@@ -1,6 +1,6 @@
 # One client for a declared scope
 
-Status: current. Draft 2, for request `e5b86654`. Nothing here is built.
+Status: current. Draft 3, for request `e5b86654`. Nothing here is built.
 
 A page shows a scope and lets a member act on it. Today the page author
 assembles that from parts: a signer, a handle, a fold, a store of sent
@@ -68,10 +68,11 @@ head 40, with the new revision, and signs it under `k2`.
 
 **A lost copy arrives after an edit.** One copy of Ana's comment gets no
 reply. The next copy is refused `type-full`, and the text returns to the
-box with the words "can still be posted". Ana changes the text and posts
+box with the reason. Ben then removes a comment, so the type has room,
+and the box says "can still be posted". Ana changes the text and posts
 again. The client signs the new text under `k1`. If the lost copy
-arrives at a head that admits it, the scope seals it and answers
-`mismatch` to the new bytes. The page then shows the first text as
+arrives first, the scope seals it and answers `mismatch` to the new
+bytes. The page then shows the first text as
 recorded and says "Your earlier version is posted." The edit is in the
 box as a new draft with a new key. The record holds one comment in each
 order.
@@ -106,8 +107,9 @@ reply and the answer `unavailable` are not answers. An **attempt** is
 the set of copies that the client sends after one submit of the member.
 
 A signing is **closed** when it cannot hold the key. Each of its copies
-has a refusal. Or a settlement read after its death answered
-`not-found`.
+has a refusal. Or a read after its death shows that the key is not in
+the record: a settlement read that answers `not-found`, or a journal
+read to a head that does not hold the key.
 
 The **replica** is the client's fold of the scope's journal, from the
 genesis entry to a head. The **record** is the scope's journal. A
@@ -118,6 +120,10 @@ A **draft** is the values of one request while the member has them. It
 has a key from the member's first edit. It lives until the member
 discards it or its request ends, whatever its values. A draft with no
 text is a draft.
+
+The **present values** of a request are the values of its draft while
+the member has the draft. While the request is pending, they are the
+values of its latest signing, read from custody.
 
 The **class** of a refusal reason is `never`, `head` or `protocol`.
 Request RC-1 (`b0fe0668`) exports the class of each of the 36 reasons.
@@ -188,7 +194,8 @@ signing is refused `full`, reason `signings`, and nothing is signed.
 
 `send` gains the option `resign: true`. With it, `Custody` keeps and
 sends a new signing in two cases. The record's phase is `refused`. Or
-the phase is `sent` or `unknown` and the latest signing is dead. Each
+the phase is `prepared`, `sent` or `unknown` and the latest signing is
+dead. Each
 new signing starts a new attempt. In each other case another meaning
 under the key throws `conflicting`, as today.
 
@@ -237,8 +244,15 @@ phase `accepted`, `archived` or `settled` does not change.
 `ScopeHandle.log` verifies each page against the summary, and request
 FG-1 (`212e97dd`) adds the check of the genesis definition.
 
+`Custody` gains `absent(identity, signing, head)`. The caller states
+that a verified journal, read to that head after the signing died, does
+not hold the key. `Custody` closes the signing and drops its envelope,
+unless it is the latest signing. The caveat of section 5.3 for a slow
+clock applies in the same way.
+
 The store port gains one read: the open and returned records of one
-signer at one target.
+signer at one target. Each store port also gains a signal that another
+client changed the store.
 
 ## 6. Status of a request
 
@@ -251,8 +265,9 @@ A request has exactly one status. The client takes the first rule that
 holds.
 
 1. The replica holds the key, and the sealed intent has the meaning of
-   the latest signing: `recorded`.
+   the present values: `recorded`.
 2. The replica holds the key with another meaning: `other-recorded`.
+   The present values continue as a new draft.
 3. Custody holds an acceptance or a `mismatch` for the request:
    `pending`. The replica is behind that answer.
 4. The current attempt has a refusal, and the replica does not hold the
@@ -266,7 +281,7 @@ holds.
 | Status | The member sees |
 |---|---|
 | `recorded` | The change, confirmed |
-| `other-recorded` | The recorded version, and the words "Your earlier version is posted". The later values return as a new draft with a new key |
+| `other-recorded` | The recorded version, and the words "Your earlier version is posted". The present values return as a new draft with a new key |
 | `pending` | The change, marked as not confirmed |
 | `withdrawn` | The reason, and "can still be posted". The values return to the member |
 | `refused` | The reason. The values return to the member |
@@ -288,6 +303,12 @@ earlier refusal belongs to an earlier attempt, and the request is
 The client compares meanings, not intent digests. It computes the
 meaning of the sealed intent from the entry in the replica, so rules 1
 and 2 need no kept envelope.
+
+Rule 2 keeps text that no signing has. Ana changes a returned text and
+does not submit it. A late copy of the first text takes effect. The
+first text shows as recorded, and the changed text stays in the box as
+a new draft with a new key. If the draft store holds values that differ
+from the sealed intent when a request ends, the same rule applies.
 
 ### 6.1 An answer waits for its head
 
@@ -336,6 +357,7 @@ to send. The client of this note has one schedule, in one place.
 | A refusal | The attempt ends |
 | `notAfter` passes | Send nothing more for that signing |
 | The signing dies with no answer | The request returns, `unsent` |
+| A signing is dead and has a copy with no answer | Read the journal to its head one time. If the replica does not hold the key, call `absent` |
 
 The client holds one timer, set to the earliest time that any request
 is due. `close()` clears the timer and cancels the observation. No other
@@ -375,7 +397,8 @@ stop.
 4. Choose the bytes by rules 5 and 6. Sign if rule 6 applies. Stop:
    `signer`.
 5. Keep the signing in custody, as a new attempt. Stop: `store`, `full`,
-   or `taken` when another tab holds the key with another meaning.
+   or `taken`. `taken` means that another tab acts on the key: custody
+   answers `locked` or `conflicting`.
 6. Send.
 
 A stop changes no store. The draft stays in its slot, and its view
@@ -385,27 +408,42 @@ end of step 5, the draft's state is `submitting`.
 A draft whose request is `pending` is **taken**: it shows in the list
 of requests and not in a slot. Step 5 is one write to custody, and the
 draft store needs no write at a submit. A reload after step 5 finds the
-custody record.
-A reload before it finds the draft, with nothing sent.
+custody record. A reload before it finds the draft, with nothing sent.
+
+`edit(slot, values)` changes only a draft in the state `editing`. It
+reads both stores first. An edit of a draft that is `submitting` or
+taken stops with `taken` and changes nothing. A pending request shows
+its present values, so the page shows what the client sent.
 
 When a request returns, its draft has its values and its key again. If
 the slot shows no other draft, the returned draft shows there, with its
 status and cause. If the slot shows a newer draft, the returned draft
 waits in the list of requests. `restore(key)` moves a draft that waits
 into its slot when the slot is empty. `dismiss(key)` removes a draft
-that waits. `discard(slot)` removes the draft of a slot. The later
-values of an `other-recorded` request follow the same rule, as a new
-draft with a new key.
+that waits. `discard(slot)` removes the draft of a slot.
+
+An `other-recorded` request follows the same rule. If the slot is
+empty, its present values enter the slot as a new draft with a new key,
+and the draft's view names the earlier key. If the slot shows another
+draft, the request waits in the list with the status `other-recorded`
+and its present values. The new key starts at the `restore`.
 
 A request leaves the list of requests in three cases. It is `recorded`.
-Its draft enters its slot. Or the member dismisses it. So each key that
-the page shows is in exactly one place: a slot, the list of requests, or
-a recorded row.
+Its values enter their slot. Or the member dismisses it. So each key
+that the page shows is in a slot or in the list, and never in both. Rows
+are apart from both: a pending request has a predicted row, and a
+recorded request has a recorded row.
+
+A request that the member discarded or dismissed can still take effect
+while a copy of it is in flight. Its recorded row then shows as each
+other row does, with no notice.
 
 The client keeps drafts in a draft store, a second port beside the
 custody store. Both ports have a memory form. A browser adapter supplies
 forms that survive a reload and that two tabs share. Two tabs then share
-a draft and its key. Custody locks one key for one writer, so two
+a draft and its key. Each store port signals a change by another client,
+and the client then reads the store and publishes a new view. Custody
+locks one key for one writer while it sends, for at most 30 s. So two
 submits of one draft make one signing, and the second tab reads `taken`
 or sends the kept bytes.
 
@@ -528,16 +566,18 @@ tab.
 
 The suite counts the member's intentions from the member's steps alone.
 An intention starts at the first edit of an empty slot. It ends at a
-discard or when its entry is in the record. The suite checks seven
-invariants after each step.
+discard or when its entry is in the record. A **continuation** is a
+submit of values after the record took another version of the same
+intention. The suite checks seven invariants after each step.
 
-1. The record holds at most one entry for each intention.
-2. Each key that the page shows has exactly one status or draft state,
-   in exactly one place.
+1. The record holds at most one entry for each intention and one for
+   each continuation.
+2. Each key that the page shows has exactly one status or draft state.
+   It shows in a slot or in the list, and never in both.
 3. A request whose entry the replica holds shows `recorded` or
    `other-recorded`.
-4. Each value that the member submitted is in a slot, in the list of
-   requests or in the record.
+4. Each value that the member typed and did not discard is in a slot,
+   in the list of requests or in the record.
 5. The client sends no bytes that custody does not hold.
 6. The published view equals the view computed again from the replica,
    the custody records, the draft store and the clock.
@@ -557,7 +597,7 @@ step C1 goes first, then NF-5. NF-5 does not wait for steps C2 to C4.
 
 | Step | Work | Needs |
 |---|---|---|
-| C1 | Custody record version 2: signings, `resign`, the rules of 5.3, `folded`, the read by target | The cutover head |
+| C1 | Custody record version 2: signings, `resign`, the rules of 5.3, `folded`, `absent`, the read by target, the change signal | The cutover head, RC-1 |
 | NF-5 | As filed, on version 2 | C1 |
 | C2 | The replica: fold of a declared scope from `ScopeHandle.log` and `observeScope`, the states, `Judged`, typed rows with their index | RC-1, FG-1, IE-1, PG-1 |
 | C3 | Requests: the status rules, the schedule, the view | C1, C2 |
@@ -579,7 +619,8 @@ other way with no change to the rest.
 - `withdrawn` needs a copy in flight that the judge admits at the
   replica's head. A returned edit with an old revision therefore reads
   `refused`, and not "can still be posted".
-- Two tabs share a draft.
+- Two tabs share a draft. The second tab cannot edit a draft that the
+  first tab submitted.
 
 ## 15. Not taken
 
