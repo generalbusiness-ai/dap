@@ -10,7 +10,7 @@ import { readMembershipDisplay } from "../src/views/member-reads.ts";
 import type { Reads } from "../src/reads.ts";
 import { fixedSigner } from "./fixtures.ts";
 
-const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
 const at = { seq: 200, hash: `sha256:${"a".repeat(64)}` as const };
 const ref = (member: `@${string}`): MemberRef => ({ membership, member });
 const item = (who: MemberRef, kind = "person", state = "active", controller: MemberRef | null = null): Item => ({

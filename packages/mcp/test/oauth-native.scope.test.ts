@@ -93,7 +93,7 @@ test("control signatures precede index registration and public client resolution
   const settings = { MCP_ENABLED: "true", SCOPE_INDEX_MODE: "register", SCOPE_INDEX: index, SCOPES: scopes, REGISTRIES: registries, AGENTS: agents } as unknown as Parameters<typeof mcpRoute>[1];
   const secret = new Uint8Array(32).fill(42), address = "203.0.113.45";
   const bytes = utf8(canonicalize({ client_id: "https://claude.ai/oauth/TEST-signature-order.json" }));
-  const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+  const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
   const call = async (action: "create" | "grant", agent: string | null, tamper: boolean, service = SERVICE, given = settings, payload = bytes) => {
     const request = { v: 1 as const, action, service, membership, agent, actor: keyIdOfSecret(secret), body: digestBytes(bytes), op: "TEST signature order", notAfter: timeOf(Date.now() + 60_000) };
     const signed = await signControlWith(request, secretSigner(secret));

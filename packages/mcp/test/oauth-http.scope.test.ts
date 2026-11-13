@@ -41,7 +41,7 @@ test("grant stream cancellation releases timers and a held standing refresh cann
     let now = start, serial = 0;
     const signer = secretSigner(new Uint8Array(32).fill(22));
     const scopes = new StandIn(signer.key); scopes.sessionEnds = "2100-01-01T00:00:00Z";
-    const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+    const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
     let entered!: () => void, release!: () => void;
     const standingEntered = new Promise<void>(resolve => { entered = resolve; });
     const standingRelease = new Promise<void>(resolve => { release = resolve; });
@@ -116,7 +116,7 @@ test("abrupt disposal of a held OAuth opening rejects the late layer and retains
     const now = Date.parse("2099-01-01T00:00:00Z");
     const signer = secretSigner(new Uint8Array(32).fill(23));
     const scopes = new StandIn(signer.key);
-    const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+    const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
     const identity: OAuthAgentIdentity = { op: "TEST HTTP layer", configuration: canonicalize({ service: SERVICE }),
       state: "enrolled", membership, key: signer.key, handle: "@agent" };
     const access = new OAuthAccess(sql, { now: () => now, agent: () => identity, charge: () => {},
@@ -176,7 +176,7 @@ test("closing a detached OAuth layer again preserves its first disposition and r
     const sql: Sql = { exec: (query, ...values) => state.storage.sql.exec(query, ...values), transaction: run => state.storage.transactionSync(run) };
     const now = Date.parse("2099-01-01T00:00:00Z"), signer = secretSigner(new Uint8Array(32).fill(24));
     const scopes = new StandIn(signer.key);
-    const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+    const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
     const identity: OAuthAgentIdentity = { op: "TEST HTTP layer", configuration: canonicalize({ service: SERVICE }),
       state: "enrolled", membership, key: signer.key, handle: "@agent" };
     const access = new OAuthAccess(sql, { now: () => now, agent: () => identity, charge: () => {},
@@ -220,7 +220,7 @@ test("self-retired OAuth generations release stale grant layers so a new grant c
     const sql: Sql = { exec: (query, ...values) => state.storage.sql.exec(query, ...values), transaction: run => state.storage.transactionSync(run) };
     const now = Date.parse("2099-01-01T00:00:00Z"), signer = secretSigner(new Uint8Array(32).fill(25));
     const scopes = new StandIn(signer.key);
-    const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+    const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
     const identity: OAuthAgentIdentity = { op: "TEST HTTP layer", configuration: canonicalize({ service: SERVICE }),
       state: "enrolled", membership, key: signer.key, handle: "@agent" };
     const access = new OAuthAccess(sql, { now: () => now, agent: () => identity, charge: () => {},

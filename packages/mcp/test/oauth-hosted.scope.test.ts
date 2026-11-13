@@ -11,7 +11,7 @@ import { oauthRedirectPolicy, type OAuthBinding, type OAuthGrantContext } from "
 import type { Sql } from "../src/sqlite-custody.ts";
 
 const START = Date.parse("2099-01-01T00:00:00Z"), SERVICE = "https://room.example", RESOURCE = SERVICE + "/mcp";
-const MEMBER: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+const MEMBER: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
 const OWNER = new Uint8Array(32).fill(2), AGENT = new Uint8Array(32).fill(3), OTHER = new Uint8Array(32).fill(4);
 const VERIFIER = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
 const BINDING: OAuthBinding = { client_id: "https://claude.ai/metadata.json", redirect_uri: "https://claude.ai/api/mcp/auth_callback", code_challenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM", resource: RESOURCE, scope: "mcp", state_digest: digestBytes(utf8("TEST state")) };

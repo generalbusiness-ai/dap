@@ -10,8 +10,8 @@ import { DeclaredViewSource } from "../src/views/declared.ts";
 import { ViewSessions } from "../src/views/session.ts";
 import type { CallResult } from "../src/service.ts";
 
-const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
-const membership: ScopeRef = { ...scope, kind: "membership" };
+const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
+const membership: ScopeRef = { ...scope, genesis: `sha256:${"c".repeat(64)}` };
 const rule = "'counting.control' in viewer.grants and item.state = 'open' and ((viewer.member.member = '@alice' and item.id = 2) or (viewer.member.member = '@bob' and item.id = 4))";
 async function fixture(condition = rule, related = false, outcome: "accepted" | "unknown" = "accepted", withMembers = false) {
   const base = await applicationCounterPacket2(), board = base.package.presentation.views["board"]!;
@@ -43,8 +43,8 @@ async function fixture(condition = rule, related = false, outcome: "accepted" | 
   const memberReads: ScopeRef[] = [];
   let relatedFailure: "scope" | "projection" | "forbidden" | null = null, head = 9;
   const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
-    installation: async () => ({ scope, membership, directory: { ...scope, kind: "directory" }, rules: { ...scope, kind: "rules" },
-      destination: { ...scope, kind: "destination" }, definition: id, ids: packet.ids, item: 7 }),
+    installation: async () => ({ scope, membership, directory: { ...scope, genesis: `sha256:${"b".repeat(64)}` }, rules: { ...scope, genesis: `sha256:${"d".repeat(64)}` },
+      destination: { ...scope, genesis: `sha256:${"e".repeat(64)}` }, definition: id, ids: packet.ids, item: 7 }),
     viewer: async () => viewer, actions: async () => viewer?.grants ?? [],
     members: async reference => { memberReads.push(reference); return null; },
     projection: async query => {
@@ -104,7 +104,7 @@ test("carousel routes from trusted member, grants and item state without exposin
 
 test("declared root reads retain both heads and recheck current routing without caller scope or item bindings", async () => {
   const f = await fixture(`(${rule}) ? (reads.roster.sources.board[id = 4].fields.lastNumber = 44 ? true : null) : false`, true);
-  const child: ScopeRef = { ...scope, scope: `sc_${"d".repeat(51)}a`, inc: `in_${"d".repeat(25)}a` };
+  const child: ScopeRef = { ...scope, scope: `sc_${"d".repeat(51)}a`, genesis: `sha256:${"d".repeat(63)}a` };
   await f.sessions.open("related", "queue", undefined, undefined, child);
   const display = f.sessions.display("related");
   expect(display.card?.identity.item).toBe("2");

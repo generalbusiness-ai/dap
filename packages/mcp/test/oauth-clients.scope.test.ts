@@ -106,7 +106,7 @@ test("metadata refuses unknown origins before fetch and caches only exact, bound
     // Actual signed Registry entry and durable counters; observations are explicit stand-ins.
     const key = new Uint8Array(32).fill(6), otherKey = new Uint8Array(32).fill(7);
     const body = utf8(JSON.stringify({ after: null })), service = "https://room.example";
-    const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+    const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
     let observations = 0;
     const registryPorts = { now: () => now, mintId: (): never => { throw Error("A read cannot allocate an Agent"); }, agent: (): never => { throw Error("A read cannot call an Agent"); },
       observe: async () => expect.fail("A connection listing must use current actor-role facts"),

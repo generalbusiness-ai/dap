@@ -73,7 +73,7 @@ test("Commons discovery binds one ordinary note tool and preserves opaque refere
   expect(tool).toBeDefined();
   expect((tool.inputSchema["required"] as string[])).not.toContain("target");
   const about = [{ document: textDigest("unread document"), fragment: "page=3" },
-    { entry: factRefOf(peer.scopes.get(peer.rules.scope)!.entries[0]!.entry), fragment: "row=7" }];
+    { entry: factRefOf(peer.scopes.get(peer.rules.scope)!.entries[0]!.entry, peer.rules), fragment: "row=7" }];
   const text = "A member's statement.", args = { fields: { text, media: "text/plain", about }, idempotencyKey: "note" };
   expect((await service.call("commons.note", args)).structuredContent["answer"]).toBe("accepted");
   expect((await service.call("commons.note", args)).structuredContent["retained"]).toBe(true);

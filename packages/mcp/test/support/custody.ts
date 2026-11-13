@@ -9,8 +9,8 @@ import type { Envelope, Identity } from "../../src/index.ts";
 import { fixedSigner } from "../fixtures.ts";
 
 export const signer = fixedSigner(7);
-export const lane: ScopeRef = { scope: "sc_lane", inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa", kind: "lane" } as ScopeRef;
-export const resource: ScopeRef = { scope: "sc_other", inc: "in_bbbbbbbbbbbbbbbbbbbbbbbbbb", kind: "lane" } as ScopeRef;
+export const lane: ScopeRef = { scope: "sc_lane", genesis: `sha256:${"a".repeat(64)}` } as ScopeRef;
+export const resource: ScopeRef = { scope: "sc_other", genesis: `sha256:${"b".repeat(64)}` } as ScopeRef;
 export const T0 = Date.parse("2099-01-01T00:00:00Z");
 export const notAfter = timeOf(T0 + 15 * 60_000);
 

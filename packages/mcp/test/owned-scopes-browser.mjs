@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { DOMAINS } from '@generalbusiness/dap-contract';
-import { canonicalize, newIncarnation, scopeIdOf, textDigest } from '@generalbusiness/dap-bytes';
+import { canonicalize, scopeIdOf, textDigest } from '@generalbusiness/dap-bytes';
 import { applicationProjectionId, applicationProjectionQueryDigest } from '@generalbusiness/dap-platform/application-v2';
 import { secretSigner } from '@generalbusiness/dap-client';
 import { prepareGrowCheck } from '../../../examples/grow/prepare-check.ts';
@@ -25,8 +25,8 @@ const report = { browserPlugin: 'Browser plugin not available; cached pinned Pla
 try {
   const { packet } = await prepareApplicationDirectory(root, secretSigner(new Uint8Array(32).fill(254)));
   host = await startViewsHost({ declared: async base => {
-    const site = { ...base.scope.rules, kind: 'lane' }, definition = packet.package.semantic.projections.grid.definition;
-    const rooms = [1, 2].map(n => ({ kind: 'lane', scope: scopeIdOf({ v: 1, kind: 'lane', definition, creator: site, cause: textDigest(`TEST browser room ${n}`), ordinal: n }), inc: newIncarnation(new Uint8Array(16).fill(n)) }));
+    const site = { ...base.scope.rules, genesis: textDigest('TEST browser site genesis') }, definition = packet.package.semantic.projections.grid.definition;
+    const rooms = [1, 2].map(n => ({ scope: scopeIdOf({ v: 1, kind: 'lane', definition, creator: site, cause: textDigest(`TEST browser room ${n}`), ordinal: n }), genesis: textDigest(`TEST browser room genesis ${n}`) }));
     const fields = (declaration, values) => Object.fromEntries(Object.entries(declaration.fields).map(([name, field]) => [name,
       Object.hasOwn(values, name) ? values[name] : field.nullable ? null : field.of.type === 'int' ? field.of.min : field.of.type === 'enum' ? field.of.of[0] : field.of.type === 'item' ? 7 : 'TEST']));
     const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {

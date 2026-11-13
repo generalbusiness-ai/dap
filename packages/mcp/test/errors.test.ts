@@ -61,7 +61,7 @@ test("archived submit and settlement stay explicit and terminal without inventin
   }
   expect([posts, settlements, (await store.unresolved()).length]).toEqual([2, 1, 0]);
   const said = answered({ answer: "archived", archived, fact }, asked, null);
-  expect(said.sentence).toContain(`hash ${fact.hash}, incarnation ${fact.at.inc}`);
+  expect(said.sentence).toContain(`hash ${fact.hash}, genesis ${fact.at.genesis}`);
   expect(said.sentence).toContain(`through entry 6, hash ${head.hash}`);
   expect(said.sentence).not.toContain("accepted");
 });

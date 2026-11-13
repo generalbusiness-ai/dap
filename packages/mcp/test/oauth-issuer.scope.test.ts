@@ -14,7 +14,7 @@ import { hostedRolePort, type HostedRoleDecision, type HostedRoleRead } from "..
 const START = Date.parse("2099-01-01T00:00:00Z"), CLIENT = "https://clients.example/metadata.json", REDIRECT = "https://claude.ai/api/mcp/auth_callback", RESOURCE = "https://room.example/mcp?host=claude";
 const VERIFIER = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
 const BINDING: OAuthBinding = { client_id: CLIENT, redirect_uri: REDIRECT, code_challenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM", resource: RESOURCE, scope: "mcp", state_digest: digestBytes(utf8("state")) };
-const MEMBERSHIP: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+const MEMBERSHIP: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
 function fixture(sql: Sql, id: string) {
   sql.exec(`CREATE TABLE test_issuer_budget (used INTEGER NOT NULL)`); sql.exec(`INSERT INTO test_issuer_budget VALUES (0)`);
   const state = { now: START, limit: 16 * 1024 * 1024, reads: 0, standing: { status: "active" } as HostedRoleDecision, hold: null as Promise<void> | null, onRead: null as (() => void) | null,
