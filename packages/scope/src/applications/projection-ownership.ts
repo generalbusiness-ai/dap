@@ -13,7 +13,10 @@ import type { PreparedRead } from "../read-preparation.ts";
 export const APPLICATION_OWNERSHIP_BOUNDS = Object.freeze({ ancestors: 16, birthBytes: 64 * 1024, totalBirthBytes: 16 * 64 * 1024 });
 export async function projectionScopeOwned(frame: PreparedRead, root: ScopeRef, rootDefinition: Digest, directory: ScopeRef,
   births: NativeBirthSource | null, run: PreparationRun): Promise<"owned" | "unavailable" | "unowned" | "too-large"> {
-  if (same(frame.scope.at, root)) return frame.pinned.named === rootDefinition && same(frame.genesis.seed.creator, directory) ? "owned" : "unowned";
+  // A Directory that creates the root in its own genesis names itself by the
+  // genesis self reference; the birth's source fact resolves it.
+  const creatorOf = (genesis: PreparedRead["genesis"]) => genesis.source ? resolveGenesisSelf(genesis.seed.creator, genesis.source) : genesis.seed.creator;
+  if (same(frame.scope.at, root)) return frame.pinned.named === rootDefinition && same(creatorOf(frame.genesis), directory) ? "owned" : "unowned";
   if (!births || !isDigest(frame.pinned.named)) return "unavailable";
   let genesis = frame.genesis;
   const seen = new Set([canonicalize(frame.scope.at)]);
@@ -33,7 +36,7 @@ export async function projectionScopeOwned(frame: PreparedRead, root: ScopeRef, 
     if (!admitted || admitted.birth.native || !isDigest(admitted.birth.named)) return "unowned";
     const entry = admitted.entry;
     if (entry.input.decision !== "applied") return "unowned";
-    if (same(parent, root)) return admitted.birth.named === rootDefinition && same(entry.input.seed.creator, directory) ? "owned" : "unowned";
+    if (same(parent, root)) return admitted.birth.named === rootDefinition && same(creatorOf(entry.input), directory) ? "owned" : "unowned";
     genesis = entry.input;
   }
   return "too-large";

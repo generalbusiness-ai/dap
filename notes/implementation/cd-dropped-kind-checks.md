@@ -20,6 +20,8 @@ Each row has one of these replacements:
 The table covers commits from `c6c836b5` to the head. A script read each
 commit's diff and listed each removed line that compares `.kind` with a
 quoted word. The line is the first line of the hunk in the new file.
+The last eleven rows come from a second read of the head's admission and
+routing files; their line numbers are head lines.
 
 | File | Line | Kind dropped | What replaces it | Commit |
 |---|---|---|---|---|
@@ -159,6 +161,17 @@ quoted word. The line is the first line of the hunk in the new file.
 | `apps/room/page/src/open-requests.ts` | 48 | `directory` | compares with a held reference | `6aae2109ab` |
 | `apps/room/page/src/original-check.ts` | 72 | `directory` | compares with a held reference | `6aae2109ab` |
 | `apps/room/page/src/original-check.ts` | 141 | `directory` | compares with a held reference | `6aae2109ab` |
+| `packages/scope/src/namespace.ts` | 118 | the reference's `kind` against the scope's | the genesis bytes fix the kind: routing selects the room by scope ID, the scope ID is the digest of a seed that states the kind, and the genesis must match | `aedccd9e95` |
+| `packages/scope/src/namespace.ts` | 77 | `directory` | compares with a held reference: the request must name the recorded creator Directory exactly, and the receiver answers only as a Directory | `ff4ef5a97d` |
+| `packages/scope/src/worker.ts` | 790 | `membership` | the place fixes the kind: the key read observes the caller's full Membership reference, in place of a reference built from a scope ID | `7c740b5255` |
+| `packages/mcp/src/hosted.ts` | 125 | `membership` | the place fixes the kind: the control request's `membership` field, and the registry answers only for the Membership whose name selects it | `daf76b0512` |
+| `packages/mcp/src/hosted.ts` | 202 | `membership` | the place fixes the kind: the role request's `membership` field | `daf76b0512` |
+| `packages/mcp/src/hosted.ts` | 256 | `membership` | the place fixes the kind: the stored identity's `membership` field | `daf76b0512` |
+| `packages/mcp/src/hosted.ts` | 298 | `membership` | compares with a held reference: the observed `of` must equal the request's Membership | `daf76b0512` |
+| `packages/scope/src/sessions.ts` | 149 | `membership` | the place fixes the kind: the claims' `membership` field; acceptance compares it with the scope's own full Membership reference | `ff4ef5a97d` |
+| `packages/scope/src/site/host.ts` | 62 | `destination` | the place fixes the kind: the admitted Directory's destination slot; the publication must answer under that exact reference | `6c1f06153e` |
+| `packages/scope/src/site/host.ts` | 80 | `destination` | the place fixes the kind: the admitted Directory's destination slot | `6c1f06153e` |
+| `packages/client/src/application-route.ts` | 34 | `directory`, `rules`, `membership`, `destination`, `lane` | the place fixes the kind: each named field of the screen context; the Directory must also match the address's scope ID | `f04b8ecbc9` |
 
 ## Checks against a variable
 
@@ -512,6 +525,7 @@ in the old shape. "Vector" means a measured number moved with the new bytes.
 | B10 | `scope/test/archive-one-entry-scale.test.ts` (fixture shape) | The test anchored the Directory facts that the lane's genesis takes as its source. Under 5a642337 and 066e49b3 a Directory fact may not be an anchor, so `#privateCopy` refused the copy of Directory entry 5 at the lane's entry 0: "an anchored private source lacks matching recorded kind and finite exporter alias metadata". The test passes on main. | `archiveAuthorityReplay` (`scope/test/support/archive-authority-replay.ts`) serves the Directory, Rules and Destination journals and anchors only Register and Membership facts. The scale test and the two archive-driver resume tests share it. The scale test passes, 1/1. |
 | B11 | `git/src/journal-v2-tree.ts` `#emit` | `#emit` built child trees in the order that `prepare` first named them. The adaptive scout prepares paths step by step, and a resumed build reaches the birth, definition and entry directories in other steps. The rebuild after a restart sent the same commit in a pack with three trees in another order, and `archive-installed.test.ts` ("export genesis zero after a late native membership directory binding") requires the same bytes. | `#emit` builds child trees in name order. This changes only the order of objects in the pack. Each tree sorts its own rows, so no tree ID, commit ID or git vector changes. The fault needs the `birth` directory, which this head adds; main has no `birth` path. The witness in `journal-v2-tree.test.ts` prepares the same paths in two orders and expects the same object list. The git suite passes, 239/239. |
 | B12 | `examples/lending/test-support.ts` (fixture shape) | The fixture built the destination as `{ ...directory, kind: "destination" }`. The ref check refused the extra field, so the lending genesis was sealed refused, item 0 never opened, and 8 tests read null. `packages/mcp/test/support/views-host.ts` built its scripted installation refs with the same spread. | Both fixtures pass the plain refs. Lending passes, 18/18. A follow-up for another head: `created()` in `derive/test/fixtures.ts` accepts a refused genesis. A check for `decision === "applied"` there would name this fault. |
+| B13 | `scope/src/applications/projection-ownership.ts` | The root check compared the root's `seed.creator` with the Directory's full reference. The Directory creates the Grow Site in its own genesis, so that seed names the creator by the genesis self reference, and every declared projection read answered "not owned". | It resolves the creator against the birth's source fact with `resolveGenesisSelf`, at the selected root and at a root reached by the ancestor walk, as B7 does for act admission. |
 
 ## Creator comparisons (audit accepted in a5d65e58)
 
@@ -623,12 +637,12 @@ The cutover changes 78 plain seals and 55 named-owner seals in `scripts/security
 
 | File | Old | New | Change |
 |---|---|---|---|
-| `apps/room/archive-policy.ts` | `ed3b746b5a26` | `d22a58a95319` | trusted release (e4b72290) | |
+| `apps/room/archive-policy.ts` | `ed3b746b5a26` | `d22a58a95319` | trusted release (e4b72290) |
 | `apps/room/archive.ts` | `9547f8b9a4a1` | `f48d094c318f` | trusted release (e4b72290); replay context; seed kind |
 | `apps/room/demo-creation.ts` | `91d9ac8a8fa3` | `18124da145e9` | ref shape {scope,genesis}; retired-room stop |
 | `apps/room/page/src/oauth-context.ts` | `15e8f1a89a49` | `ebf66f2c85eb` | store key dap-page-settings-2; ref shape |
 | `apps/room/page/src/oauth-custody.ts` | `cedf10f00ac0` | `4ccc5fa0e3c1` | browser store v2, new prefixes | |
-| `apps/room/worker.grow.ts` | `0cc4c1c63f79` | `af224660bab6` | trusted release; symbol hooks | |
+| `apps/room/worker.grow.ts` | `0cc4c1c63f79` | `af224660bab6` | trusted release; symbol hooks |
 | `examples/grow/simulator-host.ts` | `26a8521b9873` | `a503e2868ee7` | ref shape; entry body check |
 | `packages/bytes/src/index.ts` | `7c8c95148c4a` | `7a8a620d0a93` | exports sequence.ts, retired-room.ts | |
 | `packages/bytes/src/read-minimum.ts` | `5ead3e9579b2` | `13e8cbbcaf4c` | ref shape | |
@@ -764,9 +778,11 @@ The cutover changes 78 plain seals and 55 named-owner seals in `scripts/security
 
 ### Entry points whose admission or refusal changed
 
+- `apps/room/archive-policy.ts` (trusted release (e4b72290)). The Grow archive policies take the trusted release, publisher and entry as parameters, refuse a packet that names another publisher or entry, and cover every definition the release declares in place of the fixed demo constants (ruling e4b72290).
 - `apps/room/archive.ts` (trusted release (e4b72290); replay context; seed kind). The Grow archive admits by seed kind, checks a Directory row's register and membership as SequenceRefs, carries the replay context, and stops foreign-source-mismatch when the directory Rules genesis is not a rules sequence.
 - `apps/room/demo-creation.ts` (ref shape {scope,genesis}; retired-room stop). The register offer route takes `register` and `genesis` query keys in place of `inc`, and answers a retired room with the room-retired response.
 - `apps/room/page/src/oauth-context.ts` (store key dap-page-settings-2; ref shape). The consent page reads settings only under the new key and no longer requires the membership ref to say kind membership.
+- `apps/room/worker.grow.ts` (trusted release; symbol hooks). The Grow Worker passes its trusted release to the archive configuration, policies and driver, and overrides wiring through the scopeWiring symbol.
 - `examples/grow/simulator-host.ts` (ref shape; entry body check). The simulator admits a room ref without a kind and checks the room's genesis by isEntryBodyOf and seed kind lane.
 - `packages/bytes/src/records.ts` (entry and ref shapes: genesis entry, sequence entry, FactUse kind, delivery sourceKind). isScopeRef accepts only {scope, genesis}; a genesis entry has no `at` and may hold encoded self refs; a later entry names its genesis; deliveries and uses carry the source kind.
 - `packages/checkers/src/stage-origin.ts` (facts matched by isAt; genesis by hash). The stage-origin checker matches each sealed source to exactly one fact by isAt and hash, and requires the destination genesis seed kind destination.
@@ -875,3 +891,6 @@ Commit `70c3431750` cut the branches that only this case reached:
 | lending browser storage | fixture shape | References are `{ scope, genesis }`. |
 | repo-in-ai example and tests | fixture shape | References are `{ scope, genesis }`, and home configs are version 2. An entry binds to its sequence by genesis (`isEntryBodyOf`, `sentByBody`), and a genesis binds by its seed and hash. The example drops its register kind checks, because the place fixes the kind. Fixture refs that differed only by kind now differ by genesis. `hosted-loop.test.ts` reads the example input, and with the new register the suite passes, 243/243. No workflow or gate step runs that suite: it has its own `vitest.config.ts`, no `.github` workflow names repo-in-ai, and `scripts/test.mjs:33-35` runs only the three `.mjs` tests. The planner files a request to put it under a check. |
 | `archive-driver` resume, sha1 and sha256 | fixture shape | The Directory takes deliveries from the Rules and Destination geneses. Under 5a642337 and 066e49b3 neither kind may be an anchor, so the test also serves the Rules and Destination journals, and Replay proves those facts by replay. The anchors include the Membership facts of all three journals. The test compares the reported anchors as a set, because Replay reports them in the order of use. The fixture is `archiveAuthorityReplay`, which B10 shares. |
+| `mcp` `wire` and `lost-reply`, `cli` `install-without-mcp` | fixture shape | The test home config is version 2. A version 1 home now raises `RetiredHomeError`. |
+| `mcp` `reads` | fixture shape | The case that varied the Membership reference's `kind` goes: a reference has no `kind`, and the genesis and scope cases still vary the reference. |
+| `mcp` `store-format` | merge | Main's failure shape returns `error`, `message` and `next` only, so the test no longer expects a `reason` field. |

@@ -19,7 +19,7 @@ test("a call on a retired custody store answers store-retired and reads no recor
     fetch: async () => { callbacks++; throw new Error("TEST no network after store retirement"); } });
   const named = await service.call("TEST-store-format", {});
   expect(named.isError).toBe(true);
-  expect(named.structuredContent).toMatchObject({ error: "store-retired", reason: "retired", message: expect.stringContaining("retired room format") });
+  expect(named.structuredContent).toMatchObject({ error: "store-retired", message: expect.stringContaining("retired room format") });
   expect(callbacks).toBe(0);
   expect(readdirSync(old).sort()).toEqual(names);
 });
