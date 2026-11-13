@@ -177,7 +177,7 @@ test('work retains the real agent controller; an unresolved controller never bec
   assert.equal(clipped.isError, false, 'The application preserves its bounded result instead of triggering a generic replacement');
   assert.equal(clipped.structuredContent.rows.length, 0); assert.equal(clipped.structuredContent.omittedRows, 1); assert.equal(clipped.structuredContent.complete, false);
   assert.ok(utf8(canonicalize(clipped)).length <= 256 * 1024, 'The whole CallResult, including its text copy, fits the catalogue bound');
-  f.M.items.at(-1).parties.controller = { membership: { ...f.peer.membership, inc: 'in_' + 'a'.repeat(26) }, member: '@vic' };
+  f.M.items.at(-1).parties.controller = { membership: { ...f.peer.membership, genesis: 'sha256:' + 'a'.repeat(64) }, member: '@vic' };
   const missing = (await f.app.work()).structuredContent;
   assert.equal(missing.rows.length, 0); assert.ok(missing.unread.some(row => row.reason === 'agent-controller-unavailable'));
   const unsupported = f.lane('sha256:' + 'c'.repeat(64)), change = f.lane(J4_DIGESTS.change);
@@ -233,7 +233,7 @@ test('context attaches comments only to exact retained facts in its own scope', 
   const f = fixture(t), q = await question(f), foreign = await question(f);
   const local = { at: q.state.ref, seq: q.opening.entry.seq, hash: q.opening.hash };
   const references = [local, { at: foreign.state.ref, seq: foreign.opening.entry.seq, hash: foreign.opening.hash },
-    { ...local, at: { ...local.at, inc: f.peer.membership.inc } }, { ...local, hash: 'sha256:' + 'f'.repeat(64) }];
+    { ...local, at: { ...local.at, genesis: f.peer.membership.genesis } }, { ...local, hash: 'sha256:' + 'f'.repeat(64) }];
   for (const [n, about] of references.entries()) {
     const body = 'TEST comment ' + n;
     q.state.items.push(item(10 + n, 'comment', 'posted', { body: textDigest(body) }, { about }, { author: f.viewer }));
@@ -448,9 +448,9 @@ test('an accepted Decision receipt floors the next actual app read; an older coh
   const reached = await sessions.read('floor', behind.cut, { refresh: true });
   assert.equal(reached.status, 'ready'); assert.deepEqual(reached.card.projection, [{ scope: q.state.ref.scope, seq: required.head.seq, hash: required.head.hash }]);
   assert.ok(!reached.card.actions.some(action => action.id === 'approve')); assert.equal(performed, 1);
-  const count = f.peer.requests.length, foreign = { ...required, at: { ...required.at, inc: f.peer.membership.inc } };
+  const count = f.peer.requests.length, foreign = { ...required, at: { ...required.at, genesis: f.peer.membership.genesis } };
   assert.equal((await source.read({ screen: 'decision', subject: questionSubject(q.state.ref, q.opening.entry.seq), position: 0, page: 'summary' }, { call: async () => { throw Error('No generic read.'); } }, foreign)).status, 'unavailable');
-  assert.equal(f.peer.requests.length, count, 'A foreign incarnation refuses before any room read');
+  assert.equal(f.peer.requests.length, count, 'A foreign genesis refuses before any room read');
   assert.equal((await source.read({ screen: 'work', position: 0, page: 'summary' }, { call: async () => { throw Error('No generic read.'); } }, required)).status, 'unavailable');
   assert.equal(f.peer.requests.length, count, 'An unsupported screen cannot silently drop the receipt floor');
   const collection = await new Collection(f.options).begin(q.state.ref);

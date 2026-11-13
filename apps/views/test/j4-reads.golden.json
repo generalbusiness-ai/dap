@@ -7,60 +7,60 @@
         "fallback": "Read needs_you for exact rows, heads and omissions. To read a question and answer it, open its Decision card.",
         "identity": {
           "at": {},
-          "item": "5",
-          "kind": "approval-request",
-          "revision": "5",
+          "item": "6",
+          "kind": "manifest",
+          "revision": "20",
           "subject": {
-            "item": 5,
-            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+            "item": 6,
+            "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
           }
         },
-        "kicker": "Question 1",
+        "kicker": "Change 4, version 2",
         "projection": [
           {
-            "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+            "hash": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
             "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa",
             "seq": 0
           },
           {
-            "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+            "hash": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
             "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q",
             "seq": 0
           },
           {
-            "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
-            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
-            "seq": 5
-          },
-          {
-            "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+            "hash": "sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4",
             "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq",
             "seq": 20
           },
           {
-            "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+            "hash": "sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9",
             "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za",
             "seq": 20
+          },
+          {
+            "hash": "sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859",
+            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
+            "seq": 5
           }
         ],
         "reasons": [
-          "What settles it: Your approve act on the current text closes this request, with the verdict approve or request-changes.",
-          "Rule: this lane's rule for an approval request.",
+          "What settles it: A merge act on the current version settles it.",
+          "Rule: this lane's rule for a merge.",
           "Reading this item leaves it open. This list grants no permission.",
           "The opening act's signer is unavailable in this read."
         ],
         "record": {
           "label": "Exact record",
-          "text": "{\n  \"scope\": {\n    \"scope\": \"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\n    \"inc\": \"in_a4dqobyha4dqobyha4dqobyha4\",\n    \"kind\": \"lane\"\n  },\n  \"head\": {\n    \"seq\": 5,\n    \"hash\": \"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"\n  },\n  \"item\": 5,\n  \"type\": \"approval-request\",\n  \"rule\": {\n    \"definition\": \"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\n    \"clause\": \"acts.request-approval;items.approval-request\"\n  },\n  \"category\": \"requested-review\",\n  \"kicker\": \"Question 1\",\n  \"needs\": \"Approve or request changes on question 1: \\\"TEST question\\\".\",\n  \"why\": \"@vic asked you by name.\",\n  \"settles\": \"Your approve act on the current text closes this request, with the verdict approve or request-changes.\",\n  \"settledBy\": [\n    \"approve\"\n  ],\n  \"bodyAt\": 1,\n  \"currentBody\": true,\n  \"permission\": \"not-determined\"\n}"
+          "text": "{\n  \"scope\": {\n    \"scope\": \"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\n    \"genesis\": \"sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b\"\n  },\n  \"head\": {\n    \"seq\": 20,\n    \"hash\": \"sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4\"\n  },\n  \"item\": 6,\n  \"type\": \"manifest\",\n  \"rule\": {\n    \"definition\": \"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\n    \"clause\": \"acts.merge\"\n  },\n  \"category\": \"merge-attention\",\n  \"kicker\": \"Change 4, version 2\",\n  \"needs\": \"Merge change 4: \\\"TEST change\\\".\",\n  \"why\": \"Your role holds change.merge.\",\n  \"settles\": \"A merge act on the current version settles it.\",\n  \"settledBy\": [\n    \"merge\"\n  ],\n  \"roleIncludes\": \"change.merge\",\n  \"permission\": \"not-determined\",\n  \"rules\": {\n    \"revision\": 7,\n    \"approvals\": 1,\n    \"ownerMayReview\": false,\n    \"checks\": [\n      {\n        \"name\": \"security-review\",\n        \"required\": true,\n        \"checker\": {\n          \"membership\": {\n            \"scope\": \"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\n            \"genesis\": \"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"\n          },\n          \"member\": \"@vic\"\n        }\n      },\n      {\n        \"name\": \"style-review\",\n        \"required\": false,\n        \"checker\": {\n          \"membership\": {\n            \"scope\": \"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\n            \"genesis\": \"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"\n          },\n          \"member\": \"@vic\"\n        }\n      }\n    ],\n    \"extents\": [\n      {\n        \"name\": \"source\",\n        \"class\": \"content\"\n      }\n    ]\n  },\n  \"holds\": [],\n  \"changesRequested\": []\n}"
         },
         "reviewIntended": [],
         "rule": {
-          "clause": "acts.request-approval;items.approval-request",
-          "definition": "sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3"
+          "clause": "acts.merge",
+          "definition": "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"
         },
-        "settles": ["approve"],
-        "summary": "Why it is yours: @vic asked you by name.",
-        "title": "Approve or request changes on question 1: \"TEST question\".",
+        "settles": ["merge"],
+        "summary": "Why it is yours: Your role holds change.merge.",
+        "title": "Merge change 4: \"TEST change\".",
         "unavailable": [],
         "waitsOn": []
       },
@@ -78,11 +78,10 @@
               "fields": {
                 "bodyAt": {
                   "at": {
-                    "inc": "in_a4dqobyha4dqobyha4dqobyha4",
-                    "kind": "lane",
+                    "genesis": "sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1",
                     "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
                   },
-                  "hash": "sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04",
+                  "hash": "sha256:bf300462a862fa1dff4f426b6d3573edfdeef7d701f2382795159ac9b3b2001e",
                   "seq": 1
                 },
                 "request": 5,
@@ -103,11 +102,10 @@
               "fields": {
                 "bodyAt": {
                   "at": {
-                    "inc": "in_a4dqobyha4dqobyha4dqobyha4",
-                    "kind": "lane",
+                    "genesis": "sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1",
                     "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
                   },
-                  "hash": "sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04",
+                  "hash": "sha256:bf300462a862fa1dff4f426b6d3573edfdeef7d701f2382795159ac9b3b2001e",
                   "seq": 1
                 },
                 "request": 5,
@@ -140,7 +138,7 @@
         "kicker": "Question 1",
         "projection": [
           {
-            "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+            "hash": "sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859",
             "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
             "seq": 5
           }
@@ -213,17 +211,17 @@
         "kicker": "Change 4, version 2",
         "projection": [
           {
-            "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+            "hash": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
             "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa",
             "seq": 0
           },
           {
-            "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+            "hash": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
             "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q",
             "seq": 0
           },
           {
-            "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+            "hash": "sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4",
             "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq",
             "seq": 20
           }
@@ -284,17 +282,17 @@
         "kicker": "Change 4, version 2",
         "projection": [
           {
-            "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+            "hash": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
             "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa",
             "seq": 0
           },
           {
-            "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+            "hash": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
             "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q",
             "seq": 0
           },
           {
-            "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+            "hash": "sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9",
             "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za",
             "seq": 20
           }
@@ -318,74 +316,63 @@
           {
             "capture": {
               "directory": {
-                "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
-                "kind": "directory",
+                "genesis": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
                 "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
               },
               "heads": [
                 {
                   "head": {
-                    "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+                    "hash": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                     "seq": 0
                   },
                   "scope": {
-                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                    "kind": "membership",
+                    "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                     "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                   }
                 },
                 {
                   "head": {
-                    "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+                    "hash": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
                     "seq": 0
                   },
                   "scope": {
-                    "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
-                    "kind": "directory",
+                    "genesis": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
                     "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
                   }
                 },
                 {
                   "head": {
-                    "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
-                    "seq": 5
-                  },
-                  "scope": {
-                    "inc": "in_a4dqobyha4dqobyha4dqobyha4",
-                    "kind": "lane",
-                    "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
-                  }
-                },
-                {
-                  "head": {
-                    "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+                    "hash": "sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4",
                     "seq": 20
                   },
                   "scope": {
-                    "inc": "in_aucqkbifaucqkbifaucqkbifau",
-                    "kind": "lane",
+                    "genesis": "sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b",
                     "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
                   }
                 },
                 {
                   "head": {
-                    "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+                    "hash": "sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9",
                     "seq": 20
                   },
                   "scope": {
-                    "inc": "in_aydambqgaydambqgaydambqgay",
-                    "kind": "lane",
+                    "genesis": "sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b",
                     "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+                  }
+                },
+                {
+                  "head": {
+                    "hash": "sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859",
+                    "seq": 5
+                  },
+                  "scope": {
+                    "genesis": "sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1",
+                    "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
                   }
                 }
               ],
               "key": "key_bjLBl0Hwr4JgYSrpn9E9ijiURyLgiWTdI5c49VKmFTs",
               "ranges": [
-                {
-                  "from": 5,
-                  "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
-                  "to": 5
-                },
                 {
                   "from": 20,
                   "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq",
@@ -395,6 +382,11 @@
                   "from": 20,
                   "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za",
                   "to": 20
+                },
+                {
+                  "from": 5,
+                  "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
+                  "to": 5
                 },
                 {
                   "from": 0,
@@ -411,8 +403,7 @@
               "viewer": {
                 "member": "@rita",
                 "membership": {
-                  "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                  "kind": "membership",
+                  "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                   "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                 }
               }
@@ -425,11 +416,6 @@
         ],
         "entries": [
           {
-            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
-            "seq": 5,
-            "text": "Lane 3. You have not marked this one on this device. Entry 0: the scope opened. Entry 1: ask by @rita (person). Entry 2: the timed rule TEST history position. Entry 3: the timed rule TEST history position. Entry 4: the timed rule TEST history position. Entry 5: the timed rule TEST history position."
-          },
-          {
             "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq",
             "seq": 20,
             "text": "Lane 1. You have not marked this one on this device. Entry 15: the timed rule TEST scripted change position. Entry 16: the timed rule TEST scripted change position. Entry 17: the timed rule TEST scripted change position. Entry 18: the timed rule TEST scripted change position. Entry 19: the timed rule TEST scripted change position. Entry 20: the timed rule TEST scripted change position. This list leaves out 15 earlier entries."
@@ -438,6 +424,11 @@
             "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za",
             "seq": 20,
             "text": "Lane 2. You have not marked this one on this device. Entry 15: the timed rule TEST scripted change position. Entry 16: the timed rule TEST scripted change position. Entry 17: the timed rule TEST scripted change position. Entry 18: the timed rule TEST scripted change position. Entry 19: the timed rule TEST scripted change position. Entry 20: the timed rule TEST scripted change position. This list leaves out 15 earlier entries."
+          },
+          {
+            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
+            "seq": 5,
+            "text": "Lane 3. You have not marked this one on this device. Entry 0: the scope opened. Entry 1: ask by @rita (person). Entry 2: the timed rule TEST history position. Entry 3: the timed rule TEST history position. Entry 4: the timed rule TEST history position. Entry 5: the timed rule TEST history position."
           },
           {
             "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa",
@@ -453,40 +444,40 @@
         "fallback": "Read since for exact rows, heads and omissions.",
         "identity": {
           "at": {},
-          "item": "5",
+          "item": "20",
           "kind": "head",
-          "revision": "5",
+          "revision": "20",
           "subject": {
-            "item": 5,
-            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+            "item": 20,
+            "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
           }
         },
         "kicker": "Updates",
         "projection": [
           {
-            "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+            "hash": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
             "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa",
             "seq": 0
           },
           {
-            "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+            "hash": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
             "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q",
             "seq": 0
           },
           {
-            "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
-            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
-            "seq": 5
-          },
-          {
-            "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+            "hash": "sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4",
             "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq",
             "seq": 20
           },
           {
-            "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+            "hash": "sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9",
             "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za",
             "seq": 20
+          },
+          {
+            "hash": "sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859",
+            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
+            "seq": 5
           }
         ],
         "reasons": [
@@ -494,11 +485,6 @@
         ],
         "reviewIntended": [
           {
-            "from": 5,
-            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
-            "to": 5
-          },
-          {
             "from": 20,
             "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq",
             "to": 20
@@ -507,6 +493,11 @@
             "from": 20,
             "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za",
             "to": 20
+          },
+          {
+            "from": 5,
+            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
+            "to": 5
           },
           {
             "from": 0,
@@ -541,7 +532,7 @@
     "context": {
       "content": [
         {
-          "text": "{\"context\":{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"},\"definition\":\"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\"ask\":{\"id\":1,\"type\":\"ask\",\"state\":\"asked\",\"revision\":1,\"opened\":null,\"values\":{\"question\":\"TEST question\",\"body\":\"sha256:13ce45a8dc8d1f8e2dfa7cbae2155494bd0ac0b3d5b1702e3cee66b7e18121d5\",\"brief\":\"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e\"},\"refs\":{\"bodyAt\":1},\"parties\":{\"asker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},\"attributed\":[]},\"bodyAt\":{\"at\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"seq\":1,\"hash\":\"sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04\"},\"body\":\"TEST current Question body\\n\",\"requests\":[{\"attributed\":[],\"id\":5,\"opened\":null,\"parties\":{\"requested\":{\"member\":\"@rita\",\"membership\":{\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}},\"requester\":{\"member\":\"@vic\",\"membership\":{\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}}},\"refs\":{\"ask\":1,\"bodyAt\":1},\"revision\":5,\"state\":\"open\",\"type\":\"approval-request\",\"values\":{}}],\"approvals\":[],\"approvalTexts\":[],\"comments\":[],\"conditions\":null,\"brief\":\"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e\",\"briefMatches\":true,\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"actions\":[\"issue.approve\",\"issue.decide\",\"change.merge\"],\"versions\":[{\"fact\":{\"at\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"seq\":1,\"hash\":\"sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04\"},\"current\":true}]},\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"}}],\"counters\":{\"scopes\":5,\"requests\":9,\"bytes\":12112,\"pages\":8,\"items\":10,\"history\":6,\"textBytes\":27},\"briefResource\":{\"uri\":\"dap://package/brief\",\"digest\":\"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e\"},\"complete\":true}",
+          "text": "{\"context\":{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"genesis\":\"sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1\"},\"head\":{\"seq\":5,\"hash\":\"sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859\"},\"definition\":\"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\"ask\":{\"id\":1,\"type\":\"ask\",\"state\":\"asked\",\"revision\":1,\"opened\":null,\"values\":{\"question\":\"TEST question\",\"body\":\"sha256:13ce45a8dc8d1f8e2dfa7cbae2155494bd0ac0b3d5b1702e3cee66b7e18121d5\",\"brief\":\"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e\"},\"refs\":{\"bodyAt\":1},\"parties\":{\"asker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@vic\"}},\"attributed\":[]},\"bodyAt\":{\"at\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"genesis\":\"sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1\"},\"seq\":1,\"hash\":\"sha256:bf300462a862fa1dff4f426b6d3573edfdeef7d701f2382795159ac9b3b2001e\"},\"body\":\"TEST current Question body\\n\",\"requests\":[{\"attributed\":[],\"id\":5,\"opened\":null,\"parties\":{\"requested\":{\"member\":\"@rita\",\"membership\":{\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}},\"requester\":{\"member\":\"@vic\",\"membership\":{\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}}},\"refs\":{\"ask\":1,\"bodyAt\":1},\"revision\":5,\"state\":\"open\",\"type\":\"approval-request\",\"values\":{}}],\"approvals\":[],\"approvalTexts\":[],\"comments\":[],\"conditions\":null,\"brief\":\"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e\",\"briefMatches\":true,\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@rita\"},\"actions\":[\"issue.approve\",\"issue.decide\",\"change.merge\"],\"versions\":[{\"fact\":{\"at\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"genesis\":\"sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1\"},\"seq\":1,\"hash\":\"sha256:bf300462a862fa1dff4f426b6d3573edfdeef7d701f2382795159ac9b3b2001e\"},\"current\":true}]},\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"head\":{\"seq\":0,\"hash\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"genesis\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"},\"head\":{\"seq\":0,\"hash\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"genesis\":\"sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1\"},\"head\":{\"seq\":5,\"hash\":\"sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859\"}}],\"counters\":{\"scopes\":5,\"requests\":9,\"bytes\":12384,\"pages\":8,\"items\":10,\"history\":6,\"textBytes\":27},\"briefResource\":{\"uri\":\"dap://package/brief\",\"digest\":\"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e\"},\"complete\":true}",
           "type": "text"
         }
       ],
@@ -564,8 +555,7 @@
               "asker": {
                 "member": "@vic",
                 "membership": {
-                  "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                  "kind": "membership",
+                  "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                   "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                 }
               }
@@ -583,11 +573,10 @@
           "body": "TEST current Question body\n",
           "bodyAt": {
             "at": {
-              "inc": "in_a4dqobyha4dqobyha4dqobyha4",
-              "kind": "lane",
+              "genesis": "sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1",
               "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
             },
-            "hash": "sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04",
+            "hash": "sha256:bf300462a862fa1dff4f426b6d3573edfdeef7d701f2382795159ac9b3b2001e",
             "seq": 1
           },
           "brief": "sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e",
@@ -596,7 +585,7 @@
           "conditions": null,
           "definition": "sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3",
           "head": {
-            "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+            "hash": "sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859",
             "seq": 5
           },
           "requests": [
@@ -608,16 +597,14 @@
                 "requested": {
                   "member": "@rita",
                   "membership": {
-                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                    "kind": "membership",
+                    "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                     "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                   }
                 },
                 "requester": {
                   "member": "@vic",
                   "membership": {
-                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                    "kind": "membership",
+                    "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                     "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                   }
                 }
@@ -630,8 +617,7 @@
             }
           ],
           "scope": {
-            "inc": "in_a4dqobyha4dqobyha4dqobyha4",
-            "kind": "lane",
+            "genesis": "sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1",
             "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
           },
           "versions": [
@@ -639,11 +625,10 @@
               "current": true,
               "fact": {
                 "at": {
-                  "inc": "in_a4dqobyha4dqobyha4dqobyha4",
-                  "kind": "lane",
+                  "genesis": "sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1",
                   "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
                 },
-                "hash": "sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04",
+                "hash": "sha256:bf300462a862fa1dff4f426b6d3573edfdeef7d701f2382795159ac9b3b2001e",
                 "seq": 1
               }
             }
@@ -651,14 +636,13 @@
           "viewer": {
             "member": "@rita",
             "membership": {
-              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-              "kind": "membership",
+              "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
             }
           }
         },
         "counters": {
-          "bytes": 12112,
+          "bytes": 12384,
           "history": 6,
           "items": 10,
           "pages": 8,
@@ -669,34 +653,31 @@
         "heads": [
           {
             "head": {
-              "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+              "hash": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "seq": 0
             },
             "scope": {
-              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-              "kind": "membership",
+              "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
             }
           },
           {
             "head": {
-              "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+              "hash": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
               "seq": 0
             },
             "scope": {
-              "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
-              "kind": "directory",
+              "genesis": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
               "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
             }
           },
           {
             "head": {
-              "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+              "hash": "sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859",
               "seq": 5
             },
             "scope": {
-              "inc": "in_a4dqobyha4dqobyha4dqobyha4",
-              "kind": "lane",
+              "genesis": "sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1",
               "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
             }
           }
@@ -706,7 +687,7 @@
     "needsYou": {
       "content": [
         {
-          "text": "{\"rows\":[{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"},\"item\":5,\"type\":\"approval-request\",\"rule\":{\"definition\":\"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\"clause\":\"acts.request-approval;items.approval-request\"},\"category\":\"requested-review\",\"kicker\":\"Question 1\",\"needs\":\"Approve or request changes on question 1: \\\"TEST question\\\".\",\"why\":\"@vic asked you by name.\",\"settles\":\"Your approve act on the current text closes this request, with the verdict approve or request-changes.\",\"settledBy\":[\"approve\"],\"bodyAt\":1,\"currentBody\":true,\"permission\":\"not-determined\"},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"},\"item\":6,\"type\":\"manifest\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.merge\"},\"category\":\"merge-attention\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Merge change 4: \\\"TEST change\\\".\",\"why\":\"Your role holds change.merge.\",\"settles\":\"A merge act on the current version settles it.\",\"settledBy\":[\"merge\"],\"roleIncludes\":\"change.merge\",\"permission\":\"not-determined\",\"rules\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"holds\":[],\"changesRequested\":[]},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"item\":10,\"type\":\"review-request\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.request-review-own;items.review-request\"},\"category\":\"requested-review\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Review change 4: \\\"TEST change\\\".\",\"why\":\"@vic asked you by name.\",\"settles\":\"Your review-verdict act that names this request closes it.\",\"settledBy\":[\"review-verdict\"],\"currentManifest\":6,\"requestVersionBound\":false,\"permission\":\"not-determined\"},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"item\":11,\"type\":\"merge\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.merge;items.merge\"},\"category\":\"unknown-merge\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Merge 11 of this change has no known outcome.\",\"why\":\"You signed this merge.\",\"settles\":\"The destination's publication delivery settles it. Check the original request, and do not merge again.\",\"settledBy\":[\"publication\"],\"manifest\":6,\"retryAllowed\":false},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"item\":6,\"type\":\"manifest\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.merge\"},\"category\":\"merge-attention\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Merge change 4: \\\"TEST change\\\". Merge 11 must finish first.\",\"why\":\"Your role holds change.merge.\",\"settles\":\"A merge act on the current version settles it. The room refuses that act until then.\",\"settledBy\":[\"merge\"],\"roleIncludes\":\"change.merge\",\"permission\":\"not-determined\",\"rules\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"holds\":[\"merge-in-progress\"],\"changesRequested\":[]}],\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"}}],\"unread\":[],\"omittedScopes\":[],\"next\":null,\"discoveryComplete\":true,\"omittedRows\":0,\"counters\":{\"scopes\":5,\"requests\":6,\"bytes\":11031,\"pages\":5,\"items\":22,\"history\":0,\"textBytes\":0},\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"directory\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"complete\":true}",
+          "text": "{\"rows\":[{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"genesis\":\"sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4\"},\"item\":6,\"type\":\"manifest\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.merge\"},\"category\":\"merge-attention\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Merge change 4: \\\"TEST change\\\".\",\"why\":\"Your role holds change.merge.\",\"settles\":\"A merge act on the current version settles it.\",\"settledBy\":[\"merge\"],\"roleIncludes\":\"change.merge\",\"permission\":\"not-determined\",\"rules\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"holds\":[],\"changesRequested\":[]},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"genesis\":\"sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9\"},\"item\":10,\"type\":\"review-request\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.request-review-own;items.review-request\"},\"category\":\"requested-review\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Review change 4: \\\"TEST change\\\".\",\"why\":\"@vic asked you by name.\",\"settles\":\"Your review-verdict act that names this request closes it.\",\"settledBy\":[\"review-verdict\"],\"currentManifest\":6,\"requestVersionBound\":false,\"permission\":\"not-determined\"},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"genesis\":\"sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9\"},\"item\":11,\"type\":\"merge\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.merge;items.merge\"},\"category\":\"unknown-merge\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Merge 11 of this change has no known outcome.\",\"why\":\"You signed this merge.\",\"settles\":\"The destination's publication delivery settles it. Check the original request, and do not merge again.\",\"settledBy\":[\"publication\"],\"manifest\":6,\"retryAllowed\":false},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"genesis\":\"sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9\"},\"item\":6,\"type\":\"manifest\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.merge\"},\"category\":\"merge-attention\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Merge change 4: \\\"TEST change\\\". Merge 11 must finish first.\",\"why\":\"Your role holds change.merge.\",\"settles\":\"A merge act on the current version settles it. The room refuses that act until then.\",\"settledBy\":[\"merge\"],\"roleIncludes\":\"change.merge\",\"permission\":\"not-determined\",\"rules\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"holds\":[\"merge-in-progress\"],\"changesRequested\":[]},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"genesis\":\"sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1\"},\"head\":{\"seq\":5,\"hash\":\"sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859\"},\"item\":5,\"type\":\"approval-request\",\"rule\":{\"definition\":\"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\"clause\":\"acts.request-approval;items.approval-request\"},\"category\":\"requested-review\",\"kicker\":\"Question 1\",\"needs\":\"Approve or request changes on question 1: \\\"TEST question\\\".\",\"why\":\"@vic asked you by name.\",\"settles\":\"Your approve act on the current text closes this request, with the verdict approve or request-changes.\",\"settledBy\":[\"approve\"],\"bodyAt\":1,\"currentBody\":true,\"permission\":\"not-determined\"}],\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"head\":{\"seq\":0,\"hash\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"genesis\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"},\"head\":{\"seq\":0,\"hash\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"genesis\":\"sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"genesis\":\"sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"genesis\":\"sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1\"},\"head\":{\"seq\":5,\"hash\":\"sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859\"}}],\"unread\":[],\"omittedScopes\":[],\"next\":null,\"discoveryComplete\":true,\"omittedRows\":0,\"counters\":{\"scopes\":5,\"requests\":6,\"bytes\":11879,\"pages\":5,\"items\":22,\"history\":0,\"textBytes\":0},\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@rita\"},\"directory\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"genesis\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"},\"complete\":true}",
           "type": "text"
         }
       ],
@@ -714,7 +695,7 @@
       "structuredContent": {
         "complete": true,
         "counters": {
-          "bytes": 11031,
+          "bytes": 11879,
           "history": 0,
           "items": 22,
           "pages": 5,
@@ -723,65 +704,59 @@
           "textBytes": 0
         },
         "directory": {
-          "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
-          "kind": "directory",
+          "genesis": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
           "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
         },
         "discoveryComplete": true,
         "heads": [
           {
             "head": {
-              "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+              "hash": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "seq": 0
             },
             "scope": {
-              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-              "kind": "membership",
+              "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
             }
           },
           {
             "head": {
-              "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+              "hash": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
               "seq": 0
             },
             "scope": {
-              "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
-              "kind": "directory",
+              "genesis": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
               "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
             }
           },
           {
             "head": {
-              "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
-              "seq": 5
-            },
-            "scope": {
-              "inc": "in_a4dqobyha4dqobyha4dqobyha4",
-              "kind": "lane",
-              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
-            }
-          },
-          {
-            "head": {
-              "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+              "hash": "sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4",
               "seq": 20
             },
             "scope": {
-              "inc": "in_aucqkbifaucqkbifaucqkbifau",
-              "kind": "lane",
+              "genesis": "sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b",
               "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
             }
           },
           {
             "head": {
-              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "hash": "sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9",
               "seq": 20
             },
             "scope": {
-              "inc": "in_aydambqgaydambqgaydambqgay",
-              "kind": "lane",
+              "genesis": "sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b",
               "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859",
+              "seq": 5
+            },
+            "scope": {
+              "genesis": "sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1",
+              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
             }
           }
         ],
@@ -790,36 +765,10 @@
         "omittedScopes": [],
         "rows": [
           {
-            "bodyAt": 1,
-            "category": "requested-review",
-            "currentBody": true,
-            "head": {
-              "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
-              "seq": 5
-            },
-            "item": 5,
-            "kicker": "Question 1",
-            "needs": "Approve or request changes on question 1: \"TEST question\".",
-            "permission": "not-determined",
-            "rule": {
-              "clause": "acts.request-approval;items.approval-request",
-              "definition": "sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3"
-            },
-            "scope": {
-              "inc": "in_a4dqobyha4dqobyha4dqobyha4",
-              "kind": "lane",
-              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
-            },
-            "settledBy": ["approve"],
-            "settles": "Your approve act on the current text closes this request, with the verdict approve or request-changes.",
-            "type": "approval-request",
-            "why": "@vic asked you by name."
-          },
-          {
             "category": "merge-attention",
             "changesRequested": [],
             "head": {
-              "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+              "hash": "sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4",
               "seq": 20
             },
             "holds": [],
@@ -839,8 +788,7 @@
                   "checker": {
                     "member": "@vic",
                     "membership": {
-                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                      "kind": "membership",
+                      "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                       "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                     }
                   },
@@ -851,8 +799,7 @@
                   "checker": {
                     "member": "@vic",
                     "membership": {
-                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                      "kind": "membership",
+                      "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                       "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                     }
                   },
@@ -865,8 +812,7 @@
               "revision": 7
             },
             "scope": {
-              "inc": "in_aucqkbifaucqkbifaucqkbifau",
-              "kind": "lane",
+              "genesis": "sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b",
               "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
             },
             "settledBy": ["merge"],
@@ -878,7 +824,7 @@
             "category": "requested-review",
             "currentManifest": 6,
             "head": {
-              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "hash": "sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9",
               "seq": 20
             },
             "item": 10,
@@ -891,8 +837,7 @@
               "definition": "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"
             },
             "scope": {
-              "inc": "in_aydambqgaydambqgaydambqgay",
-              "kind": "lane",
+              "genesis": "sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b",
               "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
             },
             "settledBy": ["review-verdict"],
@@ -903,7 +848,7 @@
           {
             "category": "unknown-merge",
             "head": {
-              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "hash": "sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9",
               "seq": 20
             },
             "item": 11,
@@ -916,8 +861,7 @@
               "definition": "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"
             },
             "scope": {
-              "inc": "in_aydambqgaydambqgaydambqgay",
-              "kind": "lane",
+              "genesis": "sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b",
               "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
             },
             "settledBy": ["publication"],
@@ -929,7 +873,7 @@
             "category": "merge-attention",
             "changesRequested": [],
             "head": {
-              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "hash": "sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9",
               "seq": 20
             },
             "holds": ["merge-in-progress"],
@@ -949,8 +893,7 @@
                   "checker": {
                     "member": "@vic",
                     "membership": {
-                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                      "kind": "membership",
+                      "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                       "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                     }
                   },
@@ -961,8 +904,7 @@
                   "checker": {
                     "member": "@vic",
                     "membership": {
-                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                      "kind": "membership",
+                      "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                       "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                     }
                   },
@@ -975,22 +917,45 @@
               "revision": 7
             },
             "scope": {
-              "inc": "in_aydambqgaydambqgaydambqgay",
-              "kind": "lane",
+              "genesis": "sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b",
               "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
             },
             "settledBy": ["merge"],
             "settles": "A merge act on the current version settles it. The room refuses that act until then.",
             "type": "manifest",
             "why": "Your role holds change.merge."
+          },
+          {
+            "bodyAt": 1,
+            "category": "requested-review",
+            "currentBody": true,
+            "head": {
+              "hash": "sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859",
+              "seq": 5
+            },
+            "item": 5,
+            "kicker": "Question 1",
+            "needs": "Approve or request changes on question 1: \"TEST question\".",
+            "permission": "not-determined",
+            "rule": {
+              "clause": "acts.request-approval;items.approval-request",
+              "definition": "sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3"
+            },
+            "scope": {
+              "genesis": "sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1",
+              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+            },
+            "settledBy": ["approve"],
+            "settles": "Your approve act on the current text closes this request, with the verdict approve or request-changes.",
+            "type": "approval-request",
+            "why": "@vic asked you by name."
           }
         ],
         "unread": [],
         "viewer": {
           "member": "@rita",
           "membership": {
-            "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-            "kind": "membership",
+            "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
             "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
           }
         }
@@ -999,7 +964,7 @@
     "ready": {
       "content": [
         {
-          "text": "{\"change\":{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"},\"destination\":\"sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa\",\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"actions\":[\"issue.approve\",\"issue.decide\",\"change.merge\"],\"proposal\":{\"id\":0,\"type\":\"proposal\",\"state\":\"open\",\"revision\":0,\"opened\":null,\"values\":{\"title\":\"TEST change\",\"number\":4},\"refs\":{},\"parties\":{\"author\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@una\"}},\"attributed\":[]},\"manifest\":{\"id\":6,\"type\":\"manifest\",\"state\":\"current\",\"revision\":6,\"opened\":null,\"values\":{\"base\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"integration\":\"cccccccccccccccccccccccccccccccccccccccc\",\"tree\":\"3333333333333333333333333333333333333333\",\"complete\":true,\"selected\":[]},\"refs\":{},\"parties\":{\"authors\":[{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@una\"}]},\"attributed\":[]},\"versions\":2,\"rules\":{\"id\":1,\"type\":\"rules\",\"state\":\"current\",\"revision\":1,\"opened\":null,\"values\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"refs\":{},\"parties\":{},\"attributed\":[]},\"reviews\":[{\"id\":9,\"type\":\"review\",\"state\":\"submitted\",\"revision\":9,\"opened\":null,\"values\":{\"verdict\":\"approve\"},\"refs\":{\"manifest\":6},\"parties\":{\"reviewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},\"attributed\":[],\"reviewerIs\":\"@vic (person)\"}],\"requests\":[],\"jobs\":[{\"id\":7,\"type\":\"job\",\"state\":\"passed\",\"revision\":7,\"opened\":null,\"values\":{\"name\":\"security-review\"},\"refs\":{\"manifest\":6},\"parties\":{},\"attributed\":[]}],\"results\":[{\"attributed\":[],\"id\":8,\"opened\":null,\"parties\":{\"checker\":{\"member\":\"@vic\",\"membership\":{\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}}},\"refs\":{\"job\":7},\"revision\":8,\"state\":\"recorded\",\"type\":\"result\",\"values\":{\"outcome\":\"passed\"},\"checkerIs\":\"@vic (person)\"}],\"merges\":[],\"linked\":[]},\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"}}],\"counters\":{\"scopes\":3,\"requests\":7,\"bytes\":8464,\"pages\":6,\"items\":15,\"history\":0,\"textBytes\":0},\"complete\":true}",
+          "text": "{\"change\":{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"genesis\":\"sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4\"},\"destination\":\"sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa\",\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@rita\"},\"actions\":[\"issue.approve\",\"issue.decide\",\"change.merge\"],\"proposal\":{\"id\":0,\"type\":\"proposal\",\"state\":\"open\",\"revision\":0,\"opened\":null,\"values\":{\"title\":\"TEST change\",\"number\":4},\"refs\":{},\"parties\":{\"author\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@una\"}},\"attributed\":[]},\"manifest\":{\"id\":6,\"type\":\"manifest\",\"state\":\"current\",\"revision\":6,\"opened\":null,\"values\":{\"base\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"integration\":\"cccccccccccccccccccccccccccccccccccccccc\",\"tree\":\"3333333333333333333333333333333333333333\",\"complete\":true,\"selected\":[]},\"refs\":{},\"parties\":{\"authors\":[{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@una\"}]},\"attributed\":[]},\"versions\":2,\"rules\":{\"id\":1,\"type\":\"rules\",\"state\":\"current\",\"revision\":1,\"opened\":null,\"values\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"refs\":{},\"parties\":{},\"attributed\":[]},\"reviews\":[{\"id\":9,\"type\":\"review\",\"state\":\"submitted\",\"revision\":9,\"opened\":null,\"values\":{\"verdict\":\"approve\"},\"refs\":{\"manifest\":6},\"parties\":{\"reviewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@vic\"}},\"attributed\":[],\"reviewerIs\":\"@vic (person)\"}],\"requests\":[],\"jobs\":[{\"id\":7,\"type\":\"job\",\"state\":\"passed\",\"revision\":7,\"opened\":null,\"values\":{\"name\":\"security-review\"},\"refs\":{\"manifest\":6},\"parties\":{},\"attributed\":[]}],\"results\":[{\"attributed\":[],\"id\":8,\"opened\":null,\"parties\":{\"checker\":{\"member\":\"@vic\",\"membership\":{\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}}},\"refs\":{\"job\":7},\"revision\":8,\"state\":\"recorded\",\"type\":\"result\",\"values\":{\"outcome\":\"passed\"},\"checkerIs\":\"@vic (person)\"}],\"merges\":[],\"linked\":[]},\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"head\":{\"seq\":0,\"hash\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"genesis\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"},\"head\":{\"seq\":0,\"hash\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"genesis\":\"sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4\"}}],\"counters\":{\"scopes\":3,\"requests\":7,\"bytes\":9110,\"pages\":6,\"items\":15,\"history\":0,\"textBytes\":0},\"complete\":true}",
           "type": "text"
         }
       ],
@@ -1009,7 +974,7 @@
           "actions": ["issue.approve", "issue.decide", "change.merge"],
           "destination": "sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa",
           "head": {
-            "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+            "hash": "sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4",
             "seq": 20
           },
           "jobs": [
@@ -1035,8 +1000,7 @@
                 {
                   "member": "@una",
                   "membership": {
-                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                    "kind": "membership",
+                    "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                     "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                   }
                 }
@@ -1063,8 +1027,7 @@
               "author": {
                 "member": "@una",
                 "membership": {
-                  "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                  "kind": "membership",
+                  "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                   "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                 }
               }
@@ -1086,8 +1049,7 @@
                 "checker": {
                   "member": "@vic",
                   "membership": {
-                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                    "kind": "membership",
+                    "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                     "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                   }
                 }
@@ -1108,8 +1070,7 @@
                 "reviewer": {
                   "member": "@vic",
                   "membership": {
-                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                    "kind": "membership",
+                    "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                     "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                   }
                 }
@@ -1138,8 +1099,7 @@
                   "checker": {
                     "member": "@vic",
                     "membership": {
-                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                      "kind": "membership",
+                      "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                       "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                     }
                   },
@@ -1150,8 +1110,7 @@
                   "checker": {
                     "member": "@vic",
                     "membership": {
-                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                      "kind": "membership",
+                      "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                       "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                     }
                   },
@@ -1165,23 +1124,21 @@
             }
           },
           "scope": {
-            "inc": "in_aucqkbifaucqkbifaucqkbifau",
-            "kind": "lane",
+            "genesis": "sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b",
             "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
           },
           "versions": 2,
           "viewer": {
             "member": "@rita",
             "membership": {
-              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-              "kind": "membership",
+              "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
             }
           }
         },
         "complete": true,
         "counters": {
-          "bytes": 8464,
+          "bytes": 9110,
           "history": 0,
           "items": 15,
           "pages": 6,
@@ -1192,34 +1149,31 @@
         "heads": [
           {
             "head": {
-              "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+              "hash": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "seq": 0
             },
             "scope": {
-              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-              "kind": "membership",
+              "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
             }
           },
           {
             "head": {
-              "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+              "hash": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
               "seq": 0
             },
             "scope": {
-              "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
-              "kind": "directory",
+              "genesis": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
               "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
             }
           },
           {
             "head": {
-              "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+              "hash": "sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4",
               "seq": 20
             },
             "scope": {
-              "inc": "in_aucqkbifaucqkbifaucqkbifau",
-              "kind": "lane",
+              "genesis": "sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b",
               "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
             }
           }
@@ -1229,7 +1183,7 @@
     "requested": {
       "content": [
         {
-          "text": "{\"change\":{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"destination\":\"sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa\",\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"actions\":[\"issue.approve\",\"issue.decide\",\"change.merge\"],\"proposal\":{\"id\":0,\"type\":\"proposal\",\"state\":\"open\",\"revision\":0,\"opened\":null,\"values\":{\"title\":\"TEST change\",\"number\":4},\"refs\":{},\"parties\":{\"author\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@una\"}},\"attributed\":[]},\"manifest\":{\"id\":6,\"type\":\"manifest\",\"state\":\"current\",\"revision\":6,\"opened\":null,\"values\":{\"base\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"integration\":\"cccccccccccccccccccccccccccccccccccccccc\",\"tree\":\"3333333333333333333333333333333333333333\",\"complete\":true,\"selected\":[]},\"refs\":{},\"parties\":{\"authors\":[{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@una\"}]},\"attributed\":[]},\"versions\":2,\"rules\":{\"id\":1,\"type\":\"rules\",\"state\":\"current\",\"revision\":1,\"opened\":null,\"values\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"refs\":{},\"parties\":{},\"attributed\":[]},\"reviews\":[{\"id\":9,\"type\":\"review\",\"state\":\"submitted\",\"revision\":9,\"opened\":null,\"values\":{\"verdict\":\"approve\"},\"refs\":{\"manifest\":6},\"parties\":{\"reviewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},\"attributed\":[],\"reviewerIs\":\"@vic (person)\"}],\"requests\":[{\"id\":10,\"type\":\"review-request\",\"state\":\"open\",\"revision\":10,\"opened\":null,\"values\":{},\"refs\":{},\"parties\":{\"requested\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"requester\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},\"attributed\":[]}],\"jobs\":[{\"id\":7,\"type\":\"job\",\"state\":\"passed\",\"revision\":7,\"opened\":null,\"values\":{\"name\":\"security-review\"},\"refs\":{\"manifest\":6},\"parties\":{},\"attributed\":[]}],\"results\":[{\"attributed\":[],\"id\":8,\"opened\":null,\"parties\":{\"checker\":{\"member\":\"@vic\",\"membership\":{\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}}},\"refs\":{\"job\":7},\"revision\":8,\"state\":\"recorded\",\"type\":\"result\",\"values\":{\"outcome\":\"passed\"},\"checkerIs\":\"@vic (person)\"}],\"merges\":[{\"id\":11,\"type\":\"merge\",\"state\":\"unknown\",\"revision\":11,\"opened\":null,\"values\":{},\"refs\":{\"manifest\":6},\"parties\":{\"merger\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"}},\"attributed\":[],\"mergerIs\":\"@rita (person)\"}],\"linked\":[]},\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"}}],\"counters\":{\"scopes\":3,\"requests\":8,\"bytes\":9932,\"pages\":7,\"items\":17,\"history\":1,\"textBytes\":0},\"complete\":true}",
+          "text": "{\"change\":{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"genesis\":\"sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9\"},\"destination\":\"sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa\",\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@rita\"},\"actions\":[\"issue.approve\",\"issue.decide\",\"change.merge\"],\"proposal\":{\"id\":0,\"type\":\"proposal\",\"state\":\"open\",\"revision\":0,\"opened\":null,\"values\":{\"title\":\"TEST change\",\"number\":4},\"refs\":{},\"parties\":{\"author\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@una\"}},\"attributed\":[]},\"manifest\":{\"id\":6,\"type\":\"manifest\",\"state\":\"current\",\"revision\":6,\"opened\":null,\"values\":{\"base\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"integration\":\"cccccccccccccccccccccccccccccccccccccccc\",\"tree\":\"3333333333333333333333333333333333333333\",\"complete\":true,\"selected\":[]},\"refs\":{},\"parties\":{\"authors\":[{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@una\"}]},\"attributed\":[]},\"versions\":2,\"rules\":{\"id\":1,\"type\":\"rules\",\"state\":\"current\",\"revision\":1,\"opened\":null,\"values\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"refs\":{},\"parties\":{},\"attributed\":[]},\"reviews\":[{\"id\":9,\"type\":\"review\",\"state\":\"submitted\",\"revision\":9,\"opened\":null,\"values\":{\"verdict\":\"approve\"},\"refs\":{\"manifest\":6},\"parties\":{\"reviewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@vic\"}},\"attributed\":[],\"reviewerIs\":\"@vic (person)\"}],\"requests\":[{\"id\":10,\"type\":\"review-request\",\"state\":\"open\",\"revision\":10,\"opened\":null,\"values\":{},\"refs\":{},\"parties\":{\"requested\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@rita\"},\"requester\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@vic\"}},\"attributed\":[]}],\"jobs\":[{\"id\":7,\"type\":\"job\",\"state\":\"passed\",\"revision\":7,\"opened\":null,\"values\":{\"name\":\"security-review\"},\"refs\":{\"manifest\":6},\"parties\":{},\"attributed\":[]}],\"results\":[{\"attributed\":[],\"id\":8,\"opened\":null,\"parties\":{\"checker\":{\"member\":\"@vic\",\"membership\":{\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}}},\"refs\":{\"job\":7},\"revision\":8,\"state\":\"recorded\",\"type\":\"result\",\"values\":{\"outcome\":\"passed\"},\"checkerIs\":\"@vic (person)\"}],\"merges\":[{\"id\":11,\"type\":\"merge\",\"state\":\"unknown\",\"revision\":11,\"opened\":null,\"values\":{},\"refs\":{\"manifest\":6},\"parties\":{\"merger\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@rita\"}},\"attributed\":[],\"mergerIs\":\"@rita (person)\"}],\"linked\":[]},\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"head\":{\"seq\":0,\"hash\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"genesis\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"},\"head\":{\"seq\":0,\"hash\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"genesis\":\"sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9\"}}],\"counters\":{\"scopes\":3,\"requests\":8,\"bytes\":10615,\"pages\":7,\"items\":17,\"history\":1,\"textBytes\":0},\"complete\":true}",
           "type": "text"
         }
       ],
@@ -1239,7 +1193,7 @@
           "actions": ["issue.approve", "issue.decide", "change.merge"],
           "destination": "sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa",
           "head": {
-            "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+            "hash": "sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9",
             "seq": 20
           },
           "jobs": [
@@ -1265,8 +1219,7 @@
                 {
                   "member": "@una",
                   "membership": {
-                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                    "kind": "membership",
+                    "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                     "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                   }
                 }
@@ -1294,8 +1247,7 @@
                 "merger": {
                   "member": "@rita",
                   "membership": {
-                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                    "kind": "membership",
+                    "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                     "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                   }
                 }
@@ -1315,8 +1267,7 @@
               "author": {
                 "member": "@una",
                 "membership": {
-                  "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                  "kind": "membership",
+                  "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                   "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                 }
               }
@@ -1336,16 +1287,14 @@
                 "requested": {
                   "member": "@rita",
                   "membership": {
-                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                    "kind": "membership",
+                    "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                     "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                   }
                 },
                 "requester": {
                   "member": "@vic",
                   "membership": {
-                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                    "kind": "membership",
+                    "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                     "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                   }
                 }
@@ -1367,8 +1316,7 @@
                 "checker": {
                   "member": "@vic",
                   "membership": {
-                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                    "kind": "membership",
+                    "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                     "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                   }
                 }
@@ -1389,8 +1337,7 @@
                 "reviewer": {
                   "member": "@vic",
                   "membership": {
-                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                    "kind": "membership",
+                    "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                     "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                   }
                 }
@@ -1419,8 +1366,7 @@
                   "checker": {
                     "member": "@vic",
                     "membership": {
-                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                      "kind": "membership",
+                      "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                       "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                     }
                   },
@@ -1431,8 +1377,7 @@
                   "checker": {
                     "member": "@vic",
                     "membership": {
-                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-                      "kind": "membership",
+                      "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
                       "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
                     }
                   },
@@ -1446,23 +1391,21 @@
             }
           },
           "scope": {
-            "inc": "in_aydambqgaydambqgaydambqgay",
-            "kind": "lane",
+            "genesis": "sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b",
             "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
           },
           "versions": 2,
           "viewer": {
             "member": "@rita",
             "membership": {
-              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-              "kind": "membership",
+              "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
             }
           }
         },
         "complete": true,
         "counters": {
-          "bytes": 9932,
+          "bytes": 10615,
           "history": 1,
           "items": 17,
           "pages": 7,
@@ -1473,34 +1416,31 @@
         "heads": [
           {
             "head": {
-              "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+              "hash": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "seq": 0
             },
             "scope": {
-              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-              "kind": "membership",
+              "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
             }
           },
           {
             "head": {
-              "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+              "hash": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
               "seq": 0
             },
             "scope": {
-              "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
-              "kind": "directory",
+              "genesis": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
               "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
             }
           },
           {
             "head": {
-              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "hash": "sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9",
               "seq": 20
             },
             "scope": {
-              "inc": "in_aydambqgaydambqgaydambqgay",
-              "kind": "lane",
+              "genesis": "sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b",
               "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
             }
           }
@@ -1510,7 +1450,7 @@
     "since": {
       "content": [
         {
-          "text": "{\"rows\":[{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"},\"item\":5,\"type\":\"head\",\"rule\":{\"definition\":\"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":0,\"what\":\"the scope opened\"},{\"seq\":1,\"what\":\"ask by @rita (person)\"},{\"seq\":2,\"what\":\"the timed rule TEST history position\"},{\"seq\":3,\"what\":\"the timed rule TEST history position\"},{\"seq\":4,\"what\":\"the timed rule TEST history position\"},{\"seq\":5,\"what\":\"the timed rule TEST history position\"}],\"earlier\":0,\"name\":\"Lane 3\"},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"},\"item\":20,\"type\":\"head\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":15,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":16,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":17,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":18,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":19,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":20,\"what\":\"the timed rule TEST scripted change position\"}],\"earlier\":15,\"name\":\"Lane 1\"},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"item\":20,\"type\":\"head\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":15,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":16,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":17,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":18,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":19,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":20,\"what\":\"the timed rule TEST scripted change position\"}],\"earlier\":15,\"name\":\"Lane 2\"},{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"},\"item\":0,\"type\":\"head\",\"rule\":{\"definition\":\"platform:membership@8\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":0,\"what\":\"the scope opened\"}],\"earlier\":0,\"name\":\"The membership\"},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"},\"item\":0,\"type\":\"head\",\"rule\":{\"definition\":\"platform:directory@16\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":0,\"what\":\"the scope opened\"}],\"earlier\":0,\"name\":\"The directory\"}],\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"}}],\"unread\":[],\"omittedScopes\":[],\"next\":null,\"discoveryComplete\":true,\"omittedRows\":0,\"counters\":{\"scopes\":5,\"requests\":11,\"bytes\":39192,\"pages\":10,\"items\":22,\"history\":20,\"textBytes\":0},\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"directory\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"complete\":true}",
+          "text": "{\"rows\":[{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"genesis\":\"sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4\"},\"item\":20,\"type\":\"head\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":15,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":16,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":17,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":18,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":19,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":20,\"what\":\"the timed rule TEST scripted change position\"}],\"earlier\":15,\"name\":\"Lane 1\"},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"genesis\":\"sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9\"},\"item\":20,\"type\":\"head\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":15,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":16,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":17,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":18,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":19,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":20,\"what\":\"the timed rule TEST scripted change position\"}],\"earlier\":15,\"name\":\"Lane 2\"},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"genesis\":\"sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1\"},\"head\":{\"seq\":5,\"hash\":\"sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859\"},\"item\":5,\"type\":\"head\",\"rule\":{\"definition\":\"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":0,\"what\":\"the scope opened\"},{\"seq\":1,\"what\":\"ask by @rita (person)\"},{\"seq\":2,\"what\":\"the timed rule TEST history position\"},{\"seq\":3,\"what\":\"the timed rule TEST history position\"},{\"seq\":4,\"what\":\"the timed rule TEST history position\"},{\"seq\":5,\"what\":\"the timed rule TEST history position\"}],\"earlier\":0,\"name\":\"Lane 3\"},{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"head\":{\"seq\":0,\"hash\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"item\":0,\"type\":\"head\",\"rule\":{\"definition\":\"platform:membership@8\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":0,\"what\":\"the scope opened\"}],\"earlier\":0,\"name\":\"The membership\"},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"genesis\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"},\"head\":{\"seq\":0,\"hash\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"},\"item\":0,\"type\":\"head\",\"rule\":{\"definition\":\"platform:directory@16\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":0,\"what\":\"the scope opened\"}],\"earlier\":0,\"name\":\"The directory\"}],\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"head\":{\"seq\":0,\"hash\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"genesis\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"},\"head\":{\"seq\":0,\"hash\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"genesis\":\"sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"genesis\":\"sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"genesis\":\"sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1\"},\"head\":{\"seq\":5,\"hash\":\"sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859\"}}],\"unread\":[],\"omittedScopes\":[],\"next\":null,\"discoveryComplete\":true,\"omittedRows\":0,\"counters\":{\"scopes\":5,\"requests\":11,\"bytes\":37676,\"pages\":10,\"items\":22,\"history\":20,\"textBytes\":0},\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@rita\"},\"directory\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"genesis\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"},\"complete\":true}",
           "type": "text"
         }
       ],
@@ -1518,7 +1458,7 @@
       "structuredContent": {
         "complete": true,
         "counters": {
-          "bytes": 39192,
+          "bytes": 37676,
           "history": 20,
           "items": 22,
           "pages": 10,
@@ -1527,65 +1467,59 @@
           "textBytes": 0
         },
         "directory": {
-          "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
-          "kind": "directory",
+          "genesis": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
           "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
         },
         "discoveryComplete": true,
         "heads": [
           {
             "head": {
-              "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+              "hash": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "seq": 0
             },
             "scope": {
-              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-              "kind": "membership",
+              "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
             }
           },
           {
             "head": {
-              "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+              "hash": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
               "seq": 0
             },
             "scope": {
-              "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
-              "kind": "directory",
+              "genesis": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
               "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
             }
           },
           {
             "head": {
-              "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
-              "seq": 5
-            },
-            "scope": {
-              "inc": "in_a4dqobyha4dqobyha4dqobyha4",
-              "kind": "lane",
-              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
-            }
-          },
-          {
-            "head": {
-              "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+              "hash": "sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4",
               "seq": 20
             },
             "scope": {
-              "inc": "in_aucqkbifaucqkbifaucqkbifau",
-              "kind": "lane",
+              "genesis": "sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b",
               "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
             }
           },
           {
             "head": {
-              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "hash": "sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9",
               "seq": 20
             },
             "scope": {
-              "inc": "in_aydambqgaydambqgaydambqgay",
-              "kind": "lane",
+              "genesis": "sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b",
               "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859",
+              "seq": 5
+            },
+            "scope": {
+              "genesis": "sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1",
+              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
             }
           }
         ],
@@ -1593,6 +1527,98 @@
         "omittedRows": 0,
         "omittedScopes": [],
         "rows": [
+          {
+            "changed": [
+              {
+                "seq": 15,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 16,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 17,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 18,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 19,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 20,
+                "what": "the timed rule TEST scripted change position"
+              }
+            ],
+            "earlier": 15,
+            "head": {
+              "hash": "sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4",
+              "seq": 20
+            },
+            "interpretation": "Repeated until an explicit mark",
+            "item": 20,
+            "name": "Lane 1",
+            "rule": {
+              "clause": "apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)",
+              "definition": "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"
+            },
+            "scope": {
+              "genesis": "sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b",
+              "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
+            },
+            "since": null,
+            "type": "head"
+          },
+          {
+            "changed": [
+              {
+                "seq": 15,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 16,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 17,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 18,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 19,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 20,
+                "what": "the timed rule TEST scripted change position"
+              }
+            ],
+            "earlier": 15,
+            "head": {
+              "hash": "sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9",
+              "seq": 20
+            },
+            "interpretation": "Repeated until an explicit mark",
+            "item": 20,
+            "name": "Lane 2",
+            "rule": {
+              "clause": "apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)",
+              "definition": "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"
+            },
+            "scope": {
+              "genesis": "sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b",
+              "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+            },
+            "since": null,
+            "type": "head"
+          },
           {
             "changed": [
               { "seq": 0, "what": "the scope opened" },
@@ -1604,7 +1630,7 @@
             ],
             "earlier": 0,
             "head": {
-              "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+              "hash": "sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859",
               "seq": 5
             },
             "interpretation": "Repeated until an explicit mark",
@@ -1615,103 +1641,8 @@
               "definition": "sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3"
             },
             "scope": {
-              "inc": "in_a4dqobyha4dqobyha4dqobyha4",
-              "kind": "lane",
+              "genesis": "sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1",
               "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
-            },
-            "since": null,
-            "type": "head"
-          },
-          {
-            "changed": [
-              {
-                "seq": 15,
-                "what": "the timed rule TEST scripted change position"
-              },
-              {
-                "seq": 16,
-                "what": "the timed rule TEST scripted change position"
-              },
-              {
-                "seq": 17,
-                "what": "the timed rule TEST scripted change position"
-              },
-              {
-                "seq": 18,
-                "what": "the timed rule TEST scripted change position"
-              },
-              {
-                "seq": 19,
-                "what": "the timed rule TEST scripted change position"
-              },
-              {
-                "seq": 20,
-                "what": "the timed rule TEST scripted change position"
-              }
-            ],
-            "earlier": 15,
-            "head": {
-              "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
-              "seq": 20
-            },
-            "interpretation": "Repeated until an explicit mark",
-            "item": 20,
-            "name": "Lane 1",
-            "rule": {
-              "clause": "apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)",
-              "definition": "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"
-            },
-            "scope": {
-              "inc": "in_aucqkbifaucqkbifaucqkbifau",
-              "kind": "lane",
-              "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
-            },
-            "since": null,
-            "type": "head"
-          },
-          {
-            "changed": [
-              {
-                "seq": 15,
-                "what": "the timed rule TEST scripted change position"
-              },
-              {
-                "seq": 16,
-                "what": "the timed rule TEST scripted change position"
-              },
-              {
-                "seq": 17,
-                "what": "the timed rule TEST scripted change position"
-              },
-              {
-                "seq": 18,
-                "what": "the timed rule TEST scripted change position"
-              },
-              {
-                "seq": 19,
-                "what": "the timed rule TEST scripted change position"
-              },
-              {
-                "seq": 20,
-                "what": "the timed rule TEST scripted change position"
-              }
-            ],
-            "earlier": 15,
-            "head": {
-              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
-              "seq": 20
-            },
-            "interpretation": "Repeated until an explicit mark",
-            "item": 20,
-            "name": "Lane 2",
-            "rule": {
-              "clause": "apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)",
-              "definition": "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"
-            },
-            "scope": {
-              "inc": "in_aydambqgaydambqgaydambqgay",
-              "kind": "lane",
-              "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
             },
             "since": null,
             "type": "head"
@@ -1720,7 +1651,7 @@
             "changed": [{ "seq": 0, "what": "the scope opened" }],
             "earlier": 0,
             "head": {
-              "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+              "hash": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "seq": 0
             },
             "interpretation": "Repeated until an explicit mark",
@@ -1731,8 +1662,7 @@
               "definition": "platform:membership@8"
             },
             "scope": {
-              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-              "kind": "membership",
+              "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
             },
             "since": null,
@@ -1742,7 +1672,7 @@
             "changed": [{ "seq": 0, "what": "the scope opened" }],
             "earlier": 0,
             "head": {
-              "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+              "hash": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
               "seq": 0
             },
             "interpretation": "Repeated until an explicit mark",
@@ -1753,8 +1683,7 @@
               "definition": "platform:directory@16"
             },
             "scope": {
-              "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
-              "kind": "directory",
+              "genesis": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
               "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
             },
             "since": null,
@@ -1765,8 +1694,7 @@
         "viewer": {
           "member": "@rita",
           "membership": {
-            "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-            "kind": "membership",
+            "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
             "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
           }
         }
@@ -1775,7 +1703,7 @@
     "work": {
       "content": [
         {
-          "text": "{\"rows\":[],\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"}}],\"unread\":[],\"omittedScopes\":[],\"discoveryComplete\":true,\"omittedRows\":0,\"counters\":{\"scopes\":5,\"requests\":6,\"bytes\":11031,\"pages\":5,\"items\":22,\"history\":0,\"textBytes\":0},\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"directory\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"complete\":true}",
+          "text": "{\"rows\":[],\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"head\":{\"seq\":0,\"hash\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"genesis\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"},\"head\":{\"seq\":0,\"hash\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"genesis\":\"sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"genesis\":\"sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b\"},\"head\":{\"seq\":20,\"hash\":\"sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"genesis\":\"sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1\"},\"head\":{\"seq\":5,\"hash\":\"sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859\"}}],\"unread\":[],\"omittedScopes\":[],\"discoveryComplete\":true,\"omittedRows\":0,\"counters\":{\"scopes\":5,\"requests\":6,\"bytes\":11879,\"pages\":5,\"items\":22,\"history\":0,\"textBytes\":0},\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"genesis\":\"sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83\"},\"member\":\"@rita\"},\"directory\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"genesis\":\"sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028\"},\"complete\":true}",
           "type": "text"
         }
       ],
@@ -1783,7 +1711,7 @@
       "structuredContent": {
         "complete": true,
         "counters": {
-          "bytes": 11031,
+          "bytes": 11879,
           "history": 0,
           "items": 22,
           "pages": 5,
@@ -1792,65 +1720,59 @@
           "textBytes": 0
         },
         "directory": {
-          "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
-          "kind": "directory",
+          "genesis": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
           "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
         },
         "discoveryComplete": true,
         "heads": [
           {
             "head": {
-              "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+              "hash": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "seq": 0
             },
             "scope": {
-              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-              "kind": "membership",
+              "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
               "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
             }
           },
           {
             "head": {
-              "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+              "hash": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
               "seq": 0
             },
             "scope": {
-              "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
-              "kind": "directory",
+              "genesis": "sha256:969705baa51afae2b6ac076e838b4a62221f3158d65221acbcf8dab818f62028",
               "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
             }
           },
           {
             "head": {
-              "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
-              "seq": 5
-            },
-            "scope": {
-              "inc": "in_a4dqobyha4dqobyha4dqobyha4",
-              "kind": "lane",
-              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
-            }
-          },
-          {
-            "head": {
-              "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+              "hash": "sha256:77225928780bbcb29f794f9796fceac169983b7781bd625ad4e8b0a3500343a4",
               "seq": 20
             },
             "scope": {
-              "inc": "in_aucqkbifaucqkbifaucqkbifau",
-              "kind": "lane",
+              "genesis": "sha256:77e1fb83eb0a73268c86f9ac3170a58d5ee6c2898477411f90ebb90fb070123b",
               "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
             }
           },
           {
             "head": {
-              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "hash": "sha256:5230d2306da4b4d368753cd8bc07abccc6529d8d63c4b28e34e5711b020c53a9",
               "seq": 20
             },
             "scope": {
-              "inc": "in_aydambqgaydambqgaydambqgay",
-              "kind": "lane",
+              "genesis": "sha256:ba4d36a8c07fea78cbebd6355cdd9911013468483308ba2e69ce8e5c5b866f8b",
               "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:f3e51fb2f9f55c5b60d2c23f88b52ab036cda7bad4f64306a0bc11d0b517d859",
+              "seq": 5
+            },
+            "scope": {
+              "genesis": "sha256:c53c29a168c4894e16ed6f7e3c78143605211e119026c23e065ac87ce90281a1",
+              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
             }
           }
         ],
@@ -1861,8 +1783,7 @@
         "viewer": {
           "member": "@rita",
           "membership": {
-            "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
-            "kind": "membership",
+            "genesis": "sha256:21c19465e98d715fcae30bf190004c53db3e9e4be46372a40163e41200b27a83",
             "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
           }
         }

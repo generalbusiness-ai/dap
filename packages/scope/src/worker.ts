@@ -135,13 +135,13 @@ export class ScopeIndex extends DurableObject<Env> {
     this.#active = active;
     if (!active) return;
     this.#rows = new ScopeIndexRows(this.ctx.storage.sql);
-    this.#serving = new ServingAdmission(this.env);
+    this.#serving = new ServingAdmission(env);
     this.#census = new ScopeIndexCensus({
       sql: this.ctx.storage.sql,
-      register: () => { const register = readRegisterScope(this.env); return register.kind === "pinned" ? register.scope : null; },
-      mode: () => this.env.SCOPE_INDEX_MODE,
+      register: () => { const register = readRegisterScope(env); return register.kind === "pinned" ? register.scope : null; },
+      mode: () => env.SCOPE_INDEX_MODE,
       proof: async (fact, maxBytes, milliseconds) => {
-        const target = this.env.SCOPES.get(this.env.SCOPES.idFromName(fact.at.scope)) as unknown as {
+        const target = env.SCOPES.get(env.SCOPES.idFromName(fact.at.scope)) as unknown as {
           proofSource(fact: FactRef, maxBytes: number, milliseconds: number): Promise<import("./proof-bytes.ts").ProofBody | null>;
         };
         const result = await target.proofSource(fact, maxBytes, milliseconds);
@@ -151,15 +151,15 @@ export class ScopeIndex extends DurableObject<Env> {
     });
     this.#siteTokens = new SiteTokenReuse({ exec: (query, ...args) => this.ctx.storage.sql.exec(query, ...args), transaction: run => this.ctx.storage.transactionSync(run) }, () => {
       // Decode current provider readiness afresh for every custody check.
-      const configuration = this.env.ARTIFACTS_CONFIG;
-      const namespace = this.env.ARTIFACTS_NAMESPACE;
-      const binding = this.env.ARTIFACTS;
+      const configuration = env.ARTIFACTS_CONFIG;
+      const namespace = env.ARTIFACTS_NAMESPACE;
+      const binding = env.ARTIFACTS;
       return artifactsReadiness({
         ...(configuration === undefined ? {} : { ARTIFACTS_CONFIG: configuration }),
         ...(namespace === undefined ? {} : { ARTIFACTS_NAMESPACE: namespace }),
         ARTIFACTS: binding,
       });
-    }, () => Date.now(), () => this.#scheduleSiteTokens(), () => ({ REGISTER_SCOPE: this.env.REGISTER_SCOPE, INSTALLED_REGISTER_SCOPES: this.env.INSTALLED_REGISTER_SCOPES }));
+    }, () => Date.now(), () => this.#scheduleSiteTokens(), () => ({ REGISTER_SCOPE: env.REGISTER_SCOPE, INSTALLED_REGISTER_SCOPES: env.INSTALLED_REGISTER_SCOPES }));
   }
   #siteAlarm: Promise<void> | null = null;
   #siteAlarmRevision = 0;

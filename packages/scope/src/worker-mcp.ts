@@ -217,7 +217,7 @@ export class McpRegistry<E extends McpEnv = McpEnv> extends DurableObject<E> {
   readonly #publicClients: boolean;
   // Private inspection only: never an authorization shortcut for a public call.
   #inspectionOwner = false;
-  constructor(ctx: DurableObjectState, env: E) {
+  constructor(ctx: DurableObjectState, env: E & McpEnv) {
     super(ctx, env);
     try { this.#publicClients = ctx.id.toString() === env.REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY).toString(); }
     catch { this.#publicClients = false; }
@@ -306,7 +306,7 @@ export class McpRegistry<E extends McpEnv = McpEnv> extends DurableObject<E> {
 export class McpAgent<E extends McpEnv = McpEnv> extends DurableObject<E> {
   #agent: HostedAgent | null = null;
   #format: RoomFormatStart;
-  constructor(ctx: DurableObjectState, env: E) {
+  constructor(ctx: DurableObjectState, env: E & McpEnv) {
     super(ctx, env);
     // Only the shared raw catalog/word reads precede this disposition.
     this.#format = classifyRoomFormat(ctx.storage.sql);

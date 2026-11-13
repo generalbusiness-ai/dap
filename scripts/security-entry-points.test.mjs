@@ -21,7 +21,7 @@ const namedOwners = {
   },
   "packages/scope/src/worker.ts": {
     "packages/scope/src/worker.ts:$module": "9eb628cccc575d48d5e96ef22785ecbc03ea629c71557ca8fadace0d44e3f6e7",
-    "packages/scope/src/worker.ts:ScopeIndex": "05a72edf215622dfd1fab68d467bc6f29dad35e5d9c08f11ff45dad0f84d39ce",
+    "packages/scope/src/worker.ts:ScopeIndex": "b4c4e5bee990564e602083d69157ed24a9e8022adf2649227d337b8dd58dd86a",
     "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
     "packages/scope/src/worker.ts:RETIRED_HTTP": "5445b5b53d5b6b1f2b8c456b224b37e4f2ea525c5b412d8ffec299108e9d6d1d",
     "packages/scope/src/worker.ts:ROOM_RPC_METHODS": "f3d87e46eba68eacb7f390d1d2a221127794af44f017f976b0c8636fae5a54ba",
@@ -59,8 +59,8 @@ const namedOwners = {
     "packages/scope/src/worker-mcp.ts:observeThrough": "99d333760ec391012765a022413291f479c18fbe58cc767d1c183550bee06c53",
     "packages/scope/src/worker-mcp.ts:roleStandingThrough": "515916248af74961f2c5e9afe48ff68b241fd42159bbb1f51982eabf09c35008",
     "packages/scope/src/worker-mcp.ts:sqlOf": "5631baea8c5029d6ba93da6b3d199e63897c5f5ac05ae61e16b8d6f3e337f7fb",
-    "packages/scope/src/worker-mcp.ts:McpRegistry": "0acad6fae8128c6832523136dca40b2e56045ef85754283fc5a7b726e3b345e5",
-    "packages/scope/src/worker-mcp.ts:McpAgent": "2b8949faa988fdc37085ed1c95dbf60234b2196ae1bced1099e48626087f8e1a"
+    "packages/scope/src/worker-mcp.ts:McpRegistry": "def8feecb9bef8cd77e5528198eee7288c56c230e89da259887810e9442d096a",
+    "packages/scope/src/worker-mcp.ts:McpAgent": "e9afaac830cf756c4d6744d673f48ce243b683cef75b3cb5211c22b5e3f8c41d"
   },
   "packages/cli/src/commands.ts": {
     "packages/cli/src/commands.ts:$module": "cf535c54f06e618911ca355e9488750eafafbe1b18d4358e596bf66dd6fc6f04"
