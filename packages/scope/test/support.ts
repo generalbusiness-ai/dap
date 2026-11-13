@@ -14,6 +14,7 @@ import { timeMs, timeOf, type ValidDefinition } from "@generalbusiness/dap-deriv
 import { grantOf, keys, lane, variant, type Actor, type Over } from "@generalbusiness/dap-derive/testing";
 import { READ_BOUNDS, type ReadBounds, type Sealed, type Summary } from "../src/index.ts";
 import { controls, type Controls } from "../src/testing.ts";
+import { isRoomRetiredStop, type RoomRetiredStop } from "../src/room-retired.ts";
 import type { TestScope } from "./worker.ts";
 
 export const { rita, una, vic } = keys;
@@ -46,11 +47,28 @@ export function creation(notAfter: Timestamp = at(60), under: ValidDefinition = 
 
 /** The object's surface as a caller over RPC has it: each method, answered in a promise. */
 type Surface = Pick<TestScope, "create" | "submit" | "prepare" | "settle" | "checkpoint" | "summary" | "items" | "history" | "entry" | "outbox">;
-export type Remote = { [K in keyof Surface]: (...args: Parameters<Surface[K]>) => Promise<Awaited<ReturnType<Surface[K]>>> };
+/**
+ * That surface for a room of the current format. A test scope is never a
+ * retired room, so `stubOf` refuses a retired stop as a failure of the
+ * test, and the answers it returns are the scope's own.
+ */
+export type Remote = { [K in keyof Surface]: (...args: Parameters<Surface[K]>) => Promise<Exclude<Awaited<ReturnType<Surface[K]>>, RoomRetiredStop>> };
 
 /** The object with that name, for the pool's own functions: eviction, the alarm, a look at its storage. */
 export const objectOf = (name: string, namespace: DurableObjectNamespace = env.SCOPES): DurableObjectStub => namespace.get(namespace.idFromName(name));
-export const stubOf = (name: string, namespace?: DurableObjectNamespace): Remote => objectOf(name, namespace) as unknown as Remote;
+export const stubOf = (name: string, namespace?: DurableObjectNamespace): Remote => current(objectOf(name, namespace));
+/** Each method of the stub, with a retired stop thrown as a test failure. */
+function current(stub: DurableObjectStub): Remote {
+  return new Proxy(stub, { get(target, key) {
+    const method: unknown = Reflect.get(target, key);
+    if (typeof method !== "function") return method;
+    return async (...args: unknown[]) => {
+      const answer: unknown = await method.apply(target, args);
+      if (isRoomRetiredStop(answer)) throw new Error(`the test scope answered a retired stop to ${String(key)}`);
+      return answer;
+    };
+  } }) as unknown as Remote;
+}
 
 /** One created scope: entry 0 opened intent 0, requested by rita. */
 export class Lane {
