@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import type { FactRef, KeyId, MemberObservation, Observation, RulesObservation, ScopedRulesPosition, ServiceMark } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import type { EvidenceBinding } from "../src/evidence.ts";
-import { keys, otherLane, d, t } from "@generalbusiness/dap-derive/testing";
+import { keys, otherLane, d, t, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { valueDigest } from "@generalbusiness/dap-derive";
 import { keyObserved, MEMBERSHIP, RULES } from "./support-destination.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
@@ -13,7 +13,7 @@ import { evidenceKeyEligibleV17, evidenceSourceV17, readRulesPolicyObservationV1
 // SCRIPTED. These are the real pure readers/guards, not Native authority,
 // a membership answer, a published policy, or an executed checker job.
 const fact = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
-const destination = { ...otherLane, kind: "destination" as const };
+const destination = fixtureScope("destination", 17);
 const checker = { membership: MEMBERSHIP, member: keys.una.member.member };
 const mark: ServiceMark = { checker, key: keys.una.key }, rotated: ServiceMark = { checker, key: keys.vic.key };
 const memberCheck: RulesCheckV13 = { name: "member", configuration: d("b"), required: true, checker };

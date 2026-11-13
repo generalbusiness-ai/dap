@@ -1,10 +1,11 @@
 /** SCRIPTED source/state/capacity hooks. Real funding rules and encoded values
  * own this carrying-budget boundary; this is not Native funding authority. */
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Bounds, type Effect, type Entry, type FactRef, type Input, type RulesObservation, type Sealed } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Bounds, type Effect, type Entry, type FactRef, type RulesObservation, type Sealed, type SequenceEntry } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isEntry, isRecord, same, signIntent } from "@generalbusiness/dap-bytes";
-import { MemoryState, clockOf, evidenceDigest, operationOpening, outcomeOf, ownersOf, unjudged, useOf, validateDefinition, valueDigest, type Opening, type Operation, type OutcomeGives, type Own, type RuleEffect, type RuleGiven, type RuleRequest, type Rules } from "@generalbusiness/dap-derive";
-import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { MemoryState, sequenceEffects, clockOf, evidenceDigest, operationOpening, outcomeOf, ownersOf, unjudged, useOf, validateDefinition, valueDigest, type Opening, type Operation, type OutcomeGives, type Own, type RuleEffect, type RuleGiven, type RuleRequest, type Rules } from "@generalbusiness/dap-derive";
+import { d, fixtureScope, keys, later, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { destinationBirth } from "./support-destination-birth.ts";
 import { certifiedPublicationWireV17, certifiedWrittenPlanBudgetV17, evidenceCarryingBudgetV17, type CertifiedPublicationStateV17 } from "../src/destination-budget-v17.ts";
 import { EVIDENCE_FUNDING_V17, EVIDENCE_PLAN_V17, PUBLISHED_CHECKS_V17, destinationEvidenceFundingPending, destinationEvidencePlanPending, evidenceFundedBatchV17, evidenceFundingCaptureV17, evidenceFundingCompleteV17, fundingRules } from "../src/destination-evidence-funding-v17.ts";
 import { evidenceBatchWireV17, readEvidenceBatchWireV17 } from "../src/evidence-batch-v17.ts";
@@ -15,14 +16,14 @@ import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
 import { requiredChecksV17 } from "../src/reservation-v17.ts";
 
 function fundingPreview(options: { checks?: number; stageFirst?: boolean; stage?: "landing" | "published"; firstBatch?: number; pushResult?: OutcomeGives } = {}) {
-  const destination = { ...otherLane, kind: "destination" as const }, rules = { ...otherLane, kind: "rules" as const };
+  const born = destinationBirth(), destination = born.at, rules = fixtureScope("rules", 18);
   const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
-  const manifestEntry: Entry = { v: 1, at: otherLane, seq: 4, prev: d("0"), time: t(0), clamped: false, epoch: 0,
+  const manifestEntry: SequenceEntry = { v: 1, genesis: otherLane.genesis, seq: 4, prev: d("0"), time: t(0), clamped: false, epoch: 0,
     input: { type: "act", signed: signIntent({ v: 1, to: otherLane, actor: keys.una.key, kind: "propose-file", on: null, expected: {},
       fields: { base: "c".repeat(40) }, idempotencyKey: "TEST-retained-manifest", notAfter: t(60) }, keys.una.secret), authority: [], presented: {} },
     uses: [], prepared: [], effects: [], sends: [] };
   if (!isEntry(manifestEntry)) throw Error("The retained manifest must have the maintained wire shape");
-  const manifest: FactRef = { at: otherLane, seq: 4, hash: entryHash(manifestEntry) }, manifestUse = useOf(manifest, manifestEntry);
+  const manifest: FactRef = { at: otherLane, seq: 4, hash: entryHash(manifestEntry) }, manifestUse = useOf(manifest, manifestEntry, "lane");
   const proposed = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, roomService: null, labels: ['TEST\\"'],
     checks: Array.from({ length: options.checks ?? 1 }, (_, n) => ({ name: `published${n}`, configuration: d("b"), required: true, checker: keys.una.member, stage: options.stage ?? "published" })),
     extents: [
@@ -38,13 +39,12 @@ function fundingPreview(options: { checks?: number; stageFirst?: boolean; stage?
     content: { asked: "rules", approvals: 1, ownerMayReview: false, checks: proposed.policy.checks.map(({ name, configuration, required, checker }) => ({ name, configuration, required, checker: checker.member })),
       labels: ['TEST\\"'], singleControllerException: false, extents: valueDigest("artroom-rules-extents-3", envelope), roomService: null, serviceGeneration: { rules, seq: 0 } } };
   const snapshot: CertifiedPublicationStateV17 = { policy: { observation, input: { rules, destination, extents: envelope }, touched: ["source"], required: required.checks, tree: "b".repeat(40), manifest }, generations: [] };
-  const seal = (seq: number, input: Input, effects: Effect[], sends: Entry["sends"] = [], uses: Entry["uses"] = []): Sealed => {
-    const entry: Entry = { v: 1, at: destination, seq, prev: d("0"), time: t(0), clamped: false, epoch: 0, input, uses, prepared: [], effects, sends };
+  const seal = (seq: number, input: SequenceEntry["input"], effects: Effect[], sends: Entry["sends"] = [], uses: Entry["uses"] = []): Sealed => {
+    const entry: SequenceEntry = { v: 1, genesis: destination.genesis, seq, prev: d("0"), time: t(0), clamped: false, epoch: 0, input, uses, prepared: [], effects, sends };
     if (!isEntry(entry)) throw Error("The scripted funding entry must retain the real wire shape");
     return { entry, hash: entryHash(entry) };
   };
-  const genesis = seal(0, { type: "genesis", seed: { v: 1, kind: "destination", definition: "platform:destination@17", creator: null, cause: d("e"), ordinal: 0 },
-    inc: destination.inc, kind: "establish", founding: null, source: null, n: null, message: null, decision: "applied" }, []);
+  const genesis = born.genesis;
   const publication = seal(2, { type: "timed", item: 2, rule: "TEST-publication", due: t(0) }, [], [], [manifestUse]);
   const publicationFact: FactRef = { at: destination, seq: 2, hash: publication.hash }, operation = fact(1);
   const capture = seal(3, { type: "outcome", owner: "platform:destination@17", kind: "judge", operation: "2:0", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: {} } },
@@ -53,7 +53,7 @@ function fundingPreview(options: { checks?: number; stageFirst?: boolean; stage?
         { effect: "attempt" as const, operation: { k: 1 }, attempt: 1, result: "opened" as const, selected: null }] : [])]);
   const captureFact: FactRef = { at: destination, seq: 3, hash: capture.hash };
   const state = new MemoryState();
-  state.setScope({ at: destination, creator: null, status: "active", head: { seq: 3, hash: capture.hash }, time: t(0), genesis: { hash: genesis.hash, source: null, n: null }, held: [] });
+  state.setScope({ at: destination, kind: "destination", creator: null, status: "active", head: { seq: 3, hash: capture.hash }, time: t(0), genesis: { hash: genesis.hash, source: null, n: null }, held: [] });
   state.putItem({ id: 2, type: "publication", state: "reserved", revision: 2, opened: publication.hash, parties: {}, refs: { operation, lane: operation.at },
     values: { reservedAt: 3, integration: "a".repeat(40), tree: snapshot.policy.tree, passes: certifiedPublicationWireV17(snapshot, PROPOSED_BOUNDS) }, attributed: [] });
   state.addCount("publication", "reserved", 1);
@@ -64,7 +64,7 @@ function fundingPreview(options: { checks?: number; stageFirst?: boolean; stage?
   const history = new Map<number, Sealed>([[0, genesis], [2, publication], [3, capture], ...(staged ? [[4, stage] as [number, Sealed]] : [])]);
   let retainedManifest: Entry | null = manifestEntry;
   const own: Own = Object.assign((seq: number): Sealed | null => history.get(seq) ?? null,
-    { retained: (use: Entry["uses"][number]) => same(use, manifestUse) ? retainedManifest : null });
+    { retained: (use: Entry["uses"][number]) => same(use, manifestUse) ? retainedManifest : null, sequence: () => born.sequence });
   state.putOperation({ id: "3:1", owner: "platform:destination@17", kind: EVIDENCE_FUNDING_V17, most: 1, attempts: [], selected: null, for: 2 });
   // A bounded capacity-hook stand-in with escaping large enough that the
   // actual carrying entry, rather than the earlier capture, owns the byte edge.
@@ -104,7 +104,7 @@ function fundingPreview(options: { checks?: number; stageFirst?: boolean; stage?
     const sent = source?.entry.sends.find(send => send.message.class === "request" && isRecord(send.message.body)
       && send.message.body["message"] === "evidence-fund" && isRecord(send.message.body["fields"]) && send.message.body["fields"]["ordinal"] === ordinal);
     return { state, own, time: t(0), uses: [], observed: () => null, value: () => undefined, placed: () => undefined,
-      input: { type: "delivery", from: source ? { at: destination, seq: source.entry.seq, hash: source.hash } : captureFact, n: sent?.n ?? 0,
+      input: { type: "delivery", from: source ? { at: destination, seq: source.entry.seq, hash: source.hash } : captureFact, sourceKind: "destination", n: sent?.n ?? 0,
         message: sent?.message.class === "request" ? sent.message : { class: "request", type: "tell", body: {} } },
       // Actual readFacts normal forms: own facts are numbers, foreign merge stays full.
       resolved: { at: destination, self: self + ordinal, fields: { publication: publicationFact.seq, operation, capture: captureFact.seq, ordinal }, subjects: new Map(), signer: null, bounds: { ...PROPOSED_BOUNDS, ...over } } };
@@ -114,11 +114,11 @@ function fundingPreview(options: { checks?: number; stageFirst?: boolean; stage?
   const implicit: RuleEffect = { effect: "open", item: self, type, state: destinationV17.items[type]!.initial };
   const batch = (at: RuleGiven, emitted: readonly RuleEffect[]) => {
     const values: Record<string, import("@generalbusiness/dap-contract").FieldValue | null> = {};
-    for (const effect of emitted) if (effect.effect === "value" && effect.item === at.resolved.self) values[effect.slot] = effect.value;
+    for (const effect of sequenceEffects(emitted)) if (effect.effect === "value" && effect.item === at.resolved.self) values[effect.slot] = effect.value;
     const dispatch = configured["evidence-funding-ready-v17"];
     if (dispatch?.place !== "send" || at.input.type !== "delivery" || at.input.message.class !== "request") throw Error("The actual serial batch dispatcher is required");
     const request = dispatch.run(at), requests = request ? [{ n: 0, ...request }] : [];
-    const born = seal(at.resolved.self, { ...at.input, message: at.input.message, decision: "applied" }, [{ ...implicit, item: at.resolved.self }, ...emitted],
+    const born = seal(at.resolved.self, { ...at.input, message: at.input.message, decision: "applied" }, sequenceEffects([{ ...implicit, item: at.resolved.self }, ...emitted]),
       [...requests, { n: requests.length, to: at.input.from.at, message: { class: "result", of: { from: at.input.from, n: at.input.n }, outcome: "applied" } }]);
     history.set(at.resolved.self, born);
     state.putItem({ id: at.resolved.self, type: "evidence-batch", state: "funded", revision: 1, opened: born.hash, parties: {}, refs: { operation, lane: operation.at }, values, attributed: [] });
@@ -126,7 +126,7 @@ function fundingPreview(options: { checks?: number; stageFirst?: boolean; stage?
     // an index whose indexed-row count differs from its complete type count.
     state.addCount("evidence-batch", "funded", 1);
     state.putIndexed("evidence-batch", "operation", canonicalize(operation), at.resolved.self);
-    apply(at.resolved.self, emitted);
+    apply(at.resolved.self, sequenceEffects(emitted));
     state.setScope({ ...state.scope()!, head: { seq: born.entry.seq, hash: born.hash } });
   };
   const apply = (seq: number, emitted: readonly Effect[]) => {
@@ -145,7 +145,7 @@ function fundingPreview(options: { checks?: number; stageFirst?: boolean; stage?
   };
   const retain = (given: RuleGiven, result: OutcomeGives) => {
     if (given.input.type !== "outcome") throw Error("The scripted receipt retains an actual outcome input");
-    const emitted = [...result.effects, ...result.opens.flatMap((open, k) => operationOpening(k, open))];
+    const emitted = sequenceEffects([...result.effects, ...result.opens.flatMap((open, k) => operationOpening(k, open))]);
     const sealed = seal(given.resolved.self, given.input, emitted);
     history.set(sealed.entry.seq, sealed); apply(sealed.entry.seq, emitted);
     state.setScope({ ...state.scope()!, head: { seq: sealed.entry.seq, hash: sealed.hash } });
@@ -324,7 +324,7 @@ test("SCRIPTED receipt-first and fund-first schedules open one original plan, an
     expect(fixture.state.item(receipt.position)!.values["evidenceWrittenAt"]).toBe(receiptFirst ? 21 : 11);
     if (!proof) throw Error("The original plan must retain its actual written proof");
     const written = fixture.history.get(proof.written.seq)!;
-    const missingDecision: Entry = { ...written.entry, effects: written.entry.effects.filter(effect => !(effect.effect === "state" && effect.state === "written")) };
+    const writtenEntry = later(written.entry), missingDecision: Entry = { ...writtenEntry, effects: writtenEntry.effects.filter(effect => !(effect.effect === "state" && effect.state === "written")) };
     expect(isEntry(missingDecision)).toBe(true);
     fixture.history.set(proof.written.seq, { entry: missingDecision, hash: entryHash(missingDecision) });
     expect(destinationEvidencePlanPending(fixture.state, fixture.own, original)).toBeNull();

@@ -4,10 +4,11 @@ import { expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, entryHash, keyIdOfSecret, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { directory } from "../../bytes/test/fixtures.ts";
+import { fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { bindApplicationProjection, applicationProjectionId, readApplicationProjection } from "../src/application-codec/application-v2.ts";
 import { projectApplicationQueryReads } from "../src/application-codec/application-projection-read.ts";
 import { applicationProjectionQueryDigest, readApplicationProjectionReply } from "../src/application-codec/application-projection-wire.ts";
-const scope = { ...directory, kind: "lane" as const }, secret = new Uint8Array(32).fill(71);
+const scope = fixtureScope("lane", 20), secret = new Uint8Array(32).fill(71);
 
 const projection = () => ({ v: 1, definition: definitionDigest(definition), revision: "revision", sources: { log: {
   read: "entries", acts: ["note", "observe"], window: 2, limit: 2, latestBy: null as string | null, fields: {

@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import type { FactRef, KeyId } from "@generalbusiness/dap-contract";
 import type { EvidenceBinding } from "../src/evidence.ts";
 import { canonicalize, keyIdOf } from "@generalbusiness/dap-bytes";
-import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { d, keys, otherLane, t, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { evidenceProgressCohortV17, type EvidenceJobRecordV17 } from "../src/destination-evidence-v17.ts";
 import type { CertifiedGenerationV17 } from "../src/destination-budget-v17.ts";
 import type { RulesCheckV13 } from "../src/rules-policy-v13.ts";
@@ -11,7 +11,7 @@ import type { RulesCheckV13 } from "../src/rules-policy-v13.ts";
 // is exercised, without Native admission, key standing, signatures, or an
 // executed progress turn. Key bytes below identify distinct test subjects.
 type Required = Pick<RulesCheckV13, "name" | "audit">;
-const destination = { ...otherLane, kind: "destination" as const }, rules = { ...otherLane, kind: "rules" as const };
+const destination = fixtureScope("destination", 17), rules = fixtureScope("rules", 18);
 const fact = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
 const key = (n: number): KeyId => keyIdOf(new Uint8Array(32).fill(n));
 function row(name: string, seq: number, signer: KeyId | null, state: EvidenceJobRecordV17["state"] = "passed"): EvidenceJobRecordV17 {

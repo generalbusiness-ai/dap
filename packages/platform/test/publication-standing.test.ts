@@ -5,11 +5,11 @@ import { expect, test } from "vitest";
 import type { Entry, FactRef, FieldValue, Input, KeyId } from "@generalbusiness/dap-contract";
 import { entryHash, keyIdOfSecret, textDigest } from "@generalbusiness/dap-bytes";
 import type { Item, Operation } from "@generalbusiness/dap-derive";
-import { d, directory, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { d, directory, otherLane, t, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { MEMBERSHIP, keyObserved, retained, destinationRita as rita } from "./fixtures-entry.ts";
 import { publicationStandingKeys, publicationStandingRecord, type PublicationStandingContext, type PublicationStandingRecord, type StandingCheck } from "../src/publication-standing.ts";
 
-const at = { ...directory, kind: "destination" as const }, from = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
+const at = fixtureScope("destination", 17), from = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
 const owner = "platform:destination@5" as const, item = 2;
 const copy = <T>(value: T): T => structuredClone(value);
 function fixture(count = 1) {

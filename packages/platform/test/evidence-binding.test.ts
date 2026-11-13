@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, newIncarnation } from "@generalbusiness/dap-bytes";
+import { b64url, textDigest } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, readEvidenceBinding, type EvidenceBinding } from "../src/evidence.ts";
 
-const scope = (kind: ScopeRef["kind"]): ScopeRef => ({ scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}`});
+const scope = (_kind: string): ScopeRef => ({ scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}`});
 const binding = (): EvidenceBinding => ({ v: 1, source: "room", stage: "work",
   checker: { membership: scope("membership"), member: "@checker" },
   policyGeneration: { rules: scope("rules"), seq: 2 },
@@ -12,17 +12,17 @@ const binding = (): EvidenceBinding => ({ v: 1, source: "room", stage: "work",
   subject: { kind: "work", source: { at: scope("lane"), seq: 4, hash: `sha256:${"1".repeat(64)}` } },
 });
 
-test("a binding owns its nested facts and its digest distinguishes native generations and incarnations", () => {
+test("a binding owns its nested facts and its digest distinguishes native generations and sequences", () => {
   const original = binding(), owned = readEvidenceBinding(original);
   expect(owned).toEqual(original);
   if (!owned) return expect.fail("The explicit binding must be readable");
   const digest = evidenceBindingDigest(owned);
   original.serviceGeneration.seq++;
-  // Explicit public TEST bytes produce another canonical 16-byte incarnation.
-  original.checker.membership.inc = newIncarnation(new Uint8Array(16).fill(1));
+  // Another genesis of the same scope ID is another sequence.
+  original.checker.membership.genesis = textDigest("TEST genesis 1");
   expect(evidenceBindingDigest(owned)).toBe(digest);
   expect(evidenceBindingDigest(original)).not.toBe(digest);
-  const recreated = binding(); recreated.policyGeneration.rules.inc = newIncarnation(new Uint8Array(16).fill(1));
+  const recreated = binding(); recreated.policyGeneration.rules.genesis = textDigest("TEST genesis 1");
   expect(evidenceBindingDigest(recreated)).not.toBe(digest);
   expect(readEvidenceBinding({ ...binding(), stage: "landing" })).toBeNull();
   expect(readEvidenceBinding({ ...binding(), callerKey: binding().roomService!.key })).toBeNull();

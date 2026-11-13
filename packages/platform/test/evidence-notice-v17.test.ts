@@ -3,7 +3,7 @@ import { PROPOSED_BOUNDS, type Entry, type FactRef, type HoldersObservation, typ
 import { canonicalize, entryHash } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest } from "../src/evidence.ts";
 import { RuleFault, type Operation, type RuleGiven } from "@generalbusiness/dap-derive";
-import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { d, keys, otherLane, t, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { evidenceDestinationRulesV17, evidenceJobRecordWireV17, evidenceNoticeOpeningV17, readEvidenceJobRecordWireV17, type EvidenceJobRecordV17 } from "../src/destination-evidence-v17.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
 import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
@@ -11,7 +11,7 @@ import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
 // SCRIPTED Native-shaped records, opening and state ports with real canonical
 // digests. These exercise actual helper/rule callbacks, not Native admission,
 // membership/triager authority, an executed notice, or a recovery journey.
-const destination = { ...otherLane, kind: "destination" as const }, rules = { ...otherLane, kind: "rules" as const };
+const destination = fixtureScope("destination", 17), rules = fixtureScope("rules", 18);
 const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
 function record(): EvidenceJobRecordV17 {
   const proposed = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, labels: [], roomService: null,

@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Bounds, type FactRef } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import type { CheckStage, EvidenceBinding } from "../src/evidence.ts";
-import { keys, otherLane, d, t } from "@generalbusiness/dap-derive/testing";
+import { keys, otherLane, d, t, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import type { RuleGiven } from "@generalbusiness/dap-derive";
 import type { EvidenceJobRecordV17 } from "../src/destination-evidence-v17.ts";
 import { evidenceFutureEntriesV17 } from "../src/evidence-forecast-v17.ts";
@@ -16,7 +16,7 @@ import { RULES } from "./support-destination.ts";
 
 // SCRIPTED source facts, policy views, state and records. Forecast maxima
 // are not real facts or Native funding/capacity/execution evidence.
-const destination = { ...otherLane, kind: "destination" as const };
+const destination = fixtureScope("destination", 17);
 const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
 function policy(stage: CheckStage, count = 1): ReservationPolicyViewV17 {
   const proposed = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, labels: [], roomService: null,

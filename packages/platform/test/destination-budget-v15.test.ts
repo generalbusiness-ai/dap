@@ -3,16 +3,16 @@ import type { Entry, FactRef, RulesObservation, ScopeRef } from '@generalbusines
 import { PROPOSED_BOUNDS } from '@generalbusiness/dap-contract';
 import { canonicalize, utf8 } from '@generalbusiness/dap-bytes';
 import { valueDigest } from '@generalbusiness/dap-derive';
-import { d, keys, otherLane, t } from '@generalbusiness/dap-derive/testing';
+import { d, fixtureScope, keys, otherLane, t } from '@generalbusiness/dap-derive/testing';
 import { RULES_PATTERNS } from '../src/extents.ts';
 import { rulesPolicyProposalV11, type RulesPolicyV11 } from '../src/rules-policy-v11.ts';
 import { certifiedCaptureBudgetV15, certifiedPublicationBudgetV15, certifiedPublicationStateV15, type CertifiedPublicationStateV15 } from '../src/destination-budget-v15.ts';
 
 // All facts, the rules observation and proof rows below are written by hand.
 // These witness byte admission and codec correspondence, not native authority.
-const destination: ScopeRef = { ...otherLane, kind: 'destination' };
-const membership: ScopeRef = { ...otherLane, kind: 'membership' };
-const rules: ScopeRef = { ...otherLane, kind: 'rules' };
+const destination: ScopeRef = fixtureScope("destination", 17);
+const membership: ScopeRef = fixtureScope("membership", 19);
+const rules: ScopeRef = fixtureScope("rules", 18);
 const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d('a') });
 function record(policy: RulesPolicyV11): CertifiedPublicationStateV15 {
   const proposed = rulesPolicyProposalV11(policy);

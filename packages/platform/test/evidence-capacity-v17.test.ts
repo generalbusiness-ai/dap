@@ -7,8 +7,8 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, isEntry, isFactRef, isRecord, utf8 } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, type EvidenceBinding } from "../src/evidence.ts";
 import { EVIDENCE_BINDING_TEXT_V17, readBindingTextV17 } from "../src/destination-evidence-v17.ts";
-import { d, keys, otherLane } from "@generalbusiness/dap-derive/testing";
-import type { Item, RuleGiven } from "@generalbusiness/dap-derive";
+import { d, keys, otherLane, fixtureScope } from "@generalbusiness/dap-derive/testing";
+import { sequenceEffects, type Item, type RuleGiven } from "@generalbusiness/dap-derive";
 import { evidenceFundCapacityV17, evidencePendingCapacityForecastV17, readEvidenceCapacityWireV17 } from "../src/destination-evidence-capacity-v17.ts";
 import type { EvidenceBatchRecordV17 } from "../src/evidence-batch-v17.ts";
 import { certifiedBoundFenceBudgetV17 } from "../src/destination-budget-v17.ts";
@@ -35,7 +35,7 @@ describe("published hold coverage", () => {
 // The state below is an explicit SCRIPTED arithmetic port. Actual self-send,
 // certificate and holder authority are tested by the owning Native story.
 describe("exact pre-publication capacity identities", () => {
-  const destination = { ...otherLane, kind: "destination" as const };
+  const destination = fixtureScope("destination", 17);
   const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
   function batch(seq: number, touched: readonly string[]): EvidenceBatchRecordV17 {
     const check = { name: "global", configuration: d("b"), required: true, checker: keys.una.member, stage: "published" as const, holds: true };
@@ -108,7 +108,7 @@ describe("exact pre-publication capacity identities", () => {
       || input.message.type !== "tell" || !isRecord(input.message.body) || !isRecord(input.message.body["fields"])) throw Error("A bound fence forecast must retain its full wire shape");
     const fields: Record<string, unknown> = { ...input.message.body["fields"], binding: text, bindingDigest: digest };
     expect(isFactRef(fields["job"])).toBe(true);
-    const entry: Entry = { ...shell, uses: Array.from({ length: 5 }, (_, n) => ({ fact: { ...fact(Number.MAX_SAFE_INTEGER - n, destination), hash: d("f") }, content: d("f") })),
+    const entry: Entry = { ...shell, uses: Array.from({ length: 5 }, (_, n) => ({ fact: { ...fact(Number.MAX_SAFE_INTEGER - n, destination), hash: d("f") }, content: d("f"), kind: "destination" as const })),
       input: { ...input, message: { class: "request", type: "tell", body: { message: "check-fence", fields } } } };
     expect(isEntry(entry)).toBe(true);
     const full = utf8(canonicalize(entry)).length;
@@ -126,7 +126,7 @@ describe("exact pre-publication capacity identities", () => {
     for (const [n, seq] of [30, 40].entries()) {
       const next = evidenceFundCapacityV17(scripted(101 + n, { keys: 0, holds: 1, policyGenerations: 1, incidents: 1 + n }, { id: 100, capacity }), batch(seq, ["code"]));
       expect(next).not.toBeNull();
-      const update = next!.effects.find(effect => effect.effect === "value" && effect.item === 100 && effect.slot === "capacity");
+      const update = sequenceEffects(next!.effects).find(effect => effect.effect === "value" && effect.item === 100 && effect.slot === "capacity");
       if (!update || update.effect !== "value") throw Error("The scripted shared anchor was not reserved");
       capacity = update.value!;
     }

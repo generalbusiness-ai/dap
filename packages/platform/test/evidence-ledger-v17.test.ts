@@ -2,12 +2,12 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type FactRef, type ItemType, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { newItem, RuleFault, type Item, type RuleGiven, type StateView } from "@generalbusiness/dap-derive";
-import { d, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { d, fixtureScope, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { EVIDENCE_LEDGER_ITEM_V17, evidenceLedgerInitializationV17, evidenceLedgerOfV17 } from "../src/evidence-ledger-v17.ts";
 
 // SCRIPTED folded-state ports. These test singleton correspondence and the
 // actual initialization effects, not a Native certificate/fold/admission.
-const destination: ScopeRef = { ...otherLane, kind: "destination" };
+const destination: ScopeRef = fixtureScope("destination", 17);
 const zero = { keys: 0, holds: 0, policyGenerations: 0, incidents: 0 };
 const used = { keys: 1, holds: 2, policyGenerations: 3, incidents: 4 };
 const item = (id: number, type: string, values: Item["values"] = {}, refs: Item["refs"] = {}, state = "ready"): Item => ({
@@ -17,7 +17,7 @@ const branch = (reference?: Item["refs"][string], values: Item["values"] = {}): 
   reference === undefined ? {} : { evidenceLedger: reference });
 const ledger = (values: Item["values"] = { counts: used }): Item => item(20, "evidence-ledger", values);
 function state(items: readonly Item[], at = destination): Pick<StateView, "scope" | "page" | "item"> {
-  return { scope: () => ({ at, creator: null, status: "active", head: { seq: 49, hash: d("a") }, time: t(0),
+  return { scope: () => ({ at, kind: "destination", creator: null, status: "active", head: { seq: 49, hash: d("a") }, time: t(0),
     genesis: { hash: d("a"), source: null, n: null }, held: [] }),
     item: id => items.find(value => value.id === id) ?? null,
     page: (type, states, after, limit) => {

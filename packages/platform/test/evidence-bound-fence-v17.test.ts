@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type FactRef, type GenesisEntry, type ScopeRef, type SequenceEntry } from "@generalbusiness/dap-contract";
-import { admitSequenceGenesis, canonicalize, entryHash, isEntry, newGenesisNonce, same, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { PROPOSED_BOUNDS, type Entry, type FactRef, type ScopeRef, type SequenceEntry } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, isEntry, same, signIntent } from "@generalbusiness/dap-bytes";
 import { MemoryState, RuleFault, useOf, valueDigest, type Operation, type Own, type RuleGiven } from "@generalbusiness/dap-derive";
 import { d, fixtureScope, keys, otherLane, sequenceAt, t } from "@generalbusiness/dap-derive/testing";
 import { readEvidenceBoundFenceV17 } from "../src/evidence-bound-fence-v17.ts";
@@ -12,6 +12,7 @@ import { evidenceBindingDigest } from "../src/evidence.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
 import { readRulesPolicyObservationV17, requiredChecksV17 } from "../src/reservation-v17.ts";
 import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
+import { destinationBirth } from "./support-destination-birth.ts";
 
 // SCRIPTED sealed source/state chain. The maintained hash, wire, funding
 // proof and sentBy readers run; this is not a Native admission witness.
@@ -20,14 +21,7 @@ function boundary(wrongPolicy = false, checkCount = 2) {
     if (!isEntry(entry)) throw Error("The scripted entry must have the maintained wire shape");
     return { entry, hash: entryHash(entry) };
   };
-  // SCRIPTED: the destination's genesis, made by hand and admitted from its own bytes. Its hash is the destination's genesis.
-  const birth: GenesisEntry = { v: 1, seq: 0, prev: null, time: t(0), clamped: false, epoch: 0, input: { type: "genesis",
-    seed: { v: 1, kind: "destination", definition: "platform:destination@17", creator: null, cause: d("e"), ordinal: 0 },
-    nonce: newGenesisNonce(new Uint8Array(16).fill(17)), kind: "establish", founding: null, source: null, sourceKind: null, n: null, message: null, decision: "applied" },
-    uses: [], prepared: [], effects: [], sends: [] };
-  const destination: ScopeRef = { scope: scopeIdOf(birth.input.seed), genesis: entryHash(birth) }, rules = fixtureScope("rules", 18);
-  const sequence = admitSequenceGenesis(canonicalize(birth), destination, PROPOSED_BOUNDS.entryBytes);
-  if (!sequence) throw Error("The scripted destination genesis must admit its own bytes");
+  const born = destinationBirth(), destination = born.at, sequence = born.sequence, rules = fixtureScope("rules", 18);
   const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
   const frame = (seq: number, input: SequenceEntry["input"], effects: SequenceEntry["effects"] = [], sends: SequenceEntry["sends"] = [], at: ScopeRef = destination): SequenceEntry =>
     ({ v: 1, genesis: at.genesis, seq, prev: d("0"), time: t(0), clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends });
@@ -51,7 +45,7 @@ function boundary(wrongPolicy = false, checkCount = 2) {
   if (!decoded.ok || !required.ok) throw Error("The scripted complete policy must decode");
   const snapshot: CertifiedPublicationStateV17 = { policy: { observation, input: policyInput, touched: ["source"], required: required.checks,
     tree: "b".repeat(40), manifest }, generations: [] };
-  const genesis = seal(birth);
+  const genesis = born.genesis;
   const publication = seal(frame(2, { type: "timed", item: 2, rule: "TEST-publication", due: t(0) }));
   const publicationFact: FactRef = { at: destination, seq: 2, hash: publication.hash }, operation = fact(1);
   const passes = certifiedPublicationWireV17(snapshot, PROPOSED_BOUNDS);

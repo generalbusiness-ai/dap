@@ -2,8 +2,9 @@ import { expect, test } from "vitest";
 import { APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionQuery, type ApplicationProjectionRead } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { directory } from "../../bytes/test/fixtures.ts";
+import { fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { applicationProjectionQueryDigest, encodeApplicationProjectionQuery, readApplicationProjectionQuery, readApplicationProjectionReply } from "../src/application-codec/application-projection-wire.ts";
-const scope = { ...directory, kind: "lane" as const };
+const scope = fixtureScope("lane", 20);
 const query = (): ApplicationProjectionQuery => ({ v: 1, scope, directory, install: 2, projection: "room.alert", items: { alert: 7 } });
 const reply = (): ApplicationProjectionRead => ({ ok: true, query: applicationProjectionQueryDigest(query())!, value: {
   v: 1, projection: textDigest("PUBLIC TEST declared projection"), scope, at: { seq: 12, hash: textDigest("PUBLIC TEST head") },

@@ -3,7 +3,7 @@ import type { FactRef } from "@generalbusiness/dap-contract";
 import type { ServiceMark } from "@generalbusiness/dap-contract";
 import type { EvidenceBinding } from "../src/evidence.ts";
 import { canonicalize } from "@generalbusiness/dap-bytes";
-import { d, keys, otherLane } from "@generalbusiness/dap-derive/testing";
+import { d, keys, otherLane, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { evidenceFrozenBatchMatchesV17 } from "../src/destination-evidence-v17.ts";
 import { obligationChecksV17, readEvidenceBatchV17, type EvidenceBatchRecordV17 } from "../src/evidence-batch-v17.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
@@ -13,7 +13,7 @@ import { RULES } from "./support-destination.ts";
 // SCRIPTED facts and policy metadata. The maintained semantic readers build
 // valid batch values, not Native publication/capture or current authority.
 // The Native wrapper separately proves its actual holder/capture/operation.
-const destination = { ...otherLane, kind: "destination" as const };
+const destination = fixtureScope("destination", 17);
 const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
 const mark: ServiceMark = { checker: keys.una.member, key: keys.una.key };
 function batch(revision = 10, service = 5, roomService: ServiceMark | null = mark): EvidenceBatchRecordV17 {
@@ -73,9 +73,9 @@ test("full Rules generation, service generation and mark must remain the capture
   const frozen = batch(), original = binding(frozen);
   const changed: EvidenceBinding[] = [
     { ...original, policyGeneration: { ...original.policyGeneration, seq: 11 } },
-    { ...original, policyGeneration: { ...original.policyGeneration, rules: { ...RULES, inc: otherLane.inc } } },
+    { ...original, policyGeneration: { ...original.policyGeneration, rules: { ...RULES, genesis: otherLane.genesis } } },
     { ...original, serviceGeneration: { ...original.serviceGeneration, seq: 6 } },
-    { ...original, serviceGeneration: { ...original.serviceGeneration, rules: { ...RULES, inc: otherLane.inc } } },
+    { ...original, serviceGeneration: { ...original.serviceGeneration, rules: { ...RULES, genesis: otherLane.genesis } } },
     { ...original, roomService: { ...mark, key: keys.vic.key } },
     { ...original, roomService: { ...mark, checker: keys.vic.member } },
     { ...original, roomService: null },
@@ -99,7 +99,7 @@ test("publication identity includes its hash and incarnation, while work is outs
   if (subject.kind === "work") throw Error("The scripted binding is a landing");
   for (const publication of [
     { ...subject.publication, seq: 11 }, { ...subject.publication, hash: d("b") },
-    { ...subject.publication, at: { ...destination, inc: RULES.inc } },
+    { ...subject.publication, at: { ...destination, genesis: RULES.genesis } },
   ]) expect(evidenceFrozenBatchMatchesV17({ ...original, subject: { ...subject, publication } }, "member", d("b"), frozen)).toBe(false);
   expect(evidenceFrozenBatchMatchesV17({ ...original, stage: "work", subject: { kind: "work", source: fact(2) } }, "work", d("d"), frozen)).toBe(false);
 });

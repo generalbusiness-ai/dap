@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FactRef, type Incarnation, type RulesObservation } from "@generalbusiness/dap-contract";
 import { canonicalize, isEntry, isFieldValue, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { observationBytes, valueDigest, type Item, type RuleGiven } from "@generalbusiness/dap-derive";
-import { d, grantOf, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { d, grantOf, keys, otherLane, t, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { evidenceDestinationProfileV17, evidencePolicyV17 } from "../src/destination-evidence-v17.ts";
 import { evidenceBatchWireV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "../src/evidence-batch-v17.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
@@ -12,7 +12,7 @@ import { CERTIFIED_PUBLICATION_TEXT_BYTES_V17, certifiedCaptureBudgetV17, certif
 
 // SCRIPTED policy observations and facts. These tests exercise byte and
 // wire correspondence, not Native certificates or publication authority.
-const destination = { ...otherLane, kind: "destination" as const }, rules = { ...otherLane, kind: "rules" as const };
+const destination = fixtureScope("destination", 17), rules = fixtureScope("rules", 18);
 const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
 function record(label = "wire"): CertifiedPublicationStateV17 {
   const proposed = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, checks: [], labels: [label], roomService: null,
