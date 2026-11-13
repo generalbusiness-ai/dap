@@ -502,10 +502,8 @@ submits native acts through its ordinary guards.
 
 To put several definitions in one signed package, read
 [Package reference](package-reference.md) and
-[Check and preview a package](check-and-preview-a-package.md). No room
-that a current Worker creates installs an ordinary package, one that
-requires no host capability. A definition on its own, activated as above,
-is the path that runs in a new room.
+[Check and preview a package](check-and-preview-a-package.md). A room of
+the `base` cohort installs the package.
 
 ## Publish a file from an act
 

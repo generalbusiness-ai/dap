@@ -27,7 +27,7 @@ keep stable, and lists the parts that fail its test today.
 | A room Worker run on your own machine with celld, and a kit that installs it as a service on a Mac. | [Run the local Worker](celld.md), [Run on a Mac](self-host-mac.md) |
 | Published repositories served as pages. | [Pages](pages.md) |
 | dap-grow, a declared application of several scopes: a site that creates grow rooms, with operator views, probes from chat, routing, presence and device commands. A simulator runs the hosted demo room. | [The grow runbook](../examples/grow/runbook.md) |
-| Application packages: `dap new`, `dap dev`, `dap check` and `dap pack`. A room of a device cohort installs a trusted `device-command@1` package in one act. No current cohort installs ordinary packages such as Counter in a new room. Package views run as cards in an AI app. | [Run your app](run-your-app.md), [Declared application views](application-views.md) |
+| Application packages: `dap new`, `dap dev`, `dap check` and `dap pack`. A room of the `base` cohort installs a trusted ordinary package, such as Counter, or a `device-command@1` package in one act. Package views run as cards in an AI app. | [Run your app](run-your-app.md), [Declared application views](application-views.md) |
 | Evidence rules for landing, first slice, deployed. A room's rules say who may produce a check's result, when the check runs, and whether a passed result on the same tree counts again. Rooms opt in to it. | [Evidence rules for landing](../notes/2026-10-16-evidence-rules-design.md), [`evidence-cohort.ts`](../packages/platform/src/evidence-cohort.ts) |
 
 Each of those pages states its own evidence and limits.

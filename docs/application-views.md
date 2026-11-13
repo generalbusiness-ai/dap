@@ -5,10 +5,9 @@ wants members to see its items and take its acts from an AI app. It
 describes each field you can declare in a view, and what the host checks.
 
 An AI app shows a package's views only after a room installs the package.
-No room that a current Worker creates installs an ordinary package, one
-that requires no host capability. A room of a current device cohort
-installs a package that requires `device-command@1`, such as Grow, as
-[Device commands](package-reference.md#device-commands) describes.
+A room of the `base` cohort installs an ordinary package and a package that
+requires `device-command@1`, such as Grow.
+[Creation cohorts](cli.md#creation-cohorts) lists the cohorts.
 
 Four terms recur:
 
