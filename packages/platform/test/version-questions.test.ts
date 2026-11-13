@@ -18,7 +18,7 @@ const standing = JSON.parse(readFileSync(new URL("./fixtures/version-standing-86
 
 test("the question owner covers every frozen predicate and catalog pin", () => {
   expect([...VERSION_QUESTIONS].sort()).toEqual([...frozen.questions.map(question => question.name), standing.question].sort());
-  expect(Object.keys(VERSIONS).sort()).toEqual([...frozen.catalogPins].sort());
+  expect(Object.keys(VERSIONS).filter(pin => !Object.hasOwn(CUTOVER_FAMILY_ANSWERS, pin)).sort()).toEqual([...frozen.catalogPins].sort());
   expect(frozen.rows).toHaveLength(105);
   expect(frozen.questions).toHaveLength(104);
 });

@@ -1,5 +1,7 @@
 import { commonsRulesScope, commonsRules } from "./commons-rules.ts";
 import { FAILED_CLAIM_COHORT as FC } from "./failed-claim-cohort.ts";
+import { BASE_COHORT as BC } from "./base-cohort.ts";
+import { baseMembership, baseMembershipRules } from "./base-membership.ts";
 import { failedClaimRegister, failedClaimRegisterRules, failedClaimDirectory, failedClaimDirectoryRules, failedClaimMembership, failedClaimMembershipRules, failedClaimDestination, failedClaimDestinationRules } from "./failed-claim-cohort-data.ts";
 import { failedClaimApplicationPublicationOrigin } from "./publishing-provenance.ts";
 import { COMMONS_COHORT as CC } from "./commons-cohort.ts";
@@ -128,6 +130,7 @@ export interface Platform {
  * cannot run.
  */
 const VERSION_DATA: Readonly<Record<string, Platform>> = {
+  [BC.membership]: { data: baseMembership, rules: baseMembershipRules, observed: (state, asked) => standingOf(state, asked, BC.membership) },
   [OA.register]: { data: ownAgentRegister, rules: ownAgentRegisterRules },
   [OA.directory]: { data: ownAgentDirectory, rules: ownAgentDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
   [OA.membership]: { data: ownAgentMembership, rules: ownAgentMembershipRules, observed: (state, asked) => standingOf(state, asked, OA.membership) },

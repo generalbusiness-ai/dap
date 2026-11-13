@@ -1,5 +1,7 @@
 export { COMMONS_COHORT } from "./commons-cohort.ts";
 export { OWN_AGENT_COHORT } from "./own-agent-cohort.ts";
+export { BASE_COHORT } from "./base-cohort.ts";
+export { OWN_AGENT_KEYS } from "./base-membership.ts";
 export { REPOSITORY_BINDING_COHORT, repositoryBindingBranch } from "./repository-binding-cohort.ts";
 export { commons, commonsDirectory, commonsMembership } from "./commons.ts";
 import { NATIVE_DECLARATION_PINS, NATIVE_DECLARATION_TEXT } from "./native-declarations.generated.ts";
