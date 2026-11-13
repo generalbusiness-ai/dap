@@ -316,3 +316,40 @@ The replay reads it from the genesis of the covered sequence. Only a row that
 covers entry 0 carries a kind. The `dap verify` shared coverage line states
 `kind register` again. The replay tests build their expected rows with
 `coverageRow`, which reads the kind from the same genesis.
+
+## Old-format room values in tracked configuration (ruling 19a509a5)
+
+Ruling 19a509a5 (Q-D1) removes `DEMO_START_CONFIG` from
+`apps/room/wrangler.demo.jsonc`. With no start config, the demo Worker serves
+no start offer: `/v1/demo/creation-offer` answers 404, and the smoke table
+expects 404. The planner makes the new registers after the cutover deployment
+and puts their references in its own configuration head.
+
+The table names each tracked value that refers to a room made before the
+cutover. It says what the Worker does with that value between the cutover
+deployment and the planner's configuration head. Each named scope is a retired
+room after the cutover, so a read or a delivery to it answers `room-retired`.
+I read this behaviour from the source. No run observed it.
+
+| Value | File | What the Worker does with it until the planner's head |
+| --- | --- | --- |
+| `REGISTER_SCOPE` `sc_zm56…` | `apps/room/wrangler.demo.jsonc` | Parentless creation admits only an install whose seed hashes to this ID. That register is retired, so the Worker creates no room. |
+| `INSTALLED_REGISTER_SCOPES` (`sc_b5q4…`, `sc_zm56…`) | `apps/room/wrangler.demo.jsonc` | The Artifacts host serves only rooms under these registers. Both are retired, so the host serves no live room. |
+| `ARTIFACTS_CONFIG.registerScope` `sc_zm56…` | `apps/room/wrangler.demo.jsonc` | It binds the Artifacts adapter to the retired register. It also must equal `REGISTER_SCOPE`, or the adapter reports no host roots. |
+| `REGISTER_SCOPE` `sc_yatk…` | `apps/room/wrangler.grow.jsonc` | As for dap-demo: the Worker creates no room. |
+| `ARTIFACTS_CONFIG.registerScope` `sc_yatk…` | `apps/room/wrangler.grow.jsonc` | As for dap-demo: the adapter is bound to a retired register. |
+| `APPLICATION_SCREEN_HOSTS[0].directory` `sc_rygh…` | `apps/room/wrangler.grow.jsonc` | The application route matches the Grow screen origin to this directory. The directory is retired, so the screen's room reads answer `room-retired`. |
+| `GROW_ARCHIVE_CONFIG.directory` `sc_rygh…` | `apps/room/wrangler.grow.jsonc` | The archive driver archives this directory. The directory is retired, so the archive makes no progress. |
+| `REGISTER_SCOPE` `sc_c67l…` | `apps/room/wrangler.lending.jsonc` | As for dap-demo: the Worker creates no room. |
+| `ARTIFACTS_CONFIG.registerScope` `sc_c67l…` | `apps/room/wrangler.lending.jsonc` | As for dap-demo: the adapter is bound to a retired register. |
+| `SCREEN_HOSTS[0].host.directory` `sc_rygh…` (the Grow directory) | `apps/sandbox/wrangler.rollout.jsonc` | The sandbox serves the Grow screen origin under this descriptor. The descriptor must equal the Grow room's `APPLICATION_SCREEN_HOSTS` entry. The room behind it is retired, so the screen shows no live room. |
+| `register` `{ scope: sc_b5q4…, inc: in_rjfr… }` | `examples/repo-in-ai/input.example.json`, `examples/repo-in-ai/hosted-loop/input.example.json` | No Worker reads it. The example input names a retired register in the old format. |
+
+These tracked values name no room: `REGISTER_SCOPE` and
+`ARTIFACTS_CONFIG.registerScope` `unplanned` in
+`apps/room/wrangler.commons.jsonc`, its `DEMO_START_CONFIG` register
+`unplanned`, and `REGISTER_SCOPE` `PLANNED_O4_REGISTER_SCOPE` in
+`apps/room/wrangler.connect.jsonc`. `apps/room/wrangler.artroom-scope.jsonc`
+and `apps/room/wrangler.jsonc` track no room ID. Their live settings are not
+in the repository. The grep covered every tracked `.jsonc`, `.json` and
+`.toml` outside tests, fixtures, test vectors and notes.
