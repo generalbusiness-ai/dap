@@ -71,7 +71,9 @@ genesis:
   gets `wrong-genesis`.
 - A creator that already records an applied creation result for a seed,
   and then receives an applied result with another genesis, runs the clause
-  `conflict`. The operator incident `genesis-conflict` names both entries.
+  `conflict`. The operator incident `genesis-conflict` names two entries:
+  the creator's entry that ran `conflict`, and the creator's entry that
+  sent the creation request. It does not name the earlier applied result.
 
 Each of the four reference classes says one thing:
 
