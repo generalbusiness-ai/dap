@@ -1,11 +1,12 @@
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, intentDigest, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize, entryHash, intentDigest, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { applyEntry, MemoryState, owed, PROFILES, validateDefinition } from "@generalbusiness/dap-derive";
 import { PARTITION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import { partitionLane, partitionGeneration } from "../../../../packages/platform/src/directory-partitions.ts";
 import { SqliteStore } from "../../../../packages/scope/src/sqlite.ts";
+import { withSequence } from "../../../../packages/scope/src/testing.ts";
 import { net } from "./support/graph.ts";
 import { room, rita, Platform, Room, settle, soon } from "./support/room.ts";
 import { nativelyCreatedChild, settleNativeChildren } from "./support/natively-created-child.ts";
@@ -148,8 +149,10 @@ test.each(["full", "threshold"] as const)("native partition seal at %s keeps con
     const rootDefinition = validateDefinition(nativeRoot.data, rootBounds, PROFILES, { platform: true });
     if (!rootDefinition.ok) return expect.fail("native Root data is invalid");
     const entries = await r.root.sealed(), projected = new MemoryState();
+    const rootSequence = admitSequenceGenesis(canonicalize(entries[0]!.entry), await r.root.at(), rootBounds.entryBytes);
+    if (!rootSequence) return expect.fail("the native Root genesis must admit");
     for (const held of entries) {
-      applyEntry(projected, rootDefinition.definition, held.entry, entryHash(held.entry), { bounds: rootBounds, platform: { named: C.directory, rules: nativeRoot.rules }, own: seq => entries[seq] ?? null });
+      applyEntry(projected, rootDefinition.definition, held.entry, entryHash(held.entry), { bounds: rootBounds, platform: { named: C.directory, rules: nativeRoot.rules }, own: withSequence((seq: number) => entries[seq] ?? null, rootSequence) });
       expect(projected.count("partition", "active") + projected.count("partition", "creating"), `Root head ${held.entry.seq}`).toBeLessThanOrEqual(1);
     }
   } finally { net.hold = null; net.clock.now = originalClock; if (partName) net.sized.delete(partName); }

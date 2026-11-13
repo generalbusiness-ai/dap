@@ -284,8 +284,8 @@ async function story(at: Stand, wired: Set<ScopeId>, siteCleanups: (() => void)[
     // beyond the configured existing tries budget; no infinite stream or
     // timeout is needed to distinguish the former unbounded inner scan.
     const badLane = /as change (sc_\S+),/.exec(outside.lines[0]!)![1]!;
-    const template = (await new Platform(badLane as ScopeId).entries()).find((entry) => entry.effects.length === 0)!;
-    expect(template).toBeDefined();
+    const template = (await new Platform(badLane as ScopeId).entries()).find((entry) => entry.effects.length === 0);
+    if (!template || !("genesis" in template)) return expect.fail("The bad lane must hold a later entry with no effects");
     const tries = 3;
     const reads: number[] = [];
     let mergeSeq: number | null = null;

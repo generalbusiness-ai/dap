@@ -538,7 +538,7 @@ export async function plannedOperator(ctx: Context, stage: Pick<Stage, "service"
     const receipt = acknowledgement["receipt"];
     if (acknowledgement["status"] !== "service-acknowledged" || acknowledgement["service"] !== stage.service || !isReceipt(receipt)
       || receipt.definition !== definition || receipt.intent !== intentDigest(creation.intent) || receipt.fact.at.scope !== register
-      || receipt.fact.at.kind !== "register" || receipt.fact.seq !== 0 || !isScopeRef(config.register) || canonicalize(config.register) !== canonicalize(receipt.fact.at)) return null;
+      || receipt.fact.seq !== 0 || !isScopeRef(config.register) || canonicalize(config.register) !== canonicalize(receipt.fact.at)) return null;
   }
   return creation.intent.actor;
 }

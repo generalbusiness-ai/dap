@@ -4,7 +4,7 @@
 import { runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { PROPOSED_BOUNDS, type Digest, type FactRef, type Input, type PlatformDefinition } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, isPlatformDefinition, unb64url, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, isPlatformDefinition, scopeIdOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_PATTERNS, RULES_POLICY_VALUE_V11, RULES_TREE_PROOF, platform, rulesPolicyProposalV11 } from "@generalbusiness/dap-platform";
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/dap-client";
 import { localRetainedPlan, ownersOf, outcomeValueDomains, validateDefinition, valueDigest, type OperationRules } from "@generalbusiness/dap-derive";
@@ -71,7 +71,7 @@ test("certified native policy and proof plus its consumed single policy envelope
     expect(configured.values).toMatchObject({ configured: true, policy: proposal.policy, proposal: proposal.digest });
     const envelope = { configured: true, policy: configured.values["policy"], proposal: configured.values["proposal"], certificate: configured.values["certificate"] };
     const envelopeDigest = valueDigest(EXTENTS_DOMAIN, envelope);
-    const rulesHead = factRefOf((await Q.sealed()).at(-1)!.entry);
+    const rulesHead = factRefOf((await Q.sealed()).at(-1)!.entry, await Q.at());
 
     // Real lane creation/review/reserve; no CLI precheck or supplied observation.
     const change = definitionDigest(changeDemo);
@@ -90,11 +90,11 @@ test("certified native policy and proof plus its consumed single policy envelope
     const manifest = await L.did(rita, "propose-file", { fields: { base: firstHead!, path: "archive-native.md", digest: digestBytes(utf8(content)), size: utf8(content).length, content }, expected: await L.expected({ proposal: 0 }) });
     await L.did(una, "review-verdict", { expected: await L.expected({ manifest, proposal: 0 }), fields: { manifest, verdict: "approve" } });
     await L.did(rita, "merge", { expected: await L.expected({ proposal: 0, manifest, rules: laneRules.id }), fields: { manifest, reports: [] } }); await pause(nodes);
-    const gHistory = await G.sealed();
+    const gHistory = await G.sealed(), gAt = await G.at();
     const observed = gHistory.flatMap(sealed => "observed" in sealed.entry.input ? (sealed.entry.input.observed ?? []).flatMap(use => {
       const observation = use.observation;
       return "subject" in observation && observation.subject === "rules" && observation.content.asked === "rules" && observation.content.extents === envelopeDigest
-        ? [{ consumer: factRefOf(sealed.entry), observation }] : [];
+        ? [{ consumer: factRefOf(sealed.entry, gAt), observation }] : [];
     }) : []);
     expect(observed.length).toBeGreaterThan(0);
     expect(observed.some(row => canonicalize(row.observation.of) === canonicalize(rulesHead.at) && row.observation.head.seq >= rulesHead.seq)).toBe(true);
@@ -131,7 +131,7 @@ test("certified native policy and proof plus its consumed single policy envelope
     const births: FixtureArchiveSourceBirth[] = [];
     for (const at of sources.values()) {
       const birth = (await life.platform(at.scope).sealed())[0];
-      if (!birth || birth.entry.input.type !== "genesis" || canonicalize(birth.entry.at) !== canonicalize(at)) throw Error("Actual full source birth required");
+      if (!birth || birth.entry.input.type !== "genesis" || birth.hash !== at.genesis || scopeIdOf(birth.entry.input.seed) !== at.scope) throw Error("Actual full source birth required");
       const pin = birth.entry.input.seed.definition;
       expect(policies.has(pin)).toBe(true);
       births.push({ at, birth: { bytes: canonicalize(birth.entry), hash: birth.hash }, ...(pin === change ? { declaration: canonicalize(changeDemo) } : {}) });

@@ -1,4 +1,5 @@
 import { net as sourceNet } from "../../../../packages/scope/src/testing.ts";
+import { admittedOrigin } from "../../../../packages/scope/src/namespace.ts";
 import { env } from "cloudflare:workers";
 import { isEntryOf } from "@generalbusiness/dap-derive";
 import { namespace, type Sourced } from "@generalbusiness/dap-scope";
@@ -188,9 +189,13 @@ test("a genuine Native change extension cannot reserve another room's destinatio
   const decoded = await namespace(env.PLATFORM).resolver.read(merged, { maxBytes: (sourceNet.sized.get(lane.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: Math.floor((sourceNet.sized.get(lane.name) ?? PROPOSED_BOUNDS).fetchSeconds * 1000) }, true);
   expect(decoded && "entry" in decoded, "Production resolver must decode the Native origin facts").toBe(true);
   if (!decoded || !("entry" in decoded)) throw new Error("Decoded Native source closure unavailable");
-  expect(isEntryOf(decoded.entry, merged)).toBe(true);
+  // The production admission of the decoded origin rows: each genesis row admits its own bytes.
+  const origin = admittedOrigin(decoded.origin ?? [], (sourceNet.sized.get(lane.name) ?? PROPOSED_BOUNDS).entryBytes);
+  const laneSequence = origin.find(copy => canonicalize(copy.fact.at) === canonicalize(merged.at))?.sequence;
+  if (!laneSequence) throw new Error("The decoded origin must admit the lane's genesis");
+  expect(isEntryOf(decoded.entry, merged, laneSequence)).toBe(true);
   expect(decoded.under).toBe("change");
-  expect(publishingLaneOrigin(merged, await A.D.at(), await A.G.at(), decoded.origin ?? [])).toBe(true);
+  expect(publishingLaneOrigin(merged, await A.D.at(), await A.G.at(), origin)).toBe(true);
   const envelope = await lane.envelope(merged.seq);
   expect(envelope.to).toEqual(foreign);
   const answer = await B.G.stub.deliver(envelope);

@@ -108,7 +108,7 @@ test("certified-rules native birth and device install bootstrap a real tree cert
     await L.did(una, "review-verdict", { expected: await L.expected({ manifest, proposal: 0 }), fields: { manifest, verdict: "approve" } });
     const pushes = host.stand.pushes.length;
     const merge = await L.did(rita, "merge", { expected: await L.expected({ proposal: 0, manifest, rules: laneRules.id }), fields: { manifest, reports: [] } }); await pause(nodes);
-    const operation = factRefOf((await L.entries())[merge]!);
+    const operation = (await L.fact(merge));
     expect((await retainedItems(G, "publication")).find(item => canonicalize(item.refs["operation"]) === canonicalize(operation)))
       .toMatchObject({ state: "not-reserved", values: { reason: "rules-not-configured" } });
     expect(host.stand.refs.get("refs/heads/main")).toBe(firstHead); expect(host.stand.pushes).toHaveLength(pushes);
@@ -126,7 +126,7 @@ test("certified-rules native birth and device install bootstrap a real tree cert
     expect(outcome.input).toMatchObject({ kind: RULES_CERTIFICATE_KIND, result: "confirmed", evidence: { basis: "own-answer", body: { proposal: proposed.digest, started } } });
     expect(outcome.effects).toEqual(expect.arrayContaining([expect.objectContaining({ effect: "attempt", operation: `${started.seq}:0`, selected: true })]));
     expect(outcome.seq).toBe(started.seq + 1);
-    const certificate = factRefOf(outcome), body = outcome.input.evidence.body;
+    const certificate = factRefOf(outcome, await G.at()), body = outcome.input.evidence.body;
     if (!isRecord(body) || !isDigest(body["proof"])) throw Error("The actual certificate must name its proof");
     const proof = body["proof"], kept = await G.stub.retained(reader, "value", proof, RULES_TREE_PROOF.domain);
     expect(kept).toMatchObject({ ok: true }); if (!kept.ok) throw Error("Actual certificate proof must be retained");
@@ -135,8 +135,8 @@ test("certified-rules native birth and device install bootstrap a real tree cert
     // Keep the genuine certificate and both retained values unchanged.
     const beforeMissingOwner = structuredClone(await Q.item(0));
     const missingOwnerFields = JSON.parse(canonicalize({ ...proposed.policy, proposal: proposed.digest, proof,
-      certificateRequest: started, certificate, directoryBirth: factRefOf((await D.entries())[0]!),
-      destinationBirth: factRefOf((await G.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!) }));
+      certificateRequest: started, certificate, directoryBirth: (await D.fact(0)),
+      destinationBirth: (await G.fact(0)), membershipBirth: (await M.fact(0)) }));
     delete missingOwnerFields["ownerMayReview"];
     expect(Object.hasOwn(missingOwnerFields, "ownerMayReview")).toBe(false);
     const missingOwner = await Q.stub.submit(await Q.intent(rita, "publish", {
@@ -171,7 +171,7 @@ test("certified-rules native birth and device install bootstrap a real tree cert
     const staleOutcome = (await G.entries()).find(entry => entry.input.type === "outcome" && entry.input.operation === `${staleRequest.seq}:0`);
     if (!staleOutcome || staleOutcome.input.type !== "outcome") throw Error("The interrupted attempt must record its actual outcome");
     expect(staleOutcome.effects.some(effect => effect.effect === "attempt" && effect.selected === true)).toBe(false);
-    expect(await publish(staleRequest, factRefOf(staleOutcome))).toMatchObject({ answer: "refused" });
+    expect(await publish(staleRequest, factRefOf(staleOutcome, await G.at()))).toMatchObject({ answer: "refused" });
     expect((await Q.item(0)).values["certificate"]).toEqual(configured.values["certificate"]);
   } finally { life.release(); }
 });
@@ -240,7 +240,7 @@ test("fresh certified global checks override a stale native lane and staged publ
 
     // Actual native held commitment, not a fabricated source/permission flag.
     const offer = await L.did(rita, "offer", { expected: await L.expected({ proposal: 0 }), fields: { terms: "TEST genuine held full-manifest work" } });
-    await L.did(rita, "accept", { on: offer, expected: await L.expected({ on: offer }), fields: { terms: factRefOf((await L.entries())[offer]!) } });
+    await L.did(rita, "accept", { on: offer, expected: await L.expected({ on: offer }), fields: { terms: (await L.fact(offer)) } });
     const hold = await L.did(rita, "take-hold", { expected: await L.expected({ commitment: offer, proposal: 0 }), fields: { commitment: offer } });
     const heldEntry = (await L.entries())[hold]!;
     const instance = "TEST-native-full-manifest";
@@ -253,7 +253,7 @@ test("fresh certified global checks override a stale native lane and staged publ
     const built = editObjects("sha1", id => {
       const object = host.stand.objects.get(id);
       return object && object.type !== "tag" ? { id, kind: object.type, body: object.data } : null;
-    }, initialHead!, "source.md", utf8("# Native full manifest\n"), { scope: L.name, time: heldEntry.time, operation: factRefOf(heldEntry) });
+    }, initialHead!, "source.md", utf8("# Native full manifest\n"), { scope: L.name, time: heldEntry.time, operation: factRefOf(heldEntry, await L.at()) });
     if (!built) throw Error("Production Git builder must build this ordinary source path");
     for (const object of built.objects) host.stand.objects.set(object.id, { id: object.id, type: object.kind, data: object.body });
     const manifestIntent = await L.intent(rita, "propose-manifest", { expected: await L.expected({ proposal: 0, hold, commitment: offer }), fields: { hold, instance, selected: [], decisions: [],
@@ -275,12 +275,12 @@ test("fresh certified global checks override a stale native lane and staged publ
           && isRecord(send.message.body) && send.message.body["message"] === "reserve");
         expect(sends).toHaveLength(1); const send = sends[0]!;
         expect(send.to).toEqual(await G.at());
-        await G.stub.deliver({ from: factRefOf(entry), n: send.n, to: send.to, message: send.message });
+        await G.stub.deliver({ from: factRefOf(entry, await L.at()), n: send.n, to: send.to, message: send.message });
       } finally { life.setHold(() => false); }
       await pause(nodes); if (seq === null) throw Error("Actual native merge required"); return seq;
     };
     const publicationFor = async (merge: number) => {
-      const operation = factRefOf((await L.entries())[merge]!);
+      const operation = (await L.fact(merge));
       return (await retainedItems(G, "publication")).find(item => canonicalize(item.refs["operation"]) === canonicalize(operation));
     };
     const pushesBefore = host.stand.pushes.length;
@@ -315,11 +315,11 @@ test("fresh certified global checks override a stale native lane and staged publ
     if (!listRules) throw Error("Actual native list rules item required");
     const content = "# Staged native source\n";
     const source = await list.did(rita, "propose-file", { expected: await list.expected({ proposal: 0 }), fields: { base: built.commit, path: "list.md", digest: digestBytes(utf8(content)), size: utf8(content).length, content } });
-    const file = { path: "list.md", entry: factRefOf((await list.entries())[source]!), digest: digestBytes(utf8(content)) };
+    const file = { path: "list.md", entry: (await list.fact(source)), digest: digestBytes(utf8(content)) };
     const listManifest = await list.did(rita, "propose-manifest", { expected: await list.expected({ proposal: 0 }), fields: { base: built.commit, files: [file] } });
     expect((await list.summary()).value.items.some(item => item.type === "job")).toBe(false);
     const listMerge = await list.did(rita, "merge", { expected: await list.expected({ proposal: 0, manifest: listManifest, rules: listRules.id }), fields: { manifest: listManifest, reports: [] } }); await pause(nodes);
-    const operation = factRefOf((await list.entries())[listMerge]!);
+    const operation = (await list.fact(listMerge));
     const publication = (await G.summary()).value.items.find(item => item.type === "publication" && canonicalize(item.refs["operation"]) === canonicalize(operation));
     if (!publication) throw Error("Actual staged list publication required");
     const staged = await list.item(listManifest), stageRef = staged.values["reservationRef"];

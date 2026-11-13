@@ -27,9 +27,8 @@ function address(value: unknown): string {
 function home(config: Config): NonNullable<Config["repository"]> {
   if (!config || typeof config !== "object") return stop();
   const r = config.repository;
-  if (config.v !== 1 || typeof config.key !== "string" || !r || !isScopeRef(r.directory) || r.directory.kind !== "directory"
-    || !isScopeRef(r.membership) || r.membership.kind !== "membership" || !isScopeId(r.rules) || !isScopeId(r.destination)
-    || (config.register !== undefined && (!isScopeRef(config.register) || config.register.kind !== "register"))) return stop();
+  if (config.v !== 2 || typeof config.key !== "string" || !r || !isScopeRef(r.directory) || !isScopeRef(r.membership)
+    || !isScopeId(r.rules) || !isScopeId(r.destination) || (config.register !== undefined && !isScopeRef(config.register))) return stop();
   address(config.service);
   return r;
 }
@@ -42,6 +41,12 @@ function anchors(config: Config, room: Room): void {
 }
 
 function sealed(copy: Sealed): boolean { return !!copy && isEntry(copy.entry) && entryHash(copy.entry) === copy.hash; }
+
+/** A sealed entry is a fact of `at` when it is that sequence's genesis or binds that genesis. */
+function factOf(copy: Sealed, at: ScopeRef): boolean {
+  const e = copy.entry;
+  return "genesis" in e ? e.genesis === at.genesis : copy.hash === at.genesis && scopeIdOf(e.input.seed) === at.scope;
+}
 
 /** This input comes only from the producer's owner-home file. Recomputed
  * hashes/seeds in caller room.json are never a trusted observation source. */
@@ -57,9 +62,9 @@ export function captureBinding(config: Config, observed: CaptureObservations, se
     const e = birth.self.entry;
     const input = e.input;
     const kind = ["issue", "published", "controlled", "stale", "reproposed", "refused"].includes(name) ? "lane" : name;
-    if (e.seq !== 0 || e.prev !== null || e.at.kind !== kind || input.type !== "genesis" || input.decision !== "applied" || input.inc !== e.at.inc || input.seed.kind !== e.at.kind
-      || scopeIdOf(input.seed) !== e.at.scope || !isScopeId(hints[name]) || hints[name] !== e.at.scope) return stop();
-    refs[name] = e.at;
+    if ("genesis" in e || e.seq !== 0 || e.prev !== null || input.type !== "genesis" || input.decision !== "applied" || input.seed.kind !== kind
+      || scopeIdOf(input.seed) !== hints[name] || !isScopeId(hints[name])) return stop();
+    refs[name] = { scope: hints[name], genesis: birth.self.hash };
   }
   if (!same(refs.directory, r.directory) || !same(refs.membership, r.membership) || refs.rules.scope !== r.rules || refs.destination.scope !== r.destination
     || (config.register !== undefined && !same(refs.register, config.register))) return stop();
@@ -68,7 +73,7 @@ export function captureBinding(config: Config, observed: CaptureObservations, se
     const input = self.entry.input;
     const parent = name === "directory" ? refs.register : r.directory;
     if (input.type !== "genesis" || !same(input.seed.creator, parent) || !input.source || !creator || !sealed(creator)
-      || ("decision" in creator.entry.input && creator.entry.input.decision !== "applied") || !same(input.source.at, parent) || !same(creator.entry.at, parent) || input.source.seq !== creator.entry.seq || input.source.hash !== creator.hash) return stop();
+      || ("decision" in creator.entry.input && creator.entry.input.decision !== "applied") || !same(input.source.at, parent) || !factOf(creator, parent) || input.source.seq !== creator.entry.seq || input.source.hash !== creator.hash) return stop();
     const send = creator.entry.sends.find((s) => s.n === input.n);
     if (!send || !same(send.to, input.seed) || !same(send.message, input.message)) return stop();
     if (["issue", "published", "controlled", "stale", "reproposed", "refused"].includes(name)
