@@ -184,7 +184,8 @@ test("level and capacity stay explicit data and unsupported durability refuses",
   expect(explicit.definition.level).toEqual({ name: "recorded", version: 1 });
   expect(explicit.definition.capacity).toEqual({ name: "whole-scope", version: 1 });
   expect(explicit.digest).not.toBe(omitted.digest);
-  refuses(declaration([], {}, { level: { name: "sequenced", version: 1 } }), /only recorded durability version 1/);
+  expect(compile(declaration([], {}, { level: { name: "sequenced", version: 1 } })).validation.ok).toBe(true);
+  refuses(declaration([], {}, { level: { name: "live", version: 1 } }), /recorded durability version 1 and sequenced version 1/);
 });
 
 test("reference fragments retain their byte bound and refuse oversized bounds", () => {

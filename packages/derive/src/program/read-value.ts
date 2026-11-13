@@ -55,6 +55,8 @@ function executeRead(j: Judging, read: OperandRead, item: Item | null, elements:
       value ??= null;
       break;
     }
+    // The sequenced note, section 5.2. No judge derives a sequenced definition yet (`derivable`), so no page is given here.
+    case "read": throw new TypeError("a group read has no page in this judgment");
     default: exhaustive(read);
   }
   return read.projection ? part(value, read.projection) : value;
