@@ -1,6 +1,6 @@
 # A replica holds what the scope holds: the state seed
 
-Status: current. Draft 2, for request `4893fbfa`. Nothing here is built.
+Status: current. Draft 3, for request `4893fbfa`. Nothing here is built.
 
 A room has run for a year. Its repository scope has sealed 60,000
 entries. The archive holds the first 50,000, and the scope raised its
@@ -94,13 +94,31 @@ The rule has two parts.
    It needs no list of the definitions that are safe.
 2. A replica never answers "nothing" for a thing that the scope holds
    and the replica lacks. Its `Own` throws the fault `Unheld` for that
-   entry or copy. The readers of the table then cannot take it as
-   absent, refuse on it or skip it.
+   entry or copy, and it records each `Unheld` that it throws. The
+   readers of the table then cannot take the thing as absent.
 
-The client catches `Unheld`. A prediction that meets it reads
-`not-judged`. A fold that meets it stops the replica. The replica keeps
-one `Own` object for its life, because the judges compare `Own` by
-identity (`operand.ts`).
+The throw alone does not reach the client. Three places in
+`packages/derive/src` catch it first.
+
+- `run` (`marks.ts`) wraps whatever a platform rule throws in
+  `RuleFault`.
+- `unjudged` (`marks.ts`) turns each `RuleFault` into the result
+  `unavailable`. It wraps `judgeAct`, the genesis judge, the delivery
+  judge and four paths of `settle.ts`.
+- `readRetainedUses` (`retained-use.ts`) calls `own`,
+  `own.retainedRow` and `own.retainedBirth` inside `try`. It answers
+  `invalid-use` or `invalid-origin` for any throw.
+
+So the record decides, and the return value does not. After each call
+of a judge or of the fold, the client reads the record of its `Own`.
+If the record holds an `Unheld`, a prediction reads `not-judged` and a
+fold stops the replica, whatever the call returned. The client then
+clears the record. The throw still ends the reader's work early.
+
+The replica keeps one `Own` object for its life, because the judges
+compare `Own` by identity (`operand.ts`). The record lives in that
+object, in `packages/client`. No catch site of `packages/derive`
+changes.
 
 The rule decides the rest of this note. It also binds build step C2 of
 the client design today, with no seed. Section 9 states what C2 owes.
@@ -175,11 +193,14 @@ change to the kernel, and this note does not ask for it.
 
 ### 5.1 When the scope makes it
 
-A scope makes a seed in each turn that seals a `floor` entry. The
-seed's head T is that floor entry. No read can arrive between the floor
-entry and its seed. A scope that has a floor and holds no seed makes
-one before its next turn, so a scope that had a floor before this
-change gets its seed.
+A scope makes a seed in each turn that seals a `floor` entry. No read
+can arrive between the floor entry and its seed. A scope that has a
+floor and holds no seed makes one at the start of its next turn, so a
+scope that had a floor before this change gets its seed.
+
+The seed's head T is the head at which the scope made the seed. T is
+the floor entry for a seed of the floor's turn. T is a later head for
+the first seed of a scope that had a floor before this change.
 
 The scope keeps one seed. A new seed replaces the old one.
 
@@ -260,16 +281,36 @@ service and the CLI gain nothing.
    lists the kept positions.
 7. The client checks the chain: the entry at T has the hash that the
    seed names, and each entry names the hash of the entry before it.
-8. The client calls `loadState` with the rows and the entries from F
-   to T. It folds each entry after T.
-9. The replica mirrors the scope. The client's state is `current`.
+8. The client calls `loadState` with the rows and every held entry at
+   or before T: the genesis entry of step 5, each kept position of step
+   6 and the entries from F to T. `loadState` puts a fixed hash for
+   each, and `fixedRowsOf` reads those hashes. The `Own` of the replica
+   serves the same set and each entry after T.
+9. The client folds each entry after T.
+10. The replica mirrors the scope. The client's state is `current`.
 
-A `floor` entry in the journal restarts the replica. The scope made a
-new seed in the turn of that entry. The client reads the new seed, keeps
-each entry that it holds at or above the new floor, and goes to step 7.
-The fold of a floor entry reads every held entry and each retained copy
-that a kept position needs, so the first version does not fold one in
-the replica.
+A `floor` entry in the journal restarts the replica. The first version
+does not fold a floor entry in the replica, because that fold reads
+every held entry and each retained copy that a kept position needs. The
+scope made a new seed in the turn of the floor entry. The restart has
+five steps.
+
+1. The client reads the new seed.
+2. The client checks the seed as step 4 does: the scope, the genesis
+   and the definition digest. It also checks that the head T of the
+   seed is at or after the floor entry.
+3. If T is after the floor entry, the client reads `log` to T.
+4. The client keeps the genesis entry, each position that the floor
+   state of the new seed lists as kept, and each entry at or above the
+   new floor. It drops each other entry and its state. The replica held
+   each kept position before the floor entry, because the scope did, so
+   the restart needs no read of an entry below the new floor. A kept
+   position that the replica lacks is read with `entry`.
+5. The client goes to step 7 with that set. It checks the chain,
+   loads the rows and folds each entry after T.
+
+The genesis entry needs no second check, because the replica checked
+it at its start.
 
 A client that returns after a long time reads `log` from its head and
 can get `archived`. It drops its state and starts at step 3.
@@ -322,13 +363,23 @@ section 3 binds it now.
 2. The replica gives the fold and `judgeAct` one `Own` object over
    those entries, for its life. `Own` throws `Unheld` for an entry or a
    copy that the scope holds and the replica lacks.
+   `Own` records each `Unheld` that it throws. After each call of a
+   judge or of the fold, the client reads the record and then clears
+   it. A record that is not empty makes the prediction `not-judged` or
+   stops the replica, whatever the call returned.
 3. Before code, the builder lists each reader of `Own`, of
    `context.retained` and of `fixedHash` in `packages/derive`, with
-   what each does when the thing is absent. The table of section 3 is a
-   partial list from the review, and the builder's list replaces it.
+   what each does when the thing is absent. The list names the ports of
+   `RetainedOwn` (`retainedRow` and `retainedBirth`,
+   `packages/derive/src/fields.ts`), which the `Own` interface does not
+   name. It also names each catch site that can wrap a read of `Own`.
+   The table and the three catch sites of section 3 are a partial list
+   from the review, and the builder's list replaces them.
 4. The list states, for each kind of retained copy, the read that
    serves it and when the client reads it.
-5. The builder measures the memory of a replica at 20,000 entries, in
+5. One test for each catch site of the list: a replica that lacks a
+   held entry or copy reads `not-judged` there, and a fold stops.
+6. The builder measures the memory of a replica at 20,000 entries, in
    Node and in headless Chrome, and states it in the client note.
 
 If the memory at 20,000 entries passes what a page can hold, the
@@ -346,8 +397,12 @@ no capability, no reason code and no record form. It adds no tool
 family. It names no K item.
 
 - `loadState` uses `MemoryState` with its `put` methods, `indexItems`,
-  `fixedRowsOf` and `StateSnapshot`, which `packages/derive` exports
-  today.
+  `fixedRowsOf`, `putFixed` and `StateSnapshot`, which
+  `packages/derive` exports today.
+- The replica's `Own` and its record of `Unheld` are an object of
+  `packages/client`. The catch sites of `packages/derive` stay as they
+  are. A `derive` that throws `Unheld` on through each catch site would
+  change the kernel, and this note does not ask for it.
 - The read is a route of the service and a method of `ScopeHandle`. It
   is outside `ScopeApi`. Section 7.4 of the kernel page put the read
   minimums in the contract because every transport must agree on them.
@@ -432,7 +487,9 @@ and retires no room.
 ## 15. Decisions
 
 1. A replica mirrors the scope. Its `Own` throws `Unheld` for a thing
-   that the scope holds and the replica lacks. Planner.
+   that the scope holds and the replica lacks, and records the throw.
+   The client reads the record after each call, and the record decides.
+   Planner.
 2. `loadState` lives in `packages/client`. The kernel does not change.
    Planner.
 3. The scope makes a seed in the turn that seals a floor entry, and
