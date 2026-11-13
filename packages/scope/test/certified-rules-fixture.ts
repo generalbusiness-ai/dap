@@ -1,5 +1,5 @@
 import { expect } from "vitest";
-import type { Digest, FactRef, Intent, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Digest, FactRef, Intent, ScopeKind } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, factRefOf, intentDigest, isDigest, isRecord, isSeed, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, RULES_TREE_PROOF, rulesPolicyProposalV11, type RulesPolicyV11 } from "@generalbusiness/dap-platform";
 import { DestinationHost, type DestinationProvider } from "../src/destination-host.ts";

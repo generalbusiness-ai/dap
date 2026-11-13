@@ -185,7 +185,7 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
     // history too. No copied capability table is passed by this witness.
     const local = cliStore();
     await local.keep("native-member", rita.secret);
-    await local.save({ v: 1, service: port.service, key: "native-member", repository: { directory, membership, rules: A.name, destination: G.name } });
+    await local.save({ v: 2, service: port.service, key: "native-member", repository: { directory, membership, rules: A.name, destination: G.name } });
     const verified = await life.wait(() => dapCommand({ store: local, now: life.now, fetch: (url, init) => life.wait(() => routed(url, init)) }, ["verify", room.name]));
     expect(verified.code, verified.lines.join("\n")).toBe(0);
     expect(verified.lines).toContain("Result: consistent, for the mode, target, coverage and trusts stated below.");

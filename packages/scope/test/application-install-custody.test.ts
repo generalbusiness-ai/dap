@@ -115,7 +115,7 @@ test.each(installations)("$name: one signed native install settles through Direc
       let result;
       if (specimen.application === "Counter") {
         const local = cliStore(); await local.keep("operator", rita.secret);
-        await local.save({ v: 1, service: port.service, key: "operator", repository: { directory, membership, rules: A.name, destination: G.name } });
+        await local.save({ v: 2, service: port.service, key: "operator", repository: { directory, membership, rules: A.name, destination: G.name } });
         cli = { store: local, fetch: port.fetch!, now: life.now };
         cli.applicationCommand = applicationCommands(cli, store, peer.fetch, JSON.stringify(f.trust));
         const argv = ["install", f.uri, "--release", f.packet.ids.release, "--request", key, "--role", "admin", "--role", "member", "--values", specimen.values];

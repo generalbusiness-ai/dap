@@ -12,7 +12,7 @@ import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { simulatorHost } from "../../../examples/grow/simulator-host.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
-import { applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationWorkerBindings } from "./fixtures-native.ts";
+import { live, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationWorkerBindings } from "./fixtures-native.ts";
 import { rita, una, vic, routed } from "./repository.ts";
 import type {} from "./support/maintained-applications.ts";
 import type { TestScope } from "./worker.ts";
@@ -183,7 +183,7 @@ test("a native demo tick crosses a long gap in bounded prefixes and drains its o
     // authority rounds. One TEST callback still writes every checkpoint
     // through the actual native turn and SQLite store.
     await life.wait(() => runInDurableObject(room.object, async instance => {
-      for (let n = 0; n < 811; n++) expect((await (instance as TestScope).checkpoint()).answer).toBe("written");
+      for (let n = 0; n < 811; n++) expect((await live(instance as TestScope).checkpoint()).answer).toBe("written");
     }));
     const afterGap = (await life.wait(() => room.summary())).at;
     expect(afterGap.seq - beforeGap.seq).toBe(811);

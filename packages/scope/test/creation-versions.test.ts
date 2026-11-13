@@ -15,6 +15,7 @@ import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";
 import type { Binding } from "../src/namespace.ts";
 import type { ScopeObject } from "../src/object.ts";
 import { creationFormatStorage, creationVersionSettings } from "./worker.ts";
+import { live } from "./support.ts";
 
 const legacy = "platform:register@2";
 const newest = FAILED_CLAIM_COHORT.register;
@@ -125,7 +126,7 @@ test("actual deployed object defaults reject old new genesis and invalid policy 
   for (const [pin, raw] of [[legacy, undefined], [ARCHIVE_DEVICE_APPLICATION_COHORT.register, undefined], [newest, null], [newest, undefined], [COMMONS_COHORT.register, undefined]] as const) {
     const signed = install(undefined, pin === COMMONS_COHORT.register ? "none" : "git.example"), name = scopeIdOf(seedOf(signed, pin));
     creationVersionSettings.set(name, raw); // own undefined must have the absent-setting meaning
-    const object = objectOf(name), native = object as unknown as Native;
+    const object = objectOf(name), native = live(object as unknown as Native);
     const trace: NonNullable<ReturnType<typeof creationFormatStorage.get>> | null = pin === newest && raw === undefined
       ? { failAfterWord: true, starts: [] } : null;
     if (trace) creationFormatStorage.set(name, trace);
@@ -169,7 +170,7 @@ test("actual deployed object defaults reject old new genesis and invalid policy 
 test("old live deployed genesis needs sealed applied integrity for repeats while reads and acts keep its pin", async () => {
   const signed = install(), seed = seedOf(signed, legacy), name = scopeIdOf(seed);
   creationVersionSettings.set(name, JSON.stringify([legacy]));
-  const object = objectOf(name), native = object as unknown as Native;
+  const object = objectOf(name), native = live(object as unknown as Native);
   try {
     const original = await native.create(signed, legacy);
     expect(original).toMatchObject({ answer: "accepted" });
@@ -209,7 +210,7 @@ test("a deployment creates on the separate-recovery cohort only after PLATFORM_C
   for (const [raw, answer] of [[undefined, "refused"], [added, "accepted"]] as const) {
     const signed = install(), name = scopeIdOf(seedOf(signed, register));
     creationVersionSettings.set(name, raw);
-    const object = objectOf(name), native = object as unknown as Native;
+    const object = objectOf(name), native = live(object as unknown as Native);
     try {
       expect(await native.create(signed, register)).toMatchObject({ answer });
       expect(await count(object)).toBe(answer === "accepted" ? 1 : 0);
@@ -228,7 +229,7 @@ test("repository binding and own-agent families remain opt-in in actual deployed
     for (const [raw, answer] of [[undefined, "refused"], [added, "accepted"]] as const) {
       const signed = install(undefined, "none"), name = scopeIdOf(seedOf(signed, cohort.register));
       creationVersionSettings.set(name, raw);
-      const object = objectOf(name), native = object as unknown as Native;
+      const object = objectOf(name), native = live(object as unknown as Native);
       try {
         expect(await native.create(signed, cohort.register)).toMatchObject({ answer });
         expect(await count(object)).toBe(answer === "accepted" ? 1 : 0);

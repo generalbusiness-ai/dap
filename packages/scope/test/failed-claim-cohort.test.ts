@@ -205,7 +205,7 @@ test("dap create reports a final failure, retains it past an hour, and can start
     const { service, register, counters, ...client } = await clientSurface(life, R);
     const store = memoryStore();
     await store.keep("visitor", rita.secret);
-    await store.save({ v: 1, service, key: "visitor", register });
+    await store.save({ v: 2, service, key: "visitor", register });
     const ctx = { store, ...client };
     const pending = await life.wait(() => claim({ ...ctx, tries: 1, pause: async () => {} }, "retry-room"));
     expect(pending.code).toBe(1);

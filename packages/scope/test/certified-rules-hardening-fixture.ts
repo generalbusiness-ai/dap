@@ -1,5 +1,5 @@
 import { expect } from "vitest";
-import type { Digest, Entry, FactRef, Intent, Item, Read, ScopeKind, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
+import type { Digest, Entry, FactRef, Intent, Item, Read, ScopeKind, Sealed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, factRefOf, intentDigest, isDigest, isRecord, isSeed, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { HARDENED_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, RULES_TREE_PROOF, rulesPolicyProposalV11, type RulesPolicyV11 } from "@generalbusiness/dap-platform";
 import type { EffectAnswer } from "../src/operations.ts";

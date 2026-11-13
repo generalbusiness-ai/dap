@@ -1,6 +1,6 @@
 import { runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test } from "vitest";
-import type { Entry, Intent, ScopeId, Seed } from "@generalbusiness/dap-contract";
+import type { Intent, ScopeId, Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, factRefOf, intentDigest, scopeIdOf, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { requestSession, sessionRequest, type Fetch } from "@generalbusiness/dap-client";
 import { keys } from "@generalbusiness/dap-derive/testing";
