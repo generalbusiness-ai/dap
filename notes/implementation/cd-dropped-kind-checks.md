@@ -416,7 +416,7 @@ The nine tests that waited on this ruling pass: `decisions.test.ts` ×4,
 `verify.test.ts` 18.46 and 18.52, the two archive-driver resume tests, and
 the `archive-installed.test.ts` publication and failed-claim cases. The resume
 tests now also serve the Rules and Destination journals; the
-[other test changes](cd-dropped-kind-checks-tables.md#other-test-changes)
+[other test changes](cd-dropped-kind-checks-entry-points.md#other-test-changes)
 give the reason.
 
 ## The Grow archive binding (ruling e4b72290)
@@ -438,7 +438,7 @@ Q2: the production cases in `archive-installed.test.ts` and Room A
 (`test/support/maintained-applications.ts`) prepares it with `prepareGrowDemo`
 and signs it with `fixedSigner(254)`. Each case passes `{ release, publisher, entry }` from that packet, with the demo Site's
 definition digest as the entry, and reads the replay context from discovery.
-Room A stays a test; all nine cases pass.
+Room A stays a test; all nine pass.
 
 ## Security seals after the cutover
 
@@ -448,7 +448,7 @@ The cutover changes 78 plain seals and 55 named-owner seals in
 [plain seals](cd-dropped-kind-checks-tables.md#plain-seals), the
 [named-owner seals](cd-dropped-kind-checks-tables.md#named-owner-seals)
 (first 12 hex digits; the test file holds the full values) and a sentence
-for each [entry point whose admission or refusal changed](cd-dropped-kind-checks-tables.md#entry-points-whose-admission-or-refusal-changed).
+for each [entry point whose admission or refusal changed](cd-dropped-kind-checks-entry-points.md#entry-points-whose-admission-or-refusal-changed).
 
 ### Stand-ins in the route model
 
