@@ -77,7 +77,7 @@ test("Native register signer and discovered membership survive two floors and re
     const token = readerOf(mintSession(sessions, { ...claims, reads: ["entry", "retained"], ends: soon(60) }));
     const unrelated = readerOf(mintSession(sessions, { ...claims, reads: ["entry", "retained"], membership: otherMembership, ends: soon(60) }));
     // Existing chained-session authority permits entry/retained, not summary.
-    expect(await life.owner.required(() => R.stub.entry(token, 0))).toMatchObject({ ok: true, value: { entry: { seq: 0, at: { kind: "register" } } } });
+    expect(await life.owner.required(() => R.stub.entry(token, 0))).toMatchObject({ ok: true, value: { entry: { seq: 0, input: { type: "genesis", seed: { kind: "register" } } } } }); // an entry carries no address; its genesis seed names the kind
     expect(await life.owner.required(() => R.stub.entry(unrelated, 0))).toEqual({ ok: false, reason: "forbidden" });
     const carried = await runInDurableObject(R.object, (_instance, state) => {
       const store = new SqliteStore(archiveSql(state));
