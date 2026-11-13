@@ -168,6 +168,17 @@ expiry or restart charges the new window normally. The private creation
 path carries this identity; neither a public API argument nor a body supplies
 that receipt. No live window is evicted. Only expired rows leave a table.
 
+The creation table holds 8,192 windows for an hour. One address key opens
+at most 31 of them: its own window and 30 key windows. About 265 distinct
+IPv4 addresses or IPv6 /64s fill the table. After that, every new identity
+shares 10 creations an hour in the overflow window until rows expire.
+Callers that already hold windows keep them. A sender with one IPv6 /48
+holds 65,536 /64s, so it can reach that state.
+
+Every `found` submit charges its address in the `found` table. An intent
+over 1 MiB, or one that fails the strict parse, charges the address and
+then reaches its target, which refuses it.
+
 The public Site uses a separate minute window: 240 attempts per canonical
 address key, at most 4096 identity windows and one shared 240-attempt
 overflow window. Valid IP addresses always use `addressKey`, including its

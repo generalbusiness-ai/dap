@@ -50,9 +50,9 @@ export class ServingAdmission {
     const hasAddress = addressKey(address) !== null;
     if (request?.kind === "creation" || request?.kind === "found") {
       const signed = request.kind === "creation" ? boundedParentlessIntent(request.signed) : boundedServingIntent(request.signed);
-      if (!signed) return "invalid";
-      if (request.kind === "found" && signed.intent.kind !== "found") return "invalid";
-      const verified = verifySignedIntent(signed);
+      // A found intent that fails the bound still reaches its target, so it charges the address.
+      if (request.kind === "creation" ? !signed : signed && signed.intent.kind !== "found") return "invalid";
+      const verified = signed !== null && verifySignedIntent(signed);
       const fits = this.#limits.account(request.kind, verified ? signed.intent.actor : null, address, now, request.kind === "creation" ? request.overflowReservation ?? null : null);
       return !fits && (verified || hasAddress) ? "rate-limited" : verified ? "admitted" : "invalid";
     }
