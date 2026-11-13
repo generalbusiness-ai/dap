@@ -42,7 +42,8 @@ describe("replay of histories the runtime wrote, read through the Worker's read 
 
     const { report, why } = await verify(source, { mode: "replay", scope: name, head, grants: "as-recorded" });
     expect([report.result, why, report.target]).toEqual(["consistent", null, { at: await L.at(), ...head }]);
-    expect([report.coverage, report.dependencies]).toEqual([[{ scope: await L.at(), from: 0, through: 6 }], { verified: 0, anchored: 0, missing: [] }]);
+    // Ruling 4393b366 T3(a): each coverage row states the kind of its checked sequence.
+    expect([report.coverage, report.dependencies]).toEqual([[{ scope: await L.at(), kind: "directory", from: 0, through: 6 }], { verified: 0, anchored: 0, missing: [] }]);
     // The caller held the head, so the head is not on trust. What stays on trust is what no history shows.
     expect(report.trusts).toEqual([TRUSTS.clock, TRUSTS.minted, TRUSTS.authority, TRUSTS.bounds]);
   });

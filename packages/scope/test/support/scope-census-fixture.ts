@@ -51,6 +51,8 @@ export async function scopeCensusFixture(options: { members?: boolean; registerO
     }, get(selected: DurableObjectId) {
       if (selected.toString() !== id.toString()) throw Error("TEST unexpected census owner"); return stub;
     } };
+    // The fixed index object is active only when its own env names it as SCOPE_INDEX_NAME.
+    (settings as Record<string, unknown>)["SCOPE_INDEX"] = binding;
     const environment = { ...settings, SCOPE_INDEX: binding };
     const nodes = [first.R, first.D, ...first.children, other.R, other.D, ...other.children];
     const rows: ScopeRegistration[] = [];

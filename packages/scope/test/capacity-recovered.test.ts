@@ -70,6 +70,7 @@ test("a later value alias recovers a genuinely retained then redacted native tex
     expect([exact.report.result, exact.why, exact.report.incompleteBytes]).toEqual(["consistent", null, undefined]);
     const over = await verify(source, { ...options, bounds: { ...options.bounds, scopeBytes: limit - 1 } });
     expect([over.report.result, over.report.at?.at.scope, over.report.at?.seq]).toEqual(["mismatch", original.name, last.seq]);
-    expect(over.report.coverage).toEqual([{ scope: alias.at, from: 0, through: 0 }, { scope: original.at, from: 0, through: last.seq - 1 }]);
+    // Ruling 4393b366 T3(a): each coverage row states the kind of its checked sequence.
+    expect(over.report.coverage).toEqual([{ scope: alias.at, kind: "directory", from: 0, through: 0 }, { scope: original.at, kind: "directory", from: 0, through: last.seq - 1 }]);
   } finally { wired.delete(alias.name); }
 });

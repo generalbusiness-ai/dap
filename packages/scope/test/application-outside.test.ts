@@ -4,7 +4,7 @@
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeOutcome } from "@generalbusiness/dap-derive";
 import { platform } from "@generalbusiness/dap-platform";
 import { keys, membership } from "@generalbusiness/dap-derive/testing";
@@ -59,6 +59,8 @@ test("admission port confirms exact provenance and recovers cached content witho
     const input = changed.origin.entry.input;
     if (input.type !== "act") throw Error("TEST install act required");
     input.signed.intent.fields["uri"] = f.uri.replace(f.commit, "f".repeat(40));
+    // The changed entry is a whole entry under its own hash, so the check reaches the commit and not the entry binding.
+    changed.origin.hash = entryHash(changed.origin.entry);
     expect(await freshPort.hostPreparation!.resume(changed)).toMatchObject({ result: "refused", evidence: { body: { reason: "source-refused" } } });
     expect(puts()).toBe(1);
   } finally { await env.APPLICATION_CONTENT.delete(f.key); }

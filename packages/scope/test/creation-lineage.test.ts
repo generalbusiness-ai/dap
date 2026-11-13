@@ -124,11 +124,13 @@ test("three approved native cohorts admit only operator-listed roots and preserv
 
       // Readable source bytes disprove the changed ordinal/message. A changed
       // sender incarnation also contradicts the unchanged seed.creator before
-      // any birth read. Only the unavailable exact hash needs a retry answer.
+      // any birth read. The source is the Directory's genesis and the seed
+      // names its creator in the self form, so a changed source hash fails
+      // resolveGenesisSelf before any read as well.
       // No answer may reach the child's constructor boundary.
       for (const [label, altered, expected] of [
         ["ordinal contradicted by source", { ...delivered, n: delivered.n + 99 }, { answer: "routing", reason: "not-found" }],
-        ["exact source hash unavailable", { ...delivered, from: { ...delivered.from, hash: digestBytes(utf8("wrong fact")) } }, { answer: "retry", reason: "dependency-unavailable" }],
+        ["source hash contradicts the self-form creator", { ...delivered, from: { ...delivered.from, hash: digestBytes(utf8("wrong fact")) } }, { answer: "routing", reason: "not-found" }],
         ["creator genesis mismatch", { ...delivered, from: { ...delivered.from, at: { ...delivered.from.at, genesis: digestBytes(crypto.getRandomValues(new Uint8Array(16))) } } }, { answer: "routing", reason: "not-found" }],
         ["message contradicted by source", { ...delivered, message: { ...delivered.message, body: { fields: {} } } } as Delivered, { answer: "routing", reason: "not-found" }],
       ] as const) {

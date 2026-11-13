@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Entry, FactRef, FactUse, GenesisEntry, ScopeKind, ScopeRef, Seed, SequenceEntry } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, intentDigest, newGenesisNonce, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, factRefOf, intentDigest, newGenesisNonce, genesisInputDigest, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { useOf } from "@generalbusiness/dap-derive";
 import { GenesisProofs, GENESIS_PROOF_BOUNDS as B, type ProofTimer } from "../src/genesis-proof.ts";
 import { ProofBytes, type ProofBody, type ProofSource } from "../src/proof-bytes.ts";
@@ -59,7 +59,9 @@ function chain(sample: Entry, act: Entry, count: number): Entry[] {
   beside(act, sample);
   const entries: Entry[] = [act]; let previous = act;
   for (let n = 1; n <= count; n++) {
-    const seed: Seed = { ...sample.input.seed, creator: addressOf(previous), cause: previous.input.type === "genesis" ? seedDigest(previous.input.seed) : intentDigest(act.input.signed.intent), ordinal: n };
+    // A child of a genesis names its creator in the self form, and its cause is the creator's complete genesis input.
+    const seed: Seed = { ...sample.input.seed, creator: previous.input.type === "genesis" ? { scope: addressOf(previous).scope, genesis: null } : addressOf(previous),
+      cause: previous.input.type === "genesis" ? genesisInputDigest(previous.input) : intentDigest(act.input.signed.intent), ordinal: n };
     const born = genesisOf(sample);
     const genesis: Entry = { ...born, time: at(n), input: { ...born.input, seed, "founding": null, source: refOf(previous), sourceKind: born.input.seed.kind, decision: "applied" }, uses: [use(previous)] };
     entries.push(genesis); previous = genesis;

@@ -52,7 +52,7 @@ test("native installed roots and children keep exact release ownership after tru
     expect(await life.wait(() => A.item(job))).toMatchObject({ state: "active", refs: { scope: rootAt } });
     expect((await life.wait(() => root.summary())).value).toMatchObject({ status: "active", definition: rootId, items: [{ refs: { child: childAt } }] });
     expect((await life.wait(() => child.summary())).value).toMatchObject({ status: "active", definition: childId });
-    expect((await life.wait(() => child.entries()))[0]!.input).toMatchObject({ type: "genesis", seed: { creator: rootAt, definition: childId }, founding: null, decision: "applied",
+    expect((await life.wait(() => child.entries()))[0]!.input).toMatchObject({ type: "genesis", seed: { creator: { scope: rootAt.scope, genesis: null }, definition: childId }, founding: null, decision: "applied",
       message: { body: { membership, creationContext: { v: 1 } } } });
     expect((await life.wait(() => A.entries())).filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "install-application")).toHaveLength(1);
     const issued = await life.owner.required(() => requestSession(port.service, M.name, sessionRequest(membership, rita.secret, soon(60), crypto.randomUUID()), { fetch: routed }));

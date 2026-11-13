@@ -228,7 +228,8 @@ test("a repeat of a decided send is answered from the entry that recorded it, an
   expect(projected.repeated).toEqual(projected.correct); expect(projected.other).toEqual([]);
   expect(projected.after.calls).toBeGreaterThan(projected.before.calls);
   expect(projected.after.inputWork).toBeGreaterThan(projected.before.inputWork);
-  expect(new Set(projected.cells.filter(cell => typeof cell === "string"))).toEqual(new Set(["request", "tell", "noted", textDigest(text)]));
+  // "lane" is the sourceKind column (src/archive-delivery-fields.ts:55): the sender kind that the delivered entry records.
+  expect(new Set(projected.cells.filter(cell => typeof cell === "string"))).toEqual(new Set(["request", "tell", "noted", "lane", textDigest(text)]));
   expect(projected.cells).not.toContain(text);
 
   // Both redact the text, so neither holds its bytes. The same envelope again is still that send of that entry of A. B answers it
@@ -299,7 +300,8 @@ test("native related-text projection follows self and earlier owner items, and i
     expect(result.projected).toEqual(result.expected);
     expect(result.projected.map(plan => plan.dependency.mode === "text" ? plan.dependency.key : null)).toEqual([{ kind: "text", digest: textDigest(text) }]);
     expect(result.other).toEqual(index === 0 ? null : []);
-    expect(new Set(result.cells.filter(cell => typeof cell === "string"))).toEqual(new Set(["request", "relate", "linked", textDigest(text)]));
+    // "lane" is the sourceKind column (src/archive-delivery-fields.ts:55): the sender kind that the delivered entry records.
+    expect(new Set(result.cells.filter(cell => typeof cell === "string"))).toEqual(new Set(["request", "relate", "linked", "lane", textDigest(text)]));
     expect(result.cells).not.toContain(text);
   }
 });

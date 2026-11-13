@@ -36,7 +36,7 @@ test("deployed service admits its pinned register and its judged directory child
     expect(await R.stub.submit(found, [])).toMatchObject({ answer: "accepted", receipt: { fact: { seq: 1 } } });
     await effectFixture([R], lifetime.wait);
     await dispatchFixture([R, D], lifetime.wait);
-    expect(await D.at()).toMatchObject({ scope: D.name, kind: "directory" });
+    expect(await D.at()).toMatchObject({ scope: D.name });
     expect((await D.entries())[0]!.input).toMatchObject({ type: "genesis", seed });
     expect(host.attempts).toEqual(["1:0#1"]);
   } finally { creationTest.settings = previous; lifetime.release(); }

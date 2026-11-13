@@ -128,9 +128,10 @@ test("one operation cannot recapture a new genesis allowance and post-await chan
     const loader = new ReadPreparation(sql, { ...native, policy: () => policy }), budget = new PreparationBudget(), first = loader.capture(budget);
     const beforeLowBudget = store.stored(0)!;
     const validationDebits: unknown[] = [];
-    // Eight calls fit the prior declared capture; the added byte-factory
-    // candidate consumes the ninth without increasing the hard ceiling.
-    const limited = new ReadPreparation(sql, native).capture(new PreparationBudget({ ...B, calls: 8 }, () => true,
+    // Seven calls fit the declared capture without its genesis admission.
+    // The admission makes no SQL call (c5997cbd91): it spends one candidate
+    // and no call, so a capture needs eight calls.
+    const limited = new ReadPreparation(sql, native).capture(new PreparationBudget({ ...B, calls: 7 }, () => true,
       cost => validationDebits.push(cost)));
     const recaptured = loader.capture(budget);
     const policyFrame = loader.capture(); policy = "second";
@@ -143,7 +144,7 @@ test("one operation cannot recapture a new genesis allowance and post-await chan
   });
   expect(got).toMatchObject({ first: true, recaptured: true, available: false, policyChanged: false, changed: false, after: false,
     limited: true, originalUnchanged: true });
-  expect(got.validationDebits).toContainEqual({ calls: 1, candidates: 1 });
+  expect(got.validationDebits).toContainEqual({ candidates: 1 });
 });
 
 /** Synthetic pin storage for actual native catalog validation. This does
