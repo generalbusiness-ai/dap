@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fa41480701cb6a5bc9db9c5df3149c5963c7e949","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/validate/native-capacity.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fa4a3fd46a78c2e00deb43a08b6b7da42416ace9","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/device-command-grant.ts."}
