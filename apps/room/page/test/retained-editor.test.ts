@@ -1,6 +1,6 @@
 import { preparedEditStage, transitionEdit } from "../src/retained-editor-state.ts";
 import { afterEach, expect, test, vi } from "vitest";
-import { canonicalize, definitionDigest, digestBytes, keyIdOfSecret, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, digestBytes, keyIdOfSecret, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import type { Answer, FactRef, Item, ScopeId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { changeDemo } from "@generalbusiness/dap-lanes";
 import { secretSigner, signedIntent, type Fetch } from "@generalbusiness/dap-client";
@@ -30,10 +30,10 @@ test("invalid retained path keeps its corrected draft through explicit unsent re
   descriptor=Object.getOwnPropertyDescriptor(globalThis,"document"); Object.defineProperty(globalThis,"document",{configurable:true,value:{createElement:(t:string)=>new Element(t)}});
   const secret=new Uint8Array(32), opening=digestBytes(utf8("scripted retained opening")), digest=definitionDigest(changeDemo);
   // Structurally valid identities only; these scripted seeds assert no native authority.
-  const directory:ScopeRef={scope:scopeIdOf({v:1,kind:"directory",definition:"platform:directory@1",creator:null,cause:opening,ordinal:0}),inc:newIncarnation(new Uint8Array(16)),kind:"directory"};
-  const sourceScope:ScopeRef={scope:scopeIdOf({v:1,kind:"lane",definition:digest,creator:directory,cause:opening,ordinal:3}),inc:newIncarnation(new Uint8Array(16).fill(3)),kind:"lane"};
+  const directory:ScopeRef={scope:scopeIdOf({v:1,kind:"directory",definition:"platform:directory@1",creator:null,cause:opening,ordinal:0}),genesis:textDigest("TEST genesis directory")};
+  const sourceScope:ScopeRef={scope:scopeIdOf({v:1,kind:"lane",definition:digest,creator:directory,cause:opening,ordinal:3}),genesis:textDigest("TEST genesis lane")};
   const room:Room={session:{service:"https://room.test",secret},directory:directory.scope,
-    membership:{scope:scopeIdOf({v:1,kind:"membership",definition:"platform:membership@1",creator:directory,cause:opening,ordinal:0}),inc:newIncarnation(new Uint8Array(16).fill(1)),kind:"membership"},
+    membership:{scope:scopeIdOf({v:1,kind:"membership",definition:"platform:membership@1",creator:directory,cause:opening,ordinal:0}),genesis:textDigest("TEST genesis membership")},
     rules:scopeIdOf({v:1,kind:"rules",definition:"platform:rules@1",creator:directory,cause:opening,ordinal:1}),
     destination:scopeIdOf({v:1,kind:"destination",definition:"platform:destination@1",creator:directory,cause:opening,ordinal:2}),
     key:keyIdOfSecret(secret),me:null,reader:null,unsessioned:null,directoryIndex:null,definitions:new Map()};
@@ -143,7 +143,7 @@ test("text limits count UTF-8 bytes losslessly, preserve BOM and allow empty fil
 test("title/path-only input preserves untouched BOM CRLF/CR bytes while deliberate text input uses the edited textarea value",async()=>{
   vi.mocked(prepareEdit).mockClear();
   descriptor=Object.getOwnPropertyDescriptor(globalThis,"document");Object.defineProperty(globalThis,"document",{configurable:true,value:{createElement:(tag:string)=>new Element(tag)}});
-  const secret=new Uint8Array(32);const room={session:{service:"https://room.test",secret},directory:"sc_crlf_dir",membership:{scope:"sc_members",inc:"one",kind:"membership"},key:keyIdOfSecret(secret)} as unknown as Room;
+  const secret=new Uint8Array(32);const room={session:{service:"https://room.test",secret},directory:"sc_crlf_dir",membership:{scope:"sc_members",genesis:"one"},key:keyIdOfSecret(secret)} as unknown as Room;
   const exact="\ufefffirst\r\nsecond\rthird";
   const change={scope:"sc_crlf_change",manifests:[{id:7,state:"current",file:{path:"a.md",digest:digestBytes(utf8(exact)),size:utf8(exact).length,content:exact}}]} as unknown as ChangeView;
   let shown=retainedEditor(room,change,{current:()=>true}) as unknown as Element;shown.all().find(e=>e.tag==="button")!.event("click");
@@ -168,7 +168,7 @@ test("title/path-only input preserves untouched BOM CRLF/CR bytes while delibera
 test("editor reads the inherited destination head through partition6 for both workflows and still rejects legacy LIST1 and future pins", async () => {
   const actual = await vi.importActual<typeof import("../src/retained-editor-data.ts")>("../src/retained-editor-data.ts");
   const secret = new Uint8Array(32), digest = definitionDigest(changeDemo), opening = digestBytes(utf8("scripted head route"));
-  const ref = (kind: ScopeRef["kind"], ordinal: number): ScopeRef => ({ kind, scope: scopeIdOf({ v: 1, kind, definition: kind === "lane" ? digest : `platform:${kind}@1`, creator: null, cause: opening, ordinal }), inc: newIncarnation(new Uint8Array(16).fill(ordinal)) });
+  const ref = (kind: "directory" | "membership" | "rules" | "destination" | "lane", ordinal: number): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "lane" ? digest : `platform:${kind}@1`, creator: null, cause: opening, ordinal }), genesis: textDigest("TEST genesis " + kind) });
   const directory = ref("directory", 1), membership = ref("membership", 2), rules = ref("rules", 3), destination = ref("destination", 4), source = ref("lane", 5);
   const definition: Item = { id: 1, type: "definition", state: "active", revision: 1, opened: opening, attributed: [], parties: {}, refs: {}, values: { name: "change", digest } };
   let pin = "platform:destination@4", headReads = 0, mutations = 0;

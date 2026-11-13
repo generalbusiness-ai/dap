@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
-import { keyIdOfSecret, newIncarnation } from "@generalbusiness/dap-bytes";
+import { keyIdOfSecret, textDigest } from "@generalbusiness/dap-bytes";
 import { ListContexts, type ListContext, type ListStorage } from "../src/list-context.ts";
 
 // Made-up public contexts. No native permission, membership or browser runs.
 const context = (): ListContext => ({ origin: "https://page.test", directory: `sc_${"a".repeat(52)}`,
-  membership: { scope: `sc_${"b".repeat(51)}a`, inc: newIncarnation(new Uint8Array(16).fill(2)), kind: "membership" },
+  membership: { scope: `sc_${"b".repeat(51)}a`, genesis: textDigest("TEST genesis 18") },
   key: keyIdOfSecret(new Uint8Array(32).fill(7)) });
 const storage = (): ListStorage & { records: Map<string, string> } => {
   const records = new Map<string, string>();
@@ -17,7 +17,7 @@ test("list queries and filters survive redraw and fresh tab-runtime reads withou
   const reads: string[] = [];
   const retiredAttempts = { get: [] as string[], set: [] as string[], remove: [] as string[], enumerate: [] as (string | number)[] };
   const currentStorage: ListStorage & { readonly length: number; key(index: number): string | null; removeItem(name: string): void } = {
-    get length() { retiredAttempts.enumerate.push("length"); throw new Error("The new Page must not enumerate old list storage."); },
+    get length(): number { retiredAttempts.enumerate.push("length"); throw new Error("The new Page must not enumerate old list storage."); },
     key: index => { retiredAttempts.enumerate.push(index); throw new Error("The new Page must not enumerate old list storage."); },
     getItem: name => { reads.push(name); if (name === retiredName) { retiredAttempts.get.push(name); throw new Error("The new Page opened retired list storage."); } return kept.getItem(name); },
     setItem: (name, value) => { if (name === retiredName) { retiredAttempts.set.push(name); throw new Error("The new Page changed retired list storage."); } kept.setItem(name, value); },
@@ -35,7 +35,7 @@ test("list queries and filters survive redraw and fresh tab-runtime reads withou
   expect(refreshed.stateOf(here, "change")).toEqual({ query: "policy", filter: "merged" });
   for (const elsewhere of [
     { ...here, origin: "https://another.test" }, { ...here, directory: `sc_${"c".repeat(51)}a` as const },
-    { ...here, membership: { ...here.membership, inc: newIncarnation(new Uint8Array(16).fill(3)) } },
+    { ...here, membership: { ...here.membership, genesis: textDigest("TEST genesis 19") } },
     { ...here, membership: { ...here.membership, scope: `sc_${"d".repeat(51)}a` as const } },
     { ...here, key: keyIdOfSecret(new Uint8Array(32).fill(8)) },
   ]) expect(refreshed.stateOf(elsewhere, "issue")).toEqual({ query: "", filter: "open" });

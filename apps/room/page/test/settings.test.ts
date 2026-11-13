@@ -4,7 +4,6 @@ import { scriptedPageKeys } from "./scripted-page-key-store.ts";
 import {
   b64url,
   keyIdOfSecret,
-  newIncarnation,
   scopeIdOf,
   textDigest,
 } from "@generalbusiness/dap-bytes";
@@ -119,7 +118,7 @@ test("Config and key select a room only after matching standing and exact storag
       cause: textDigest("config UI membership"),
       ordinal: 0,
     }),
-    inc: newIncarnation(new Uint8Array(16).fill(4)),
+    genesis: textDigest("TEST genesis 32"),
   };
   const place = {
     directory: scopeIdOf({
@@ -137,8 +136,7 @@ test("Config and key select a room only after matching standing and exact storag
     repository: {
       directory: {
         scope: place.directory,
-        kind: "directory",
-        inc: membership.inc,
+        genesis: textDigest("TEST genesis directory"),
       },
       membership,
     },

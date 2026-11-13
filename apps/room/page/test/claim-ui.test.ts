@@ -1,3 +1,4 @@
+import { textDigest } from "@generalbusiness/dap-bytes";
 import { expect, test, vi } from "vitest";
 import { scriptedPageKeys } from "./scripted-page-key-store.ts";
 
@@ -35,8 +36,8 @@ test("only an eligible configured founder sees creation; an in-flight or stale c
   }
   const root = new Element("div");
   const body = new Element("body");
-  const register = { kind: "register", scope: "register", inc: "one" };
-  let settings: { place: { directory: string; membership: { kind: string; scope: string; inc: string } }; publicKey: string; register: typeof register; label?: { text: string; place: { directory: string; membership: { kind: string; scope: string; inc: string } }; register: typeof register } } = { place: { directory: "room", membership: { kind: "membership", scope: "membership", inc: "one" } }, publicKey: "key", register };
+  const register = { kind: "register", scope: "register", genesis: textDigest("TEST genesis 8") };
+  let settings: { place: { directory: string; membership: { scope: string; genesis: string } }; publicKey: string; register: typeof register; label?: { text: string; place: { directory: string; membership: { scope: string; genesis: string } }; register: typeof register } } = { place: { directory: "room", membership: { scope: "membership", genesis: textDigest("TEST genesis 9") } }, publicKey: "key", register };
   settings.label = { text: "Original local label", place: settings.place, register };
   let eligible = true, locked = true, failSave = false;
   let journal: { operation: string; label: string; state: "pending" | "complete" | "failed" } | null = null;

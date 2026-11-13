@@ -1,18 +1,18 @@
 import { expect, test } from "vitest";
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { ITEM_QUERY_BOUNDS as B } from "@generalbusiness/dap-contract";
-import { canonicalize, encodeItemQueryCursor, itemQueryArgument, itemQueryDigest, newIncarnation, readItemQueryParameter, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, encodeItemQueryCursor, itemQueryArgument, itemQueryDigest, readItemQueryParameter, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { listLanes, Unreadable, type Room } from "../src/data.ts";
 
 // Scripted bounded HTTP page, not native authority or freshness evidence.
 // Native Page story separately proves the directory path makes no lane reads.
 test("directory listing uses only advisory index rows and refuses an incomplete prefix after one page", async () => {
-  const directory: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "directory", creator: null, definition: "platform:directory@3", cause: textDigest("SCRIPTED directory cause"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16)), kind: "directory" };
-  const lane: ScopeRef = { ...directory, kind: "lane", scope: scopeIdOf({ v: 1, kind: "lane", creator: directory, definition: textDigest("SCRIPTED lane pin"), cause: textDigest("SCRIPTED lane cause"), ordinal: 1 }) };
+  const directory: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "directory", creator: null, definition: "platform:directory@3", cause: textDigest("SCRIPTED directory cause"), ordinal: 0 }), genesis: textDigest("TEST genesis 10") };
+  const lane: ScopeRef = { genesis: textDigest("TEST genesis lane"), scope: scopeIdOf({ v: 1, kind: "lane", creator: directory, definition: textDigest("SCRIPTED lane pin"), cause: textDigest("SCRIPTED lane cause"), ordinal: 1 }) };
   const at: Head = { seq: 15, hash: textDigest("SCRIPTED index head") };
   let complete = true;
   const calls: string[] = [];
-  const room: Room = { directory: directory.scope, directoryIndex: { scope: directory, definition: "platform:directory@3" }, membership: { ...directory, kind: "membership" }, rules: directory.scope, destination: directory.scope, key: "" as Room["key"], me: null, reader: null, unsessioned: "SCRIPTED", definitions: new Map(),
+  const room: Room = { directory: directory.scope, directoryIndex: { scope: directory, definition: "platform:directory@3" }, membership: { ...directory }, rules: directory.scope, destination: directory.scope, key: "" as Room["key"], me: null, reader: null, unsessioned: "SCRIPTED", definitions: new Map(),
     session: { service: "https://room.test", secret: new Uint8Array(32), now: () => Date.parse("2026-10-15T00:00:00Z"), fetch: async url => {
       calls.push(url);
       expect(new URL(url).pathname).toBe(`/v1/scopes/${directory.scope}/query-items`);

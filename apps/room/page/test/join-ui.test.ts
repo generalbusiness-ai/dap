@@ -2,7 +2,6 @@ import { expect, test, vi } from "vitest";
 import {
   b64url,
   keyIdOfSecret,
-  newIncarnation,
   scopeIdOf,
   textDigest,
 } from "@generalbusiness/dap-bytes";
@@ -159,7 +158,7 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
       cause: textDigest("UI fake membership"),
       ordinal: 0,
     }),
-    inc: newIncarnation(new Uint8Array(16).fill(3)),
+    genesis: textDigest("TEST genesis 11"),
   };
   const place = {
     directory: scopeIdOf({
@@ -392,7 +391,7 @@ test("A retained first refusal stays readable after reload and allows only a dif
       cause: textDigest("refused UI membership"),
       ordinal: 0,
     }),
-    inc: newIncarnation(new Uint8Array(16).fill(5)),
+    genesis: textDigest("TEST genesis 12"),
   };
   const place = {
     directory: scopeIdOf({

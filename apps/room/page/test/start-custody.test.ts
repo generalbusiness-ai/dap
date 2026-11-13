@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, verify } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, scopeIdOf, textDigest, verify } from "@generalbusiness/dap-bytes";
 import { signedIntent, type CreationOffer } from "@generalbusiness/dap-client";
 import type { Context, PendingClaim, Repository } from "@generalbusiness/dap-cli/browser";
 
@@ -14,7 +14,7 @@ const keys = memoryPageKeys();
 const startRoom: typeof actualStartRoom = (origin, storage, options) => actualStartRoom(origin, storage, { ...options, keys });
 import type { ClaimStorage } from "../src/claim.ts";
 const origin = "https://start-custody.test";
-const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@17" : kind === "directory" ? "platform:directory@16" : "platform:membership@8", creator: null, cause: textDigest("SCRIPTED Start " + kind), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(6)), kind });
+const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@17" : kind === "directory" ? "platform:directory@16" : "platform:membership@8", creator: null, cause: textDigest("SCRIPTED Start " + kind), ordinal: 0 }), genesis: textDigest("TEST genesis 37") });
 const register = ref("register");
 const offer: CreationOffer = { v: 2, origin, register, definition: "platform:register@17", at: { seq: 0, hash: textDigest("SCRIPTED register head") }, registerItem: { id: 0, revision: 1, state: "open", host: "artifacts", namespace: "SCRIPTED", policy: "open" } };
 const locks = { request: async <T>(_name: string, run: () => Promise<T>) => run() };

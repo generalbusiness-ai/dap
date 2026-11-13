@@ -1,13 +1,13 @@
 import { expect, test, vi } from "vitest";
-import { base32, keyIdOfSecret, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { base32, keyIdOfSecret, timeOf, utf8, textDigest } from "@generalbusiness/dap-bytes";
 import { Session, type CompleteSnapshot } from "@generalbusiness/dap-client";
 import type { Head, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { PageObservation, pollingInterval, type PageObservationSource } from "../src/page-observation.ts";
 import { workbenchFixtures } from "./workbench-fixture.ts";
 
 // Scripted authenticated data and stream ports. No Native scope or browser runs.
-const scope: ScopeRef = { scope: `sc_${base32(new Uint8Array(32))}`, inc: `in_${base32(new Uint8Array(16))}`, kind: "lane" };
-const membership: ScopeRef = { ...scope, scope: `sc_${base32(new Uint8Array(32).fill(1))}`, kind: "membership" };
+const scope: ScopeRef = { scope: `sc_${base32(new Uint8Array(32))}`, genesis: textDigest("TEST genesis 26") };
+const membership: ScopeRef = { ...scope, scope: `sc_${base32(new Uint8Array(32).fill(1))}`, genesis: textDigest("TEST genesis membership") };
 const key = keyIdOfSecret(new Uint8Array(32));
 const definition = `sha256:${"1".repeat(64)}` as const;
 const head = (seq: number): Head => ({ seq, hash: `sha256:${String(seq).padStart(64, "0")}` });

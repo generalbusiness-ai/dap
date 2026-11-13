@@ -1,14 +1,14 @@
 import { expect, test } from "vitest";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { openRoom, siteAddress, loadSite, type Session } from "../src/data.ts";
 
 // Actual data path over scripted HTTP summaries, not Native creation/authority.
 // The null is the native fold's empty optional slot, not a repository record.
 test("Page publication mode needs the exact active unpublished directory; missing old or malformed metadata is unreadable", async () => {
-  const ref = (kind: "directory" | "membership" | "rules" | "destination"): ScopeRef => ({ kind,
+  const ref = (kind: "directory" | "membership" | "rules" | "destination"): ScopeRef => ({
     scope: scopeIdOf({ v: 1, kind, definition: `platform:${kind}@1`, creator: null, cause: textDigest("SCRIPTED publication " + kind), ordinal: 0 }),
-    inc: newIncarnation(new Uint8Array(16).fill(3)) });
+    genesis: textDigest("TEST genesis " + kind) });
   const directory = ref("directory"), membership = ref("membership"), rules = ref("rules"), destination = ref("destination");
   let definition = "platform:directory@20", status = "active", repository: unknown = null;
   const calls: string[] = [];

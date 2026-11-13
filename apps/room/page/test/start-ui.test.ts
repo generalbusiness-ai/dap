@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { b64url, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { b64url, keyIdOfSecret, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { secretSigner, type CreationOffer } from "@generalbusiness/dap-client";
 import type { StartedRoom, StartOptions, StartStatus } from "../src/start-custody.ts";
 
@@ -79,7 +79,7 @@ class Element {
 test("Start is explicit; Back fences late discovery, reload only offers Check and Continue, and public configuration never exports the browser key", async () => {
   let demoStart = false;
   const root = new Element("div"), location = { origin: "https://dap-demo.inguz.workers.dev", hash: "#/join" };
-  const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@17" : kind === "directory" ? "platform:directory@16" : "platform:membership@8", creator: null, cause: textDigest("SCRIPTED Start UI " + kind), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(5)), kind });
+  const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@17" : kind === "directory" ? "platform:directory@16" : "platform:membership@8", creator: null, cause: textDigest("SCRIPTED Start UI " + kind), ordinal: 0 }), genesis: textDigest("TEST genesis 38") });
   const register = ref("register"), directory = ref("directory"), membership = ref("membership");
   const legacyRegister = { ...register, scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@7", creator: null, cause: textDigest("SCRIPTED retained UI register"), ordinal: 0 }) };
   let selectedDirectory = directory;

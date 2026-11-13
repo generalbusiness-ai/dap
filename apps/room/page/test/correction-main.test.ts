@@ -25,7 +25,7 @@ test("Main mounts a new corrected-proposal control for verified invalid-path tex
     querySelectorAll(){return[];} get value(){return this.attrs['value']??'';} set value(v:string){this.attrs['value']=v;} get textContent():string{return this.children.map(c=>typeof c==='string'?c:c.textContent).join(' ');}
   }
   const root=new Element('div');
-  const place={directory:'directory',membership:{scope:'membership',kind:'membership',inc:'one'}};
+  const place={directory:'directory',membership:{scope:'membership',genesis:'one'}};
   const room={session:{service:'https://page.test',secret:new Uint8Array(32)},...place,rules:'rules',destination:'destination',key:'key',me:{handle:'@member',role:'member',actions:['change.open','change.propose']},reader:{}};
   const change={scope:'invalid-change',definition:'definition',head:{seq:1,hash:'head'},number:7,title:'Invalid original',body:null,state:'open',author:'@member',currentManifest:12,manifests:[{id:12,state:'current',integrator:'@member',authors:['@member'],base:'a'.repeat(40),integration:null,tree:null,complete:true,file:{path:'../outside.md',digest:'digest',size:8,page:'not-a-preview',content:'original\r\n'}}],reviews:[],requests:[],jobs:[],links:[],merges:[],rules:null,comments:[]};
   vi.doMock('@generalbusiness/dap-bytes',async()=>({...await vi.importActual<typeof import('@generalbusiness/dap-bytes')>('@generalbusiness/dap-bytes'),b64url:()=> 'device',unb64url:()=>new Uint8Array(32),keyIdOfSecret:()=> 'key',isKeyId:()=>true}));

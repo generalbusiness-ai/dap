@@ -1,6 +1,6 @@
 import { workbenchFixtures } from "./workbench-fixture.ts";
 import { expect, test, vi } from "vitest";
-import { keyIdOfSecret } from "@generalbusiness/dap-bytes";
+import { keyIdOfSecret, textDigest } from "@generalbusiness/dap-bytes";
 
 
 // Scripted UI ports: migration/key persistence have separate custody/browser
@@ -55,7 +55,7 @@ test("joined room/account clicks disclose identity without leaving the room, and
     get textContent(): string { return this.children.map(c => typeof c === "string" ? c : c.textContent).join(" "); }
   }
   const root = new Element("div"), secret = new Uint8Array(32).fill(71);
-  const place = { directory: "directory", membership: { scope: "membership", kind: "membership", inc: "one" } };
+  const place = { directory: "directory", membership: { scope: "membership", genesis: textDigest("TEST genesis 17") } };
   const publicKey = keyIdOfSecret(secret), unexpectedKeyOperation = uiKeys([publicKey]);
   const signer = { key: publicKey, sign: unexpectedKeyOperation };
   const room = { session: { service: location.origin, signer }, ...place, name: "Hugh's room" as string | undefined, key: keyIdOfSecret(secret), me: { handle: "@hugh-web", role: "member", actions: [] }, reader: {}, rules: "rules", destination: "destination", publication: "repository" };
