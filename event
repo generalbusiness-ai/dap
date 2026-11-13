@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:450461c8504f739a698a67ac630665734fea86b2","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/browser-key-store.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:45133837730748a6bb094e7f7a25a1ec11e6a4b2","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/capacity-recovered.test.ts."}
