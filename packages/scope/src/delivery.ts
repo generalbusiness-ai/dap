@@ -25,7 +25,7 @@ import { countedEntries } from "@generalbusiness/dap-derive";
  */
 
 import type { Bounds, Digest, Entry, FactRef, GenesisNonce, PlatformDefinition, ScopeId, Seed, UnavailableReason } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isPlatformDefinition, newGenesisNonce, isSeed, parseStrict, platformName } from "@generalbusiness/dap-bytes";
+import { canonicalize, isDigest, isPlatformDefinition, newGenesisNonce, isSeed, parseStrict, platformName, resolveGenesisSelf } from "@generalbusiness/dap-bytes";
 
 import { bound, clockOf, creationFields, factsNamed, isEntryOf, isFactRef, isLocalId, isObject, isScopeRef, judgeDelivery, judgeGenesis, messageFacts, messageTexts, own, prepareRules, readFields, retainedResultContext, textsNamed } from "@generalbusiness/dap-derive";
 import type { ClassifiedRetainedUse, Clock as Reading, Creation, Delivered, DeliveryContext, Fetched, RetainedResultMaterial, Judgment, PlatformRules, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
@@ -78,10 +78,11 @@ export class Deliveries {
    * that this runtime cannot run whole: a version that it lacks, or one
    * with a mark and no rule. Either way nothing is recorded.
    */
-  async #declared(seed: Seed): Promise<{ valid: ValidDefinition; bytes: string | null; children: Retained[]; platform: PlatformRules | null } | "dependency-unavailable" | "unsupported-definition"> {
-    if (!isObject(seed) || !isScopeRef(seed.creator)) return "unsupported-definition";
+  async #declared(seed: Seed, origin: FactRef): Promise<{ valid: ValidDefinition; bytes: string | null; children: Retained[]; platform: PlatformRules | null } | "dependency-unavailable" | "unsupported-definition"> {
+    // A seed in its creator's genesis names that creator by scope alone; the authenticated source fact supplies its genesis.
+    const creator = isObject(seed) ? resolveGenesisSelf(seed.creator, origin) : null;
+    if (!creator) return "unsupported-definition";
     const { definitions } = this.#ports;
-    const creator = seed.creator;
     const seconds = this.#bounds.fetchSeconds;
     const from = async (digest: Digest): Promise<DefinitionRead> => {
       const read = await within(() => definitions.read(digest, creator), seconds);
@@ -165,7 +166,7 @@ export class Deliveries {
     let source: Fetched = carryProducerName({ fact: from, entry: read.entry, under: read.under, sequence: read.sequence }, read);
 
     // The definition is read only after authenticating the source bytes.
-    const declared = this.#scope.pinned() || !creates ? null : await this.#declared(delivered.to as Seed);
+    const declared = this.#scope.pinned() || !creates ? null : await this.#declared(delivered.to as Seed, from);
     if (typeof declared === "string") return retry(declared);
     const creation = declared;
     const pinned = this.#scope.pinned();
