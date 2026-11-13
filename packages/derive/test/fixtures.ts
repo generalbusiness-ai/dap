@@ -192,14 +192,14 @@ export class Scope extends Ledger {
     const slot = Object.keys(declared.items[type]!.parties)[0]!;
     this.fold({
       v: 1, seq: 0, prev: null, time: T0, clamped: false, epoch: 0,
-      input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(9 + ordinal)), kind: declared.genesis, "founding": null, source, n: 0, message, decision: "applied" }, uses: [], prepared: [],
+      input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(9 + ordinal)), kind: declared.genesis, "founding": null, source, sourceKind: "directory", n: 0, message, decision: "applied" }, uses: [], prepared: [],
       effects: [{ effect: "open", item: 0, type, state: declared.items[type]!.initial }, { effect: "party", item: 0, slot, member: opener }],
       sends: [{ n: 0, to: directory, message: { class: "result", of: { from: source, n: 0 }, outcome: "applied" } }],
     });
     if (confirmed) {
       this.fold({
         v: 1, genesis: this.at.genesis, seq: 1, prev: this.head.hash, time: T0, clamped: false, epoch: 0,
-        input: { type: "delivery", from: { at: directory, seq: 18, hash: d("8") }, n: 0, message: { class: "control", type: "confirm", genesis: this.fact(0) } },
+        input: { type: "delivery", from: { at: directory, seq: 18, hash: d("8") }, sourceKind: "directory", n: 0, message: { class: "control", type: "confirm", genesis: this.fact(0) } },
         uses: [], prepared: [], effects: [{ effect: "activate" }], sends: [],
       });
     }
@@ -253,7 +253,7 @@ export function judged(to: Ledger, from: Ledger, seq: number, n = 0, over: Arriv
   const { source: read = source, ...envelope } = over;
   const arrival = { ...delivered, ...envelope };
   const message = arrival.message;
-  const named = message.class === "request" || message.class === "advisory" ? messageFacts(to.state, to.definition, message, arrival.from, to.bounds, read?.under ?? from.under) : [];
+  const named = message.class === "request" || message.class === "advisory" ? messageFacts(to.state, to.definition, message, arrival.from, fixtureSequence(from).kind, to.bounds, read?.under ?? from.under) : [];
   const facts = named.flatMap((fact): Fetched[] => (fact.at.scope === from.at.scope && from.entries[fact.seq] ? [{ fact, entry: from.entries[fact.seq]!.entry, sequence: fixtureSequence(from), under: from.under }] : []));
   return judgeDelivery(to.state, to.definition, arrival, arriving(to, arrival, read, facts));
 }
