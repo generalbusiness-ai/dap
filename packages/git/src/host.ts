@@ -64,7 +64,7 @@
  */
 
 import { isFactRef, timeMs } from "@generalbusiness/dap-bytes";
-import type { DecisiveEvidence, Digest, Effect, Entry, FactRef, OperationId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import type { DecisiveEvidence, Digest, Entry, GenesisEffect, FactRef, OperationId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 
 /** The owner and the two kinds of operation that this driver sends: the names that the code of `hold@1` states (`derive/src/capability/hold.ts`, `HOLD_KINDS`). */
 export const TOKEN_OWNER = "hold@1";
@@ -152,7 +152,7 @@ export interface TokenDriverOptions {
   log?: (event: { step: "mint" | "revoke" | "handoff"; event: string }) => void;
 }
 
-type Recorded = Extract<Effect, { effect: "record" }>;
+type Recorded = Extract<GenesisEffect, { effect: "record" }>;
 
 const attemptStorageKey = (at: AttemptOf): string => `${at.scope.scope}/${at.scope.genesis}/${at.operation}#${at.attempt}`;
 const position = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
@@ -160,7 +160,8 @@ const isOperation = (value: unknown): value is OperationId => typeof value === "
 
 /** The `token` record of that owner in the sealed entry that names the operation in the member `by`. Null: the entry holds none, or more than one. */
 function tokenOf(entry: Entry, owner: string, by: "mint" | "revocation", operation: OperationId): Recorded | null {
-  const matched = entry.effects.filter((e): e is Recorded => e.effect === "record" && e.capability === owner && e.kind === "token" && e.values[by] === operation);
+  const matched: Recorded[] = [];
+  for (const e of entry.effects) if (e.effect === "record" && e.capability === owner && e.kind === "token" && e.values[by] === operation) matched.push(e);
   return matched.length === 1 && position(matched[0]!.key[0]) ? matched[0]! : null;
 }
 

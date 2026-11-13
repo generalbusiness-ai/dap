@@ -490,7 +490,7 @@ const retainedBy = (input: Entry["input"]): ObservationUse[] => {
  * in its grant or in `observed`, which fixes it.
  */
 const fixedFor = (recorded: RecordedRef | null, input: Entry["input"]): ScopeRef | null => {
-  if (recorded === null || recorded.genesis !== null) return recorded as ScopeRef | null;
+  if (recorded === null || !("pending" in recorded)) return recorded;
   return fixedBy(recorded, retainedBy(input).map((use) => use.observation.of).find((of) => observedOf(of, recorded)) ?? null);
 };
 /** The membership reference, so. */
@@ -1560,7 +1560,7 @@ class Verifier {
     if (!own || input?.type !== "delivery" || !same(input.from, fact) || input.message.class !== "result" || input.message.outcome !== "applied") return false;
     if (fact.seq !== 0 || input.sourceKind !== "directory" || fact.at.scope === own) return false;
     const run = this.#runs.get(user.at.scope), of = input.message.of;
-    if (run?.sequence?.kind !== "register" || !sameScope(of.from.at, run.at)) return false;
+    if (run?.sequence?.kind !== "register" || !run.at || !sameScope(of.from.at, run.at)) return false;
     const request = run.sealed[of.from.seq];
     if (!request || request.hash !== of.from.hash) return false;
     const to = request.entry.sends[of.n]?.to;
@@ -1616,7 +1616,7 @@ class Verifier {
     const kind = this.#recordedKind(entry, fact, where);
     const catalogKind = answersCatalogVocabularyQuestion(row.pin, "archiveRegisterForeignCopy") ? "register"
       : answersCatalogVocabularyQuestion(row.pin, "archiveMembershipForeignCopy") ? "membership" : null;
-    if (!same(row.at, fact.at) || catalogKind === null || kind === null) return null;
+    if (!same(row.at, fact.at) || catalogKind === null || kind === null || !isPlatformDefinition(row.pin)) return null;
     if (catalogKind !== kind) throw new Stop("mismatch", "the retained definition's catalog kind contradicts the receiving entry's recorded kind", where);
     return platformName(row.pin);
   }
@@ -2222,7 +2222,7 @@ class Verifier {
             const message = delivered?.message;
             if (born.decision !== "refused" || !delivered || message?.class !== "result" || !same(fact, delivered.from)
               || !same(born.seed.creator, where.at) || !isFactRef(born.source) || !isObject(message.of) || !isFactRef(message.of.from) || !isLocalId(message.of.n) || !same(message.of.from, born.source) || message.of.n !== born.n
-              || message.outcome !== "refused" || !sentBy(copy.entry, { to: where.at, from: delivered.from, n: delivered.n, message })) throw mismatch("a refused genesis is not positive source evidence");
+              || message.outcome !== "refused" || !sentBy(copy.entry, { to: where.at, from: delivered.from, n: delivered.n, message }, copy.sequence)) throw mismatch("a refused genesis is not positive source evidence");
             copy.under = "";
           } else copy.under = selected.under;
         }
