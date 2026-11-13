@@ -1361,8 +1361,9 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     if (kind === "fixture") return;
     const directorySelection = diagnosticArchives.get(D.name)!.selection;
     const replayScopes = discovery!.scopes.map(scope => scope.at);
-    // A missing ordinary producer cannot silently become caller trust.
-    expect(() => archiveReplayAnchors(directorySelection, replayScopes.filter(at => at.scope !== A.name), new ArchiveBudget()))
+    // A missing ordinary producer cannot silently become caller trust. A
+    // reference names no kind, so the source pins classify the producer.
+    expect(() => archiveReplayAnchors(directorySelection, replayScopes.filter(at => at.scope !== A.name), new ArchiveBudget(), fixtureSources))
       .toThrow("unsupported-foreign-copy");
     const directoryGenesis = (await life.wait(() => D.sealed()))[0]!.entry;
     if (directoryGenesis.input.type !== "genesis" || !directoryGenesis.input.source) throw Error("Native directory needs its actual register claim.");
