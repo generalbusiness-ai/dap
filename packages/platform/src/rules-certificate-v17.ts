@@ -1,6 +1,6 @@
 /** Q13/G17 certificate custody. Every earlier certificate family stays exact. */
 import type { Digest, Entry, FactRef, Head, ScopeKind, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isFactRef, isHead, isRecord, same, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isFactRef, isHead, isRecord, same, scopeIdOf, genesisInputDigest, resolveGenesisSelf, utf8 } from "@generalbusiness/dap-bytes";
 import type { CheckedSequence } from '@generalbusiness/dap-bytes';
 import { isEntryOf, sentBy, type Fetched, type Operation, type Own, type RuleGiven } from "@generalbusiness/dap-derive";
 import type { RulesTreeBinding } from "./rules-policy-tree.ts";
@@ -60,8 +60,8 @@ export function rulesCertificateFamilyV17(given:RuleGiven,otherKind:'rules'|'des
     const destination=birth(ownKind==='destination'?ownCopy:find(given,otherFact),EVIDENCE_RULES_COHORT.destination,'destination');
     if(!directory||!membership||!rules||!destination)return null;
     for(const [child,ordinal] of [[membership,0],[rules,1],[destination,2]] as const){
-      const input=child.entry.input;if(input.type!=='genesis'||!same(child.seed.creator,directory.fact.at)||!same(input.source,directory.fact)
-        ||child.seed.ordinal!==ordinal||child.seed.cause!==seedDigest(directory.seed)||input.n===null||!input.message
+      const input=child.entry.input;if(input.type!=='genesis'||!same(resolveGenesisSelf(child.seed.creator,directory.fact),directory.fact.at)||!same(input.source,directory.fact)
+        ||child.seed.ordinal!==ordinal||directory.entry.input.type!=='genesis'||child.seed.cause!==genesisInputDigest(directory.entry.input)||input.n===null||!input.message
         ||!sentBy(directory.entry,{from:directory.fact,n:input.n,to:child.seed,message:input.message},directory.sequence))return null;
     }
     if(!same(rules.fields['directory'],directory.fact.at)||!same(destination.fields['directory'],directory.fact.at)

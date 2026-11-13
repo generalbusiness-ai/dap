@@ -1,7 +1,7 @@
 import { EVIDENCE_LANE_PINS } from "./evidence-lane-pins.generated.ts";
 import { evidenceIncidentOriginV17 } from "./evidence-incident-origin-v17.ts";
 /** Native identities are established by immutable creation facts, not declared names. */
-import { same } from "@generalbusiness/dap-bytes";
+import { resolveGenesisSelf, same } from "@generalbusiness/dap-bytes";
 import type { Digest, FactRef, GenesisInput, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, deliveryCauseDigest, intentDigest, isEntryBodyOf, isEntryOf, isMemberRef, messageDigest, parseStrict, isDigest, isPlatformDefinition, isSeed, platformName, scopeIdOf, verifySignedIntent, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { creationContextOf, isFactRef, isObject, isScopeRef, sentBySource, type SourceCopy } from "@generalbusiness/dap-derive";
@@ -36,7 +36,7 @@ const genuine = (copy: SourceCopy | undefined): copy is Genuine => !!copy && cop
  * records (ruling b02334db).
  */
 const creatorOf = (copy: SourceCopy, born: GenesisInput): boolean =>
-  born.source !== null && isEntryBodyOf(copy.entry, born.source) && same(born.seed.creator, born.source.at);
+  born.source !== null && isEntryBodyOf(copy.entry, born.source) && same(resolveGenesisSelf(born.seed.creator, born.source), born.source.at);
 
 /** A reserve must address the full Directory and destination of its birth. */
 export function publishingLaneAffiliation(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly SourceCopy[]): boolean {

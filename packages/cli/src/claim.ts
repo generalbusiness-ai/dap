@@ -2,7 +2,7 @@
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { readFields } from "@generalbusiness/dap-derive";
 import type { ActType, Digest, Entry, FactRef, Item, KeyId, PlatformDefinition, ScopeId, ScopeRef, Seed, Settlement, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, isDigest, isFactRef, isHead, isReceipt, isSignedIntentShape, textDigest, verifySignedIntent, isScopeId, parseStrict, scopeIdOf, seedDigest, isEntryBodyOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, isDigest, isFactRef, isHead, isReceipt, isSignedIntentShape, textDigest, verifySignedIntent, isScopeId, parseStrict, scopeIdOf, isEntryBodyOf, entryHash, genesisInputDigest } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, creationOffer, isCreationOffer, isCurrentCreationOffer, signedIntent, signedReads, type CreationOffer } from "@generalbusiness/dap-client";
 import { answersVersionQuestion, DIRECTORY_OF, SIBLINGS_OF, platform } from "@generalbusiness/dap-platform";
 import type { Context, Outcome } from "./commands.ts";
@@ -52,16 +52,20 @@ function retainedRegisterSelector(config: Config, register: ScopeRef, key: KeyId
   } catch { return null; } // Insufficient legacy custody keeps the existing read path.
 }
 
-function validRepository(repository: Repository, directory: Seed): boolean {
+/** The directory's genesis seals its siblings' seeds: each names the directory by scope alone and that genesis input as its cause. */
+async function validRepository(repository: Repository, directory: Seed, D: ScopeHandle): Promise<boolean> {
   try {
     const siblings = SIBLINGS_OF[directory.definition];
-    if (!siblings) return false;
-    const sibling = (kind: "membership" | "rules" | "destination", ordinal: number) => scopeIdOf({ v: 1, kind, definition: siblings[kind], creator: repository.directory, cause: seedDigest(directory), ordinal });
-    // The pinned directory creates these three exact siblings in order. Both its exact
-    // seed and full confirmed reference determine their IDs; the same creator
+    if (!siblings || repository.directory.scope !== scopeIdOf(directory) || D.scope !== repository.directory.scope || !isDigest(repository.directory.genesis)) return false;
+    const read = await D.entry(0);
+    const born = read.ok ? read.value.entry : null;
+    if (!born || born.input.type !== "genesis" || entryHash(born) !== repository.directory.genesis || canonicalize(born.input.seed) !== canonicalize(directory)) return false;
+    const cause = genesisInputDigest(born.input);
+    const sibling = (kind: "membership" | "rules" | "destination", ordinal: number) => scopeIdOf({ v: 1, kind, definition: siblings[kind], creator: { scope: repository.directory.scope, genesis: null }, cause, ordinal });
+    // The pinned directory creates these three exact siblings in order. Its exact
+    // seed and sealed genesis determine their IDs; the same creator
     // key/handle in another room cannot authorize a substituted cache.
-    return repository.directory.scope === scopeIdOf(directory) && isDigest(repository.directory.genesis)
-      && isScopeId(repository.membership.scope) && isDigest(repository.membership.genesis)
+    return isScopeId(repository.membership.scope) && isDigest(repository.membership.genesis)
       && repository.membership.scope === sibling("membership", 0) && repository.rules === sibling("rules", 1) && repository.destination === sibling("destination", 2)
       && (repository.inbox === undefined || isScopeId(repository.inbox));
   } catch { return false; }
@@ -333,7 +337,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
       repository = { directory: directory.scope, membership: summaries[0]!.scope, rules: children[1]!, destination: children[2]! };
       await keep({ ...pending, repository });
     }
-    if (!validRepository(repository, seed)) return failed(`The saved repository references do not match this claim. ${CLAIM_WENT}`);
+    if (!await validRepository(repository, seed, await handleOf(ctx, config, repository.directory.scope, null))) return failed(`The saved repository references do not match this claim. ${CLAIM_WENT}`);
     const handle = pending.handle;
 
     // The creator's seat and first key (`founding-key`): the first admin of the repository.
