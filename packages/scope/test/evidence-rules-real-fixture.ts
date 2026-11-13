@@ -731,7 +731,7 @@ export async function evidenceNativeState(room: EvidenceRoom, replay = false) {
     const source = httpSource('https://scopes.test', { reader, fetch: (url, init) => room.life.wait(() => routed(url, init)) });
     const checked = await room.life.wait(() => verify(source, { mode: 'replay', platform: nativePlatform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: 'proven', scope: room.G.name, head: before }));
     expect([checked.report.result, checked.why, checked.report.target]).toEqual(['consistent', null, { at: await room.G.at(), ...before }]);
-    expect(checked.report.coverage).toContainEqual({ scope: await room.G.at(), from: 0, through: before.seq });
+    expect(checked.report.coverage).toContainEqual({ scope: await room.G.at(), kind: 'destination', from: 0, through: before.seq });
   }
   expect((await room.G.summary()).at).toEqual(before);
   return inspected;
