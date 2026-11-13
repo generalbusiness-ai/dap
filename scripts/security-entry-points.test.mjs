@@ -318,7 +318,7 @@ const seals = {
   "packages/scope/src/limits.ts": "dfab21444a03339291f51f500941dc1b0d23926fa01fb173e7cd7cc91983f099", // R12 verified-key join failure window.
   "packages/scope/src/serving-limits.ts": "94f6987027c7638ebe0aad6899f1dbf352a25029aceca60c00476b600e7d410b", // New bounded memory-only counter, no live eviction.
   "packages/scope/src/serving-admission.ts": "44e8ef11b0bb97a0a2982643152d62d9ec1ab14f9af26a2a687d5a301ccf1168", // New bounded original-signature/counter ingress.
-  "packages/bytes/src/records.ts": "ab0e3293165aae42bf4e30d235972035ff645a8219ee149705a4a40b1edbbf3f", // R11 named serving refusal; RC-1 adds the REFUSAL_CLASSES table only; actual maintained parser output.
+  "packages/bytes/src/records.ts": "9808419e86a06b15da0a12e5a36841bc7a2387a1c7c12074e4a2fc50cdaeeaf6", // R11 named serving refusal; RC-1 adds the REFUSAL_CLASSES table; H1 refuses the six sequenced inputs and leaves the page kind out; actual maintained parser output.
   "packages/scope/src/session-preparation.ts": "49b091ff2910c0c2602fce76330e7084479a3bd4cb3bc1617005c18f2cd3fac3",
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection-source.ts": "4045ccd66ccc971a08a2a31e5f7daaf8f20453c03af8fe0f1cb134bf77ac86b7", // Closed native room metadata with optional supported membership pin.

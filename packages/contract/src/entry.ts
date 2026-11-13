@@ -4,7 +4,7 @@
  * section 4.1). The `Entry` type has no field for its own hash.
  */
 
-import type { Digest, FactRef, GenesisNonce, GenesisSelfRef, MemberRef, OperationId, PlatformDefinition, ScopeId, ScopeKind, ScopeRef, Seed, Grant, Timestamp } from "./scope.ts";
+import type { Digest, FactRef, GenesisNonce, GenesisSelfRef, MemberRef, OperationId, PlatformDefinition, ScopeId, ScopeKind, ScopeRef, Seed, Grant, SequenceRef, Timestamp } from "./scope.ts";
 import type { FieldValue, GenesisFieldValue, SignedIntent } from "./intent.ts";
 import type { RefusalReason } from "./result.ts";
 import type { CapabilityName } from "./capability.ts";
@@ -27,8 +27,23 @@ interface EntryBody {
 
 /** Genesis has no self-hashing sequence header. */
 export interface GenesisEntry extends EntryBody { seq: 0; prev: null; input: GenesisInput }
-/** Every later entry binds its sequence by the already sealed genesis. */
-export interface SequenceEntry extends EntryBody { genesis: Digest; input: Exclude<Input, GenesisInput>; effects: readonly Effect[] }
+/**
+ * Every later entry binds its sequence by the already sealed genesis. A prepare entry and its commit entry state `position`,
+ * the order scope's entry that allocated the input's position, and a prepare entry states `reads`, one witness for each `reads`
+ * entry of its act (sequenced note, sections 5.2 and 5.5). No other entry states either.
+ */
+export interface SequenceEntry extends EntryBody { genesis: Digest; input: Exclude<Input, GenesisInput>; effects: readonly Effect[];
+                                                   position?: { at: FactRef }; reads?: readonly GroupReadUse[] }
+
+/**
+ * The witness of one read of a member as of a cut (sequenced note, section 5.5). `name`: the `reads` key. `member`: the member's
+ * sequence. `cut`: the cut position X. `entry`: the member's cut entry, a commit entry or its genesis, or null when the member
+ * left below the cut. `page`: the digest of the canonical page bytes, which the reader retains under the kind `page`.
+ */
+export interface GroupReadUse { name: string; member: SequenceRef; cut: number; entry: FactRef | null; page: Digest }
+
+/** The input that a prepare or commit entry wraps: the original act, or the original delivery of a request. */
+export type SequencedInput = Extract<Input, { type: "act" }> | Extract<Input, { type: "delivery"; message: Request }>;
 export type Entry = GenesisEntry | SequenceEntry;
 
 interface GenesisInputBody {
@@ -88,7 +103,16 @@ export type Input =
       owner: CapabilityName | PlatformDefinition; kind: string;           // of the operation, as the entry that opened it states them (section 4.1, revision 16)
       result: "confirmed" | "refused" | "unknown"; evidence: Evidence;    // section 4.3
       observed?: readonly ObservationUse[] }    // as for an act
-  | { type: "checkpoint"; through: number; state: Digest };
+  | { type: "checkpoint"; through: number; state: Digest }
+  // A member of a group (sequenced note, section 5.2). `prepare`: the judgment, which is not an effective fact. `commit`: the one
+  // effective fact, with the prepare's effects and sends. `abandon`: the prepare is void after its allocation expired.
+  | { type: "prepare"; input: SequencedInput; position: { at: FactRef }; reads: readonly GroupReadUse[] }
+  | { type: "commit"; input: SequencedInput; prepare: FactRef; resolution: FactRef }
+  | { type: "abandon"; prepare: FactRef; expiry: FactRef }
+  // An order scope (sequenced note, section 5.3). Each is one platform request of a member. `input`: the digest of the input.
+  | { type: "allocation"; member: SequenceRef; input: Digest }                                       // opens an `allocation`; its seq is the position
+  | { type: "resolution"; member: SequenceRef; position: number; input: Digest; prepare: FactRef }  // `open` to `resolved`, bound to the prepare entry
+  | { type: "hole"; member: SequenceRef; position: number; input: Digest; reason: string };         // `open` to `holed`
 
 /**
  * A preparation entry (section 4.1; 5.5): the signed intent that asks for a
