@@ -233,3 +233,28 @@ A ruling decides what replaces each one.
 | `packages/mcp/test/room.scope.test.ts` | the hold `task` field value is the lane reference with `kind: "task"` | what form that field value takes |
 | `packages/cli/test/scope-index-applications.test.ts` | the recorded `fixtures/application-release-listing.json` names `inc` and `kind` in its references | a new recording of the listing |
 | `packages/cli/test/verify.test.ts` | the shared coverage line states `kind register` | what replaces the kind column of the coverage |
+
+## Page browser rows (ruling 4393b366 P1)
+
+The Page claim journal, the connection custody rows and the OAuth connection
+rows take new storage names: `dap-page-claim-2:`, `dap-page-connections-2` and
+`dap-oauth-connection-2`. The Page reads none of the old names. The claim
+journal no longer carries a legacy record or a recovery seed, so the claim
+recovery key migration (`migrateClaimKeys`, `migrateRecoveryCustody`,
+`migrateAllClaimCustody`) and its test are removed. The custody compatibility
+test now shows that an old connection row stays in the browser, unread.
+
+A person who returns with an old link gets `room-retired` from the Worker. The
+old browser rows stay in the browser, unread.
+
+Open: the Start row (`artroom-page-start:v2`), the join row and the settings
+slot still use their old names and still migrate a retained secret into the
+key store. Ruling e7787de0 item 5 names them; ruling 4393b366 P1 names only the
+three files above.
+
+## Grow and lending examples
+
+The grow examples check each entry with `isEntryBodyOf` against the room's
+sequence reference. The simulator host reads the room kind `lane` from the
+room genesis seed, not from the binding. The lending `memberForKey` check
+`summary.scope.kind !== "membership"` is held: see the open questions.
