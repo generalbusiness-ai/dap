@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9afd38b88caee1a0b248d46e3de5a5f6358e45b2","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/evidence-ledger-v17.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9b1b3c1269da1fe4c79ad5d1dff2515dcab384e4","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-v2-reader.ts."}
