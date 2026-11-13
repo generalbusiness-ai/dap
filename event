@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"notes/implementation/cd-dropped-kind-checks.md at exact 9b583eb2344af8b33e8a79704e3e67c9e1c455ed on builder/identifiers-cd-composed-20261112, under promise git:sha1…a8de08d on request git:sha1…e084717","body":{"commit":"9b583eb2344af8b33e8a79704e3e67c9e1c455ed","path":"notes/implementation/cd-dropped-kind-checks.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b610f9148efa6472ffc514c165b5cdb8727a8788","text":"Republished at 9b583eb2344af8b33e8a79704e3e67c9e1c455ed; the successor stands at .agents."}
