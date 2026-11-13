@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b0f00eac48ee7e5aee78392f0377b8563e962b54","text":"Replaced by the review request for exact head 520841797adafbd9357f5e36352219cda4d165fa; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
+{"kind":"promise","text":"I review IDR-1 at exact head 52084179 for request 567ef991 under promise 53426ce1 and review request 4f94b119, against verdict 909a06c1, and file one verdict with Architecture, Security and Simplification conclusions."}
