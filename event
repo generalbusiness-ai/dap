@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a70b25f930093c6fb416588906c042c0fad8ffa4","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/application-host-route.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a74fcebb2138fcef12eb3c4d2a22630a585a0333","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/inbox.ts."}
