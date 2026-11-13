@@ -55,6 +55,8 @@ export async function initializeCapture(context: CaptureSetupContext, kept: Capt
       }, body: '<!doctype html><meta charset="utf-8"><link rel="icon" href="data:,"><title>Capture key setup</title>' });
     });
     await page.goto(bootstrap.href);
+    // Under tsx, esbuild keeps function names with a module helper `__name`, and the setup body below carries calls to it into the page.
+    await page.evaluate(async () => { (globalThis as { __name?: unknown }).__name ??= (target: unknown) => target; }, undefined);
     await page.evaluate(async input => {
       const fail = () => new Error("Capture key setup did not finish.");
       if (window.top !== window || location.href !== input.bootstrap || location.origin !== input.origin

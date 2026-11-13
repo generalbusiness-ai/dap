@@ -50,7 +50,8 @@ try {
     assert.equal(proof.mode, 'inline', 'the declared display mode is used');
     assert.deepEqual(errors, []); assert.deepEqual(proof.errors, []); assert.deepEqual(proof.chat, []);
     assert.ok(!JSON.stringify(proof.contexts).includes('lastNumber'));
-    assert.ok(!JSON.stringify(proof.contexts).includes('42'));
+    // The hidden value is the number 42. A view ID is a random UUID and can hold the digits 42, so look for the JSON number.
+    assert.doesNotMatch(JSON.stringify(proof.contexts), /[:,[]42[,\]}]/);
     assert.equal(proof.contexts.at(-1).structuredContent.note, 'Board 2 v1');
     await page.screenshot({ path: join(out, `declared-${width}.png`) });
     await app.getByRole('button', { name: /Back/ }).click();
