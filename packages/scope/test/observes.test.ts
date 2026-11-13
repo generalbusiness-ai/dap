@@ -242,10 +242,11 @@ test.each([EXTENTS, DOMAINS.definition])("18.48 cases 6 to 8, and 18.50 cases 4 
     /** One `ask`, and the applied result of it as it arrives, from an entry of the peer MADE BY HAND. */
     const asked = async (seq: number) => {
       expect(said(await s.act(rita, "go", await s.desk()))).toEqual(["accepted", null]);
-      const sent = (await s.entries()).at(-1)!;
+      const sent = (await s.entries()).at(-1)!, born = (await s.entries())[0]!;
+      if (born.input.type !== "genesis") throw new Error("the sending scope has no genesis");
       const request = { from: { at: s.scope, seq: sent.seq, hash: entryHash(sent) }, n: 0 };
       const answer: Send = { n: 0, to: s.scope, message: { class: "result", of: request, outcome: "applied" } };
-      const entry = peerLane.entry(seq, { type: "delivery", from: request.from, n: 0, message: sent.sends[0]!.message as never, decision: "applied" }, [answer]);
+      const entry = peerLane.entry(seq, { type: "delivery", from: request.from, sourceKind: born.input.seed.kind, n: 0, message: sent.sends[0]!.message as never, decision: "applied" }, [answer]);
       c.foreign.set(entryHash(entry), peerLane.source(entry, "lane"));
       return { ...answer, from: peerLane.fact(entry) };
     };

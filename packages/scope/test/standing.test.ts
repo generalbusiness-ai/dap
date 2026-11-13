@@ -90,9 +90,10 @@ test("C1 native admission reserves before new work, rolls back ordinary/owed mar
       expect(await snapshot()).toEqual(corrupt);
     } finally { await restoreCounter(false); }
     expect(await snapshot()).toEqual(full);
-    const origin = full.entries[1]!, request = origin.sends[0]!.message as Request;
+    const origin = full.entries[1]!, request = origin.sends[0]!.message as Request, born = full.entries[0]!;
+    if (born.input.type !== "genesis") throw new Error("the scope has no genesis");
     const message = { class: "result", of: { from: factRefOf(origin, scope), n: 0 }, outcome: "applied" } as const;
-    const source = scripted.entry(2, { type: "delivery", from: factRefOf(origin, scope), n: 0, message: request, decision: "applied" }, [{ n: 0, to: scope, message }]);
+    const source = scripted.entry(2, { type: "delivery", from: factRefOf(origin, scope), sourceKind: born.input.seed.kind, n: 0, message: request, decision: "applied" }, [{ n: 0, to: scope, message }]);
     const from = scripted.fact(source);
     control.foreign.set(from.hash, scripted.source(source, "ticket"));
     expect(await receiver.deliver({ to: scope, from, n: 0, message })).toMatchObject({ answer: "retry", reason: "unavailable" });

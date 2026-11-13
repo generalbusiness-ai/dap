@@ -541,7 +541,7 @@ test("all eight closed local variants plan only native typed consumers; checkpoi
   const signed = lane.intent(rita, "remark", { on: 0, fields: { text: omitted } });
   const through = await appendInputs(lane, [
     { type: "act", signed, authority: [], presented: {} },
-    { type: "delivery", from: lane.genesis.fact, n: 0, message: { class: "control", type: "confirm", genesis: lane.genesis.fact } },
+    { type: "delivery", from: lane.genesis.fact, sourceKind: "directory", n: 0, message: { class: "control", type: "confirm", genesis: lane.genesis.fact } },
     { type: "timed", item: 0, rule: unrelated, due: lane.signed.intent.notAfter },
     { type: "diagnosis", of: { seq: 1, n: 0 }, finding: "undelivered", attempts: [] },
     { type: "outcome", owner: "hold@1", kind: "archive-fixture", operation: "0:0", attempt: 0, result: "confirmed", evidence: { basis: "own-answer", body: base.digest } },
