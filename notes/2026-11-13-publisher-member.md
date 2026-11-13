@@ -1,6 +1,6 @@
 # Outside effects by a member: the publisher
 
-Status: current. Draft 1, for request `35cbcb29`. Nothing here is built.
+Status: current. Draft 2, for request `35cbcb29`. Nothing here is built.
 
 A scope judges signed acts and keeps one entry for each act that takes
 effect. One part of dap does more. A destination scope writes to a Git
@@ -133,7 +133,7 @@ The singleton item `library` gains four slots.
 | Slot | Form | Holds |
 |---|---|---|
 | `publisher` | A party slot, not required | The appointed member |
-| `repository` | A value slot, a record of `host`, `namespace` and `name` | The repository that receives the pages |
+| `repository` | A value slot, a record of `host`, `namespace` and `name`, not required | The repository that receives the pages |
 | `head` | A value slot of type `commit`, not required | The published commit |
 | `cursor` | A reference slot of type `fact`, not required | The last entry that the head covers |
 
@@ -143,7 +143,7 @@ The singleton item `library` gains four slots.
 |---|---|---|---|
 | `bind-repository` | `lending.staff` | `repository` holds nothing | Sets `repository` |
 | `appoint-publisher` | `lending.staff` | None | Sets `publisher`. A later appointment replaces the earlier one |
-| `published` | `lending.publish` | The signer is in `publisher`. `through` is an entry of this scope. `base` equals `head`, or the act states no `base` and `head` holds nothing | Sets `head` to `commit`. Sets `cursor` to `through` |
+| `published` | `lending.publish` | The signer is in `publisher`. `through` is a fact of the lending definition. The scope of `through` is this scope. `base` equals `head`, or the act states no `base` and `head` holds nothing | Sets `head` to `commit`. Sets `cursor` to `through` |
 | `adopt-head` | `lending.staff` | None | Sets `head` to the stated commit |
 
 The guard on `base` gives the record one order of publications. A
@@ -152,11 +152,25 @@ the present head. So the act needs no guard on the position of `through`.
 A publisher that states an earlier entry is at fault, and the entry shows
 the fault.
 
+Two guards state that `through` is an entry of this scope. The `fact`
+guard checks the kind of the entry and the name of its definition
+(`packages/derive/src/program/guard-value.ts`). A fact of another scope
+that runs a definition of the same name passes that guard. So
+`published` also has the guard
+`equals { a: { field: "through", part: "scope" }, b: { scope: true } }`.
+Without it a foreign `through` sets the cursor to an entry of another
+room, and the check of section 7 folds the wrong journal. The field type
+of `through` lists each kind of entry that it can name.
+
 Slice P1 adds the action `lending.publish` and grants it to the role
 `agent` (`declareRoles`, `examples/lending/roles.ts`). The `signer` guard
 limits the act to the one appointed member. Membership keeps its fixed list of
 roles (`ROLE`, `packages/platform/src/membership.ts`), so the route needs
 no new membership version.
+The package manifest holds the same role table
+(`examples/lending/dap.application.json`). A room that installed the
+package earlier learns `lending.publish` through an ordinary
+`set-actions` act.
 
 Staff use `adopt-head` when a writer outside the record moved the branch.
 Section 6 gives the case.
@@ -240,7 +254,7 @@ second write follows.
 | Two processes run at once | The first ref update wins | One `published` takes effect | The Git host refuses the second update. The scope refuses the second report on the `base` guard |
 | A report takes effect and the branch did not move | `c1` | Head `c2` | The next ref update fails. The publisher stops at step 6. A reader with a clone sees the difference |
 | Another writer moved the branch | `x` | Head `c1` | Step 6. Staff repair the branch or sign `adopt-head` |
-| The publisher's key is lost or misused | Any | Any | Membership revokes the key with an ordinary act. Staff appoint another publisher |
+| The publisher's key is lost or misused | Any | Any | Membership revokes the key with an ordinary act, and staff appoint another publisher. The issuer of the Git credential revokes it at the Git host. Section 7 gives the two parts |
 
 No case writes an `unknown` result. Two properties of a Git branch make
 that possible: a ref update is conditional, and a branch can be read. The
@@ -262,7 +276,7 @@ shape today. This note designs neither form.
 | What does replay check? | That platform code derives the entry from the recorded evidence | That declared guards admit the signed act |
 | What shows that the branch moved? | The receipt commit and the branch | The branch and the trailer |
 | Who holds the Git credential? | The platform. The deployment holds the GitHub App key, and `packages/scope/src/credential-store.ts` keeps each token that the host mints | The publisher. A room's owner can keep the credential from the operator |
-| How does a room stop a bad writer? | No act does | A key revocation and a new appointment |
+| How does a room stop a bad writer? | No act does | Two parts: a key revocation in the record, and a credential revocation at the Git host |
 
 A reader with a clone and the journal can check every commit. The reader
 runs the fold for the entry in each trailer and compares the commit. The
@@ -271,6 +285,22 @@ check needs the publication map and no platform code.
 A publisher can sign a false report, and it can write a commit that no
 entry covers. An operator's runtime can do both today. The record now
 states the member who is answerable.
+
+Revoking a publisher has two parts. Membership revokes its key, and
+staff appoint another publisher. That stops each `published` act of the
+old key. It does not stop a push. The old publisher still holds the Git
+credential, and no act of the record can revoke a credential at the Git
+host. The issuer of the credential revokes it there.
+
+Until that second part is done, the old publisher can move the branch.
+The new publisher then meets the case "Another writer moved the branch"
+of section 6 and stops. The record holds. The published pages can show
+content that no entry covers until staff repair the branch.
+
+The issuer holds the duty. When the operator runs the publisher, the
+operator issued the credential and revokes it. When the owner of the
+room runs the publisher, the owner does. Section 11 lists the decision
+on who runs a hosted publisher.
 
 ## 8. Kernel review
 
@@ -359,6 +389,14 @@ Slice P1 changes no file in `packages/contract`, `packages/derive`,
 lending definition and its pin stay as they are, and the hosted lending
 room keeps its definition.
 
+Two decisions are Hugh's, at the ratification of this note.
+
+1. Who runs a hosted publisher and holds its Git credential: the
+   operator or the owner of the room. The answer names who revokes the
+   credential (section 7).
+2. Whether slice P1 is inside the stable base. The planner recommends a
+   side lane after the cutover family and the cutover deployment.
+
 ## 12. Witnesses for slice P1
 
 Each witness runs in the in-memory test support of the example
@@ -385,6 +423,9 @@ temporary directory, so no witness uses the network.
 8. **A reader's check.** A script runs the fold for each trailer and
    compares each commit. The script reports a mismatch for a commit with
    one changed file.
+9. **A foreign entry.** The publisher signs `published` with a `through`
+   that names an entry of another scope under a definition of the same
+   name. The scope refuses the act, and `cursor` does not change.
 
 ## Sources
 
