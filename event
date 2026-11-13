@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:203591d532a63cf65973ac09cdf345d5193d5abd","text":"Merge retired a covered predecessor; the successor is at scripts/celld-smoke.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:20552b33104dfab8a3795d624b691ca20d021481","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/grow-owned-session.ts."}
