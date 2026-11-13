@@ -3,8 +3,9 @@
 For request `9a321a0a` (NF-2) and promise `b7f2ffaa`.
 Planner request `0916128e` states the six problems and the three parts.
 The base is main `33836693`, the NF-1 landing.
-The source for the gate is `ebc4c936`, tree `1e193aaa2bc78816afded26714261fbf3b377a33`.
-The note commit after it changes only this note.
+The reviewed source is `456c1a05`, tree `03d520f7a605947954f2c04246a4becfbdd12eca`.
+The gate ran at `95ff9a43`. Commit `456c1a05` changes only `packages/mcp/test/hosted.scope.test.ts`.
+The commit after it changes only this note and its manifest.
 
 ## What changed
 
@@ -133,6 +134,7 @@ I did not audit `scopeArg`, which `#scope` resolves, or the `cursor` of each pag
 
 ## Evidence
 
+The [manifest](evidence/2026-11-12-mcp-boundary-nf2.manifest.json) lists each cited file with its bytes and SHA-256.
 Paths are relative to `~/play/artroom-evidence`.
 
 | Check | Head and command | Exit and result | Output |
@@ -153,8 +155,11 @@ Paths are relative to `~/play/artroom-evidence`.
 | Plain, MCP | `10250c74`: `vitest run --config vitest.plain.config.ts --project mcp` | 0. 37 files, 350 passed, 1 skipped | `2026-11-12-nf2-working-8d00dbbc/plain-4.stdout` |
 | First gate | `e989e6ee`: `npm run gate` | 1. Node 169 of 169, Counting 56 of 56, Plain 4,547 of 4,548 with 1 skip, Native 1,107 of 1,134 with 25 failed and 2 skips | `2026-11-12-nf2-gate-e989e6ee/gate.stdout` |
 | Native, the ten failed files | `ebc4c936`: `vitest run --config vitest.native.config.ts --project scope` on the ten files | 0. 10 files, 31 of 31 passed | `2026-11-12-nf2-working-8d00dbbc/native-3.stdout` |
-| Gate | `ebc4c936` or later: `npm run gate` | PENDING | PENDING |
-| CI | `ebc4c936` or later: branch push | PENDING | PENDING |
+| Gate, void | `95ff9a43`: `npm run gate` | 1, void: host sleep. 8 Plain tests timed out while the host slept from 17:54 to 18:43 ET. END `b2cd3c3b`, void under ruling `45f7507b` (`17b3a759`) | `2026-11-12-nf2-gate-95ff9a43/gate.stdout`, `pmset-sleep-wake.txt` |
+| Gate | `95ff9a43`: `npm run gate` under `caffeinate -i` | 1. Node 169 of 169, Counting 56 of 56, Plain 4,547 of 4,548 with 1 skip, Native 1,137 of 1,140 with 1 failed and 2 skips. START `6cbd893c`, END `a4f676f9` | `2026-11-12-nf2-gate-95ff9a43-2/gate.stdout` |
+| Isolated follow-up | `456c1a05`: `tsc -p packages/mcp/tsconfig.scope.json`, then `vitest run --config vitest.native.config.ts --project scope-stories` on `hosted.scope.test.ts` | 0 and 0. 24 of 24 passed, H6 included. START `a542134d`, END `595d5a0f` | `2026-11-12-nf2-h6-followup-456c1a05/owner.stdout` |
+| Page CI | Run 43318611822 at `9d3a4fd5`, push, attempt 1 | Success | `2026-11-12-nf2-ci-456c1a05/run-43318611822.log` |
+| Card CI | Run 43320873989 at `e989e6ee`, push, attempt 1 | Success | `2026-11-12-nf2-ci-456c1a05/run-43320873989.log` |
 
 Each Vitest and Node test command ran with `env -u VITEST_MAX_WORKERS`. The Native command also set `ARTROOM_SCALE_MODE=omit`.
 The skipped Plain test is `a dead reclaimer under a long ARTROOM_HOME`, which skips on macOS.
@@ -171,6 +176,21 @@ The first gate failed 25 Native tests in ten files under `packages/scope/test/`:
 24 failures are the same diff: the install result has `phase: "accepted"` where the test expects `"recorded"`.
 The 25th, `installed Grow production public archive command verifies its native producer clone`, fails with "the immediately preceding native producer did not publish a command session". It reads `retainedCommand`, which `installed Grow production scopes export genesis zero after a late native membership directory binding` sets only after its install check passes. That test failed at the phase check, so the 25th failure is a cascade.
 No failure had another cause. A search of `apps`, `examples`, `packages/cli`, `packages/client` and `packages/mcp` found no other install-phase expectation. The `"recorded"` values in the Counter voice tests and the lane delivery answers are different words.
+
+The gate at `95ff9a43` failed one Native test: the H6 matrix in `packages/mcp/test/hosted.scope.test.ts`.
+At `await stub.reset()` the runtime refused with "Cannot perform I/O on behalf of a different Durable Object (I/O type: OutgoingFactory)".
+The test's `holdAfterAdmission` gate resolves `entered` from inside the hosted agent's Durable Object, so the test resumes in that object's context.
+The `stub` the test made before the hold belongs to the test's own context.
+Commit `456c1a05` resets the agent through a fresh `agentStub(bot.agent)` at that line. Every case, assertion and deadline stays.
+The S4 repair gate at `e708f454` failed the same test with the same class of error at another line, before NF-2 existed.
+NF-2 does not otherwise touch this test file, and no file imports it.
+Under the isolated-file rule of `docs/evidence-filing.md`, the follow-up ran the changed compiler context and the whole test file once. The gate reached every stage, so no stage repeated.
+The failed gate stays exit 1.
+
+No workflow ran for the push of `456c1a05`. Under ruling `a8d2f83d` the last push run of each workflow stands when no path in its filter changed.
+`git diff --name-only 9d3a4fd5 456c1a05` lists 17 paths, and none matches the filter in `.github/workflows/page-browser.yml`.
+`git diff --name-only e989e6ee 456c1a05` lists 12 paths, and none matches the filter in `.github/workflows/views-browser.yml`.
+Both lists and both workflow files are in `2026-11-12-nf2-ci-456c1a05`.
 
 The seal changes in `scripts/security-entry-points.test.mjs` come from the test's failure output in two refreshes, `70ab6509` and `38b395a3`. Each one names a reviewed source change. The table shows each seal from main to `38b395a3`.
 
