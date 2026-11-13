@@ -3,7 +3,7 @@ import type { ItemQuery, ItemQueryRead, ScopeRef } from "@generalbusiness/dap-co
 import { ITEM_QUERY_BOUNDS as B, ITEM_QUERY_ORDER } from "@generalbusiness/dap-contract";
 import { canonicalize, encodeItemQueryParameter, itemQueryArgument, itemQueryDigest, readItemQueryParameter, encodeItemQueryCursor } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, collectItemQuery, httpTransport, signedReads, secretSigner, bindingTransport, type ServiceBinding, type Fetch } from "../src/index.ts";
-const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" as const };
+const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
 const query: ItemQuery = { v: 1, scope, type: "task", states: ["open"], ids: null, limit: 100, cursor: null };
 const good: Extract<ItemQueryRead, { ok: true }> = { ok: true, at: { seq: 0, hash: `sha256:${"a".repeat(64)}` }, value: { v: 1, scope, query: itemQueryDigest(query)!, argument: itemQueryArgument(query)!, items: [] }, complete: true };
 

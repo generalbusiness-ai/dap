@@ -7,7 +7,7 @@ import { digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { ANSWERS } from "../src/answers.ts";
 import { ScopeHandle, bindingTransport, journalTail, type JournalClone, type ServiceBinding } from "../src/index.ts";
 
-const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
+const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
 const row = (seq: number) => { const bytes = `scripted journal bytes ${seq}`; return { seq, bytes, hash: digestBytes(utf8(`${DOMAINS.entry}\n${bytes}`)) }; };
 const head = (seq: number): Head => ({ seq, hash: row(seq).hash });
 const receipt = (seq: number): Archived => ({ floor: seq, commit: seq.toString(16).padStart(40, "0"), through: head(seq) });
@@ -43,7 +43,7 @@ test("a refreshed clone returns the missing prefix and checks commit identity pl
   expect([fetches, seen]).toEqual([1, [2, 10]]);
   for (const broken of [
     { ...clone(9), commit: async () => null },
-    { ...clone(9), commit: async () => ({ scope: { ...scope, inc: `in_${"b".repeat(26)}` as const }, through: head(9) }) },
+    { ...clone(9), commit: async () => ({ scope: { ...scope, genesis: `sha256:${"b".repeat(64)}` as const }, through: head(9) }) },
     { ...clone(9), log: async (from: number) => from === 9 ? { ...page(9, 9), value: { scope, definition: "platform:task@1", entries: [{ ...row(9), bytes: "changed after its hash" }] } } as Read<LogPage> : page(from, 9) },
   ]) {
     expect(await journalTail(clone(1), service, async () => broken).read(2)).toMatchObject({ ok: false, reason: "incomplete", detail: expect.stringMatching(/^floor-commit-/) });

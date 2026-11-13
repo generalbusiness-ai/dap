@@ -5,7 +5,7 @@ import { Session } from "../src/session.ts";
 import { HeadStreamUnavailable, headLines, openHttpHeadStream } from "../src/head-stream.ts";
 import { observeScope, type CompleteSnapshot, type ObservationState } from "../src/observe.ts";
 const gate=<T=void>()=>{let resolve!:(value:T)=>void;const promise=new Promise<T>(r=>{resolve=r;});return{promise,resolve};};
-const scope={scope:`sc_${base32(new Uint8Array(32))}`,inc:`in_${base32(new Uint8Array(16))}`,kind:"lane"} as ScopeRef;
+const scope={scope:`sc_${base32(new Uint8Array(32))}`,genesis:`sha256:${"0".repeat(64)}`} as ScopeRef;
 const membership={...scope,kind:"membership"} as ScopeRef;const key=keyIdOfSecret(new Uint8Array(32));const definition="sha256:"+"1".repeat(64) as `sha256:${string}`;
 const context={origin:"https://scope.test",scope,membership,definition,member:"@member" as const,key,deployment:"test"};
 const head=(seq:number):Head=>({seq,hash:`sha256:${String(seq).padStart(64,"0")}`});
@@ -105,8 +105,8 @@ test("EOF reconnects with new authentication and a complete current snapshot, th
  expect(auths).toBe(3);expect(opens).toBe(2);expect(states.at(-1)).toEqual({status:"forbidden",reason:"unauthorized",retained:snapshot(5)});expect(states.some(s=>s.status==="reconnecting")).toBe(true);
 });
 
-test("same sequence different hash and wrong snapshot incarnation are visible failures, never current views",async()=>{
- for(const changed of["hash","incarnation"]){const body=stream(),states:ObservationState<number>[]=[];const observer=observeScope({context,current:()=>true,authenticate:async()=>({ok:true,session:session()}),open:async()=>({ok:true,body:body.body}),snapshot:async()=>{const value=snapshot(1);if(changed==="hash")value.at={...value.at,hash:("sha256:"+"9".repeat(64)) as `sha256:${string}`};else value.scope={...scope,inc:`in_${base32(new Uint8Array(16).fill(1))}`};return{ok:true,at:value.at,value,complete:true};},emit:s=>states.push(s)});await drain();body.notice(1);await observer.done;expect(states.at(-1)?.status).toBe("error");expect(states.some(s=>s.status==="current")).toBe(false);}
+test("same sequence different hash and wrong snapshot genesis are visible failures, never current views",async()=>{
+ for(const changed of["hash","genesis"]){const body=stream(),states:ObservationState<number>[]=[];const observer=observeScope({context,current:()=>true,authenticate:async()=>({ok:true,session:session()}),open:async()=>({ok:true,body:body.body}),snapshot:async()=>{const value=snapshot(1);if(changed==="hash")value.at={...value.at,hash:("sha256:"+"9".repeat(64)) as `sha256:${string}`};else value.scope={...scope,genesis:`sha256:${"1".repeat(64)}`};return{ok:true,at:value.at,value,complete:true};},emit:s=>states.push(s)});await drain();body.notice(1);await observer.done;expect(states.at(-1)?.status).toBe("error");expect(states.some(s=>s.status==="current")).toBe(false);}
 });
 
 test("first head waiting has a bound and cancels its body rather than waiting indefinitely",async()=>{

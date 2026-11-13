@@ -3,12 +3,12 @@ import { expect, test } from "vitest";
 import type { ReadMinimum, ApplicationProjectionQuery, BehindRead, Entry, Receipt, ScopeRef, SignedRead } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, parseStrict, readMinimumParameter, unb64url, verifySignedRead } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, bindingTransport, httpTransport, secretSigner, signedReads, TransportError, type Fetch, type ServiceBinding } from "../src/index.ts";
-const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
+const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
 const fact = { at, seq: 8, hash: `sha256:${"b".repeat(64)}` as const };
 const receipt: Receipt = { fact, definition: `sha256:${"c".repeat(64)}`, intent: null, effects: [], sends: [], epoch: 0 };
 const minimum = { at, head: { seq: fact.seq, hash: fact.hash } };
 const behind: BehindRead = { ok: false, reason: "behind", current: { ...fact, seq: 2 } };
-const query: ApplicationProjectionQuery = { v: 1, scope: at, directory: { ...at, kind: "directory" }, install: 7, projection: "board", items: {} };
+const query: ApplicationProjectionQuery = { v: 1, scope: at, directory: { ...at }, install: 7, projection: "board", items: {} };
 
 test("all five handle reads carry the complete receipt minimum in one HTTP request and preserve behind metadata", async () => {
   const urls: URL[] = [];
@@ -61,7 +61,7 @@ test("followReceipt performs one sequence-qualified entry read and returns behin
   expect(calls).toEqual([[at.scope, null, fact.seq, { at, head: fact.seq }]]);
 });
 
-const entry: Entry = { v: 1, at, seq: fact.seq, prev: fact.hash, time: "2026-10-30T17:00:00Z", clamped: false,
+const entry: Entry = { v: 1, genesis: at.genesis, seq: fact.seq, prev: fact.hash, time: "2026-10-30T17:00:00Z", clamped: false,
   epoch: 0, input: { type: "checkpoint", through: fact.seq - 1, state: fact.hash }, uses: [], prepared: [], effects: [], sends: [] };
 const exact: Receipt = { ...receipt, fact: { ...fact, hash: entryHash(entry) } };
 const sealed = { entry, hash: exact.fact.hash };
@@ -72,7 +72,7 @@ test("HTTP and binding follow one normal receipt read and use only one unavailab
     let stale = false;
     const reply = (required?: ReadMinimum) => {
       calls.push(required);
-      if (required && required.at.kind !== at.kind) return { ok: false, reason: "unavailable" };
+      if (required && required.at.genesis !== at.genesis) return { ok: false, reason: "unavailable" };
       return { ok: true, at: { seq: stale ? fact.seq - 1 : fact.seq, hash: exact.fact.hash }, value: sealed, complete: true };
     };
     const transport = mode === "http" ? httpTransport("https://scopes.test", { fetch: async url => {
@@ -84,7 +84,7 @@ test("HTTP and binding follow one normal receipt read and use only one unavailab
     expect(calls.splice(0)).toEqual([{ at, head: fact.seq }]);
     expect(await handle.followReceipt(receipt)).toEqual({ ok: false, reason: "hash-mismatch" });
     expect(calls.splice(0)).toEqual([{ at, head: fact.seq }]);
-    const other = { ...at, kind: "rules" as const }, wrong = { ...exact, fact: { ...exact.fact, at: other } };
+    const other = { ...at, genesis: `sha256:${"9".repeat(64)}` as const }, wrong = { ...exact, fact: { ...exact.fact, at: other } };
     expect(await handle.followReceipt(wrong)).toEqual({ ok: false, reason: "reference-mismatch" });
     expect(calls.splice(0)).toEqual([{ at: other, head: fact.seq }, undefined]);
     stale = true;

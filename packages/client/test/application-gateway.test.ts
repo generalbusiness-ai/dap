@@ -1,13 +1,13 @@
 /** Fixed transport mapping only. No browser/native admission or hosted shim
  * is claimed by these scripted HTTP boundaries. */
 import { expect, test } from "vitest";
-import { canonicalize, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import type { Digest, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationScreenPath } from "../src/application-route.ts";
 import { applicationGatewayRoute, applicationScreenTransport, readApplicationScreenHost, type ApplicationGatewayFetch } from "../src/application-gateway.ts";
 import { loadApplicationScreenContext } from "../src/application-screen.ts";
 const digest = (letter: string): Digest => `sha256:${letter.repeat(64)}`;
-const ref = (kind: ScopeKind, ordinal: number): ScopeRef => ({ kind, scope: scopeIdOf({ v: 1, kind, definition: digest("a"), creator: null, cause: digest("b"), ordinal }), inc: newIncarnation(new Uint8Array(16).fill(ordinal)) });
+const ref = (kind: ScopeKind, ordinal: number): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: digest("a"), creator: null, cause: digest("b"), ordinal }), genesis: textDigest(`TEST genesis ${ordinal}`) });
 const directory = ref("directory", 1), rules = ref("rules", 2), membership = ref("membership", 3), destination = ref("destination", 4), scope = ref("lane", 5);
 const host = readApplicationScreenHost({ v: 1, screenOrigin: "https://library.inguz.space", roomOrigin: "https://dap-lending.inguz.workers.dev", directory: directory.scope, item: 7, presentation: digest("c") });
 const base = applicationScreenPath(directory.scope, host.item, host.presentation);
