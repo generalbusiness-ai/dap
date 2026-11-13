@@ -191,8 +191,9 @@ function installedApplicationOrigin(from: FactRef, directory: ScopeRef, destinat
       || scopeIdOf(office.seed) !== directory.scope || made.message.class !== "request" || made.message.type !== "tell"
       || !("decision" in made) || made.decision !== "applied" || made.sourceKind !== "rules" || !isObject(made.message.body) || made.message.body["message"] !== "application-create"
       || !isObject(made.message.body["fields"])) return false;
+    // A genesis names its own scope as creator in the genesis-self form, resolved against the genesis fact.
     const sibling = (kind: "rules" | "membership" | "destination", pin: string, at: ScopeRef) => first.entry.sends.some(send => isSeed(send.to)
-      && send.to.kind === kind && send.to.definition === pin && same(send.to.creator, directory) && scopeIdOf(send.to) === at.scope);
+      && send.to.kind === kind && send.to.definition === pin && same(resolveGenesisSelf(send.to.creator, first.fact), directory) && scopeIdOf(send.to) === at.scope);
     if (!sibling("rules", pins.rules, made.from.at) || !sibling("destination", pins.destination, destination)) return false;
     const requested = made.message.body["fields"];
     if (requested["definition"] !== seed.definition || !isMemberRef(requested["installer"]) || typeof requested["genesis"] !== "string"
