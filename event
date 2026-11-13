@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4856b906f36f972b59ce7e6a736bfadc0704d90e","text":"Merge retired a covered predecessor; the successor is at apps/views/src/capture.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4932f08280d5d761af4b17569469d123806f4289","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/application-projection-native.test.ts."}
