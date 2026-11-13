@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, Input, SignedIntent } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, newIncarnation, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
+import { factRefOf, intentDigest, scopeIdOf, seedDigest, textDigest, newGenesisNonce } from "@generalbusiness/dap-bytes";
 import { clockOf, derivable, judgeDelivery, judgeGenesis, runnable, type OutcomeRule, type PlatformRule, type RuleGiven } from "@generalbusiness/dap-derive";
 import { Ledger, T0, deskDefinition, created } from "@generalbusiness/dap-derive/testing";
 import { CREATION_ATTEMPTS, DIRECTORY, REGISTER, directoryIdOf, platform, register, registerRules, repositoryName } from "../src/index.ts";
@@ -95,7 +95,7 @@ test("a register is founded by an install intent, under its own definition and n
   const install = installing(paul, "keys", []);
   const create = (seed = registerSeed(install), creation = install, definition = registerDefinition, rules = registerPlatform) => {
     const s = new Ledger(definition);
-    return judgeGenesis(s.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(7)), seed, creation: creation }, { clock: clockOf(s.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: rules }).result;
+    return judgeGenesis(s.state, definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(7)), seed, creation: creation }, { clock: clockOf(s.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: rules }).result;
   };
   const byCreation = installing(paul, "keys", [], "found");
   expect([
@@ -234,7 +234,7 @@ test("the directory's applied result runs the clause of the outcome's send: the 
   // Case e: the same creation answered `applied` by another incarnation of the directory's name, from a genesis MADE BY HAND. The
   // `conflict` clause has no effect, and no `confirm` is sent. The claim keeps the incarnation that it holds.
   const genesis = p.last.input as Extract<Input, { type: "genesis" }>;
-  const other = { ...p.at, inc: newIncarnation(new Uint8Array(16).fill(99)) };
+  const other = { ...p.at, genesis: textDigest("TEST genesis 99") };
   const second = recorded({ ...p.last, at: other, input: { ...genesis, inc: other.inc } });
   expect(second.result === "write" && [second.draft.input, second.draft.effects, second.draft.sends]).toMatchObject([{ type: "delivery", clause: "conflict" }, [], []]);
   expect(r.item(claim).refs["directory"]).toEqual(p.at);

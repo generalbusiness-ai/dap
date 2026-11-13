@@ -11,9 +11,10 @@ export function scriptedPartitionOrigin(name: "application" | "change" | "issue"
   const seedOf = (kind: ScopeKind, named: Digest | PlatformDefinition, creator: Seed["creator"], cause: Digest, ordinal = 0): Seed => ({ v: 1, kind, definition: named, creator, cause, ordinal });
   // sourceKind is the required b023 input field. Its Contract/Bytes assembly
   // is separate from this producer slice; no old wire fallback is used.
-  const birth = (seed: Seed, kind: string, source: FactRef | null, n: number | null, message: Request | null, sourceKind: ScopeKind | null) => ({
-    ...empty(), input: { type: "genesis" as const, seed, nonce: newGenesisNonce(new Uint8Array(16).fill(nonce++)), kind, founding: null, source, sourceKind, n, message, decision: "applied" as const },
-  });
+  const birth = (seed: Seed, kind: string, source: FactRef | null, n: number | null, message: Request | null, sourceKind: ScopeKind | null): GenesisEntry => {
+    const body = { type: "genesis" as const, seed, nonce: newGenesisNonce(new Uint8Array(16).fill(nonce++)), kind, founding: null, n, message, decision: "applied" as const };
+    return { ...empty(), input: source && sourceKind ? { ...body, source, sourceKind } : { ...body, source: null, sourceKind: null } };
+  };
   const atOf = (entry: GenesisEntry): ScopeRef => ({ scope: scopeIdOf(entry.input.seed), genesis: entryHash(entry) });
   const signed = (at: ScopeRef, kind: string, fields: Record<string, never> | { definition: Digest }, key: string) => signIntent({ v: 1, to: at, actor: keys.rita.key, kind, on: null, expected: {}, fields, idempotencyKey: key, notAfter: t(60) }, keys.rita.secret);
   const registerSeed = seedOf("register", C.register, null, d("1")), registerGenesis = birth(registerSeed, "install", null, null, null, null), register = atOf(registerGenesis);

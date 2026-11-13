@@ -156,7 +156,7 @@ export const refOf = (entry: Entry): FactRef => {
  * An entry made by hand at a scope: it has a hash, and nothing judged it. `kind`: the kind of the act that it says it recorded.
  * `fields`: the fields of its intent. `effects`: what it says it derived, given its own position.
  */
-export function handMade(at: ScopeRef, kind: string, sends: readonly Send[] = [], who: Actor = rita, fields: Record<string, FieldValue> = {}, effects: (seq: number) => Entry["effects"] = () => []): Entry {
+export function handMade(at: ScopeRef, kind: string, sends: readonly Send[] = [], who: Actor = rita, fields: Record<string, FieldValue> = {}, effects: (seq: number) => SequenceEntry["effects"] = () => []): SequenceEntry {
   const signed = signIntent({ v: 1, to: at, actor: who.key, kind, on: null, expected: {}, fields, idempotencyKey: `made-${made}`, notAfter: t(60) }, who.secret);
   const input: Input = { type: "act", signed, authority: [], presented: {} };
   const seq = 100 + made++;

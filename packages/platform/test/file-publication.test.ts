@@ -1,14 +1,14 @@
 import { expect, test } from "vitest";
 import type { Entry, FactRef, FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState, PROFILES, validateDefinition, type Operation, type Own, type StateView } from "@generalbusiness/dap-derive";
 import { destination4, destinationPublicationAt, filePublicationCause, filePublicationCurrent, fileSupersededOutcome, newestFilePublication } from "../src/destination.ts";
 import { filePublicationCommit, fileReceiptObjects, fileReceiptRef } from "../src/destination-objects.ts";
 
 // Pure schema/state/object witnesses. These rows and causes are scripted;
 // no Native application birth, operation driver, provider or replay is proved.
-const sender: ScopeRef = { kind: "lane", scope: scopeIdOf({ v: 1, kind: "lane", definition: textDigest("PUBLIC TEST definition"), creator: null, cause: textDigest("PUBLIC TEST cause"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(3)) };
+const sender: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "lane", definition: textDigest("PUBLIC TEST definition"), creator: null, cause: textDigest("PUBLIC TEST cause"), ordinal: 0 }), genesis: textDigest("TEST genesis 3") };
 const file = (id: number, seq: number, n = 0, state = "queued", at = sender): Item => ({
   id, type: "file-publication", state, revision: id, opened: textDigest(`PUBLIC TEST opening ${id}`), attributed: [], parties: {},
   refs: { sender: at as ScopeRef & FieldValue }, values: { sourceSeq: seq, sourceHash: textDigest(`PUBLIC TEST source ${seq}`), sourceOrdinal: n, path: "shelf/pot.md", content: "# Pot\n", contentDigest: textDigest("# Pot\n") },
@@ -37,7 +37,7 @@ test("destination4 validates integer queue pointers with zero as a real publicat
 
 test("source order wins across every retained page and final state, with send ordinal and full sender incarnation as part of its key", () => {
   const early = file(0, 7), newer = file(130, 8, 0, "published"), ordinal = file(131, 8, 1, "superseded");
-  const other = file(132, 999, 0, "published", { ...sender, inc: newIncarnation(new Uint8Array(16).fill(4)) });
+  const other = file(132, 999, 0, "published", { ...sender, genesis: textDigest("TEST genesis 4") });
   const rows = [early, ...Array.from({ length: 129 }, (_, n) => ({ ...file(n + 1, 0, 0, "aborted"), values: { ...file(n + 1, 0).values, path: `other/${n}.md` } })), newer, ordinal, other];
   const state = pages(rows);
   expect(newestFilePublication(state, early)).toEqual(ordinal);

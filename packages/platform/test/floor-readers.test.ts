@@ -4,7 +4,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Entry, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { entryHash, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { entryHash, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { MemoryState } from "@generalbusiness/dap-derive";
 import type { Own, RuleGiven } from "@generalbusiness/dap-derive";
 import { d, directory as scriptedDirectory, T0 } from "@generalbusiness/dap-derive/testing";
@@ -43,7 +43,7 @@ test("G15 keeps both local facts read by the latest declined certificate record"
   // No factory, signer, outcome judgment, archive writer or authority ran.
   const seed: Seed = { v: 1, kind: "destination", definition: HARDENED_CERTIFIED_RULES_COHORT.destination,
     creator: scriptedDirectory, cause: d("c"), ordinal: 2 };
-  const at: ScopeRef = { kind: "destination", scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(15)) };
+  const at: ScopeRef = { scope: scopeIdOf(seed), genesis: textDigest("TEST genesis 15") };
   const genesis: Entry = { v: 1, at, seq: 0, prev: null, time: T0, clamped: false, epoch: 0,
     input: { type: "genesis", seed, inc: at.inc, kind: "establish", "founding": null,
       source: { at: scriptedDirectory, seq: 0, hash: d("d") }, n: 2,

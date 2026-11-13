@@ -3,7 +3,7 @@
  * real @5 admission, fresh standing or a provider send. */
 import { expect, test } from "vitest";
 import type { Entry, FactRef, FieldValue, Input, KeyId } from "@generalbusiness/dap-contract";
-import { entryHash, keyIdOfSecret, newIncarnation } from "@generalbusiness/dap-bytes";
+import { entryHash, keyIdOfSecret, textDigest } from "@generalbusiness/dap-bytes";
 import type { Item, Operation } from "@generalbusiness/dap-derive";
 import { d, directory, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { MEMBERSHIP, keyObserved, retained, destinationRita as rita } from "./fixtures-entry.ts";
@@ -72,7 +72,7 @@ test("exactly nine distinct provenance keys are complete; ten refuse rather than
 
 test("wrong frame, holder, attempt, accepted effect and missing or ambiguous metadata are unavailable, never an empty active set", () => {
   const frame = fixture();
-  expect(frame.read({ membership: { ...MEMBERSHIP, inc: newIncarnation(new Uint8Array(16).fill(45)) } })).toEqual({ ok: false, reason: "unavailable" });
+  expect(frame.read({ membership: { ...MEMBERSHIP, genesis: textDigest("TEST genesis 45") } })).toEqual({ ok: false, reason: "unavailable" });
   const holder = fixture(), op = holder.operations.get("10:0")!;
   holder.operations.set("10:0", { ...op, for: 99 });
   expect(holder.read()).toEqual({ ok: false, reason: "unavailable" });

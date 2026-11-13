@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, isObservationUse, newIncarnation } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, isObservationUse, textDigest } from "@generalbusiness/dap-bytes";
 import { PROFILES, derivable, runnable, validateDefinition, valueDigest } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Judgment } from "@generalbusiness/dap-derive";
 import { d, desk, deskDefinition, directory, keys, membership, ticket, ticketDefinition } from "@generalbusiness/dap-derive/testing";
@@ -154,7 +154,7 @@ test("publish sets the rules when each check's configuration is kept and each ch
   }
   // Case a: `not-a-checker`. The role is not `checker`; the member is removed, or unknown; the field names the checker in another
   // membership scope, or in another incarnation of it than the one observed.
-  const reborn = { ...membership, inc: newIncarnation(new Uint8Array(16).fill(77)) };
+  const reborn = { ...membership, genesis: textDigest("TEST genesis 77") };
   const NOT = ["refused", "guard-failed", "not-a-checker"];
   expect([
     said(publish(r, checks, [checkA, standing("@bot", 8, { role: "member" })])),
@@ -352,7 +352,7 @@ test("a rules scope answers an observation from its folded state at its head: th
   // No answer: a provisional rules scope (section 12.1); a request that states another incarnation, or another kind; one for a key
   // or for a member; and a state that holds no rules.
   const provisional = new Rulebook(false);
-  const reborn = { ...r.at, inc: newIncarnation(new Uint8Array(16).fill(77)) };
+  const reborn = { ...r.at, genesis: textDigest("TEST genesis 77") };
   expect([
     answer(provisional, { of: provisional.at, asked: "rules" }), answer(r, { of: reborn, asked: "rules" }), answer(r, { of: { ...r.at, kind: "membership" }, asked: "rules" }),
     answer(r, { of: r.at, key: rita.key }), answer(r, { of: r.at, member: "@check" }), answer(r.registrar as never, { of: r.registrar.at, asked: "rules" }), revisionOf(r.registrar.state),

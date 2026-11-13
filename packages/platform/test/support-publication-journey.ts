@@ -38,7 +38,7 @@ export function publicationJourney(data: PlatformData = destination4, named: Pla
     const returned = ledger.last.sends.find(send => send.message.class === "result");
     if (!returned || returned.message.class !== "result") throw Error("The judged genesis returned its original result");
     const confirmation = { ...handMade(directory, "confirm-destination", [{ n: 0, to: ledger.at, message: control }]),
-      input: { type: "delivery", from: ledger.fact(0), n: returned.n, message: returned.message, clause: "applied" } as const };
+      input: { type: "delivery", from: ledger.fact(0), sourceKind: "destination", n: returned.n, message: returned.message, clause: "applied" } as const };
     write(ledger, judgeDelivery(ledger.state, definition, { to: ledger.at, from: factRefOf(confirmation, directory), n: 0, message: control }, { clock: clockOf(ledger.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: { entry: confirmation, sequence: sequenceAt(directory), under: "platform:directory" }, own: ledger.own, platform }));
     if (!ready) return ledger;
     const adopt = ledger.act(keys.rita, "adopt-head", { on: 0, expected: { on: ledger.item(0).revision }, fields: { commit: HEAD, why: "SCRIPTED host base for bounds" } }, { platform });

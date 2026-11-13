@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FieldValue, Grant, Input, MemberObservation, MemberRef, ObservationUse, RulesObservation, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, genesisInputDigest, newGenesisNonce, factRefOf, intentDigest, newIncarnation, parseStrict, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, genesisInputDigest, newGenesisNonce, factRefOf, intentDigest, parseStrict, scopeIdOf, seedDigest, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { MemoryState, clockOf, derivable, judgeGenesis, runnable, valueDigest, type Item, type Judgment, type OutcomeRule, type PlatformRule, type RuleGiven } from "@generalbusiness/dap-derive";
 import { Ledger, T0, creation, desk, deskDefinition, t, ticket, ticketDefinition } from "@generalbusiness/dap-derive/testing";
 import { DIRECTORY, directory, directoryMembership, directoryRules, membershipId, platform, repositoryName } from "../src/index.ts";
@@ -81,7 +81,7 @@ describe("the rules of platform:directory@1, each as a plain function (authority
   const d = new Directory({ import: IMPORT });
   const plain = new Directory();
   const { membership, rules } = d.children as Required<Directory["children"]>;
-  const lane: ScopeRef = { scope: d.at.scope, inc: newIncarnation(new Uint8Array(16).fill(50)), kind: "lane" };
+  const lane: ScopeRef = { scope: d.at.scope, genesis: textDigest("TEST genesis 50")};
   const next = d.head.seq + 1;
   /** What is at hand: the further observations, and the values, by their canonical bytes. A value is matched by its digest in its domain. */
   const hand = (observed: readonly ObservationUse[], values: readonly string[]): Pick<RuleGiven, "observed" | "value" | "placed"> => ({
@@ -349,7 +349,7 @@ test("two index rows of one lane, in either order, give the same row; a concern'
   // Case e: the first index row of a concern, which its parent created, and then the same row again. The row is opened, with the
   // next number: the lane's own `number` is not taken. The repeat is the same advisory, and opens nothing.
   const { d, index } = a;
-  const concern: ScopeRef = { scope: d.at.scope, inc: newIncarnation(new Uint8Array(16).fill(70)), kind: "lane" };
+  const concern: ScopeRef = { scope: d.at.scope, genesis: textDigest("TEST genesis 70")};
   const first: Row = [0, t(30), { kind: "issue", author: una.member, title: "A concern", state: "open", number: 99 }];
   expect(index(concern, ...first).result).toBe("write");
   const opened = d.head.seq;
@@ -378,7 +378,7 @@ test("a `compromised` notice from the repository's membership scope is sent on t
     { n: 0, to: destination, message: { class: "request", type: "tell", body: { message: "compromised", fields: { key: una.key, member: { membership, member: "@una" }, entry: source } } } },
     { n: 1, to: membership, message: { class: "result", of: { from: source, n: 0 }, outcome: "applied" } },
   ]);
-  const other = notice({ scope: membership.scope, kind: "membership", inc: newIncarnation(new Uint8Array(16).fill(80)) });
+  const other = notice({ scope: membership.scope, genesis: textDigest("TEST genesis 80") });
   expect(other.sends.map((send) => send.message)).toMatchObject([{ class: "result", outcome: "refused", reason: { code: "guard-failed", name: "not-the-membership" } }]);
 
   // The import that the creation opened, with 3 attempts. `retry-import` waits until they are used, by the rule `import-spent`

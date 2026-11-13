@@ -3,7 +3,7 @@
  * admission runs here. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { intentDigest, isDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { intentDigest, isDigest, scopeIdOf, signIntent, newGenesisNonce } from "@generalbusiness/dap-bytes";
 import { PROFILES, clockOf, judgeGenesis, judgeOutcome, validateDefinition } from "@generalbusiness/dap-derive";
 import { Ledger, T0, creation } from "@generalbusiness/dap-derive/testing";
 import { DEMO_PURPOSE, DEMO_REGISTER, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, platform, repositoryName } from "../src/index.ts";
@@ -25,7 +25,7 @@ test("demo install admits open founding without an allow-list and refuses a clos
     const signed=signIntent({...source,fields:{...source.fields,purpose:DEMO_PURPOSE}},paul.secret);
     const seed={v:1 as const,kind:"register" as const,definition:named,creator:null,cause:intentDigest(signed.intent),ordinal:0};
     const ledger=new Ledger(definition,"platform:register");
-    return judgeGenesis(ledger.state,definition,{name:scopeIdOf(seed),inc:newIncarnation(new Uint8Array(16).fill(7)),seed,creation:signed},{clock:clockOf(ledger.state,T0),bounds:PROPOSED_BOUNDS,facts:[],prepared:[],source:null,platform:{named,rules:selected.rules}});
+    return judgeGenesis(ledger.state,definition,{name:scopeIdOf(seed),nonce: newGenesisNonce(new Uint8Array(16).fill(7)),seed,creation:signed},{clock:clockOf(ledger.state,T0),bounds:PROPOSED_BOUNDS,facts:[],prepared:[],source:null,platform:{named,rules:selected.rules}});
   };
   const original = judged("open",undefined);
   expect(original.result).toBe("write");

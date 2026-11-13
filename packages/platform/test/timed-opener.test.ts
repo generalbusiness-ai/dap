@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type PlatformDefinition } from "@generalbusiness/dap-contract";
 import { platform } from "../src/index.ts";
 import { board } from "../../derive/test/fixtures-f.ts";
-import { newIncarnation, scopeIdOf, textDigest, timeOf } from "@generalbusiness/dap-bytes";
+import { scopeIdOf, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeTimed, MemoryState, validateDefinition } from "@generalbusiness/dap-derive";
 const destination3 = platform("platform:destination@3")!.data;
 
@@ -15,7 +15,7 @@ test("timed cleanup is platform-only and refuses different kinds, oversized atte
   // the separate complete manifest story, not by this pure judge fixture.
   const due = timeOf(1_900_000_000_000), hash = textDigest("PUBLIC timed cleanup fixture");
   const state = new MemoryState();
-  const at = { kind: "destination" as const, scope: scopeIdOf({ v: 1, kind: "destination", definition: "platform:destination@3", creator: null, cause: hash, ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(7)) };
+  const at = { scope: scopeIdOf({ v: 1, kind: "destination", definition: "platform:destination@3", creator: null, cause: hash, ordinal: 0 }), genesis: textDigest("TEST genesis 7") };
   state.setScope({ at, creator: null, status: "active", head: { seq: 4, hash }, time: due, genesis: { hash, source: null, n: null }, held: [] });
   state.putItem({ id: 1, type: "publication", state: "reserved", revision: 1, opened: hash, attributed: [], parties: {}, refs: {}, values: { checkDeadline: due } });
   state.addCount("publication", "reserved", 1);

@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { Digest, FactRef, FieldValue, PlatformDefinition, Request, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { factRefOf, intentDigest, scopeIdOf, signIntent, textDigest, newGenesisNonce } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeDelivery, judgeGenesis, judgeOutcome, runnable, type Fetched, type PlatformRules, type RuleGiven } from "@generalbusiness/dap-derive";
 import { Ledger, T0, keys, t } from "@generalbusiness/dap-derive/testing";
 import { platform, repositoryName, firstHeadCommit, UNPUBLISHED_COHORT as U, REPOSITORY_BINDING_COHORT as B } from "../src/index.ts";
@@ -23,7 +23,7 @@ function register(host: string, namespace = "TEST ignored under none", family: C
   const observed: PlatformRules = { ...native, rules: { ...native.rules, "host-choice": { ...guard, run: (given: RuleGiven) => {
     const checked = guard.run(given); hostChecks.push(checked); return checked;
   } } } };
-  const judgment = judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(21)), seed, creation: signed },
+  const judgment = judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(21)), seed, creation: signed },
     { clock: clockOf(ledger.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: observed });
   if (judgment.result === "write") ledger.seal(judgment.draft);
   return { ledger, judgment, hostChecks };
@@ -37,7 +37,7 @@ function child(parent: Ledger, seq: number, ordinal: number, named: PlatformDefi
   const send = parent.entries[seq]!.entry.sends.find(send => send.n === ordinal)!;
   const seed = send.to as Seed, definition = checkedPlatformData(platform(named)!.data);
   const ledger = new Ledger(definition, `platform:${seed.kind}`);
-  ledger.seal(written(judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(seed.kind === "directory" ? 20 : 16)),
+  ledger.seal(written(judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(seed.kind === "directory" ? 20 : 16)),
     to: seed, from: parent.fact(seq), n: send.n, message: send.message as Request }, {
     clock: clockOf(ledger.state, T0), bounds: PROPOSED_BOUNDS, facts, prepared: [], own: ledger.own,
     source: { entry: parent.entries[seq]!.entry, under: parent.under }, platform: code(named),
