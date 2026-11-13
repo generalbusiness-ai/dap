@@ -275,10 +275,11 @@ Release text: "Rooms made before this release are retired: an old link
 answers `room-retired`, and the browser keeps its old rows but no longer
 reads them."
 
-Held: the "Join with config and key" screen (`apps/room/page/src/main.ts`)
-imports a pasted `device.key` through the key store's `migrate`. It reads no
-stored row, so it is not the legacy migration. The join path imports a
-supplied `secret` the same way. Both stay until a ruling says otherwise.
+Kept, not a stored-row migration: the "Join with config and key" screen
+(`apps/room/page/src/main.ts`) imports a pasted `device.key` through the key
+store's `migrate`, and the join path imports a supplied `secret` the same way.
+Neither reads a stored row, so neither is the legacy migration that item 5
+removes.
 
 ## Grow and lending examples
 
