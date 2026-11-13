@@ -9,7 +9,7 @@ import { SEED_LIMITS, SeedRefusal, compareSeedFiles, seedTree, type SeedFile } f
 // Scripted founding facts and an in-memory Git object store. The builders
 // and parsers are real; this is no native room, fresh clone or provider proof.
 const scope = `sc_${"g".repeat(51)}a` as ScopeId;
-const claim: FactRef = { at: { kind: "register", scope: `sc_${"r".repeat(51)}a`, inc: `in_${"r".repeat(25)}a` }, seq: 7, hash: `sha256:${"1".repeat(64)}` };
+const claim: FactRef = { at: { scope: `sc_${"r".repeat(51)}a`, genesis: `sha256:${"2".repeat(64)}` }, seq: 7, hash: `sha256:${"1".repeat(64)}` };
 const readme = { name: "repo-in-ai-1", handle: "@owner", directory: `sc_${"d".repeat(51)}a` as ScopeId };
 const initial = () => initialCommitObjects("sha1", scope, "2026-10-30T12:00:00Z", claim, readme);
 const file = (path: string, content = "text\n", mode = "100644"): SeedFile => ({ path, mode, bytes: utf8(content) });

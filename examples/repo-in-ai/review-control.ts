@@ -42,7 +42,7 @@ function custodyPath(home: string): string {
 /** Fixed agent-b approval attempt against the same manifest the owner reviews.
  * Check settles only. Continue can send only the original signed envelope. */
 export async function agentReviewControl(agent: Session, home: string, target: ScopeRef, manifest: number, mode: SessionMode): Promise<PrivateResult> {
-  if (!["new", "check", "continue"].includes(mode) || !isScopeRef(target) || target.kind !== "lane" || !isLocalId(manifest)) return stop();
+  if (!["new", "check", "continue"].includes(mode) || !isScopeRef(target) || !isLocalId(manifest)) return stop();
   const path = custodyPath(home), config = await agent.ctx.store.config();
   const local = durableCliStore(home), localConfig = await local.config();
   if (!config?.repository || !config.handle || !equal(localConfig, config)) return stop();

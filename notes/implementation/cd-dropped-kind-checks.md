@@ -569,3 +569,4 @@ Commit `70c3431750` cut the branches that only this case reached:
 | `mcp` inventory and `docs/mcp-tools.json` | vector | A scope reference reads `{ scope, genesis }`. The same text in `docs/roadmap.md`, `docs/use-cases.md` and `docs/deploy.md` changed. |
 | Grow example tests | fixture shape | Scripted entries name their genesis. Entry 0 of the command journal is a fixture genesis. Foreign copies carry their sequence, and receipts take the scope and effects. |
 | lending browser storage | fixture shape | References are `{ scope, genesis }`. |
+| repo-in-ai example and tests | fixture shape | References are `{ scope, genesis }`, and home configs are version 2. An entry binds to its sequence by genesis (`isEntryBodyOf`, `sentByBody`), and a genesis binds by its seed and hash. The example drops its register kind checks, because the place fixes the kind. Fixture refs that differed only by kind now differ by genesis. |

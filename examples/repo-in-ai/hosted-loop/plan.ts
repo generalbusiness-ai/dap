@@ -36,7 +36,7 @@ export function readLoopPlan(path: string): LoopPlan {
   } catch { return stop("input"); }
   if (!closed(value, ["v", "service", "deployment", "deploymentVersion", "register", "name", "home", "handles"], ["standInBase"]) || value["v"] !== 1
     || typeof value["service"] !== "string" || typeof value["deployment"] !== "string" || typeof value["deploymentVersion"] !== "string"
-    || !isScopeRef(value["register"]) || value["register"].kind !== "register" || typeof value["home"] !== "string" || typeof value["name"] !== "string"
+    || !isScopeRef(value["register"]) || typeof value["home"] !== "string" || typeof value["name"] !== "string"
     || !closed(value["handles"], ["person", "agent"]) || !isHandle(value["handles"]["person"]) || !isHandle(value["handles"]["agent"]) || value["handles"]["person"] === value["handles"]["agent"]) return stop("input");
   let service: URL;
   try { service = new URL(value["service"]); } catch { return stop("input"); }

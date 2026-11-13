@@ -1,7 +1,7 @@
 /** Bounded reading and folding of the seed lane's native capability records. */
 import type { ScopeRef, Sealed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isDigest, isEntry, isRecord, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isDigest, isEntry, isEntryBodyOf, isRecord, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { applyEntry, MemoryState, validateDefinition } from "@generalbusiness/dap-derive";
 import { changeJ4 } from "../../apps/room/lanes/src/j4.ts";
 import { J4_DIGESTS } from "../../apps/room/lanes/src/digests-j4.ts";
@@ -30,7 +30,9 @@ export async function laneState(session: Session, ref: ScopeRef): Promise<{ memo
       try { entry = parseStrict(bytes); }
       catch { throw new Error("The native lane journal is incomplete or misbound."); }
       if (!isEntry(entry) || canonicalize(entry) !== bytes || entryHash(entry) !== hash
-        || entry.seq !== value["seq"] || canonicalize(entry.at) !== canonicalize(ref)
+        || entry.seq !== value["seq"] || !isEntryBodyOf(entry, { at: ref, seq: entry.seq, hash })
+        // The genesis binds the scope ID; each later entry binds the genesis hash.
+        || (entry.input.type === "genesis" && scopeIdOf(entry.input.seed) !== ref.scope)
         || entry.prev !== previous) throw new Error("The native lane journal is incomplete or misbound.");
       applyEntry(memory, checked.definition, entry, hash);
       entries.push({ entry, hash }); previous = hash;
