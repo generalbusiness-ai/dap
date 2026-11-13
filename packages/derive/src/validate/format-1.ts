@@ -39,10 +39,14 @@ export function validateFormat1(input: unknown, bounds: Bounds, profiles: Readon
   // The format-1 checks begin here, after the existing bounded preamble.
   // Durability A0a: omission preserves the original declaration bytes. A level
   // requiring an executor we do not have must never fall back to recording.
+  // The sequenced note, section 5.11: version 1 of the sequenced level is admitted here. No runtime derives it yet, so
+  // `derivable` is false for it, and no scope pins it.
+  let sequenced = false;
   if (Object.hasOwn(top, "level")) {
     const level = rec(top["level"], "level", ["name", "version"]);
-    if (level && (level["name"] !== "recorded" || level["version"] !== 1)) {
-      bad("unsupported-definition", "level", "this runtime implements only recorded durability version 1");
+    sequenced = level !== null && level["name"] === "sequenced" && level["version"] === 1;
+    if (level && !sequenced && (level["name"] !== "recorded" || level["version"] !== 1)) {
+      bad("unsupported-definition", "level", "this runtime implements recorded durability version 1 and sequenced version 1");
     }
   }
   // The definition pins its rule for the scope's entire life. Never add a
@@ -66,6 +70,7 @@ export function validateFormat1(input: unknown, bounds: Bounds, profiles: Readon
     ...read, bounds, name: typeof top["name"] === "string" ? top["name"] : null, typeNames: new Set(isObject(top["items"]) ? Object.keys(top["items"]) : []), types: new Map(), rules: new Set(), holds: false, holdTypes: new Set(),
     capabilities: new Map(), underived: [],
     indexes: [], clauseSets: [], clauseRetains: new Map(), clausePaths: new Map(), clause: null, pendingWork: [], platform, marks: [], places: new Map(), valueSets: [], bindings: [], observing: false,
+    sequenced,
   };
 
   const profile = rec(top["profile"], "profile", ["name", "version"]);

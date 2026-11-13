@@ -12,7 +12,7 @@ import { settlementSubject } from "./settlement.ts";
 import { attentionPlan, checkedBody, conditionPlan, effectPlan, guardPlan, sendClauseStructure, sendPlan, type BodyStructure, type ResolutionGroup, type StructureNode } from "./structure.ts";
 
 export type ProgramDependency = Dependency
-  | { readonly kind: "input"; readonly part: "sender" | "source" | "update" | "result" | "presented" | "directory" | "cause" | "operation" | "runtime-clock-use" }
+  | { readonly kind: "input"; readonly part: "sender" | "source" | "update" | "result" | "presented" | "directory" | "cause" | "operation" | "runtime-clock-use" | "reads" }
   | { readonly kind: "element"; readonly name: string; readonly members: readonly string[] }
   | { readonly kind: "scan"; readonly type: string; readonly states: readonly string[] }
   | { readonly kind: "fixed-count"; readonly type: string; readonly slot: string; readonly states: readonly string[] }
@@ -76,6 +76,7 @@ export function requirements(definition: ValidDefinition, body: BodyStructure): 
       case "update": add({ kind: "input", part: "update" }); break;
       case "result": add({ kind: "input", part: "result" }); break;
       case "element": add({ kind: "element", name: value.binding.name, members: value.binding.members }); break;
+      case "read": add({ kind: "input", part: "reads" }); break;
       default: exhaustive(value);
     }
     if (value.projection) projection(value.projection);

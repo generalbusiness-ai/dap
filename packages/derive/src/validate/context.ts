@@ -51,6 +51,8 @@ export interface Ctx {
   each: Type | null;                      // a fan-out send: the type of the items its range covers
   eachPath: string | null;                // the declaration path of that fan-out range
   unsettled?: ReadonlySet<string>;        // the `also` names that a later entry cannot select again: selected through a slot that is not fixed
+  reads?: ReadonlySet<string>;            // a sequenced act: the names of its `reads` entries, which a `read` operand may name (sequenced note, section 5.2)
+  readList?: boolean;                     // the operand is the `list` of an `each`, `has`, `distinct` or `sameSet`: the one place a `read` stands
 }
 
 /** Forms that name nothing yet. Each act, handler and timed rule starts from this and says what it has. */
@@ -156,6 +158,7 @@ export interface Defining extends Shapes {
   readonly valueSets: ValueSet[];           // each written `value` effect that was read, for the rule that a mark is set only to `true` (section 6.4, revision 21)
   readonly bindings: Binding[];             // each handler that states `bound`, for the checks of `decisions` (section 17.2a, revision 21)
   observing: boolean;                       // section 16.1, revision 20: the data states rows of `observes`, or the `origin` of an outcome, somewhere
+  readonly sequenced: boolean;              // the definition states the sequenced level, version 1 (sequenced note, section 5.11)
 }
 
 /** One written `value` effect: the type and the slot that it sets, where it stands, and whether it sets the constant `true`. */

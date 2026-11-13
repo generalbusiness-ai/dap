@@ -184,14 +184,53 @@ function setsOf(d: Defining, opens: Type | null, read: () => void): ClauseSet {
   return sets;
 }
 
+/** The most `reads` entries of one sequenced input (sequenced note, section 5.9). */
+const GROUP_READS = 4;
+
+/**
+ * The sequenced mark of one act and its `reads` (sequenced note, sections 5.2 and 5.11). Returns the names of the `reads`
+ * entries, which a `read` operand of the act may name, or null when the act is not sequenced. Version 1 of the level reads
+ * every member at P - 1, so a read states no `staleness`. A child's genesis source would be a commit entry, and creation
+ * lineage does not read through one yet, so a sequenced act sends no `create`. Only the package holds a member's definition,
+ * so a read's range names a type and states that the package check resolves, and nothing that this definition would resolve.
+ */
+function sequencedAct(d: Defining, o: Rec, path: string, genesis: boolean): ReadonlySet<string> | null {
+  const { bad, rec, entries, str, names } = d;
+  const marked = "sequenced" in o;
+  if (marked && o["sequenced"] !== true) bad("shape", at(path, "sequenced"), "is true");
+  if (marked && !d.sequenced) bad("shape", at(path, "sequenced"), "only a definition of the sequenced level marks an act sequenced");
+  if (marked && genesis) bad("shape", at(path, "sequenced"), "a genesis is never sequenced");
+  if ("reads" in o && !marked) bad("shape", at(path, "reads"), "reads is only on an act that is sequenced");
+  if (!marked) return null;
+  if (Array.isArray(o["sends"])) o["sends"].forEach((send, i) => {
+    if (isObject(send) && "create" in send) bad("shape", at(at(at(path, "sends"), i), "create"), "a sequenced act sends no create in version 1 of the sequenced level");
+  });
+  const read = new Set<string>();
+  if (!("reads" in o)) return read;
+  for (const [name, rv] of entries(o["reads"], at(path, "reads"), GROUP_READS)) {
+    const p = at(at(path, "reads"), name);
+    read.add(name);
+    const r = rec(rv, p, ["member", "items"], ["staleness"]);
+    if (!r) continue;
+    if ("staleness" in r) bad("shape", at(p, "staleness"), "version 1 of the sequenced level reads every member at P - 1, with no staleness");
+    str(r["member"], at(p, "member"));
+    const items = rec(r["items"], at(p, "items"), ["type", "states"]);
+    if (!items) continue;
+    str(items["type"], at(at(p, "items"), "type"));
+    names(items["states"], at(at(p, "items"), "states"), { has: (s) => s !== "" }, "state");
+  }
+  return read;
+}
+
 /** Every act. `timed`: the timed rules as written, which the opening of a hold reads. `top`: the definition as written. */
 export function acts(d: Defining, v: unknown, timed: Readonly<Record<string, unknown>>, top: Rec): void {
   const { bounds, types, bad, rec, entries, str } = d;
   for (const [name, av] of entries(v, "acts", bounds.acts)) withRow(d, "act", name, at("acts", name), () => {
     const path = at("acts", name);
     // Section 17.2a: in platform data an act may state `adds`. `holds.ts` reads it.
-    const o = rec(av, path, ["step", "on", "also", "fields", "grant", "guards", "effects", "sends", "attention"], ["settles", "presents", ...(d.platform ? ["adds", "observes"] : [])]);
+    const o = rec(av, path, ["step", "on", "also", "fields", "grant", "guards", "effects", "sends", "attention"], ["settles", "presents", "sequenced", "reads", ...(d.platform ? ["adds", "observes"] : [])]);
     if (!o) return;
+    const reads = sequencedAct(d, o, path, name === top["genesis"]);
     const step = o["step"];
     if (step !== "open" && step !== "transition" && step !== "comment") bad("shape", at(path, "step"), "is open, transition or comment");
     const on = typeof o["on"] === "string" ? (types.get(o["on"]) ?? null) : null;
@@ -218,7 +257,7 @@ export function acts(d: Defining, v: unknown, timed: Readonly<Record<string, unk
         if (type) presented.set(p, type);
       }
     }
-    const ctx: Ctx = { ...naming(), on, also: named.types, nascent: step === "open", fields, signer: true, kind: name, presented, unsettled: named.unsettled };
+    const ctx: Ctx = { ...naming(), on, also: named.types, nascent: step === "open", fields, signer: true, kind: name, presented, unsettled: named.unsettled, ...(reads ? { reads } : {}) };
     // Section 6.4: a comment changes no item and meets no guard.
     if (step === "comment") for (const k of ["guards", "effects", "sends"]) if (!Array.isArray(o[k]) || o[k].length > 0) bad("shape", at(path, k), "a comment has none");
     if (step === "comment" && ctx.also.size > 0) bad("shape", at(path, "also"), "a comment names no other item");
@@ -254,8 +293,11 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
   const handled = new Set<string>();
   for (const [name, hv] of entries(v, "receives", bounds.receives)) withRow(d, "receive", name, at("receives", name), () => {
     const path = at("receives", name);
-    const o = rec(hv, path, ["message", "class", "from", "fields", "opens", "also", "guards", "effects", "sends", "attention"], ["copies", "settles", "order", "late", ...(d.platform ? ["bound"] : [])]);
+    const o = rec(hv, path, ["message", "class", "from", "fields", "opens", "also", "guards", "effects", "sends", "attention"], ["copies", "settles", "order", "late", "sequenced", "reads", ...(d.platform ? ["bound"] : [])]);
     if (!o) return;
+    // The sequenced note, section 5.11: version 1 of the level marks acts only, and a delivery is judged as in a recorded scope.
+    if ("sequenced" in o) bad("shape", at(path, "sequenced"), "version 1 of the sequenced level marks an act only, not a handler");
+    if ("reads" in o) bad("shape", at(path, "reads"), "reads is only on an act that is sequenced");
     const message = str(o["message"], at(path, "message"));
     const cls = o["class"];
     if ("order" in o && (cls !== "tell" || (o["order"] !== "arrival" && o["order"] !== "source"))) bad("shape", at(path, "order"), "only a tell handler declares arrival or source order");

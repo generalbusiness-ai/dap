@@ -195,6 +195,7 @@ export type OperandData =
   | { readonly op: "source"; readonly entry: EntryRead }
   | { readonly op: "update"; readonly part: "state" | "item" | "revision" }
   | { readonly op: "result"; readonly part: "reason" }
-  | { readonly op: "const"; readonly value: FieldValue };
+  | { readonly op: "const"; readonly value: FieldValue }
+  | { readonly op: "read"; readonly name: string };   // the sequenced note, section 5.2: a `reads` entry of a sequenced act
 export type OperandKind = OperandData["op"];
 export type OperandRead = ReadSite & OperandData & { readonly baseType: ReadType; readonly projection: PartRead | null };
