@@ -27,7 +27,7 @@ async function completeIssue(d: Demo, room: Room, fact: FactRef, kind: "open-iss
   expect(source.ok, "Accepted opening must have readable immutable source bytes").toBe(true);
   if (!source.ok) throw new Error("Accepted opening source unavailable");
   const entry = source.value.entry;
-  expect([entryHash(entry), entry.at]).toEqual([fact.hash, fact.at]);
+  expect([entryHash(entry), "genesis" in entry ? entry.genesis : null]).toEqual([fact.hash, fact.at.genesis]);
   expect(entry.input.type).toBe("act");
   if (entry.input.type !== "act") throw new Error("Accepted opening is not an act");
   expect(entry.input.signed.intent.kind).toBe(kind);

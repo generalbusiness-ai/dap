@@ -162,8 +162,9 @@ test("consent retains lost grants and reuses each controller's Native agent in t
     const preparedSecret = b64url(crypto.getRandomValues(new Uint8Array(32)));
     const preparedInvite = await life.wait(async () => M.did(rita, "invite-key", { fields: { member: preparedMember, kind: "agent", ...invitationIssueFields(OWN_AGENT_COHORT.membership, preparedSecret), inviteEnds: timeOf(life.now() + 3_600_000) }, expected: await M.expected({ member: preparedMember }) }));
     const preparedHistory = await life.wait(() => M.entries());
+    const membershipAt = await life.wait(() => M.at());
     const prepared = { v: 1 as const, kind: "agent-key" as const, service: origin, repository: { directory: room.directory, membership: room.membership, rules: room.rules.scope, destination: destination.scope }, definition: OWN_AGENT_COHORT.membership, handle: "@admin-connected", controller: selection.controller,
-      member: factRefOf(preparedHistory.find(entry => entry.seq === preparedMember)!), invitation: factRefOf(preparedHistory.find(entry => entry.seq === preparedInvite)!), secret: preparedSecret,
+      member: factRefOf(preparedHistory.find(entry => entry.seq === preparedMember)!, membershipAt), invitation: factRefOf(preparedHistory.find(entry => entry.seq === preparedInvite)!, membershipAt), secret: preparedSecret,
       expected: { on: (await life.wait(() => M.item(0))).revision, member: (await life.wait(() => M.item(preparedMember))).revision } };
     const preparedLink = encodeAgentKeyInvitation(prepared);
     expect(preparedOAuthInvitation(adminSelection, preparedLink)).toMatchObject({ handle: "@admin-connected", controller: selection.controller });
