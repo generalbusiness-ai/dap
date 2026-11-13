@@ -2,10 +2,10 @@
 import { lstatSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { canonicalize, intentDigest, isLocalId, isScopeRef, same, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { httpTransport, signedIntent, TransportError } from "@generalbusiness/dap-client";
+import { expectedOf, httpTransport, signedIntent, TransportError } from "@generalbusiness/dap-client";
 import type { Answer, FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { Custody, Lost, TERMINAL, declarationDigest, expectedOf, identityId, meaningOf, projectAnswer, type BindingRecord, type CustodyRecord, type Identity } from "@generalbusiness/dap-mcp";
+import { Custody, Lost, TERMINAL, declarationDigest, identityId, meaningOf, projectAnswer, type BindingRecord, type CustodyRecord, type Identity } from "@generalbusiness/dap-mcp";
 import { changeJ4 } from "../../apps/room/lanes/src/j4.ts";
 import { J4_DIGESTS } from "../../apps/room/lanes/src/digests-j4.ts";
 import { storedSigner } from "../../packages/cli/src/store-signer.ts";
@@ -112,7 +112,7 @@ export async function agentReviewControl(agent: Session, home: string, target: S
   if (!record) return stop();
   validate(record);
   const decided = await custody.decided(identityId(identity), record);
-  const body = { ...(decided?.answer ? projectAnswer(checked(decided.answer, record)) : decided?.archivedSettlement ? { answer: "archived", archived: decided.archivedSettlement.archived } : { answer: "unknown" }), phase: record.phase };
+  const body = { ...(decided?.answer ? projectAnswer({ answer: checked(decided.answer, record) }) : decided?.archivedSettlement ? { answer: "archived", archived: decided.archivedSettlement.archived } : { answer: "unknown" }), phase: record.phase };
   const privateRecord = receiptName("agent-review-native", { identity, body });
   await retain(local, privateRecord, { v: 1, identity, body });
   return { result: { content: [], structuredContent: body, isError: false }, privateRecord };

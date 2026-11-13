@@ -1,5 +1,5 @@
 /**
- * How the server reads: with a read session it asks membership for, kept in
+ * How MCP and the command line read: with a read session it asks membership for, kept in
  * memory, and by signed reads of its key where no session is given or a
  * session is refused (plan 031, section 7, "Where it runs"). A session is
  * asked of each membership the inventory uses, once, and again before a read
@@ -9,7 +9,11 @@
 
 import type { ReadMinimum, ItemQueryRead, Read, ScopeId, ScopeRef, ApplicationProjectionQuery, ApplicationProjectionRead } from "@generalbusiness/dap-contract";
 import { timeOf } from "@generalbusiness/dap-bytes";
-import { TransportError, ScopeHandle, httpTransport, requestSession, signedReads, signerSessionRequest, type Fetch, type Session, type Signer, type Transport } from "@generalbusiness/dap-client";
+import { TransportError, ScopeHandle, type Transport } from "./handle.ts";
+import { httpTransport, type Fetch } from "./http.ts";
+import { requestSession, signerSessionRequest, type Session } from "./session.ts";
+import { signedReads } from "./signed-read.ts";
+import type { Signer } from "./signer.ts";
 
 export interface ReadPort {
   service: string;

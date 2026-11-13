@@ -35,7 +35,7 @@ import type { ControlAction, ControlRequest, Digest, Head, KeyId, MemberId, Scop
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, isHead, isKeyId, isSequenceRef, keyIdOfSecret, parseStrict, scopeIdOf, sign, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/dap-bytes";
 import { TransportError, agentKeyInvitationOf, httpTransport, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
-import { CustodyError, Lost, identityId, meaningOf, type Envelope, type Identity, type CustodyRecord } from "./custody.ts";
+import { CustodyError, Lost, identityId, meaningOf, type Envelope, type Identity, type CustodyRecord } from "@generalbusiness/dap-client";
 import { enrolledKeyItem, retirementBody } from "./hosted-retirement.ts";
 import { HttpGeneration, McpHttp, SESSIONS_MOST, SessionFull, type SessionRow } from "./http.ts";
 import type { McpConfig, Root } from "./inventory.ts";
@@ -43,7 +43,7 @@ import { McpService, failed, type ServerPort } from "./service.ts";
 import { McpMetrics, mcpRead, type McpMetricOptions } from "./metrics.ts";
 import { sqliteStore, type Sql, type SqliteCustodyBounds } from "./sqlite-custody.ts";
 import { Wire } from "./wire.ts";
-import type { CallResult, DispatchContext } from "./results.ts";
+import type { DispatchContext, Failure } from "./results.ts";
 import { remoteCardDomain, type RemoteCardOrigin } from "./views/remote-origins.ts";
 import { mcpChallengeResponse, mcpUnauthorized, publicRequestUrl } from "./oauth-resource.ts";
 import { OAuthAccess, agentRoleDecision, equalTokenDigest, type OAuthAccessCandidate } from "./oauth-access.ts";
@@ -1873,7 +1873,7 @@ export class HostedAgent {
   /** One request's private credential owner; every actual delivery reads fresh facts. */
   #dispatchContext(row: Pick<AgentRow, "op" | "membership" | "key" | "handle"> & { service: string }, owner: string, controller: MemberId, oauth: OAuthAccessCandidate | null, generation: HttpGeneration, admittedAt: number): DispatchContext {
     const epoch = oauth ? this.#oauthEpoch : this.#httpEpoch;
-    const denied = (error: "unavailable" | "unauthorized"): CallResult => failed({ error,
+    const denied = (error: "unavailable" | "unauthorized"): Failure => failed({ error,
       sentence: "This delivery stopped before its Native transport call. A request may already be kept, and earlier sends under the same key may remain unresolved. This local stop records no Native outcome.",
       next: "Keep the same idempotencyKey and exact arguments. Reconcile the kept original with settle before starting another operation." });
     return { prepare: async (binding, source) => {

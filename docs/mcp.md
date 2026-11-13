@@ -673,9 +673,43 @@ Creates a scope with no existing target, and records it in your configuration so
         }
       },
       "membership": {
-        "type": [
-          "string",
-          "object"
+        "anyOf": [
+          {
+            "type": "string",
+            "pattern": "^sc_[a-z2-7]{51}[aq]$"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "type": "string",
+                "pattern": "^sc_[a-z2-7]{51}[aq]$"
+              },
+              "inc": {
+                "type": "string",
+                "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
+              },
+              "kind": {
+                "enum": [
+                  "register",
+                  "directory",
+                  "membership",
+                  "rules",
+                  "destination",
+                  "inbox",
+                  "task",
+                  "lane",
+                  "commons"
+                ]
+              }
+            },
+            "required": [
+              "scope",
+              "inc",
+              "kind"
+            ],
+            "additionalProperties": false
+          }
         ]
       },
       "idempotencyKey": {
@@ -700,7 +734,14 @@ Creates a scope with no existing target, and records it in your configuration so
     "properties": {
       "answer": {
         "type": "string",
-        "description": "accepted, refused, unavailable, mismatch, or unknown when the reply was lost"
+        "enum": [
+          "accepted",
+          "archived",
+          "refused",
+          "unavailable",
+          "mismatch"
+        ],
+        "description": "The room's Native decision: accepted, archived, refused, unavailable, or mismatch. A lost reply remains a separate custody finding."
       },
       "sentence": {
         "type": "string"
@@ -718,7 +759,41 @@ Creates a scope with no existing target, and records it in your configuration so
         "type": "string"
       },
       "fact": {
-        "type": "object"
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "type": "string"
+              },
+              "inc": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "scope",
+              "inc",
+              "kind"
+            ]
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "hash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "at",
+          "seq",
+          "hash"
+        ]
       },
       "outboxIds": {
         "type": "array",
@@ -733,17 +808,88 @@ Creates a scope with no existing target, and records it in your configuration so
         "type": "string"
       },
       "judgedAt": {
-        "type": "object"
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "hash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "seq",
+          "hash"
+        ]
       },
       "retained": {
         "type": "boolean",
         "description": "true when this is a terminal outcome kept under custody, and nothing was sent"
+      },
+      "archived": {
+        "type": "object",
+        "properties": {
+          "floor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "commit": {
+            "type": "string"
+          },
+          "through": {
+            "type": "object",
+            "properties": {
+              "seq": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hash": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "seq",
+              "hash"
+            ]
+          }
+        },
+        "required": [
+          "floor",
+          "commit",
+          "through"
+        ]
+      },
+      "phase": {
+        "type": "string",
+        "enum": [
+          "prepared",
+          "sent",
+          "unknown",
+          "accepted",
+          "archived",
+          "refused",
+          "mismatch",
+          "settled"
+        ],
+        "description": "The state of this client's kept request. Acceptance records the request; it does not prove that the installation workflow finished."
+      },
+      "effects": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      },
+      "item": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
       }
     },
     "required": [
-      "answer",
-      "sentence",
-      "next"
+      "answer"
     ]
   },
   "annotations": {
@@ -786,7 +932,14 @@ Joins a room with an invitation link from dap invite (artroom-invite:...), as da
     "properties": {
       "answer": {
         "type": "string",
-        "description": "accepted, refused, unavailable, mismatch, or unknown when the reply was lost"
+        "enum": [
+          "accepted",
+          "archived",
+          "refused",
+          "unavailable",
+          "mismatch"
+        ],
+        "description": "The room's Native decision: accepted, archived, refused, unavailable, or mismatch. A lost reply remains a separate custody finding."
       },
       "sentence": {
         "type": "string"
@@ -804,7 +957,41 @@ Joins a room with an invitation link from dap invite (artroom-invite:...), as da
         "type": "string"
       },
       "fact": {
-        "type": "object"
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "type": "string"
+              },
+              "inc": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "scope",
+              "inc",
+              "kind"
+            ]
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "hash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "at",
+          "seq",
+          "hash"
+        ]
       },
       "outboxIds": {
         "type": "array",
@@ -819,17 +1006,88 @@ Joins a room with an invitation link from dap invite (artroom-invite:...), as da
         "type": "string"
       },
       "judgedAt": {
-        "type": "object"
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "hash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "seq",
+          "hash"
+        ]
       },
       "retained": {
         "type": "boolean",
         "description": "true when this is a terminal outcome kept under custody, and nothing was sent"
+      },
+      "archived": {
+        "type": "object",
+        "properties": {
+          "floor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "commit": {
+            "type": "string"
+          },
+          "through": {
+            "type": "object",
+            "properties": {
+              "seq": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hash": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "seq",
+              "hash"
+            ]
+          }
+        },
+        "required": [
+          "floor",
+          "commit",
+          "through"
+        ]
+      },
+      "phase": {
+        "type": "string",
+        "enum": [
+          "prepared",
+          "sent",
+          "unknown",
+          "accepted",
+          "archived",
+          "refused",
+          "mismatch",
+          "settled"
+        ],
+        "description": "The state of this client's kept request. Acceptance records the request; it does not prove that the installation workflow finished."
+      },
+      "effects": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      },
+      "item": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
       }
     },
     "required": [
-      "answer",
-      "sentence",
-      "next"
+      "answer"
     ]
   },
   "annotations": {
@@ -858,10 +1116,12 @@ Asks the scope that owns a resource for one step of a capability. With kind: for
         "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "capability": {
-        "type": "string"
+        "type": "string",
+        "maxLength": 128
       },
       "step": {
-        "type": "string"
+        "type": "string",
+        "maxLength": 128
       },
       "target": {
         "type": [
@@ -917,7 +1177,24 @@ Asks the scope that owns a resource for one step of a capability. With kind: for
       "step",
       "idempotencyKey"
     ],
-    "additionalProperties": false
+    "additionalProperties": false,
+    "if": {
+      "required": [
+        "kind"
+      ]
+    },
+    "then": {
+      "required": [
+        "target"
+      ],
+      "properties": {
+        "on": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    }
   },
   "annotations": {
     "readOnlyHint": false,
@@ -1252,6 +1529,46 @@ What is known about the envelope under idempotencyKey on target (or the creation
           "object"
         ]
       },
+      "membership": {
+        "anyOf": [
+          {
+            "type": "string",
+            "pattern": "^sc_[a-z2-7]{51}[aq]$"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "type": "string",
+                "pattern": "^sc_[a-z2-7]{51}[aq]$"
+              },
+              "inc": {
+                "type": "string",
+                "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
+              },
+              "kind": {
+                "enum": [
+                  "register",
+                  "directory",
+                  "membership",
+                  "rules",
+                  "destination",
+                  "inbox",
+                  "task",
+                  "lane",
+                  "commons"
+                ]
+              }
+            },
+            "required": [
+              "scope",
+              "inc",
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
       "idempotencyKey": {
         "type": "string",
         "minLength": 1,
@@ -1265,7 +1582,19 @@ What is known about the envelope under idempotencyKey on target (or the creation
     "required": [
       "idempotencyKey"
     ],
-    "additionalProperties": false
+    "additionalProperties": false,
+    "anyOf": [
+      {
+        "required": [
+          "target"
+        ]
+      },
+      {
+        "required": [
+          "definition"
+        ]
+      }
+    ]
   },
   "annotations": {
     "readOnlyHint": true,
@@ -1326,10 +1655,12 @@ The change between two exact commits, read with the one-time credential of a rea
       },
       "base": {
         "type": "string",
+        "pattern": "^[0-9a-f]{40}$",
         "description": "The exact commit ID of the older side."
       },
       "integration": {
         "type": "string",
+        "pattern": "^[0-9a-f]{40}$",
         "description": "The exact commit ID of the newer side."
       },
       "target": {
@@ -1442,7 +1773,8 @@ Signs one act of a scope by its native kind, under the same custody and binding 
       },
       "on": {
         "type": "integer",
-        "minimum": 0
+        "minimum": 0,
+        "maximum": 9007199254740991
       },
       "at": {
         "type": "object",
@@ -1494,7 +1826,14 @@ Signs one act of a scope by its native kind, under the same custody and binding 
     "properties": {
       "answer": {
         "type": "string",
-        "description": "accepted, refused, unavailable, mismatch, or unknown when the reply was lost"
+        "enum": [
+          "accepted",
+          "archived",
+          "refused",
+          "unavailable",
+          "mismatch"
+        ],
+        "description": "The room's Native decision: accepted, archived, refused, unavailable, or mismatch. A lost reply remains a separate custody finding."
       },
       "sentence": {
         "type": "string"
@@ -1512,7 +1851,41 @@ Signs one act of a scope by its native kind, under the same custody and binding 
         "type": "string"
       },
       "fact": {
-        "type": "object"
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "type": "string"
+              },
+              "inc": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "scope",
+              "inc",
+              "kind"
+            ]
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "hash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "at",
+          "seq",
+          "hash"
+        ]
       },
       "outboxIds": {
         "type": "array",
@@ -1527,17 +1900,88 @@ Signs one act of a scope by its native kind, under the same custody and binding 
         "type": "string"
       },
       "judgedAt": {
-        "type": "object"
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "hash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "seq",
+          "hash"
+        ]
       },
       "retained": {
         "type": "boolean",
         "description": "true when this is a terminal outcome kept under custody, and nothing was sent"
+      },
+      "archived": {
+        "type": "object",
+        "properties": {
+          "floor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "commit": {
+            "type": "string"
+          },
+          "through": {
+            "type": "object",
+            "properties": {
+              "seq": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hash": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "seq",
+              "hash"
+            ]
+          }
+        },
+        "required": [
+          "floor",
+          "commit",
+          "through"
+        ]
+      },
+      "phase": {
+        "type": "string",
+        "enum": [
+          "prepared",
+          "sent",
+          "unknown",
+          "accepted",
+          "archived",
+          "refused",
+          "mismatch",
+          "settled"
+        ],
+        "description": "The state of this client's kept request. Acceptance records the request; it does not prove that the installation workflow finished."
+      },
+      "effects": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      },
+      "item": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
       }
     },
     "required": [
-      "answer",
-      "sentence",
-      "next"
+      "answer"
     ]
   },
   "annotations": {
@@ -1560,6 +2004,50 @@ Install an operator-trusted package in this room by immutable Git URI and indepe
     "properties": {
       "owner": {
         "type": "object",
+        "properties": {
+          "membership": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "type": "string",
+                "pattern": "^sc_[a-z2-7]{51}[aq]$"
+              },
+              "inc": {
+                "type": "string",
+                "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
+              },
+              "kind": {
+                "enum": [
+                  "register",
+                  "directory",
+                  "membership",
+                  "rules",
+                  "destination",
+                  "inbox",
+                  "task",
+                  "lane",
+                  "commons"
+                ]
+              }
+            },
+            "required": [
+              "scope",
+              "inc",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          "member": {
+            "type": "string",
+            "pattern": "^@.",
+            "minLength": 2
+          }
+        },
+        "required": [
+          "membership",
+          "member"
+        ],
+        "additionalProperties": false,
         "description": "Existing full MemberRef chosen for a device package. Native installation checks its current membership."
       },
       "uri": {
@@ -1567,7 +2055,8 @@ Install an operator-trusted package in this room by immutable Git URI and indepe
         "maxLength": 4096
       },
       "release": {
-        "type": "string"
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
       },
       "roles": {
         "type": "array",
@@ -1625,7 +2114,7 @@ if its commons ref is absent.
 
 ### `application_installation`
 
-Read one native installation in the configured room, including its recorded phase and final refusal reason. Earlier committed activation and grants can remain after a later refusal. Active results include the exact generic screen address. This read signs no install or continuation and changes no native state.
+Read one native installation in the configured room, including its state, installation workflow phase and final refusal reason. Earlier committed activation and grants can remain after a later refusal. Active results include the exact generic screen address. This read signs no install or continuation and changes no native state.
 
 ```json
 {
@@ -1634,7 +2123,8 @@ Read one native installation in the configured room, including its recorded phas
     "properties": {
       "item": {
         "type": "integer",
-        "minimum": 0
+        "minimum": 0,
+        "maximum": 9007199254740991
       }
     },
     "required": [

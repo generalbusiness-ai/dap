@@ -1,11 +1,11 @@
 import { canonicalize, isHead, isKeyId, isMemberRef, isRecord, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { Receipt, ScopeRef } from "@generalbusiness/dap-contract";
-import { validKey } from "../custody.ts";
+import { validKey } from "@generalbusiness/dap-client";
 import { decodeViewParameters } from "@generalbusiness/dap-platform/application-v2";
 import { shapeAt } from "../shape.ts";
-import type { CallResult, DispatchContext } from "../results.ts";
+import { dataOf, type CallResult, type TypedCallResult, type ViewOutcomeData, type ExactReadData, type LocalReviewData, type DispatchContext } from "../results.ts";
 import type { ViewKind } from "./resources.ts";
-import type { ActSigner, Card, CardAction, CardContext, Display, EntryRange, ExactRead, LocalReviewAction, NamedCommit, NativeCardAction, PageKind, Projection, ShownRead, ViewQuery, ViewSource } from "./types.ts";
+import type { ActSigner, Card, CardAction, CardContext, Display, EntryRange, ExactRead, LocalReviewAction, NativeCardAction, PageKind, Projection, ShownRead, ViewQuery, ViewSource } from "./types.ts";
 
 import { signerWords } from "./actor.ts";
 
@@ -23,7 +23,7 @@ interface Instance {
   exactReceipt?: { of: string; text: string };
   readReceipt?: Receipt;
   busy: boolean;
-  dispatches: Map<string, Promise<CallResult>>;
+  dispatches: Map<string, Promise<TypedCallResult<ViewOutcomeData>>>;
   pending: Map<string, Card["actions"][number]>;
   inputs: Map<string, { meaning: string; outcome: Promise<InputOpening> }>;
   /** The displayed reads, newest last, and the one its diff page shows. Only complete answers replay without another read. */
@@ -46,12 +46,12 @@ const FILE_LABEL = 128;
 const READ_WORD: Record<ExactRead["kind"], string> = { diff: "Diff", interdiff: "Interdiff", file: "File" };
 
 /** A read's words, commits and file actions, from the service's answer, so that the page names what the read returned. */
-function shownOf(read: ExactRead, answer: Record<string, unknown>): { shown: ShownRead; files: ExactRead[] } {
-  const leftOut = typeof answer["leftOut"] === "string" ? answer["leftOut"] : null, truncated = answer["truncated"] === true;
-  const paths = Array.isArray(answer["paths"]) ? answer["paths"] as { path: string; shown: string; commit: string }[] : [];
-  const reached = typeof answer["files"] === "number" ? answer["files"] : paths.length;
+function shownOf(read: ExactRead, answer: ExactReadData): { shown: ShownRead; files: ExactRead[] } {
+  const leftOut = typeof answer.leftOut === "string" ? answer.leftOut : null, truncated = answer.truncated === true;
+  const paths = Array.isArray(answer.paths) ? answer.paths : [];
+  const reached = typeof answer.files === "number" ? answer.files : paths.length;
   const listed = paths.slice(0, FILE_ACTIONS);
-  const shown: ShownRead = { kind: read.kind, title: "", commits: Array.isArray(answer["commits"]) ? answer["commits"] as NamedCommit[] : [], truncated, leftOut, files: [], moreFiles: Math.max(0, reached - listed.length) };
+  const shown: ShownRead = { kind: read.kind, title: "", commits: Array.isArray(answer.commits) ? answer.commits : [], truncated, leftOut, files: [], moreFiles: Math.max(0, reached - listed.length) };
   if (read.kind === "diff") shown.title = `Diff of ${read.label ?? "this version"}`;
   else if (read.kind === "interdiff") shown.title = `Interdiff from ${read.from.label} to ${read.to.label}`;
   else { shown.title = `File at ${read.commitLabel}`; shown.moreFiles = 0; }
@@ -64,7 +64,7 @@ export interface ViewPorts {
   /** Identity of the actual envelope, retained by the service, never supplied by the browser or the source card. */
   signerOf?: (result: CallResult) => ActSigner | null;
   /** Sign one read-token act and make one bounded read. `admit` runs before the signature. */
-  readExact?: (read: ExactRead, admit: () => void | Promise<void>, dispatchContext?: DispatchContext) => Promise<CallResult>;
+  readExact?: (read: ExactRead, admit: () => void | Promise<void>, dispatchContext?: DispatchContext) => Promise<TypedCallResult<ExactReadData>>;
   /** Private result identity from an actual stopped custody delivery; never a JSON error classification. */
   dispatchStopped?: (result: CallResult) => boolean;
   /** The key of an act sent at this scope with no outcome kept. */
@@ -75,21 +75,21 @@ const PAGES = new Set<PageKind>(["summary", "item", "diff", "updates"]);
 const finite = (value: number) => Number.isSafeInteger(value) && value >= 0;
 
 /** What a person reads after a press, and what the model's context reads. An accepted act with its own words names no entry to a person; the context does. */
-function receiptLine(card: Card, action: CardAction, result: CallResult, dispatchStopped = false): { shown: string; exact?: string } {
-  const answer = result.structuredContent;
-  const reason = [answer["reason"], answer["name"]].filter((value): value is string => typeof value === "string").join(", ");
-  const uncertain = dispatchStopped || answer["answer"] === "unknown" || answer["answer"] === "unavailable" || answer["error"] === "transport" || answer["error"] === "custody";
+function receiptLine(card: Card, action: CardAction, result: TypedCallResult<ViewOutcomeData>, dispatchStopped = false): { shown: string; exact?: string } {
+  const answer = dataOf(result);
+  const reason = [answer.reason, answer.name].filter((value): value is string => typeof value === "string").join(", ");
+  const uncertain = dispatchStopped || answer.answer === "unknown" || answer.answer === "unavailable" || answer.error === "transport" || answer.error === "custody";
   let outcome: string;
-  const later = typeof answer["checkAfter"] === "string" ? ` after ${answer["checkAfter"]}` : "";
+  const later = typeof answer.checkAfter === "string" ? ` after ${answer.checkAfter}` : "";
   if (uncertain) outcome = `outcome unknown; check the original request${later}`;
-  else if (answer["answer"] === "not-found") outcome = "this server keeps no record of it, which does not show that it was not sent";
-  else if (answer["answer"] === "accepted") {
-    const fact = answer["fact"] as { seq?: unknown } | undefined;
+  else if (answer.answer === "not-found") outcome = "this server keeps no record of it, which does not show that it was not sent";
+  else if (answer.answer === "accepted") {
+    const fact = answer.fact;
     outcome = `accepted${typeof fact?.seq === "number" ? ` (entry ${fact.seq})` : ""}`;
-  } else if (typeof answer["answer"] === "string") outcome = `${answer["answer"]}${reason ? ` (${reason})` : ""}`;
+  } else if (typeof answer.answer === "string") outcome = `${answer.answer}${reason ? ` (${reason})` : ""}`;
   else outcome = "the act could not be confirmed; refresh the card";
-  const fact = answer["fact"] as { seq?: unknown } | undefined;
-  if (answer["answer"] === "accepted" && !action.local && action.done) return { shown: action.done, ...(typeof fact?.seq === "number" ? { exact: `${action.done} Entry ${fact.seq}.` } : {}) };
+  const fact = answer.fact;
+  if (answer.answer === "accepted" && !action.local && action.done) return { shown: action.done, ...(typeof fact?.seq === "number" ? { exact: `${action.done} Entry ${fact.seq}.` } : {}) };
   return { shown: `${card.kicker ?? `${card.identity.kind} ${card.identity.item} ${card.identity.revision}`}: ${outcome}.`.replace(/\s+/g, " ").slice(0, 512) };
 }
 
@@ -104,6 +104,16 @@ function mergeRanges(ranges: EntryRange[]): EntryRange[] {
   return out;
 }
 function ranges(entries: NonNullable<Card["entries"]>): EntryRange[] { return mergeRanges(entries.map(({ scope, seq }) => ({ scope, from: seq, to: seq }))); }
+
+/** The existing callback boundary admits a local mark, never a Native answer. */
+function checkedLocalResult(result: CallResult, admitted: boolean): asserts result is TypedCallResult<LocalReviewData> {
+  if (!isRecord(result) || !isRecord(result.structuredContent) || typeof result.isError !== "boolean" || !Array.isArray(result.content)
+    || result.content.some(entry => !isRecord(entry) || entry["type"] !== "text" || typeof entry["text"] !== "string")) throw new ViewError("unavailable", "The local review callback returned a malformed local result.");
+  const status = result.structuredContent["localStatus"];
+  if (typeof status !== "string" || !["marked", "already", "refused", "unavailable", "stale"].includes(status)
+    || "answer" in result.structuredContent || "fact" in result.structuredContent || "receipt" in result.structuredContent
+    || utf8(canonicalize(result)).length > 64 * 1024 || ((status === "marked" || status === "already") && !admitted)) throw new ViewError("unavailable", "The local review callback returned no bounded local result.");
+}
 
 function checkedLocal(action: LocalReviewAction, card: Card): void {
   const capture = action.capture;
@@ -171,7 +181,7 @@ function checked(projection: Projection, query: ViewQuery): Projection {
 export class ViewSessions {
   readonly #instances = new Map<string, Instance>();
   readonly #current = new Map<ViewKind, string>();
-  constructor(readonly source: ViewSource, readonly access: (dispatchContext?: DispatchContext) => Parameters<ViewSource["read"]>[1], readonly perform: (kind: string, args: Record<string, unknown>, admit: () => void | Promise<void>, dispatchContext?: DispatchContext) => Promise<CallResult>, readonly settle: (args: Record<string, unknown>, dispatchContext?: DispatchContext) => Promise<CallResult>, readonly receiptOf: (result: CallResult) => Receipt | null = () => null, readonly ports: ViewPorts = {}) {}
+  constructor(readonly source: ViewSource, readonly access: (dispatchContext?: DispatchContext) => Parameters<ViewSource["read"]>[1], readonly perform: (kind: string, args: Record<string, unknown>, admit: () => void | Promise<void>, dispatchContext?: DispatchContext) => Promise<TypedCallResult<ViewOutcomeData>>, readonly settle: (args: Record<string, unknown>, dispatchContext?: DispatchContext) => Promise<TypedCallResult<ViewOutcomeData>>, readonly receiptOf: (result: CallResult) => Receipt | null = () => null, readonly ports: ViewPorts = {}) {}
   async #openOriginal(card: Card, query: ViewQuery): Promise<{ idempotencyKey: string } | null> {
     if (card.declared || !this.source.checksOriginals?.(query) || !this.ports.unresolved) return null;
     return this.ports.unresolved(card.identity.subject.scope);
@@ -313,7 +323,7 @@ export class ViewSessions {
     }
     return this.#display(instance);
   }
-  async act(key: string, cut: number, actionId: string, dispatchContext?: DispatchContext): Promise<{ result: CallResult; display: Display }> {
+  async act(key: string, cut: number, actionId: string, dispatchContext?: DispatchContext): Promise<{ result: TypedCallResult<ViewOutcomeData | ExactReadData>; display: Display }> {
     const instance = this.#instance(key);
     if (actionId === VIEW_DIFF || (isExactAction(actionId) && instance.projection.card?.diffRead)) return this.#readExact(instance, cut, actionId, dispatchContext);
     const dispatchKey = `${cut}:${actionId}`;
@@ -350,7 +360,7 @@ export class ViewSessions {
         fields: { ...(offered.args["fields"] as Record<string, unknown> | undefined), ...fields } } };
       const cut = instance.cut;
       const { result } = await this.#dispatch(instance, cut, action, `input:${request}`, dispatchContext);
-      if (result.structuredContent["answer"] === "accepted") {
+      if (dataOf(result).answer === "accepted") {
         try { await this.read(key, cut, { position: 0 }, dispatchContext); }
         catch { /* The accepted receipt survives a failed refresh. */ }
       }
@@ -359,7 +369,7 @@ export class ViewSessions {
     instance.inputs.set(request, { meaning, outcome });
     return outcome;
   }
-  async #markReviewed(instance: Instance, cut: number, card: Card, action: LocalReviewAction, dispatchKey: string): Promise<{ result: CallResult; display: Display }> {
+  async #markReviewed(instance: Instance, cut: number, card: Card, action: LocalReviewAction, dispatchKey: string): Promise<{ result: TypedCallResult<ViewOutcomeData | ExactReadData>; display: Display }> {
     if (!this.source.markReviewed) throw new ViewError("unavailable", "This view has no local review store.");
     if (instance.query.page !== "updates" || card.unavailable.length || !(card.entries?.length)
       || canonicalize(mergeRanges(card.reviewIntended)) !== canonicalize(ranges(card.entries))) throw new ViewError("shape", "Only the exact displayed available updates can be marked locally.");
@@ -367,7 +377,7 @@ export class ViewSessions {
     checkedLocal(action, card);
     const mark = this.source.markReviewed;
     instance.busy = true;
-    const dispatch = (async (): Promise<CallResult> => {
+    const dispatch = (async (): Promise<TypedCallResult<LocalReviewData>> => {
       let admitted = false;
       let result: CallResult;
       try { result = structuredClone(await mark.call(this.source, structuredClone(action.capture), { view: instance.key, cut, admit: () => {
@@ -375,12 +385,8 @@ export class ViewSessions {
         admitted = true;
       } })); }
       catch (error) { if (error instanceof ViewError) throw error; throw new ViewError("unavailable", "The local review mark could not be confirmed. No native act was sent."); }
-      if (!isRecord(result) || !isRecord(result.structuredContent) || typeof result.isError !== "boolean" || !Array.isArray(result.content)
-        || result.content.some(entry => !isRecord(entry) || entry["type"] !== "text" || typeof entry["text"] !== "string")) throw new ViewError("unavailable", "The local review callback returned a malformed local result.");
-      const status = result.structuredContent["localStatus"];
-      if (typeof status !== "string" || !["marked", "already", "refused", "unavailable", "stale"].includes(status)
-        || "answer" in result.structuredContent || "fact" in result.structuredContent || "receipt" in result.structuredContent
-        || utf8(canonicalize(result)).length > 64 * 1024 || ((status === "marked" || status === "already") && !admitted)) throw new ViewError("unavailable", "The local review callback returned no bounded local result.");
+      checkedLocalResult(result, admitted);
+      const { localStatus: status } = dataOf(result);
       instance.receipt = `Local review: ${status}. This is not a native journal receipt.`;
       return result;
     })();
@@ -422,7 +428,7 @@ export class ViewSessions {
     return true;
   }
   /** A complete retained answer signs nothing. A truncated answer can run again; a failure keeps the page and says why. */
-  async #readExact(instance: Instance, cut: number, action: string, dispatchContext?: DispatchContext): Promise<{ result: CallResult; display: Display }> {
+  async #readExact(instance: Instance, cut: number, action: string, dispatchContext?: DispatchContext): Promise<{ result: TypedCallResult<ViewOutcomeData | ExactReadData>; display: Display }> {
     this.#admit(instance, cut);
     if (instance.busy) throw new ViewError("busy", "The card has an operation in progress. Retry its read.");
     const card = instance.projection.card, read = card ? this.#exactRead(instance, card, action) : null;
@@ -447,17 +453,17 @@ export class ViewSessions {
         this.#admit(instance, cut);
       }, dispatchContext);
       // The read has returned, so a request may be signed. These words say so, where #admit says that nothing was sent.
-      if (!this.#active(instance)) throw new ViewError("superseded", result.isError || typeof result.structuredContent["text"] !== "string"
+      if (!this.#active(instance)) throw new ViewError("superseded", result.isError || typeof dataOf(result).text !== "string"
         ? "A newer card replaced this one during the read. The read may have been signed, and this card does not show its answer."
         : "A newer card replaced this one during the read. The read was signed, and this card does not show its answer.");
       this.#admit(instance, cut);
-      const text = result.structuredContent["text"];
+      const exact = dataOf(result), text = exact.text;
       if (result.isError || typeof text !== "string") {
-        const message = result.structuredContent["message"], answer = result.structuredContent["answer"];
+        const message = exact.message, answer = exact.answer;
         instance.receipt = (`${word} not shown: ${typeof message === "string" ? message : typeof answer === "string" ? `the read request was ${answer}.` : "the read did not finish."}`).slice(0, 512);
         return { result, display: this.#display(instance) };
       }
-      const { shown, files } = shownOf(read, result.structuredContent);
+      const { shown, files } = shownOf(read, exact);
       const answer: HeldRead = { of, read, text, shown, files };
       if (!this.#showRead(instance, card, answer)) {
         instance.receipt = `${word} not shown: the card cannot hold this answer. The one-time credential is spent.`;
@@ -465,12 +471,12 @@ export class ViewSessions {
       }
       instance.reads = [...instance.reads.filter(item => item.of !== of), answer].slice(-HELD_READS);
       // The display holds the text. The result states what the read returned, and it does not repeat the text.
-      const { text: _text, ...facts } = result.structuredContent;
+      const { text: _text, ...facts } = exact;
       return { result: { structuredContent: facts, content: [{ type: "text", text: `${word} shown on the page.` }], isError: false }, display: this.#display(instance) };
     } finally { instance.busy = false; }
   }
 
-  async #dispatch(instance: Instance, cut: number, action: CardAction | undefined, dispatchKey: string, dispatchContext?: DispatchContext): Promise<{ result: CallResult; display: Display }> {
+  async #dispatch(instance: Instance, cut: number, action: CardAction | undefined, dispatchKey: string, dispatchContext?: DispatchContext): Promise<{ result: TypedCallResult<ViewOutcomeData | ExactReadData>; display: Display }> {
     const retained = action?.purpose === "check-original" ? undefined : instance.dispatches.get(dispatchKey);
     if (retained) return { result: await retained, display: this.#display(instance) };
     this.#admit(instance, cut);
@@ -500,7 +506,7 @@ export class ViewSessions {
     if (action.purpose !== "check-original") instance.dispatches.set(dispatchKey, dispatch);
     try {
       const result = await dispatch;
-      const answer = result.structuredContent;
+      const answer = dataOf(result);
       const dispatchStopped = this.ports.dispatchStopped?.(result) === true;
       const line = receiptLine(card, action, result, dispatchStopped);
       if (this.ports.signerOf) {
@@ -512,15 +518,15 @@ export class ViewSessions {
       instance.receipt = line.shown;
       if (line.exact) instance.exactReceipt = { of: line.shown, text: line.exact };
       const receipt = this.receiptOf(result);
-      if (answer["answer"] === "accepted" && receipt) instance.readReceipt = structuredClone(receipt);
+      if (answer.answer === "accepted" && receipt) instance.readReceipt = structuredClone(receipt);
       const itemKey = this.#itemKey(card);
-      if (dispatchStopped || answer["answer"] === "unknown" || answer["answer"] === "unavailable" || answer["error"] === "custody" || answer["error"] === "transport") {
+      if (dispatchStopped || answer.answer === "unknown" || answer.answer === "unavailable" || answer.error === "custody" || answer.error === "transport") {
         const original = { id: `check-${cut}`, label: "Check original request", purpose: "check-original" as const, kind: "", args: { target: args["target"] ?? args["scope"], idempotencyKey: args["idempotencyKey"] } };
         instance.pending.set(itemKey, original);
         card.unresolvedOriginal = true;
         card.actions = [original];
         instance.cut++;
-      } else if (answer["answer"] !== "unavailable" && action.purpose === "check-original") {
+      } else if (answer.answer !== "unavailable" && action.purpose === "check-original") {
         instance.pending.delete(itemKey);
         card.unresolvedOriginal = false;
         card.actions = [];

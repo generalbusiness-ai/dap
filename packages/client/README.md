@@ -19,7 +19,7 @@ entries DJ1, DJ7 and DJ23 to DJ25.
 | Module | Holds |
 |---|---|
 | `intent` | `signedIntent(signer, asked, signing?)`: an intent with a fresh idempotency key and a `notAfter` within the lifetime bound, signed. The intent is a detached copy of what was asked, taken before the signer is awaited, so the value returned is the value signed. `Signer`; `secretSigner(secret)`; `webCryptoSigner()`, over a key that cannot be read; `newIdempotencyKey()`. |
-| `handle` | `ScopeHandle`: `submit(signed, grants?, beside?)`, `settle`, the reads `summary`, `items`, `queryItems`, `history`, `entry` and `outbox`, `definition`, `text(digest)`, `followReceipt` and `followOutbox`. `create(transport, creation, definition, definitions?, reader?, beside?)`. `Transport`, `TransportError`. |
+| `handle` | `ScopeHandle`: `submit(signed, grants?, beside?)`, `settle`, the reads `summary`, `items`, `queryItems`, `history`, `entry`, `log` and `outbox`, `definition`, `text(digest)`, `followReceipt` and `followOutbox`. `create(transport, creation, definition, definitions?, reader?, beside?)`. `Transport`, `TransportError`. |
 | `session` | A read session, as a device holds one: `sessionRequest(to, secret, notAfter, operation)` signs a request with the device's key; `requestSession(service, membership, signed)` asks the membership scope over the HTTP route and preserves valid advisory `retryAfterSeconds` on a 429 `rate-limited` refusal; `Session` keeps the token in memory, gives `reader()` for a `ScopeHandle`, and leaves the token out of its JSON and its text. A session signs nothing. |
 | `originals` | A member's original requests at membership: `originalsAt(service, membership, reader)` with `keep`, `list`, `read` and `end`; `actBody`, `actBodyText`, `originalRequest(bytes, digest)`, `sendableAt(notAfter)` and `EXPIRY_MARGIN_MS`. |
 | `device-key-invitation` | The private link of a second device key of one member: `DEVICE_KEY_LINK`, `deviceKeyInvitationOf`, `encodeDeviceKeyInvitation`. Encoding grants no authority. |
@@ -177,6 +177,40 @@ unavailable, or mismatch.
 Keep the value `signedIntent` returned, and retry with it. It is a copy:
 later changes to the object that was passed in, such as a form's fields, do
 not reach it, and it is the value the signature covers.
+
+## Folding a scope's journal
+
+`ScopeHandle.log(cursor?, atLeast?)` reads one page of the journal as the
+scope stores it: each entry's canonical bytes, its seq and its hash. The
+handle checks every page before it returns it:
+
+- The page names this scope's reference and definition, as the scope's
+  summary gives them. The handle reads the summary once.
+- Each entry's bytes hash to its hash, and hold its seq and this scope.
+- The seqs rise from the cursor and do not pass the head.
+
+A page that fails a check rejects with `TransportError`. Below the floor,
+the read is the `archived` refusal.
+
+A checked page has a `coverage`. It is `whole` only when both of these hold:
+
+- The handle read with a session: its reader is a `Session` text.
+- The seqs run without a gap from the cursor to the page's `next`, or to
+  the head when the page has no `next`.
+
+Otherwise the page is `filtered`. A member session and a register session
+read whole pages. A signed read may not: outside a register, it keeps the
+genesis, its key's own entries and the entries that its key's chain leads
+to. The scope
+computes `complete` and `next` before it filters the rows, so a signed
+page can say `complete: true` and still omit entries. The handle reports
+every signed page as `filtered`, whatever its seqs are, at a register too.
+
+A fold of whole pages from cursor 0, with derive's `applyEntry`, equals the
+scope's state. Do not fold a `filtered` page into a replica.
+
+The transport sends no read minimum with `log`. The handle refuses a page
+whose head is below `atLeast`.
 
 ## Following
 

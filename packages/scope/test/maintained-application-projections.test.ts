@@ -52,7 +52,7 @@ test.each(["counter", "lending"] as const)("maintained %s package installs and i
       applicationFetch: peer.fetch, applicationTrust: JSON.stringify(f.trust), fetch: (url, init) => life.wait(() => routed(url, init)) };
     const mcp = new McpService(port);
     const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release, roles: ["admin", "member", "agent"], values: name === "counter" ? { target: 7 } : {}, idempotencyKey: `TEST-maintained-${name}` }));
-    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
+    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
     const job = Number(installed.structuredContent["item"]);
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
     const create = (await life.wait(() => D.entries())).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.kind === "lane");

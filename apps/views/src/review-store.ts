@@ -6,7 +6,7 @@ import { canonicalize, isDigest, isMemberRef, isScopeRef, utf8 } from "@generalb
 import type { LocalReviewCapture } from "@generalbusiness/dap-mcp";
 import type { Point } from "./reads.ts";
 import { sameOptional } from "./reads.ts";
-import { retiredStoreMessage } from "../../../packages/mcp/src/store-format-error.ts";
+import { retiredStoreMessage } from "../../../packages/client/src/store-format-error.ts";
 
 const BYTES = 32768, HEADS = 64;
 type Mark = Pick<LocalReviewCapture, "service" | "directory" | "viewer" | "key"> & Point;

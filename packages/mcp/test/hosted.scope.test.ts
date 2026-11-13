@@ -2394,8 +2394,9 @@ test("H6 matrix through the endpoint: prepared reset, concurrent send and settle
       hostedTest.roleReply = null; hostedTest.submitted = null;
       expect((await rita.ok("member.actions", { on: 0, fields: { role: "agent", actions: actualAgentActions }, idempotencyKey: "TEST-S4-old-lost-restore" }))["answer"]).toBe("accepted");
     }
-    await stub.reset();
-    hostedTest.lose = `/${rita.config.repository!.directory.scope}/acts`;
+    // The held admission resumes this test from the agent object's context, so the stub from before the hold is foreign here.
+    await agentStub(bot.agent).reset();
+    hostedTest.lose =`/${rita.config.repository!.directory.scope}/acts`;
     expect((await result(await room.wait(() => open("uncertain"))))["error"]).toBe("transport");
     const decisive = await result(await room.wait(() => modernCall(bot.bearer, "settle", { idempotencyKey: "uncertain", target: "directory" })));
     expect(decisive["answer"], JSON.stringify(decisive)).toBe("accepted");

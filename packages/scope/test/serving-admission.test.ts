@@ -5,7 +5,7 @@ import { expect, test } from "vitest";
 import type { Intent, ItemQuery, SignedIntent } from "@generalbusiness/dap-contract";
 import { encodeItemQueryParameter, itemQueryArgument, keyIdOfSecret, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { httpTransport, secretSigner, signedReader } from "@generalbusiness/dap-client";
-import { ServingAdmission, type ServingDecision, type ServingRequest } from "../src/serving-admission.ts";
+import { SERVING_CREATION_BYTES, ServingAdmission, type ServingDecision, type ServingRequest } from "../src/serving-admission.ts";
 import { SCOPE_INDEX_NAME } from "../src/scope-index.ts";
 import { api, route, type Api } from "../src/worker.ts";
 import type { Binding } from "../src/namespace.ts";
@@ -265,6 +265,20 @@ test("found custody windows stop one key across addresses and one address across
   // Native authority has not changed, and founding consumes no read window.
   const reader = await signedReader(secretSigner(secret(21)), target, "summary", "summary", { now: () => 0 });
   expect(owner.serving.admit({ kind: "signed-read", reader }, "192.0.2.1", 0)).toBe("admitted");
+});
+
+test("every found submit charges its address, including one over the serving bound that the target refuses", async () => {
+  const owner = fixed(), address = "192.0.2.40"; let submits = 0;
+  // Target stand-in: proves serving admission, never native founding authority.
+  const binding: Binding<string> = { idFromName: name => name, get: () => ({
+    submit: async () => { submits++; return { answer: "refused", reason: "source-unverified" }; },
+  }) };
+  const found = (n: number) => signIntent({ ...creation(secret(n)).intent, to: { scope: target, genesis: `sha256:${"9".repeat(64)}` }, kind: "found" }, secret(n));
+  const oversized = (n: number): SignedIntent => { const signed = found(n); return { ...signed, intent: { ...signed.intent, fields: { pad: "x".repeat(SERVING_CREATION_BYTES) } } }; };
+  const scopes = api(binding, address, owner.environment);
+  for (let n = 41; n < 44; n++) expect(await scopes.submit(target, oversized(n), [])).toEqual({ answer: "refused", reason: "source-unverified" });
+  expect(await scopes.submit(target, found(44), [])).toEqual({ answer: "unavailable", reason: "rate-limited" });
+  expect(submits).toBe(3);
 });
 
 test("an exhausted creation address is refused before its HTTP body is read or parsed", async () => {

@@ -21,13 +21,15 @@
  */
 
 import type { Digest, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, hex, isPlatformDefinition, sha256, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, hex, sha256, utf8 } from "@generalbusiness/dap-bytes";
+import { declarationDigest } from "@generalbusiness/dap-client/install";
 import { formFor } from "@generalbusiness/dap-client";
-import { describeAct, grantAction, type ActLike, type DefinitionLike, type Described, type Who } from "./describe.ts";
+import { ACT_OUTPUT } from "./act-result.ts";
+import { describeAct, type Described } from "./describe.ts";
+import { grantAction, type ActLike, type DefinitionLike, type Who } from "@generalbusiness/dap-client";
 import { descriptions } from "./description-context.ts";
 import { actInputSchema } from "./input-schema.ts";
 import { surfaceOf, wordsDigest, type Words } from "./words.ts";
-import { markRefusals, markText } from "./marks.ts";
 
 /** Where a scope of the inventory sits. */
 export type Place = "register" | "directory" | "partition" | "membership" | "rules" | "commons" | "destination" | "inbox" | "lane" | "application" | "root";
@@ -91,50 +93,9 @@ export interface Tool {
   _meta?: Record<string, unknown>;
 }
 
+export { declarationDigest };
+
 const SINGLETONS: ReadonlySet<Place> = new Set(["register", "directory", "membership", "rules", "commons", "destination", "inbox"]);
-
-/** The item types an act names: every string of its declaration that is an item type of the definition. */
-function itemsNamed(act: unknown, items: Readonly<Record<string, unknown>>): Record<string, unknown> {
-  const named = new Set<string>();
-  const walk = (v: unknown): void => {
-    if (typeof v === "string") { if (Object.hasOwn(items, v)) named.add(v); return; }
-    if (Array.isArray(v)) { v.forEach(walk); return; }
-    if (typeof v === "object" && v !== null) for (const [k, x] of Object.entries(v)) { walk(k); walk(x); }
-  };
-  walk(act);
-  return Object.fromEntries([...named].sort().map((name) => [name, items[name]]));
-}
-
-/** The names of the rules an act's guards name, and the platform marks (`{ code, row }`) they carry, anywhere in them. */
-function rendered(act: unknown): { rules: Set<string>; marks: Map<string, { code: string; row: string }> } {
-  const rules = new Set<string>();
-  const marks = new Map<string, { code: string; row: string }>();
-  const walk = (v: unknown): void => {
-    if (Array.isArray(v)) { v.forEach(walk); return; }
-    if (typeof v !== "object" || v === null) return;
-    const o = v as Record<string, unknown>;
-    if (typeof o["rule"] === "string") rules.add(o["rule"]);
-    if (typeof o["code"] === "string") marks.set(`${o["code"]} ${String(o["row"] ?? "")}`, { code: o["code"], row: String(o["row"] ?? "") });
-    for (const x of Object.values(o)) walk(x);
-  };
-  walk(act);
-  return { rules, marks };
-}
-
-/**
- * The digest of an act declaration and everything its rendering reads (section 3, "One tool per act declaration"): the act, the
- * item types it names, the bodies of the rules its guards name, the definition's profile, and, for a platform definition, the
- * text and refusal names of each mark it carries in the pinned version. Two definitions whose rows match but whose rule bodies,
- * profile or marks differ are two declarations, so no description can speak for the other's meaning.
- */
-export function declarationDigest(definition: DefinitionLike, kind: string, pinned?: string): Digest {
-  const act = definition.acts[kind];
-  const { rules, marks } = rendered(act);
-  const bodies = Object.fromEntries([...rules].sort().map((name) => [name, definition.rules?.[name] ?? null]));
-  const marked = pinned === undefined || !isPlatformDefinition(pinned) ? {} : Object.fromEntries([...marks.entries()].sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, m]) => [k, [markText(pinned, m), [...markRefusals(pinned, m.code)]]]));
-  const profile = (definition as { profile?: unknown }).profile ?? null;
-  return digestBytes(utf8(canonicalize({ act, items: itemsNamed(act, definition.items), rules: bodies, profile, marks: marked } as never)));
-}
 
 /** The variant of a binding identity: hex of a digest over it, `chars` long. */
 export function variantOf(identity: { definition: string; kind: string; declaration: string }, chars: number): string {
@@ -220,20 +181,6 @@ export function describedOf(binding: Binding, inventory: Inventory, mode: Mode):
   return describeAct(binding.holder, binding.kind, binding.act, whoOf(binding, inventory), { pinned: binding.pinned, active: inventory.active },
     { definition: binding.definition, kind: binding.kind, declaration: binding.declaration, digests: binding.digests }, pointer);
 }
-
-/** The output of an act tool: the scope's answer, or the server's finding, with the sentence and the next step. */
-export const ACT_OUTPUT: Record<string, unknown> = {
-  type: "object",
-  properties: {
-    answer: { type: "string", description: "accepted, refused, unavailable, mismatch, or unknown when the reply was lost" },
-    sentence: { type: "string" }, next: { type: "string" },
-    scope: { type: "string" }, kind: { type: "string" }, tool: { type: "string" },
-    fact: { type: "object" }, outboxIds: { type: "array", items: { type: "string" } },
-    reason: { type: "string" }, name: { type: "string" }, judgedAt: { type: "object" },
-    retained: { type: "boolean", description: "true when this is a terminal outcome kept under custody, and nothing was sent" },
-  },
-  required: ["answer", "sentence", "next"],
-};
 
 /** The act tool of one binding. */
 export function actTool(binding: Binding, inventory: Inventory, mode: Mode): Tool {

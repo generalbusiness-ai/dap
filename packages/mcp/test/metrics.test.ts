@@ -1,5 +1,13 @@
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import type { SignedIntent } from "@generalbusiness/dap-contract";
+import { timeOf } from "@generalbusiness/dap-bytes";
+import { Custody, Lost, identityId, meaningOf } from "@generalbusiness/dap-client";
+import { fileStore } from "@generalbusiness/dap-client/node";
+import { T0, build, identity, notAfter, receiptOf } from "../../client/test/support/custody.ts";
 import { describe, expect, test } from "vitest";
-import { custodyTransition, McpMetrics, MCP_METRIC_SCHEMA, observedFetch, type McpMetricPoint } from "../src/metrics.ts";
+import { custodyMetrics, custodyTransition, McpMetrics, MCP_METRIC_SCHEMA, observedFetch, type McpMetricPoint } from "../src/metrics.ts";
 
 const good = { end: "ok", bytes: 123 };
 function fixture(report?: (point: McpMetricPoint) => unknown) {
@@ -30,6 +38,28 @@ describe("closed MCP operational observations", () => {
     expect(calls.map(p => [p.blobs[3], p.doubles[2], p.doubles[3]])).toEqual([["application_installation", 1, 0], ["install_application", 5, 3]]);
     expect(points.filter(p => p.blobs[0] === "custody").map(p => p.blobs[5])).toEqual(["prepared", "sent"]);
     expect(points.every(p => p.blobs[8] === MCP_METRIC_SCHEMA)).toBe(true);
+
+    // The real Client write calls MCP's adapter inside the active tool call.
+    const dir = mkdtempSync(join(tmpdir(), "mcp-custody-metrics-"));
+    let now = T0;
+    const custody = new Custody(fileStore(dir, undefined, () => now), () => timeOf(now), custodyMetrics);
+    const custodyPoints: McpMetricPoint[] = [], custodyCalls = new McpMetrics({ report: p => { custodyPoints.push(p); } });
+    const sent: SignedIntent[] = [];
+    const lost = await custodyCalls.call("act", () => custody.send(identity("k1"), meaningOf("m"), build("k1"), async e => { sent.push(e.signed); throw new Lost(); }, { notAfter }), () => ({ end: "unavailable", bytes: 0 }));
+    expect("lost" in lost && lost.record.phase).toBe("unknown");
+    now += 20 * 60_000;
+    const write = custody.store.write;
+    custody.store.write = async (id, record, options) => { if (record.phase === "accepted") throw new Error("scripted storage failure"); return write(id, record, options); };
+    try {
+      await expect(custodyCalls.call("settle", () => custody.settle(identity("k1"), async e => receiptOf(e.signed, 3)), () => ({ end: "ok", bytes: 0 }))).rejects.toMatchObject({ why: { held: "unreadable" } });
+    } finally { custody.store.write = write; }
+    expect((await custody.store.read(identityId(identity("k1"))))?.phase).toBe("unknown");
+    expect(custodyPoints.filter(p => p.blobs[0] === "custody").map(p => p.blobs[5])).toEqual(["prepared", "sent", "unknown"]);
+    const settled = await custodyCalls.call("settle", () => custody.settle(identity("k1"), async e => receiptOf(e.signed, 3)), () => ({ end: "ok", bytes: 0 }));
+    expect([settled!.record.phase, settled!.receipt?.fact.seq]).toEqual(["accepted", 3]);
+    expect(settled!.record.envelope.signed).toEqual(sent[0]);
+    expect(sent[0]!.intent.idempotencyKey).toBe("k1");
+    expect(custodyPoints.filter(p => p.blobs[0] === "custody").map(p => p.blobs[5])).toEqual(["prepared", "sent", "unknown", "accepted"]);
   });
   test("a rejected operation retains attempted reads and pages and the original exception", async () => {
     const { points, metrics } = fixture();

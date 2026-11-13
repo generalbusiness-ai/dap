@@ -61,7 +61,6 @@
 
 import type { Answer, Beside, DeclaredDefinition, Digest, KeyId, PlatformDefinition, Receipt, ScopeRef, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, intentDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { custodyTransition, custodyStepTransition } from "./metrics.ts";
 import { StoreFormatError } from "./store-format-error.ts";
 
 export const UNRESOLVED_MOST = 256;
@@ -220,8 +219,14 @@ export function decisive(outcomes: readonly Outcome[], attempt: number): Decided
   return null;
 }
 
+/** Synchronous caller observations. An observer cannot own a completed write. */
+export interface CustodyMetrics {
+  transition(from: Phase | null, to: Phase): void;
+  stepTransition(from: Step["phase"] | null, to: Step["phase"]): void;
+}
+
 export class Custody {
-  constructor(readonly store: CustodyStore, private readonly now: () => string) {}
+  constructor(readonly store: CustodyStore, private readonly now: () => string, private readonly metrics?: CustodyMetrics) {}
 
   async #locked<T>(id: string, notAfter: string, work: () => Promise<T>): Promise<T> {
     const release = await this.store.lock(id, notAfter);
@@ -255,7 +260,7 @@ export class Custody {
     // A store may refuse a write by its own account (`full`: the hosted store's budget, before anything is dispatched); any
     // other failure is a storage failure, which settles nothing.
     try { await this.store.write(id, record, dispatch ? { dispatch: true } : {}); } catch (error) { throw error instanceof StoreFormatError || error instanceof CustodyError ? error : new CustodyError({ held: "unreadable" }); }
-    custodyTransition(from, record.phase);
+    try { this.metrics?.transition(from, record.phase); } catch { /* observations never own a write */ }
   }
 
   /**
@@ -463,7 +468,7 @@ export class Custody {
       fresh.steps[sid] = entry;
       if (fresh.standalone) fresh.phase = "sent";
       await this.#write(id, fresh, true, before);
-      custodyStepTransition(stepBefore, entry.phase);
+      try { this.metrics?.stepTransition(stepBefore, entry.phase); } catch { /* observations never own a write */ }
       let answer: Answer | null = null;
       try { answer = await deliver(fresh.envelope.signed); } catch (error) { if (!(error instanceof Lost)) throw error; }
       entry.phase = answer === null || answer.answer === "unavailable" ? "unknown" : "answered";
@@ -478,7 +483,7 @@ export class Custody {
       try {
         fresh.updated = this.now();
         await this.#write(id, fresh, false, previous);
-        custodyStepTransition("sent", entry.phase);
+        try { this.metrics?.stepTransition("sent", entry.phase); } catch { /* observations never own a write */ }
       } catch (error) {
         if (error instanceof StoreFormatError) throw error;
         if (error instanceof CustodyError && error.why.held === "too-large") throw error;

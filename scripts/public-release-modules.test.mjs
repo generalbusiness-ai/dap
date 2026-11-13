@@ -106,6 +106,23 @@ test("SDK module references preserve genuine imports and rewrite declarations wi
     const replay = PLAN.packages.find(spec => spec.dir === "replay");
     assert.deepEqual(productionInputs(replay, ["packages/replay/src/index.ts", "packages/replay/src/bin.ts", "packages/replay/src/git.ts"]), { names: ["packages/replay/src/index.ts"], omitted: ["packages/replay/src/bin.ts", "packages/replay/src/git.ts"] });
     assert.throws(() => productionInputs({ ...replay, excludedInputs: ["src/index.ts"] }, ["packages/replay/src/index.ts", "packages/replay/src/bin.ts"]), /source-input-exclusions/);
+    const client = PLAN.packages.find(spec => spec.dir === "client");
+    const clientInputs = ["packages/client/src/index.ts", "packages/client/src/custody.ts", "packages/client/src/node.ts", "packages/client/src/install-request.ts"];
+    assert.deepEqual(productionInputs(client, clientInputs), { names: clientInputs.slice(0, 2), omitted: clientInputs.slice(2) });
+    assert.throws(() => productionInputs({ ...client, excludedInputs: [] }, clientInputs), /source-input-exclusions/);
+    assert.throws(() => productionInputs({ ...client, excludedInputs: ["src/node.ts"] }, clientInputs), /source-input-exclusions/);
+    assert.throws(() => productionInputs({ ...client, excludedInputs: ["src/node.ts", "src/install-request.ts", "src/custody.ts"] }, clientInputs), /source-input-exclusions/);
+    assert.throws(() => productionInputs(client, clientInputs.slice(0, 3)), /missing-excluded-source/);
+    const clientStage = join(dir, "client-production"); mkdirSync(join(clientStage, "dist/src"), { recursive: true });
+    const clientManifest = JSON.parse(readFileSync(new URL("packages/client/package.json", root), "utf8"));
+    writeFileSync(join(clientStage, "package.json"), JSON.stringify(publishManifest(client, clientManifest, "0.1.0-dev.2")));
+    for (const name of ["index", "application", "custody"]) for (const extension of ["js", "d.ts"]) writeFileSync(join(clientStage, `dist/src/${name}.${extension}`), "export {};\n");
+    assert.equal(outputClosure(clientStage, client, "0.1.0-dev.2").length, 7);
+    for (const extension of ["js", "d.ts"]) {
+      const file = join(clientStage, `dist/src/node.${extension}`); writeFileSync(file, "export {};\n");
+      assert.throws(() => outputClosure(clientStage, client, "0.1.0-dev.2"), /excluded-output/);
+      rmSync(file);
+    }
     const stage = join(dir, "production"); mkdirSync(join(stage, "dist/src"), { recursive: true });
     writeFileSync(join(stage, "package.json"), JSON.stringify({ name: "@generalbusiness/dap-replay", version: "0.1.0-dev.2", type: "module", exports: { ".": { types: "./dist/src/index.d.ts", default: "./dist/src/index.js" } } }));
     writeFileSync(join(stage, "dist/src/index.js"), "export {};\n"); writeFileSync(join(stage, "dist/src/index.d.ts"), "export {};\n");
@@ -277,6 +294,12 @@ test("SDK published manifests match the actual supported workspace manifests", (
   const clientManifest = JSON.parse(readFileSync(new URL("packages/client/package.json", root), "utf8"));
   assert.deepEqual(Object.keys(publishManifest(client, clientManifest, "0.1.0-dev.2").exports), [".", "./application"]);
   assert.equal(publishManifest(client, clientManifest, "0.1.0-dev.2").dependencies["@generalbusiness/dap-platform"], "0.1.0-dev.2");
+  assert.deepEqual(client.excludedSourceExports, { "./node": "./src/node.ts", "./install": "./src/install-request.ts" });
+  assert.throws(() => publishManifest({ ...client, excludedSourceExports: {} }, clientManifest, "0.1.0-dev.2"), /source-export-exclusions/);
+  assert.throws(() => publishManifest({ ...client, excludedSourceExports: { "./node": "./src/node.ts" } }, clientManifest, "0.1.0-dev.2"), /source-export-exclusions/);
+  assert.throws(() => publishManifest({ ...client, excludedSourceExports: { "./node": "./src/node.ts", "./install": "./src/install-request.ts", "./custody": "./src/custody.ts" } }, clientManifest, "0.1.0-dev.2"), /source-export-exclusions/);
+  assert.throws(() => publishManifest(client, { ...clientManifest, exports: { ...clientManifest.exports, "./node": "./src/index.ts" } }, "0.1.0-dev.2"), /unsupported-source-export/);
+  assert.throws(() => publishManifest(client, { ...clientManifest, exports: { ...clientManifest.exports, "./install": "./src/index.ts" } }, "0.1.0-dev.2"), /unsupported-source-export/);
   const derive = PLAN.packages.find(spec => spec.dir === "derive");
   const deriveManifest = JSON.parse(readFileSync(new URL("packages/derive/package.json", root), "utf8"));
   const publicDerive = publishManifest(derive, deriveManifest, "0.1.0-dev.2");

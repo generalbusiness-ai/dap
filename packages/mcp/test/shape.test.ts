@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { FactRef, FieldType, ScopeRef } from "@generalbusiness/dap-contract";
 import { scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
-import { effectiveFields, expectedOf, finalStates, viaLeft, type ActLike } from "../src/index.ts";
+import { effectiveFields, expectedOf, finalStates, viaLeft, type ActLike } from "@generalbusiness/dap-client";
 import { capturedExpected, shapeAt, shapeFields, Unshaped } from "../src/shape.ts";
 
 const scopeOf = (cause: string) => scopeIdOf({ v: 1, kind: "lane", definition: "platform:issue@1", creator: null, cause: textDigest(cause), ordinal: 0 } as never);

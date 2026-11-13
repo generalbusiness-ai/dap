@@ -11,7 +11,7 @@ import { encodeAgentKeyInvitation, httpTransport, secretSigner, signedIntent, ty
 import { HostedAgent, hostedRolePort, type AgentPorts } from "../src/hosted.ts";
 import { RETIRED_STORE_STOP } from "../src/hosted-store-stop.ts";
 import { enrolledKeyItem, retirementBody } from "../src/hosted-retirement.ts";
-import { identityId, type Identity } from "../src/custody.ts";
+import { identityId, type Identity } from "@generalbusiness/dap-client";
 import { sqliteStore, type Sql, type SqlValue } from "../src/sqlite-custody.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";
 

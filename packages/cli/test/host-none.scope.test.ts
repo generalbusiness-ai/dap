@@ -5,7 +5,7 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test } from "vitest";
 import { DEVICE_COMMAND, DOMAINS, type DeclaredDefinition, type FactRef, type FieldValue, type OutboxId, type ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, isFactRef, isMemberRef, isRecord, isSeed, LATE, scopeIdOf, textDigest, timeOf, utf8, within } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, definitionDigest, digestBytes, entryHash, factRefOf, isFactRef, isMemberRef, isRecord, isSeed, LATE, scopeIdOf, textDigest, timeOf, utf8, within } from "@generalbusiness/dap-bytes";
 import { secretSigner, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { firstExtents, UNPUBLISHED_COHORT as C } from "@generalbusiness/dap-platform";
 import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
@@ -273,7 +273,12 @@ test("host none creates a real local room, settles installed publication refusal
     expect(nativeOwner.membership).toEqual(repository.membership);
     const installed = await call("install_application", { uri: f.uri, release: f.packet.ids.release,
       roles: ["admin"], owner: nativeOwner, values: {}, idempotencyKey: "TEST-host-none-device-publisher" });
-    expect(installed).toMatchObject({ answer: "accepted", phase: "recorded" });
+    expect(installed).toMatchObject({ answer: "accepted", phase: "accepted" });
+    const installFact = installed["fact"];
+    if (!isFactRef(installFact)) expect.fail("The accepted native installation must retain its exact fact.");
+    const installEntry = (await wait(() => A.entries())).find(entry => entry.seq === installFact.seq && entryHash(entry) === installFact.hash);
+    expect(installEntry, "the accepted install projection names its actual native entry").toBeDefined();
+    expect(installed["effects"]).toBe(installEntry!.effects.length);
     const job = Number(installed["item"]); expect(Number.isSafeInteger(job)).toBe(true);
     await pause([]);
     const installation = await wait(() => A.item(job));

@@ -12,7 +12,7 @@ import { change, change3, changeDemo, issue, issueDemo } from "@generalbusiness/
 import { BOUNDS, McpService, memoryStore, type CallResult, type CustodyStore, type McpConfig, type Mode } from "../src/index.ts";
 import { ERROR_BYTES, failed, ListRestart } from "../src/service.ts";
 import { finding } from "../src/errors.ts";
-import { fileStore } from "../src/node.ts";
+import { fileStore } from "@generalbusiness/dap-client/node";
 import type { McpMetricOptions, McpMetricPoint } from "../src/metrics.ts";
 import { SERVICE, StandIn } from "./support/standin.ts";
 
@@ -532,7 +532,16 @@ describe("what a call costs, end to end", () => {
   test("an over-long capability or step name is refused whole, within the bound", async ({ annotate }) => {
     const s = roomOf("admin", [issueDemo], { custody: memoryStore() });
     await s.service.page();
+    const prepare = (await s.service.page()).tools.find(tool => tool.name === "prepare")!;
+    const properties = prepare.inputSchema["properties"] as Record<string, { maxLength?: number }>;
     const huge = "c".repeat(100 * 1024);
+    expect(huge.length).toBeGreaterThan(properties["capability"]!.maxLength!);
+    expect(huge.length).toBeGreaterThan(properties["step"]!.maxLength!);
+    // maxLength is a necessary character bound. The server still checks UTF-8 bytes.
+    const multibyte = "é".repeat(65);
+    expect(multibyte.length).toBeLessThanOrEqual(properties["capability"]!.maxLength!);
+    const nonAscii = await counted(s, () => s.service.call("prepare", { resource: 1, capability: multibyte, step: "instance", fields: {}, idempotencyKey: "multibyte-name" }));
+    expect([nonAscii.result.isError, nonAscii.result.structuredContent["error"], nonAscii.requests]).toEqual([true, "shape", []]);
     const sizes: number[] = [];
     for (const args of [{ capability: huge, step: "instance" }, { capability: "hold@1", step: huge }]) {
       for (const kind of [{}, { kind: "comment", target: 1 }]) {

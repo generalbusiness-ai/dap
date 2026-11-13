@@ -3,7 +3,7 @@ import { natural } from "@generalbusiness/dap-bytes";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { Fetch } from "@generalbusiness/dap-client";
 import type { MismatchReason, ReadRefusal, RefusalReason, SessionRefusal, UnavailableReason } from "@generalbusiness/dap-contract";
-import type { Phase, Step } from "./custody.ts";
+import type { CustodyMetrics, Phase, Step } from "@generalbusiness/dap-client";
 
 export const MCP_METRIC_SCHEMA = "mcp-metrics-v1";
 const MAX = 0x7fffffff;
@@ -57,6 +57,9 @@ export function custodyTransition(from: Phase | null, to: Phase): void {
 export function custodyStepTransition(from: Step["phase"] | null, to: Step["phase"]): void {
   try { const op = active(); if (op && from !== to) { if (!STEP_PHASES.has(to)) lost(op); else emit(op, "custody", "ok", to, [0, 0, 0, 0, 1]); } } catch { /* observations never own a write */ }
 }
+/** The production adapter for Client-owned custody observations. */
+export const custodyMetrics: CustodyMetrics = { transition: custodyTransition, stepTransition: custodyStepTransition };
+
 /** One attempted operational read; direct hosted authority reads use this too. */
 export function mcpRead(page = false): void {
   try {

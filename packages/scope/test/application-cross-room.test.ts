@@ -67,7 +67,7 @@ test("a declared cross-room send admits only the genesis-named sender and expose
     const install = async (room: typeof sending, key: string, admittedSender?: ScopeRef) => {
       const installed = await life.wait(() => room.mcp.call("install_application", { uri: f.uri, release: packet.ids.release,
         roles: ["admin"], values: admittedSender ? { admittedSender } : {}, idempotencyKey: key }));
-      expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
+      expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
       const job = Number(installed.structuredContent["item"]);
       await driveFixture(all(), life.wait);
       const creation = (await life.wait(() => room.D.entries())).flatMap(entry => entry.sends).filter(send => isSeed(send.to) && send.to.definition === id).at(-1);

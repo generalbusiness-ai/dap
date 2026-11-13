@@ -2,7 +2,7 @@
 import { canonicalize, digestBytes, isDigest, isEntryBodyOf, isFactRef, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest, FactRef, Item, ReadMinimum, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
 import { FINDING_DIGESTS, J4_DIGESTS, QUESTION_DIGESTS, QUESTION_BRIEF_DIGESTS, issueQuestions, issueQuestionsBrief } from "@generalbusiness/dap-lanes";
-import type { ActSigner, ApplicationReadCatalogue, CallResult, LocalReviewCapture } from "@generalbusiness/dap-mcp";
+import type { ActSigner, ApplicationReadCatalogue, CallResult, Success, LocalReviewCapture } from "@generalbusiness/dap-mcp";
 import { Collection, LIMITS, Unread, sameOptional, minimumFor, type Frame, type ReadOptions } from "./reads.ts";
 import { ReviewStore, ReviewStoreError } from "./review-store.ts";
 import { readChange } from "./change.ts";
@@ -21,7 +21,9 @@ export type PublicContext = Omit<Context, "items" | "versions" | "signer"> & {
   versions: ({ fact: FactRef; current: true } | { fact: FactRef; text: string })[];
 };
 export interface AdapterOptions extends ReadOptions { reviewStore: ReviewStore; brief: { bytes: Uint8Array; digest: Digest } }
-export const result = (value: Record<string, unknown>, isError = false): CallResult => ({ structuredContent: value, content: [{ type: "text", text: JSON.stringify(value) }], isError });
+export function result<T extends Record<string, unknown>>(value: T, isError?: false): Success<T>;
+export function result<T extends Record<string, unknown>>(value: T, isError: true): CallResult & { structuredContent: T; isError: true };
+export function result<T extends Record<string, unknown>>(value: T, isError = false): CallResult { return { structuredContent: value, content: [{ type: "text", text: JSON.stringify(value) }], isError }; }
 const RESULT_BYTES = 256 * 1024;
 const resultBytes = (answer: CallResult): number => utf8(canonicalize(answer)).length;
 export { questions };
@@ -66,7 +68,7 @@ export class RepoInAi {
     try { await collection.begin(target, only, after); return { value: await run(collection), collection }; }
     finally { collection.close(); }
   }
-  async #rows(run: (collection: Collection, frames: Frame[]) => Promise<Row[]>, after?: unknown, walks = true, cardPosition?: number): Promise<CallResult> {
+  async #rows(run: (collection: Collection, frames: Frame[]) => Promise<Row[]>, after?: unknown, walks = true, cardPosition?: number) {
     const position = (collection: Collection) => walks ? { next: collection.next } : {};
     if (after !== undefined && !isScopeRef(after)) return result({ error: "after-selector", complete: false }, true);
     try {
@@ -91,10 +93,10 @@ export class RepoInAi {
       return answer;
     } catch (error) { return result({ error: "read-unavailable", reason: error instanceof Unread || error instanceof ReviewStoreError ? error.reason : "read-failed", complete: false }, true); }
   }
-  needsYou(args: Readonly<Record<string, unknown>> = {}, cardPosition?: number): Promise<CallResult> {
+  needsYou(args: Readonly<Record<string, unknown>> = {}, cardPosition?: number) {
     return this.#rows((collection, frames) => needsYouRows(frames, collection), args["after"], true, cardPosition);
   }
-  work(cardPosition?: number): Promise<CallResult> {
+  work(cardPosition?: number) {
     return this.#rows(async (collection, frames) => {
       const rows: Row[] = [];
       for (const frame of frames) {
@@ -192,7 +194,7 @@ export class RepoInAi {
     }
     catch (error) { return result({ error: "change-unavailable", reason: error instanceof Unread ? error.reason : "read-failed", complete: false }, true); }
   }
-  since(args: Readonly<Record<string, unknown>> = {}): Promise<CallResult> {
+  since(args: Readonly<Record<string, unknown>> = {}) {
     return this.#rows(async (collection, frames) => {
       const marks = this.options.reviewStore.read({ service: this.options.service, directory: collection.directory, viewer: collection.viewer, key: this.options.signer.key });
       const rows: Row[] = [];

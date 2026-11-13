@@ -5,5 +5,6 @@
     // The text coders of the Web platform, as the bytes package declares them: the narrowest lib these sources need.
     "types": ["@generalbusiness/dap-bytes/web"]
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/node.ts", "src/store-format.ts"]
 }

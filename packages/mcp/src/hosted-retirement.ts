@@ -2,7 +2,7 @@
 import type { KeyId, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, isSignedIntentShape, parseStrict, same, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { isAgentKeyMembership } from "@generalbusiness/dap-client";
-import type { CustodyRecord, Identity } from "./custody.ts";
+import type { CustodyRecord, Identity } from "@generalbusiness/dap-client";
 
 export type RetirementBody = { valid: true; revoke: SignedIntent | null } | { valid: false };
 

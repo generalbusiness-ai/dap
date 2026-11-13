@@ -30,7 +30,7 @@ test.each([ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT])("na
       applicationFetch: peer.fetch, applicationTrust: JSON.stringify(f.trust), fetch: (url, init) => life.wait(() => routed(url, init)) };
     const mcp = new McpService(port);
     const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: f.packet.ids.release, roles: ["admin"], values: declared ? {} : { target: 7 }, idempotencyKey: "TEST-archive-mcp-install" }));
-    expect(installed.structuredContent, JSON.stringify(installed.structuredContent)).toMatchObject({ answer: "accepted", phase: "recorded" });
+    expect(installed.structuredContent, JSON.stringify(installed.structuredContent)).toMatchObject({ answer: "accepted", phase: "accepted" });
     const job = Number(installed.structuredContent["item"]);
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
     const send = (await life.wait(() => D.entries())).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.definition === f.packet.package.semantic.entry);

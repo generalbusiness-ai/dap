@@ -259,7 +259,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       expect(installed.structuredContent).toMatchObject({ answer: "refused", phase: "refused", reason: "bad-field", name: "invalid-application-package" });
       return;
     }
-    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
+    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
     // Independent Native setup oracle, captured BEFORE any archive output.
     // A pre-MCP summary is diagnostic only: standing authority is read later.

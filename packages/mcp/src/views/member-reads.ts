@@ -1,7 +1,7 @@
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { ScopeHandle } from "@generalbusiness/dap-client";
-import type { Reads } from "../reads.ts";
+import type { Reads } from "@generalbusiness/dap-client";
 import type { MembershipDisplaySnapshot } from "./member-types.ts";
 
 /** One bounded membership window, including final states. No cursor follow,
