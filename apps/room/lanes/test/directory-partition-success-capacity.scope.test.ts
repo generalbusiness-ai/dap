@@ -119,4 +119,5 @@ test("native initially full Root completes one thousand successful partition bir
     expect(final.written + final.reserved).toBeLessThanOrEqual(bounds.scopeEntries);
     expect([parts.size, creates]).toEqual([1000, 1000]);
   } finally { wired.delete(D.name); for (const name of parts) net.sized.delete(name); }
-}, scaleDeadline(600_000));
+  // Three times the slowest measured run: 329,272 ms in cutover gate attempt 10.
+}, scaleDeadline(990_000));

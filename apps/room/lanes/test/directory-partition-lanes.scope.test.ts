@@ -378,4 +378,6 @@ test("native raw proof residency stays at thirty-two dense frames with one physi
     marker.live = null; operation = null;
     await checkpoint("released");
   } finally { delete diagnostic.__ARTROOM_PARTITION_MEMORY__; life.release(); }
-}, 60_000);
+  // Three times the measured run: 53,811 ms in cutover gate attempt 10.
+  // Dispatch of the 33 dense births takes most of that time.
+}, 162_000);
