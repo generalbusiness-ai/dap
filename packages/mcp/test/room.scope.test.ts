@@ -144,8 +144,8 @@ async function story(mode: "default" | "generic", lines: string[] = []): Promise
     // The accepted workflow, under another key: the holder's instance, a step with no act; the report's stage and check; then
     // the act itself, accepted, and its own settlement. hold@1's outside operations are answered by the Host STAND-IN.
     const laneRef = (await paul.ok("inspect", { scope: 1 }))["ref"] as { scope: string; genesis: string };
-    // HELD: the `task` field adds a kind to the lane reference. Ruling needed on the form of that field value.
-    const instance = await paul.ok("prepare", { resource: 1, capability: "hold@1", step: "instance", fields: { hold, task: { ...laneRef, kind: "task" }, instance: "i-1" }, idempotencyKey: "instance-1" });
+    // The `task` field holds the plain lane reference (ruling 4393b366 T3(d)).
+    const instance = await paul.ok("prepare", { resource: 1, capability: "hold@1", step: "instance", fields: { hold, task: laneRef, instance: "i-1" }, idempotencyKey: "instance-1" });
     expect((instance["step"] as { answer: { answer: string } }).answer.answer, JSON.stringify(instance)).toBe("accepted");
     const staged = { ...report, idempotencyKey: "hand-in-2" };
     const stageAccepted = await paul.ok("prepare", { ...staged, resource: 1, capability: "hold@1", step: "stage" });

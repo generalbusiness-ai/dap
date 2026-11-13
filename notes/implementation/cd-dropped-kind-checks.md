@@ -229,7 +229,6 @@ A ruling decides what replaces each one.
 |---|---|---|
 | `packages/replay/test/verify.test.ts` | a reference to another genesis fails with `wrong incarnation` | which reason the replay now gives |
 | `packages/checkers/test/reservation-origin.test.ts`, `reservation-record.test.ts` | the frozen `fixtures/reservation-record.json` names `at` and `inc` in its entries | a new recording from the Scope recorder |
-| `packages/mcp/test/room.scope.test.ts` | the hold `task` field value is the lane reference with `kind: "task"` | what form that field value takes |
 | `packages/cli/test/scope-index-applications.test.ts` | the recorded `fixtures/application-release-listing.json` names `inc` and `kind` in its references | a new recording of the listing |
 
 ## Browser store list (rulings e7787de0 items 5 and 6, 4393b366 P1)
@@ -304,6 +303,11 @@ it reads the summary's `definition` instead.
 
 The lending test roster names `platform:membership@13`, and a roster with a
 directory definition returns null.
+
+## Hold task field (ruling 4393b366 T3(d))
+
+The `task` field of a hold@1 instance step holds the plain lane reference,
+with no kind. `packages/mcp/test/room.scope.test.ts` sends it that way.
 
 ## Coverage kind (ruling 4393b366 T3(a))
 
