@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:005f0e1bd4439c2d6f5a991997e3f050fa384dc0","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-inventory.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:008560ed0c42a1856ee5880a38cb333edfcc8dfe","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/idle-alarms.test.ts."}
