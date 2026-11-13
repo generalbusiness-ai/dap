@@ -6,7 +6,7 @@
  */
 import { same } from "@generalbusiness/dap-bytes";
 import type { Entry, FieldValue, ScopeId } from "@generalbusiness/dap-contract";
-import { isDigest, isEntryBodyOf, isFactRef, isOperationId, parseStrict } from "@generalbusiness/dap-bytes";
+import { isDigest, isEntryBodyOf, isFactRef, isOperationId, parseStrict, resolveGenesisSelf } from "@generalbusiness/dap-bytes";
 import { valueDigest } from "@generalbusiness/dap-derive";
 import { DESTINATION_KINDS, destinationBranch, destinationWrite, directoryIdOf, isOf } from "@generalbusiness/dap-platform";
 import type { DestinationBinding, DestinationRepository } from "./destination-host.ts";
@@ -26,7 +26,9 @@ export function destinationBirth(given: OutsideGiven, registerScope: ScopeId | r
     const branch = destinationBranch(given.state);
     const claim = branch?.refs["claim"];
     // A reference names no kind: the creator's kind is the genesis's recorded source kind, and the claim's is its retained use's kind.
-    if (genesis?.input.type !== "genesis" || !genesis.input.seed.creator || genesis.input.sourceKind !== "directory" || !same(branch?.refs["directory"], genesis.input.seed.creator) || !isFactRef(claim) || !registerScopes.includes(claim.at.scope)) return false;
+    // The destination is born in its directory's genesis: its seed names the directory by scope alone, and the source fact supplies the genesis.
+    const creator = genesis?.input.type === "genesis" && genesis.input.source ? resolveGenesisSelf(genesis.input.seed.creator, genesis.input.source) : null;
+    if (genesis?.input.type !== "genesis" || !creator || genesis.input.sourceKind !== "directory" || !same(branch?.refs["directory"], creator) || !isFactRef(claim) || !registerScopes.includes(claim.at.scope)) return false;
     const use = genesis.uses.find((use) => same(use.fact, claim));
     const retained = use?.kind === "register" ? given.retained("entry", use.content) : null;
     if (!retained) return false;
@@ -34,7 +36,7 @@ export function destinationBirth(given: OutsideGiven, registerScope: ScopeId | r
     if (!isEntryBodyOf(opening, claim) || opening.input.type !== "act" || opening.input.signed.intent.kind !== "found") return false;
     const seeds = opening.effects.filter((effect) => effect.effect === "value" && effect.item === claim.seq && effect.slot === "seed");
     const seed = seeds.length === 1 && seeds[0]?.effect === "value" ? seeds[0].value : null;
-    return isDigest(seed) && directoryIdOf(seed) === genesis.input.seed.creator.scope;
+    return isDigest(seed) && directoryIdOf(seed) === creator.scope;
   } catch { return false; }
 }
 

@@ -5,7 +5,7 @@ import { answersVersionQuestion, directoryIdOf } from "@generalbusiness/dap-plat
  * ask.archiving's lineage. The production target's checked birth walk does
  * that before either item query. Namespace RPC access alone is no proof. */
 import type { ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isEntry, isEntryBodyOf, isFactRef, isScopeRef, parseStrict, readItemQueryParameter, same } from "@generalbusiness/dap-bytes";
+import { isDigest, isEntry, isEntryBodyOf, isFactRef, isScopeRef, parseStrict, readItemQueryParameter, resolveGenesisSelf, same } from "@generalbusiness/dap-bytes";
 
 import type { OutsideGiven } from "./given.ts";
 import { hostBound } from "./host-wiring.ts";
@@ -42,7 +42,7 @@ export function archiveHostItem(sql: Pick<Sql, "exec">, given: OutsideGiven, pin
       if (!isDigest(seed) || directoryIdOf(seed) !== scope.at.scope) return refused;
     } else if (scope.kind === "destination") {
       if ((!answersVersionQuestion(pinned.named, "scopeArchiveHostDestination")) || query.type !== "branch" || query.states.join() !== "empty,ready"
-        || genesis?.sourceKind !== "directory" || !same(genesis.seed.creator, ask.directory) || !hostBound(given, config.registerScope, config.host, config.namespace)(pinned.named)) return refused;
+        || genesis?.sourceKind !== "directory" || !genesis.source || !same(resolveGenesisSelf(genesis.seed.creator, genesis.source), ask.directory) || !hostBound(given, config.registerScope, config.host, config.namespace)(pinned.named)) return refused;
     } else return refused;
     return itemQueryPage(sql, { scope, pinned }, query, () => true);
   } catch { return refused; }

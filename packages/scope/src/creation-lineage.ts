@@ -5,7 +5,7 @@ import { injectedPlatformCreationPolicy, permitsNewPlatformScope } from "./creat
  * history in this deployment may open a child object. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactRef, PlatformDefinition, ScopeKind, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, intentDigest, isDigest, isPlatformDefinition, isFactRef, isLocalId, isSeed, isSignedIntentShape, parseStrict, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, intentDigest, isDigest, isPlatformDefinition, isFactRef, isLocalId, isSeed, isSignedIntentShape, parseStrict, resolveGenesisSelf, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { creates, isObject, isScopeRef, same, sentBy, validateDefinition, type Delivered } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
@@ -129,7 +129,7 @@ export async function admitChildCreation(binding: Binding, settings: CreationAdm
       let cohort: Cohort | undefined, fromKind: ScopeKind | undefined;
       for (;;) {
         visit();
-        if (!isScopeRef(child.creator) || !same(child.creator, from.at) || seen.has(canonicalize(from.at))) return refused();
+        if (!same(resolveGenesisSelf(child.creator, from), from.at) || seen.has(canonicalize(from.at))) return refused();
         seen.add(canonicalize(from.at));
         const creator = await birth(from.at, fromKind); active();
         const source = await proof(from, expectedContent); active();

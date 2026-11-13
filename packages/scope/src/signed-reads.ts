@@ -86,7 +86,7 @@ import { heldPositions, archivedPosition } from "@generalbusiness/dap-derive";
  */
 
 import type { Entry, FactRef, FactUse, KeyId, ScopeId, Seed, SignedRead, SignedReadName, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, isKeyId, isScopeId, isSignature, parseStrict, scopeIdOf, seedDigest, unb64url, verifySignedRead } from "@generalbusiness/dap-bytes";
+import { canonicalize, genesisInputDigest, intentDigest, isKeyId, isScopeId, isSignature, parseStrict, scopeIdOf, unb64url, verifySignedRead } from "@generalbusiness/dap-bytes";
 import { isObject, same, timeMs, type ScopeState } from "@generalbusiness/dap-derive";
 import type { Clock, ReadName } from "./ports.ts";
 import type { Store } from "./store.ts";
@@ -227,7 +227,8 @@ export async function rootOf(start: { readonly entry: Entry; readonly scope: Sco
     const source = await read(use);
     if (!source) return "unavailable";
     if (source.input.type === "genesis") {
-      if (seedDigest(source.input.seed) !== input.seed.cause) return null;
+      // A child of a genesis names that genesis input as its cause (section 7.2).
+      if (genesisInputDigest(source.input) !== input.seed.cause) return null;
       entry = source; scope = use.fact.at.scope;
       continue;
     }

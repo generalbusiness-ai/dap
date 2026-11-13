@@ -39,7 +39,7 @@
  */
 
 import type { Digest, Entry, Input, KeyId, Observation, ObservationRequest, ObservationUse, ObservedScope, PlatformDefinition, RunId, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, hex, isObservationUse, isRecord, parseStrict } from "@generalbusiness/dap-bytes";
+import { canonicalize, hex, isObservationUse, isRecord, parseStrict, resolveGenesisSelf } from "@generalbusiness/dap-bytes";
 import { WINDOWS, contentChecked, contentStates, fixedBy, highestHead, isScopeRef, judgeGrant, membershipOf, namedBy, observationOf, observedName, observedOf, prefer, revoked, same, subjectName, valueDigest, type Clock as Reading, type ContentStates, type GrantJudgment, type Needed, type RecordedRef, type Retains, type StateView, type ValueRead } from "@generalbusiness/dap-derive";
 import { isPlatformDefinition } from "@generalbusiness/dap-bytes";
 import { answersVersionQuestion, authoritySessionBirthDirectories, destinationBranch, unpublishedDestinationBranch, platform, standingOf } from "@generalbusiness/dap-platform";
@@ -468,7 +468,8 @@ export function repositorySessionBirth(config: Pick<Repository, "genesis" | "sta
   // The directory/child cohort is the exact supported catalog, never a name alias or newest fallback.
   const definitions = authoritySessionBirthDirectories(kind, genesis.seed.definition);
   if (!definitions.length) return null;
-  const directory = genesis.seed.creator;
+  // A child of the directory's genesis names its creator by scope alone; the recorded source fact supplies its genesis.
+  const directory = genesis.source ? resolveGenesisSelf(genesis.seed.creator, genesis.source) : null;
   const item = kind === "destination"
     ? (answersVersionQuestion(genesis.seed.definition, "authoritySessionBirthUnpublishedBranch") ? unpublishedDestinationBranch(state) : destinationBranch(state))
     : state.page(kind === "commons" ? "commons" : "rules", [kind === "commons" ? "open" : "current"], null, 1).items[0];

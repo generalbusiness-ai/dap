@@ -2,7 +2,7 @@
  * This is no history search and never promotes another delivery-created lane. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { natural, canonicalize, deliveryCauseDigest, intentDigest, isDigest, isEntryOf, isFactRef, isMemberRef, isRecord, isSeed, messageDigest, same, scopeIdOf, seedDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { natural, canonicalize, deliveryCauseDigest, genesisInputDigest, intentDigest, isDigest, isEntryOf, isFactRef, isMemberRef, isRecord, isSeed, messageDigest, resolveGenesisSelf, same, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, readEvidenceBinding } from "./evidence.ts";
 import { sentBySource, type SourceCopy } from "@generalbusiness/dap-derive";
 import { EVIDENCE_LANE_PINS } from "./evidence-lane-pins.generated.ts";
@@ -129,8 +129,8 @@ export function evidenceIncidentOriginV17(named: Digest, facts: readonly SourceC
     const target = destination.entry.input;
     if (destination.under !== "platform:destination" || target.type !== "genesis" || target.decision !== "applied" || target.kind !== "establish"
       || !isSeed(target.seed) || target.seed.definition !== C.destination || target.seed.kind !== "destination" || target.seed.ordinal !== 2
-      || destination.sequence?.kind !== "destination" || scopeIdOf(target.seed) !== destination.fact.at.scope || !same(target.seed.creator, directory.fact.at)
-      || target.seed.cause !== seedDigest(office.seed) || !same(target.source, directory.fact) || target.n === null || !target.message
+      || destination.sequence?.kind !== "destination" || scopeIdOf(target.seed) !== destination.fact.at.scope || !same(resolveGenesisSelf(target.seed.creator, directory.fact), directory.fact.at)
+      || target.seed.cause !== genesisInputDigest(office) || !same(target.source, directory.fact) || target.n === null || !target.message
       || !sentBySource(directory, { from: directory.fact, n: target.n, to: target.seed, message: target.message })
       || !same(parentBirth.message.body["fields"]["destination"], destination.fact.at)) return false;
     const held = record(native.entry)!, binding = readEvidenceBinding(held["binding"]);

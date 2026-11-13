@@ -3,7 +3,7 @@
  * are not proof of native execution. Old destination policies remain separate. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition, Digest, Entry, FactRef, GenesisInput, PlatformDefinition, Request, ScopeKind, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, deliveryCauseDigest, intentDigest, isDigest, isPlatformDefinition, isScopeKind, isSeed, messageDigest, platformName, scopeIdOf, seedDigest, utf8, verifySignedIntent, resolveGenesisSelf, type CheckedSequence } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, deliveryCauseDigest, genesisInputDigest, intentDigest, isDigest, isPlatformDefinition, isScopeKind, isSeed, messageDigest, platformName, scopeIdOf, utf8, verifySignedIntent, resolveGenesisSelf, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { isEntryOf, isFactRef, isObject, isScopeRef, same, sentBy, type Fetched, type SourceCopy } from "@generalbusiness/dap-derive";
 import { sourceName as legacySourceName } from "./publishing-provenance.ts";
 import { PARTITION_COHORT as COHORT, MAX_GENERATIONS, PARTITION_SPAN } from "./directory-partitions.ts";
@@ -157,7 +157,7 @@ function rootContext(facts: readonly Fetched[], partBirth: PartitionCreation, ro
     if (!child.ok) return invalid;
     const birth = child.value.entry.input;
     if (birth.type !== "genesis" || !recordedKind(birth, office.value) || !same(creatorOf(birth), root) || birth.seed.ordinal !== ordinal
-      || birth.seed.cause !== seedDigest(rootBirth.seed) || !same(birth.source, office.value.fact) || birth.n === null || !birth.message || birth.message.class !== "request" || birth.message.type !== "create"
+      || birth.seed.cause !== genesisInputDigest(rootBirth) || !same(birth.source, office.value.fact) || birth.n === null || !birth.message || birth.message.class !== "request" || birth.message.type !== "create"
       || !sentBy(office.value.entry, { from: office.value.fact, n: birth.n, to: birth.seed, message: birth.message }, office.value.sequence)
       || !isObject(birth.message.body) || !isObject(birth.message.body["fields"]) || !same(resolveGenesisSelf(birth.message.body["fields"]["directory"], office.value.fact), root)) return invalid;
     const childFields = birth.message.body["fields"];
@@ -310,7 +310,7 @@ export type PartitionReceiverPolicy = { mode: "legacy" } | { mode: "partition-v1
 function rootSiblingCreation(creation: PartitionCreation, ordinal: number, facts: readonly Fetched[], root: Fetched): boolean {
   const checked = genesis(facts, root.fact.at, COHORT.directory), born = root.entry.input;
   return checked?.ok === true && born.type === "genesis" && same(creationCreator(creation), root.fact.at) && creation.seed.ordinal === ordinal
-    && creation.seed.cause === seedDigest(born.seed) && same(creation.source, root.fact)
+    && creation.seed.cause === genesisInputDigest(born) && same(creation.source, root.fact)
     && Number.isSafeInteger(creation.n) && creation.n >= 0 && creation.message.class === "request" && creation.message.type === "create"
     && isObject(creation.message.body) && isObject(creation.message.body["fields"])
     && same(resolveGenesisSelf(creation.message.body["fields"]["directory"], root.fact), root.fact.at)
