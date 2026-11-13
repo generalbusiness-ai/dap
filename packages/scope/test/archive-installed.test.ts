@@ -267,6 +267,11 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release, roles: productionScenario ? ["admin", "agent"] : ["admin"],
       values: kind === "Grow" ? { label: "TEST archive Grow Site", ...(productionScenario ? demoMembers : {}) } : {},
       ...(kind === "Grow" ? { owner: productionScenario ? demoMembers.sensors : operator } : {}), idempotencyKey: "TEST-archive-installed-scopes" }));
+    if (scenario === "Grow") {
+      // Ruling a7c8072a: the recorded old-spelling Grow package never installs into a new-format room.
+      expect(installed.structuredContent).toMatchObject({ answer: "refused", phase: "refused", reason: "bad-field", name: "invalid-application-package" });
+      return;
+    }
     expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
     // Independent Native setup oracle, captured BEFORE any archive output.
