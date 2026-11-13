@@ -39,6 +39,7 @@ function put(dir: string, format: JournalFormat, objects: readonly JournalObject
 }
 const keyOf = (input: MemoryScope["retained"][number]): ArchiveRetainedName => {
   if (input.kind === "text") throw new Error("fixture archive must omit detached text");
+  if (input.kind === "page") throw new Error("fixture archive has no sequenced page");
   return input.kind === "value" ? { kind: input.kind, domain: input.domain!, digest: input.digest } : { kind: input.kind, digest: input.digest };
 };
 

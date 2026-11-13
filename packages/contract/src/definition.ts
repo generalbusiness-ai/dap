@@ -30,7 +30,10 @@ export interface CapacityVersion {
 
 export interface DeclaredDefinition {
   format: "artroom-definition-1";
-  /** Absent means recorded. Explicit recorded has its own bytes and digest; live/sequenced execution is not yet supported. */
+  /**
+   * Absent means recorded. Explicit recorded has its own bytes and digest. The validator admits sequenced version 1 (sequenced
+   * note, section 5.11). No runtime derives a sequenced definition yet, so `derivable` is false for one. Live is not supported.
+   */
   level?: DurabilityLevel;
   /** Omission keeps entries-only admission and replay. Whole-scope counts all five logical dimensions. */
   capacity?: CapacityVersion;
@@ -108,6 +111,19 @@ export interface ActType {
   effects: readonly EffectForm[];          // at most 16
   sends: readonly SendForm[];              // at most 8
   attention: readonly Notify[];            // at most 8
+  sequenced?: true;                        // the act takes a position in its group's order (sequenced note, section 5.2)
+  reads?: Record<string, GroupRead>;       // at most 4; only with `sequenced`
+}
+
+/**
+ * One read of a member of the group, as of the input's cut position (sequenced note, sections 5.2 and 5.5). `member`: the
+ * member's name in the order scope. `items`: the items of the member that the read covers, in the member's own types.
+ * `staleness`: read the member as of an older position. Version 1 of the level refuses it, and every cut is P - 1.
+ */
+export interface GroupRead {
+  member: string;
+  items: Range;
+  staleness?: { seconds: number };
 }
 
 /** A handler: what a delivered message of one class and name does, from a scope of one kind (section 6.4). */
@@ -127,6 +143,8 @@ export interface ReceiveType {
   effects: readonly EffectForm[];
   sends: readonly SendForm[];              // empty when `class` is `advisory`
   attention: readonly Notify[];            // empty when `class` is `advisory`
+  sequenced?: true;                        // the sequenced note, section 5.2. Version 1 of the level refuses it on a handler
+  reads?: Record<string, GroupRead>;
 }
 
 /** The name a definition used for the adopted form while the landed form of a handler was also a `ReceiveType`. It is the same type. */
@@ -168,7 +186,8 @@ export type Operand =
   | { scope: true }                                // this scope's own reference
   | { intent: true }                               // the digest of the intent being judged
   | { none: true }
-  | { const: FieldValue };
+  | { const: FieldValue }
+  | { read: string; part?: Part };                 // sequenced acts only: the list of records that a `reads` entry bound as of its cut
 
 /** A part reads inside an entry that a fact reference names. */
 export type Part = EntryPart | { of: EntryPart; then: "scope" | "seq" };

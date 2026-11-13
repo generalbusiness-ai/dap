@@ -9,7 +9,7 @@ import { ApplicationPackageError } from "./application-types.ts";
 import { APPLICATION_PROJECTION_LIMITS as B, type ApplicationReadProjection } from "./application-projection-types.ts";
 export * from "./application-projection-types.ts";
 const NAME = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
-const KINDS: Record<ScopeKind, true> = { register: true, directory: true, membership: true, rules: true, destination: true, inbox: true, task: true, lane: true, commons: true };
+const KINDS: Record<ScopeKind, true> = { register: true, directory: true, membership: true, rules: true, destination: true, inbox: true, task: true, lane: true, commons: true, order: true };
 const META = new Set(["id", "type", "state", "revision"]);
 const object = (value: unknown, keys: string): Record<string, unknown> => isRecord(value) && Object.keys(value).sort().join() === keys ? value : fail();
 const name = (value: unknown): string => typeof value === "string" && NAME.test(value) ? value : fail();
