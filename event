@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:38e87b0f1bd5e2d46962c638cc8b595d42576891","text":"Merge retired a covered predecessor; the successor is at packages/client/test/device-key-invitation.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3918c61ce5df7c98289d8d3b695dc8aa822d49b4","text":"Merge retired a covered predecessor; the successor is at examples/repo-in-ai/test/custody.test.mjs."}
