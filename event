@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:76bca38045e8c8452aa5acbdbd37ec554bb766aa","text":"Merge retired a covered predecessor; the successor is at scripts/deploy-config.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:773d7e69d5c14eb9225ee28379e7b17a55f7ba5c","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/commons-bill.test.ts."}
