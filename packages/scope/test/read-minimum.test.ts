@@ -103,7 +103,7 @@ test("native wait rechecks actual session expiry before exposing timeout or inca
       class WaitScope extends ScopeObject {
         protected override [scopeWiring](): Wiring { return { ports: testPorts(c), ...sessionWiring(() => f.sessions, env.PLATFORM), bounds: { ...c.bounds, readWaitMilliseconds: 1000 }, queryTimer: timer }; }
       }
-      const object = new WaitScope(state, {}), token = readerOf(mintSession(f.sessions, { ...f.claims, reads: ["summary", "items", "history", "entry"] }));
+      const object = live(new WaitScope(state, {})), token = readerOf(mintSession(f.sessions, { ...f.claims, reads: ["summary", "items", "history", "entry"] }));
       const before = await object.summary(token);
       expect(before.ok).toBe(true);
       const pending = object.entry(token, 9999, { at: f.rules, head: 9999 });
@@ -152,7 +152,7 @@ test("a future projection minimum leaves the shared flight available to a concur
       class WaitScope extends ScopeObject {
         protected override [scopeWiring](): Wiring { return { ports: testPorts(c), ...sessionWiring(() => f.sessions, env.PLATFORM), bounds: { ...c.bounds, readWaitMilliseconds: 1000 }, queryTimer: timer }; }
       }
-      const object = new WaitScope(state, {}), token = readerOf(mintSession(f.sessions, { ...f.claims, reads: ["summary", "items"] }));
+      const object = live(new WaitScope(state, {})), token = readerOf(mintSession(f.sessions, { ...f.claims, reads: ["summary", "items"] }));
       const before = await object.summary(token);
       expect(before.ok).toBe(true);
       const query: ApplicationProjectionQuery = { v: 1, scope: f.rules, directory: f.directory, install: 0, projection: "board", items: {} };
@@ -194,7 +194,7 @@ test("causal signed history and entry readers see a native delivery sealed durin
           return { ports: { ...netPorts(net, peers.transport, peers.resolver), definitions: peers.definitions, births: peers.births, proofs: peers.proofs }, bounds: { ...PROPOSED_BOUNDS, readWaitMilliseconds: 1000 }, queryTimer: timer };
         }
       }
-      const object = new WaitScope(state, {});
+      const object = live(new WaitScope(state, {}));
       const header = (who: Actor, read: "history" | "entry", arg: string) => signedReader(secretSigner(who.secret), target.name, read, arg, { now: () => timeMs(net.clock.now)! });
       const minimum = { at: targetRef, head: seq };
       // A valid stranger still gets no head and opens no wait.

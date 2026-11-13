@@ -1,7 +1,7 @@
 /** One stateless invocation over public member reads and signed requests.
  * The caller supplies HTTP allowances and real member/session bindings. */
 import type { Answer, Digest, FactRef, FieldValue, Head, Item, MemberRef, ScopeRef, SignedIntent, Summary } from "@generalbusiness/dap-contract";
-import { isLocalId as integer, same, entryHash, isEntryBodyOf, intentDigest, isDigest, isFactRef, isMemberRef, isRecord, isScopeRef } from "@generalbusiness/dap-bytes";
+import { isLocalId as integer, same, isEntryBodyOf, intentDigest, isDigest, isFactRef, isMemberRef, isRecord, isScopeRef } from "@generalbusiness/dap-bytes";
 import { signedIntent, type ScopeHandle, type Signer } from "@generalbusiness/dap-client";
 import { readCommandJournal, type OpenCommand } from "./command-journal.ts";
 import { simulateRoom, type SimulatedDevice, type SimulatedZone, type SimulatorSchedule } from "./simulator.ts";

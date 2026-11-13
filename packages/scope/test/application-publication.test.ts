@@ -4,7 +4,7 @@ import { scopePublisher as publisher, publisherContainerData } from "./definitio
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import type { DeclaredDefinition, FactRef, Intent, ScopeKind, ScopeRef, Seed } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, FactRef, Intent, ScopeKind, Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, factRefOf, intentDigest, isSeed, scopeIdOf, signIntent, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { applicationPublicationOrigin, archiveDevicePublicationOrigin, FAILED_CLAIM_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, FILE_PUBLICATION_COHORT, fileReceiptRef, platform } from "@generalbusiness/dap-platform";
 import { Reader } from "@generalbusiness/dap-git";

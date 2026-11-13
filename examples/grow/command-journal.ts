@@ -2,7 +2,7 @@
  * its acknowledged prefix from the application's own recorded cursor. This
  * does not read a native record table or infer absence from a short suffix. */
 import type { Digest, FactRef, Head, MemberRef, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
-import { isLocalId as integer, canonicalize, entryHash, isEntryBodyOf, isFactRef, isMemberRef } from "@generalbusiness/dap-bytes";
+import { isLocalId as integer, canonicalize, isEntryBodyOf, isFactRef, isMemberRef } from "@generalbusiness/dap-bytes";
 import type { SimulatedDevice } from "./simulator.ts";
 
 const CAPABILITY: string = "device-command@1";

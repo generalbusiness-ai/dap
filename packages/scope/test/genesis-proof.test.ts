@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import type { Entry, FactRef, FactUse, GenesisEntry, ScopeKind, ScopeRef, Seed } from "@generalbusiness/dap-contract";
+import type { Entry, FactRef, FactUse, GenesisEntry, ScopeKind, ScopeRef, Seed, SequenceEntry } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, intentDigest, newGenesisNonce, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { useOf } from "@generalbusiness/dap-derive";
 import { GenesisProofs, GENESIS_PROOF_BOUNDS as B, type ProofTimer } from "../src/genesis-proof.ts";
@@ -44,6 +44,11 @@ const use = (entry: Entry): FactUse => useOf(refOf(entry), entry, kindOfEntry(en
 const genesisOf = (entry: Entry): GenesisEntry => {
   if ("genesis" in entry || entry.input.type !== "genesis") throw new Error("a genesis entry is required");
   return entry as GenesisEntry;
+};
+/** A later entry, or a test failure. */
+const laterOf = (entry: Entry): SequenceEntry => {
+  if (!("genesis" in entry)) throw new Error("a later entry is required");
+  return entry;
 };
 
 /** Explicitly synthetic genesis chain, canonical/hash-linked on actual SQLite.
@@ -205,13 +210,13 @@ test("body capacity counts the genesis and repeated uses spend work even when th
     const got = await scope.inside(async state => {
       const store = new SqliteStore(sqlOf(state)), act = JSON.parse(store.stored(1)!.bytes) as Entry;
       const creations = chain(JSON.parse(store.stored(0)!.bytes), act, 1), start = creations[1]!;
-      const unsigned = (seq: number): Entry => beside({ ...act, seq, input: { type: "checkpoint", through: 0, state: act.prev! } }, act);
+      const unsigned = (seq: number): Entry => beside({ ...laterOf(act), seq, input: { type: "checkpoint", through: 0, state: act.prev! } }, act);
       const source = unsigned(10), extras = Array.from({ length: mode === "extra-body" ? 14 : 13 }, (_, n) => unsigned(n + 20));
       const uses = [use(source), ...extras.map(entry => use(entry)), use(act)];
       if (mode === "repeated-uses") uses.splice(1, 0, ...Array.from({ length: B.attempts }, () => use(source)));
       if (mode === "conflicting-uses") uses.splice(1, 0, { fact: refOf(source), content: `sha256:${"0".repeat(64)}`, kind: kindOfEntry(source) });
       if (mode === "uses-search") uses.unshift(...Array.from({ length: B.visits }, () => use(extras[0]!)));
-      const genesis: Entry = { ...genesisOf(start), input: { ...genesisOf(start).input, source: refOf(source) }, uses };
+      const genesis: Entry = { ...genesisOf(start), input: { ...genesisOf(start).input, source: refOf(source), sourceKind: kindOfEntry(source) }, uses };
       install(state, genesis); const fixture = scripted([act, source, ...extras]);
       const result = await new GenesisProofs(new ProofBytes(sqlOf(state)), fixture.source, new Timer()).root();
       return { result: result.kind, calls: fixture.calls.length };
@@ -225,8 +230,10 @@ test("remaining cumulative bytes are offered to the source before another body c
   const scope = await create(); await scope.commitment();
   const got = await scope.inside(async state => {
     const store = new SqliteStore(sqlOf(state)), sample = JSON.parse(store.stored(0)!.bytes) as Entry, nativeAct = JSON.parse(store.stored(1)!.bytes) as Entry;
-    const pad = (entry: Entry): Entry => ({ ...entry, effects: [...entry.effects, { effect: "record", capability: "hold@1", kind: "padding", key: [], state: "padded", values: { text: "x".repeat(600_000) } }] });
-    const act = beside(pad(nativeAct), sample), start = pad(chain(sample, act, 1)[1]!);
+    const padding = { effect: "record", capability: "hold@1", kind: "padding", key: [], state: "padded", values: { text: "x".repeat(600_000) } } as const;
+    const padLater = (entry: Entry): Entry => { const later = laterOf(entry); return { ...later, effects: [...later.effects, padding] }; };
+    const padGenesis = (entry: Entry): Entry => { const born = genesisOf(entry); return { ...born, effects: [...born.effects, padding] }; };
+    const act = beside(padLater(nativeAct), sample), start = padGenesis(chain(sample, act, 1)[1]!);
     install(state, start); const body = { fact: refOf(act), bytes: canonicalize(act) };
     let asked = 0, sourceBodies = 0;
     // Labelled source stand-in implements the separately native-tested
