@@ -60,6 +60,16 @@ The transport's `log` takes no read minimum, and this head does not change the t
 
 No security seal changes.
 
+## The gate and CI pass at `b54bb9f8`
+
+The head `b54bb9f8` merges main `e7db3872`, where NF-4 landed, into `6fea47d5`. Both commits have tree `56d851c0`.
+
+The gate at `b54bb9f8cdb398eedda6f80c336ee4edf0e99a9f` exited 0. Its START is `e5c8b73a` and its END is `69fa6fe5`. Plain passed 4,556 of 4,557 with 1 skip. Native passed 1,134 of 1,136 with 2 skips. The test step took 864.9 s. The evidence is in `2026-11-12-log1-gate-b54bb9f8-3`.
+
+Two earlier starts at the same head stopped with exit 130 for a planner deploy window. They are not results. Their START commits are `2ab52bee`, in `2026-11-12-log1-gate-b54bb9f8`, and `33cdf309`, in `2026-11-12-log1-gate-b54bb9f8-2`.
+
+Page browser scripts run `43366646400` passed on a push of `6fea47d5`, which has the same tree. No changed path is in the Card workflow filter. The celld smoke workflow names `packages/scope/**`, but it runs on pushes to `main` only, so it runs when this head lands. Later commits on this head change only `notes/`.
+
 ## Evidence
 
-The working evidence is in `~/play/artroom-evidence/2026-11-12-log1-working/`. It holds each compile and test run with its exit code.
+The working evidence is in `~/play/artroom-evidence/2026-11-12-log1-working/`. It holds each compile and test run with its exit code. `notes/implementation/evidence/2026-11-12-log1-handle-log.manifest.json` lists each file of the gate evidence and the working evidence with its size and SHA-256. Each directory holds its own `SHA256SUMS` and is read-only.
