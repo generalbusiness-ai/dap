@@ -17,6 +17,7 @@ import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import { archiveHostGate as gate } from "./support/archive-provider.ts";
 import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
 import { ArchiveDriver } from "../src/archive-driver.ts";
+import { archiveOwnReplayContext } from "../src/archive-publication.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { planArchive, type ArchiveFixedFinish } from "../src/archive-build.ts";
 import { at, rita, una, type Lane } from "./fixtures-native.ts";
@@ -462,7 +463,11 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
       sources: async (_after, _through, actualBudget, exact) => {
         if (budget) expect(actualBudget).toBe(budget); else fixedBudgets.push(actualBudget);
         expect(exact).toBe(false); sourceOrder.push("sources");
-        return { pins: archiveAuthorityBasis(lane)!.pins, prepare: async (seq, sameBudget) => {
+        // Production takes the replay context from its target read; this
+        // stand-in admits the lane's own genesis outside the pass budget.
+        return { pins: archiveAuthorityBasis(lane)!.pins,
+          replayContext: archiveOwnReplayContext(archiveSql(state), lane.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()),
+          prepare: async (seq, sameBudget) => {
           expect(sameBudget).toBe(actualBudget); sourceOrder.push(`prepare:${seq}`);
           if (hardWithdraw) throw new ArchivePrefixStopped("foreign-source-unavailable");
           if (withdraw) actualBudget.stop("unavailable");
