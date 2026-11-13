@@ -160,7 +160,21 @@ python3 apps/room/celld/mac/deploy.py \
 curl --cacert "$HOME/dap-tls/cert.pem" "$BASE/health"
 ```
 
-The plan uses `--host none`. The prepared project keeps the production
+The plan uses `--host none --cohort unpublished`. A room for a GitHub
+binding, as the next section describes, uses the `repository-binding`
+family. celld does not run `base`, the default family of `dap install`, so
+`prepare-project.mjs` refuses a `base` plan and names the `--cohort` to
+give. A celld room lacks these parts of the `base` family:
+
+- `leave`, `revoke-key` of the signer's own key, removal of an agent by
+  its controller, and the limit of four keys for an own agent.
+- Own agents: `add-own-agent` and up to eight agents for each person.
+- Ordinary version 2 packages and `publication-paths@1` prefixes.
+- The final failed state of a claim, and the refusal of a founder key that
+  is also the recovery key.
+- The fixed one-hour Git read token.
+
+The prepared project keeps the production
 Worker and its bindings, sets `REGISTER_SCOPE` to the planned register, and
 keeps the session secret in private configuration. Deployment creates the
 installation's bucket and uploads the Worker. Run these commands as the
