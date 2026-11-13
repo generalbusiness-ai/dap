@@ -15,10 +15,11 @@
  */
 
 import type {
-  Archived, BehindRead, ReadMinimum, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxItem, OutboxId, Entry, Created, Grant, Head, Item, PlatformDefinition, Read, ReadRefusal, Receipt, ScopeApi, ScopeId, Sealed, Settlement,
+  Archived, BehindRead, LogPage, ReadMinimum, ScopeRef, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxItem, OutboxId, Entry, Created, Grant, Head, Item, PlatformDefinition, Read, ReadRefusal, Receipt, ScopeApi, ScopeId, Sealed, Settlement,
   SignedIntent, Summary, ItemQuery, ItemQueryRead, ApplicationProjectionQuery, ApplicationProjectionRead,
 } from "@generalbusiness/dap-contract";
-import { readMinimum, isReceipt, definitionDigest, entryHash, encodeItemQueryParameter, readItemQueryParameter, itemQueryReadFor, within, LATE, isDigest, parseStrict, textDigest } from "@generalbusiness/dap-bytes";
+import { DOMAINS } from "@generalbusiness/dap-contract";
+import { canonicalize, digestBytes, utf8, readMinimum, isReceipt, definitionDigest, entryHash, encodeItemQueryParameter, readItemQueryParameter, itemQueryReadFor, within, LATE, isDigest, parseStrict, textDigest } from "@generalbusiness/dap-bytes";
 import { encodeApplicationProjectionQuery, readApplicationProjectionQuery, readApplicationProjectionReplyText } from "@generalbusiness/dap-platform/application-v2";
 
 /** How a handle reaches a scope service: the contract's `ScopeApi`. `http.ts` and `binding.ts` each make one. */
@@ -59,10 +60,25 @@ function checkedRead<T>(reply: Read<T>, required?: ReadMinimum): Read<T> {
   return reply;
 }
 
+/**
+ * What a `log` page covers. `whole`: the page holds every entry from the cursor up to its `next`, or up to the head when it has
+ * none, so a fold of the whole pages from 0 equals the scope's state. `filtered`: the page can omit entries. Below the floor the
+ * read is the `archived` refusal.
+ */
+export type LogCoverage = "whole" | "filtered";
+/** A `log` read: a refusal as the scope gives it, or a checked page with its coverage. */
+export type LogRead = Exclude<Read<LogPage>, { ok: true }> | (Extract<Read<LogPage>, { ok: true }> & { coverage: LogCoverage });
+
+/** Only a session reads every row of a scope's journal. A signed read keeps the rows of its own key's chain. */
+const SESSION = "Session ";
+const sameRef = (a: ScopeRef, b: ScopeRef): boolean => canonicalize(a as never) === canonicalize(b as never);
+
 export class ScopeHandle {
   readonly scope: ScopeId;
   readonly #transport: Transport;
   readonly #reader: unknown;
+  /** The scope reference and definition that this scope's summary named: each `log` page must name the same. */
+  #own: { scope: ScopeRef; definition: Digest | PlatformDefinition } | null = null;
 
   /** `reader`: what this caller presents to the read port. What it must be is the authority note's. */
   constructor(transport: Transport, scope: ScopeId, reader: unknown = null) {
@@ -129,6 +145,47 @@ export class ScopeHandle {
   async entry(seq: number, atLeast?: ReadMinimum | Receipt): Promise<Read<Sealed>> {
     const required = minimum(atLeast);
     return checkedRead(await this.#transport.entry(this.scope, this.#reader, seq, required), required);
+  }
+  /**
+   * One page of the journal as the scope stores it, checked. The page must name this scope's reference and definition, as its
+   * summary gives them. Each entry's bytes must hash to its hash and hold its seq and this scope. The seqs must rise, from the
+   * cursor up to the head. A page that fails a check rejects with `TransportError`.
+   *
+   * The coverage is `whole` only when this handle read with a session and the seqs run without a gap from the cursor to the
+   * page's `next`, or to the head when it has none. A signed read keeps only some rows, while the scope reports `complete` and
+   * `next` of the rows before it filters them: its page is `filtered` whatever its seqs are.
+   *
+   * The transport sends no read minimum with `log`. The handle checks the page's head against `atLeast` after the read.
+   */
+  async log(cursor?: Cursor, atLeast?: ReadMinimum | Receipt): Promise<LogRead> {
+    const required = minimum(atLeast);
+    if (this.#own === null) {
+      const summary = await this.summary();
+      if (!summary.ok) return summary;
+      if (summary.value.scope.scope !== this.scope) throw new TransportError("the summary is of another scope");
+      this.#own = { scope: summary.value.scope, definition: summary.value.definition };
+    }
+    const own = this.#own;
+    if (required && !sameRef(required.at, own.scope)) throw new TransportError("the read minimum names another scope");
+    const reply = await this.#transport.log(this.scope, this.#reader, cursor);
+    if (!reply.ok) return reply;
+    reached(reply.at, required);
+    const page = reply.value;
+    if (!sameRef(page.scope, own.scope) || page.definition !== own.definition) throw new TransportError("the log page is of another scope or definition");
+    const from = cursor === undefined ? 0 : /^(0|[1-9][0-9]{0,15})$/.test(cursor) ? Number(cursor) : null;
+    let previous = from === null ? -1 : from - 1, gap = from === null;
+    for (const row of page.entries) {
+      if (digestBytes(utf8(`${DOMAINS.entry}\n${row.bytes}`)) !== row.hash) throw new TransportError(`log entry ${row.seq} does not hash to its hash`);
+      let entry: Entry;
+      try { entry = parseStrict(row.bytes) as Entry; } catch { throw new TransportError(`log entry ${row.seq} is not canonical`); }
+      if (entry.seq !== row.seq || !entry.at || !sameRef(entry.at, own.scope)) throw new TransportError(`log entry ${row.seq} is not this scope's entry at that seq`);
+      if (row.seq <= previous || row.seq > reply.at.seq) throw new TransportError("the log page's seqs do not rise from the cursor to the head");
+      if (row.seq !== previous + 1) gap = true;
+      previous = row.seq;
+    }
+    const end = reply.next === undefined ? reply.at.seq + 1 : /^(0|[1-9][0-9]{0,15})$/.test(reply.next) ? Number(reply.next) : null;
+    const whole = typeof this.#reader === "string" && this.#reader.startsWith(SESSION) && !gap && end !== null && previous + 1 === end;
+    return { ...reply, coverage: whole ? "whole" : "filtered" };
   }
   outbox(cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return this.#transport.outbox(this.scope, this.#reader, cursor); }
 
