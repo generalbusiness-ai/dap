@@ -26,7 +26,7 @@ test("one room proof reuses checked prefixes at the exact unique-entry ceiling a
     expect(pages.get(`${w.I.scope.scope}:0`)).toBe(2); // dependency open + explicit root refresh
     expect(pages.get(`${w.P.scope.scope}:0`)).toBe(2);
     expect(pages.get(`${w.D.scope.scope}:2`)).toBe(1);
-    expect(finished.coverage.filter(span => span.scope.scope === w.D.scope.scope)).toEqual([{ scope: w.D.scope, from: 0, through: 6, root: w.D.scope.scope }]);
+    expect(finished.coverage.filter(span => span.scope.scope === w.D.scope.scope)).toEqual([{ scope: w.D.scope, kind: "directory", from: 0, through: 6, root: w.D.scope.scope }]); // a coverage row states the kind its genesis names
     expect(finished.coverage.some(span => span.scope.scope === w.P.scope.scope && span.root === w.I.scope.scope && span.through >= 2)).toBe(true);
     expect(Object.isFrozen(finished)).toBe(true);
     expect(Object.isFrozen(finished.roots)).toBe(true);
