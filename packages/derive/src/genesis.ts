@@ -15,8 +15,8 @@ import { nativeMark } from "./program/native.ts";
 import type { Entry, FactRef, FactUse, GenesisInput, GenesisNonce, GenesisSelfRef, Prepared, Reason, Request, ScopeId, ScopeRef, Seed, Send, SignedIntent } from "@generalbusiness/dap-contract";
 import { deliveryCauseDigest, genesisInputDigest, intentDigest, isDigest, isGenesisNonce, isSeed, messageDigest, resolveGenesisSelf, scopeIdOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { judgeDelivery, judgeDeliveryForReplay, reasonOf, type DeliveryContext } from "./delivery.ts";
-import { creationFields, isIntent, readFields, textsNamed, useOf, type Texts } from "./fields.ts";
-import { copyEntry, copyFact, copyKind, judgmentFacts, matchesCopy, readJudgmentFacts, replayAssumptions, replayContext, sentByCopy, sourceCopy, verifiedContext, withJudgmentSource, type JudgmentCopy } from "./operand.ts";
+import { creationFields, isIntent, readFields, textsNamed, useOf, withBirthUses, type Texts } from "./fields.ts";
+import { copyEntry, copyFact, copyKind, copySequence, judgmentFacts, matchesCopy, readJudgmentFacts, replayAssumptions, replayContext, sentByCopy, sourceCopy, verifiedContext, withJudgmentSource, type JudgmentCopy } from "./operand.ts";
 import type { Judging, ReplayAssumptions } from "./guards.ts";
 import { giving } from "./handlers.ts";
 import { executeBody } from "./program/body.ts";
@@ -176,7 +176,8 @@ function genesisJudged(view: StateView, definition: ValidDefinition, asked: Sign
   const provenance = source ? { source: copyFact(source), sourceKind: copyKind(source) } : { source: null, sourceKind: null } as const;
   const input = (decision: "applied" | "refused"): GenesisInput =>
     ({ type: "genesis", seed, nonce: asked.nonce, kind: declarationOf(definition).genesis, "founding": creation, ...provenance, n: child?.n ?? null, message: child?.message ?? null, decision });
-  const sourceUse = source ? [useOf(copyFact(source), copyEntry(source), copyKind(source))] : [];
+  // Ruling a140a1c6, Q-B1: a source that is a later entry of its sequence is recorded with that sequence's birth.
+  const sourceUse = source ? withBirthUses([useOf(copyFact(source), copyEntry(source), copyKind(source))], [copySequence(source)]) : [];
   /**
    * Section 7.2: a refused genesis is written, sends its `refused` result and
    * nothing else, and is terminal. Section 9.2: it records what its judgment
@@ -201,7 +202,8 @@ function genesisJudged(view: StateView, definition: ValidDefinition, asked: Sign
   const named = readJudgmentFacts(view, act.fields, read.fields, source ? [...judgmentFacts(context), source] : judgmentFacts(context), { at, own: Object.assign(() => null, { sequence: () => null }), texts: context.texts });
   if (named.result === "unavailable") return { result: "unavailable", reason: "dependency-unavailable" };
   /** The source entry, then each named fact that was read. The source is recorded once. */
-  const uses = [...sourceUse, ...named.uses.filter((u) => u.fact.hash !== (source ? copyFact(source).hash : undefined))];
+  const uses = withBirthUses([...sourceUse, ...named.uses.filter((u) => !sourceUse.some((held) => held.fact.hash === u.fact.hash))],
+    [copySequence(source), ...judgmentFacts(context).map(copySequence)]);
   // A field that names a local item names nothing: no item exists before a genesis. The facts read before it are recorded.
   if (named.result !== "read") return refuse({ code: named.result }, uses);
   // Platform data: what a rule of the genesis act is given (section 6.1). Check 7: a field whose type is a mark is checked by its rule.

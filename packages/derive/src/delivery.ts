@@ -8,13 +8,13 @@ import type { CheckedSequence } from "@generalbusiness/dap-bytes";
 import type { Advisory, CapabilityName, Control, Digest, Effect, Entry, FactRef, FactUse, Message, ObservationUse, PlatformDefinition, Prepared, Reason, Request, Result, RoutingRefusal, ScopeKind, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
 import { deliveryCauseDigest, messageDigest, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { declaredBy, type Recorded } from "./capability.ts";
-import { isEntryBodyOf, isEntryOf, updateOf, useOf, type Reading } from "./fields.ts";
+import { isEntryBodyOf, isEntryOf, updateOf, useOf, withBirthUses, type Reading } from "./fields.ts";
 import { bound, runClause, runHandler, type Clause, type Handled, type Sent } from "./handlers.ts";
 import { handlerBranch } from "./handler-branch.ts";
 import { declarationOf } from "./program/declaration.ts";
 import { timeMs } from "./time.ts";
 import type { ReplayAssumptions, SourceCopy } from "./guards.ts";
-import { admitRetainedResultContext, assumedSource, copyEntry, copyKind, copyUnder, replayContext, sourceCopy, sentByCopy, verifiedContext, withJudgmentSource } from "./operand.ts";
+import { admitRetainedResultContext, assumedSource, copyEntry, copyKind, copySequence, copyUnder, judgmentFacts, replayContext, sourceCopy, sentByCopy, verifiedContext, withJudgmentSource } from "./operand.ts";
 import type { Judgment } from "./judge.ts";
 import { heldOpenings } from "./ledger.ts";
 import { withinCounts } from "./draws.ts";
@@ -159,7 +159,7 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
   const next = nextDue(view, definition, clock.asOf);
   if (next) return { result: "due", next };
 
-  if (message.class === "control") return confirmation(view, scope, delivered, message, source, sourceKind);
+  if (message.class === "control") return confirmation(view, scope, delivered, message, source, sourceKind, copySequence(evidence));
   if (message.class === "request" && message.type === "create") return unverified("this scope's genesis answered another creation request");
   // Section 7.2: a provisional scope admits its confirmation and a repeat of its creation request; a refused one only the repeat.
   if (scope.status === "provisional") return { result: "unavailable", reason: "scope-provisional" };
@@ -169,7 +169,7 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
   /** Section 5.3: an entry that judges no time condition may be written clamped; one that does is `clock-behind`. */
   /** `read`: the foreign entries a clause read beside the source entry. Each fact is recorded once (section 9.2). */
   const write = (input: Extract<Judgment, { result: "write" }>["draft"]["input"], effects: readonly Effect[], sends: readonly Send[], prepared: readonly Prepared[], judgesTime: boolean, read: readonly FactUse[] = [], settles = false, bound?: { item: number; message: string }): Judgment =>
-    (judgesTime && clock.behind ? { result: "unavailable", reason: "clock-behind" } : { result: "write", draft: { input, uses: [use, ...read.filter((u) => u.fact.hash !== from.hash)], prepared, effects, sends, judgesTime, settles, ...(bound ? { bound } : {}) } });
+    (judgesTime && clock.behind ? { result: "unavailable", reason: "clock-behind" } : { result: "write", draft: { input, uses: withBirthUses([use, ...read.filter((u) => u.fact.hash !== from.hash)], [copySequence(evidence), ...judgmentFacts(context).map(copySequence)]), prepared, effects, sends, judgesTime, settles, ...(bound ? { bound } : {}) } });
   /** Section 7.2: the cause of any scope this delivery's handler creates names this one delivery. */
   const cause = () => deliveryCauseDigest({ v: 1, from, n, message: messageDigest(message) });
 
@@ -313,7 +313,7 @@ const under = (handler: { from: { under?: string } }, source: string): boolean =
  * activates the scope and judges no time. It opens attempt 1 of each
  * operation that the genesis holds (section 4.3, item 1).
  */
-function confirmation(view: StateView, scope: ScopeState, { from, n }: Delivered, message: Control, source: Entry, sourceKind: ScopeKind): Judgment {
+function confirmation(view: StateView, scope: ScopeState, { from, n }: Delivered, message: Control, source: Entry, sourceKind: ScopeKind, sequence: CheckedSequence | null): Judgment {
   const genesis: FactRef = { at: scope.at, seq: 0, hash: scope.genesis.hash };
   const recorded = source.input;
   const admitted = message.type === "confirm" && scope.status === "provisional" && scope.creator !== null && scope.genesis.source !== null
@@ -322,7 +322,7 @@ function confirmation(view: StateView, scope: ScopeState, { from, n }: Delivered
     && same(recorded.message.of, { from: scope.genesis.source, n: scope.genesis.n }) && same(recorded.from, genesis)
     && same(message.genesis, genesis);
   if (!admitted) return { result: "source-unverified", detail: "not the creator's confirmation of this genesis" };
-  return { result: "write", draft: { input: { type: "delivery", from, sourceKind, n, message }, uses: [useOf(from, source, sourceKind)], prepared: [], effects: [{ effect: "activate" }, ...heldOpenings(view)], sends: [], judgesTime: false } };
+  return { result: "write", draft: { input: { type: "delivery", from, sourceKind, n, message }, uses: withBirthUses([useOf(from, source, sourceKind)], [sequence]), prepared: [], effects: [{ effect: "activate" }, ...heldOpenings(view)], sends: [], judgesTime: false } };
 }
 
 /**
