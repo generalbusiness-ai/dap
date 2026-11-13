@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4878a1d7fe657790f69548e60d0fecc0c25bde4d","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/evidence-parent-spelling-fixture.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:487dc0fd2b783e21715d0c03b6e0a8f0f7492e3c","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/grant.ts."}
