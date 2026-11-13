@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Checker takes the exact-head review of NF-3 at 3bb7327ccbce0a289f34998ccc4c1fb1120a2b97 for review request fd2239fb."}
+{"kind":"promise","text":"S1-F: I take the three follow-ups as one small head on main a76764a7. It takes no gate slot from the cutover.","body":{"branch":"builder/s1f-followups-20261112"}}
