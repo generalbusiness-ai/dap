@@ -57,6 +57,10 @@ export type Remote = { [K in keyof Surface]: (...args: Parameters<Surface[K]>) =
 /** The object with that name, for the pool's own functions: eviction, the alarm, a look at its storage. */
 export const objectOf = (name: string, namespace: DurableObjectNamespace = env.SCOPES): DurableObjectStub => namespace.get(namespace.idFromName(name));
 export const stubOf = (name: string, namespace?: DurableObjectNamespace): Remote => current(objectOf(name, namespace));
+/** The surface with each answer as the object gives it, a retired stop included. */
+export type RawRemote = { [K in keyof Surface]: (...args: Parameters<Surface[K]>) => Promise<Awaited<ReturnType<Surface[K]>>> };
+/** The stub unwrapped: a test that expects a retired stop reads it here. */
+export const rawStubOf = (name: string, namespace?: DurableObjectNamespace): RawRemote => objectOf(name, namespace) as unknown as RawRemote;
 /** Each method of the stub, with a retired stop thrown as a test failure. */
 function current(stub: DurableObjectStub): Remote {
   return new Proxy(stub, { get(target, key) {
