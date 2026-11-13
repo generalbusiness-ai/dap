@@ -116,8 +116,11 @@
         "@generalbusiness/dap-contract": "coordinated",
         "@generalbusiness/dap-platform": "coordinated"
       },
-      "excludedSourceExports": { "./node": "./src/node.ts" },
-      "excludedInputs": ["src/node.ts"]
+      "excludedSourceExports": {
+        "./node": "./src/node.ts",
+        "./install": "./src/install-request.ts"
+      },
+      "excludedInputs": ["src/node.ts", "src/install-request.ts"]
     },
     {
       "dir": "replay",

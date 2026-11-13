@@ -11,7 +11,8 @@ export * from "./errors.ts";
 // Temporary same-symbol custody aliases; NF5 removes these after importer migration.
 export { UNRESOLVED_MOST, OUTCOMES_INLINE, OUTCOMES_INLINE_BYTES, RECORD_BYTES, KEY_BYTES, DECIDED_SLICE, TERMINAL, identityId, meaningOf, stepId, CustodyError, Lost, validKey, decisive, Custody, memoryStore } from "@generalbusiness/dap-client";
 export type { Identity, BindingRecord, Envelope, Phase, ArchivedSettlement, Decided, Outcome, Step, CustodyRecord, CustodyStore, HeldBack, Sent } from "@generalbusiness/dap-client";
-export * from "./reads.ts";
+// Same-symbol reader aliases for importers of dap-mcp; the client owns the reader since NF-4.
+export { Reads, ReadSessions, type ReadPort } from "@generalbusiness/dap-client";
 export * from "./inventory.ts";
 export * from "./shape.ts";
 export * from "./paging.ts";

@@ -61,7 +61,7 @@ test("no platform package depends on the lanes package or imports from it", () =
 // and the command line, which reads a platform definition's acts (no scope retains a platform definition's declaration to read) and
 // runs the verifier with the platform's rules; the page, which reads a platform definition's acts as the command line does; and the
 // MCP server, which derives the act tools of the platform's scopes from those acts.
-const clientApplicationUsers = new Set(["packages/client/src/answers.ts", "packages/client/src/application-install.ts", "packages/client/src/application-json.ts", "packages/client/src/application-package.ts", "packages/client/src/application-projection.ts", "packages/client/src/application-types.ts", "packages/client/src/application-uri.ts", "packages/client/src/binding.ts", "packages/client/src/handle.ts", "packages/client/src/http.ts", "packages/client/src/signer.ts", "packages/client/test/application-projection.test.ts", "packages/client/package.json"]);
+const clientApplicationUsers = new Set(["packages/client/src/answers.ts", "packages/client/src/install-request.ts", "packages/client/src/application-install.ts", "packages/client/src/application-json.ts", "packages/client/src/application-package.ts", "packages/client/src/application-projection.ts", "packages/client/src/application-types.ts", "packages/client/src/application-uri.ts", "packages/client/src/binding.ts", "packages/client/src/handle.ts", "packages/client/src/http.ts", "packages/client/src/signer.ts", "packages/client/test/application-projection.test.ts", "packages/client/test/install-request.test.ts", "packages/client/package.json"]);
 const checkerPlatformUsers = new Set(["packages/checkers/package.json", "packages/checkers/src/container-records.ts", "packages/checkers/src/job.ts", "packages/checkers/src/outcome.ts", "packages/checkers/src/service.ts", "packages/checkers/src/signing.ts", "packages/checkers/src/stage-origin.ts", "packages/checkers/src/store.ts", "packages/checkers/test/stage-identity.test.ts", "packages/checkers/test/support/stage-service.ts", "packages/checkers/test/support/evidence-container-bridge.mjs"]);
 const platformConsumerAllowed = file => clientApplicationUsers.has(file) || checkerPlatformUsers.has(file) || /^packages\/(platform|scope|replay|lanes|cli|page|mcp)\//.test(packagePath(file));
 test("the platform package depends only on contract, bytes, derive and package graph, and only its runtime consumers and exact client application wrappers name it", () => {
@@ -87,11 +87,13 @@ test("the exact checker codec consumers do not permit a Git-to-Platform cycle or
 // the same table of sends as the real repository does: no rule of a platform definition reads a repository.
 // M1 preparation permits one explicit public immutable reader import. The
 // server's other modules and broad Git/provider/Node entry points stay closed.
+// The command line's install runtime imports the same exact reader for
+// `dap install <uri>`; the client takes the bytes through a port.
 // Grow's exact development host fixture constructs a synthetic archive and
 // exercises the actual smart-HTTP send boundary with scripted host replies.
 // The certified native archive journey reads its real local Git clone for
 // offline replay; this grants no production Git import.
-const applicationGitUsers = new Set(["packages/mcp/package.json", "packages/mcp/src/service.ts", "packages/mcp/src/node.ts", "apps/room/lanes/test/grow-archive.test.ts", "apps/room/lanes/test/certified-rules-archive.scope.test.ts", "apps/room/lanes/test/evidence.scope.test.ts"]);
+const applicationGitUsers = new Set(["packages/cli/package.json", "packages/cli/src/application-install-runtime.ts", "packages/mcp/package.json", "packages/mcp/src/service.ts", "packages/mcp/src/node.ts", "apps/room/lanes/test/grow-archive.test.ts", "apps/room/lanes/test/certified-rules-archive.scope.test.ts", "apps/room/lanes/test/evidence.scope.test.ts"]);
 // Replay's Node and integration test boundaries may depend on Git. The v2
 // witnesses combine real Git archives with offline Replay; Git itself stays
 // below Replay and imports none of it, including from its own tests.

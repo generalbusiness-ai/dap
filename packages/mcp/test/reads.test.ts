@@ -1,8 +1,7 @@
 import { setImmediate } from "node:timers/promises";
 import { expect, test } from "vitest";
 import type { ScopeRef, SignedSessionRequest } from "@generalbusiness/dap-contract";
-import { secretSigner } from "@generalbusiness/dap-client";
-import { Reads, ReadSessions } from "../src/reads.ts";
+import { Reads, ReadSessions, secretSigner } from "@generalbusiness/dap-client";
 import { Kept, readInventory } from "../src/inventory.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";
 

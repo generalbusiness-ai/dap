@@ -1,0 +1,207 @@
+{
+  "key": {
+    "isError": true,
+    "structuredContent": {
+      "error": "shape",
+      "message": "Before signing, the server found field idempotencyKey is missing or invalid; declared: a key you choose and keep. This call sent nothing.",
+      "next": "Correct the field and call again with the same idempotencyKey."
+    }
+  },
+  "unconfigured": {
+    "isError": true,
+    "structuredContent": {
+      "error": "target",
+      "message": "Before signing, the server could not resolve the target: configure a trusted-application room before installing. This call sent nothing.",
+      "next": "Call room for the scopes and lanes of the room; give target as a scope ID or a number."
+    }
+  },
+  "room-siblings": {
+    "isError": true,
+    "structuredContent": {
+      "error": "target",
+      "message": "Before signing, the server could not resolve the target: the configured room does not match its exact generic native siblings. This call sent nothing.",
+      "next": "Call room for the scopes and lanes of the room; give target as a scope ID or a number."
+    }
+  },
+  "rules-sibling": {
+    "isError": true,
+    "structuredContent": {
+      "error": "target",
+      "message": "Before signing, the server could not resolve the target: the actual Rules sibling does not support native application installation. This call sent nothing.",
+      "next": "Call room for the scopes and lanes of the room; give target as a scope ID or a number."
+    }
+  },
+  "read": {
+    "isError": true,
+    "structuredContent": {
+      "error": "read",
+      "message": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q did not answer the read: forbidden (your key may not read it).",
+      "next": "Call room to see your standing; a signed read reads only what your key signed, within its window."
+    }
+  },
+  "installation": {
+    "isError": false,
+    "structuredContent": {
+      "rules": {
+        "scope": "sc_jr4toexa26eig4jb7vojz4iylvm7cq6sc6a3o2p5bmlrgs5yyreq",
+        "inc": "in_aibaeaqcaibaeaqcaibaeaqcai",
+        "kind": "rules"
+      },
+      "at": {
+        "hash": "sha256:879f4f08c31ba60e09725743ed56dbade47fa6e200383555c8c6f08b157c6a24",
+        "seq": 1
+      },
+      "item": 1,
+      "state": "pending",
+      "phase": "fetch",
+      "reason": null,
+      "uri": "git+https://git.example/packages.git/@c1ff1d0cdd500531aae4375e6eece27c7f9693b0/packages/application.dap.json",
+      "release": "sha256:ce70aa12a3582c2fc4271f68c187747a92e11906c4f8b48ffd46386e9714fd11",
+      "scope": null,
+      "screen": null
+    }
+  },
+  "trust": {
+    "isError": true,
+    "structuredContent": {
+      "error": "target",
+      "message": "Before signing, the server could not resolve the target: the expected release and Git host are not in a valid APPLICATION_TRUST setting; this call fetched nothing. This call sent nothing.",
+      "next": "Call room for the scopes and lanes of the room; give target as a scope ID or a number."
+    }
+  },
+  "unavailable": {
+    "isError": true,
+    "structuredContent": {
+      "error": "target",
+      "message": "Before signing, the server could not resolve the target: the exact Git package could not be prepared. This call sent nothing.",
+      "next": "Call room for the scopes and lanes of the room; give target as a scope ID or a number."
+    }
+  },
+  "sha256": {
+    "isError": true,
+    "structuredContent": {
+      "error": "target",
+      "message": "Before signing, the server could not resolve the target: the public HTTPS Git transport does not support SHA-256 repositories. This call sent nothing.",
+      "next": "Call room for the scopes and lanes of the room; give target as a scope ID or a number."
+    }
+  },
+  "package": {
+    "isError": true,
+    "structuredContent": {
+      "error": "target",
+      "message": "Before signing, the server could not resolve the target: package bytes do not match the expected signed release or install bounds. This call sent nothing.",
+      "next": "Call room for the scopes and lanes of the room; give target as a scope ID or a number."
+    }
+  },
+  "unknown-tool": {
+    "isError": true,
+    "structuredContent": {
+      "error": "unknown-tool",
+      "message": "No tool is named install_application in this list.",
+      "next": "Call tools/list."
+    }
+  },
+  "lost": {
+    "isError": true,
+    "structuredContent": {
+      "error": "transport",
+      "message": "The reply from sc_jr4toexa26eig4jb7vojz4iylvm7cq6sc6a3o2p5bmlrgs5yyreq was lost or malformed; the outcome is unknown. The envelope is under custody.",
+      "next": "Call settle with the same idempotencyKey; do not sign again first."
+    }
+  },
+  "refused": {
+    "isError": false,
+    "structuredContent": {
+      "answer": "refused",
+      "reason": "guard-failed",
+      "judgedAt": {
+        "seq": 41,
+        "hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "retained": false,
+      "phase": "refused"
+    }
+  },
+  "receipt": {
+    "isError": true,
+    "structuredContent": {
+      "error": "target",
+      "message": "The scope accepted this request, and the server could not check it: the install acknowledgement does not match the retained native request.",
+      "next": "A repeat stops at this check again and sends nothing, so report this message and the idempotencyKey. Do not use a new key, because a new key can make a second entry."
+    }
+  },
+  "repeat": {
+    "isError": false,
+    "structuredContent": {
+      "answer": "accepted",
+      "item": 1,
+      "retained": true,
+      "phase": "accepted",
+      "fact": {
+        "at": {
+          "inc": "in_aibaeaqcaibaeaqcaibaeaqcai",
+          "kind": "rules",
+          "scope": "sc_jr4toexa26eig4jb7vojz4iylvm7cq6sc6a3o2p5bmlrgs5yyreq"
+        },
+        "hash": "sha256:879f4f08c31ba60e09725743ed56dbade47fa6e200383555c8c6f08b157c6a24",
+        "seq": 1
+      },
+      "outboxIds": [],
+      "effects": 0,
+      "next": "Read application_installation with this item. Native acceptance records the request; installation may still be pending or refused."
+    }
+  },
+  "accepted": {
+    "isError": false,
+    "structuredContent": {
+      "answer": "accepted",
+      "item": 1,
+      "retained": false,
+      "phase": "accepted",
+      "fact": {
+        "at": {
+          "scope": "sc_jr4toexa26eig4jb7vojz4iylvm7cq6sc6a3o2p5bmlrgs5yyreq",
+          "inc": "in_aibaeaqcaibaeaqcaibaeaqcai",
+          "kind": "rules"
+        },
+        "seq": 1,
+        "hash": "sha256:879f4f08c31ba60e09725743ed56dbade47fa6e200383555c8c6f08b157c6a24"
+      },
+      "outboxIds": [],
+      "effects": 0,
+      "next": "Read application_installation with this item. Native acceptance records the request; installation may still be pending or refused."
+    }
+  },
+  "item": {
+    "isError": true,
+    "structuredContent": {
+      "error": "shape",
+      "message": "Before signing, the server found field item is not a native install item; declared: a nonnegative integer. This call sent nothing.",
+      "next": "Correct the field and call again with the same idempotencyKey."
+    }
+  },
+  "installation-unavailable": {
+    "isError": true,
+    "structuredContent": {
+      "error": "target",
+      "message": "Before signing, the server could not resolve the target: that installation is unavailable in this exact room. This call sent nothing.",
+      "next": "Call room for the scopes and lanes of the room; give target as a scope ID or a number."
+    }
+  },
+  "installation-read": {
+    "isError": true,
+    "structuredContent": {
+      "error": "target",
+      "message": "Before signing, the server could not resolve the target: the bounded installation read refused: forbidden. This call sent nothing.",
+      "next": "Call room for the scopes and lanes of the room; give target as a scope ID or a number."
+    }
+  },
+  "installation-unconfigured": {
+    "isError": true,
+    "structuredContent": {
+      "error": "target",
+      "message": "Before signing, the server could not resolve the target: configure a trusted-application room before installing. This call sent nothing.",
+      "next": "Call room for the scopes and lanes of the room; give target as a scope ID or a number."
+    }
+  }
+}
