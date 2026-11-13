@@ -90,7 +90,7 @@ function destinationGiven(register: Ledger, creator: ScopeRef): OutsideGiven {
   const entry: Entry = {
     v: 1, seq: 0, prev: null, time: register.own(0)!.entry.time, clamped: false, epoch: 0,
     input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(3)), kind: "establish", "founding": null, source: null, sourceKind: null, n: null, message: null, decision: "applied" },
-    uses: [{ fact: claim, content }], prepared: [], effects: [], sends: [],
+    uses: [{ fact: claim, content, kind: "register" }], prepared: [], effects: [], sends: [],
   };
   const hash = entryHash(entry);
   const at: ScopeRef = { scope: scopeIdOf(seed), genesis: hash };

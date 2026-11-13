@@ -17,7 +17,7 @@
 
 import { env } from "cloudflare:workers";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
-import type { Answer, Beside, Digest, Entry, FactRef, FieldValue, Grant, Intent, PlatformDefinition, Read, RetainedInput, ScopeId, ScopeRef, Seed, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Answer, Beside, Digest, Entry, FactRef, FieldValue, Grant, Intent, PlatformDefinition, Read, RetainedInput, ScopeId, ScopeKind, ScopeRef, Seed, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, intentDigest, isDigest, isScopeRef, scopeIdOf, signIntent, textDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { hashOfBytes, type MemoryScope } from "@generalbusiness/dap-replay";
 import type { Delivered, Item } from "@generalbusiness/dap-derive";
@@ -79,6 +79,12 @@ export class Platform {
     return read.value;
   }
   async entries(): Promise<Entry[]> { return (await this.sealed()).map((sealed) => sealed.entry); }
+  /** The kind that this scope's genesis seed names. */
+  async kind(): Promise<ScopeKind> {
+    const born = (await this.entries())[0];
+    if (!born || born.input.type !== "genesis") throw new Error(`no genesis of ${this.name}`);
+    return born.input.seed.kind;
+  }
   /** The fact of this scope's sealed entry at `seq`, under this scope's full reference. */
   async fact(seq: number): Promise<FactRef> {
     const entry = (await this.entries())[seq];

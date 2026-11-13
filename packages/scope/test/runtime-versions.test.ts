@@ -105,7 +105,7 @@ test("runtime exact @2 membership observations and aged destination/rules reads 
     }
     const store = memoryStore();
     await store.keep("device", rita.secret);
-    await store.save({ v: 1, service: "https://scopes.test", key: "device", register: await inspected(() => R.at()), repository: { directory: directoryAt, membership: membershipAt, rules: rules.name, destination: G.name }, handle: "@rita" });
+    await store.save({ v: 2, service: "https://scopes.test", key: "device", register: await inspected(() => R.at()), repository: { directory: directoryAt, membership: membershipAt, rules: rules.name, destination: G.name }, handle: "@rita" });
     let gitCalls = 0;
     const gitDiagnostics: (LocalCloneRunDiagnostic | undefined)[] = [];
     const context: Context = {

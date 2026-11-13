@@ -211,7 +211,7 @@ test("real PLATFORM founding through production GitHub factory writes exact firs
     for (const object of first.objects) expect(host.objects.get(object.id)).toMatchObject({ type: object.kind, data: object.body });
     expect(await D.item(0)).toMatchObject({ refs: { register, membership: await membership.at(), rules: await rules.at(), destination: await G.at() }, values: { repository: { host: "github.com", namespace: ACCOUNT.login, name: host.name, id: "71" } } });
     const summaries = await Promise.all([R, D, membership, rules, G].map((node) => node.summary()));
-    expect(summaries.map((summary) => [summary.value.scope.kind, summary.value.status])).toEqual([["register", "active"], ["directory", "active"], ["membership", "active"], ["rules", "active"], ["destination", "active"]]);
+    expect(await Promise.all([R, D, membership, rules, G].map(async (node, n) => [await node.kind(), summaries[n]!.value.status]))).toEqual([["register", "active"], ["directory", "active"], ["membership", "active"], ["rules", "active"], ["destination", "active"]]);
     const outboxItems = await D.stub.outbox(reader);
     expect(outboxItems.ok && outboxItems.value.every((outboxId) => outboxId.acknowledged !== null)).toBe(true);
     const privateState = () => runInDurableObject(G.object, (_instance, state) => {

@@ -200,7 +200,7 @@ describe("signed reads on real registers (the planner's decisions 61cc5e50, c649
     net.hold = net.deaf = null;
     const { D, children } = await created(PROPOSED_BOUNDS.dispatchRetrySeconds);
     const [M, Ru, G] = children as [Platform, Platform, Platform];
-    expect(await Promise.all(children.map(async (node) => (await node.summary()).value.scope.kind))).toEqual(["membership", "rules", "destination"]);
+    expect(await Promise.all(children.map((node) => node.kind()))).toEqual(["membership", "rules", "destination"]);
     // A cold child needs an ancestor from the real namespace to find its
     // root. Invalid requests must fail before making any resolver call.
     const calls: FactRef[] = [];

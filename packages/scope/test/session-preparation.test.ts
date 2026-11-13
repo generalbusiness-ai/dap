@@ -17,7 +17,7 @@ test("bounded session policy preserves manually restricted live/final/mixed and 
     const store = new SqliteStore(sql), core = new Scope(scope.name, store, { ...production(), ...testPorts(scope.c) }, scope.c.bounds);
     const loader = new ReadPreparation(sql, { policy: () => "native-session-policy-v1", declared: bytes => core.validate(bytes), platform: named => core.platform(named) });
     const frame = loader.capture(); if (!frame || !frame.current()) return expect.fail("native frame unavailable");
-    const membership: ScopeRef = { ...scope.at, kind: "membership" }; // explicit policy-boundary reference, not native repository discovery
+    const membership: ScopeRef = scope.at; // explicit policy-boundary reference, not native repository discovery
     const configured = sessionsOf("a synthetic restricted session test secret", "bounded-session-test")!;
     let sessions: typeof configured | null = configured, now = at(1), secretsRead = 0;
     const config = { sessions: () => { secretsRead++; return sessions; }, clock: { read: () => now } };

@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { signIntent } from "@generalbusiness/dap-bytes";
-import { RETIRED_ROOM_READER_COMMIT } from "@generalbusiness/dap-contract";
+import { RETIRED_ROOM_READER_COMMIT } from "@generalbusiness/dap-bytes";
 import { grantOf } from "@generalbusiness/dap-derive/testing";
 import { api, route } from "../src/worker.ts";
 import { measuredRequest, operationContext, measured } from "../src/operational.ts";

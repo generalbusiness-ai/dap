@@ -375,7 +375,7 @@ test("compact confirmation bounds escaped and Unicode metadata while target, pen
       expect(stoppedRows[0]?.['v']).toBe(canonicalize(store.load()));
     });
     await lane.restart();
-    expect(await lane.inside(state => new ArchiveRows(archiveSql(state), { ...lane.at, kind: "destination" }).load()?.stopped?.reason)).toBe("TEST stopped metadata");
+    expect(await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).load()?.stopped?.reason)).toBe("TEST stopped metadata");
   }
 });
 

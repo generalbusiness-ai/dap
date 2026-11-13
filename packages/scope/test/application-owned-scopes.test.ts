@@ -48,7 +48,7 @@ test("native installed roots and children keep exact release ownership after tru
     if (!childCreate || !isSeed(childCreate.to)) throw Error("The declared root genesis must create the child.");
     const child = life.platform(scopeIdOf(childCreate.to)); await driveFixture([R, D, M, A, G, root, child], life.wait);
     const rootAt = await life.wait(() => root.at()), childAt = await life.wait(() => child.at());
-    expect(rootAt.kind).toBe("lane"); expect(childAt.kind).toBe("lane");
+    expect(await life.wait(() => root.kind())).toBe("lane"); expect(await life.wait(() => child.kind())).toBe("lane");
     expect(await life.wait(() => A.item(job))).toMatchObject({ state: "active", refs: { scope: rootAt } });
     expect((await life.wait(() => root.summary())).value).toMatchObject({ status: "active", definition: rootId, items: [{ refs: { child: childAt } }] });
     expect((await life.wait(() => child.summary())).value).toMatchObject({ status: "active", definition: childId });

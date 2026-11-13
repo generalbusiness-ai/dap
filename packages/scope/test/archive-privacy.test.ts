@@ -54,7 +54,7 @@ test("whole native prefix classification reaches every selected position without
 test("a copied foreign use in the last selected position refuses the whole prefix with no copied-value/text body read", async () => {
   const lane = await create();
   await lane.did(rita, "remark", { on: 0, fields: { text: "last position" } });
-  await damageLast(lane, entry => { entry.uses = [{ fact: lane.genesis.fact, content: lane.genesis.fact.hash }]; });
+  await damageLast(lane, entry => { entry.uses = [{ fact: lane.genesis.fact, content: lane.genesis.fact.hash, kind: "directory" }]; });
   const result = await scan(lane);
   expect(result.reason).toBe("unsupported-foreign-copy"); expect(result.positions).toEqual([]);
   expect(result.queries.filter(row => row.query.includes("AS usesType")).map(row => row.seq)).toEqual([0, 1]);

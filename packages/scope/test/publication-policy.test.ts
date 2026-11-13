@@ -1,6 +1,6 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { DEVICE_COMMAND, type DeclaredDefinition, type Intent, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, type DeclaredDefinition, type Intent, type ScopeKind, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { CAPABILITY_CODE, valueDigest } from "@generalbusiness/dap-derive";
 import { FAILED_CLAIM_COHORT, FILE_PUBLICATION_COHORT, FIRST_ACTIONS_OF, TRUSTED_APPLICATION_COHORT, firstExtents, platform } from "@generalbusiness/dap-platform";
@@ -91,7 +91,7 @@ test.each([
     expect(await R.stub.submit(found, [])).toMatchObject({ answer: "accepted" });
     await pause();
     const first = (await D.entries())[0]!;
-    const sibling = (kind: ScopeRef["kind"]) => {
+    const sibling = (kind: ScopeKind) => {
       const send = first.sends.find(row => "definition" in row.to && row.to.kind === kind);
       if (!send || !("definition" in send.to)) throw Error("The Native Directory must create each sibling");
       return life.platform(scopeIdOf(send.to));

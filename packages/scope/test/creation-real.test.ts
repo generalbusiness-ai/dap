@@ -132,7 +132,7 @@ describe("a founding on real scopes under the deployed class (authority note, se
     const branchScope = await G.at();
     const shown = async (node: Platform, recorded: (items: Awaited<ReturnType<Platform["summary"]>>["value"]["items"]) => unknown) => {
       const { scope, status, definition, items } = (await node.summary()).value;
-      return [scope.kind, scope.scope, definition, status, recorded(items)];
+      return [await node.kind(), scope.scope, definition, status, recorded(items)];
     };
     expect([
       await shown(R, () => null), await shown(D, (items) => items[0]!.refs["membership"]), await shown(membershipScope!, () => membership), await shown(rulesScope!, (items) => items[0]!.values["membership"]), await shown(G, (items) => items[0]!.values["membership"]),

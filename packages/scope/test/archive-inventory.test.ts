@@ -87,7 +87,7 @@ test("forbidden final metadata and missing reviewed inline-class coverage fail b
   expect(entryReads(coverage.calls)).toEqual([]); expect(payloadReads(coverage.calls)).toEqual([]);
   await lane.inside(state => {
     const original = state.storage.sql.exec<{ bytes: string }>("SELECT bytes FROM entry WHERE seq = ?", through.seq).one().bytes;
-    const entry: Entry = JSON.parse(original); entry.uses = [{ fact: lane.genesis.fact, content: lane.genesis.fact.hash }]; const bytes = canonicalize(entry);
+    const entry: Entry = JSON.parse(original); entry.uses = [{ fact: lane.genesis.fact, content: lane.genesis.fact.hash, kind: "directory" }]; const bytes = canonicalize(entry);
     state.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", bytes, utf8(bytes).length, through.seq);
   });
   const forbidden = await scan(lane, through);

@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { afterAll, beforeAll, expect, test } from "vitest";
-import type { Entry, Intent, Seed, ScopeId } from "@generalbusiness/dap-contract";
+import type { Intent, Seed, ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { DIRECTORY, REGISTER, destinationReceipt, initialCommitOf, repositoryName } from "@generalbusiness/dap-platform";
