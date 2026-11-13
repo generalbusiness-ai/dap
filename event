@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-11-13-scope-client.md","body":{"commit":"e5b128cfdd50689c6d75093f70bd14c87cfdb521","path":"notes/2026-11-13-scope-client.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f887ed9e4bbdfd1df71a83aa9e3727e4bee36daf","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-13-scope-client.md."}
