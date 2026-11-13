@@ -55,7 +55,7 @@ export function typedViewBindings() {
     act("remove", "Remove", "true");
     // @ts-expect-error The native title field takes text, not an integer.
     act("edit", "Edit", "true", { args: { title: 3 } });
-    const destination = { scope: "sc_test", inc: "in_test", kind: "destination" } as const;
+    const destination = { scope: "sc_test", genesis: "sha256:test", kind: "destination" } as const;
     const signer = { membership: { ...destination, kind: "membership" }, member: "@tester" } as const;
     act("edit", "Edit", "true", { args: { title: "Title", target: 1, destination, evidence: { at: destination, seq: 0, hash: "sha256:test" }, citation: { document: "sha256:test" }, nested: { targets: [1], signer, destination } } });
     // @ts-expect-error A native local item is a number, not its string spelling.

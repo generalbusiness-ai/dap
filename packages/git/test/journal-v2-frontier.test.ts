@@ -62,7 +62,7 @@ test("a stored frontier refuses changed custody, head, schema, object bytes, cou
   const changed = new Uint8Array(frontier.objects[0]!.data); changed[0] = changed[0]! ^ 1;
   const mutants: { value: unknown; reason: string }[] = [
     { value: { ...frontier, repository: digestBytes(utf8("TEST other repository")) }, reason: "parent" },
-    { value: { ...frontier, at: { ...frontier.at, inc: syntheticJournal(1, 2).at.inc } }, reason: "parent" },
+    { value: { ...frontier, at: { ...frontier.at, genesis: syntheticJournal(1, 2).at.genesis } }, reason: "parent" },
     { value: { ...frontier, through: { ...frontier.through, hash: digestBytes(utf8("TEST different head")) } }, reason: "parent" },
     { value: { ...frontier, commit: "f".repeat(40) }, reason: "parent" },
     { value: { ...frontier, first: -0 }, reason: "parent" },
