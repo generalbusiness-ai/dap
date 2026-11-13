@@ -47,6 +47,9 @@ export function served(ledger: Ledger, all: readonly Ledger[]): MemoryScope {
     for (const use of entry.uses) {
       const owner = all.find((other) => other.at.scope === use.fact.at.scope)!;
       retained.push({ kind: "entry", digest: use.content, bytes: canonicalize(owner.entries[use.fact.seq]!.entry), under: owner.definition.declared.name });
+      // Rulings 4f697a7a and ae48dd39: a later foreign use also keeps that sequence's first entry, served as `birth`.
+      if (use.fact.seq > 0 && use.fact.at.scope !== ledger.at.scope && !retained.some((r) => r.kind === "birth" && r.digest === use.fact.at.genesis))
+        retained.push({ kind: "birth", digest: use.fact.at.genesis, bytes: canonicalize(owner.entries[0]!.entry) });
     }
   }
   return { scope: ledger.at, entries: ledger.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained };

@@ -145,6 +145,9 @@ export class Weighing extends Ledger {
         if (kept.has(use.content)) continue;
         kept.add(use.content);
         retained.push({ kind: "entry", digest: digestBytes(utf8(canonicalize(copy.entry))), bytes: canonicalize(copy.entry), under: copy.under });
+        // Rulings 4f697a7a and ae48dd39: a later foreign use also keeps that sequence's first entry, served as `birth`.
+        if (use.fact.seq > 0 && !retained.some((r) => r.kind === "birth" && r.digest === use.fact.at.genesis))
+          retained.push({ kind: "birth", digest: use.fact.at.genesis, bytes: copy.sequence.birth });
       }
     }
     return { scope: this.at, entries: this.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained };

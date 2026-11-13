@@ -28,6 +28,8 @@ test("an earlier successful field check rules out a later fabricated size refusa
     retained: [
       { kind: "definition", digest: definition.digest, bytes: canonicalize(definition.declared) },
       { kind: "entry", digest: use.content, bytes: canonicalize(source.entry), under: "notes" },
+      // Rulings 4f697a7a and ae48dd39: the scope keeps the first entry of the source's sequence beside the later entry.
+      { kind: "birth", digest: fact.at.genesis, bytes: source.sequence.birth },
     ],
   };
   const result = await verify(new MemorySource([served]), { mode: "replay", scope: scope.at.scope, grants: "as-recorded", anchors: [{ scope: fact.at.scope, seq: fact.seq, hash: fact.hash }] });

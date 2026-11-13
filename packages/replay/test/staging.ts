@@ -142,6 +142,9 @@ export class Lane extends Ledger {
       for (const use of entry.uses) {
         const source = this.foreign.find((made) => factRefOf(made.entry, made.sequence.at).hash === use.fact.hash)!;
         retained.push({ kind: "entry", digest: use.content, bytes: canonicalize(source.entry), under: source.under });
+        // Rulings 4f697a7a and ae48dd39: a later foreign use also keeps that sequence's first entry, served as `birth`.
+        if (use.fact.seq > 0 && !retained.some((r) => r.kind === "birth" && r.digest === use.fact.at.genesis))
+          retained.push({ kind: "birth", digest: use.fact.at.genesis, bytes: source.sequence.birth });
       }
     }
     for (const [digest, bytes] of snapshots) retained.push({ kind: "snapshot", digest: digest as RetainedInput["digest"], bytes });
