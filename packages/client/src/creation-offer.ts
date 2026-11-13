@@ -17,7 +17,7 @@ interface CreationRegisterItem {
 /** These native register pins have no purpose field; the offer invents none. */
 export interface CurrentCreationOffer extends CreationOfferBase {
   readonly v: 2;
-  readonly definition: "platform:register@17" | "platform:register@26";
+  readonly definition: "platform:register@17" | "platform:register@26" | "platform:register@28";
   readonly registerItem: CreationRegisterItem;
 }
 export type CreationOffer = CurrentCreationOffer;

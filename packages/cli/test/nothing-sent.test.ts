@@ -59,7 +59,7 @@ test("a bad flag over an attempted plan speaks of this run", async () => {
   const { ctx } = await attemptedPlan();
   expect((await command(ctx, ["install", SERVICE, "--host", "nowhere"])).lines).toEqual(["Refused: host-unknown. Choose --host none, artifacts or github.com; this run signed and sent nothing."]);
   expect((await command(ctx, ["install", SERVICE])).lines[0]).toBe("--host is required: none, artifacts or github.com; this run signed and sent nothing.");
-  expect((await command(ctx, ["install", SERVICE, "--host", "none", "--cohort", "trusted-application"])).lines[0]).toBe("--host none requires the unpublished, repository-binding, own-agent or commons cohort; this run signed and sent nothing.");
+  expect((await command(ctx, ["install", SERVICE, "--host", "none", "--cohort", "trusted-application"])).lines[0]).toBe("--host none requires the base, unpublished, repository-binding, own-agent or commons cohort; this run signed and sent nothing.");
   expect((await command(ctx, ["install", SERVICE, "--host", "github.com", "--register-policy", "open", "--cohort", "trusted-application"])).lines[0]).toBe("--register-policy open requires a cohort with an open register policy; this run signed and sent nothing.");
   // `line.ts` checks these two first, so only the exported function reaches them.
   expect((await installPlanned(ctx, { cohort: "no-such-cohort" as never })).lines[0]).toBe("--cohort needs one current creation family or the historical family of a retained plan; this run signed and sent nothing.");

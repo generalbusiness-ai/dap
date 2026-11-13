@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 import * as relation from "../src/version-relations.ts";
-import { NEWEST } from "../src/index.ts";
+import { BASE_COHORT, NEWEST } from "../src/index.ts";
 
 interface Row {
   input?: unknown;
@@ -22,6 +22,9 @@ const frozen = JSON.parse(readFileSync(new URL("./fixtures/version-questions-861
   relations: { name: string; answerRows: Row[] }[];
 };
 const kinds = ["register", "directory", "membership", "rules", "destination", "inbox", "commons", "lane", "unknown"];
+/** CF-1 changes three frozen answers: the base family becomes the default and leads the creation cohorts. */
+const BASE_PINS: readonly string[] = Object.values(BASE_COHORT);
+const withoutBase = (pins: readonly string[]) => pins.filter(pin => !BASE_PINS.includes(pin) || pin === "platform:inbox@1");
 const pinsOf = (row: Row) => Object.fromEntries(Object.entries(row).filter(([key]) => key !== "name"));
 
 test.each(frozen.relations)("the independent old relation holds: $name", record => {
@@ -42,10 +45,13 @@ test.each(frozen.relations)("the independent old relation holds: $name", record 
       case "cliInstallRegisterForCohort":
         expect(relation.CLI_INSTALL_REGISTERS[input as keyof typeof relation.CLI_INSTALL_REGISTERS]).toBe(row.answer); break;
       case "cliDefaultInstallRegister":
-        expect(NEWEST["platform:register"]).toBe(row.answer); break;
-      case "cliScopeIndexCreationCohorts":
-        expect(relation.cliScopeIndexCreationCohorts().map(value => value.pins))
-          .toEqual((row.answer as { pins: unknown }[]).map(value => value.pins)); break;
+        expect(row.answer).toBe("platform:register@26");
+        expect(NEWEST["platform:register"]).toBe(BASE_COHORT.register); break;
+      case "cliScopeIndexCreationCohorts": {
+        const [base, ...rest] = relation.cliScopeIndexCreationCohorts();
+        expect(base).toEqual({ name: "base", pins: BASE_COHORT });
+        expect(rest.map(value => value.pins)).toEqual((row.answer as { pins: unknown }[]).map(value => value.pins)); break;
+      }
       case "claimDirectoryDefinitionForRegister":
         expect(relation.claimDirectoryDefinitionForRegister(input)).toBe(row.answer); break;
       case "claimSiblingDefinitionsForDirectory":
@@ -64,7 +70,8 @@ test.each(frozen.relations)("the independent old relation holds: $name", record 
       case "scopeArchiveAnchorForeignSource":
         for (const kind of kinds) expect(relation.scopeArchiveAnchorForeignSource(row.pin!, kind)).toBe(row.scopeKinds === "any" || row.scopeKinds!.includes(kind)); break;
       case "deploymentCreationDefaults":
-        expect([...relation.deploymentCreationDefaults()].sort()).toEqual(row.defaultPins); break;
+        expect(relation.deploymentCreationDefaults().slice(0, BASE_PINS.length)).toEqual(BASE_PINS);
+        expect(withoutBase(relation.deploymentCreationDefaults()).sort()).toEqual(row.defaultPins); break;
       case "authoritySessionBirthDirectories":
         expect(relation.authoritySessionBirthDirectories(row.scopeKind!, row.genesisPin!)).toEqual(row.answer); break;
       case "mcpApplicationRoomCohort":
@@ -104,7 +111,7 @@ test("pair relations preserve every old negative pin pair", () => {
 
 test("the ordered source descriptors retain their report names", () => {
   expect(relation.cliScopeIndexCreationCohorts().map(row => row.name)).toEqual([
-    "failed-claim", "archive-device-publication", "archive-device-application", "application",
+    "base", "failed-claim", "archive-device-publication", "archive-device-application", "application",
     "archive-certified-rules", "hardened-certified-rules", "commons", "separate-recovery", "repository-binding", "own-agent",
   ]);
 });

@@ -83,6 +83,10 @@ function rootCreation(given: RuleGiven) {
 }
 
 export const baseDirectoryRules: Rules = { ...ownAgentDirectoryRules,
+  /** Directory 20's `has-repository` reads the item whose ID equals the new entry's seq, so
+   * `bind-archive` always refuses there. Directory 27 reads the act's own repository item. */
+  "has-repository": { place: "guard", refusals: ["no-repository"], run: given =>
+    given.resolved.subjects.get("on")?.values["repository"] == null ? { holds: false, name: "no-repository" } : { holds: true } },
   "application-capabilities": { place: "guard", refusals: ["invalid-device-command-grant", "invalid-application-creation"], run: given => {
     if (given.resolved.fields["deviceGrant"] !== undefined && !grantOf(given)) return { holds: false, name: "invalid-device-command-grant" };
     if (given.resolved.fields["publication"] !== undefined && !readPublicationText(given.resolved.fields["publication"])) return { holds: false, name: "invalid-application-creation" };

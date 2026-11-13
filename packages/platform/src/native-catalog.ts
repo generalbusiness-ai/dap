@@ -4,6 +4,7 @@ import { BASE_COHORT as BC } from "./base-cohort.ts";
 import { baseDestination, baseDestinationRules } from "./base-destination.ts";
 import { baseDirectory, baseDirectoryRules } from "./base-directory.ts";
 import { baseMembership, baseMembershipRules } from "./base-membership.ts";
+import { baseRegister, baseRegisterRules } from "./base-register.ts";
 import { baseRules, baseRulesScope } from "./base-rules.ts";
 import { failedClaimRegister, failedClaimRegisterRules, failedClaimDirectory, failedClaimDirectoryRules, failedClaimMembership, failedClaimMembershipRules, failedClaimDestination, failedClaimDestinationRules } from "./failed-claim-cohort-data.ts";
 import { failedClaimApplicationPublicationOrigin } from "./publishing-provenance.ts";
@@ -133,6 +134,7 @@ export interface Platform {
  * cannot run.
  */
 const VERSION_DATA: Readonly<Record<string, Platform>> = {
+  [BC.register]: { data: baseRegister, rules: baseRegisterRules },
   [BC.directory]: { data: baseDirectory, rules: baseDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
   [BC.destination]: { data: baseDestination, rules: baseDestinationRules, membership: unpublishedDestinationMembership, rulesScope: unpublishedDestinationRulesScope, applicationPublicationOrigin: baseApplicationPublicationOrigin },
   [BC.membership]: { data: baseMembership, rules: baseMembershipRules, observed: (state, asked) => standingOf(state, asked, BC.membership) },

@@ -9,7 +9,7 @@ export { REPOSITORY_BINDING_COHORT, repositoryBindingBranch } from "./repository
 export { commons, commonsDirectory, commonsMembership } from "./commons.ts";
 import { NATIVE_DECLARATION_PINS, NATIVE_DECLARATION_TEXT } from "./native-declarations.generated.ts";
 import { VERSIONS } from "./native-catalog.ts";
-import { FAILED_CLAIM_COHORT } from "./failed-claim-cohort.ts";
+import { BASE_COHORT } from "./base-cohort.ts";
 export { VERSIONS, platform, type Platform } from "./native-catalog.ts";
 export { applicationRoom, applicationInstallation } from "./application-install-reader.ts";
 export { applicationProjectionDeclaration } from "./application-projection-reader.ts";
@@ -89,7 +89,7 @@ export type { Extent, ExtentClass, ExtentJudged, ExtentsAsked, ExtentsJudged, Ho
 
 /** New creation defaults only. Existing scopes and explicit cohort pins stay fixed. */
 export const NEWEST: Readonly<Record<string, PlatformDefinition>> = {
-  "platform:inbox": FAILED_CLAIM_COHORT.inbox, "platform:membership": FAILED_CLAIM_COHORT.membership, "platform:register": FAILED_CLAIM_COHORT.register, "platform:directory": FAILED_CLAIM_COHORT.directory, "platform:rules": FAILED_CLAIM_COHORT.rules, "platform:destination": FAILED_CLAIM_COHORT.destination,
+  "platform:inbox": BASE_COHORT.inbox, "platform:membership": BASE_COHORT.membership, "platform:register": BASE_COHORT.register, "platform:directory": BASE_COHORT.directory, "platform:rules": BASE_COHORT.rules, "platform:destination": BASE_COHORT.destination,
 };
 
 /** The data of the newest version of each platform definition, by name without the version. */
