@@ -383,7 +383,7 @@ test("fresh application admission is rechecked after an async foreign read follo
       }
       await Promise.resolve();
       if (revokeDuringForeignRead) state = "application-revoked";
-      return asked.hash === proof.hash ? { fact: proof, entry: evidence, under: definition.declared.name } : null;
+      return asked.hash === proof.hash ? { entry: evidence, under: definition.declared.name, sequence: peerSequence } : null;
     } },
   }));
   onTestFinished(() => { wired.delete(s.name); });
