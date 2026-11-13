@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3128bc7c8387b5e1a09375a69fb239bdca6dbbbd","text":"Merge retired a covered predecessor; the successor is at apps/views/src/reads.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:319180d674499dd09f21ae20ad2bfc9d9ce650eb","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-act-fields.test.ts."}
