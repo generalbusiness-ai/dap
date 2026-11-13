@@ -12,8 +12,8 @@ test("verify --all refuses incomplete room discovery at its page bound and retai
   const directory: ScopeRef = { scope: scopeIdOf(seed), genesis: textDigest("TEST genesis 1") };
   const membership: ScopeRef = { scope: scopeIdOf({ ...seed, kind: "membership" }), genesis: textDigest("TEST membership genesis") };
   const time = "2099-01-01T00:00:00Z";
-  const entries: Entry[] = [0, 1, 2].map((seq): SequenceEntry => ({ v: 1, genesis: directory.genesis, seq, prev: seq === 0 ? null : textDigest(`previous ${seq}`), time, clamped: false, epoch: 0, input: { type: "checkpoint", through: 0, state: textDigest("fixture state") }, uses: [], prepared: [], effects: [], sends: [] }));
-  const head = { seq: 2, hash: entryHash(entries[2]!) };
+  const entries: Entry[] = [0, 1, 2].map((seq): SequenceEntry => ({ v: 1, genesis: directory.genesis, seq: seq + 1, prev: textDigest(`previous ${seq}`), time, clamped: false, epoch: 0, input: { type: "checkpoint", through: 0, state: textDigest("fixture state") }, uses: [], prepared: [], effects: [], sends: [] }));
+  const head = { seq: 3, hash: entryHash(entries[2]!) };
   for (const limit of [1, 2]) {
     const store = memoryStore();
     await store.keep("device", new Uint8Array(32).fill(2));
@@ -264,7 +264,7 @@ test("a server that relabels this room's own result as another room's fails the 
   const inventedFact = { at: last.at, seq: 0, hash: entryHash(invented) }, inventedUse = useOf(inventedFact, invented, "directory");
   const inventedCopy: RetainedInput = { kind: "entry", digest: inventedUse.content, bytes: canonicalize(invented), under: own.definition.declared.name };
   const variants: Record<string, [(entry: Entry) => Entry | null, string, RetainedInput[]?]> = {
-    "an invented source entry": [(entry: Entry) => entry.seq === lastResult.seq ? null : relabelUses(inventedFact, inventedUse)(entry), `Result: not proven: needs ${last.at.scope} entries 0 to 0, not readable by this session.`, [inventedCopy]],
+    "an invented source entry": [(entry: Entry) => entry.seq === lastResult.seq ? null : relabelUses(inventedFact, inventedUse)(entry), "Result: mismatch: the history is not consistent.", [inventedCopy]],
     "the source alone": [relabel(() => ({ from: theirs.fact(0) })), `Result: not proven: needs ${theirs.at.scope} entries 0 to 0, not readable by this session.`],
     "the source and the request": [relabel(input => ({ from: theirs.fact(0), message: { ...input.message, of: (theirResult.input as { message: { of: unknown } }).message.of } })), "Result: mismatch: the history is not consistent."],
     "a whole copy of their result": [(entry: Entry) => entry.seq === ownResult.seq ? { ...entry, input: theirResult.input, uses: theirResult.uses } as Entry : entry, "Result: mismatch: the history is not consistent."],

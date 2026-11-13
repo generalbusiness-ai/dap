@@ -82,7 +82,7 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
     if (url.includes(directory.scope)) {
       expect(init?.headers?.["authorization"]?.startsWith("Session ")).toBe(true); crossReads++;
       const definition = wrongDirectoryPin ? named === "platform:membership@8" ? "platform:directory@12" : "platform:directory@13" : directoryDefinition;
-      return reply({ ok: true, at: { seq: 0, hash: textDigest("SCRIPTED directory head") }, complete: true, value: { scope: directory, status: "active", definition, time: m.now, counts: [["repository", "ready", 1]], items: [{ id: 0, type: "repository", state: "ready", revision: 1, opened: textDigest("SCRIPTED repository"), attributed: [], parties: {}, values: {}, refs: { membership: m.at, rules: { ...directory, genesis: textDigest("TEST rules genesis") }, destination: { ...directory, scope: wrongDirectory ? m.at.scope : directory.scope, kind: "destination" } } }] } });
+      return reply({ ok: true, at: { seq: 0, hash: textDigest("SCRIPTED directory head") }, complete: true, value: { scope: directory, status: "active", definition, time: m.now, counts: [["repository", "ready", 1]], items: [{ id: 0, type: "repository", state: "ready", revision: 1, opened: textDigest("SCRIPTED repository"), attributed: [], parties: {}, values: {}, refs: { membership: m.at, rules: { ...directory, genesis: textDigest("TEST rules genesis") }, destination: { ...directory, scope: wrongDirectory ? m.at.scope : directory.scope } } }] } });
     }
     if (path.includes("/entries/")) {
       const seq = Number(path.split("/").at(-1)), sealed = m.entries[seq];

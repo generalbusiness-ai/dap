@@ -46,7 +46,7 @@ test("person-link parity uses the actual pending CLI entry and fresh discovery i
     expect(agentKeyInvitationOf(tagged(service)) !== null, service).toBe(new URL(service).origin === service);
   }
   expect(wellFormedInvitation(invitationOf(text(link))!)).toBe(true);
-  expect(wellFormedInvitation(invitationOf(text({ ...link, repository: { ...repository, membership: { ...repository.membership, genesis: textDigest("TEST lane genesis") } } }))!)).toBe(false);
+  expect(wellFormedInvitation(invitationOf(text({ ...link, repository: { ...repository, membership: { ...repository.membership, kind: "lane" } } }))!)).toBe(false);
   expect(wellFormedInvitation(invitationOf(text({ ...link, invitation: 0 }))!)).toBe(false);
 
   // Five rows reach the actual pending command. The sixth exercises fresh CLI discovery only.

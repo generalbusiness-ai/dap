@@ -79,7 +79,7 @@ test("scope inventory observes the configured creation tree and refuses incomple
   if (broken.a.input.type !== "genesis") throw Error("fixture genesis");
   broken.a.input = { ...broken.a.input, seed: { ...broken.a.input.seed, cause: textDigest("wrong child seed") } };
   broken.put(broken.a);
-  await expect(captureIndexManifest(service, broken.D, broken.reads)).rejects.toThrow("applied genesis");
+  await expect(captureIndexManifest(service, broken.D, broken.reads)).rejects.toThrow("wrong entry identity");
   let pages = 0;
   await expect(captureIndexManifest(service, f.D, { ...f.reads, history: async () => {
     pages++; return { ok: true, at: { seq: 0, hash: entryHash(f.d) }, complete: false, value: [], next: "still-pending" };
@@ -211,7 +211,7 @@ test("operator versions binds saved genesis and separates observed catalog pins 
     expect.objectContaining({ at: refused.A, result: "mismatch", reason: "genesis-identity" }),
   ]) });
   const altered = { ...manifest, scopes: manifest.scopes.map(row => row.at.scope === f.A.scope ? { ...row, at: { ...row.at, genesis: textDigest("different saved bytes") } } : row) };
-  expect(await indexManifestVersions(altered, f.reads)).toMatchObject({ ready: false, usableCreationCohorts: [], rows: expect.arrayContaining([expect.objectContaining({ at: f.A, result: "mismatch", reason: "genesis-hash" })]) });
+  expect(await indexManifestVersions(altered, f.reads)).toMatchObject({ ready: false, usableCreationCohorts: [], rows: expect.arrayContaining([expect.objectContaining({ at: { ...f.A, genesis: textDigest("different saved bytes") }, result: "mismatch", reason: "genesis-hash" })]) });
   const substituted: IndexReads = { ...f.reads, entry: async (scope, seq) => {
     if (scope === f.R.scope) return { ok: false, reason: "not-found" };
     const got = await f.reads.entry(scope, seq);

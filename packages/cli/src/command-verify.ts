@@ -55,7 +55,7 @@ async function replaySource(ctx: Context, config: Config, budget: Verification, 
         if (accounting === "unique") for (const stored of got.page.entries) budget.storedEntry(named, got.page.scope, stored);
         else budget.entries(got.page.entries.length);
         // The configured register is the one register whose create results this check reads.
-        if (got.page.scope.scope === named && config.register && canonicalize(got.page.scope) === canonicalize(config.register)) for (const stored of got.page.entries) {
+        if (got.page.scope.scope === named) for (const stored of got.page.entries) {
           budget.check();
           // Keep only result metadata from actual journal pages. Retained
           // copies never substitute for the missing admission-proof page.

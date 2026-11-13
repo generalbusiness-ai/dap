@@ -52,7 +52,7 @@ test("a stopped verification ignores a delayed reply and starts no later HTTP re
 // judged these entries. Accounting grants no admission or replay proof.
 const seed: Seed = { v: 1, kind: "directory", definition: "platform:directory@2", creator: null, cause: textDigest("TEST accounting"), ordinal: 0 };
 const at: ScopeRef = { scope: scopeIdOf(seed), genesis: textDigest("TEST genesis 1") };
-const entry = (seq: number): SequenceEntry => ({ v: 1, genesis: at.genesis, seq, prev: null, time: "2099-01-01T00:00:00Z", clamped: false, epoch: 0,
+const entry = (seq: number): SequenceEntry => ({ v: 1, genesis: at.genesis, seq: seq + 1, prev: textDigest("TEST prev"), time: "2099-01-01T00:00:00Z", clamped: false, epoch: 0,
   input: { type: "checkpoint", through: 0, state: textDigest("TEST state") }, uses: [], prepared: [], effects: [], sends: [] });
 const sealed = (value: Entry) => ({ entry: value, hash: entryHash(value) });
 const stored = (value: Entry) => ({ seq: value.seq, hash: entryHash(value), bytes: canonicalize(value) });
@@ -94,7 +94,7 @@ test("duplicate accounting never hides malformed bytes, a conflicting hash or a 
     budget => budget.sealedEntry(at.scope, { entry: changed, hash: entryHash(first) }),
     budget => budget.storedEntry(at.scope, at, { ...stored(changed), hash: entryHash(first) }),
     budget => budget.storedEntry(at.scope, at, { seq: 0, hash: hashOfBytes(noncanonical), bytes: noncanonical }),
-    budget => budget.storedEntry(at.scope, at, { ...stored(first), seq: 1 }),
+    budget => budget.storedEntry(at.scope, at, { ...stored(first), seq: 2 }),
     budget => budget.storedEntry(at.scope, otherGenesis, stored(first)),
     budget => budget.sealedEntry(at.scope, sealed({ ...first, genesis: otherGenesis.genesis })),
     budget => budget.storedEntry(at.scope, at, stored(changed)),
