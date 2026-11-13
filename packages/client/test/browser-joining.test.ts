@@ -1,9 +1,10 @@
 /** Actual device signatures and HTTP codec/receipt checks. Backend entries,
- * session answers, storage and locks are SCRIPTED, not native enrollment. */
+ * session answers, the join slot and locks are SCRIPTED, not native enrollment.
+ * Custody is the real `Custody` over `memoryStore`, a STAND-IN for the browser store. */
 import { expect, test } from "vitest";
 import type { Entry, Receipt, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, entryHash, intentDigest, keyIdOfSecret, scopeIdOf, textDigest, utf8, verifyInvitationProof, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { browserJoining, generateBrowserDeviceKey, readBrowserInvitation, storedWebCryptoSigner, type BrowserJoinStore, type BrowserKeptJoin, type Fetch, type InvitationLink } from "../src/index.ts";
+import { browserJoining, generateBrowserDeviceKey, memoryStore, readBrowserInvitation, RETIRED_REQUEST, storedWebCryptoSigner, type BrowserJoinStore, type BrowserKeptJoin, type CustodyRecord, type Fetch, type InvitationLink } from "../src/index.ts";
 const origin = "https://browser.test", start = Date.parse("2026-10-18T12:00:00Z"), seed = new Uint8Array(32).fill(66);
 type Version = "platform:membership@4" | "platform:membership@6" | "platform:membership@7" | "platform:membership@8";
 const reference = (kind: ScopeKind): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: textDigest("TEST browser joining " + kind), creator: null, cause: textDigest("TEST browser joining address"), ordinal: 0 }), genesis: textDigest("TEST genesis 2") });
@@ -16,10 +17,13 @@ async function fixture(definition: Version = "platform:membership@6") {
   const device = await generateBrowserDeviceKey(), signer = storedWebCryptoSigner(device.publicKey, device.pair.privateKey), link = invitation(definition);
   const offered = readBrowserInvitation(linkText(link), { origin, membershipDefinition: definition });
   if (!offered.ok) throw new Error("The TEST invitation was refused");
-  let held: BrowserKeptJoin | null = null, now = start, failSave = false, lose = true, found = false, wrongSession = false, wrongReceipt = false;
+  let held: unknown = null, now = start, failSave = false, lose = true, found = false, wrongSession = false, wrongReceipt = false;
   let written: Entry | null = null, receipt: Receipt | null = null;
-  const posts: SignedIntent[] = [], calls: string[] = [];
-  const store: BrowserJoinStore = { load: async () => structuredClone(held), save: async value => { if (failSave) throw new Error("SCRIPTED storage failure"); held = structuredClone(value); calls.push("save " + value.kept.phase); }, clear: async () => { held = null; calls.push("clear"); } };
+  const posts: SignedIntent[] = [], settles: SignedIntent[] = [], calls: string[] = [];
+  const store: BrowserJoinStore = { load: async () => structuredClone(held), save: async value => { held = structuredClone(value); calls.push("save slot"); }, clear: async outcome => { held = null; calls.push("clear " + outcome); } };
+  const memory = memoryStore();
+  // A failing custody write: the browser store's IndexedDB did not commit.
+  const custody = { ...memory, write: async (...args: Parameters<typeof memory.write>) => { if (failSave) throw new Error("SCRIPTED storage failure"); calls.push("keep"); return memory.write(...args); } };
   const reply = (value: unknown, status = 200) => ({ status, body: new Response(JSON.stringify(value)).body });
   const fetch: Fetch = async (url, init) => {
     const path = new URL(url).pathname;
@@ -34,7 +38,7 @@ async function fixture(definition: Version = "platform:membership@6") {
       return reply({ answer: "accepted", receipt });
     }
     if (path.endsWith("/settle")) {
-      calls.push("settle");
+      calls.push("settle"); settles.push(structuredClone(body.signed ?? body));
       return found && receipt ? reply({ ok: true, at: { seq: 1, hash: receipt.fact.hash }, complete: true, value: wrongReceipt ? { ...receipt, definition: "platform:membership@5" } : receipt }) : reply({ ok: false, reason: "not-found" }, 404);
     }
     if (path.endsWith("/sessions")) {
@@ -47,9 +51,10 @@ async function fixture(definition: Version = "platform:membership@6") {
     }
     throw new Error("Unexpected SCRIPTED route");
   };
-  const api = browserJoining(signer, { origin, membershipDefinition: definition, lock: { run: work => work() }, store, now: () => now, fetch });
-  return { api, link, seat: offered.seat, posts, calls, key: signer.key, store,
-    kept: () => structuredClone(held), setHeld: (value: BrowserKeptJoin) => { held = structuredClone(value); },
+  const open = () => browserJoining(signer, { origin, membershipDefinition: definition, lock: { run: work => work() }, store, custody, now: () => now, fetch });
+  const record = (): CustodyRecord | null => { const texts = [...memory.records.values()]; return texts.length === 1 ? JSON.parse(texts[0]!) as CustodyRecord : null; };
+  return { api: open(), reload: open, link, seat: offered.seat, posts, settles, calls, key: signer.key, store, record, records: () => memory.records.size,
+    kept: () => structuredClone(held) as BrowserKeptJoin | null, setHeld: (value: unknown) => { held = structuredClone(value); },
     clock: (time: number) => { now = time; }, saving: (fails: boolean) => { failSave = fails; },
     replies: (values: { lose?: boolean; found?: boolean; wrongSession?: boolean; wrongReceipt?: boolean }) => { lose = values.lose ?? lose; found = values.found ?? found; wrongSession = values.wrongSession ?? wrongSession; wrongReceipt = values.wrongReceipt ?? wrongReceipt; } };
 }
@@ -58,8 +63,10 @@ test("a kept browser join recovers by reads and checks its original receipt, mem
   for (const version of ["platform:membership@4", "platform:membership@6", "platform:membership@7", "platform:membership@8"] as const) {
     const f = await fixture(version);
     expect(await f.api.join(f.link, f.seat)).toMatchObject({ status: "unknown" });
-    expect(f.posts).toHaveLength(1); expect(f.calls.slice(0, 3)).toEqual(["save prepared", "save inflight", "post"]);
-    const held = f.kept()!; expect(held.kept.phase).toBe("unknown"); expect(verifySignedIntent(f.posts[0]!)).toBe(true);
+    // The slot names the key before anything is signed; custody keeps the envelope before it is sent.
+    expect(f.posts).toHaveLength(1); expect(f.calls.slice(0, 4)).toEqual(["save slot", "keep", "keep", "post"]);
+    const held = f.kept()!; expect(f.record()!.phase).toBe("unknown"); expect(verifySignedIntent(f.posts[0]!)).toBe(true);
+    expect(f.posts[0]!.intent.idempotencyKey).toBe(held.key); expect(canonicalize(f.record()!.envelope.signed)).toBe(canonicalize(f.posts[0]));
     if (version !== "platform:membership@4") {
       expect(Object.hasOwn(f.posts[0]!.intent.fields, "secret")).toBe(false);
       expect(verifyInvitationProof(keyIdOfSecret(seed), f.posts[0]!.intent.fields["proof"], f.seat.membership, 1, f.key)).toBe(true);
@@ -70,20 +77,23 @@ test("a kept browser join recovers by reads and checks its original receipt, mem
     f.replies({ wrongReceipt: false, wrongSession: true });
     expect(await f.api.check()).toMatchObject({ status: "unknown" }); expect(f.kept()).toEqual(held);
     f.replies({ wrongSession: false });
-    expect(await f.api.check()).toEqual({ status: "joined", seat: f.seat }); expect(f.kept()).toBeNull(); expect(f.posts).toHaveLength(1);
-    expect(f.calls.slice(-3)).toEqual(["entry", "save recorded", "clear"]);
+    // A reload: a new page over the same slot and custody settles the same envelope with a read, and signs nothing.
+    expect(await f.reload().check()).toEqual({ status: "joined", seat: f.seat }); expect(f.kept()).toBeNull(); expect(f.posts).toHaveLength(1);
+    expect(f.settles.map(signed => canonicalize(signed))).toContain(canonicalize(f.posts[0])); expect(f.records()).toBe(1);
+    expect(f.record()!.phase).toBe("accepted"); expect(f.calls.slice(-3)).toEqual(["entry", "keep", "clear joined"]);
   }
 });
 
 test("Continue submits only the original unexpired browser join and a failed durable save sends nothing", async () => {
   const f = await fixture(); await f.api.join(f.link, f.seat);
   const original = canonicalize(f.posts[0]), held = f.kept()!;
+  // Custody writes `sent` before it sends; a write that fails sends nothing.
   f.saving(true);
   expect(await f.api.continueOriginal()).toMatchObject({ status: "unknown" }); expect(f.posts).toHaveLength(1); expect(f.kept()).toEqual(held);
   f.saving(false); f.replies({ lose: false });
   expect(await f.api.continueOriginal()).toEqual({ status: "joined", seat: f.seat }); expect(f.posts).toHaveLength(2); expect(canonicalize(f.posts[1])).toBe(original);
   const expired = await fixture(); await expired.api.join(expired.link, expired.seat); const pending = expired.kept()!;
-  expired.clock(Date.parse(pending.kept.envelope.signed.intent.notAfter));
+  expired.clock(Date.parse(expired.record()!.envelope.signed.intent.notAfter));
   // The first send went and lost its reply. Past the deadline, this press sends nothing and cannot call the join unsent.
   expect(await expired.api.continueOriginal()).toMatchObject({ status: "unknown", reason: "The original join's deadline has passed. This press sent nothing, and an earlier send of this join has no known outcome. Check it; do not use the invitation again." }); expect(expired.posts).toHaveLength(1); expect(expired.kept()).toEqual(pending);
 });
@@ -99,8 +109,29 @@ test("browser invitation context mismatches and malformed kept joins cannot be s
   const pending = f.api.join(f.link, f.seat);
   f.link.invitation = 2; f.seat.handle = "@changed";
   await pending;
-  expect(f.posts[0]!.intent.fields["invitation"]).toBe(1); expect(f.kept()!.seat.handle).toBe("@browser");
+  expect(f.posts[0]!.intent.fields["invitation"]).toBe(1); expect(f.kept()!.seat.handle).toBe("@browser"); expect(f.records()).toBe(1);
   const held = f.kept()!, malformed = { ...held, seat: { ...held.seat, origin: "https://other.test" } };
   f.setHeld(malformed);
   expect(await f.api.check()).toMatchObject({ status: "unknown" }); expect(await f.api.continueOriginal()).toMatchObject({ status: "unknown" }); expect(f.posts).toHaveLength(1); expect(f.kept()).toEqual(malformed);
+});
+
+test("a join slot from before the cutover is removed, the person is told the room retired, and nothing is signed or sent", async () => {
+  const f = await fixture();
+  const retired = { v: 1, seat: f.seat, kept: { v: 1, kind: "join", envelope: { signed: {}, grants: [], beside: {} }, phase: "unknown" } };
+  for (const press of [() => f.api.check(), () => f.api.continueOriginal(), () => f.api.join(f.link, f.seat)]) {
+    f.setHeld(retired);
+    expect(await press()).toEqual({ status: "retired", reason: RETIRED_REQUEST });
+    expect(f.kept()).toBeNull(); expect(f.calls.at(-1)).toBe("clear retired");
+  }
+  f.setHeld(retired);
+  expect(await f.api.pending()).toBeNull(); expect(await f.api.retired()).toBe(RETIRED_REQUEST); expect(f.kept()).toBeNull(); expect(await f.api.retired()).toBeNull();
+  expect(f.posts).toHaveLength(0); expect(f.records()).toBe(0);
+  // With the old slot gone, the invitation signs one join.
+  await f.api.join(f.link, f.seat); expect(f.posts).toHaveLength(1);
+});
+
+test("a slot whose join was never signed clears on Check and says that nothing was sent", async () => {
+  const f = await fixture();
+  f.setHeld({ v: 2, seat: f.seat, key: "TEST-unsigned-key" });
+  expect(await f.api.check()).toMatchObject({ status: "nothing-sent" }); expect(f.kept()).toBeNull(); expect(f.posts).toHaveLength(0);
 });

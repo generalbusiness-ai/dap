@@ -80,13 +80,13 @@ previously observed staff role has changed.
 | `browser/publication.ts` | Reads a published page and compares its visible text with the page the journal implies, at one observed commit. |
 | `test-support.ts` | The in-memory scope, rules and stand-in destination that `definition.test.ts` uses. |
 | `browser/model.ts` | What the member interface shows and may ask for: the view of one read, the act to sign, and a refusal in plain words. |
-| `browser/custody.ts` | Custody of one lending request: kept before it is sent, sent at most once, settled afterwards only by a read. |
+| `browser/custody.ts` | The lending identity, its acts and its custody target. The client's `Custody` keeps each request before it is sent and settles it afterwards by a read. |
 | `browser/client.ts` | The gateway: one coherent read of the scope (summary, head and journal), and `act`, `check`, `resume` and `abandon` over that custody. |
 | `browser/join.ts` | Joining with an invitation link under a device key that WebCrypto holds, with the same custody; and finding the room's lending scope in its directory. |
-| `browser/storage.ts` | This origin's private storage: the device key, the seat (this member's item in membership), and the kept requests, in IndexedDB under a Web Lock. |
+| `browser/storage.ts` | This origin's private storage: the device key, the seat (this member's item in membership), and the browser custody store of its requests, in IndexedDB under a Web Lock. |
 | `browser/main.ts`, `index.html`, `style.css` | The screens: join, the shelf, donate, borrow, return, cancel, the kept request, each page's text, and the journal. |
 | `dap.application.json` | Builds the signed package, including browser source, ordinary assets, native definition, default roles, and local scenarios. The host serves its exact installed presentation. |
-| `browser/model.test.ts`, `browser/custody.test.ts`, `browser/publication.test.ts`, `browser/storage.browser.test.ts` | Tests of the model, the custody, the published-page comparison, and the browser storage. |
+| `browser/model.test.ts`, `browser/publication.test.ts`, `browser/storage.browser.test.ts` | Tests of the model, the published-page comparison, and the browser storage. |
 | `runbook.md` | Current publication-room provisioning, preserved rehearsal, and incomplete six-output observation ledger. |
 | `demo-script.md` | The script for the recording. |
 | `definition.test.ts` | Plain-function tests: the bytes and the pin, the story of Nasruddin and the pot with the page each act sends, shelf paths, and the bounds. Grants are scripted. |
@@ -121,10 +121,10 @@ may first authenticate a read session, which signs and sends a session
 request. A post-join membership read confirms the device's active handle
 before the interface displays it as confirmed.
 
-The Counter's request journal could not be reused as it stands: it accepts
-only the counting definition's acts. `browser/custody.ts` is a smaller
-custody with the same rules. One shared module for both applications
-would be better, and is left to the builder.
+Lending, the Counter and browser joining keep their requests in the
+client's one `Custody`, with the browser custody store. A request slot of
+the format from before the identifier cutover names a retired room: the
+page removes it and says so.
 
 ## The application rules in brief
 

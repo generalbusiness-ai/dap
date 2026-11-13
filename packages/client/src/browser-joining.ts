@@ -1,7 +1,12 @@
-/** Browser joining over exact kept signed requests. Host-owned origin and
+/** Browser joining over a join kept in `Custody`. Host-owned origin and
  * membership version are explicit; this does not establish native admission
- * or isolate an untrusted screen. Read-session credentials stay in memory. */
-import type { KeyId, MemberId, Receipt, ScopeRef } from "@generalbusiness/dap-contract";
+ * or isolate an untrusted screen. Read-session credentials stay in memory.
+ *
+ * The join slot holds the seat and the custody key, and the page writes it
+ * before it signs. After a reload the slot names the record, and Check
+ * settles the same envelope with a read. A slot from before the identifier
+ * cutover names a retired room: the page removes it and says so. */
+import type { MemberId, Receipt, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, intentDigest, isMemberId, isRecord, isScopeRef, parseStrict, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ScopeHandle } from "./handle.ts";
 import { httpTransport, type Fetch } from "./http.ts";
@@ -10,15 +15,19 @@ import { invitationOf, wellFormedInvitation, type InvitationLink } from "./invit
 import { invitationServiceUrl } from "./invitation-service.ts";
 import { invitationRedemptionFields, isInvitationRedemptionFields, usesInvitationKey } from "./invitation-fields.ts";
 import { requestSession, signerSessionRequest } from "./session.ts";
-import { advance, envelopeKey, validKept, type Binding, type CustodyLock, type Envelope, type Kept, type KeptStore, type Ports } from "./request-custody.ts";
+import { meaningOf, validKey, type ClientCustodyStore, type CustodyRecord, type Envelope } from "./custody.ts";
+import { browserRequests, requestKey, RETIRED_REQUEST, unsentError, type BrowserRequests, type RequestSettled } from "./browser-request.ts";
+import type { BrowserCustodyLock } from "./browser-storage.ts";
 
 export interface Seat { origin: string; directory: ScopeRef; membership: ScopeRef; handle: MemberId }
 export interface InvitationContext { origin: string; membershipDefinition: string }
 export type Invited = { ok: true; link: InvitationLink; seat: Seat } | { ok: false; reason: string };
-export interface KeptJoin { v: 1; seat: Seat; kept: Kept }
-export interface JoinStore { load(): Promise<unknown>; save(value: KeptJoin): Promise<void>; clear(): Promise<void> }
+/** The join slot: the seat, and the key of the join's custody record. */
+export interface KeptJoin { v: 2; seat: Seat; key: string }
+/** `clear` names the outcome: a host keeps the seat of a join that took effect before the slot goes. */
+export interface JoinStore { load(): Promise<unknown>; save(value: KeptJoin): Promise<void>; clear(outcome: "joined" | "refused" | "unsigned" | "retired"): Promise<void> }
 export type JoinOutcome = { status: "joined"; seat: Seat } | { status: "refused"; reason: string }
-  | { status: "unknown"; reason: string; seat?: Seat } | { status: "nothing-sent"; reason: string };
+  | { status: "unknown"; reason: string; seat?: Seat } | { status: "nothing-sent"; reason: string } | { status: "retired"; reason: string };
 export interface Joining {
   join(link: InvitationLink, seat: Seat): Promise<JoinOutcome>;
   pending(): Promise<Seat | null>;
@@ -26,8 +35,10 @@ export interface Joining {
   check(): Promise<JoinOutcome | null>;
   /** Uses only the original retained signature and lifetime. */
   continueOriginal(): Promise<JoinOutcome | null>;
+  /** Removes a join slot of the retired format and gives the words that say so; null when there was none. */
+  retired(): Promise<string | null>;
 }
-export interface JoiningOptions extends InvitationContext { lock: CustodyLock; store: JoinStore; current?: () => boolean; now?: () => number; fetch?: Fetch; actFetch?: Fetch }
+export interface JoiningOptions extends InvitationContext { lock: BrowserCustodyLock; store: JoinStore; custody: ClientCustodyStore; current?: () => boolean; now?: () => number; fetch?: Fetch; actFetch?: Fetch }
 const closed = (value: unknown, keys: readonly string[]): value is Record<string, unknown> => isRecord(value) && Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key));
 function configured(context: InvitationContext): boolean {
   const service = invitationServiceUrl(context.origin);
@@ -53,29 +64,29 @@ export function readBrowserInvitation(text: string, context: InvitationContext):
   const link = invitationOf(typed, context.origin);
   return link ? offered(link, context) : { ok: false, reason: "That is not an invitation link." };
 }
-const joinBinding = (seat: Seat, key: KeyId): Binding => ({ scope: seat.membership, publicKey: key, kinds: ["join"] });
 const refusalWords = (reason: string): string =>
   `${reason === "guard-failed" ? "The room did not accept this invitation. It may be used, ended or mistyped." : reason === "unauthorized" ? "The room does not allow this join." : "The room refused the join."} (${reason})`;
+/** A join slot from before the identifier cutover: version 1 held the signed envelope itself. */
+const retiredJoin = (value: unknown): boolean => isRecord(value) && value["v"] === 1 && Object.hasOwn(value, "kept");
 
 export function browserJoining(signer: Signer, options: JoiningOptions): Joining {
   const policy = { origin: options.origin, membershipDefinition: options.membershipDefinition }, membershipDefinition = policy.membershipDefinition;
   if (!configured(policy)) throw new Error("The configured browser join context is unsupported.");
   const now = options.now ?? (() => Date.now()), usable = options.current ?? (() => true);
-  const validJoin = (value: unknown, key: KeyId): value is KeptJoin => {
-    try {
-      return closed(value, ["v", "seat", "kept"]) && value["v"] === 1 && validSeat(value["seat"], policy.origin)
-        && validKept(value["kept"], joinBinding(value["seat"], key))
-        && isInvitationRedemptionFields(membershipDefinition, value["kept"].envelope.signed.intent.fields);
-    } catch { return false; }
+  const validJoin = (value: unknown): value is KeptJoin => closed(value, ["v", "seat", "key"]) && value["v"] === 2 && validSeat(value["seat"], policy.origin) && validKey(value["key"]);
+  /** The join record must be a join of this device to the seat's membership, with the fields of this membership version. */
+  const validRecord = (record: CustodyRecord, seat: Seat): boolean => {
+    const intent = record.envelope.signed.intent;
+    return intent.kind === "join" && intent.actor === signer.key && canonicalize(intent.to) === canonicalize(seat.membership) && isInvitationRedemptionFields(membershipDefinition, intent.fields);
   };
   const current = () => { if (!usable()) throw new Error("This join context is no longer current."); };
   const transport = (origin: string, fetch?: Fetch) => httpTransport(origin, fetch ? { fetch } : {});
-  const ports = (seat: Seat): Ports => {
+  const requests = (seat: Seat): BrowserRequests => {
     // A person who has not joined has no read session. Settlement by the exact signed request needs none.
     const reads = new ScopeHandle(transport(seat.origin, options.fetch), seat.membership.scope, null);
-    return {
+    return browserRequests(options.custody, { service: seat.origin, membership: null, signer: signer.key, target: seat.membership }, {
       current: usable,
-      post: (envelope) => new ScopeHandle(transport(seat.origin, options.actFetch ?? options.fetch), seat.membership.scope, null).submit(envelope.signed, envelope.grants, envelope.beside),
+      post: (envelope) => new ScopeHandle(transport(seat.origin, options.actFetch ?? options.fetch), seat.membership.scope, null).submit(envelope.signed, [], envelope.beside),
       recorded: async (receipt: Receipt, envelope: Envelope) => {
         if (receipt.definition !== membershipDefinition || receipt.intent !== intentDigest(envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(seat.membership)) return false;
         // Reading the recorded entry needs a session. If the join took effect, this device is a member
@@ -87,21 +98,33 @@ export function browserJoining(signer: Signer, options: JoiningOptions): Joining
         return followed.ok && followed.entry.input.type === "act" && canonicalize(followed.entry.input.signed) === canonicalize(envelope.signed);
       },
       settle: async (envelope) => { const answer = await reads.settle(envelope.signed); return answer.ok ? answer.value : null; },
-    };
+    }, now);
   };
-  const inner = (held: KeptJoin): KeptStore => ({ load: async () => { const now = await options.store.load(); return validJoin(now, signer.key) ? now.kept : null; },
-    save: (kept) => options.store.save({ v: 1, seat: held.seat, kept }), clear: () => options.store.clear() });
-  const conclude = async (held: KeptJoin, readOnly: boolean, continueOriginal = false): Promise<JoinOutcome> => {
+  const unknown = (seat: Seat): JoinOutcome => ({ status: "unknown", seat, reason: "No answer came back that could be trusted. The original join is kept. Check it; do not use the invitation again." });
+  /** Tell the person what the join settled. The slot goes only after a final outcome of this exact join. */
+  const conclude = async (held: KeptJoin, settled: RequestSettled): Promise<JoinOutcome> => {
     current();
-    const settled = await advance(inner(held), joinBinding(held.seat, signer.key), ports(held.seat), held.kept.envelope, readOnly, continueOriginal);
-    current();
-    if (settled.status === "unknown") return { status: "unknown", seat: held.seat, reason: "No answer came back that could be trusted. The original join is kept. Check it; do not use the invitation again." };
+    if (settled.status === "unknown") return unknown(held.seat);
     const latest = await options.store.load(); current();
-    if (!validJoin(latest, signer.key) || envelopeKey(latest.kept.envelope) !== envelopeKey(held.kept.envelope) || latest.kept.phase !== settled.status)
-      return { status: "unknown", seat: held.seat, reason: "The original join is kept. Check it." };
-    // Clear only after the exact terminal custody mark was committed.
-    await options.store.clear(); current();
+    if (!validJoin(latest) || latest.key !== held.key) return { status: "unknown", seat: held.seat, reason: "The original join is kept. Check it." };
+    await options.store.clear(settled.status === "recorded" ? "joined" : "refused"); current();
     return settled.status === "recorded" ? { status: "joined", seat: held.seat } : { status: "refused", reason: refusalWords(settled.reason) };
+  };
+  /** The slot as it is: null when empty, a retired slot removed, or the slot with its record. */
+  const held = async (): Promise<null | JoinOutcome | { join: KeptJoin; record: CustodyRecord | null; requests: BrowserRequests }> => {
+    current(); const value = await options.store.load(); current();
+    if ((value ?? null) === null) return null;
+    if (retiredJoin(value)) { await options.store.clear("retired"); current(); return { status: "retired", reason: RETIRED_REQUEST }; }
+    if (!validJoin(value)) return { status: "unknown", reason: "The kept join cannot be read. It stays in this browser." };
+    const requests_ = requests(value.seat);
+    const record = await requests_.find(value.key); current();
+    if (record && !validRecord(record, value.seat)) return { status: "unknown", seat: value.seat, reason: "The kept join cannot be read. It stays in this browser." };
+    return { join: value, record, requests: requests_ };
+  };
+  /** A slot with no record: the page wrote the slot and stopped before it signed. Nothing was signed or sent. */
+  const unsigned = async (): Promise<JoinOutcome> => {
+    await options.store.clear("unsigned"); current();
+    return { status: "nothing-sent", reason: "The join was not signed. Nothing was sent. Use the invitation again." };
   };
   return {
     join(link, seat) {
@@ -116,35 +139,62 @@ export function browserJoining(signer: Signer, options: JoiningOptions): Joining
       const { link: originalLink, seat: originalSeat } = owned;
       return options.lock.run(async (): Promise<JoinOutcome> => {
         current();
-        if ((await options.store.load() ?? null) !== null) return { status: "nothing-sent", reason: "An earlier join is kept. Check it first." };
-        current();
-        let held: KeptJoin;
-        try {
-          const signed = await signedIntent(signer, { to: originalSeat.membership, kind: "join", fields: invitationRedemptionFields(membershipDefinition, originalSeat.membership, originalLink.invitation, signer.key, originalLink.secret), expected: {} }, { now: now() }); current();
-          held = { v: 1, seat: originalSeat, kept: { v: 1, kind: "join", envelope: { signed, grants: [], beside: {} }, phase: "prepared" } };
-          if (!validJoin(held, signer.key)) throw new Error("not a join of this device");
-          await options.store.save(held); current();
-        } catch { return { status: "nothing-sent", reason: "The join could not be signed and kept. Nothing was sent." }; }
-        return conclude(held, false);
+        const earlier = await options.store.load(); current();
+        if (retiredJoin(earlier)) { await options.store.clear("retired"); current(); return { status: "retired", reason: RETIRED_REQUEST }; }
+        if ((earlier ?? null) !== null) return { status: "nothing-sent", reason: "An earlier join is kept. Check it first." };
+        const join: KeptJoin = { v: 2, seat: originalSeat, key: requestKey() };
+        try { await options.store.save(join); current(); }
+        catch { return { status: "nothing-sent", reason: "The join could not be kept. Nothing was sent." }; }
+        const meaning = meaningOf({ kind: "join", membership: originalSeat.membership, invitation: originalLink.invitation, handle: originalSeat.handle });
+        const build = async () => {
+          const signed = await signedIntent(signer, { to: originalSeat.membership, kind: "join", fields: invitationRedemptionFields(membershipDefinition, originalSeat.membership, originalLink.invitation, signer.key, originalLink.secret), expected: {} }, { now: now(), idempotencyKey: join.key });
+          current();
+          return { binding: { definition: membershipDefinition, kind: "join", declaration: null, pinned: membershipDefinition as never }, envelope: { signed, beside: {} } };
+        };
+        let settled: RequestSettled;
+        try { settled = await requests(originalSeat).send(join.key, meaning, build, { notAfter: timeOf(now() + 60_000) }); }
+        catch (error) {
+          if (!unsentError(error)) return unknown(originalSeat);
+          // Nothing left this browser. A record that custody kept stays for Check; with no record the slot goes.
+          const record = await requests(originalSeat).find(join.key).catch(() => null);
+          if (record) return unknown(originalSeat);
+          await options.store.clear("unsigned").catch(() => undefined);
+          return { status: "nothing-sent", reason: "The join could not be signed and kept. Nothing was sent." };
+        }
+        return conclude(join, settled);
       });
     },
     continueOriginal() {
       return options.lock.run(async () => {
-        current(); const held = await options.store.load(); current();
-        if ((held ?? null) === null) return null;
-        if (!validJoin(held, signer.key)) return { status: "unknown" as const, reason: "The kept join cannot be read. It stays in this browser." };
-        const deadline = timeMs(held.kept.envelope.signed.intent.notAfter);
-        if (deadline === null || now() >= deadline) return { status: "unknown" as const, seat: held.seat, reason: "The original join's deadline has passed. This press sent nothing, and an earlier send of this join has no known outcome. Check it; do not use the invitation again." };
-        return conclude(held, false, true);
+        const found = await held();
+        if (found === null || "status" in found) return found;
+        if (!found.record) return unsigned();
+        const deadline = timeMs(found.record.envelope.signed.intent.notAfter);
+        if (deadline === null || now() >= deadline) return { status: "unknown" as const, seat: found.join.seat, reason: "The original join's deadline has passed. This press sent nothing, and an earlier send of this join has no known outcome. Check it; do not use the invitation again." };
+        const record = found.record;
+        let settled: RequestSettled;
+        try { settled = await found.requests.send(found.join.key, record.meaning, async () => { throw new Error("A kept join is never signed again."); }, { notAfter: timeOf(now() + 60_000) }); }
+        catch { return unknown(found.join.seat); }
+        return conclude(found.join, settled);
       });
     },
-    async pending() { current(); const held = await options.store.load(); current(); return validJoin(held, signer.key) ? held.seat : null; },
+    retired() {
+      return options.lock.run(async () => {
+        current(); const value = await options.store.load(); current();
+        if (!retiredJoin(value)) return null;
+        await options.store.clear("retired"); current();
+        return RETIRED_REQUEST;
+      });
+    },
+    async pending() { current(); const value = await options.store.load(); current(); return validJoin(value) ? value.seat : null; },
     check() {
       return options.lock.run(async () => {
-        current(); const held = await options.store.load(); current();
-        if ((held ?? null) === null) return null;
-        if (!validJoin(held, signer.key)) return { status: "unknown" as const, reason: "The kept join cannot be read. It stays in this browser." };
-        return conclude(held, true);
+        const found = await held();
+        if (found === null || "status" in found) return found;
+        if (!found.record) return unsigned();
+        let settled: RequestSettled | null;
+        try { settled = await found.requests.settle(found.join.key); } catch { return unknown(found.join.seat); }
+        return conclude(found.join, settled ?? { status: "unknown" });
       });
     },
   };

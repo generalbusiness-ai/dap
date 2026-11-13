@@ -37,7 +37,6 @@
     "browser/model.ts",
     "browser/model.test.ts",
     "browser/custody.ts",
-    "browser/custody.test.ts",
     "browser/publication.test.ts"
   ]
 }

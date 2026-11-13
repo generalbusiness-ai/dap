@@ -1,12 +1,12 @@
 /**
  * This origin's private storage for the lending interface: the device key, the
- * seat it joined, and the one kept request of each kind. IndexedDB holds the
+ * seat it joined, and the custody of its requests. IndexedDB holds the
  * key pair as WebCrypto made it; its private half cannot be read out, here or
  * anywhere. A Web Lock keeps other tabs out of a slot while one tab uses it.
  * No session token is stored.
  */
-import { browserPrivateSlots } from "@generalbusiness/dap-client";
-import type { CustodyLock, Kept, KeptStore, LendingIdentity } from "./custody.ts";
+import { browserCustodyStore, browserPrivateSlots } from "@generalbusiness/dap-client";
+import type { CustodyLock, LendingIdentity } from "./custody.ts";
 import type { DeviceKey, JoinStore, KeptJoin, Seat } from "./join.ts";
 
 const DATABASE = "dap-lending-private-2", STORE = "slots", LOCK = "dap-lending-custody";
@@ -29,20 +29,27 @@ const remembered = {
   /** Forget the device key and the seat. Kept requests are left as they are. */
   forget: () => remove("remembered"),
 };
-const joinStore: JoinStore = { load: () => get<KeptJoin>("join"), save: (value) => put("join", value), clear: async () => {
+const joinStore: JoinStore = { load: () => get<KeptJoin>("join"), save: (value) => put("join", value), clear: async (outcome) => {
   const held = await get<KeptJoin>("join");
-  if (binding !== undefined && held?.kept.phase === "recorded") {
+  if (binding !== undefined && outcome === "joined" && held?.v === 2) {
     const current = await remembered.load();
     if (!current) throw Error("The enrolled browser key is unavailable.");
     await remembered.save({ ...current, seat: held.seat });
   }
   await remove("join");
 } };
-/** The kept lending request of one device key in one lending scope. */
-const actStore = (identity: LendingIdentity): KeptStore => {
-  const key = `act:${identity.scope.scope}:${identity.publicKey}`;
-  return { load: () => get<Kept>(key), save: (value) => put(key, value), clear: () => remove(key) };
+/** The custody records of this origin's lending requests. `byTarget` separates each identity's requests. */
+const custody = browserCustodyStore({ database: "dap-lending-custody-1", lock: "dap-lending-custody" });
+/** The page's own state of one identity's requests: the keys the person gave up, and the slot of the retired format. */
+const requests = (identity: LendingIdentity) => {
+  const givenUp = `given-up:${identity.scope.scope}:${identity.publicKey}`, retired = `act:${identity.scope.scope}:${identity.publicKey}`;
+  return {
+    givenUp: async (): Promise<string[]> => (await get<string[]>(givenUp)) ?? [],
+    giveUp: async (key: string): Promise<void> => { const kept = (await get<string[]>(givenUp)) ?? []; await put(givenUp, [...kept.filter((k) => k !== key), key].slice(-256)); },
+    /** True when a request slot from before the identifier cutover was here. The page removes it; its room retired. */
+    dropRetired: async (): Promise<boolean> => { if (await get(retired) === null) return false; await remove(retired); return true; },
+  };
 };
-  return { browserLock, remembered, joinStore, actStore };
+  return { browserLock, remembered, joinStore, custody, requests };
 }
-export const { browserLock, remembered, joinStore, actStore } = lendingStorage();
+export const { browserLock, remembered, joinStore, custody, requests } = lendingStorage();

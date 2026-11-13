@@ -2,18 +2,18 @@
  * The lending gateway: reads the lending scope, and signs, keeps and sends one
  * lending act at a time. It follows notes/2026-10-13-lending-library.md, section 4.1.
  *
- * An act is signed once and kept (custody.ts) before anything is sent. After a
+ * An act is signed once and kept in `Custody` before anything is sent. After a
  * lost reply or a reload Check is read-only. Explicit Continue reuses that
  * original envelope. Nothing here signs a replacement.
  */
 import type { ApplicationProjectionData, Receipt } from "@generalbusiness/dap-contract";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
 import { b64url, canonicalize, intentDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
-import { ScopeHandle, completeSummary, completeApplicationProjection, httpTransport, observeScope, openHttpHeadStream, requestSession, shapeDeclaredAct, signedIntent, signerSessionRequest,
-  type CompleteSnapshot, type Fetch, type HeadStreamFetch, type Observation, type Session, type Signer } from "@generalbusiness/dap-client";
+import { RETIRED_REQUEST, ScopeHandle, browserRequests, completeSummary, completeApplicationProjection, httpTransport, meaningOf, observeScope, openHttpHeadStream, requestKey, requestSession, shapeDeclaredAct, signedIntent, signerSessionRequest, unsentError,
+  type ClientCustodyStore, type CompleteSnapshot, type CustodyRecord, type Envelope, type Fetch, type HeadStreamFetch, type KeptRequest, type Observation, type RequestSettled, type Session, type Signer } from "@generalbusiness/dap-client";
 import { lending } from "../definition.ts";
 import { LENDING_DEFINITION } from "../pin.ts";
-import { advance, envelopeKey, lendingBinding, validKept, type CustodyLock, type Envelope, type Kept, type KeptStore, type LendingIdentity, type Ports, type Settled } from "./custody.ts";
+import { LENDING_ACTS, lendingTarget, type CustodyLock, type LendingIdentity } from "./custody.ts";
 import { lendingProjectionView, lendingProjectionActivity, membershipActions, propose, refusalWords, type LendingAct, type LendingView, type LendingActivityRow } from "./model.ts";
 import { lendingStateProjection } from "./projection.ts";
 
@@ -51,11 +51,16 @@ export interface LendingGateway {
   continueOriginal(): Promise<ActOutcome | null>;
   /** Give up the kept original, only when a read shows it did not take effect and its deadline has passed. */
   abandon(): Promise<boolean>;
+  /** The words for a request slot of the retired format, which the page removed; null when there was none. */
+  retired(): Promise<string | null>;
   dispose(): void;
 }
 
 export function lendingGateway(configured: LendingIdentity, signer: Signer, options: {
-  current(): boolean; lock: CustodyLock; store: KeptStore; /** The clock for deadlines. Date.now by default. */ now?: () => number; fetch?: Fetch; headFetch?: HeadStreamFetch; /** The fetch of the one send. It defaults to `fetch`. */ actFetch?: Fetch;
+  current(): boolean; lock: CustodyLock; custody: ClientCustodyStore;
+  /** The page's own state of this identity's requests: the keys the person gave up, and the slot of the retired format. */
+  requests: { givenUp(): Promise<string[]>; giveUp(key: string): Promise<void>; dropRetired(): Promise<boolean> };
+  /** The clock for deadlines. Date.now by default. */ now?: () => number; fetch?: Fetch; headFetch?: HeadStreamFetch; /** The fetch of the one send. It defaults to `fetch`. */ actFetch?: Fetch;
   application?: Pick<ApplicationInstallation,"scope"|"directory"|"item"|"definition">;
 }): LendingGateway {
   const identity = JSON.parse(JSON.stringify(configured)) as LendingIdentity;
@@ -65,7 +70,7 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
   if (origin.origin !== identity.origin || !["https:", "http:"].includes(origin.protocol)) throw new Error("The configured service must be an exact origin.");
   if (identity.definition !== LENDING_DEFINITION || signer.key !== identity.publicKey) throw new Error("This device does not match the configured lending identity.");
 
-  const now = options.now ?? (() => Date.now()), binding = lendingBinding(identity);
+  const now = options.now ?? (() => Date.now());
   const lifetime = new AbortController();
   let readVersion = 0;
   let alive = true, session: Session | null = null, observer: Observation | undefined, view: LendingView | undefined, fresh = false, currentActivity: readonly LendingActivityRow[] = [];
@@ -99,9 +104,9 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
 
   const send = options.actFetch ?? options.fetch ?? ((url: string, init?: Parameters<Fetch>[1]) =>
     fetch(url, { ...init, redirect: "error", signal: init?.signal ? AbortSignal.any([init.signal, lifetime.signal]) : lifetime.signal }));
-  const ports: Ports = {
+  const requests = browserRequests(options.custody, lendingTarget(identity), {
     current: usable,
-    post: (envelope) => new ScopeHandle(httpTransport(identity.origin, { fetch: send as Fetch }), identity.scope.scope).submit(envelope.signed, envelope.grants, envelope.beside),
+    post: (envelope) => new ScopeHandle(httpTransport(identity.origin, { fetch: send as Fetch }), identity.scope.scope).submit(envelope.signed, [], envelope.beside),
     // An acceptance counts only when the scope's own record holds this exact signed request.
     recorded: async (receipt: Receipt, envelope: Envelope) => {
       if (receipt.definition !== identity.definition || receipt.intent !== intentDigest(envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(identity.scope)) return false;
@@ -110,15 +115,29 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
       return followed.ok && followed.entry.input.type === "act" && canonicalize(followed.entry.input.signed) === canonicalize(envelope.signed);
     },
     settle: async (envelope) => { await ready(); const answer = await handle().settle(envelope.signed); return answer.ok ? answer.value : null; },
+  }, now);
+  /** A kept record is a lending act of this device to this scope; anything else is left as it is and never sent. */
+  const lendingRecord = (record: CustodyRecord): boolean => {
+    const intent = record.envelope.signed.intent;
+    return (LENDING_ACTS as readonly string[]).includes(intent.kind) && intent.actor === identity.publicKey && canonicalize(intent.to) === canonicalize(identity.scope);
   };
-  /** Tell the member what a step settled, and release custody only on a final result for this exact request. */
-  const conclude = async (held: Kept, settled: Settled): Promise<ActOutcome> => {
+  /** The newest unresolved request that the person did not give up. One request is kept at a time. */
+  const kept = async (): Promise<KeptRequest | null> => {
+    const given = new Set(await options.requests.givenUp()); current();
+    const open = (await requests.unresolved()).filter((request) => !given.has(request.key)); current();
+    return open.at(-1) ?? null;
+  };
+  /** Tell the member what a step settled. A final result needs no clearing: custody keeps it, and it is no longer pending. */
+  const conclude = (record: CustodyRecord, settled: RequestSettled): ActOutcome => {
     if (settled.status === "unknown") return { status: "unknown", reason: "No answer came back that could be trusted. The original request is kept. Check it before doing anything else." };
-    current(); const latest = await options.store.load(); current();
-    if (!validKept(latest, binding) || envelopeKey(latest.envelope) !== envelopeKey(held.envelope) || latest.phase !== settled.status)
-      return { status: "unknown", reason: "The original request is kept. Check it before doing anything else." };
-    await options.store.clear(); current(); observer?.refresh();
-    return settled.status === "recorded" ? { status: "recorded" } : { status: "refused", reason: refusalWords(held.kind as LendingAct, settled.reason) };
+    observer?.refresh();
+    return settled.status === "recorded" ? { status: "recorded" } : { status: "refused", reason: refusalWords(record.envelope.signed.intent.kind as LendingAct, settled.reason) };
+  };
+  const unreadable = { status: "unknown" as const, reason: "The kept request cannot be read. It stays in this browser." };
+  /** Send the kept record's own envelope again, or a `prepared` one for the first time. It signs nothing. */
+  const resend = async (request: KeptRequest): Promise<ActOutcome> => {
+    try { return conclude(request.record, await requests.send(request.key, request.record.meaning, async () => { throw new Error("A kept request is never signed again."); }, { notAfter: timeOf(now() + 60_000) })); }
+    catch { return { status: "unknown", reason: "The original request is kept. Check it before doing anything else." }; }
   };
 
   return {
@@ -177,72 +196,80 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
     act(kind, input = {}) {
       return options.lock.run(async (): Promise<ActOutcome> => {
         current();
-        if ((await options.store.load() ?? null) !== null) return { status: "nothing-sent", reason: "An earlier request is kept. Check it first." };
+        if (await kept() !== null) return { status: "nothing-sent", reason: "An earlier request is kept. Check it first." };
         current();
         if (!view || !fresh) return { status: "nothing-sent", reason: "The list is not current yet. Nothing was sent." };
         const proposed = propose(view, kind, input, identity.member.member);
         if (!proposed.ok) return { status: "nothing-sent", reason: proposed.reason };
         const { on, expected, fields } = proposed.proposal;
-        let held: Kept;
-        try {
+        const key = requestKey(), meaning = meaningOf({ kind, on, expected, fields });
+        const build = async () => {
           const shaped = shapeDeclaredAct(lending, kind, { on, fields } as never);
-          const signed = await signedIntent(signer, { to: identity.scope, kind, on: shaped.on, fields: shaped.fields, expected }, { now: now() }); current();
-          held = { v: 1, kind, envelope: { signed, grants: [], beside: shaped.beside }, phase: "prepared" };
-          if (!validKept(held, binding)) throw new Error("The signed request is not a lending request of this identity.");
-          // Kept before anything is sent.
-          await options.store.save(held); current();
-        } catch { return { status: "nothing-sent", reason: "The request could not be signed and kept. Nothing was sent." }; }
-        return conclude(held, await advance(options.store, binding, ports, held.envelope));
+          const signed = await signedIntent(signer, { to: identity.scope, kind, on: shaped.on, fields: shaped.fields, expected }, { now: now(), idempotencyKey: key }); current();
+          return { binding: { definition: "lending", kind, declaration: null, pinned: identity.definition }, envelope: { signed, beside: shaped.beside } };
+        };
+        try {
+          const settled = await requests.send(key, meaning, build, { notAfter: timeOf(now() + 60_000) });
+          const record = await requests.find(key); current();
+          return record ? conclude(record, settled) : { status: "unknown", reason: "The original request is kept. Check it before doing anything else." };
+        } catch (error) {
+          // Custody keeps the envelope before anything is sent: an error before the send leaves nothing sent.
+          if (unsentError(error) && !(await requests.find(key).catch(() => null))) return { status: "nothing-sent", reason: "The request could not be signed and kept. Nothing was sent." };
+          return { status: "unknown", reason: "The original request is kept. Check it before doing anything else." };
+        }
       });
     },
     async pending() {
-      const held = await options.store.load();
-      if (held === null || held === undefined) return null;
-      if (!validKept(held, binding)) return { kind: "unknown", thing: null, name: null, notAfter: "", unsent: false };
-      const { intent } = held.envelope.signed;
-      return { kind: held.kind, thing: held.kind === "publish" && typeof intent.fields["thing"] === "number" ? intent.fields["thing"] : intent.on, name: typeof intent.fields["name"] === "string" ? intent.fields["name"] : null, notAfter: intent.notAfter, unsent: held.phase === "prepared" };
+      const request = await kept();
+      if (!request) return null;
+      if (!lendingRecord(request.record)) return { kind: "unknown", thing: null, name: null, notAfter: "", unsent: false };
+      const { intent } = request.record.envelope.signed;
+      return { kind: intent.kind, thing: intent.kind === "publish" && typeof intent.fields["thing"] === "number" ? intent.fields["thing"] : intent.on, name: typeof intent.fields["name"] === "string" ? intent.fields["name"] : null, notAfter: intent.notAfter, unsent: request.record.phase === "prepared" };
     },
     check() {
       return options.lock.run(async () => {
-        current(); const held = await options.store.load(); current();
-        if (held === null || held === undefined) return null;
-        if (!validKept(held, binding)) return { status: "unknown" as const, reason: "The kept request cannot be read. It stays in this browser." };
-        return conclude(held, await advance(options.store, binding, ports, held.envelope, true));
+        current(); const request = await kept();
+        if (!request) return null;
+        if (!lendingRecord(request.record)) return unreadable;
+        try { return conclude(request.record, (await requests.settle(request.key)) ?? { status: "unknown" }); }
+        catch { return { status: "unknown" as const, reason: "The original request is kept. Check it before doing anything else." }; }
       });
     },
     resume() {
       return options.lock.run(async () => {
-        current(); const held = await options.store.load(); current();
-        if (held === null || held === undefined) return null;
-        if (!validKept(held, binding) || held.phase !== "prepared")
+        current(); const request = await kept();
+        if (!request) return null;
+        if (!lendingRecord(request.record) || request.record.phase !== "prepared")
           return { status: "unknown" as const, reason: "This request may already have been sent. Check it; it will not be sent again." };
-        return conclude(held, await advance(options.store, binding, ports, held.envelope));
+        return resend(request);
       });
     },
     continueOriginal() {
       return options.lock.run(async () => {
-        current(); const held = await options.store.load(); current();
-        if (held === null || held === undefined) return null;
-        if (!validKept(held, binding)) return { status: "unknown" as const, reason: "The kept request cannot be read. It stays in this browser." };
-        const deadline = timeMs(held.envelope.signed.intent.notAfter);
+        current(); const request = await kept();
+        if (!request) return null;
+        if (!lendingRecord(request.record)) return unreadable;
+        const deadline = timeMs(request.record.envelope.signed.intent.notAfter);
         if (deadline === null || now() > deadline) return { status: "unknown" as const, reason: "The original request's deadline has passed. Check it; nothing was sent." };
-        return conclude(held, await advance(options.store, binding, ports, held.envelope, false, true));
+        return resend(request);
       });
     },
     abandon() {
       return options.lock.run(async () => {
-        current(); const held = await options.store.load(); current();
-        if (held === null || held === undefined) return true;
-        if (!validKept(held, binding)) return false;
-        const deadline = timeMs(held.envelope.signed.intent.notAfter);
+        current(); const request = await kept();
+        if (!request) return true;
+        if (!lendingRecord(request.record)) return false;
+        const deadline = timeMs(request.record.envelope.signed.intent.notAfter);
         if (deadline === null || now() < deadline + SETTLED_AFTER_MS) return false;
         await ready();
-        const answer = await handle().settle(held.envelope.signed); current();
+        const answer = await handle().settle(request.record.envelope.signed); current();
         if (answer.ok || answer.reason !== "not-found") return false;
-        await options.store.clear(); current(); observer?.refresh();
+        // Custody keeps the record unresolved: a later read can still settle it. The page stops showing it.
+        await options.requests.giveUp(request.key); current(); observer?.refresh();
         return true;
       });
     },
+    async retired() { return (await options.requests.dropRetired()) ? RETIRED_REQUEST : null; },
     dispose() { alive = false; readVersion++; lifetime.abort(); observer?.cancel(); session = null; view = undefined; fresh = false; currentActions = null; },
   };
 }

@@ -21,7 +21,7 @@ const screen = await loadApplicationScreenContext(location.href);
 const screenTransport = screen ? applicationScreenTransport(screen) : null;
 const serviceOrigin = screen?.origin ?? location.origin;
 if (screen && screen.definition !== LENDING_DEFINITION) throw Error("This presentation does not match the installed library definition.");
-const { actStore, browserLock, joinStore, remembered } = lendingStorage(screen ? canonicalize(screen.scope) : undefined);
+const { browserLock, custody, joinStore, remembered, requests } = lendingStorage(screen ? canonicalize(screen.scope) : undefined);
 type Notice = { kind: "plain" | "refusal"; text: string } | null;
 const root = document.querySelector<HTMLElement>("#lending")!;
 /** Each change of room or view raises this, so an answer for a view the person has left is ignored. */
@@ -105,7 +105,10 @@ async function open(next: Remembered): Promise<void> {
   if (timer !== undefined) clearInterval(timer);
   if (!next.identity) return;
   const at = epoch;
-  gateway = lendingGateway(next.identity, deviceSigner(next.device), { current: () => at === epoch, lock: browserLock, store: actStore(next.identity), ...(screen?{application:screen}:{}), ...(screenTransport ? { fetch: screenTransport.fetch, headFetch: screenTransport.headFetch, actFetch: screenTransport.fetch } : {}) });
+  gateway = lendingGateway(next.identity, deviceSigner(next.device), { current: () => at === epoch, lock: browserLock, custody, requests: requests(next.identity), ...(screen?{application:screen}:{}), ...(screenTransport ? { fetch: screenTransport.fetch, headFetch: screenTransport.headFetch, actFetch: screenTransport.fetch } : {}) });
+  const retired = await gateway.retired().catch(() => null);
+  if (at !== epoch) return;
+  if (retired) notice = { kind: "plain", text: retired };
   await look();
   if (at !== epoch) return;
   timer = window.setInterval(() => { if (!busy && document.visibilityState === "visible") void look(); }, 15_000);
@@ -142,11 +145,11 @@ async function joined(device: DeviceKey, outcome: JoinOutcome | null, expectedEp
   }
   if (outcome.status === "joined") { notice = { kind: "plain", text: "Your join was recorded. Confirming your membership…" }; keptJoin = null; return seated(device, outcome.seat, expectedEpoch); }
   notice = { kind: outcome.status === "refused" ? "refusal" : "plain", text: outcome.reason };
-  if (outcome.status === "refused") keptJoin = null;
+  if (outcome.status === "refused" || outcome.status === "retired") keptJoin = null;
   if (outcome.status === "unknown" && outcome.seat) keptJoin = outcome.seat;
 }
 function joinFor(device: DeviceKey, expectedEpoch = epoch) {
-  return joining(device, { origin: serviceOrigin, lock: browserLock, store: joinStore, ...(screen ? { membershipDefinition: screen.membershipDefinition } : {}), ...(screenTransport ? { fetch: screenTransport.fetch, actFetch: screenTransport.fetch } : {}), current: () => expectedEpoch === epoch });
+  return joining(device, { origin: serviceOrigin, lock: browserLock, store: joinStore, custody, ...(screen ? { membershipDefinition: screen.membershipDefinition } : {}), ...(screenTransport ? { fetch: screenTransport.fetch, actFetch: screenTransport.fetch } : {}), current: () => expectedEpoch === epoch });
 }
 /** The device key of this browser, made on first need and remembered before it is used. */
 async function device(): Promise<DeviceKey> {
@@ -291,7 +294,9 @@ void (async () => {
     if (screen && memory?.identity) {
       if (!memory.seat || canonicalize(applicationDeviceIdentity(screen, memory.seat, memory.device.publicKey)) !== canonicalize(memory.identity)) throw Error("The remembered seat does not match this installed library.");
     }
-    if (memory) { keptJoin = await joining(memory.device, { origin: serviceOrigin, lock: browserLock, store: joinStore, ...(screen ? { membershipDefinition: screen.membershipDefinition } : {}), ...(screenTransport ? { fetch: screenTransport.fetch, actFetch: screenTransport.fetch } : {}) }).pending(); if (memory.seat) await open(memory); }
+    if (memory) { const join = joining(memory.device, { origin: serviceOrigin, lock: browserLock, store: joinStore, custody, ...(screen ? { membershipDefinition: screen.membershipDefinition } : {}), ...(screenTransport ? { fetch: screenTransport.fetch, actFetch: screenTransport.fetch } : {}) });
+      const retired = await join.retired(); if (retired) notice = { kind: "plain", text: retired };
+      keptJoin = await join.pending(); if (memory.seat) await open(memory); }
   } catch (error) { notice = { kind: "plain", text: error instanceof Error ? error.message : "This browser's private storage is unavailable." }; }
   draw();
 })();
