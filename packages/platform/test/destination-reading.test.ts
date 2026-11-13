@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import type { Entry, FactRef, Grant, RulesObservation } from "@generalbusiness/dap-contract";
 import { factRefOf, isFactRef } from "@generalbusiness/dap-bytes";
 import type { RuleGiven, StateView } from "@generalbusiness/dap-derive";
-import { d, fixtureScope, keys, otherLane, sequenceAt, t } from "@generalbusiness/dap-derive/testing";
+import { d, fixtureScope, keys, otherLane, otherLaneSequence, t } from "@generalbusiness/dap-derive/testing";
 import { decidingKeys, manifestAuthors, readLane } from "../src/destination-reading.ts";
 import { DESTINATION_CHANGED_SET, isJudgeChanges, isRecordedJudgeEvidence, type Statement } from "../src/reservation.ts";
 import { RULES_SCOPE, rulesAnswer } from "../src/rules-scope.ts";
@@ -26,7 +26,7 @@ const statement: Statement = { operation: factRefOf(merge, lane), manifest: fact
 const rulebook = fixtureScope("rules", 18).at;
 const rulesState = { scope: () => ({ at: rulebook, kind: "rules", status: "active", head: { seq: 0, hash: d("a") } }), page: () => ({ items: [{ type: "rules", state: "current", refs: { published: null }, values: { approvals: 1, ownerMayReview: false, labels: [], singleControllerException: false, checks: [{ name: "verify", configuration: d("d"), checker: member, required: true }] } }], more: false }) } as unknown as Pick<StateView, "scope" | "page">;
 const rules: RulesObservation = { ...rulesAnswer(rulesState, { of: rulebook, asked: "rules" }, RULES_SCOPE)!, at: t(0) };
-const given = (entries: readonly Entry[]): Pick<RuleGiven, "uses" | "observed"> => ({ uses: entries.map((entry) => ({ fact: factRefOf(entry, lane), entry, under: "change", sequence: sequenceAt(lane) })), observed: (asked) => "key" in asked ? grant(asked.key === keys.una.key ? keys.una : keys.rita).fresh : null });
+const given = (entries: readonly Entry[]): Pick<RuleGiven, "uses" | "observed"> => ({ uses: entries.map((entry) => ({ fact: factRefOf(entry, lane), entry, under: "change", sequence: otherLaneSequence })), observed: (asked) => "key" in asked ? grant(asked.key === keys.una.key ? keys.una : keys.rita).fresh : null });
 const records = [manifest, merge, review, job, check];
 
 // Invariant: the rule reads the lane's recorded attribution and provenance; a required configured check contributes its

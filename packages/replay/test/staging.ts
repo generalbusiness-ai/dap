@@ -29,7 +29,7 @@ import type { Digest, Entry, Evidence, FieldValue, Grant, MemberId, MemberObserv
 import { canonicalize, factRefOf, intentDigest, newGenesisNonce, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { RETIRE_ACTION, actionOf, clockOf, grantFrom, judgeDelivery, judgeGenesis, judgePreparation, settleOutcome, valueDigest } from "@generalbusiness/dap-derive";
 import type { OutcomeRule, PlatformRules, Source } from "@generalbusiness/dap-derive";
-import { Ledger, T0, creation, d, deliver, directory, fixtureSequence, keys, membership, sequenceAt, t, type Actor, type Context } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, creation, d, deliver, directory, directorySequence, fixtureSequence, keys, membership, t, type Actor, type Context } from "@generalbusiness/dap-derive/testing";
 import { cap, snapshots, staging } from "../../derive/test/fixtures-hold.ts";
 import { gateRules, gateWith } from "../../derive/test/fixtures-marks.ts";
 import type { Anchor, Coded, MemoryScope } from "../src/index.ts";
@@ -82,7 +82,7 @@ export class Lane extends Ledger {
     } else {
       // STAND-IN: the directory's act that creates the lane, and its entry that confirms it, are made by hand.
       const by = (seq: number, input: SequenceEntry["input"], sends: Entry["sends"]): Source => {
-        const source: Source = { entry: { v: 1, genesis: directory.genesis, seq, prev: d("0"), time: T0, clamped: false, epoch: 0, input, uses: [], prepared: [], effects: [], sends }, sequence: sequenceAt(directory), under: "desk" };
+        const source: Source = { entry: { v: 1, genesis: directory.genesis, seq, prev: d("0"), time: T0, clamped: false, epoch: 0, input, uses: [], prepared: [], effects: [], sends }, sequence: directorySequence, under: "desk" };
         this.foreign.push(source);
         return source;
       };

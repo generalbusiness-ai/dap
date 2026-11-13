@@ -9,7 +9,7 @@ import { useOf, valueDigest, type Operation } from "@generalbusiness/dap-derive"
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { publicationJourney } from "../../platform/test/support-publication-journey.ts";
 import { keyObserved } from "../../platform/test/support-destination.ts";
-import { Branch, HEAD, NEXT, OTHER, TREE, fetched, handMade, refOf, rita, RULES } from "../../../packages/platform/test/support-destination.ts";
+import { Branch, HEAD, NEXT, OTHER, TREE, fetched, handMade, refOf, rita, RULES, sequenceAt } from "../../../packages/platform/test/support-destination.ts";
 import { CredentialStore } from "../src/credential-store.ts";
 import { DestinationHost, type DestinationBinding, type DestinationHostOptions, type DestinationInspection, type DestinationProvider, type DestinationRepository } from "../src/destination-host.ts";
 import type { OutsideGiven } from "../src/object.ts";
@@ -426,10 +426,10 @@ test.each([
       { effect: "value", item: seq, slot: "tree", value: reserved.publication.values["tree"]! }, { effect: "value", item: seq, slot: "deadline", value: t(600) },
     ]);
     journey.tell(tree.ledger, "check-fence", { operation: refOf(reserved.merge) as unknown as FieldValue, job: refOf(job) as unknown as FieldValue, name: "unit" }, [reserved.merge, job]);
-    for (const fact of tree.ledger.foldOptions.facts ?? []) { const use = useOf(fact.fact, fact.entry); tree.retained.set(use.content, { kind: "entry", digest: use.content, bytes: canonicalize(fact.entry), under: fact.under }); }
+    for (const fact of tree.ledger.foldOptions.facts ?? []) { const use = useOf(fact.fact, fact.entry, fact.sequence.kind); tree.retained.set(use.content, { kind: "entry", digest: use.content, bytes: canonicalize(fact.entry), under: fact.under }); }
     let keyReads = 0;
     const host = new DestinationHost(tree.given, { ...tree.options, snapshotReader: {
-      job: async fact => canonicalize(fact) === canonicalize(refOf(job)) ? { entry: job, under: "change", state: "requested" } : null,
+      job: async fact => canonicalize(fact) === canonicalize(refOf(job)) ? { entry: job, under: "change", sequence: sequenceAt(refOf(job).at), state: "requested" } : null,
       key: async () => { keyReads++; return keyObserved(keys.una, tree.ledger.now, { actions: ["change.check"] }); },
     } });
     const ask = signIntent({ v: 1, to: refOf(job).at, actor: keys.una.key, kind: "git-read@1:job-read", on: null, expected: {}, fields: { job: refOf(job) as unknown as FieldValue }, idempotencyKey: "D1 scripted job read", notAfter: t(60) }, keys.una.secret);

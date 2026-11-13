@@ -6,7 +6,7 @@ import type { Bounds, EffectForm, FieldValue, Guard, MemberRef, Notify, Send } f
 import { factRefOf } from "@generalbusiness/dap-bytes";
 import { clockOf, evaluateEffects, judgeDelivery, validateDefinition, type ActJudgment, type Item, type Judging } from "../src/index.ts";
 import { verifiedCopy } from "../src/operand.ts";
-import { Scope, arriving, deliver, fields, forged, created, keys, member, on, ticketDefinition, valid, type Actor, type Over } from "./fixtures-entry.ts";
+import { Scope, arriving, deliver, fields, fixtureSequence, forged, created, keys, member, on, ticketDefinition, valid, type Actor, type Over } from "./fixtures-entry.ts";
 
 const { rita, una, vic, paul, sam } = keys;
 
@@ -314,7 +314,7 @@ describe("effects in a handler and in a result clause (sections 6.6 and 7.4)", (
     const X = new Scope(ticketDefinition);
     X.did(una, "ask", fields({ desk: D.at }));   // X.2: an `ask` act of a ticket
     const tell: Send = { n: 0, to: D.at, message: { class: "request", type: "tell", body: { message: "audit", fields: { repo: 0 } } } };
-    const source = forged(X.at, 2, X.entries[2]!.entry.input, [tell]);
+    const source = forged(fixtureSequence(X), 2, X.entries[2]!.entry.input, [tell]);
     const arrival = { ...tell, from: factRefOf(source.entry, source.sequence.at) };
     const decided = (kind: string, under = "ticket") => {
       const j = judgeDelivery(D.state, audited(kind, under), arrival, arriving(D, arrival, source));

@@ -18,8 +18,8 @@
  */
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Digest, Entry, FactRef, PlatformDefinition, Request, ScopeRef, Seed, Send, SignedIntent } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, newGenesisNonce, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import type { Digest, Entry, FactRef, PlatformDefinition, Request, ScopeId, ScopeRef, Seed, Send, SignedIntent } from "@generalbusiness/dap-contract";
+import { factRefOf, intentDigest, newGenesisNonce, scopeIdOf, signIntent, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeDelivery, judgeGenesis, judgeOutcome, ownersOf } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Fetched, Judgment, PlatformRules, Source, ValidDefinition } from "@generalbusiness/dap-derive";
 import { Ledger, T0, fixtureSequence, forged, keys, t, type Actor, type Context, type Over } from "@generalbusiness/dap-derive/testing";
@@ -96,7 +96,7 @@ function unknownBody(ledger: Ledger, definition: ValidDefinition, platform: Plat
 }
 
 /** An entry of a scope that no judge wrote: MADE BY HAND, under that definition's name, at that time. */
-export const scripted = (at: ScopeRef, seq: number, input: Entry["input"], sends: readonly Send[], under: string, time = T0): Source => {
+export const scripted = (at: CheckedSequence | ScopeRef, seq: number, input: Entry["input"], sends: readonly Send[], under: string, time = T0): Source => {
   const made = forged(at, seq, input, sends);
   if (made.entry.input.type === "genesis") {
     // A changed time would change the genesis bytes that `forged` admitted.
@@ -123,6 +123,8 @@ export class Directory extends Ledger {
   readonly claim: FactRef;
   /** The references of the scripted children that answered, by kind. */
   readonly children: Partial<Record<"membership" | "rules" | "destination", ScopeRef>> = {};
+  /** The admitted sequence and the seed of each child that `created` answered, by scope ID. */
+  readonly #created = new Map<ScopeId, { sequence: CheckedSequence; seed: Seed }>();
 
   constructor(over: { import?: string; confirmed?: boolean; children?: readonly ("membership" | "rules" | "destination")[] } = {}) {
     super(directoryDefinition, "platform:directory");
@@ -175,7 +177,26 @@ export class Directory extends Ledger {
       [{ n: 0, to: this.at, message: { class: "result", of: { from: this.fact(seq), n }, outcome: "applied" } }], under);
     // A clause reads again each fact that the fields of its origin entry name: for the genesis, the claim's entry, which it retained.
     this.take(genesis, 0, [{ fact: this.claim, entry: this.register.entries[this.claim.seq]!.entry, under: this.register.under, sequence: fixtureSequence(this.register) }]);
+    this.#created.set(genesis.sequence.at.scope, { sequence: genesis.sequence, seed });
     return { ...genesis.sequence.at };
+  }
+
+  /** The admitted sequence of a child that `created` answered. */
+  sequenceOf(at: ScopeRef): CheckedSequence {
+    const held = this.#created.get(at.scope);
+    if (!held || held.sequence.at.genesis !== at.genesis) throw new Error("the directory created no child at this address");
+    return held.sequence;
+  }
+
+  /**
+   * STAND-IN: a second genesis of a child's seed, made by hand with another
+   * nonce. It is an admitted sequence at the same scope ID, which the
+   * directory does not hold.
+   */
+  secondSequence(at: ScopeRef, mint: number): CheckedSequence {
+    const held = this.#created.get(at.scope);
+    if (!held) throw new Error("the directory created no child at this scope ID");
+    return forged(at, 0, { type: "genesis", seed: held.seed, nonce: newGenesisNonce(new Uint8Array(16).fill(mint)), kind: "establish", founding: null, source: null, sourceKind: null, n: null, message: null, decision: "applied" }, []).sequence;
   }
 
   /** SCRIPTED: one child of the directory's genesis answers its `create` as applied. */

@@ -1,11 +1,11 @@
 import { composeChange0, composeChange1, composeChange2, composeChange3, composeChange4, composeChange5, composeChange6, composeChange7, composeChange8, composeChange9 } from "./definition-corpus/compose-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Attempt, Input, Result, Seed, Send } from "@generalbusiness/dap-contract";
+import type { Attempt, Digest, Input, Result, Seed, Send } from "@generalbusiness/dap-contract";
 import { deliveryCauseDigest, entryHash, factRefOf, intentDigest, isEntryBodyOf, isEntryOf, messageDigest, newGenesisNonce, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { MemoryState, applyEntry, checkpointOf, clockOf, entryOf, fits, judgeCheckpoint, judgeDelivery, judgeDiagnosis, judgeGenesis, owed, prepareRules, stateDigest, useOf } from "../src/index.ts";
 import type { Creation, DeliveryContext, Draft, Fetched, Judged, Source, ValidDefinition } from "../src/index.ts";
-import { Ledger, Scope, T0, arriving, born, creation, d, deliver, deskDefinition, fields, forged, fixtureSequence, created, judged, keys, laneDefinition, on, sent, t, ticket, ticketDefinition, variant, type Over } from "./fixtures-entry.ts";
+import { Ledger, Scope, T0, arriving, born, creation, d, deliver, deskDefinition, fields, forged, fixtureSequence, later, created, judged, keys, laneDefinition, on, sent, t, ticket, ticketDefinition, variant, type Over } from "./fixtures-entry.ts";
 
 const { rita, una } = keys;
 const unverified = { result: "source-unverified" };
@@ -17,8 +17,10 @@ function asker(desk: Ledger): Scope {
   return s;
 }
 /** The same input and address in an entry of that scope with other sends: an entry that exists, and is not the one that was sealed. */
-const resealed = (from: Ledger, seq: number, sends: readonly Send[]): Source => forged(from.at, seq, from.entries[seq]!.entry.input, sends, fixtureSequence(from));
+const resealed = (from: Ledger, seq: number, sends: readonly Send[]): Source => forged(fixtureSequence(from), seq, from.entries[seq]!.entry.input, sends);
 /** A scripted source reference is data; the genuine sequence argument still gates admission. */
+/** The same source with its entry naming another genesis, while it keeps the target's admitted sequence. */
+const otherGenesis = (source: Source, genesis: Digest): Source => ({ ...source, entry: { ...later(source.entry), genesis } });
 const sourceFact = (source: Source) => {
   const entry = source.entry, hash = entryHash(entry);
   const at = entry.input.type === "genesis" ? { scope: scopeIdOf(entry.input.seed), genesis: hash } : source.sequence.at;
@@ -65,7 +67,7 @@ describe("founding a directory and creating a child (sections 7.1 and 7.2)", () 
     expect(D.state.creation(seedDigest(seed))).toEqual({ genesis: I.at.genesis, seq: 2 });
 
     // A confirmation is admitted only from the creator's entry that recorded this genesis's result: not from its act, D.1.
-    const other = forged(D.at, 7, D.entries[1]!.entry.input, D.last.sends, fixtureSequence(D));
+    const other = forged(fixtureSequence(D), 7, D.entries[1]!.entry.input, D.last.sends);
     expect(judged(I, D, 2, 0, { from: sourceFact(other), source: other })).toMatchObject(unverified);
 
     // I.1: the confirmation. The scope is active from this entry; a repeat adds nothing; an act is now judged.
@@ -142,7 +144,7 @@ describe("founding a directory and creating a child (sections 7.1 and 7.2)", () 
     /** The creation that the outcome entry at D.5 sends at ordinal 0, of an attempt of that operation, as it reaches the child; and the child's judgment with those entries at hand. */
     const judge = (operation: `${number}:${number}`, facts: readonly Fetched[], to: Seed = seed, named = claim) => {
       const message = { class: "request", type: "create", body: { fields: { opener: rita.member, title: "By an outcome", claim: named } } } as const;
-      const source = forged(D.at, 5, { type: "outcome", operation, attempt: 1, owner: "platform:register@1", kind: "create-repository", result: "confirmed", evidence: { basis: "own-answer", body: { id: "r1" } } }, [{ n: 0, to, message }], fixtureSequence(D));
+      const source = forged(fixtureSequence(D), 5, { type: "outcome", operation, attempt: 1, owner: "platform:register@1", kind: "create-repository", result: "confirmed", evidence: { basis: "own-answer", body: { id: "r1" } } }, [{ n: 0, to, message }], fixtureSequence(D));
       const s = new Ledger(child);
       const asked: Creation = { name: scopeIdOf(to), nonce: newGenesisNonce(new Uint8Array(16).fill(20)), to, from: sourceFact(source), n: 0, message };
       return { s, judgment: judgeGenesis(s.state, child, asked, { clock: clockOf(s.state, T0), bounds: PROPOSED_BOUNDS, facts, prepared: [], source }) };
@@ -230,8 +232,8 @@ describe("what a receiver checks in the source entry (section 7.4)", () => {
     const result = entry.sends[1]!;
     const other = new Scope(ticketDefinition, rita.member, true, 5);
     const sources: readonly (readonly [string, Source])[] = [
-      ["another scope", forged(other.at, 1, entry.input, [result], fixtureSequence(other))],
-      ["another sequence of the target", forged({ ...D.at, genesis: other.at.genesis }, 1, entry.input, [result], fixtureSequence(D))],
+      ["another scope", forged(fixtureSequence(other), 1, entry.input, [result])],
+      ["another sequence of the target", otherGenesis(forged(fixtureSequence(D), 1, entry.input, [result]), other.at.genesis)],
       ["an entry of the target that did not decide the request", resealed(D, 0, [result])],
     ];
     const head = S.head;

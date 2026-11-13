@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FieldValue, Grant, Input, MemberObservation, MemberRef, ObservationUse, RulesObservation, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, genesisInputDigest, newGenesisNonce, factRefOf, intentDigest, parseStrict, scopeIdOf, seedDigest, signIntent, textDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, genesisInputDigest, newGenesisNonce, factRefOf, intentDigest, parseStrict, scopeIdOf, seedDigest, signIntent, textDigest, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { MemoryState, clockOf, derivable, judgeGenesis, runnable, valueDigest, type Item, type Judgment, type OutcomeRule, type PlatformRule, type RuleGiven } from "@generalbusiness/dap-derive";
-import { Ledger, T0, creation, desk, fixtureSequence, deskDefinition, t, ticket, ticketDefinition } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, creation, desk, fixtureScope, fixtureSequence, deskDefinition, t, ticket, ticketDefinition } from "@generalbusiness/dap-derive/testing";
 import { DIRECTORY, directory, directoryMembership, directoryRules, membershipId, platform, repositoryName } from "../src/index.ts";
 import { rulesScopeRules, rulesScopeDefinition, Directory, directoryDefinition, creationRita as rita, creationSam as sam, scripted, creationUna as una, creationVic as vic } from "./fixtures-entry.ts";
 
@@ -81,7 +81,7 @@ describe("the rules of platform:directory@1, each as a plain function (authority
   const d = new Directory({ import: IMPORT });
   const plain = new Directory();
   const { membership, rules } = d.children as Required<Directory["children"]>;
-  const lane: ScopeRef = { scope: d.at.scope, genesis: textDigest("TEST genesis 50")};
+  const laneSequence = fixtureScope("lane", 50), lane = laneSequence.at;
   const next = d.head.seq + 1;
   /** What is at hand: the further observations, and the values, by their canonical bytes. A value is matched by its digest in its domain. */
   const hand = (observed: readonly ObservationUse[], values: readonly string[]): Pick<RuleGiven, "observed" | "value" | "placed"> => ({
@@ -97,7 +97,7 @@ describe("the rules of platform:directory@1, each as a plain function (authority
   });
   /** What a rule of the `index` handler is given: the delivery of an advisory from that lane's entry, which is among what the entry read. */
   const indexed = (fields: Record<string, FieldValue>, seq = 6, time = t(5)): RuleGiven => {
-    const source = scripted(lane, seq, d.entries[1]!.entry.input, [{ n: 0, to: d.at, message: { class: "advisory", type: "index", body: { fields } } }], "ticket", time);
+    const source = scripted(laneSequence, seq, d.entries[1]!.entry.input, [{ n: 0, to: d.at, message: { class: "advisory", type: "index", body: { fields } } }], "ticket", time);
     const from = factRefOf(source.entry, source.sequence.at);
     return { ...given(d, "none", fields), input: { type: "delivery", from, sourceKind: "lane", n: 0, message: source.entry.sends[0]!.message }, uses: [{ fact: from, entry: source.entry, under: "ticket", sequence: source.sequence }] };
   };
@@ -323,8 +323,8 @@ test("two index rows of one lane, in either order, give the same row; a concern'
     d.act(rita, "open-issue", opening(d), active(d));
     const row = d.head.seq;
     const lane = d.created(row, 0, "ticket", 60);
-    const index = (from: ScopeRef, seq: number, time: string, fields: Record<string, FieldValue>): Judgment => {
-      const source = scripted(from, seq, d.entries[1]!.entry.input, [{ n: 0, to: d.at, message: { class: "advisory", type: "index", body: { fields } } }], "ticket", time);
+    const index = (from: CheckedSequence | ScopeRef, seq: number, time: string, fields: Record<string, FieldValue>): Judgment => {
+      const source = scripted("at" in from ? from : d.sequenceOf(from), seq, d.entries[1]!.entry.input, [{ n: 0, to: d.at, message: { class: "advisory", type: "index", body: { fields } } }], "ticket", time);
       const judgment = d.judgeDelivered(source, 0);
       if (judgment.result === "write") d.seal(judgment.draft);
       return judgment;
@@ -349,15 +349,15 @@ test("two index rows of one lane, in either order, give the same row; a concern'
   // Case e: the first index row of a concern, which its parent created, and then the same row again. The row is opened, with the
   // next number: the lane's own `number` is not taken. The repeat is the same advisory, and opens nothing.
   const { d, index } = a;
-  const concern: ScopeRef = { scope: d.at.scope, genesis: textDigest("TEST genesis 70")};
+  const concernSequence = fixtureScope("lane", 70), concern = concernSequence.at;
   const first: Row = [0, t(30), { kind: "issue", author: una.member, title: "A concern", state: "open", number: 99 }];
-  expect(index(concern, ...first).result).toBe("write");
+  expect(index(concernSequence, ...first).result).toBe("write");
   const opened = d.head.seq;
   expect([d.item(opened).type, d.item(opened).refs["scope"], d.item(opened).parties["author"], d.item(opened).values, d.item(0).values["lastNumber"]])
     .toMatchObject(["lane", concern, una.member, { number: 2, kind: "issue", title: "A concern", state: "open", first: t(30), latest: t(30), seen: { title: 0, state: 0 } }, 2]);
-  expect([index(concern, ...first), d.head.seq]).toEqual([{ result: "repeat", seq: opened }, opened]);
+  expect([index(concernSequence, ...first), d.head.seq]).toEqual([{ result: "repeat", seq: opened }, opened]);
   // A later row of the concern changes its row, and takes no number.
-  index(concern, 4, t(40), { title: "Renamed", kind: "pr" });
+  index(concernSequence, 4, t(40), { title: "Renamed", kind: "pr" });
   expect([d.item(opened).values, d.item(0).values["lastNumber"], d.state.count("lane", "listed")]).toMatchObject([{ number: 2, kind: "issue", title: "Renamed", latest: t(40) }, 2, 2]);
 });
 
@@ -366,19 +366,20 @@ test("a `compromised` notice from the repository's membership scope is sent on t
   const d = new Directory({ import: IMPORT });
   const { membership, destination } = d.children as Required<Directory["children"]>;
   /** A `compromised` notice from that membership scope: a `tell` of an entry made by hand, which is a `revoke-key`. */
-  const notice = (from: ScopeRef): Entry => {
+  const notice = (sequence: CheckedSequence): Entry => {
+    const from = sequence.at;
     const revoke = signIntent({ v: 1, to: from, actor: rita.key, kind: "revoke-key", on: 3, expected: {}, fields: {}, idempotencyKey: "r", notAfter: t(60) }, rita.secret);
     const tell: Send = { n: 0, to: d.at, message: { class: "request", type: "tell", body: { message: "compromised", fields: { key: una.key, member: { membership: from, member: "@una" }, entry: { self: true } } } } };
-    const source = scripted(from, 12, { type: "act", signed: revoke, authority: [], presented: {} }, [tell], "platform:membership");
+    const source = scripted(sequence, 12, { type: "act", signed: revoke, authority: [], presented: {} }, [tell], "platform:membership");
     return d.take(source, 0);
   };
-  const told = notice(membership);
+  const told = notice(d.sequenceOf(membership));
   const source = (told.input as Extract<Input, { type: "delivery" }>).from;
   expect(told.sends).toEqual([
     { n: 0, to: destination, message: { class: "request", type: "tell", body: { message: "compromised", fields: { key: una.key, member: { membership, member: "@una" }, entry: source } } } },
     { n: 1, to: membership, message: { class: "result", of: { from: source, n: 0 }, outcome: "applied" } },
   ]);
-  const other = notice({ scope: membership.scope, genesis: textDigest("TEST genesis 80") });
+  const other = notice(d.secondSequence(membership, 80));
   expect(other.sends.map((send) => send.message)).toMatchObject([{ class: "result", outcome: "refused", reason: { code: "guard-failed", name: "not-the-membership" } }]);
 
   // The import that the creation opened, with 3 attempts. `retry-import` waits until they are used, by the rule `import-spent`

@@ -3,7 +3,7 @@ import { PROPOSED_BOUNDS, type FactRef, type FieldValue, type SequenceEntry } fr
 import { canonicalize, entryHash, factRefOf, isEntry, signIntent } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest } from "../src/evidence.ts";
 import { readFacts, readFields, useOf, RuleFault, type Item, type Operation, type RuleGiven, type StateView } from "@generalbusiness/dap-derive";
-import { d, fixtureScope, keys, otherLane, sequenceAt, t } from "@generalbusiness/dap-derive/testing";
+import { d, fixtureScope, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { destinationEvidenceAuditPending, destinationEvidenceResultPending, evidenceAuditOpeningV17, evidenceDestinationRulesV17, evidenceResultMessageFieldsV17,
   evidenceJobKeyV17, evidenceJobRecordWireV17, type EvidenceJobRecordV17 } from "../src/destination-evidence-v17.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
@@ -12,7 +12,7 @@ import { destinationV17 } from "../src/destination-v17.ts";
 
 // SCRIPTED entries and folded ports, using real canonical wire hashes.
 // These exercise dispatch correspondence, not Native admission or authority.
-const at = fixtureScope("destination", 15).at, rules = fixtureScope("rules", 16).at;
+const atSequence = fixtureScope("destination", 15), at = atSequence.at, rules = fixtureScope("rules", 16).at;
 const fact = (seq: number, scope = otherLane): FactRef => ({ at: scope, seq, hash: d("a") });
 function fixture(marked: number | null = null) {
   const proposed = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, labels: [], roomService: null, checks: [
@@ -48,7 +48,7 @@ function fixture(marked: number | null = null) {
   const operation: Operation = { id: "30:0", owner: "platform:destination@17", kind: "evidence-audit", most: 1, for: 7, selected: null,
     attempts: [{ attempt: 1, opened: 30, outcomes: [{ seq: 31, result: "unknown", evidence: d("f"), selected: null }] }] };
   const own = Object.assign((seq: number) => seq === 20 ? { entry: admission, hash: entryHash(admission) } : seq === 30 ? { entry: progress, hash: entryHash(progress) } : null,
-    { sequence: () => sequenceAt(at) });
+    { sequence: () => atSequence });
   const state = { item: (id: number) => id === 20 ? item : null, lookup: (type: string, index: string, key: string) =>
     type === "evidence-job" && index === "jobKey" && key === canonicalize(evidenceJobKeyV17(record.job)) ? [20] : [], operation: () => operation } as unknown as StateView;
   const given = { state, own, resolved: { at, self: 30, bounds: PROPOSED_BOUNDS } } as unknown as RuleGiven;
@@ -134,7 +134,7 @@ function resultBoundary(work: boolean, patch: Record<string, FieldValue> = {}) {
   const state = { ...prior.state, scope: () => ({ at }), item: (id: number) => id === 20 ? item : id === 1 ? { id: 1, type: "publication", refs: { operation: merge } } : null,
     operation: (id: string) => id === operation.id ? operation : null } as unknown as StateView;
   const own = Object.assign((seq: number) => seq === 20 ? { entry: admission, hash: entryHash(admission) }
-    : seq === 50 ? { entry: receipt, hash: entryHash(receipt) } : prior.own(seq), { retained: () => result, sequence: () => sequenceAt(at) });
+    : seq === 50 ? { entry: receipt, hash: entryHash(receipt) } : prior.own(seq), { retained: () => result, sequence: () => atSequence });
   return { record, admitted, result, resultFact, receipt, state, own, operation };
 }
 

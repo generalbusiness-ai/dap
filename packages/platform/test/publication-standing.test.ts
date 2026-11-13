@@ -5,11 +5,11 @@ import { expect, test } from "vitest";
 import type { FactRef, FieldValue, KeyId, SequenceEntry } from "@generalbusiness/dap-contract";
 import { entryHash, keyIdOfSecret, textDigest } from "@generalbusiness/dap-bytes";
 import type { Item, Operation } from "@generalbusiness/dap-derive";
-import { d, otherLane, sequenceAt, t, fixtureScope } from "@generalbusiness/dap-derive/testing";
+import { d, otherLane, t, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { MEMBERSHIP, keyObserved, retained, destinationRita as rita } from "./fixtures-entry.ts";
 import { publicationStandingKeys, publicationStandingRecord, type PublicationStandingContext, type PublicationStandingRecord, type StandingCheck } from "../src/publication-standing.ts";
 
-const at = fixtureScope("destination", 17).at, from = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
+const atSequence = fixtureScope("destination", 17), at = atSequence.at, from = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
 const owner = "platform:destination@5" as const, item = 2;
 const copy = <T>(value: T): T => structuredClone(value);
 function fixture(count = 1) {
@@ -38,7 +38,7 @@ function fixture(count = 1) {
   };
   for (let n = 0; n < count; n++) add(`check-${n}`, n);
   const publication = (): Item => ({ id: item, type: "publication", state: "reserved", revision: 4, opened: d("2"), parties: {}, refs: { lane: otherLane }, values: { reservedAt: 5, passes: copy(record) as unknown as FieldValue, requiredChecks: record.checks.map(check => check.name) }, attributed: [] });
-  const context: PublicationStandingContext = { at, membership: MEMBERSHIP, owner, before: 100, own: Object.assign((seq: number) => { calls.push(seq); return entries.get(seq) ?? null; }, { sequence: () => sequenceAt(at) }), operation: id => operations.get(id) ?? null };
+  const context: PublicationStandingContext = { at, membership: MEMBERSHIP, owner, before: 100, own: Object.assign((seq: number) => { calls.push(seq); return entries.get(seq) ?? null; }, { sequence: () => atSequence }), operation: id => operations.get(id) ?? null };
   const read = (over: Partial<PublicationStandingContext> = {}, pub = publication()) => publicationStandingKeys({ ...context, ...over }, pub);
   return { entries, operations, calls, add, read, publication, record: () => record };
 }

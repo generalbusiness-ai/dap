@@ -274,8 +274,8 @@ test("retained selection preserves reads and admits only byte-proved same-origin
   const contextOperand = resultProjection.values[0]!;
   const makeResult = (of: Result["of"] = { from: requestFact, n: 0 }, decision: "applied" | "refused" = "applied") => {
     const message: Result = { class: "result", of, outcome: "applied" };
-    const source = forged(foreign.at, 1000, { type: "delivery", from: of.from, sourceKind: localSequence.kind, n: of.n,
-      message: requestMessage, decision }, [{ n: 0, to: local.at, message }], sequence);
+    const source = forged(sequence, 1000, { type: "delivery", from: of.from, sourceKind: localSequence.kind, n: of.n,
+      message: requestMessage, decision }, [{ n: 0, to: local.at, message }]);
     const delivered: Delivered = { to: local.at, from: { at: foreign.at, seq: source.entry.seq, hash: entryHash(source.entry) }, n: 0, message };
     return { delivered, source, message };
   };
@@ -333,8 +333,8 @@ test("retained selection preserves reads and admits only byte-proved same-origin
   expect(admitRetainedResultContext(withJudgmentSource(verifiedContext(differentOrigin, { delivery: answer.delivered }),
     { delivery: answer.delivered }, differentSource), answer.delivered, local.at)).toBeNull();
 
-  const historical = forged(local.at, 1001, { type: "delivery", from: answer.delivered.from, sourceKind: sequence.kind,
-    n: 0, message: answer.message, clause: "applied" }, [], localSequence);
+  const historical = forged(localSequence, 1001, { type: "delivery", from: answer.delivered.from, sourceKind: sequence.kind,
+    n: 0, message: answer.message, clause: "applied" }, []);
   const replay = replayContext({ ...base, facts: [], origin: requestOrigin }, {
     recorded: { ...historical.entry, uses: [laterUse] }, source: null,
     facts: [{ mode: "retained-name", fact: laterUse.fact, entry: resultLater.value.use.entry,
