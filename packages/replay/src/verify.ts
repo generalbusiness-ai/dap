@@ -39,8 +39,8 @@ import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/
  */
 
 import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Seed, Bounds, CapabilityName, Digest, Entry, FactRef, Grant, Head, KeyId, Observation, ObservationRequest, ObservationUse, MismatchName, PlatformData, PlatformDefinition, Report, RetainedInput, ScopeId, ScopeKind, ScopeRef, SequenceRef } from "@generalbusiness/dap-contract";
-import { admitSequenceGenesis, isEntryOf, type CheckedSequence, rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isEntryBodyOf, isObservationUse, isPlatformDefinition, natural, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import type { Seed, Bounds, CapabilityName, Digest, Entry, FactRef, FactUse, Grant, Head, KeyId, Observation, ObservationRequest, ObservationUse, MismatchName, PlatformData, PlatformDefinition, Report, RetainedInput, ScopeId, ScopeKind, ScopeRef, SequenceRef } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, digestBytes, isEntryOf, type CheckedSequence, rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isEntryBodyOf, isObservationUse, isPlatformDefinition, natural, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { AmountError, RuleFault, ByteUsage, bound, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeActForReplay, judgeCheckpoint, judgeDeliveryForReplay, archivedPosition, countedEntries, heldPositions, judgeFloor, judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesisForReplay, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, preparationScopeGrant, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds } from "@generalbusiness/dap-derive";
 import type { AnchoredJudgmentCopy, DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, SourceCopy, Observing, Owners, PlatformRules, PreparationJudgment, Own, RecordedRef, Retains, Rules, StateView, Texts, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES, evaluateRules } from "@generalbusiness/dap-derive/rule";
@@ -1207,6 +1207,26 @@ class Verifier {
     this.#textCounts.set(digest, bytes);
   }
 
+  /**
+   * Rulings 4f697a7a and ae48dd39: the retained first entry of a foreign sequence that an entry uses at a later entry, by the
+   * `birth` read under the sequence's genesis digest. The bytes must admit the use's full reference and give the use's kind. A
+   * missing row reads as a missing retained input, and a row that does not admit reads as one that is not the one named. The
+   * bytes count once, as the `entry` row the scope keeps under their content digest.
+   */
+  async #birth(run: Run, use: FactUse, where: FactRef): Promise<CheckedSequence> {
+    const at = use.fact.at, left = this.#limits.bytes - this.#bytes;
+    const got = await this.#source.retained(run.id, "birth", at.genesis, { bytes: Math.min(left, RETAINED_REPLY_BYTES) });
+    if (!got.ok) {
+      this.#unread(got.reason, left < RETAINED_REPLY_BYTES, `a retained input of ${run.id}`);
+      throw new Stop("incomplete", `a retained input is missing: the first entry of ${at.scope}, ${at.genesis} (${got.reason})`, where);
+    }
+    this.#count(got.bytes);
+    const sequence = admitSequenceGenesis(got.input.bytes, at, this.#bounds.entryBytes);
+    if (!sequence || sequence.kind !== use.kind) throw new Stop("incomplete", `a retained input is not the one named: the first entry of ${at.scope}`, where);
+    if (run.definition === null || run.definition.declared.capacity) this.#retainBytes(run, { kind: "entry", digest: digestBytes(utf8(got.input.bytes)) }, utf8(got.input.bytes).length, where.seq, got.input.bytes);
+    return sequence;
+  }
+
   /** Section 9.2: an input an entry names by digest. One that is missing makes the replay `incomplete`. */
   async #retained(run: Run, dependency: RequiredDependency, what: string): Promise<RetainedInput> {
     const { key, origin: { at } } = dependency;
@@ -2173,6 +2193,14 @@ class Verifier {
       if (!isEntry(copy) || !isEntryBodyOf(copy, use.fact)) throw mismatch("a retained foreign body does not match its exact fact");
       this.#recordedKind(entry, use.fact, where);
       rawFacts.push({ fact: use.fact, entry: copy, content: use.content, under: kept.under ?? "", bytes: kept.bytes });
+    }
+    // Rulings 4f697a7a and ae48dd39: each foreign sequence that the entry uses at a later entry has its retained first entry.
+    const births = new Set<string>();
+    for (const use of entry.uses) {
+      if (use.fact.seq === 0 || (run.at && use.fact.at.scope === run.at.scope) || births.has(canonicalize(use.fact.at))) continue;
+      births.add(canonicalize(use.fact.at));
+      const born = await this.#birth(run, use, where);
+      if (!rawFacts.filter(copy => same(copy.fact.at, use.fact.at)).every(copy => isEntryOf(copy.entry, copy.fact, born))) throw mismatch("a retained foreign body does not match its retained first entry");
     }
     const foreign = [...entry.uses.map(use => use.fact), ...(input.type === "delivery" ? [input.from] : []), ...(input.type === "genesis" && input.source ? [input.source] : [])];
     const distinctForeign = [...new Map(foreign.map(fact => [canonicalize(fact), fact])).values()];
