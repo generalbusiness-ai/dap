@@ -46,7 +46,7 @@ export async function scopeIndexCensusCommand(ctx: Context, argv: readonly strin
       };
       check();
       const config = await ctx.store.config(); check();
-      if (!config || config.v !== 2 || typeof config.service !== "string" || typeof config.key !== "string" || !config.key
+      if (!config || config.v !== 1 || typeof config.service !== "string" || typeof config.key !== "string" || !config.key
         || !isSequenceRef(config.register)) return stop("page-failed", "configuration-unavailable");
       const service = indexService(config.service), root = config.repository?.directory;
       if (root === undefined) return stop("root-unregistered");
@@ -103,7 +103,7 @@ export async function scopeIndexCensusCommand(ctx: Context, argv: readonly strin
         const page: IndexScope[] = []; let previous = cursor;
         for (const row of reply["rows"]) {
           if (!isRecord(row) || !exact(row, ["at", "kind"]) || !isSequenceRef(row["at"]) || !isScopeKind(row["kind"]) || row["at"].scope <= previous) return stop("page-failed", "invalid-row");
-          previous = row["at"].scope; page.push({ at: { ...row["at"] }, genesis: row["at"].genesis });
+          previous = row["at"].scope; page.push({ at: { ...row["at"] }, kind: row["kind"] });
         }
         const next = reply["next"];
         if (next !== null && (!isScopeId(next) || page.length === 0 || next !== previous || next <= cursor)) return stop("page-failed", "invalid-cursor");

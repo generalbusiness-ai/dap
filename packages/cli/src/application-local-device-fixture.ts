@@ -76,7 +76,7 @@ export function scriptedDeviceParent(packet: AnyPackedApplication, founding: Sig
       if (!childSequence) throw Error("The actual child genesis must admit its own reference.");
       const judged = judgeDelivery(state, definition, { ...result, from: factRefOf(genesis.entry, childAt) }, {
         clock: clockOf(state, now), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: { entry: genesis.entry, sequence: childSequence, under: child.name }, origin: first.entry,
-        own: seq => entries[seq] ?? null,
+        own: Object.assign((seq: number) => entries[seq] ?? null, { sequence: () => sequence }),
       });
       if (judged.result !== "write") throw Error("The actual child's result did not derive its creator confirmation.");
       const confirmed = seal(judged.draft), confirmation = confirmed.entry.sends.find(send => send.message.class === "control" && send.message.type === "confirm");
