@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2cd0a757ce3bec094250adfb0815ab3ec40d597f","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/retained-editor.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2cd2c97b094498110f2cbb2d556eef0dadde15f0","text":"Merge retired a covered predecessor; the successor is at packages/client/src/checker-key-invitation.ts."}
