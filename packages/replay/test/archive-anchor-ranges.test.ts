@@ -72,6 +72,12 @@ async function journal(fixture: ReturnType<typeof remarks>, dependencies: readon
         const key = { kind: "entry" as const, digest: use.content };
         copies.push({ key, bytes: utf8(bytes).length, pass: from, foreign: { fact: use.fact, pin: NAMED },
           consumers: [{ mode: "required", origin: { at: ledger.fact(entry.seq), input: entry.input.type }, consumer: "foreign-use", purpose: "replay-required", key }] });
+        // Ruling ae48dd39: a later use also needs its sequence's first entry.
+        if (use.fact.seq === 0 || copies.some(copy => copy.key.kind === "birth" && copy.key.digest === use.fact.at.genesis)) continue;
+        const genesis = canonicalize(owner.ledger.entries[0]!.entry), birth = { kind: "birth" as const, digest: use.fact.at.genesis };
+        retained.set(birth.digest, genesis);
+        copies.push({ key: birth, bytes: utf8(genesis).length, pass: from, foreign: { fact: { at: use.fact.at, seq: 0, hash: use.fact.at.genesis }, pin: NAMED },
+          consumers: [{ mode: "required", origin: { at: ledger.fact(entry.seq), input: entry.input.type }, consumer: "foreign-birth", purpose: "replay-required", key: birth }] });
       }
       budget.spend({ entries: entries.length, attempts: copies.length });
       const built = await buildJournalPass({ format: "sha1", budget,
@@ -91,7 +97,7 @@ async function journal(fixture: ReturnType<typeof remarks>, dependencies: readon
         ...(publication ? { publication: () => publication } : {}) });
       expect(built.ok ? "accepted" : built).toBe("accepted");
       if (!built.ok) throw Error(JSON.stringify(built));
-      expect(built.archive.manifest.retained.filter(row => row.kind === "entry")).toHaveLength(copies.length);
+      expect(built.archive.manifest.retained.filter(row => row.kind === "entry")).toHaveLength(copies.filter(copy => copy.key.kind === "entry").length);
       for (const object of built.archive.objects) objects.set(object.id, object);
       current = built.archive.commit; return built.archive;
     },

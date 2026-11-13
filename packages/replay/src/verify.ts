@@ -1222,7 +1222,9 @@ class Verifier {
     }
     this.#count(got.bytes);
     const sequence = admitSequenceGenesis(got.input.bytes, at, this.#bounds.entryBytes);
-    if (!sequence || sequence.kind !== use.kind) throw new Stop("incomplete", `a retained input is not the one named: the first entry of ${at.scope}`, where);
+    if (!sequence) throw new Stop("incomplete", `a retained input is not the one named: the first entry of ${at.scope}`, where);
+    // The admitted genesis proves the source kind; a different recorded word contradicts it.
+    if (sequence.kind !== use.kind) throw new Stop("mismatch", "the recorded source kind contradicts its verified genesis", where);
     if (run.definition === null || run.definition.declared.capacity) this.#retainBytes(run, { kind: "entry", digest: digestBytes(utf8(got.input.bytes)) }, utf8(got.input.bytes).length, where.seq, got.input.bytes);
     return sequence;
   }

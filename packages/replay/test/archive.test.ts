@@ -226,7 +226,8 @@ test("exact caller anchors classify reviewed private Register copies without adm
       } });
       const result = await verifyArchive(conflicting, { ...options, head: { seq: 0, hash } });
       expect(result).toMatchObject({ kind: "verification", verification: { report: { result: "mismatch" } } });
-      if (result.kind === "verification") expect(result.verification.why).toContain("catalog kind contradicts");
+      // The retained Register birth proves its kind before the catalog alias check.
+      if (result.kind === "verification") expect(result.verification.why).toContain("contradicts its verified genesis");
       expect(refused).toEqual([]);
     }
     if (pin === "platform:register@19") {
