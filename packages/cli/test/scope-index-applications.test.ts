@@ -143,10 +143,12 @@ test("application listing preserves active rows with pending errors and isolates
   for (const damage of [
     (item: Item): Item => ({ ...item, values: { ...item.values, release: privateText } }),
     (item: Item): Item => ({ ...item, values: { ...item.values, uri: `git+https://name:secret@git.example.test/repo.git/@${"a".repeat(40)}/package.json` } }),
-    // An installed scope named before its genesis was sealed: the reference holds no genesis digest.
-    (item: Item): Item => ({ ...item, refs: { ...item.refs, scope: { scope: application.scope, genesis: null } as unknown as ScopeRef } }),
   ]) expect(projectScopeApplications({ at: rules, kind: "rules" }, observation([damage(installation())]))).toEqual(error("malformed-installation"));
   expect(projectScopeApplications({ at: rules, kind: "rules" }, observation([installation(), installation(7)]))).toEqual(error("malformed-installation"));
+  // An installed scope named before its genesis was sealed holds no genesis digest. The summary shape refuses it before any
+  // installation check. A wrong genesis that is still a digest cannot be told from a right one here.
+  const unsealed: Item = { ...installation(), refs: { ...installation().refs, scope: { scope: application.scope, genesis: null } as unknown as ScopeRef } };
+  expect(projectScopeApplications({ at: rules, kind: "rules" }, observation([unsealed]))).toEqual(error("malformed-summary"));
 });
 
 // Invariant: complete native summaries cannot omit live rows or exceed their

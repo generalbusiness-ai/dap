@@ -401,11 +401,10 @@ describe("integrity mode (section 9.5)", () => {
     // Section 9.5: the word is not used alone. This rendering does not use it at all.
     expect(text).not.toMatch(/verified/i);
     expect((await replay(w)).report.result).toBe("mismatch");
-    // Integrity mode reads no definition, so it does not check the kind that a genesis records (section 4.1).
+    // Integrity mode reads no definition. A genesis changed in place no longer binds the digest that names its sequence.
     const k = world();
-    // The genesis is sealed again with the kind, and every history that names I is bound to the new genesis.
-    reseal(k, "I", 0, (entry) => { entry.input.kind = "link"; });
-    expect((await replay(k, { mode: "integrity" })).report.result).toBe("consistent");
+    rewrite(k.I, 0, (entry) => { entry.input.kind = "link"; });
+    expect((await replay(k, { mode: "integrity" })).report.result).toBe("mismatch");
   });
 });
 

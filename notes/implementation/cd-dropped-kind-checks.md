@@ -353,3 +353,23 @@ These tracked values name no room: `REGISTER_SCOPE` and
 and `apps/room/wrangler.jsonc` track no room ID. Their live settings are not
 in the repository. The grep covered every tracked `.jsonc`, `.json` and
 `.toml` outside tests, fixtures, test vectors and notes.
+
+## Replay and listing cases after the cutover (ruling a140a1c6 Q-V1, Q-C1)
+
+`packages/replay/test/verify.test.ts`, the reference to another genesis: replay
+refuses at I.1 with "a retained foreign body does not match its exact fact"
+(T3(b)).
+
+The genesis-kind case in replay mode uses `reseal` from
+`packages/replay/test/world.ts`. The helper changes the kind of I.0, then seals
+D, P and I again in the order their entries used each other, and it signs each
+changed intent again with its actor's fixture key. Replay refuses at I.0 with
+`genesis-kind`. The integrity-mode case changes I.0 in place, so the genesis no
+longer binds the digest that names its sequence, and the result is `mismatch`.
+
+`packages/cli/test/scope-index-applications.test.ts`: the damage that put the
+membership reference in the `scope` slot depended on the kind in the
+reference. The case now gives the installed scope a reference whose `genesis`
+is `null`. The summary shape refuses it, so the listing reports
+`malformed-summary`. A wrong genesis that is still a digest cannot be told
+from the right one in the listing, and the listing gets no new rule for it.
