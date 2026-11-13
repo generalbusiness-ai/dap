@@ -14,7 +14,7 @@ act's target item type, fields, required action, guards, effects and
 messages. Read the definition the scope pins. An act's name alone does not
 tell you its meaning.
 
-The intent binds the target scope and its incarnation, the signing key,
+The intent binds the target scope and its genesis, the signing key,
 the act kind, the item, the item revisions the signer expects, the field
 values, an idempotency key and a deadline. A verdict names the version it
 reviews. If that version changes, the participant makes a new decision. A

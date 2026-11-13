@@ -53,8 +53,9 @@ only and creates no new room.
   old directory. The directory has mode 0700 and each file 0600.
 - **A read session.** Room reads use a session that membership issues.
   The command keeps the session in a private cache in the config
-  directory, bound to the service, the membership incarnation and your
-  current key. It reuses the session until 30 seconds before its end. The
+  directory, bound to the service, the membership reference (scope ID and
+  genesis) and your current key. It reuses the session until 30 seconds
+  before its end. The
   token never appears in public config, JSON output or logs. If a reused
   session is refused as `forbidden`, the command checks the membership
   summary once. If that check also refuses the session, the command
@@ -334,8 +335,8 @@ capability.
   existing historical `declared-application` room.
 - A device-command package needs a room of a current device cohort, or an
   existing historical `device-application` room. It also needs `--owner`
-  with the full JSON member reference: the membership scope, incarnation
-  and member handle. The install checks that the member is active in the
+  with the full JSON member reference: the membership scope ID and genesis,
+  and the member handle. The install checks that the member is active in the
   room's membership. The signed package declares the kinds and one owner
   requirement. It supplies no member identity or authority.
 - A package whose signed host requirements include `archive` needs an

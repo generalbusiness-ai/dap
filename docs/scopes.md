@@ -41,7 +41,7 @@ The runtime (`scope`) and the verifier (`replay`) judge and fold with the
 same `derive` functions. The verifier's portable core imports nothing else
 of the runtime's. The package guides describe each package's parts.
 
-## Identity and incarnation
+## Identity and genesis
 
 `packages/contract/src/scope.ts` holds the identifiers, the seed and the
 four reference classes.
@@ -55,18 +55,32 @@ holds the scope's kind, its definition, the scope that created it, the one
 input that caused it, and an ordinal. So the ID is known before the scope
 exists, and two requests to create the same scope name the same scope.
 
-An ID does not say which life of the scope is meant. When a scope writes
-its first entry, it mints a random **incarnation** (`Incarnation`). A
-reference to a scope (`ScopeRef`) is the ID, the incarnation and the kind
-together. A scope refuses a message or an act addressed to another
-incarnation.
+An ID does not say which sequence of entries is meant. The first entry of a
+scope, at `seq` 0, is its **genesis**. Its input (`GenesisInput`) holds the
+seed, a random 16-byte nonce (`GenesisNonce`) that the caller mints in the
+transaction that writes the entry, and the request or the source fact that
+asked for the scope. The hash of that entry is the scope's genesis digest.
+Each later entry carries the genesis digest in its field `genesis`.
+
+A reference to a scope (`SequenceRef`) holds two things:
+`{ scope, genesis }`, the ID and the genesis digest. It holds no kind: the
+kind comes from the seed. A scope refuses what is addressed to another
+genesis:
+
+- A message, act or read that names this ID with another genesis digest
+  gets `wrong-genesis`.
+- A creator that already records an applied creation result for a seed,
+  and then receives an applied result with another genesis, runs the clause
+  `conflict`. The operator incident `genesis-conflict` names two entries:
+  the creator's entry that ran `conflict`, and the creator's entry that
+  sent the creation request. It does not name the earlier applied result.
 
 Each of the four reference classes says one thing:
 
 | Reference | Type | Says |
 |---|---|---|
-| Identity | `ScopeRef` | This scope, this incarnation. Nothing about its state. |
-| Fact | `FactRef` | One sealed entry: the scope, the position `seq` and the entry's hash. |
+| Identity | `SequenceRef` | This scope, this genesis. Nothing about its state. |
+| Fact | `FactRef` | One sealed entry: the sequence reference `at`, the position `seq` and the entry's hash. |
 | Grant | `Grant` | Permission that a fact in an authority scope issued. |
 | Commitment | `Commitment` | One operation that its issuer has promised to complete. |
 
@@ -94,16 +108,17 @@ the room at the versions that the register creates. Both commands print the
 versions.
 
 Every digest and signature is over a domain tag, a newline and the
-canonical JSON of one value. The eight tags are in `DOMAINS`, in
-`packages/contract/src/intent.ts`. They include `artroom-text-1` for
-detached texts and `artroom-snapshot-1` for snapshots of staged refs.
+canonical JSON of one value. The nine tags are in `DOMAINS`, in
+`packages/contract/src/intent.ts`. They include `artroom-input-1` for
+genesis inputs, `artroom-text-1` for detached texts and
+`artroom-snapshot-1` for snapshots of staged refs.
 Sessions have their own tags, `SESSION_DOMAINS`, in `session.ts`. No value
 contains its own digest: an entry has no field for its own hash.
 
 `@generalbusiness/dap-bytes` has the one implementation of each:
 `canonicalize` and `parseStrict`. `scopeIdOf`, `entryHash`, `intentDigest`,
-`definitionDigest`, `textDigest` and the other digests. `signIntent` and
-`verifySignedIntent`. The guards `isDigest`, `isScopeId`, `isIncarnation`,
+`definitionDigest`, `textDigest`, `genesisInputDigest` and the other
+digests. `signIntent` and `verifySignedIntent`. The guards `isDigest`, `isScopeId`, `isGenesisNonce`,
 `isKeyId`, `isMemberId`, `isOutboxId`, `isOperationId`,
 `isPlatformDefinition` and `isScopeKind`.
 
@@ -716,10 +731,10 @@ separate named binding for its screen and native requests.
 
 **Minimum heads.** The `summary`, `items`, `history`, `entry`, and
 `applicationProjection` reads accept an optional trailing `ReadMinimum`:
-`{ at: ScopeRef, head }`. The head is a nonnegative sequence number or
-`{ seq, hash }`. The full scope reference qualifies the sequence by scope, kind,
-and incarnation. `ScopeHandle` also accepts a receipt and uses its exact fact as
-the minimum.
+`{ at: SequenceRef, head }`. The head is a nonnegative sequence number or
+`{ seq, hash }`. The reference `at` qualifies the sequence by scope ID and
+genesis. `ScopeHandle` also accepts a receipt and uses its exact fact as the
+minimum.
 
 The HTTP form is one `atLeast` parameter containing unpadded base64url of
 canonical JSON, with at most 512 decoded bytes. For application projection,
@@ -732,7 +747,7 @@ the named head, then performs the normal read. A full head also requires the
 retained hash at that sequence. A missing or different hash returns
 `unavailable`. Another genesis returns `wrong-genesis`. For an entry
 below the archive floor, the existing `archived` answer takes precedence over a
-minimum's kind or incarnation mismatch. If the scope remains behind, an
+minimum's genesis mismatch. If the scope remains behind, an
 authorized reader receives `{ ok: false, reason: "behind", current: FactRef }`
 with HTTP 503. The wait writes no entry or durable alarm. An abandoned transport
 request may retain its callback until an arrival or the bounded deadline.
@@ -953,7 +968,7 @@ other. By default, deliveries from one sender have no order either. A
 `tell` handler may declare `order: "source"`. The receiver then suppresses
 a delivery whose (source entry position, send ordinal) pair is lower than
 a pair that already applied. It keeps the highest pair for each sender
-incarnation and handler. An older delivery that arrives first still
+scope, sender genesis and handler. An older delivery that arrives first still
 applies, and the newer one applies after it. So source order suppresses
 late arrivals. It does not guarantee a latest value or detect a missing
 delivery. A suppressed delivery still spends the decision that a numbered
@@ -967,7 +982,7 @@ is not built.
 **Diagnoses.** When a request cannot be delivered, the sender stops and
 writes a `diagnosis` entry with its attempt log. There are two findings.
 With `undelivered`, routing refused every attempt, so the target does not
-exist under that name and incarnation. The `undelivered` clause runs, and
+exist under that ID and genesis. The `undelivered` clause runs, and
 the request is settled. With `delivery-unavailable`, something else
 happened. No clause runs, the request stays pending, and the scope still
 records a late result. A lost answer is never read as proof.

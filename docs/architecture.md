@@ -47,7 +47,7 @@ definition with a new digest. Scopes created under the old one keep it.
 ## An act is a signed request, judged in one turn
 
 A participant changes a scope by signing an intent. The intent names the
-scope and its incarnation, the act, the item it is on, the revision the
+scope and its genesis, the act, the item it is on, the revision the
 signer expects that item to have, the fields, an idempotency key and a
 deadline. The signature covers all of it, so a scope can tell exactly what
 was asked and by which key.

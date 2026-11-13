@@ -57,7 +57,7 @@ The examples below are fragments. Their field, item, state, and party names must
 
 The `each` example assumes `names` is a declared list field. The optional-proof example assumes `presents.proof` declares its `kind`, `under`, and `required: false`. The `notIn` example assumes an existing subject with the party slot `authors`. It is not valid in a handler, which has no signer. The last example assumes `proof` is a declared fact field.
 
-An empty `fact.where` does not bypass reference verification. [`readFacts`](../../packages/derive/src/fields.ts) checks scope, incarnation, position, and hash. The guard then checks `kind` and `under`. However, `under` is a definition name, not a restriction to one scope. A valid entry of that kind is not by itself proof that its performer is this signer.
+An empty `fact.where` does not bypass reference verification. [`readFacts`](../../packages/derive/src/fields.ts) checks scope, genesis, position, and hash. The guard then checks `kind` and `under`. However, `under` is a definition name, not a restriction to one scope. A valid entry of that kind is not by itself proof that its performer is this signer.
 
 A field-based fact condition can state that relationship. This fragment comes from the lane-assignment test. There, `proof` has the fact type `kind: ["assign"]`, `under: "lane"`:
 

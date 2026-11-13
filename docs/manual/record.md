@@ -21,10 +21,11 @@ flowchart LR
   F --> R[Receipt]
 ```
 
-An exact **fact reference** names a scope's ID, kind and incarnation, an
-entry position and that entry's hash. A position such as "entry 12" has a
-meaning only inside its own scope. An incarnation tells this lifetime of
-the scope from an earlier lifetime under the same scope ID.
+An exact **fact reference** names a scope's ID and genesis, an entry
+position and that entry's hash. A position such as "entry 12" has a
+meaning only inside its own scope. The genesis, the hash of the scope's
+first entry, tells this sequence from an earlier one under the same scope
+ID.
 
 ## Keep the receipt
 
@@ -97,7 +98,7 @@ separately.
 
 ## Source
 
-Checked against main `6bfb6e16` on 10 November 2026. Sources:
+Checked against main `57e893c0` on 13 November 2026. Sources:
 [entries and receipts](../../packages/contract/src/entry.ts),
 [the report shape](../../packages/contract/src/report.ts),
 [the CLI verifier](../../packages/cli/src/commands.ts),
