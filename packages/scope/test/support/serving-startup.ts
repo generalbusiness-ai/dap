@@ -33,7 +33,9 @@ export class StartupServingIndex extends ScopeIndex {
     // STARTUP_INDEX namespace, under whatever name its test chose, so the
     // stand-in namespace names this object as the owner. ScopeIndex reads
     // SCOPE_INDEX for that check alone.
-    actual.SCOPE_INDEX = new Proxy(env.SCOPE_INDEX, { get(target, key) {
+    const index = env.SCOPE_INDEX;
+    if (!index) throw new Error("The TEST startup index needs a SCOPE_INDEX binding.");
+    actual.SCOPE_INDEX = new Proxy(index, { get(target, key) {
       if (key === "idFromName") return () => ctx.id;
       const value = Reflect.get(target, key, target);
       return typeof value === "function" ? value.bind(target) : value;
