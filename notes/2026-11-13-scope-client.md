@@ -13,7 +13,7 @@ definition or the record already settles.
 This note designs one client in `packages/client` that makes those
 decisions. The author passes a declared definition one time. The author
 then writes views, the words for each outcome, and one typed call for
-each control. Every fact below is read at main `64112e45`.
+each control. Every fact below is read at main `57e893c0`.
 
 Hugh made two decisions on 13 November 2026 that this note takes as
 given. An edited retry goes under the same key. The replica moves into
@@ -145,7 +145,7 @@ The confirmed table has 6 reasons of class `never`, 5 of class
 6. In each other case the client signs the built intent under the same
    key. The values can be the same or changed.
 
-The scope's rule is at `packages/derive/src/judge.ts:218-222`. The first
+The scope's rule is at `packages/derive/src/judge.ts:225-229`. The first
 sealed intent of an actor under a key holds the key. The same bytes get
 the receipt of that entry again. Other bytes get `mismatch`. Rules 1 to
 6 therefore give one entry for one request, whatever the page remembers
@@ -164,8 +164,8 @@ gives the times.
 
 `Custody` (`packages/client/src/custody.ts`) keeps one exact envelope
 for each key today. Another meaning under the key throws `conflicting`.
-Any refusal makes the record terminal (`:404`), and `settle` returns at
-once for a terminal record (`:421`). Four changes follow.
+Any refusal makes the record terminal (`:406`), and `settle` returns at
+once for a terminal record (`:423`). Four changes follow.
 
 ### 5.1 A record holds the signings of one request
 
@@ -519,9 +519,9 @@ the kernel.
 
 ## 10. Answer shapes stay as they are
 
-`mismatch` carries only its reason (`packages/contract/src/result.ts:80`),
+`mismatch` carries only its reason (`packages/contract/src/result.ts:81`),
 and `settle` answers `not-found` when another intent holds the key
-(`packages/scope/src/core.ts:806-822`). Neither shape changes.
+(`packages/scope/src/core.ts:900-916`). Neither shape changes.
 
 A client with a replica reads which intent holds a key from
 `state.accepted(actor, key)`, with no request. A client with no replica
