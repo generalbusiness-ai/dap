@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d22cf37bb0f121877d3e3e5e569181d2ac4c1a38","text":"Merge retired a covered predecessor; the successor is at docs/manual/record.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d38c39cfdb358e9d911b7dfae2228363344014f6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/cd-dropped-kind-checks.md."}
