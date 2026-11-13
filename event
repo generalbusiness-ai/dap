@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/derive/package.json","body":{"commit":"57e893c01c1a0ae34af7e62a077513743ddcbb4c","path":"packages/derive/package.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/derive/src/binding.ts","body":{"commit":"57e893c01c1a0ae34af7e62a077513743ddcbb4c","path":"packages/derive/src/binding.ts"}}
