@@ -37,7 +37,6 @@ test("application listing preserves recorded Native none/one metadata through SC
   // Native execution occurred in the retained Counter capture. Only its
   // metadata is checked in. All non-output slots below are SCRIPTED, with
   // placeholders rather than reconstructed package bodies or signatures.
-  // HELD: the recorded listing predates genesis references. Its scopes still name `inc` and `kind`, and it needs a new recording.
   const recorded = JSON.parse(readFileSync(new URL("./fixtures/application-release-listing.json", import.meta.url), "utf8")) as {
     samples: Record<"none" | "one", {
       observation: { scope: ScopeRef; pin: Summary["definition"]; head: Head; complete: boolean; counts: Summary["counts"] };
