@@ -1,7 +1,8 @@
+import { scopeGenesisEligibility } from "../src/internal/room-hooks.ts";
 import { expect, test } from "vitest";
-import type { Entry, OperationId } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, utf8 } from "@generalbusiness/dap-bytes";
-import { ProofBytes, PROOF_BYTE_BOUNDS as B } from "../src/proof-bytes.ts";
+import type { Entry, GenesisEntry, OperationId } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, digestBytes, entryHash, isEntryBodyOf, isScopeId, utf8 } from "@generalbusiness/dap-bytes";
+import { ProofBytes, proofEntry, PROOF_BYTE_BOUNDS as B } from "../src/proof-bytes.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { at, create, rita } from "./fixtures-native.ts";
 import { outsideOf, pushOf } from "./outside.ts";
@@ -21,15 +22,36 @@ test("native proof source returns only exact admitted entry bytes and checks ful
     let bodies = 0;
     const traced = new ProofBytes({ exec(query, ...args) { if (query.startsWith("SELECT bytes FROM entry")) bodies++; return sql.exec(query, ...args); } });
     const refused = [
-      traced.exact({ ...identity.genesis, at: { ...identity.genesis.at, kind: "register" } }, first.size),
-      traced.exact({ ...identity.genesis, at: { ...identity.genesis.at, inc: `in_${"a".repeat(26)}` } }, first.size),
+      traced.exact({ ...identity.genesis, at: { ...identity.genesis.at, scope: `sc_${"a".repeat(52)}` } }, first.size),
+      traced.exact({ ...identity.genesis, at: { ...identity.genesis.at, genesis: `sha256:${"0".repeat(64)}` } }, first.size),
       traced.exact({ ...identity.genesis, hash: `sha256:${"0".repeat(64)}` }, first.size),
       traced.exact({ ...identity.genesis, seq: 1 }, first.size),
       traced.exact(identity.genesis, first.size - 1), traced.exact(identity.genesis, NaN),
     ];
-    const owner = instance as { genesisEligibility(request: () => { key: typeof rita.key; since: number }): Promise<unknown> };
-    const eligibility = await owner.genesisEligibility(() => ({ key: rita.key, since: Date.parse(at(0)) }));
-    return { answer, timed, invalidTime, expected: { fact: identity.genesis, bytes: first.bytes }, refused, bodies, eligibility };
+    const owner = instance as { [scopeGenesisEligibility](request: () => { key: typeof rita.key; since: number }): Promise<unknown> };
+    const eligibility = await owner[scopeGenesisEligibility](() => ({ key: rita.key, since: Date.parse(at(0)) }));
+    const sequence = admitSequenceGenesis(first.bytes, identity.genesis.at, first.size);
+    if (!sequence) throw Error("Actual original genesis association required");
+    const original = proofEntry({ fact: identity.genesis, bytes: first.bytes }, identity.genesis, first.size, sequence);
+    if (!original || original.input.type !== "genesis") throw Error("Actual genesis entry required");
+    // Byte-association fixture only: this later entry is not a Native turn.
+    const later: Entry = { ...original, seq: 1, prev: first.hash, genesis: first.hash,
+      input: { type: "checkpoint", through: 0, state: digestBytes(utf8("TEST synthetic checkpoint")) }, effects: [], sends: [] };
+    const fact = { at: identity.genesis.at, seq: 1, hash: entryHash(later) }, bytes = canonicalize(later), raw = { fact, bytes };
+    const changedScope = `sc_${fact.at.scope[3] === "a" ? "b" : "a"}${fact.at.scope.slice(4)}`;
+    if (!isScopeId(changedScope)) throw Error("Full but different scope address required");
+    const changedAddress = { ...fact, at: { ...fact.at, scope: changedScope } };
+    const full = proofEntry(raw, fact, utf8(bytes).length, sequence);
+    const wrongAddress = proofEntry({ fact: changedAddress, bytes }, changedAddress, utf8(bytes).length, sequence);
+    const missing = Reflect.apply(proofEntry, undefined, [raw, fact, utf8(bytes).length]);
+    const labelled = Reflect.apply(proofEntry, undefined, [raw, fact, utf8(bytes).length, { at: fact.at, kind: sequence.kind }]);
+    const genesis = { fact: identity.genesis, bytes: first.bytes };
+    const content = digestBytes(utf8(first.bytes));
+    return { answer, timed, invalidTime, expected: { fact: identity.genesis, bytes: first.bytes }, refused, bodies, eligibility,
+      full: full !== null, bodyOnlyChangedAddress: isEntryBodyOf(later, changedAddress), wrongAddress, missing, labelled,
+      content: proofEntry(genesis, identity.genesis, first.size, sequence, content) !== null,
+      wrongContent: proofEntry(genesis, identity.genesis, first.size, sequence, digestBytes(utf8("wrong content"))),
+      noncanonical: proofEntry({ ...raw, bytes: bytes + " " }, fact, utf8(bytes).length + 1, sequence) };
   });
   expect(got.answer).toEqual(got.expected);
   expect(got.timed).toEqual(got.expected);
@@ -37,6 +59,8 @@ test("native proof source returns only exact admitted entry bytes and checks ful
   expect(got.eligibility).toEqual({ state: "positive" });
   expect(Object.keys(got.answer!)).toEqual(["fact", "bytes"]);
   expect(got.refused).toEqual(Array(6).fill(null)); expect(got.bodies).toBe(0);
+  expect(got).toMatchObject({ full: true, bodyOnlyChangedAddress: true, wrongAddress: null, missing: null, labelled: null,
+    content: true, wrongContent: null, noncanonical: null });
 });
 
 /** Synthetic canonical entry padding on real SQLite, not native judgments. */
@@ -44,13 +68,13 @@ test("native sender admits truthful UTF8 bytes at the hard bound and refuses B+1
   for (const size of [B.body, B.body + 1]) {
     const scope = await create();
     const got = await scope.inside(state => {
-      const sql = sqlOf(state), store = new SqliteStore(sql), original = JSON.parse(store.stored(0)!.bytes) as Entry;
-      const entry = { ...original, effects: [...original.effects, { effect: "record" as const, capability: "hold@1" as const, kind: "padding", key: [], state: "padded", values: { text: "é😀" } }] };
-      const extra = size - utf8(canonicalize(entry)).length;
-      entry.effects[entry.effects.length - 1] = { effect: "record", capability: "hold@1" as const, kind: "padding", key: [], state: "padded", values: { text: "é😀" + "x".repeat(extra) } };
+      const sql = sqlOf(state), store = new SqliteStore(sql), original = JSON.parse(store.stored(0)!.bytes) as GenesisEntry;
+      const padded = (text: string): GenesisEntry => ({ ...original, effects: [...original.effects, { effect: "record" as const, capability: "hold@1" as const, kind: "padding", key: [], state: "padded", values: { text } }] });
+      const extra = size - utf8(canonicalize(padded("é😀"))).length;
+      const entry = padded("é😀" + "x".repeat(extra));
       const bytes = canonicalize(entry), hash = entryHash(entry);
       state.storage.sql.exec("UPDATE entry SET bytes=?,hash=?,size=1 WHERE seq=0", bytes, hash); // forged legacy size must not decide
-      store.setScope({ ...store.scope()!, head: { seq: 0, hash }, genesis: { ...store.scope()!.genesis, hash } });
+      store.setScope({ ...store.scope()!, at: { ...store.scope()!.at, genesis: hash }, head: { seq: 0, hash }, genesis: { ...store.scope()!.genesis, hash } });
       let bodies = 0;
       const proof = new ProofBytes({ exec(query, ...args) { if (query.startsWith("SELECT bytes FROM entry")) bodies++; return sql.exec(query, ...args); } });
       const identity = proof.identity()!, answer = proof.exact(identity.genesis, Number.MAX_SAFE_INTEGER);
@@ -66,13 +90,13 @@ test("proof sender bounds scope metadata and retained bodies before transfer and
   const scope = await create();
   const got = await scope.inside(state => {
     const sql = sqlOf(state), store = new SqliteStore(sql), first = store.stored(0)!, proof = new ProofBytes(sql), fact = proof.identity()!.genesis;
-    const content = digestBytes(utf8(first.bytes)), use = { fact, content };
+    const content = digestBytes(utf8(first.bytes)), use = { fact, content, kind: store.scope()!.kind };
     store.retain({ kind: "entry", digest: content, bytes: first.bytes, under: "ignored-secret-bearing-label" });
     const valid = proof.retained(use, first.size);
     let bodies = 0;
     const traced = new ProofBytes({ exec(query, ...args) { if (query.startsWith("SELECT bytes FROM")) bodies++; return sql.exec(query, ...args); } });
     const small = traced.retained(use, first.size - 1);
-    const wrong = proof.retained({ fact: { ...fact, hash: `sha256:${"0".repeat(64)}` }, content }, first.size);
+    const wrong = proof.retained({ ...use, fact: { ...fact, hash: `sha256:${"0".repeat(64)}` } }, first.size);
     state.storage.sql.exec("UPDATE retained_input SET bytes=? WHERE kind='entry' AND digest=?", "x".repeat(B.body + 1), content);
     const oversized = traced.retained(use, B.body);
     const current = store.scope()!;

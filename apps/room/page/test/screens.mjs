@@ -18,6 +18,7 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { recordFrom, recorderLog } from "../../../../scripts/demo/recorder-output.ts";
+import { initializeCapture } from "../../../../scripts/demo/page-key-custody.ts";
 
 const page = join(dirname(fileURLToPath(import.meta.url)), "..");
 const root = join(page, "../../..");
@@ -86,7 +87,7 @@ async function as(person, { width = 1024, height = 800, colorScheme = "light" } 
     }
     return route.fulfill({ status: answer.status, headers: answer.headers, body: answer.body });
   });
-  await context.addInitScript((kept) => localStorage.setItem("artroom-page", JSON.stringify(kept)), { place: record.place, secret: record.people[person] });
+  await initializeCapture(context, { service: record.service, place: record.place, secret: record.people[person] });
   const tab = await context.newPage();
   const requests = [];
   tab.on("request", (request) => requests.push({ method: request.method(), url: request.url() }));

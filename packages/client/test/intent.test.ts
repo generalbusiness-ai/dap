@@ -1,16 +1,16 @@
 import { expect, test, vi } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { LATE, MAX_DEPTH, canonicalize, isFieldValue, newIncarnation, publicKeyOf, scopeIdOf, takeBytes, textDigest, verifySessionRequest, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { LATE, MAX_DEPTH, canonicalize, isFieldValue, newGenesisNonce, publicKeyOf, scopeIdOf, takeBytes, textDigest, verifySessionRequest, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, bindingTransport, create, httpTransport, signedIntent, signerSessionRequest, webCryptoSigner, type ServiceBinding, type Transport } from "../src/index.ts";
 
 test("an asynchronous session signer keeps the original membership request and its session domain while caller data changes", async () => {
   const signer = await webCryptoSigner();
-  const to = { scope: scopeIdOf({ v: 1, kind: "membership", definition: "platform:membership@5", creator: null, cause: textDigest("TEST session signer"), ordinal: 0 }), kind: "membership" as const, inc: newIncarnation(new Uint8Array(16).fill(1)) };
+  const to = { scope: scopeIdOf({ v: 1, kind: "membership", definition: "platform:membership@5", creator: null, cause: textDigest("TEST session signer"), ordinal: 0 }), genesis: textDigest("TEST genesis 1") };
   const original = structuredClone(to);
   let release!: () => void;
   const waiting = new Promise<void>(resolve => { release = resolve; });
   const result = signerSessionRequest(to, { key: signer.key, sign: async bytes => { await waiting; return signer.sign(bytes); } }, "2026-10-12T00:01:00Z", "TEST operation");
-  to.inc = newIncarnation(new Uint8Array(16).fill(2));
+  to.genesis = textDigest("TEST genesis 2");
   release();
   const signed = await result;
   expect(verifySessionRequest(signed)).toBe(true);
@@ -38,7 +38,7 @@ test("an intent signed by a WebCrypto key that cannot be read is one the bytes p
 
 test("a reply is an outcome only when it is an answer of its operation: a discriminant the contract names, with what that answer must carry; anything else is a TransportError", async () => {
   const d = `sha256:${"a".repeat(64)}`;
-  const fact = { at: { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" }, seq: 1, hash: d };
+  const fact = { at: { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` }, seq: 1, hash: d };
   const receipt = { fact, definition: d, intent: d, effects: [], sends: ["1.0"], epoch: 0 };
   const replying = (reply: unknown) => httpTransport("https://scopes.test", { fetch: () => Promise.resolve({ status: 200, body: new Response(JSON.stringify(reply)).body }) });
   const submit = (reply: unknown) => replying(reply).submit(fact.at.scope, {} as never, []);
@@ -66,20 +66,20 @@ test("a reply is an outcome only when it is an answer of its operation: a discri
 
 test("each operation of the handle returns a reply only when it has every member the contract requires of that operation's result; with one member missing or of another kind it is a TransportError", async () => {
   const d = `sha256:${"a".repeat(64)}`;
-  const scope = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
+  const scope = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
   const head = { seq: 1, hash: d };
   const fact = { at: scope, ...head };
   const receipt = { fact, definition: d, intent: d, effects: [{ effect: "activate" }], sends: ["1.0"], epoch: 0 };
   const item = { id: 1, type: "note", state: "draft", revision: 1, opened: d, parties: {}, refs: {}, values: {}, attributed: [] };
-  const entry = { v: 1, at: scope, seq: 1, prev: d, time: "2026-10-04T12:00:00Z", clamped: false, epoch: 0, input: { type: "checkpoint", through: 0, state: d }, uses: [], prepared: [], effects: [], sends: [] };
+  const entry = { v: 1, genesis: scope.genesis, seq: 1, prev: d, time: "2026-10-04T12:00:00Z", clamped: false, epoch: 0, input: { type: "checkpoint", through: 0, state: d }, uses: [], prepared: [], effects: [], sends: [] };
   const sealed = { entry, hash: d };
   // An act's input, with an actor and a signature of the forms the contract fixes: a key ID of 32 bytes, a signature of 64.
   const intent = { v: 1, to: scope, actor: `key_${"A".repeat(43)}`, kind: "offer", on: null, expected: {}, fields: {}, idempotencyKey: "k", notAfter: entry.time };
   const act = (over: object, sig = "A".repeat(86)) => read({ entry: { ...entry, input: { type: "act", signed: { intent: { ...intent, ...over }, sig }, authority: [], presented: {} } }, hash: d });
   // A refused delivery records why: a code the contract names and, where the failed guard declares one, a name.
-  const refusal = (reason: unknown) => read({ entry: { ...entry, input: { type: "delivery", from: fact, n: 0, message: { class: "request", type: "tell", body: {} }, decision: "refused", reason } }, hash: d });
+  const refusal = (reason: unknown) => read({ entry: { ...entry, input: { type: "delivery", from: fact, sourceKind: "lane", n: 0, message: { class: "request", type: "tell", body: {} }, decision: "refused", reason } }, hash: d });
   // A genesis states its act kind (section 4.1): one text, always present, and never empty.
-  const genesis = (kind: object) => read({ entry: { ...entry, input: { type: "genesis", seed: { v: 1, kind: "lane", definition: d, creator: scope, cause: d, ordinal: 0 }, inc: scope.inc, "founding": null, source: fact, n: 0, message: { class: "request", type: "create", body: {} }, decision: "refused", ...kind } }, hash: d });
+  const genesis = (kind: object) => read({ entry: { v: 1, seq: 0, prev: null, time: entry.time, clamped: false, epoch: 0, uses: [], prepared: [], effects: [], sends: [], input: { type: "genesis", seed: { v: 1, kind: "lane", definition: d, creator: scope, cause: d, ordinal: 0 }, nonce: newGenesisNonce(new Uint8Array(16).fill(1)), "founding": null, source: fact, sourceKind: "lane", n: 0, message: { class: "request", type: "create", body: {} }, decision: "refused", ...kind } }, hash: d });
   const outboxId = { outboxId: "1.0", to: scope, class: "request", held: false, attempts: [{ at: entry.time, answer: "none" }], acknowledged: null, result: null, diagnosis: null };
   const summary = { scope, status: "active", definition: "platform:directory@1", time: entry.time, items: [item], counts: [["note", "draft", 1]] };
   const read = (value: unknown, more: object = {}) => ({ ok: true, at: head, value, complete: true, ...more });
@@ -129,7 +129,7 @@ test("each operation of the handle returns a reply only when it has every member
   expect(rows.every(([, , good, bad]) => good.length > 0 && bad.length > 0)).toBe(true);
 
   // Following a receipt reads the entry it names, so a reply that is no entry is no outcome of it either; a refusal the contract names is.
-  await expect(handle(binding(read({ entry: less(entry, "at"), hash: d }))).followReceipt(receipt as never)).rejects.toThrow(TransportError);
+  await expect(handle(binding(read({ entry: less(entry, "genesis"), hash: d }))).followReceipt(receipt as never)).rejects.toThrow(TransportError);
   expect(await handle(binding({ ok: false, reason: "forbidden" })).followReceipt(receipt as never)).toEqual({ ok: false, reason: "forbidden" });
   // An entry of the right shape and other bytes is the handle's own finding, not the transport's.
   expect(await handle(binding(read(sealed))).followReceipt(receipt as never)).toEqual({ ok: false, reason: "hash-mismatch" });
@@ -153,7 +153,7 @@ test("the intent that is signed is a detached copy: what the caller changes whil
 
 test("a reply nested far deeper than any value can be is no answer on either transport, and is no field value: the guard returns false and does not throw, and a service binding's result is disposed whatever the guard does", async () => {
   const d = `sha256:${"a".repeat(64)}`;
-  const fact = { at: { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" }, seq: 1, hash: d };
+  const fact = { at: { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` }, seq: 1, hash: d };
   /** A record nested `n` deep, from text and not by recursion. */
   const nested = (n: number) => '{"x":'.repeat(n) + "0" + "}".repeat(n);
   const receipt = (text: string) => `{"answer":"accepted","receipt":{"fact":${JSON.stringify(fact)},"definition":"${d}","intent":"${d}","effects":[{"effect":"value","item":0,"slot":"s","value":${text}}],"sends":[],"epoch":0}}`;

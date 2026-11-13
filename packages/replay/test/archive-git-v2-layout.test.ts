@@ -4,6 +4,7 @@ import { afterAll, expect, test } from "vitest";
 import { canonicalize, entryHash, parseStrict } from "@generalbusiness/dap-bytes";
 import type { Entry } from "@generalbusiness/dap-contract";
 import { archiveSource, verifyArchive } from "../src/index.ts";
+import { later } from "@generalbusiness/dap-derive/testing";
 import { gitSource } from "../src/git.ts";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
 import { buildJournalPass } from "../../git/src/journal-v2-layout.ts";
@@ -78,7 +79,7 @@ test("three v2 passes cover ten thousand entries without rereading old entries o
       // Hash and descriptor agree, but the first entry does not follow the
       // confirmed receipt. A copied body cannot choose a different chain.
       const raw = parseStrict(fixture.bodies[first]!) as Entry;
-      const bad = { ...raw, prev: fixture.description.entries[0]!.hash }, bytes = canonicalize(bad), hash = entryHash(bad);
+      const bad = { ...later(raw), prev: fixture.description.entries[0]!.hash }, bytes = canonicalize(bad), hash = entryHash(bad);
       const changed = JSON.parse(selection); changed.entries[0].hash = hash;
       for (const object of changed.objects) for (const consumer of object.consumers) consumer.origin.at.hash = hash;
       const control = new ArchiveBudget({}, () => 0); control.spend({ entries: entries.length, attempts: objects.length });

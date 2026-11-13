@@ -94,7 +94,7 @@ async function room(t) {
   t.after(() => new Promise(resolve => { http.closeAllConnections(); http.close(resolve); }));
   const service = `http://127.0.0.1:${http.address().port}`, store = fileStore(home);
   await store.keep('operator', SECRET);
-  await store.save({ v: 1, service, register: peer.register ?? { scope: 'sc_test', inc: 'in_test', kind: 'register' }, key: 'operator', handle: '@rita', repository: peer.config().repository });
+  await store.save({ v: 2, service, register: peer.register ?? { scope: 'sc_test', genesis: textDigest('TEST register genesis') }, key: 'operator', handle: '@rita', repository: peer.config().repository });
   const file = join(home, 'brief.txt'); writeFileSync(file, BRIEF);
   const pair = [server(home, file), server(home, file)];
   t.after(() => { for (const process_ of pair) process_.stop(); });

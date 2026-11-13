@@ -8,7 +8,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { entryHash, factRefOf } from "@generalbusiness/dap-bytes";
 import { AmountError, MemoryState, NOTHING, PROFILES, StandingError, applyEntry, checkStandingEntry, entryOf, fits, judgeCheckpoint, judgeDelivery, judgeDiagnosis, owed, reserved, standingCounter, standingEntries, standingReserved, checkpointOf, validateDefinition } from "../src/index.ts";
 import type { PlatformRules, StateView } from "../src/index.ts";
-import { arriving, desk, forged, created, keys, on, valid, standingData } from "./fixtures-entry.ts";
+import { arriving, desk, fixtureSequence, forged, created, keys, on, valid, standingData } from "./fixtures-entry.ts";
 
 const definition = () => valid(validateDefinition(standingData(), PROPOSED_BOUNDS, PROFILES, { platform: true }));
 const total = (s: ReturnType<typeof created>) => s.head.seq + 1 + owed(s.state, s.definition, s.last.input);
@@ -173,8 +173,8 @@ test("at B a handoff exchanges three standing entries for one entry and two requ
   const message = { class: "result", of: { from: s.fact(request.seq), n: 0 }, outcome: "applied" } as const;
   const requestMessage = origin.sends[0]!.message;
   if (requestMessage.class !== "request") return expect.fail("advance sent no request");
-  const source = forged(peer.at, 2, { type: "delivery", from: s.fact(request.seq), n: 0, message: requestMessage, decision: "applied" }, [{ n: 0, to: s.at, message }]);
-  const delivered = { to: s.at, from: factRefOf(source.entry), n: 0, message };
+  const source = forged(fixtureSequence(peer), 2, { type: "delivery", sourceKind: "lane", from: s.fact(request.seq), n: 0, message: requestMessage, decision: "applied" }, [{ n: 0, to: s.at, message }]);
+  const delivered = { to: s.at, from: factRefOf(source.entry, source.sequence.at), n: 0, message };
   const resultContext = { ...arriving(s, delivered, source), platform };
   const bad = judgeDelivery(s.state, s.definition, delivered, resultContext);
   expect(bad).toEqual({ result: "unavailable", reason: "unavailable" });

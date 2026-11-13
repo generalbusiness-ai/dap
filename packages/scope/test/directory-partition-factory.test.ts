@@ -13,8 +13,9 @@ import { recordedMembership, recordedRules } from "../src/authority.ts";
 import { SqliteStore } from "../src/sqlite.ts";
 import { namespace } from "../src/namespace.ts";
 import { partitionProof, receiverPolicyProof, partitionCreationProof, partitionDeclaredCreationProof } from "../src/partition-proof.ts";
-import { PROOF_BYTE_BOUNDS, proofEntry } from "../src/proof-bytes.ts";
-import { partitionApplicationPublicationOrigin } from "../../platform/src/partition-provenance.ts";
+import { PROOF_BYTE_BOUNDS } from "../src/proof-bytes.ts";
+import { partitionApplicationPublicationOrigin, partitionPublicationOrigin } from "../../platform/src/partition-provenance.ts";
+import { readNativeBirth } from "../src/native-birth.ts";
 import { counting } from "../../../apps/counter/definition.ts";
 import { COUNTING_DEFINITION } from "../../../apps/counter/pin.ts";
 import { rita, una } from "./repository.ts";
@@ -50,11 +51,11 @@ test("native root creates its partition with exact confirmed refs and real membe
     // The receiver is still empty: this checks the actual native Root send,
     // not a retained Part genesis or a supplied directory hint.
     if (send.message.class !== "request") return expect.fail("partition creation is not a request");
-    const partitionCreate = { seed: send.to as Seed, source: factRefOf(creating), n: send.n, message: send.message };
+    const partitionCreate = { seed: send.to as Seed, source: factRefOf(creating, refs.root), n: send.n, message: send.message };
     const bootstrap = await life.wait(() => partitionCreationProof(namespace(env.PLATFORM), partitionCreate));
     expect(bootstrap?.policy).toMatchObject({ mode: "partition-v1", root: refs.root, creation: partitionCreate });
-    expect(bootstrap?.proof.calls).toBe(5);
-    expect(bootstrap?.proof.frames).toHaveLength(5);
+    expect(bootstrap?.proof.calls).toBe(6);
+    expect(bootstrap?.proof.frames).toHaveLength(6);
     expect(bootstrap?.proof.frames.some(frame => frame.fact.at.scope === scopeIdOf(partitionCreate.seed))).toBe(false);
     expect(await life.wait(() => partitionCreationProof(namespace(env.PLATFORM), { ...partitionCreate, n: send.n + 100 }))).toBeNull();
     await dispatchFixture([D, P, ...children], life.wait);
@@ -80,37 +81,45 @@ test("native root creates its partition with exact confirmed refs and real membe
     if (!create) return expect.fail("native partition emitted no application create");
     const A = life.platform(scopeIdOf(create.to as Seed));
     if (create.message.class !== "request") return expect.fail("application creation is not a request");
-    const applicationCreate = { seed: create.to as Seed, source: factRefOf(creation), n: create.n, message: create.message };
+    const applicationCreate = { seed: create.to as Seed, source: factRefOf(creation, await P.at()), n: create.n, message: create.message };
     const appBootstrap = await life.wait(() => partitionDeclaredCreationProof(namespace(env.PLATFORM), applicationCreate, counting));
     expect(appBootstrap?.policy).toMatchObject({ mode: "partition-v1", root: refs.root, creation: applicationCreate });
-    expect(appBootstrap?.proof.frames).toHaveLength(7); expect(appBootstrap?.proof.calls).toBe(7);
+    expect(appBootstrap?.proof.frames).toHaveLength(8); expect(appBootstrap?.proof.calls).toBe(8);
     expect(await life.wait(() => partitionDeclaredCreationProof(namespace(env.PLATFORM), applicationCreate, { ...counting, name: "issue" }))).toBeNull();
     await dispatchFixture([P, A, ...children], life.wait);
     const genesis = (await A.entries())[0]!;
     expect((await A.summary()).value).toMatchObject({ definition: COUNTING_DEFINITION, status: "active" });
-    const proof = await life.wait(() => partitionProof(namespace(env.PLATFORM), factRefOf(genesis)));
-    expect(proof).toMatchObject({ calls: 8, reservedBytes: 8 * 1024 * 1024 });
-    expect(proof?.frames).toHaveLength(8);
+    const applicationAt = await A.at();
+    const proof = await life.wait(() => partitionProof(namespace(env.PLATFORM), factRefOf(genesis, applicationAt)));
+    expect(proof).toMatchObject({ calls: 9, reservedBytes: 9 * 1024 * 1024 });
+    expect(proof?.frames).toHaveLength(9);
     for (const node of [D, P, ...children, A]) {
       expect(partitionReceiverPolicy(await node.at(), proof!.frames)).toMatchObject({ mode: "partition-v1", lineage: { at: await node.at(), root: refs.root } });
       const at = await node.at(), selected = await life.wait(() => receiverPolicyProof(namespace(env.PLATFORM), at));
       expect(selected?.policy).toMatchObject({ mode: "partition-v1", lineage: { at, root: refs.root } });
-      expect(selected?.proof.calls).toBeLessThanOrEqual(8);
+      expect(selected?.proof.calls).toBeLessThanOrEqual(9);
     }
     const inboxAt = await inbox.at(), inboxPolicy = await life.wait(() => receiverPolicyProof(namespace(env.PLATFORM), inboxAt));
     const inboxBirth = await life.wait(() => namespace(env.PLATFORM).births.read(inboxAt, 10000));
-    const inboxEntry = inboxBirth && proofEntry(inboxBirth.proof, inboxBirth.proof.fact, PROOF_BYTE_BOUNDS.body);
+    let inboxBytes = 0;
+    const inboxAdmitted = inboxBirth && readNativeBirth(inboxBirth, inboxAt, PROOF_BYTE_BOUNDS.body, bytes => {
+      inboxBytes += bytes;
+      if (inboxBytes > PROOF_BYTE_BOUNDS.body) throw new Error("inbox birth exceeds its one-reply witness allowance");
+    });
+    const inboxEntry = inboxAdmitted && inboxAdmitted.entry;
+    expect(inboxBytes).toBeGreaterThan(0); expect(inboxBytes).toBeLessThanOrEqual(PROOF_BYTE_BOUNDS.body);
     expect(inboxEntry?.input.type === "genesis" ? inboxEntry.input.message?.body : null).toMatchObject({ membership: refs.membership, fields: { membership: refs.membership } });
     expect(inboxPolicy?.policy).toMatchObject({ mode: "partition-v1", lineage: { at: inboxAt, root: refs.root } });
     expect(inboxPolicy?.proof.calls).toBe(4);
-    const frames = proof!.frames.map(frame => ({ fact: frame.fact, entry: frame.entry, under: isPlatformDefinition(frame.named) ? platformName(frame.named) : frame.declarationName }));
-    expect(partitionApplicationPublicationOrigin(factRefOf(genesis), refs.root, refs.destination, frames)).toBe(true);
-    expect(applicationPublicationOrigin(factRefOf(genesis), refs.root, refs.destination, frames)).toBe(false);
+    const frames = proof!.frames.map(frame => ({ fact: frame.fact, entry: frame.entry, bytes: canonicalize(frame.entry), sequence: frame.sequence, under: isPlatformDefinition(frame.named) ? platformName(frame.named) : frame.declarationName }));
+    expect(partitionApplicationPublicationOrigin(factRefOf(genesis, applicationAt), refs.root, refs.destination, frames)).toBeNull();
+    expect(partitionPublicationOrigin(factRefOf(genesis, applicationAt), refs.root, refs.destination, "application", proof!.frames)).toBe(true);
+    expect(applicationPublicationOrigin(factRefOf(genesis, applicationAt), refs.root, refs.destination, frames)).toBe(false);
     const confirmed = (await A.entries()).at(-1)!;
     expect(confirmed.seq).toBeGreaterThan(0);
-    const current = await life.wait(() => partitionProof(namespace(env.PLATFORM), factRefOf(confirmed)));
-    expect(current?.source.fact).toEqual(factRefOf(confirmed));
-    expect(current?.frames).toHaveLength(8); expect(current?.calls).toBe(9);
+    const current = await life.wait(() => partitionProof(namespace(env.PLATFORM), factRefOf(confirmed, applicationAt)));
+    expect(current?.source.fact).toEqual(factRefOf(confirmed, applicationAt));
+    expect(current?.frames).toHaveLength(9); expect(current?.calls).toBe(10);
   } finally { life.release(); }
 });
 
@@ -122,9 +131,14 @@ test("the shared membership6 pin keeps legacy receiver policy when its actual na
     for (const node of [D, M]) {
       const at = await node.at(), birth = await life.wait(() => births.read(at, 10000));
       if (!birth) return expect.fail("actual legacy native birth unavailable");
-      const entry = proofEntry(birth.proof, birth.proof.fact, PROOF_BYTE_BOUNDS.body);
-      if (!entry) return expect.fail("actual native birth does not verify");
-      frames.push({ fact: birth.proof.fact, entry, named: birth.named, declarationName: birth.declarationName, native: birth.native });
+      let actualBytes = 0;
+      const admitted = readNativeBirth(birth, at, PROOF_BYTE_BOUNDS.body, bytes => {
+        actualBytes += bytes;
+        if (actualBytes > PROOF_BYTE_BOUNDS.body) throw new Error("legacy birth exceeds its one-reply witness allowance");
+      });
+      if (!admitted) return expect.fail("actual native birth does not verify");
+      expect(actualBytes).toBeGreaterThan(0);
+      frames.push({ fact: birth.proof.fact, entry: admitted.entry, sequence: admitted.sequence, named: birth.named, declarationName: birth.declarationName, native: birth.native });
     }
     expect((await M.summary()).value.definition).toBe(C.membership);
     expect(partitionReceiverPolicy(await M.at(), frames)).toEqual({ mode: "legacy" });
@@ -167,7 +181,7 @@ test("a partition-created Lending file reaches the destination6 driver once its 
     await dispatchFixture([P, L, ...children], life.wait);
     const donation = await L.did(rita, "donate", { expected: await L.expected({ library: 0 }), fields: { name: "Pot", description: "Copper", page: "shelf/partition.md", content: "# A partition-created book\n" } });
     await dispatchFixture([L, G!], life.wait);
-    const source = factRefOf((await L.entries())[donation]!);
+    const source = factRefOf((await L.entries())[donation]!, await L.at());
     const admitted = (await G!.entries()).find(entry => entry.input.type === "delivery" && entry.input.from.hash === source.hash);
     expect(admitted?.input).toMatchObject({ type: "delivery", decision: "applied" });
     const requests: EffectRequest[] = [];

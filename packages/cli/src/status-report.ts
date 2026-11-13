@@ -54,7 +54,8 @@ export async function statusReport(http: Http, reader: string, known: readonly {
         if (summary.complete && summary.next === undefined && answersVersionQuestion(summary.value.definition, "cliStatusUnpublishedDestination") && summary.value.status === "active" && summary.value.items.some(item => item.type === "branch" && item.state === "unpublished" && item.values["repository"] == null && item.values["head"] == null && item.values["token"] == null)) lines.push("  publication: unpublished; no-repository.");
         if (discover) for (const item of summary.value.items) for (const name of ["register", "membership", "rules", "destination", "root"]) {
           const reference = item.refs[name];
-          if (isScopeRef(reference) && !add(reference.kind, reference.scope)) lines.push("  discovery: more; scope limit reached.");
+          // The slot names the kind: `root` holds the directory.
+          if (isScopeRef(reference) && !add(name === "root" ? "directory" : name, reference.scope)) lines.push("  discovery: more; scope limit reached.");
         }
       }
     } catch (error) { if (error instanceof Stop) throw error; lines.push("  summary: unknown; head unknown."); }

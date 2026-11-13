@@ -6,7 +6,7 @@ export * from "./time.ts";
 export * from "./values.ts";
 export * from "./attribution.ts";
 export * from "./guards.ts";
-export { evaluateEffects, held, type Derived } from "./effects.ts";
+export { evaluateEffects, held, sequenceEffects, type Derived } from "./effects.ts";
 export { counted, derivable, maximumOf, type Capabilities, type CapabilityForm, type CapabilityGiven, type Maximum, type Recorded } from "./capability.ts";
 export { evaluateSends, directoryOf, membershipOf, type Sends } from "./sends.ts";
 export * from "./timed.ts";
@@ -44,3 +44,7 @@ export * from "./created-definitions.ts";
 export * from "./retained-plan.ts";
 
 export * from "./floor.ts";
+
+export { readRetainedUses, isRetainedUse, inspectClassifiedRetainedUse, type RetainedUse, type SelectedRetainedUse, type ClassifiedRetainedUse, type RetainedUseRead, type RetainedUseProjection, type RetainedSelectionResult } from "./retained-use.ts";
+
+export { retainedResultContext } from "./operand.ts";

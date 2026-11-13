@@ -32,7 +32,7 @@ test("v2 refuses gaps, overlaps, unlisted retained files, invalid pass reference
   for (let seq = 0; seq < fixture.bodies.length; seq++) {
     const entry = parseStrict(fixture.bodies[seq]!) as Entry;
     entry.prev = seq === 0 ? null : fixture.description.entries[seq - 1]!.hash;
-    if (seq === 1) entry.uses = [{ fact: { at: foreign.at, seq: 0, hash: foreign.description.entries[0]!.hash }, content }];
+    if (seq === 1) entry.uses = [{ fact: { at: foreign.at, seq: 0, hash: foreign.description.entries[0]!.hash }, content, kind: "register" }];
     const bytes = canonicalize(entry), hash = entryHash(entry);
     fixture.bodies[seq] = bytes; fixture.description.entries[seq] = { seq, hash, bytes: utf8(bytes).length };
   }

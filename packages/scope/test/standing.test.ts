@@ -5,14 +5,14 @@ import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Answer, Entry, Intent, PlatformDefinition, Request, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { entryHash, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { factRefOf, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { PROFILES, StandingError, standingEntries, validateDefinition } from "@generalbusiness/dap-derive";
-import { forged, grantOf } from "@generalbusiness/dap-derive/testing";
+import { grantOf } from "@generalbusiness/dap-derive/testing";
 import { valid } from "../../derive/test/fixtures.ts";
 import { standingData } from "../../derive/test/fixtures-standing.ts";
 import type { ScopeObject } from "../src/object.ts";
 import { SqliteStore } from "../src/sqlite.ts";
-import { controls } from "../src/testing.ts";
+import { controls, scriptedSequence } from "../src/testing.ts";
 import { wired } from "./outside.ts";
 import { START, at, objectOf, rita, stubOf } from "./fixtures-native.ts";
 
@@ -32,8 +32,9 @@ test("C1 native admission reserves before new work, rolls back ordinary/owed mar
     const stub = stubOf(name), receiver = objectOf(name) as unknown as Pick<ScopeObject, "deliver">, creationAnswer = await stub.create(signIntent(creation, rita.secret), MADE);
     if (creationAnswer.answer !== "accepted") return expect.fail(JSON.stringify(creationAnswer));
     const scope = creationAnswer.receipt.fact.at;
-    // A different, fully named scope is a scripted result source, not a live peer.
-    const peer = { scope: scopeIdOf({ ...seed, ordinal: 1 }), kind: scope.kind, inc: newIncarnation(new Uint8Array(16).fill(2)) };
+    // A different, fully named scope is a scripted result source, not a live peer. Its genesis is real canonical bytes, and
+    // nothing judged it.
+    const scripted = scriptedSequence({ ...seed, ordinal: 1 }, START, 2), peer = scripted.at;
     const act = (kind: string, fields: Intent["fields"] = {}): Promise<Answer> => stub.submit(signIntent({ v: 1, to: scope, actor: rita.key, kind, on: 0, expected: { on: revision }, fields, idempotencyKey: crypto.randomUUID(), notAfter: at(60) }, rita.secret), [grantOf(rita, scope, ["set"])]);
     const snapshot = () => runInDurableObject(objectOf(name), (_instance, state) => {
       const store = new SqliteStore({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: work => state.storage.transactionSync(work) });
@@ -89,11 +90,12 @@ test("C1 native admission reserves before new work, rolls back ordinary/owed mar
       expect(await snapshot()).toEqual(corrupt);
     } finally { await restoreCounter(false); }
     expect(await snapshot()).toEqual(full);
-    const origin = full.entries[1]!, request = origin.sends[0]!.message as Request;
-    const message = { class: "result", of: { from: factRefOf(origin), n: 0 }, outcome: "applied" } as const;
-    const source = forged(peer, 2, { type: "delivery", from: factRefOf(origin), n: 0, message: request, decision: "applied" }, [{ n: 0, to: scope, message }]);
-    const from = { at: peer, seq: 2, hash: entryHash(source.entry) };
-    control.foreign.set(from.hash, source);
+    const origin = full.entries[1]!, request = origin.sends[0]!.message as Request, born = full.entries[0]!;
+    if (born.input.type !== "genesis") throw new Error("the scope has no genesis");
+    const message = { class: "result", of: { from: factRefOf(origin, scope), n: 0 }, outcome: "applied" } as const;
+    const source = scripted.entry(2, { type: "delivery", from: factRefOf(origin, scope), sourceKind: born.input.seed.kind, n: 0, message: request, decision: "applied" }, [{ n: 0, to: scope, message }]);
+    const from = scripted.fact(source);
+    control.foreign.set(from.hash, scripted.source(source, "ticket"));
     expect(await receiver.deliver({ to: scope, from, n: 0, message })).toMatchObject({ answer: "retry", reason: "unavailable" });
     expect(reached).toBeGreaterThan(0); // preparation and commit both reach the owed clause
     const badReached = reached;

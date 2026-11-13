@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
-import { b64url, canonicalize, keyIdOfSecret, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, keyIdOfSecret, scopeIdOf, utf8, textDigest } from "@generalbusiness/dap-bytes";
 import type { Digest, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationDeviceIdentity, loadApplicationScreenContext, readApplicationInvitation } from "../src/application-screen.ts";
 import { applicationScreenPath, readApplicationScreenAddress, readApplicationScreenContext } from "../src/application-route.ts";
 const id = (letter: string): Digest => `sha256:${letter.repeat(64)}`;
-const scope = (kind: ScopeKind, ordinal: number): ScopeRef => ({ kind, scope: scopeIdOf({ v: 1, kind, definition: id("a"), creator: null, cause: id("b"), ordinal }), inc: newIncarnation(new Uint8Array(16).fill(ordinal)) });
+const scope = (kind: ScopeKind, ordinal: number): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: id("a"), creator: null, cause: id("b"), ordinal }), genesis: textDigest(`TEST genesis ${ordinal}`) });
 const directory = scope("directory", 1), presentation = id("c");
 // Invariant: one screen address cannot alias another room, install or exact
 // presentation, or turn an asset suffix into a relative path traversal.

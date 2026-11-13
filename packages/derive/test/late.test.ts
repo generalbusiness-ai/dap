@@ -4,7 +4,7 @@ import { factRefOf, isEntry } from "@generalbusiness/dap-bytes";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { holdCapability, judgeDelivery, ownerReservations, prepareRules, validateDefinition } from "../src/index.ts";
 import { RULE_PROFILES } from "../src/rule/index.ts";
-import { arriving, created, deliver, forged, keys, sent, t, valid, sourceOrderFixture, lateDefinition, lateFixture, boundRecordData, PIN_BOUNDS } from "./fixtures-entry.ts";
+import { arriving, created, deliver, fixtureScope, forged, keys, sent, t, valid, sourceOrderFixture, lateDefinition, lateFixture, boundRecordData, PIN_BOUNDS } from "./fixtures-entry.ts";
 
 test.each([false, true])("late branch=%s: fresh and boundary run normal forms; strictly late replaces or refuses with an authenticated result", branch => {
   for (const seconds of [29.999, 30, 30.001]) {
@@ -143,12 +143,12 @@ test("a late refusal consumes a native receiver pin and exact repeat consumes no
   const data = lateNativePinData();
   const definition = valid(validateDefinition(data, PIN_BOUNDS)), owner = holdCapability({ tokensPerHold: 2, rootRetentionSeconds: 600 });
   const ledger = created(definition, { title: "A", opener: keys.rita.member }); ledger.bounds = PIN_BOUNDS;
-  const task = { ...ledger.at, kind: "task" as const };
+  const taskSequence = fixtureScope("task", 42), task = taskSequence.at;
   expect(ledger.act(keys.rita, "license", { on: 0, expected: { on: ledger.item(0).revision }, fields: { peer: task } }, { capabilities: owner })).toMatchObject({ result: "write" });
   const send = { n: 0, to: ledger.at, message: { class: "request" as const, type: "tell" as const, body: { message: "export-license", fields: { export: 0, k: 2 } } } };
-  const source = forged(task, 100, { type: "checkpoint", through: 0, state: definition.digest }, [send]);
+  const source = forged(taskSequence, 100, { type: "checkpoint", through: 0, state: definition.digest }, [send]);
   ledger.now = t(31);
-  const arrival = { ...send, from: factRefOf(source.entry) }, context = { ...arriving(ledger, arrival, source), capabilities: owner, bounds: PIN_BOUNDS };
+  const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) }, context = { ...arriving(ledger, arrival, source), capabilities: owner, bounds: PIN_BOUNDS };
   const result = judgeDelivery(ledger.state, definition, arrival, context);
   expect(result).toMatchObject({ result: "write", draft: { settles: true, judgesTime: true, input: { decision: "refused", reason: { code: "late", name: "old-license" } } } });
   if (result.result !== "write") return expect.fail("expected the reserved deciding entry");

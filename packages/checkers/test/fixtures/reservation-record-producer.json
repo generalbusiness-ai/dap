@@ -1,25 +1,22 @@
 {
-  "recordSha256": "e0c0f1023925207bde7f52859d91601e76cd85c6093427244ae164df963fe4c9",
-  "recordBytes": 29734,
-  "producerHead": "bc85a7a279f28ec4892b7c7b49e9d26f99f880ee",
-  "producerState": "Dirty capture; this is not a clean exact-HEAD proof.",
-  "changedDuringCapture": [
-    "packages/platform/src/destination.ts",
-    "packages/lanes/test/manifest-tree.scope.test.ts"
-  ],
-  "sourceQualification": "Destination changes bound stagedOwn to the publication operation and integration/tree. The lane fixture included unknown-stage/deletion scenarios and recorded the signed read and scope heads. Those changes were subsequently committed as 4dd2d731cdad861ba1710e8e70a85e1a6243c76d. A temporary recorder-only replacement of inject('demoRecord') with true was restored in finally; there was no configuration patch or package installation.",
+  "recordSha256": "72edb565ee697afbe7f1fb682ed888b3cf37dc8ba1e8e756aee5cac6bc9befcc",
+  "recordBytes": 31386,
+  "producerHead": "56bc449fa4dcf19935609f30c4631036523f122a",
+  "producerState": "Clean capture at the exact producer head, on the identifier cutover branch.",
+  "changedDuringCapture": [],
+  "sourceQualification": "The record replaces the 2026-10-08 capture, whose entries named `at`. Entries now carry their sequence's genesis digest. The recorder ran with DEMO_RECORD=1, which sets the demoRecord provide; there was no source patch, configuration patch or package installation. The manifest-list witness runs twice, once per creation mode; this record is the `default` creation run's line.",
   "start": {
-    "printed": "21:18:39",
-    "date": "2026-10-08",
+    "printed": "00:41:44",
+    "date": "2026-11-13",
     "timezone": "America/New_York",
-    "timezoneBasis": "Producer-reported host timezone; the log has no timezone.",
-    "utc": "2026-10-09T01:18:39Z",
-    "utcBasis": "Inferred from producer-reported date and timezone."
+    "timezoneBasis": "Host timezone, read by `date` before the run.",
+    "utc": "2026-11-13T05:41:44Z",
+    "utcBasis": "Read by `date -u` before the run."
   },
-  "command": "./node_modules/.bin/vitest run --project scope packages/lanes/test/manifest-tree.scope.test.ts --reporter=verbose --silent=false",
-  "logSha256": "4baefe76887462dddee90489e7de5154412a2308d5bdc4dfc9b92198a9d99d1e",
-  "logBytes": 31224,
+  "command": "DEMO_RECORD=1 ./node_modules/.bin/vitest run --config vitest.native.config.ts --project scope-stories apps/room/lanes/test/manifest-tree.scope.test.ts --reporter=verbose --silent=false",
+  "logSha256": "1342ee29c6baf321fd5340157b3ef5ef3e10e939352f95fe56ca1a5036961008",
+  "logBytes": 187145,
   "producerExit": 0,
-  "producerTests": 5,
+  "producerTests": 23,
   "limits": "Two runtimes connected by these exact recorded public bytes. The local Git repository and check executable are stand-ins; image 777 is a configuration fixture. No deployed provider, image, container, fresh authorization, full history replay, or final gate is proved."
 }

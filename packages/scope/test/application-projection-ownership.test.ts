@@ -2,34 +2,37 @@
  * are constructed bytes, not a native creation or authority witness. The real
  * ownership/creation/replay witness is application-owned-scopes.test.ts. */
 import { expect, test } from "vitest";
-import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import type { ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, newGenesisNonce, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { created, directory } from "@generalbusiness/dap-derive/testing";
 import { APPLICATION_OWNERSHIP_BOUNDS as B, projectionScopeOwned } from "../src/applications/projection-ownership.ts";
 import { readNativeBirth, type NativeBirth } from "../src/native-birth.ts";
+import { PROOF_BYTE_BOUNDS } from "../src/proof-bytes.ts";
 import type { PreparedRead } from "../src/read-preparation.ts";
 import { PreparationFlights, PREPARATION_MILLISECONDS } from "../src/preparation-flight.ts";
 const fixture = created(), original = fixture.entries[0]!.entry, digest = fixture.definition.digest;
 const run = { ends: 10_000, active: () => true, remaining: () => 10_000 };
-function node(parent: ScopeRef, tag: number, oversized = false) {
+function node(parent: ScopeRef, tag: number, oversized = false, parentKind: ScopeKind = parent === directory ? "directory" : "lane", inGenesis = false) {
   const entry = structuredClone(original);
   if (entry.input.type !== "genesis") throw Error("The protocol fixture needs genesis bytes.");
-  entry.input.seed = { ...entry.input.seed, kind: "lane", creator: parent, cause: textDigest(`TEST ancestry ${tag}`) };
-  entry.input.inc = newIncarnation(new Uint8Array(16).fill(tag));
-  entry.at = { kind: "lane", scope: scopeIdOf(entry.input.seed), inc: entry.input.inc };
-  entry.input.founding = null; entry.input.source = { at: parent, seq: 0, hash: textDigest("TEST parent fact") }; entry.input.n = 0;
+  // A creation in the parent's own genesis names the parent by the self reference.
+  entry.input.seed = { ...entry.input.seed, kind: "lane", creator: inGenesis ? { scope: parent.scope, genesis: null } : parent, cause: textDigest(`TEST ancestry ${tag}`) };
+  entry.input.nonce = newGenesisNonce(new Uint8Array(16).fill(tag));
+  entry.input.founding = null; entry.input.source = { at: parent, seq: 0, hash: inGenesis ? parent.genesis : textDigest("TEST parent fact") }; entry.input.sourceKind = parentKind; entry.input.n = 0;
   if (oversized) entry.effects = [...entry.effects, { effect: "value", item: 0, slot: "text", value: "x".repeat(B.birthBytes) }];
+  // The address follows from the changed genesis: its seed's scope ID and its hash.
+  const at: ScopeRef = { scope: scopeIdOf(entry.input.seed), genesis: entryHash(entry) };
   const birth: NativeBirth = { v: 1, native: false, named: digest, declarationName: fixture.definition.declared.name,
-    proof: { fact: { at: entry.at, seq: 0, hash: entryHash(entry) }, bytes: canonicalize(entry) } };
-  const frame = { scope: { at: entry.at }, pinned: { named: digest }, genesis: entry.input } as unknown as PreparedRead;
-  return { at: entry.at, birth, frame };
+    proof: { fact: { at, seq: 0, hash: entryHash(entry) }, bytes: canonicalize(entry) } };
+  const frame = { scope: { at }, pinned: { named: digest }, genesis: entry.input } as unknown as PreparedRead;
+  return { at, birth, frame };
 }
 
 // Invariant: ownership stops at the admitted ancestor count/body cap; matching
 // declared definitions cannot turn an incomplete chain into an owned scope.
 test("projection ancestry accepts the complete 16-parent chain and refuses before a seventeenth or oversized birth", async () => {
   const root = node(directory, 1), nodes = [root], calls: { at: ScopeRef; ms: number; most: number | undefined }[] = [];
-  expect(readNativeBirth(root.birth, root.at)).toEqual(root.birth);
+  expect(readNativeBirth(root.birth, root.at, PROOF_BYTE_BOUNDS.body, () => {})?.birth).toEqual(root.birth);
   for (let n = 1; n <= B.ancestors + 1; n++) nodes.push(node(nodes.at(-1)!.at, n + 1));
   const source = { read: async (at: ScopeRef, ms: number, most?: number) => {
     calls.push({ at, ms, most }); return nodes.find(node => canonicalize(node.at) === canonicalize(at))?.birth ?? null;
@@ -41,7 +44,7 @@ test("projection ancestry accepts the complete 16-parent chain and refuses befor
   expect(await projectionScopeOwned(nodes[B.ancestors + 1]!.frame, root.at, digest, directory, source, run)).toBe("too-large");
   expect(calls).toHaveLength(B.ancestors); expect(calls.some(call => canonicalize(call.at) === canonicalize(root.at))).toBe(false);
   const hugeRoot = node(directory, 90, true), child = node(hugeRoot.at, 91);
-  expect(readNativeBirth(hugeRoot.birth, hugeRoot.at)).toEqual(hugeRoot.birth); // valid at the general protocol's larger cap
+  expect(readNativeBirth(hugeRoot.birth, hugeRoot.at, PROOF_BYTE_BOUNDS.body, () => {})?.birth).toEqual(hugeRoot.birth); // valid at the general protocol's larger cap
   expect(await projectionScopeOwned(child.frame, hugeRoot.at, digest, directory, { read: async () => hugeRoot.birth }, run)).toBe("unowned");
   expect(B.totalBirthBytes).toBe(B.ancestors * B.birthBytes); // derived bound, not a second unreachable admission guard
 });
@@ -65,4 +68,12 @@ test("a late ancestry response retains its preparation flight and refuses before
   expect(owned).toBe(0);
   expect(await flights.run(current => projectionScopeOwned(child.frame, root.at, digest, directory, { read: async () => { reads++; return root.birth; } }, current))).toBe("owned");
   expect(reads).toBe(2);
+});
+
+// Invariant: a child born in its parent's genesis names the parent by the
+// genesis self reference, and the walk resolves it against the birth's source.
+test("projection ancestry resolves a parent named by the genesis self reference", async () => {
+  const root = node(directory, 110), child = node(root.at, 111, false, "lane", true);
+  expect(child.frame.genesis.seed.creator).toEqual({ scope: root.at.scope, genesis: null });
+  expect(await projectionScopeOwned(child.frame, root.at, digest, directory, { read: async () => root.birth }, run)).toBe("owned");
 });

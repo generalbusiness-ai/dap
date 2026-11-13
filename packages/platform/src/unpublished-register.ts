@@ -34,7 +34,7 @@ export const unpublishedRegisterRules: Rules = {
   "directory-genesis-result": { place: "type", run: (given, value) => {
     const input = given.input;
     if (!isFactRef(value) || input.type !== "delivery" || input.message.class !== "result" || input.message.outcome !== "applied"
-      || !same(value, input.from) || value.seq !== 0 || value.at.kind !== "directory") return false;
+      || !same(value, input.from) || value.seq !== 0 || input.sourceKind !== "directory") return false;
     const of = input.message.of, original = given.own(of.from.seq);
     if (!original || original.hash !== of.from.hash || !same(of.from.at, given.resolved.at)) return false;
     const sent = original.entry.sends.find(send => send.n === of.n);

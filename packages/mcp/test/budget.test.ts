@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { encode } from "gpt-tokenizer/encoding/o200k_base";
-import type { DeclaredDefinition, Item, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, Item, Request, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, intentDigest, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { secretSigner, TransportError, type Fetch } from "@generalbusiness/dap-client";
 import { FIRST_ACTIONS_OF } from "@generalbusiness/dap-platform";
@@ -416,8 +416,11 @@ describe("what a call costs, end to end", () => {
     for (let i = 0; i < 100; i++) s.stand.append(lane, { type: "timed", item: 0, rule: "stand-in", due: "2099-01-01T00:00:00Z" } as never);
     const intent = (lane.entries[actSeq]!.entry.input as { signed: SignedIntent }).signed.intent;
     const seed: Seed = { v: 1, kind: "lane", definition: definitionDigest(issueDemo), creator: lane.ref, cause: intentDigest(intent), ordinal: 0 };
-    const child = s.stand.seeded(seed);
-    s.stand.append(lane, { type: "timed", item: 0, rule: "stand-in", due: "2099-01-01T00:00:00Z" } as never, [], [{ n: 1, to: seed, message: { class: "request", type: "create", body: null } } as never]);
+    const message: Request = { class: "request", type: "create", body: null };
+    // Seal the same scripted send first. Child metadata comes from that actual entry,
+    // not from a guessed source fact. No HTTP request or Native judgment occurs here.
+    const sent = s.stand.append(lane, { type: "timed", item: 0, rule: "stand-in", due: "2099-01-01T00:00:00Z" } as never, [], [{ n: 1, to: seed, message }]);
+    const child = s.stand.seeded(seed, [], { from: s.stand.receipt(lane, sent).fact, sourceKind: lane.sequence.kind, n: 1, message });
     const waited = await counted(s, () => s.service.call("wait", { scope: 1, entry: actSeq }));
     expect([waited.result.structuredContent["timedOut"], (waited.result.structuredContent["created"] as { scope: string }[]).map((c) => c.scope)], JSON.stringify(waited.result.structuredContent)).toEqual([false, [child.scope]]);
     const polls = waited.result.structuredContent["polls"] as number;

@@ -8,7 +8,7 @@ import { statusReport } from "./status-report.ts";
 import { canonicalize, readItemQuery } from "@generalbusiness/dap-bytes";
 import { declaredHandle, type Session, signedIntent, type Transport } from "@generalbusiness/dap-client";
 import type { Entry, FieldValue, Item, KeyId, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { type Role, ROLE_LISTS } from "@generalbusiness/dap-platform";
+import { platform, type Role, ROLE_LISTS } from "@generalbusiness/dap-platform";
 
 /** Node operator adapter. Constructing it reads local configuration only;
  * authentication starts lazily, after a manifest's local validation. */
@@ -108,7 +108,7 @@ export function act(ctx: Context, kind: string, options: { on?: string; target?:
       return answered(scope, await typed.handle.submit(signed, [], { ...beside, ...(values.length > 0 ? { values } : {}) }), "Took effect");
     }
     const signed = await signedIntent(signer, { to: summary.scope, kind, on: target, fields, expected }, signing(ctx));
-    return answered(scope, await handle.submit(signed, [], values.length > 0 ? { values } : {}), "Took effect", kind === "found" && summary.scope.kind === "register" ? REGISTER_FULL : undefined);
+    return answered(scope, await handle.submit(signed, [], values.length > 0 ? { values } : {}), "Took effect", kind === "found" && platform(summary.definition)?.data.name === "platform:register" ? REGISTER_FULL : undefined);
   });
 }
 
@@ -142,7 +142,7 @@ function entryLine(scope: ScopeId, entry: Entry): string {
   const input = entry.input;
   const what = input.type === "act" ? `act ${input.signed.intent.kind} by ${short(input.signed.intent.actor)}`
     : input.type === "genesis" ? `genesis ${input.kind}`
-    : input.type === "delivery" ? `delivery ${"type" in input.message ? input.message.type : input.message.class} from ${input.from.at.kind}:${input.from.seq}`
+    : input.type === "delivery" ? `delivery ${"type" in input.message ? input.message.type : input.message.class} from ${input.sourceKind}:${input.from.seq}`
     : input.type;
   return `${scope}:${entry.seq}  ${entry.time}  ${what}; ${entry.effects.length} effects, ${entry.sends.length} sends`;
 }

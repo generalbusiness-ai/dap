@@ -1,16 +1,17 @@
+import { storedSequenceOf } from "./support/local-sequence.ts";
 import { floorSizeProofsData as data } from "../../derive/test/definition-corpus/scope-capacity-floor.ts";
 /** Native storage, admitted receiver inputs and restart. The platform data,
  * its invalid-value rule, authority, clock and sender are labelled fixtures.
  * This tests the cold decision-binding consumer, not a real platform rule. */
 import { expect, onTestFinished, test } from "vitest";
 import { PROPOSED_BOUNDS, type Beside, type Created, type Entry, type PlatformDefinition, type Seed, type SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState, clockOf, decisionBinding, isUnprovenDecisionBinding, validateDefinition, type Delivered, type Rules, type StateSnapshot } from "@generalbusiness/dap-derive";
-import { forged, otherLane, valid } from "@generalbusiness/dap-derive/testing";
-import { Scope, ownOf, retainedFacts } from "../src/core.ts";
+import { valid } from "@generalbusiness/dap-derive/testing";
+import { Scope, genuineRetained, ownOf, retainedUsesOf } from "../src/core.ts";
 import { production } from "../src/ports.ts";
 import { SqliteStore } from "../src/sqlite.ts";
-import { controls, testPorts } from "../src/testing.ts";
+import { controls, testPorts, scriptedSequence } from "../src/testing.ts";
 import type { Delivery } from "../src/ports.ts";
 import { Lane, START, at, objectOf, rita } from "./fixtures-native.ts";
 import { wired } from "./outside.ts";
@@ -41,11 +42,13 @@ test("Native archived proof200 cannot bind deciding100 while proof50 can, includ
     const created = await api.create(signed, NAMED, [], { texts: [text] });
     if (created.answer !== "accepted") throw new Error(canonicalize(created));
     const lane = new Lane(name, c, created.receipt.fact.at, created.receipt, signed);
+    // SCRIPTED: the sender is a lane written by hand under a real canonical genesis, and nothing judged it.
+    const sender = scriptedSequence({ v: 1, kind: "lane", definition: definition.digest, creator: null, cause: textDigest(`sender ${proving}`), ordinal: 0 }, START);
     let ordinal = 0, pre!: StateSnapshot, deciding!: Entry;
     const deliver = async (message: string, fields: Record<string, string> = {}) => {
       const body = { class: "request" as const, type: "tell" as const, body: { message, fields } };
-      const source = forged(otherLane, ++ordinal, { type: "checkpoint", through: 0, state: definition.digest }, [{ n: 0, to: lane.at, message: body }]);
-      const from = factRefOf(source.entry); c.foreign.set(from.hash, { entry: source.entry, under: "lane" });
+      const entry = sender.entry(++ordinal, { type: "checkpoint", through: 0, state: definition.digest }, [{ n: 0, to: lane.at, message: body }]);
+      const from = sender.fact(entry); c.foreign.set(from.hash, sender.source(entry, "lane"));
       expect(await api.deliver({ to: lane.at, from, n: 0, message: body })).toMatchObject({ answer: "recorded" });
     };
     await deliver("start");
@@ -72,7 +75,10 @@ test("Native archived proof200 cannot bind deciding100 while proof50 can, includ
       const store = new SqliteStore(archiveSql(state));
       expect(store.retained("text", digest)).toBeNull(); expect(store.stored(proving)).toBeNull();
       expect(store.floor()!.sizeProofs).toEqual([{ digest, seq: proving, bound: utf8(text).length }]);
-      const view = before(pre), run = () => decisionBinding(view, definition, deciding, { clock: clockOf(view, deciding.time), bounds: c.bounds, own: ownOf(store), facts: retainedFacts(store, deciding), texts: () => null, prepared: [], platform: { named: NAMED, rules } });
+      const sequence = storedSequenceOf(store, c.bounds.entryBytes); // fixture setup only
+      const own = ownOf(store, sequence), retained = retainedUsesOf(own, deciding.seq);
+      if (!retained) throw new Error("the deciding entry's retained uses do not read");
+      const view = before(pre), run = () => decisionBinding(view, definition, deciding, { clock: clockOf(view, deciding.time), bounds: c.bounds, own, facts: genuineRetained(retained.uses), texts: () => null, prepared: [], platform: { named: NAMED, rules } });
       if (proving === 200) { let failure: unknown; try { run(); } catch (error) { failure = error; } expect(isUnprovenDecisionBinding(failure)).toBe(true); }
       else expect(run()).toEqual({ item: 1, message: "stop" });
     });

@@ -3,7 +3,7 @@ import { customRequiredChangeData } from "./support/definition-corpus-data.ts";
 import { runInDurableObject, runDurableObjectAlarm } from "cloudflare:test";
 import { inject, expect, test, onTestFinished } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FactRef, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, timeOf, unb64url, definitionDigest, sign, keyIdOfSecret, digestBytes, factRefOf, scopeIdOf, timeMs, utf8, textDigest } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, b64url, canonicalize, entryHash, timeOf, unb64url, definitionDigest, sign, keyIdOfSecret, digestBytes, factRefOf, scopeIdOf, timeMs, utf8, textDigest } from "@generalbusiness/dap-bytes";
 import { requestSession, sessionRequest, signedReader, type Fetch } from "@generalbusiness/dap-client";
 import { FAILED_CLAIM_COHORT, firstExtents, CONFIGURATION_DOMAIN, platform, revokedToken, destinationWrite, destinationRevokedMint } from "@generalbusiness/dap-platform";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
@@ -68,7 +68,9 @@ async function publicationCheckpoint(node: Platform) {
       const rule = code && mark && operation.owner === definition ? ruleAt(code.rules, mark.code, "outcome") : null;
       const callback = rule?.rules.publicationOrigin;
       try {
-        const asked = callback?.(store, operation, ownOf(store));
+        const sequence = first && scope ? admitSequenceGenesis(first.bytes, scope.at, PROPOSED_BOUNDS.entryBytes) : null;
+        if (!sequence) throw new Error("the diagnostic scope has no admitted genesis");
+        const asked = callback?.(store, operation, ownOf(store, sequence));
         return { callback: !!callback, result: asked === undefined ? "absent" : asked === null ? "not-required" : asked === false ? "denied" : "required",
           ...(asked && { from: asked.from, directory: asked.directory, destination: asked.destination }) };
       } catch (error) { return { callback: !!callback, result: "threw", errorCategory: error instanceof Error ? error.name.slice(0, 80) : "non-error" }; }
@@ -236,7 +238,8 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   let pendingMint: { request: import("../../../../packages/scope/src/operations.ts").EffectRequest; answer: import("../../../../packages/scope/src/operations.ts").EffectAnswer; late: import("../../../../packages/scope/src/operations.ts").LateAnswers | null } | null = null;
   let earlierDelete: { request: import("../../../../packages/scope/src/operations.ts").EffectRequest; late: import("../../../../packages/scope/src/operations.ts").LateAnswers | null } | null = null;
   const wire = (name: ScopeId) => { wired.add(name); platformOutside.set(name, (given, sql) => {
-    const nativeReader = snapshotReaderOf(env.PLATFORM);
+    if (!given.bounds) throw Error("Native snapshot fixture requires its configured bounds");
+    const nativeReader = snapshotReaderOf(env.PLATFORM, { maxBytes: given.bounds.entryBytes, milliseconds: Math.floor(given.bounds.fetchSeconds * 1000) });
     let keyReads = 0, jobReads = 0;
     const outside = artifactsOutside(given, sql, bindings(), at.stand.fetch, { ...nativeReader, job: async (fact) => {
       const answer = await nativeReader.job(fact);
@@ -512,7 +515,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
     expect((await lane.summary()).value.items.some((item) => item.type === "manifest")).toBe(false);
     const source = ok(await run(creator, "act", "propose-file", "--on", lane.name, "--set", `base=${first}`, "--set", "path=one.md", "--set", `digest=${digestBytes(files["one.md"]!)}`, "--set", `size=${files["one.md"]!.length}`, "--set", "content=# One\n"));
     const sourceSeq = Number(/entry \S+:(\d+),/.exec(source.lines[0]!)![1]);
-    const row = { path: "one.md", entry: factRefOf((await lane.entries())[sourceSeq]!), digest: digestBytes(files["one.md"]!) };
+    const row = { path: "one.md", entry: (await lane.fact(sourceSeq)), digest: digestBytes(files["one.md"]!) };
     ok(await run(creator, "act", "propose-manifest", "--on", lane.name, "--set", `base=${first}`, "--set", `files=${JSON.stringify([row])}`));
     const manifest = (await lane.summary()).value.items.find((item) => item.type === "manifest")!;
     expect([manifest.state, manifest.values["complete"], manifest.values["files"]]).toEqual(["current", true, [{ ...row, entry: sourceSeq }]]);
@@ -661,7 +664,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
     const lane = new Platform(matched[1] as ScopeId);
     const merge = (await lane.summary()).value.items.find((item) => item.type === "merge")!;
     const reservation = events[publication.values["reservedAt"] as number]!;
-    const ref = `refs/artroom/reservations/${factRefOf(reservation).hash.slice(7)}`;
+    const ref = `refs/artroom/reservations/${entryHash(reservation).slice(7)}`;
     expect(host.refs.has(ref)).toBe(true);
     ok(await run(creator, "act", "cancel-merge", "--on", lane.name, "--target", String(merge.id)));
     await pause([lane.name, repository.destination]);
@@ -725,8 +728,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
     const controlLane = await D.created(openSeq); await pause([controlLane.name]);
     const source = ok(await run(creator, "act", "propose-file", "--on", controlLane.name, "--set", `base=${first}`, "--set", "path=one.md", "--set", `digest=${digestBytes(files["one.md"]!)}`, "--set", `size=${files["one.md"]!.length}`, "--set", "content=# One\n"));
     const sourceSeq = Number(/entry \S+:(\d+),/.exec(source.lines[0]!)![1]);
-    const sourceEntry = (await controlLane.entries())[sourceSeq]!;
-    const row = { path: "one.md", entry: factRefOf(sourceEntry), digest: digestBytes(files["one.md"]!) };
+    const row = { path: "one.md", entry: await controlLane.fact(sourceSeq), digest: digestBytes(files["one.md"]!) };
     const mismatch = await run(creator, "act", "propose-manifest", "--on", controlLane.name, "--set", `base=${first}`, "--set", `files=${JSON.stringify([{ ...row, digest: `sha256:${"e".repeat(64)}` }])}`);
     expect([mismatch.code, mismatch.lines[0]]).toEqual([1, expect.stringContaining("source-mismatch")]);
   }
@@ -763,8 +765,11 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   // records; current standing, snapshot, keys, generations and refs stay fresh.
   const [jobEntry, manifestEntry] = await L.sealed().then(entries => [entries[job], entries[version]] as const);
   if (!jobEntry || !manifestEntry) expect.fail("The native checker job and manifest openings must both be present.");
-  const sameOpeningScope = (scope: ScopeRef): boolean => scope.scope === jobEntry.entry.at.scope && scope.inc === jobEntry.entry.at.inc && scope.kind === jobEntry.entry.at.kind;
-  if (jobEntry.entry.seq !== job || manifestEntry.entry.seq !== version || jobEntry.entry.at.scope !== L.name || jobEntry.entry.at.kind !== "lane" || !sameOpeningScope(manifestEntry.entry.at)) expect.fail("The native checker openings must match their exact lane and sequences.");
+  // Both openings bind the genesis of lane L, which is a lane by construction.
+  const laneRef = await L.at();
+  const onLane = (entry: Entry): boolean => "genesis" in entry && entry.genesis === laneRef.genesis;
+  const sameOpeningScope = (scope: ScopeRef): boolean => canonicalize(scope) === canonicalize(laneRef);
+  if (jobEntry.entry.seq !== job || manifestEntry.entry.seq !== version || laneRef.scope !== L.name || !onLane(jobEntry.entry) || !onLane(manifestEntry.entry)) expect.fail("The native checker openings must match their exact lane and sequences.");
   const serviceOptions: ConstructorParameters<typeof CheckerService>[0] = {
     signer: { key: checkerKey, sign: (bytes) => sign(checkerSecret, bytes) }, outcomes: new Outcomes(new MemoryDurable()), clock: now, random: (length) => crypto.getRandomValues(new Uint8Array(length)),
     scopes: {
@@ -787,7 +792,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   };
   if (containerTest) { const realRun = serviceOptions.runner.run.bind(serviceOptions.runner); serviceOptions.runner = { find: (run, expectedJob) => containerTestRunner(containerTest).find(run, expectedJob), run: async ask => { runs++; return realRun(ask); } }; }
   const service = new CheckerService(serviceOptions);
-  const jobFact = factRefOf(jobEntry.entry);
+  const jobFact = factRefOf(jobEntry.entry, laneRef);
   const readAsk = await signJobRead({ key: checkerKey, sign: (bytes) => sign(checkerSecret, bytes) }, { lane: await L.at(), fact: jobFact }, { now: now(), nonce: crypto.getRandomValues(new Uint8Array(16)) });
   const snapshot = await Gsnapshot.reservationSnapshot(readAsk);
   expect(snapshot).not.toBeNull();
@@ -819,13 +824,13 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
       const failedRequest = ok(await run(creator, "act", "request-check", "--on", failedLane.name, "--set", `manifest=${failedVersion}`, "--set", "name=text", "--set", `configuration=${configuration}`));
       const failedJob = Number(/entry \S+:(\d+),/.exec(failedRequest.lines[0]!)![1]);
       await pause([failedLane.name, repository.destination]);
-      const failedOpenings = await failedLane.sealed();
+      const failedOpenings = await failedLane.sealed(), failedAt = await failedLane.at();
       const failedService = new CheckerService({ ...serviceOptions, outcomes: new Outcomes(new MemoryDurable()), scopes: { ...serviceOptions.scopes,
-        entry: async (scope, seq) => (seq === failedJob || seq === failedVersion) && canonicalize(scope) === canonicalize(failedOpenings[seq]?.entry.at) ? structuredClone(failedOpenings[seq] ?? null) : null,
+        entry: async (scope, seq) => (seq === failedJob || seq === failedVersion) && canonicalize(scope) === canonicalize(failedAt) ? structuredClone(failedOpenings[seq] ?? null) : null,
         standing: async (_scope, id, kind) => { const items = (await failedLane.summary()).value.items, item = items.find(item => item.id === id); return item ? { state: item.state, expected: expectedOf(changeDemo3.acts[kind] as unknown as ActShape, items, null, { job: id }) } : null; },
         submit: (_scope, signed) => failedLane.stub.submit(signed, []),
       } });
-      const failedFact = factRefOf(failedOpenings[failedJob]!.entry);
+      const failedFact = factRefOf(failedOpenings[failedJob]!.entry, failedAt);
       expect(await failedService.deliver({ lane: await failedLane.at(), job: failedFact, name: "text", tree: failedManifest.values["tree"] as string })).toEqual({ did: "submitted", outcome: { act: "check", outcome: "failed" }, ran: true, lane: "admitted" });
       await pause([failedLane.name, repository.destination]);
       expect((await failedLane.item(failedJob)).state).toBe("failed");
@@ -878,7 +883,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   const wrongKey = (await otherChecker.store.secret((await otherChecker.store.config())!.key))!;
   const wrongAsk = await signJobRead({ key: keyIdOfSecret(wrongKey), sign: (bytes) => sign(wrongKey, bytes) }, { lane: await L.at(), fact: jobFact }, { now: now(), nonce: crypto.getRandomValues(new Uint8Array(16)) });
   expect(await Gsnapshot.reservationSnapshot(wrongAsk)).toBeNull();
-  const delivered = await service.deliver({ lane: await L.at(), job: factRefOf(jobEntry.entry), name: "text", tree: manifest.values["tree"] as string });
+  const delivered = await service.deliver({ lane: await L.at(), job: factRefOf(jobEntry.entry, laneRef), name: "text", tree: manifest.values["tree"] as string });
   expect([delivered, runs, prepares]).toEqual([{ did: "submitted", outcome: { act: "check", outcome: "passed" }, ran: true, lane: "kept" }, 1, 0]);
   refuseSnapshot = true;
   const resumed = await new CheckerService(serviceOptions).deliver({ lane: await L.at(), job: jobFact, name: "text", tree: manifest.values["tree"] as string });
@@ -949,7 +954,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   const snapshotJ1out = ok(await run(creator, "act", "request-check", "--on", snapshotLane.name, "--set", `manifest=${snapshotVersion}`, "--set", "name=text", "--set", `configuration=${configuration}`));
   await pause([snapshotLane.name, repository.destination]);
   const snapshotJ1 = Number(/entry \S+:(\d+),/.exec(snapshotJ1out.lines[0]!)![1]);
-  const snapshotJ1Fact = factRefOf((await snapshotLane.entries())[snapshotJ1]!);
+  const snapshotJ1Fact = (await snapshotLane.fact(snapshotJ1));
   const snapshotJ1Ask = await signJobRead({ key: checkerKey, sign: (bytes) => sign(checkerSecret, bytes) }, { lane: await snapshotLane.at(), fact: snapshotJ1Fact }, { now: now(), nonce: crypto.getRandomValues(new Uint8Array(16)) });
   expect(await Gsnapshot.reservationSnapshot(snapshotJ1Ask)).not.toBeNull();
   const originalHold = net.hold;
@@ -962,7 +967,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   net.clock.now = timeOf(timeMs(net.clock.now)! + 2000);
   await pause([snapshotLane.name, repository.destination]);
   const snapshotJ2 = Number(/entry \S+:(\d+),/.exec(snapshotJ2out.lines[0]!)![1]);
-  const snapshotJ2Ask = await signJobRead({ key: checkerKey, sign: (bytes) => sign(checkerSecret, bytes) }, { lane: await snapshotLane.at(), fact: factRefOf((await snapshotLane.entries())[snapshotJ2]!) }, { now: now(), nonce: crypto.getRandomValues(new Uint8Array(16)) });
+  const snapshotJ2Ask = await signJobRead({ key: checkerKey, sign: (bytes) => sign(checkerSecret, bytes) }, { lane: await snapshotLane.at(), fact: (await snapshotLane.fact(snapshotJ2)) }, { now: now(), nonce: crypto.getRandomValues(new Uint8Array(16)) });
   expect(await Gsnapshot.reservationSnapshot(snapshotJ2Ask)).not.toBeNull();
   const snapshotMerge = (await snapshotLane.summary()).value.items.find((item) => item.type === "merge")!;
   ok(await run(creator, "act", "cancel-merge", "--on", snapshotLane.name, "--target", String(snapshotMerge.id)));
@@ -1045,7 +1050,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   const heldRequest = ok(await run(creator, "act", "request-check", "--on", heldLane.name, "--set", `manifest=${heldVersion}`, "--set", "name=text", "--set", `configuration=${configuration}`));
   await pause([heldLane.name, repository.destination]);
   const heldJob = Number(/entry \S+:(\d+),/.exec(heldRequest.lines[0]!)![1]);
-  const heldFact = factRefOf((await heldLane.entries())[heldJob]!);
+  const heldFact = (await heldLane.fact(heldJob));
   const heldAsk = await signJobRead({ key: checkerKey, sign: (bytes) => sign(checkerSecret, bytes) }, { lane: await heldLane.at(), fact: heldFact }, { now: now(), nonce: crypto.getRandomValues(new Uint8Array(16)) });
   expect(await Gsnapshot.reservationSnapshot(heldAsk)).not.toBeNull();
   const M = new Platform(repository.membership.scope);
@@ -1066,7 +1071,7 @@ test("a native version-2 room refuses branch list proposals before local Git cap
   owner.configure({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
   try {
     const store = memoryStore(); await store.keep("founder", legacyCreator.secret);
-    await store.save({ v: 1, service: SERVICE, key: "founder", repository: { directory, membership, rules: old.rules.name, destination: old.G.name } });
+    await store.save({ v: 2, service: SERVICE, key: "founder", repository: { directory, membership, rules: old.rules.name, destination: old.G.name } });
     let reads = 0;
     const outcome = await command({ store, fetch: ((url: string, init?: RequestInit) => routed(url, init)) as unknown as Fetch, now: () => timeMs(net.clock.now)!, git: { run: async () => 0, files: async () => { reads++; return { ok: false, reason: "should-not-read" }; } } }, ["propose", "topic"]);
     expect([outcome.code, outcome.lines[0], reads, (await old.G.summary()).value.definition]).toEqual([1, "Cannot propose: version-mismatch. This room has no manifest-list destination.", 0, "platform:destination@2"]);

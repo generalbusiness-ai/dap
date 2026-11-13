@@ -37,7 +37,7 @@ export class ReadSessions {
   readonly #entries = new Map<string, SessionEntry>();
 
   entry(service: string, key: string, membership: ScopeRef): SessionEntry {
-    const identity = JSON.stringify([service, key, membership.scope, membership.inc, membership.kind]);
+    const identity = JSON.stringify([service, key, membership.scope, membership.genesis]);
     let entry = this.#entries.get(identity);
     if (!entry) {
       entry = { identity, scope: membership.scope, session: null };
@@ -86,10 +86,10 @@ export class Reads {
     const now = this.#port.now();
     const claims = held.session?.claims;
     if (held.session && claims?.key === this.#port.signer.key
-      && claims.membership.scope === membership.scope && claims.membership.inc === membership.inc && claims.membership.kind === membership.kind
+      && claims.membership.scope === membership.scope && claims.membership.genesis === membership.genesis
       && !held.session.endedBy(timeOf(now + 10_000))) {
       this.#heldScopes.add(membership.scope);
-      this.#held.add(`${membership.scope} ${membership.inc}`);
+      this.#held.add(`${membership.scope} ${membership.genesis}`);
       return held.session;
     }
     const refusedAt = this.#refused.get(held);
@@ -110,7 +110,7 @@ export class Reads {
       if (answer.ok) { held.session = answer.session; this.#refused.delete(held); }
       else this.#refused.set(held, now);
       if (answer.ok) this.#heldScopes.add(membership.scope);
-      if (answer.ok) this.#held.add(`${membership.scope} ${membership.inc}`);
+      if (answer.ok) this.#held.add(`${membership.scope} ${membership.genesis}`);
       return answer.ok ? answer.session : null;
     } catch (error) {
       if (!(error instanceof TransportError)) throw error;
@@ -120,7 +120,7 @@ export class Reads {
   }
 
   /** Since this process started, it held a session of this membership. */
-  held(membership: ScopeRef): boolean { return this.#held.has(`${membership.scope} ${membership.inc}`); }
+  held(membership: ScopeRef): boolean { return this.#held.has(`${membership.scope} ${membership.genesis}`); }
 
   /** This reader held a session for some incarnation of this scope. No token or authority follows from that history. */
   hasHeld(scope: ScopeId): boolean { return this.#heldScopes.has(scope); }

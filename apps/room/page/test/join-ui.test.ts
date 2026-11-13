@@ -2,7 +2,6 @@ import { expect, test, vi } from "vitest";
 import {
   b64url,
   keyIdOfSecret,
-  newIncarnation,
   scopeIdOf,
   textDigest,
 } from "@generalbusiness/dap-bytes";
@@ -54,7 +53,6 @@ const cleanup = async () => {
   await drain();
   vi.unstubAllGlobals();
   vi.doUnmock("../src/join-custody.ts");
-  vi.doUnmock("../src/page-key-migration.ts");
   vi.doUnmock("../src/view.ts");
   vi.resetModules();
 };
@@ -151,7 +149,6 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
   const seed = new Uint8Array(32).fill(81),
     key = keyIdOfSecret(seed);
   const membership = {
-    kind: "membership" as const,
     scope: scopeIdOf({
       v: 1,
       kind: "membership",
@@ -160,7 +157,7 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
       cause: textDigest("UI fake membership"),
       ordinal: 0,
     }),
-    inc: newIncarnation(new Uint8Array(16).fill(3)),
+    genesis: textDigest("TEST genesis 11"),
   };
   const place = {
     directory: scopeIdOf({
@@ -196,7 +193,6 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
     };
   });
   // Startup migration is a separate custody witness, not this UI port.
-  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   vi.doMock("../src/join-custody.ts", () => ({
     joinInvitation: join,
     originalJoin: original,
@@ -271,7 +267,7 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
     reason: "The original enrollment remains unknown.",
   });
   await wait(drain);
-  expect(values.has("artroom-page")).toBe(false);
+  expect(values.has("dap-page-settings-2")).toBe(false);
   location.hash = "#/invitation";
   await wait(() => publication(root, () => redraw()));
   const restored = root.all().find((e) => e.attrs["name"] === "invitation")!;
@@ -318,7 +314,7 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
     answer: { answer: "accepted" },
   });
   await wait(drain);
-  expect(values.has("artroom-page")).toBe(false);
+  expect(values.has("dap-page-settings-2")).toBe(false);
   expect(location.hash).toBe("#/join");
 }, cleanup));
 
@@ -385,7 +381,6 @@ test("A retained first refusal stays readable after reload and allows only a dif
   const root = new Element("div");
   const location = { origin: "https://page.test", hash: "#/invitation" };
   const membership = {
-    kind: "membership" as const,
     scope: scopeIdOf({
       v: 1,
       kind: "membership",
@@ -394,7 +389,7 @@ test("A retained first refusal stays readable after reload and allows only a dif
       cause: textDigest("refused UI membership"),
       ordinal: 0,
     }),
-    inc: newIncarnation(new Uint8Array(16).fill(5)),
+    genesis: textDigest("TEST genesis 12"),
   };
   const place = {
     directory: scopeIdOf({
@@ -439,7 +434,6 @@ test("A retained first refusal stays readable after reload and allows only a dif
     return refused();
   });
   // Startup migration is a separate custody witness, not this UI port.
-  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   vi.doMock("../src/join-custody.ts", () => ({
     originalJoin: original,
     joinInvitation: join,

@@ -7,6 +7,7 @@ import { rulesPolicyProposalV11, rulesPolicyPatternsV11 } from './rules-policy-v
 import { RULES_TREE_PROOF, verifyRulesTree } from './rules-policy-tree.ts';
 import { RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, readRulesCertificateBinding, rulesCertificateBranchMatches,
   rulesCertificateFamily, rulesCertificateOpening } from './rules-certificate.ts';
+import { sealedAt } from "@generalbusiness/dap-derive";
 
 const birthField=(under:string)=>({type:'fact' as const,kind:['establish'],under,required:true});
 const branch=(given:RuleGiven)=>given.resolved.subjects.get('branch') ?? given.state.page('branch',['ready'],null,1).items[0];
@@ -79,7 +80,7 @@ export const destinationRulesV14:Rules={...destinationRules4,
     unknown:()=>({}),wellFormed:(result,answer)=>result==='confirmed'?answer.basis==='own-answer'&&evidence(answer.body):readRecord(answer.body,[])!==null,
     holds:(given,operation)=>{
       if(given.input.type!=='outcome'||given.input.result!=='confirmed'||!evidence(given.input.evidence.body))return false;
-      const opened=rulesCertificateOpening(given.own,operation,given.resolved.at),scope=given.state.scope();
+      const opened=rulesCertificateOpening(given.own,operation,sealedAt(given.resolved.at)),scope=given.state.scope();
       if(!opened||!scope||!same(scope.head,{seq:opened.started.seq,hash:opened.started.hash})
         ||operation.for===undefined||!rulesCertificateBranchMatches(given.state,opened.binding,operation.for))return false;
       const request=given.own(opened.started.seq);if(request?.entry.input.type!=='act')return false;

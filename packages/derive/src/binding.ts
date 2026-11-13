@@ -24,7 +24,7 @@
 import { declarationOf } from "./program/declaration.ts";
 import { nativeMark } from "./program/native.ts";
 import { observeNativeCall } from "./program/native-trace.ts";
-import type { BindingMark, Bound, FieldValue, PlatformReceive, ReceiveType, ScopeRef } from "@generalbusiness/dap-contract";
+import type { BindingMark, Bound, FieldValue, GenesisSelfRef, PlatformReceive, ReceiveType, ScopeRef } from "@generalbusiness/dap-contract";
 import { CanonicalError, canonicalize } from "@generalbusiness/dap-bytes";
 import type { Judging } from "./guards.ts";
 import { RuleFault, outside, ruleFor, run, type Giving } from "./marks.ts";
@@ -49,7 +49,7 @@ export const INDEXED_TYPES: readonly string[] = ["fact", "item", "scope", "membe
  * An integer uses its unquoted canonical decimal text. Equality lookup
  * implies neither numeric ordering nor uniqueness of that value.
  */
-export function bindingKey(value: unknown, at: ScopeRef): string | null {
+export function bindingKey(value: unknown, at: ScopeRef | GenesisSelfRef): string | null {
   if (value === null || value === undefined) return null;
   // A value with no canonical bytes is no key, and this never throws: negative zero, an object that is not plain. No field as
   // check 7 read it and no slot of a folded item is one.

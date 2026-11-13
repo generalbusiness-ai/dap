@@ -46,8 +46,8 @@ const envelopeFits = (value: unknown): boolean => {
 export function readRulesPolicyObservationV14(observed: RulesObservation | null, input: ReservationPolicyInputV14, time: Timestamp): RulesPolicyObservationV14 {
   const invalid = (): RulesPolicyObservationV14 => ({ ok: false, reason: "evidence-invalid" });
   if (!observed || observed.subject !== "rules" || observed.definition !== "platform:rules@11" || observed.content.asked !== "rules"
-    || !isScopeRef(input.rules) || input.rules.kind !== "rules" || !same(observed.of, input.rules)
-    || !isScopeRef(input.destination) || input.destination.kind !== "destination" || !isHead(observed.head)
+    || !isScopeRef(input.rules) || !same(observed.of, input.rules)
+    || !isScopeRef(input.destination) || !isHead(observed.head)
     || !Number.isSafeInteger(observed.revision) || observed.revision < 0 || observed.revision > observed.head.seq) return invalid();
   const at = timeMs(observed.at), now = timeMs(time);
   if (at === null || now === null || now < at || now - at > 10000) return invalid();

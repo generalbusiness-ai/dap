@@ -7,6 +7,7 @@
  * of what the rule would read in the commit.
  */
 
+import { resultContextForRuleCollection } from "./operand.ts";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
 import { judgeDelivery, type Delivered, type DeliveryContext } from "./delivery.ts";
 import { judgeGenesis, type Creation, type SignedCreation } from "./genesis.ts";
@@ -31,7 +32,8 @@ export function prepareRules(view: StateView, definition: ValidDefinition, judge
   const asked: RuleInput[] = [];
   const collecting = { prepared: [], asked };
   if ("act" in judged) judgeAct(view, definition, judged.act, { ...judged.context, ...collecting });
-  else if ("delivery" in judged) judgeDelivery(view, definition, judged.delivery, { ...judged.context, ...collecting });
+  else if ("delivery" in judged) judgeDelivery(view, definition, judged.delivery,
+    judged.delivery.message.class === "result" ? resultContextForRuleCollection(judged.context, judged.delivery, asked) : { ...judged.context, ...collecting });
   else judgeGenesis(view, definition, judged.genesis, { ...judged.context, ...collecting });
   return asked;
 }

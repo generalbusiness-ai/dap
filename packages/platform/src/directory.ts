@@ -63,7 +63,7 @@
 
 import type { Digest, FactRef, FieldValue, Grant, MemberObservation, MemberRef, PlatformData, PlatformDefinition, RulesObservation, ScopeId, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { intentDigest, isDigest, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
+import { genesisInputDigest, intentDigest, isDigest, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { PROFILES, isObject, isScopeRef, same, validateDefinition, type Item, type Operation, type RuleEffect, type RuleGiven, type Rules, type StateView } from "@generalbusiness/dap-derive";
 import { CREATION_ATTEMPTS, DIRECTORY, REPOSITORY } from "./register.ts";
 import { isOf, pinnedBy } from "./versions.ts";
@@ -472,8 +472,8 @@ const repositoryAt = (given: RuleGiven): Item => {
 /**
  * The seed of one scope that the genesis creates beside the two others
  * (section 12.1.2, "The two creation rules of the genesis"): `creator` is
- * this scope's own reference, with its incarnation; `cause` is the digest
- * of this scope's own seed, the contract's third cause; and `ordinal`
+ * this scope's encoded own reference; `cause` is the digest
+ * of this scope's complete prospective genesis input; and `ordinal`
  * counts the creations of the entry from 0: membership 0, rules 1,
  * destination 2. The seed of membership that a rule builds is the one that
  * the judge builds for the written `create` of the same entry: both use the
@@ -482,7 +482,7 @@ const repositoryAt = (given: RuleGiven): Item => {
 const SIBLINGS = { membership: 0, rules: 1, destination: 2 } as const;
 const sibling = ({ input, resolved }: RuleGiven, kind: keyof typeof SIBLINGS): Seed => {
   if (input.type !== "genesis") throw new Error("a sibling is a scope that the genesis creates");
-  return { v: 1, kind, definition: SIBLINGS_OF[input.seed.definition]![kind], creator: resolved.at, cause: seedDigest(input.seed), ordinal: SIBLINGS[kind] };
+  return { v: 1, kind, definition: SIBLINGS_OF[input.seed.definition]![kind], creator: resolved.at, cause: genesisInputDigest(input), ordinal: SIBLINGS[kind] };
 };
 /** A sibling's scope ID: the contract's `ScopeId` of the sibling's seed, the text `sc_` and the 52 base32 characters of the seed's digest. It is not the bare digest. */
 const siblingId = (given: RuleGiven, kind: keyof typeof SIBLINGS): ScopeId => scopeIdOf(sibling(given, kind));
@@ -590,7 +590,8 @@ export const directoryRules: Rules = {
         // A value is at hand only when its bytes hash to the digest in the domain. Without one, the bytes cannot be read now.
         const bytes = given.value(DEFINITION_DOMAIN, next, bounds.definitionBytes);
         if (bytes === undefined) return unavailable;
-        const checked = validateDefinition(bytes, bounds, PROFILES);
+        // A lane definition enters the room here: only its one canonical spelling, as the lane's genesis admits it (scope `validate`).
+        const checked = validateDefinition(bytes, bounds, PROFILES, { canonical: true });
         if (!checked.ok) return unsupported;
         if (checked.definition.digest !== next) return unavailable;
         queue.push(...namedIn(checked.definition.declared));

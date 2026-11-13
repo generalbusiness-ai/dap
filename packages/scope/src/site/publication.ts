@@ -3,10 +3,11 @@
  * These reads do not start dispatchers, operations, sessions or provider calls.
  */
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isScopeRef } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize, isEntryBodyOf, isScopeRef, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { isOf, destinationReceipt, initialCommitOf, usesFilePublicationProtocol } from "@generalbusiness/dap-platform";
 import { isObjectId, refName } from "@generalbusiness/dap-git";
 import type { DestinationRepository } from "../destination-host.ts";
+import type { RoomRetiredStop } from "../room-retired.ts";
 
 export interface Publication {
   at: ScopeRef;
@@ -25,7 +26,8 @@ export function siteDestination(store: import("../sqlite.ts").SqliteStore, defin
   if (positions[0]!.size > 1024 * 1024) throw new Error("publication-history-limit");
   const repository = store.item(positions[0]!.id);
   const destination = repository?.refs["destination"];
-  return isScopeRef(destination) && destination.kind === "destination" ? destination : null;
+  // The repository records this reference in its destination slot. A reference names no kind.
+  return isScopeRef(destination) ? destination : null;
 }
 
 /** A confirmed destination's exact branch head, bound to the asking directory and repository. */
@@ -48,9 +50,9 @@ export function sitePublication(store: import("../sqlite.ts").SqliteStore, defin
 }
 
 export interface SitePublicationPeer {
-  siteDestination(): Promise<ScopeRef | null>;
-  sitePublication(directory: ScopeRef, repository: DestinationRepository): Promise<Publication | null>;
-  sitePublishedCommit(directory: ScopeRef, repository: DestinationRepository, commit: string): Promise<PublishedCommitSelection>;
+  siteDestination(): Promise<ScopeRef | null | RoomRetiredStop>;
+  sitePublication(directory: ScopeRef, repository: DestinationRepository): Promise<Publication | null | RoomRetiredStop>;
+  sitePublishedCommit(directory: ScopeRef, repository: DestinationRepository, commit: string): Promise<PublishedCommitSelection | RoomRetiredStop>;
 }
 
 /** Finite work and allocation allowance for the internal native proof read. */
@@ -84,15 +86,26 @@ export function sitePublishedCommit(store: import("../sqlite.ts").SqliteStore, d
     return take(store.itemBytes(id)) ? store.item(id) : null;
   };
   let current: Publication;
-  const own = (seq: number) => {
+  // The sequence comes from this scope's own genesis bytes, read once under the same bounds.
+  let sequence: CheckedSequence | null | undefined;
+  const own = Object.assign((seq: number) => {
     if (++entries > PUBLICATION_PROOF_BOUNDS.entries) exceed();
     if (!take(store.storedBytes(seq))) return null;
     const row = store.stored(seq);
     if (!row) return null;
     const entry = JSON.parse(row.bytes) as import("@generalbusiness/dap-contract").Entry;
-    if (entry.seq !== seq || canonicalize(entry.at) !== canonicalize(current.at) || entryHash(entry) !== row.hash) return null;
+    if (entry.seq !== seq || !isEntryBodyOf(entry, { at: current.at, seq, hash: row.hash })) return null;
     return { entry, hash: row.hash };
-  };
+  }, {
+    sequence: (): CheckedSequence | null => {
+      if (sequence !== undefined) return sequence;
+      if (++entries > PUBLICATION_PROOF_BOUNDS.entries) exceed();
+      const size = store.storedBytes(0);
+      const row = take(size) ? store.stored(0) : null;
+      sequence = row && size !== null ? admitSequenceGenesis(row.bytes, current.at, size) : null;
+      return sequence;
+    },
+  });
   let after: number | null = null;
   try {
     if (!take(store.scopeBytes())) return absent;
@@ -142,8 +155,8 @@ export function sitePublishedCommit(store: import("../sqlite.ts").SqliteStore, d
         const blob = expected.objects.find(o => o.kind === "blob")?.id;
         if (!tree || !blob) continue;
         return { ok: true, proof: { at: current.at, head: current.head, directory, repository: repository as DestinationRepository, commit,
-          publication: { at: judged.entry.at, seq: judged.entry.seq, hash: judged.hash },
-          written: { at: written.entry.at, seq: written.entry.seq, hash: written.hash },
+          publication: { at: current.at, seq: judged.entry.seq, hash: judged.hash },
+          written: { at: current.at, seq: written.entry.seq, hash: written.hash },
           receipt: { ref: expected.ref, commit: expected.commit, tree, blob, file: canonicalize(expected.file) } } };
       }
       if (positions.length <= PUBLICATION_PROOF_BOUNDS.pageItems) return absent;

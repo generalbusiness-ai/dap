@@ -37,7 +37,7 @@ const OWNER_LIMIT = 65;
 /** Finite native metadata. Device commands own no outside operation kind. */
 export const DEVICE_COMMAND_ARCHIVE_RECORDS: ReadonlySet<string> = new Set(["command"]);
 export const DEVICE_COMMAND_ARCHIVE_PREPARATIONS: ReadonlySet<string> = new Set(["answer"]);
-const HEADER = `json_extract(bytes, '$.seq') AS seq, ${text("$.at.scope", 71)} AS scope, ${text("$.at.inc", 64)} AS inc, ${text("$.at.kind", 16)} AS kind, ${text("$.input.type", 16)} AS input, ${text("$.prev", 71)} AS prev, json_type(bytes, '$.prev') AS prevType, json_type(bytes, '$.uses') AS usesType, json_array_length(bytes, '$.uses') AS uses, json_type(bytes, '$.effects') AS effectsType, json_array_length(bytes, '$.effects') AS effects`;
+const HEADER = `json_extract(bytes, '$.seq') AS seq, ${text("$.genesis", 71)} AS genesis, json_type(bytes, '$.genesis') AS genesisType, ${text("$.input.type", 16)} AS input, ${text("$.prev", 71)} AS prev, json_type(bytes, '$.prev') AS prevType, json_type(bytes, '$.uses') AS usesType, json_array_length(bytes, '$.uses') AS uses, json_type(bytes, '$.effects') AS effectsType, json_array_length(bytes, '$.effects') AS effects`;
 function location(source: ArchiveMetadataSource) {
   return source.kind === "local" ? {
     table: "entry", where: "entry.seq = ? AND entry.hash = ? AND entry.size = ? AND octet_length(entry.bytes) = ?",
@@ -48,19 +48,24 @@ function location(source: ArchiveMetadataSource) {
   };
 }
 /** Local JSON work was reserved by archivePrefixMetadata. A copy reserves
- * the same full-entry equivalents before its first JSON inspection. */
-export function archiveEntryHeader(sql: Pick<Sql, "exec">, source: ArchiveMetadataSource, budget: ArchiveBudget): ArchiveEntryHeader {
+ * the same full-entry equivalents before its first JSON inspection. The
+ * caller supplies its already checked origin; matching a later genesis
+ * header alone does not authenticate a routing address or prove a fact. */
+export function archiveEntryHeader(sql: Pick<Sql, "exec">, source: ArchiveMetadataSource, budget: ArchiveBudget, expected: ScopeRef): ArchiveEntryHeader {
   budget.check();
+  if (!isScopeRef(expected)) return stop("unavailable");
   if (source.kind === "copy") {
     if (!isDigest(source.content) || !natural(source.bytes) || source.bytes === 0 || source.bytes > RETAINED_INPUT_BYTES) return stop("unavailable");
     budget.spend({ inputWork: source.bytes * ARCHIVE_PRIVACY_JSON_PASSES });
   }
   const held = location(source);
   const rows = budget.native(sql, () => ({ metadata: ARCHIVE_ENTRY_HEADER_METADATA, inputWork: 0 })).exec(`SELECT ${HEADER} FROM ${held.table} WHERE ${held.where} LIMIT 1`, ...held.args).toArray(), row = rows[0];
-  const at = { scope: row?.["scope"], inc: row?.["inc"], kind: row?.["kind"] };
-  if (rows.length !== 1 || !row || !natural(row["seq"]) || !isScopeRef(at) || !variants.includes(row["input"])
+  const at = { scope: expected.scope, genesis: expected.genesis };
+  if (rows.length !== 1 || !row || !natural(row["seq"]) || !variants.includes(row["input"])
     || row["usesType"] !== "array" || !natural(row["uses"]) || row["effectsType"] !== "array" || !natural(row["effects"])) return stop("unavailable");
-  if (row["seq"] === 0 ? row["input"] !== "genesis" || row["prevType"] !== "null" : row["input"] === "genesis" || !isDigest(row["prev"])) return stop("mismatch");
+  if (row["seq"] === 0 ? row["input"] !== "genesis" || row["prevType"] !== "null" || row["genesisType"] !== null
+    || (source.kind === "local" ? source.position.hash !== expected.genesis : false)
+    : row["input"] === "genesis" || !isDigest(row["prev"]) || row["genesis"] !== expected.genesis) return stop("mismatch");
   return { seq: row["seq"], at, input: row["input"] as Input["type"], prev: row["seq"] === 0 ? null : row["prev"] as Digest, uses: row["uses"], effects: row["effects"] };
 }
 

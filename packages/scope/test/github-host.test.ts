@@ -166,7 +166,7 @@ test("scripted GitHub provider creation loss and mismatched cleanup stay pending
   expect(replacement).toBe("pending");
   expect(calls).toBe(beforeReplacement + 1); // ID mismatch never asks Git at the replacement's name.
   repositoryId = 71;
-  const binding: DestinationBinding = { scope: { scope: "sc_scripted", inc: "in_scripted", kind: "destination" }, mint: "1:0", attempt: 1, write: "2:0", writeAttempt: 1, ref: "refs/heads/main" };
+  const binding: DestinationBinding = { scope: { scope: "sc_scripted", genesis: `sha256:${"5c".repeat(32)}` }, mint: "1:0", attempt: 1, write: "2:0", writeAttempt: 1, ref: "refs/heads/main" };
   expect(await provider.mint(repository, binding)).toEqual({ id: "caller-owned-local-handle", ends: "2026-10-06T13:00:00Z", plaintext: token });
   expect(calls).toBe(beforeReplacement + 2); // Exactly one POST; no bootstrap GET hidden in mint.
   expect(mintRequest?.method).toBe("POST");
@@ -211,7 +211,7 @@ test("later-bound mint verifies repository name and stable ID and installation b
     readCredential: async () => "TEST-private-read", credentialHandle: async () => "TEST-local-handle",
     verifyRepositoryBeforeMint: () => true,
   });
-  const binding: DestinationBinding = { scope: { scope: "sc_scripted", inc: "in_scripted", kind: "destination" }, mint: "1:1", attempt: 1, write: "1:0", writeAttempt: 1, ref: "refs/heads/main" };
+  const binding: DestinationBinding = { scope: { scope: "sc_scripted", genesis: `sha256:${"5c".repeat(32)}` }, mint: "1:1", attempt: 1, write: "1:0", writeAttempt: 1, ref: "refs/heads/main" };
   const refusal = (task: Promise<unknown>) => task.then(() => null, error => (error as { reason?: unknown }).reason);
   const writeRefusal = await refusal(provider.mint(repository, binding));
   const readRefusal = await refusal(provider.mintRead(repository, { handle: "TEST-read", seconds: 3600 }));
@@ -257,7 +257,7 @@ test("App-only private reads narrow every token and verify stable identity befor
     } }, installationReads: true, verifyRepositoryBeforeMint: () => true,
     readCredential: async () => { throw Error("static read credential forbidden"); }, credentialHandle: async () => "TEST-write",
   });
-  const binding: DestinationBinding = { scope: { scope: "sc_scripted", inc: "in_scripted", kind: "destination" }, mint: "1:1", attempt: 1, write: "1:0", writeAttempt: 1, ref: "refs/heads/main" };
+  const binding: DestinationBinding = { scope: { scope: "sc_scripted", genesis: `sha256:${"5c".repeat(32)}` }, mint: "1:1", attempt: 1, write: "1:0", writeAttempt: 1, ref: "refs/heads/main" };
   const paths = () => calls.map(call => call.path);
   const reset = () => { calls.length = 0; };
   const refusal = (task: Promise<unknown>) => task.then(() => null, error => (error as { reason?: unknown }).reason);

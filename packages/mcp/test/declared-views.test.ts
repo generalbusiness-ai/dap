@@ -13,12 +13,12 @@ import { ViewSessions } from "../src/views/session.ts";
 import type { CallResult } from "../src/service.ts";
 import { viewTools } from "../src/views/tools.ts";
 import { viewToolName } from "../src/views/names.ts";
-const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
+const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
 
 async function fixture(navigation = false) {
   const packet = navigation ? await applicationCounterNavigationPacket2() : await applicationCounterPacket2();
-  let installation: ApplicationInstallation | null = { scope, directory: { ...scope, kind: "directory" }, membership: { ...scope, kind: "membership" },
-    rules: { ...scope, kind: "rules" }, destination: { ...scope, kind: "destination" }, definition: packet.package.semantic.entry, ids: packet.ids, item: 7 };
+  let installation: ApplicationInstallation | null = { scope, directory: { ...scope, genesis: `sha256:${"b".repeat(64)}` }, membership: { ...scope, genesis: `sha256:${"c".repeat(64)}` },
+    rules: { ...scope, genesis: `sha256:${"d".repeat(64)}` }, destination: { ...scope, genesis: `sha256:${"e".repeat(64)}` }, definition: packet.package.semantic.entry, ids: packet.ids, item: 7 };
   let actions = ["counting.control"], state = "open", revision = 1;
   const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
     installation: async () => installation,
@@ -108,8 +108,8 @@ test("declared controls capture different subject sets and repeat secondary revi
   } } }, { key: keyIdOfSecret(secret), sign: bytes => sign(secret, bytes) });
   let revision = 7, present = true, signed = 0;
   const sent: unknown[] = [];
-  const installation: ApplicationInstallation = { scope, directory: { ...scope, kind: "directory" }, membership: { ...scope, kind: "membership" },
-    rules: { ...scope, kind: "rules" }, destination: { ...scope, kind: "destination" }, definition: id, ids: packet.ids, item: 7 };
+  const installation: ApplicationInstallation = { scope, directory: { ...scope, genesis: `sha256:${"b".repeat(64)}` }, membership: { ...scope, genesis: `sha256:${"c".repeat(64)}` },
+    rules: { ...scope, genesis: `sha256:${"d".repeat(64)}` }, destination: { ...scope, genesis: `sha256:${"e".repeat(64)}` }, definition: id, ids: packet.ids, item: 7 };
   const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
     installation: async () => installation, actions: async () => ["counting.control"],
     projection: async query => ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: {
@@ -180,8 +180,8 @@ test("two constant choices retain one native act and recheck fields, standing an
     entry: id, definitions: [{ id, bytes: canonicalize(definition) }], projections: { board: { ...base.package.semantic.projections["board"]!, definition: id } } },
     presentation: { ...presentation, views: { board: { ...board, acts: controls } } } },
     { key: keyIdOfSecret(secret), sign: bytes => sign(secret, bytes) });
-  const installation: ApplicationInstallation = { scope, directory: { ...scope, kind: "directory" }, membership: { ...scope, kind: "membership" },
-    rules: { ...scope, kind: "rules" }, destination: { ...scope, kind: "destination" }, definition: id, ids: packet.ids, item: 7 };
+  const installation: ApplicationInstallation = { scope, directory: { ...scope, genesis: `sha256:${"b".repeat(64)}` }, membership: { ...scope, genesis: `sha256:${"c".repeat(64)}` },
+    rules: { ...scope, genesis: `sha256:${"d".repeat(64)}` }, destination: { ...scope, genesis: `sha256:${"e".repeat(64)}` }, definition: id, ids: packet.ids, item: 7 };
   let held = ["counting.control"], revision = 1;
   const source = new DeclaredViewSource(packet.bytes, packet.ids.release, { installation: async () => installation, actions: async () => held,
     projection: async query => ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: {
@@ -220,8 +220,8 @@ test("record history keeps only the last selected-item samples and their exact s
     definitions: [{ id, bytes: canonicalize(definition) }], projections: { board: projection } }, presentation: { ...presentation, views: {
       board: { ...board, kind: "record", acts: [], series: { source: "history", field: "mean", label: "Mean", scale: 2, unit: "°C", last: 2 } },
     } } }, { key: keyIdOfSecret(secret), sign: bytes => sign(secret, bytes) });
-  const installation: ApplicationInstallation = { scope, directory: { ...scope, kind: "directory" }, membership: { ...scope, kind: "membership" },
-    rules: { ...scope, kind: "rules" }, destination: { ...scope, kind: "destination" }, definition: id, ids: packet.ids, item: 7 };
+  const installation: ApplicationInstallation = { scope, directory: { ...scope, genesis: `sha256:${"b".repeat(64)}` }, membership: { ...scope, genesis: `sha256:${"c".repeat(64)}` },
+    rules: { ...scope, genesis: `sha256:${"d".repeat(64)}` }, destination: { ...scope, genesis: `sha256:${"e".repeat(64)}` }, definition: id, ids: packet.ids, item: 7 };
   const point = (seq: number, on: number, mean: number, time: string) => ({ id: seq, type: "pause", state: "sealed", revision: seq, on, time,
     fields: { mean }, entry: { at: scope, seq, hash: `sha256:${"b".repeat(64)}` as const } });
   let history = [point(1, 2, 2400, "2026-10-18T12:00:00Z"), point(3, 2, 2650, "2026-10-18T12:05:00Z"),

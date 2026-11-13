@@ -1,16 +1,18 @@
 import { scopeFactoryChange, scopeScaleChange } from "../definition-corpus-data.ts";
+
 /** Genuine Native Membership8 authority for archive fixture signed histories.
  * Lane definitions, clock, host, target, token and policy are TEST fixtures.
  * The reported budget covers source birth/pin validation only, not native
  * sessionRoom/seat/key/role RPC or wall work; all are external fixture setup.
  * Each writer still pays its existing source lookup charges. No production
  * source-RPC, throughput, custody or full preparation-cost claim follows. */
+import { RECORDED_GROW_RELEASE } from "./recorded-grow-release.ts";
 import { env } from "cloudflare:test";
 import { expect, inject, onTestFinished, TestRunner } from "vitest";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, FIRST_ACTIONS_OF } from "@generalbusiness/dap-platform";
 import type { Bounds, Digest, FactRef, Grant, MemberRef, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, isFactRef, isRecord, isSeed, LATE, scopeIdOf, unb64url, within } from "@generalbusiness/dap-bytes";
-import type { ValidDefinition } from "@generalbusiness/dap-derive";
+import { resolvedEntryEffects, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { growArchivePolicies } from "../../../../apps/room/archive-policy.ts";
 import { ArchiveBudget } from "../../src/archive-budget.ts";
@@ -28,7 +30,11 @@ import { dispatchFixture } from "./native-fixture-lifetime.ts";
 import { archiveDefinition, archivePolicies } from "./archive.ts";
 import type {} from "./maintained-applications.ts";
 
-interface Basis { pins: FixtureArchiveSourcePins; policies: ArchivePolicyRegistry; observed: Map<string, FactRef>; setupCost: ReturnType<ArchiveBudget["admitted"]>; creator?: FactRef; confirmation?: FactRef }
+type NativeRoom = Awaited<ReturnType<typeof sessionRoom>>;
+/** The genuine native room behind a factory lane: its Register, Directory,
+ * Rules and Membership handles, and the Grow archive policies. */
+export interface NativeArchiveRoom { readonly room: NativeRoom; readonly policies: ArchivePolicyRegistry; readonly declarations: ReadonlyMap<string, string> }
+interface Basis { pins: FixtureArchiveSourcePins; policies: ArchivePolicyRegistry; observed: Map<string, FactRef>; setupCost: ReturnType<ArchiveBudget["admitted"]>; creator?: FactRef; confirmation?: FactRef; room?: NativeArchiveRoom }
 const bases = new WeakMap<Lane, Basis>();
 let activeClockOwner: { failedClose: boolean } | null = null;
 /** TEST declaration for the two factory-born resume/replay cases only.
@@ -72,6 +78,7 @@ export function archiveAuthorityAnchors(lane: Lane): readonly FactRef[] {
   return [...(basis.creator ? [basis.creator] : []), ...(basis.confirmation ? [basis.confirmation] : []), ...[...basis.observed.values()].sort((a, b) => a.seq - b.seq || canonicalize(a.at).localeCompare(canonicalize(b.at)))];
 }
 export function archiveAuthorityBasis(lane: Lane): Basis | undefined { return bases.get(lane); }
+export function archiveAuthorityRoom(lane: Lane): NativeArchiveRoom | undefined { return bases.get(lane)?.room; }
 export function archiveAuthorityPolicies(lane: Lane, policies: ArchivePolicyRegistry = archivePolicies): ArchivePolicyRegistry {
   const basis = bases.get(lane);
   return basis ? new Map([...policies, ...basis.policies]) : policies;
@@ -172,7 +179,7 @@ export async function nativeArchiveFixture() {
     await life.wait(async () => membership.did(rita, "first-key", { fields: { member: seat }, expected: await membership.expected({ roster: 0, member: seat }) }));
     const packet = unb64url(inject("maintainedApplications").growDemo.bytes);
     if (!packet) throw Error("Exact native archive policy packet required");
-    const nativePolicy = growArchivePolicies(new TextDecoder().decode(packet)).get(ARCHIVE_DEVICE_APPLICATION_COHORT.membership);
+    const nativePolicy = growArchivePolicies(new TextDecoder().decode(packet), RECORDED_GROW_RELEASE).get(ARCHIVE_DEVICE_APPLICATION_COHORT.membership);
     if (!nativePolicy) throw Error("Membership8 archive policy required");
     return {
       create(bounds: Partial<Bounds> = {}, reads: Partial<ReadBounds> = {}, under: ValidDefinition = archiveDefinition, factory = false): Promise<Lane> {
@@ -199,13 +206,13 @@ export async function nativeArchiveFixture() {
           const send = sends[0]!;
           if (!isSeed(send.to)) throw Error("Actual native child seed required");
           const child = life.platform(scopeIdOf(send.to));
-          creator = factRefOf(sealed.entry); expect(creator).toEqual(accepted.receipt.fact);
+          creator = factRefOf(sealed.entry, await life.wait(() => room.D.at())); expect(creator).toEqual(accepted.receipt.fact);
           expect(send.message).toMatchObject({ class: "request", type: "create", body: { membership: at, directory: await life.wait(() => room.D.at()), fields: { title: "A lane", opener } } });
           await dispatchFixture([room.D, child], life.wait);
           const childHistory = await life.wait(() => child.sealed()), born = childHistory[0];
           if (!born || born.entry.input.type !== "genesis" || born.entry.input.decision !== "applied") throw Error("Applied native child genesis required");
           expect(born.entry.input).toMatchObject({ source: creator, seed: send.to, n: send.n, message: send.message });
-          const bornFact = factRefOf(born.entry); expect(bornFact.hash).toBe(born.hash);
+          const bornFact = factRefOf(born.entry, await life.wait(() => child.at())); expect(bornFact.hash).toBe(born.hash);
           const results = (await life.wait(() => room.D.sealed())).filter(value => {
             const input = value.entry.input;
             return input.type === "delivery" && "clause" in input && input.clause === "applied"
@@ -215,9 +222,9 @@ export async function nativeArchiveFixture() {
           });
           if (results.length !== 1) throw Error("One actual Directory result of this child birth required");
           const result = results[0]!;
-          confirmation = factRefOf(result.entry); expect(confirmation.hash).toBe(result.hash);
+          confirmation = factRefOf(result.entry, await life.wait(() => room.D.at())); expect(confirmation.hash).toBe(result.hash);
           const confirms = result.entry.sends.filter(value => value.message.class === "control" && value.message.type === "confirm"
-            && canonicalize(value.to) === canonicalize(born.entry.at) && canonicalize(value.message.genesis) === canonicalize(bornFact));
+            && canonicalize(value.to) === canonicalize(bornFact.at) && canonicalize(value.message.genesis) === canonicalize(bornFact));
           if (confirms.length !== 1) throw Error("One actual Directory confirmation send required");
           const confirmed = confirms[0]!, activations = childHistory.filter(value => {
             const input = value.entry.input;
@@ -227,7 +234,8 @@ export async function nativeArchiveFixture() {
           if (activations.length !== 1) throw Error("Actual child activation must retain the exact native confirmation");
           expect(activations[0]!.entry.effects).toContainEqual({ effect: "activate" });
           const c = controls(child.name, START); c.clock = clock;
-          made = new Lane(child.name, c, born.entry.at, receiptOf(born, under.digest), signed);
+          // A genesis opens every item it names, so the resolver reads no earlier item.
+          made = new Lane(child.name, c, bornFact.at, receiptOf(born, under.digest, bornFact.at, resolvedEntryEffects({ item: () => null }, under, born.entry, bornFact.at)), signed);
         } else made = await create(bounds, reads, under, { opener, clock });
         const lane = new NativeArchiveLane(made, active, run, factory);
         lanes.push(lane);
@@ -255,14 +263,14 @@ export async function nativeArchiveFixture() {
         }
         const budget = new ArchiveBudget();
         budget.spend({ nodes: 1, calls: 1, metadata: 256 * 1024, inputWork: 256 * 1024 * 8 });
-        const birth = readNativeBirth(await life.wait(() => namespace(env.PLATFORM).births.read(at, 10_000, 256 * 1024)), at, 256 * 1024);
+        const birth = readNativeBirth(await life.wait(() => namespace(env.PLATFORM).births.read(at, 10_000, 256 * 1024)), at, 256 * 1024, () => {})?.birth;
         if (!birth || birth.named !== ARCHIVE_DEVICE_APPLICATION_COHORT.membership) throw Error("Actual Membership8 birth required");
         const policies = new Map<Digest | PlatformDefinition, ReviewedArchivePolicy>([[ARCHIVE_DEVICE_APPLICATION_COHORT.membership, nativePolicy]]);
         const births = [{ at, birth: { bytes: birth.proof.bytes, hash: birth.proof.fact.hash } }];
         if (creator) {
           budget.spend({ nodes: 1, calls: 1, metadata: 256 * 1024, inputWork: 256 * 1024 * 8 });
-          const source = readNativeBirth(await life.wait(() => namespace(env.PLATFORM).births.read(creator!.at, 10_000, 256 * 1024)), creator.at, 256 * 1024);
-          const policy = growArchivePolicies(new TextDecoder().decode(packet)).get(ARCHIVE_DEVICE_APPLICATION_COHORT.directory);
+          const source = readNativeBirth(await life.wait(() => namespace(env.PLATFORM).births.read(creator!.at, 10_000, 256 * 1024)), creator.at, 256 * 1024, () => {})?.birth;
+          const policy = growArchivePolicies(new TextDecoder().decode(packet), RECORDED_GROW_RELEASE).get(ARCHIVE_DEVICE_APPLICATION_COHORT.directory);
           if (!source || source.named !== ARCHIVE_DEVICE_APPLICATION_COHORT.directory || !policy) throw Error("Actual native Directory source birth and policy required");
           births.push({ at: creator.at, birth: { bytes: source.proof.bytes, hash: source.proof.fact.hash } });
           policies.set(ARCHIVE_DEVICE_APPLICATION_COHORT.directory, policy);
@@ -271,7 +279,9 @@ export async function nativeArchiveFixture() {
           review: "TEST STAND-IN: factory-compatible inline archive classes", support: { named: under.digest, definition: under, owners: new Map(), records: new Map(), preparations: new Map() } });
         const registry: ArchivePolicyRegistry = policies;
         const pins = new FixtureArchiveSourcePins(births, lane.c.bounds, budget, registry);
-        bases.set(lane, { pins, policies: registry, observed, setupCost: budget.admitted(), ...(creator ? { creator } : {}), ...(confirmation ? { confirmation } : {}) });
+        const roomPolicies: ArchivePolicyRegistry = new Map([...growArchivePolicies(new TextDecoder().decode(packet), RECORDED_GROW_RELEASE), ...registry]);
+        bases.set(lane, { pins, policies: registry, observed, setupCost: budget.admitted(), ...(creator ? { creator } : {}), ...(confirmation ? { confirmation } : {}),
+          ...(factory ? { room: { room, policies: roomPolicies, declarations: new Map([[under.digest, canonicalize(under.declared)]]) } } : {}) });
         console.info("Native archive source-birth/pin setup budget only", canonicalize(budget.admitted()));
         return lane;
         });

@@ -1,6 +1,7 @@
 /** Counting application: scope-verified field proposals, native Join order, no outside effects. */
 import type { ActType, DeclaredDefinition, EffectForm, FieldType, FieldValue, Guard, ItemType, Range, Subject } from
   "@generalbusiness/dap-contract";
+import { normalize } from "@generalbusiness/dap-define";
 const integerField = (min:number,max:number) => ({type:"int",min,max} as const);
 const field = (type:FieldType, required=true): FieldType & {required:boolean} => ({...type,required});
 const value = (of:FieldType, required=false, defaultValue?:FieldValue): ItemType["values"][string] =>
@@ -45,7 +46,7 @@ const leave = (grant:string,guards:Guard[]):ActType => ({...base("transition","p
   also:{board:{item:"board",one:true},next:{item:"participant",by:"next"}},
   fields:leaveFields, guards:[{state:["joined"]},{of:"also.board",state:["paused","running","finished"]},...guards,roster(["on"]),rule("leave-plan")],
   effects:leaveEffects});
-export const counting:DeclaredDefinition = {
+const authored:DeclaredDefinition = {
   format:"artroom-definition-1", name:"counting",profile:{name:"restricted",version:1},
   capabilities:[],genesis:"establish",
   items:{
@@ -113,6 +114,9 @@ export const counting:DeclaredDefinition = {
     "reset-plan":'fields.generation = subjects.on.values.generation + 1'
   }
 };
+
+/** The authored declaration in the kernel's one spelling (Define's `normalize`). */
+export const counting:DeclaredDefinition = normalize(authored);
 
 /** Complete declared closure: this application creates no child definitions. */
 export const countingClosure: readonly DeclaredDefinition[] = [counting];

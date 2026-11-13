@@ -1,14 +1,14 @@
 /** TEST proof rebasing only. The caller first obtains nine actual Native facts.
  * Re-signing a copied factory does not claim that its judge ran again. */
-import type { Digest, Entry, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, deliveryCauseDigest, factRefOf, intentDigest, isFactRef, isRecord, isScopeRef, isSeed, messageDigest, parseStrict, same, scopeIdOf, signIntent, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { isEntryOf, sentBy, type Fetched } from "@generalbusiness/dap-derive";
+import { PROPOSED_BOUNDS, type Digest, type Entry, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, deliveryCauseDigest, entryHash, factRefOf, intentDigest, isFactRef, isRecord, isScopeRef, isSeed, messageDigest, parseStrict, same, scopeIdOf, signIntent, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { isEntryOf, sentBy, type SourceCopy } from "@generalbusiness/dap-derive";
 import { evidenceBindingDigest, readEvidenceBinding } from "@generalbusiness/dap-platform";
 import { rita } from "./repository.ts";
 
 /** Keep all proof links coherent while changing only the factory's selected pin.
  * A distinct idempotency key also rebases same-pin controls nontrivially. */
-export function evidenceFactoryProof(facts: readonly Fetched[], factoryPin: Digest): readonly Fetched[] {
+export function evidenceFactoryProof(facts: readonly SourceCopy[], factoryPin: Digest): readonly SourceCopy[] {
   if (facts.length !== 9) throw Error("Exactly nine actual origin facts required");
   const child = facts[0]!, creator = facts[1]!;
   if (child.entry.input.type !== "genesis" || creator.entry.input.type !== "delivery") throw Error("Actual child and creator required");
@@ -22,12 +22,15 @@ export function evidenceFactoryProof(facts: readonly Fetched[], factoryPin: Dige
     idempotencyKey: opened.entry.input.signed.intent.idempotencyKey + "-F-proof",
   }, rita.secret);
   const parentSeed: Seed = { ...parentBirth.seed, cause: intentDigest(signed.intent) };
-  const parentAt: ScopeRef = { ...parent.fact.at, scope: scopeIdOf(parentSeed) };
-  let childSeed = childBirth.seed, childAt = child.fact.at;
+  let childSeed = childBirth.seed;
   let references = new Map(facts.map(copy => [canonicalize(copy.fact), copy.fact]));
   let hashes = new Map(facts.map(copy => [copy.fact.hash, copy.fact.hash]));
-  let result: readonly Fetched[] = facts;
+  let result: readonly SourceCopy[] = facts;
   for (let pass = 0; pass < 32; pass++) {
+    // A rebased scope's address: its rebased seed's scope ID and the rebased hash of its genesis, from the previous pass.
+    const genesisOf = (at: ScopeRef) => hashes.get(at.genesis) ?? at.genesis;
+    const parentAt: ScopeRef = { scope: scopeIdOf(parentSeed), genesis: genesisOf(parent.fact.at) };
+    let childAt: ScopeRef = { scope: scopeIdOf(childSeed), genesis: genesisOf(child.fact.at) };
     const rewrite = (value: unknown, wire = false): unknown => {
       if (typeof value === "string") {
         if (wire) return canonicalize(rewrite(parseStrict(value)));
@@ -55,17 +58,36 @@ export function evidenceFactoryProof(facts: readonly Fetched[], factoryPin: Dige
     const delivery = rewrite(creator.entry.input) as typeof creator.entry.input;
     childSeed = { ...childBirth.seed, creator: parentAt,
       cause: deliveryCauseDigest({ v: 1, from: delivery.from, n: delivery.n, message: messageDigest(delivery.message) }) };
-    childAt = { ...child.fact.at, scope: scopeIdOf(childSeed) };
+    // The child's genesis carries this pass's seed, so its address takes that seed's scope ID.
+    childAt = { scope: scopeIdOf(childSeed), genesis: childAt.genesis };
     const next = facts.map(copy => {
       let entry = rewrite(copy.entry) as Entry;
-      if (copy === opened) entry = { ...entry, input: { type: "act", signed,
+      if (copy === opened) {
+        if (!("genesis" in entry)) throw Error("The factory act must be a later entry");
+        entry = { ...entry, input: { type: "act", signed,
         authority: opened.entry.input.type === "act" ? opened.entry.input.authority : [],
         presented: opened.entry.input.type === "act" ? opened.entry.input.presented : {} } };
-      return { ...copy, entry, fact: factRefOf(entry) };
+      }
+      // A genesis hash is its sequence's identity: a rebased genesis takes the address of its own bytes,
+      // and the next pass carries that hash to the sequence's later entries.
+      const rebased = rewrite(copy.fact.at) as ScopeRef;
+      const at: ScopeRef = entry.input.type === "genesis" ? { scope: rebased.scope, genesis: entryHash(entry) } : rebased;
+      return { ...copy, entry, fact: factRefOf(entry, at) };
     });
-    if (canonicalize(next) === canonicalize(result)) {
+    if (canonicalize(next.map(copy => [copy.fact, copy.entry])) === canonicalize(result.map(copy => [copy.fact, copy.entry]))) {
+      // Each rebased copy carries its rebased bytes. A copy whose genesis the
+      // rows hold is admitted under the sequence those rebased genesis bytes
+      // establish; any other copy stays a raw copy, as the source sent it.
+      const births = new Map(next.filter(copy => copy.fact.seq === 0).map(copy => [canonicalize(copy.fact.at), canonicalize(copy.entry)]));
+      const admitted = next.map(copy => {
+        const birth = births.get(canonicalize(copy.fact.at));
+        const sequence = birth === undefined ? copy.sequence : admitSequenceGenesis(birth, copy.fact.at, PROPOSED_BOUNDS.entryBytes);
+        if (birth !== undefined && !sequence) throw Error("Rebased genesis must bind its rebased address");
+        return { ...copy, bytes: canonicalize(copy.entry), sequence };
+      });
       const rebasedParent = next.find(copy => copy.fact.seq === 0 && same(copy.fact.at, parentAt));
-      const rebasedFactory = next[facts.indexOf(opened)]!;
+      const rebasedFactory = admitted[facts.indexOf(opened)]!;
+      if (!rebasedFactory.sequence) throw Error("The rebased factory's genesis must be among the origin rows");
       if (!rebasedParent || rebasedParent.entry.input.type !== "genesis" || rebasedFactory.entry.input.type !== "act"
         || !verifySignedIntent(rebasedFactory.entry.input.signed)
         || rebasedParent.entry.input.seed.definition !== parentBirth.seed.definition
@@ -74,9 +96,9 @@ export function evidenceFactoryProof(facts: readonly Fetched[], factoryPin: Dige
         || !same(rebasedParent.entry.input.source, rebasedFactory.fact)
         || rebasedParent.entry.input.n === null || !rebasedParent.entry.input.message
         || !sentBy(rebasedFactory.entry, { from: rebasedFactory.fact, n: rebasedParent.entry.input.n,
-          to: rebasedParent.entry.input.seed, message: rebasedParent.entry.input.message })
-        || next.some(copy => !isEntryOf(copy.entry, copy.fact))) throw Error("Rebased factory must retain coherent signatures, causes, sends and fact hashes");
-      return next;
+          to: rebasedParent.entry.input.seed, message: rebasedParent.entry.input.message }, rebasedFactory.sequence)
+        || admitted.some(copy => copy.sequence !== null && !isEntryOf(copy.entry, copy.fact, copy.sequence))) throw Error("Rebased factory must retain coherent signatures, causes, sends and fact hashes");
+      return admitted;
     }
     result = next;
     references = new Map(facts.map((copy, index) => [canonicalize(copy.fact), next[index]!.fact]));

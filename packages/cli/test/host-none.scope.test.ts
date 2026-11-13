@@ -299,7 +299,7 @@ test("host none creates a real local room, settles installed publication refusal
         outboxes.push({ role, scope: node.name, ...(read.ok ? {
           loadedItems: read.value.length, items: read.value.slice(-16).map(item => ({
             source: item.outboxId, to: isSeed(item.to) ? scopeIdOf(item.to) : item.to.scope,
-            kind: item.to.kind, class: item.class, held: item.held,
+            kind: isSeed(item.to) ? item.to.kind : null, class: item.class, held: item.held,
             attempts: item.attempts.slice(-4).map(attempt => attempt.answer),
             acknowledged: item.acknowledged ? { scope: item.acknowledged.at.scope, seq: item.acknowledged.seq } : null,
             result: item.result, diagnosis: item.diagnosis,
@@ -322,7 +322,7 @@ test("host none creates a real local room, settles installed publication refusal
               clause: "clause" in input ? input.clause : null,
               source: input.type === "delivery" ? { scope: input.from.at.scope, seq: input.from.seq, n: input.n } : null,
               sendsCount: entry.sends.length, sends: entry.sends.slice(0, 16).map(send => ({ n: send.n,
-                to: isSeed(send.to) ? scopeIdOf(send.to) : send.to.scope, kind: send.to.kind,
+                to: isSeed(send.to) ? scopeIdOf(send.to) : send.to.scope, kind: isSeed(send.to) ? send.to.kind : null,
                 class: send.message.class, type: "type" in send.message ? send.message.type : null })),
               operations: entry.effects.flatMap(effect => effect.effect === "operation"
                 ? [{ k: effect.k, kind: effect.kind, owner: effect.owner }] : []).slice(0, 16),
@@ -355,7 +355,7 @@ test("host none creates a real local room, settles installed publication refusal
     if (!isFactRef(report)) throw Error("Actual device report source fact required");
     expect(await wait(() => L.item(device.seq))).toMatchObject({ values: { reported: 80 } });
     const sending = (await wait(() => L.sealed())).find(row => row.entry.seq === report.seq)!;
-    expect(factRefOf(sending.entry)).toEqual(report);
+    expect(factRefOf(sending.entry, await L.at())).toEqual(report);
     const publication = sending.entry.sends.find(send => send.message.class === "request" && send.message.type === "tell"
       && isRecord(send.message.body) && send.message.body["message"] === "publish-file");
     if (!publication) throw Error("Actual installed device publication request required");
@@ -369,7 +369,7 @@ test("host none creates a real local room, settles installed publication refusal
     const settlements = (await wait(() => L.entries())).filter(entry => entry.input.type === "delivery" && entry.input.message.class === "result"
       && canonicalize(entry.input.message.of) === canonicalize({ from: report, n: publication.n }));
     expect(settlements).toHaveLength(1);
-    expect(settlements[0]!.input).toMatchObject({ type: "delivery", from: factRefOf(refused), n: 0,
+    expect(settlements[0]!.input).toMatchObject({ type: "delivery", from: factRefOf(refused, await G.at()), n: 0,
       message: refused.sends[0]!.message, clause: "refused" });
     const outboxId = `${report.seq}.${publication.n}` as OutboxId;
     expect(await call("sends", { scope: L.name, outboxId })).toMatchObject({ outboxItem: { outboxId, result: { seq: settlements[0]!.seq, clause: "refused" }, diagnosis: null } });
@@ -424,7 +424,7 @@ test("host none creates a real local room, settles installed publication refusal
     const policy = rulesPolicyProposalV11({ approvals: 1, ownerMayReview: false, checks: [], labels: [], extents: firstExtentsV11({ approvals: 1, checks: [] }) });
     if (!policy.ok) throw Error("Authored well-formed certificate proposal required");
     files["policy.json"] = utf8(canonicalize(policy.policy));
-    const birth = async (node: typeof D): Promise<FactRef> => factRefOf((await wait(() => node.entries()))[0]!);
+    const birth = async (node: typeof D): Promise<FactRef> => { await wait(() => node.entries()); return node.fact(0); };
     const beforeCertificate = requests.filter(row => row.signed).length;
     const certificate = await act(admin, G.name, "certify-rules-tree", { proposal: policy.digest,
       directoryBirth: await birth(D), rulesBirth: await birth(A), membershipBirth: await birth(M) }, 0, ["policy.json"]);

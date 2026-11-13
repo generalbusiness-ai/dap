@@ -125,7 +125,7 @@ export async function hosted(before: (h: Hosted) => void = () => undefined): Pro
   const commitment = await lane.commitment();
   const hold = (await lane.did(una, "take-hold", { fields: { commitment }, expected: { commitment: 2 } })).fact.seq;
   const accepted = async (answer: Promise<Answer>) => { const a = await answer; if (a.answer !== "accepted") throw new Error(`a step was not accepted: ${JSON.stringify(a)}`); return a.receipt.fact.seq; };
-  await accepted(h.step("instance", "hold@1:instance", { hold, task: { ...lane.at, kind: "task" }, instance: "i1" }));
+  await accepted(h.step("instance", "hold@1:instance", { hold, task: lane.at, instance: "i1" }));
   const seq = await accepted(h.step("stage", "report", { commitment, commit: C("a") }, { commitment: 2 }));
   await h.drain();
   const [prepared] = await lane.entries(seq);

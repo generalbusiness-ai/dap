@@ -112,7 +112,7 @@ test("own-agent creation checks the controller, live role subset and eight activ
     // The ordinary member uses the production retained issuer. The signer
     // and one-second clock skew are explicit TEST ports; Native owns acts.
     const issuerBase = memoryStore(), privateRequests: string[] = [];
-    await issuerBase.save({ v: 1, service: "https://scopes.test", key: "browser", handle: "@vic",
+    await issuerBase.save({ v: 2, service: "https://scopes.test", key: "browser", handle: "@vic",
       repository: agentKeyInvitationOf(link)!.repository });
     const issuerStore = { ...issuerBase,
       signer: async () => secretSigner(vic.secret),

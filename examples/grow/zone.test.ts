@@ -2,7 +2,7 @@
  * member grants and root-directory setup are labelled local fixtures. */
 import { expect, test } from "vitest";
 import type { FactRef, FieldValue } from "@generalbusiness/dap-contract";
-import { t } from "@generalbusiness/dap-derive/testing";
+import { fixtureSequence, t } from "@generalbusiness/dap-derive/testing";
 import { nativeScenario, on, operator, climate, sensors, devicePermissions, replay, submit, type Ledger } from "./test-support.ts";
 import { zoneTestDefinition } from "./definition-corpus-data.ts";
 
@@ -55,7 +55,7 @@ test("a real summary from another room cannot classify this room's identically n
   expect(otherZone).toBe(zone); expect(foreign.at.scope).not.toBe(ledger.at.scope);
   const summary = await observe(foreign, [hot(otherZone)], 0);
   const result = await submit(ledger, sensors, "report-zone", on(ledger, zone, { ...summary, min: 2400, max: 2740, mean: 2650, inBand: 10 }),
-    [{ fact: summary.summary, entry: foreign.last, under: definition.name }]);
+    [{ fact: summary.summary, entry: foreign.last, sequence: fixtureSequence(foreign), under: definition.name }]);
   expect(result).toMatchObject({ result: "refused", reason: "guard-failed", name: "wrong-summary-room" });
   expect(ledger.item(zone).state).toBe("unobserved"); expect((await replay(ledger)).report.result).toBe("consistent");
 });

@@ -15,7 +15,7 @@
 
 import { isRecord } from "@generalbusiness/dap-bytes";
 import type { Digest, FactRef, KeyId, MemberId, MemberRef, Observation, RulesObservation, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, isDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, isDigest, same, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { byteOrder } from "@generalbusiness/dap-derive";
 import { editPath } from "./destination-objects.ts";
 import { LANDING, RULES_EXTENT, classify, judgeExtents, type Extent, type ExtentsAsked, type Review, type TreeLink } from "./extents.ts";
@@ -244,7 +244,7 @@ function reservationDecision({ recorded, evidence, statement, read, time, file =
   // report"). The named reports are not the manifest's selections. An entry that the statement names is not P's, in P's
   // incarnation, which is the scope of `operation`. Or two records of `verdicts` name one `review`, or two records of `jobs` name
   // one `job` or one `decidedBy`: the lane's `collect` gives one record for an item, and a deciding entry sets one job.
-  const [own, twice] = [(fact: FactRef) => fact.at.scope === statement.operation.at.scope && fact.at.inc === statement.operation.at.inc, (facts: readonly FactRef[]) => new Set(facts.map((fact) => canonicalize(fact))).size !== facts.length];
+  const [own, twice] = [(fact: FactRef) => same(fact.at, statement.operation.at), (facts: readonly FactRef[]) => new Set(facts.map((fact) => canonicalize(fact))).size !== facts.length];
   const [reviews, jobs, deciding] = [statement.verdicts.map((verdict) => verdict.review), statement.jobs.map((job) => job.job), statement.jobs.flatMap((job) => (job.decidedBy ? [job.decidedBy] : []))];
   let invalid = read.sound === false || manifest.reports === null || ![statement.manifest, ...reviews, ...jobs, ...deciding].every(own) || twice(reviews) || twice(jobs) || twice(deciding)
     || statement.verdicts.some((_, n) => read.verdicts[n]?.sound !== true);

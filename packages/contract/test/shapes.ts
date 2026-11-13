@@ -5,14 +5,14 @@
  * compiling. The digests and names are made up.
  */
 
-import type { AdoptedReceiveType, Answer, DeclaredDefinition, DeliveryCause, Digest, OutboxId, Entry, Envelope, FactRef, Grant, Intent, MemberRef, ObservationUse, Read, Receipt, Report, ScopeRef, Seed } from "../src/index.ts";
+import type { AdoptedReceiveType, Answer, DeclaredDefinition, DeliveryCause, Digest, OutboxId, Entry, Envelope, FactRef, Grant, Intent, MemberRef, ObservationUse, Read, Receipt, Report, ScopeRef, Seed, SequenceEntry } from "../src/index.ts";
 import { DOMAINS, PROPOSED_BOUNDS, type Bounds, type DomainTag } from "../src/index.ts";
 
 const d = (c: string): Digest => `sha256:${c.repeat(64)}`;
 const time = "2026-10-04T12:00:00Z";
 
-const membership: ScopeRef = { scope: "sc_membership", inc: "in_m", kind: "membership" };
-const directory: ScopeRef = { scope: "sc_directory", inc: "in_d", kind: "directory" };
+const membership: ScopeRef = { scope: "sc_membership", genesis: d("m") };
+const directory: ScopeRef = { scope: "sc_directory", genesis: d("d") };
 const opener: MemberRef = { membership, member: "@alice" };
 
 const intent: Intent = {
@@ -28,8 +28,8 @@ const grant: Grant = {
 
 // Step 1. D.17, an act. It sends a creation, addressed by a seed.
 const seed: Seed = { v: 1, kind: "lane", definition: d("e"), creator: directory, cause: d("a"), ordinal: 0 };
-const d17: Entry = {
-  v: 1, at: directory, seq: 17, prev: d("6"), time, clamped: false, epoch: 0,
+const d17: SequenceEntry = {
+  v: 1, genesis: directory.genesis, seq: 17, prev: d("6"), time, clamped: false, epoch: 0,
   input: { type: "act", signed: { intent, sig: "c2ln" }, authority: [grant], presented: {} },
   uses: [], prepared: [],
   effects: [{ effect: "open", item: 17, type: "issue", state: "allocated" }],
@@ -38,10 +38,11 @@ const d17: Entry = {
 const d17Fact: FactRef = { at: directory, seq: 17, hash: d("7") };
 
 // Step 2. I.0, the child's genesis. Provisional.
-const lane: ScopeRef = { scope: "sc_issue", inc: "in_i", kind: "lane" };
+// The lane's reference holds the hash of its genesis, I.0.
+const lane: ScopeRef = { scope: "sc_issue", genesis: d("0") };
 const i0: Entry = {
-  v: 1, at: lane, seq: 0, prev: null, time, clamped: false, epoch: 0,
-  input: { type: "genesis", seed, inc: lane.inc, kind: "file", "founding": null, source: d17Fact, n: 0,
+  v: 1, seq: 0, prev: null, time, clamped: false, epoch: 0,
+  input: { type: "genesis", seed, nonce: "bm9uY2U", kind: "file", "founding": null, source: d17Fact, sourceKind: "directory", n: 0,
            message: { class: "request", type: "create", body: { opener, title: "A flaky test" } }, decision: "applied" },
   uses: [], prepared: [],
   effects: [{ effect: "open", item: 0, type: "intent", state: "open" }, { effect: "party", item: 0, slot: "requester", member: opener }],
@@ -51,8 +52,8 @@ const i0Fact: FactRef = { at: lane, seq: 0, hash: d("0") };
 
 // Step 3. D.18, the delivery of the result. Its `applied` clause runs, and it sends the confirmation.
 const d18: Entry = {
-  v: 1, at: directory, seq: 18, prev: d17Fact.hash, time, clamped: false, epoch: 0,
-  input: { type: "delivery", from: i0Fact, n: 0, message: { class: "result", of: { from: d17Fact, n: 0 }, outcome: "applied" }, clause: "applied" },
+  v: 1, genesis: directory.genesis, seq: 18, prev: d17Fact.hash, time, clamped: false, epoch: 0,
+  input: { type: "delivery", from: i0Fact, sourceKind: "lane", n: 0, message: { class: "result", of: { from: d17Fact, n: 0 }, outcome: "applied" }, clause: "applied" },
   uses: [], prepared: [],
   effects: [{ effect: "state", item: 17, state: "created" }, { effect: "ref", item: 17, slot: "lane", to: lane }],
   sends: [{ n: 0, to: lane, message: { class: "control", type: "confirm", genesis: i0Fact } }],
@@ -61,8 +62,8 @@ const d18Fact: FactRef = { at: directory, seq: 18, hash: d("8") };
 
 // Step 4. I.1, the delivery of the confirmation. The scope becomes active.
 const i1: Entry = {
-  v: 1, at: lane, seq: 1, prev: i0Fact.hash, time, clamped: false, epoch: 0,
-  input: { type: "delivery", from: d18Fact, n: 0, message: { class: "control", type: "confirm", genesis: i0Fact } },
+  v: 1, genesis: lane.genesis, seq: 1, prev: i0Fact.hash, time, clamped: false, epoch: 0,
+  input: { type: "delivery", from: d18Fact, sourceKind: "directory", n: 0, message: { class: "control", type: "confirm", genesis: i0Fact } },
   uses: [], prepared: [], effects: [{ effect: "activate" }], sends: [],
 };
 

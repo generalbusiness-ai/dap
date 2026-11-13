@@ -58,7 +58,7 @@ export function readServiceMarkV13(value: unknown): { ok: true; mark: ServiceMar
   if (value === null) return { ok: true, mark: null };
   if (!isRecord(value) || !exact(value, ["checker", "key"]) || !isRecord(value["checker"])
     || typeof value["checker"]["member"] !== "string" || value["checker"]["member"].length > 256
-    || !isMemberRef(value["checker"]) || value["checker"].membership.kind !== "membership" || !isKeyId(value["key"])) return { ok: false };
+    || !isMemberRef(value["checker"]) || !isKeyId(value["key"])) return { ok: false };
   return { ok: true, mark: { checker: copyMember(value["checker"]), key: value["key"] } };
 }
 

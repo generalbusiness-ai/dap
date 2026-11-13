@@ -1,3 +1,4 @@
+import { scopeWiring } from "../src/internal/room-hooks.ts";
 /** Real native ScopeObject, turn, journal and SQLite. The first fixtures use
  * test authority/readers and a scripted clock. The expiry case uses the
  * production session reader over an actually created native room, with a
@@ -6,13 +7,13 @@
 import { expect, test } from "vitest";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
-import { PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ItemQuery, type ReadMinimum } from "@generalbusiness/dap-contract";
-import { encodeReadMinimumParameter, encodeItemQueryParameter, isScopeRef, newIncarnation, textDigest, timeMs } from "@generalbusiness/dap-bytes";
+import { PROPOSED_BOUNDS, type SequenceRef, type ApplicationProjectionQuery, type ItemQuery, type ReadMinimum } from "@generalbusiness/dap-contract";
+import { encodeItemQueryParameter, encodeReadMinimumParameter, isScopeRef, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import { ScopeObject, type Wiring } from "../src/object.ts";
 import { api, route, sessionWiring } from "../src/worker.ts";
 import { mintSession, readerOf } from "../src/sessions.ts";
 import { controls, netPorts, testPorts } from "../src/testing.ts";
-import { create, reader, sessionRoom, type Lane } from "./fixtures-native.ts";
+import { create, live, reader, sessionRoom, type Lane, type Live } from "./fixtures-native.ts";
 import { desk, net, settle, ticket } from "./net.ts";
 import { namespace } from "../src/namespace.ts";
 import { encodeApplicationProjectionQuery } from "@generalbusiness/dap-platform/application-v2";
@@ -38,14 +39,14 @@ class Timer {
   }
   advance(ms: number) { this.value += ms; for (const task of [...this.tasks]) if (task.at <= this.value) { this.tasks.delete(task); task.work(); } }
 }
-async function inside<T>(work: (object: ScopeObject, lane: Lane, timer: Timer, state: DurableObjectState) => Promise<T>): Promise<T> {
+async function inside<T>(work: (object: Live<ScopeObject>, lane: Lane, timer: Timer, state: DurableObjectState) => Promise<T>): Promise<T> {
   const lane = await create({ readWaitMilliseconds: 1000 });
   return lane.inside(async state => {
     const timer = new Timer();
     class WaitScope extends ScopeObject {
-      protected override wiring(): Wiring { return { ports: testPorts(lane.c), bounds: lane.c.bounds, queryTimer: timer }; }
+      protected override [scopeWiring](): Wiring { return { ports: testPorts(lane.c), bounds: lane.c.bounds, queryTimer: timer }; }
     }
-    return work(new WaitScope(state, {}), lane, timer, state);
+    return work(live(new WaitScope(state, {})), lane, timer, state);
   });
 }
 
@@ -86,8 +87,9 @@ test("native wait timeout reports the authorized current fact and leaves no time
     expect(timer.tasks.size).toBe(0);
     expect(await object.summary(reader)).toEqual(before);
     expect(await state.storage.getAlarm()).toBe(alarm);
-    expect(await object.summary(reader, { at: { ...lane.at, inc: newIncarnation(new Uint8Array(16).fill(99)) }, head: 99 })).toEqual({ ok: false, reason: "wrong-incarnation" });
-    expect(await object.summary(reader, { at: { ...lane.at, kind: "lane" }, head: 99 })).toEqual({ ok: false, reason: "unavailable" });
+    expect(await object.summary(reader, { at: { ...lane.at, genesis: `sha256:${"63".repeat(32)}` as const }, head: 99 })).toEqual({ ok: false, reason: "wrong-genesis" });
+    // An address with a member beyond scope and genesis is not a sequence reference.
+    expect(await object.summary(reader, { at: { ...lane.at, kind: "lane" } as unknown as SequenceRef, head: 99 })).toEqual({ ok: false, reason: "unavailable" });
     expect(timer.started).toBe(1);
   });
 });
@@ -99,9 +101,9 @@ test("native wait rechecks actual session expiry before exposing timeout or inca
     await f.life.wait(() => runInDurableObject(child.object, async (_instance, state) => {
       const timer = new Timer(), c = controls(child.name); c.clock = net.clock;
       class WaitScope extends ScopeObject {
-        protected override wiring(): Wiring { return { ports: testPorts(c), ...sessionWiring(() => f.sessions, env.PLATFORM), bounds: { ...c.bounds, readWaitMilliseconds: 1000 }, queryTimer: timer }; }
+        protected override [scopeWiring](): Wiring { return { ports: testPorts(c), ...sessionWiring(() => f.sessions, env.PLATFORM), bounds: { ...c.bounds, readWaitMilliseconds: 1000 }, queryTimer: timer }; }
       }
-      const object = new WaitScope(state, {}), token = readerOf(mintSession(f.sessions, { ...f.claims, reads: ["summary", "items", "history", "entry"] }));
+      const object = live(new WaitScope(state, {})), token = readerOf(mintSession(f.sessions, { ...f.claims, reads: ["summary", "items", "history", "entry"] }));
       const before = await object.summary(token);
       expect(before.ok).toBe(true);
       const pending = object.entry(token, 9999, { at: f.rules, head: 9999 });
@@ -109,7 +111,7 @@ test("native wait rechecks actual session expiry before exposing timeout or inca
       net.clock.now = f.claims.ends;
       timer.advance(1000);
       expect(await pending).toEqual({ ok: false, reason: "forbidden" });
-      expect(await object.summary(token, { at: { ...f.rules, inc: newIncarnation(new Uint8Array(16).fill(99)) }, head: 9999 })).toEqual({ ok: false, reason: "forbidden" });
+      expect(await object.summary(token, { at: { ...f.rules, genesis: `sha256:${"63".repeat(32)}` as const }, head: 9999 })).toEqual({ ok: false, reason: "forbidden" });
       expect(timer.tasks.size).toBe(0);
       expect(timer.started).toBe(1);
     }));
@@ -148,9 +150,9 @@ test("a future projection minimum leaves the shared flight available to a concur
       }
       const timer = new ProjectionTimer(), c = controls(child.name); c.clock = net.clock;
       class WaitScope extends ScopeObject {
-        protected override wiring(): Wiring { return { ports: testPorts(c), ...sessionWiring(() => f.sessions, env.PLATFORM), bounds: { ...c.bounds, readWaitMilliseconds: 1000 }, queryTimer: timer }; }
+        protected override [scopeWiring](): Wiring { return { ports: testPorts(c), ...sessionWiring(() => f.sessions, env.PLATFORM), bounds: { ...c.bounds, readWaitMilliseconds: 1000 }, queryTimer: timer }; }
       }
-      const object = new WaitScope(state, {}), token = readerOf(mintSession(f.sessions, { ...f.claims, reads: ["summary", "items"] }));
+      const object = live(new WaitScope(state, {})), token = readerOf(mintSession(f.sessions, { ...f.claims, reads: ["summary", "items"] }));
       const before = await object.summary(token);
       expect(before.ok).toBe(true);
       const query: ApplicationProjectionQuery = { v: 1, scope: f.rules, directory: f.directory, install: 0, projection: "board", items: {} };
@@ -177,7 +179,7 @@ test("causal signed history and entry readers see a native delivery sealed durin
   const targetRef = await target.at(), before = await target.summary(), seq = before.at.seq + 1;
   const previousHold = net.hold;
   const hold: NonNullable<typeof net.hold> = envelope =>
-    (isScopeRef(envelope.to) && envelope.to.scope === targetRef.scope && envelope.to.inc === targetRef.inc && envelope.to.kind === targetRef.kind)
+    (isScopeRef(envelope.to) && envelope.to.scope === targetRef.scope && envelope.to.genesis === targetRef.genesis)
       || (previousHold?.(envelope) ?? false);
   net.hold = hold;
   try {
@@ -188,11 +190,11 @@ test("causal signed history and entry readers see a native delivery sealed durin
     await runInDurableObject(target.object, async (_instance, state) => {
       const timer = new Timer(), peers = namespace(env.NET);
       class WaitScope extends ScopeObject {
-        protected override wiring(): Wiring {
+        protected override [scopeWiring](): Wiring {
           return { ports: { ...netPorts(net, peers.transport, peers.resolver), definitions: peers.definitions, births: peers.births, proofs: peers.proofs }, bounds: { ...PROPOSED_BOUNDS, readWaitMilliseconds: 1000 }, queryTimer: timer };
         }
       }
-      const object = new WaitScope(state, {});
+      const object = live(new WaitScope(state, {}));
       const header = (who: Actor, read: "history" | "entry", arg: string) => signedReader(secretSigner(who.secret), target.name, read, arg, { now: () => timeMs(net.clock.now)! });
       const minimum = { at: targetRef, head: seq };
       // A valid stranger still gets no head and opens no wait.

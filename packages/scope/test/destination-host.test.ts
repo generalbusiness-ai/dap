@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Digest, FieldValue, OperationId, RetainedInput, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, utf8, factRefOf, newIncarnation, signIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { t } from "@generalbusiness/dap-derive/testing";
 import { DESTINATION_5, destination4, destinationRules4, destination5, destinationRules5, destinationReceipt, initialCommitObjects, type DestinationObject, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
 import { idOf, snapshotCommit } from "@generalbusiness/dap-git";
@@ -9,13 +9,14 @@ import { useOf, valueDigest, type Operation } from "@generalbusiness/dap-derive"
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { publicationJourney } from "../../platform/test/support-publication-journey.ts";
 import { keyObserved } from "../../platform/test/support-destination.ts";
-import { Branch, HEAD, NEXT, OTHER, TREE, handMade, rita, RULES } from "../../../packages/platform/test/support-destination.ts";
+import { Branch, HEAD, NEXT, OTHER, TREE, fetched, handMade, refOf, rita, RULES, sequenceAt } from "../../../packages/platform/test/support-destination.ts";
 import { CredentialStore } from "../src/credential-store.ts";
 import { DestinationHost, type DestinationBinding, type DestinationHostOptions, type DestinationInspection, type DestinationProvider, type DestinationRepository } from "../src/destination-host.ts";
 import type { OutsideGiven } from "../src/object.ts";
 import type { RulesTreeObjects } from "../src/rules-tree-provider.ts";
 import type { EffectAnswer, EffectRequest } from "../src/operations.ts";
 import { create } from "./fixtures-native.ts";
+import { withSequence } from "../src/testing.ts";
 
 /** STAND-IN: provider replies and object reads are scripts. No host or transport runs. */
 class Provider implements DestinationProvider {
@@ -52,7 +53,7 @@ function fixture(sql: SqlStorage, importing = false) {
   const provider = new Provider();
   const retained = new Map<Digest, RetainedInput>();
   const given: OutsideGiven = {
-    state: branch.state, own: branch.own, retained: (_kind, digest) => retained.get(digest) ?? null,
+    localSequence: () => branch.own.sequence(), state: branch.state, own: branch.own, retained: (_kind, digest) => retained.get(digest) ?? null,
     scope: () => branch.state.scope(),
     genesis: () => { const input = branch.own(0)?.entry.input; return input?.type === "genesis" ? input : null; },
     clock: { read: () => branch.now }, random: { bytes: (length) => new Uint8Array(length) },
@@ -109,7 +110,7 @@ describe("destination outside adapter; scripted host, platform judgments in memo
       const genesis = f.branch.own(0)!.entry;
       // The creation commit of `platform:destination@2`: one README that names the repository, the creator's handle and the directory.
       const readme = { name: (f.branch.branch.values["repository"] as { name: string }).name, handle: "@rita", directory: (f.branch.branch.refs["directory"] as { scope: ScopeId }).scope };
-      const expected = initialCommitObjects("sha1", genesis.at.scope, genesis.time, f.branch.branch.refs["claim"] as never, readme);
+      const expected = initialCommitObjects("sha1", f.branch.at.scope, genesis.time, f.branch.branch.refs["claim"] as never, readme);
       expect({ commit: sent.commit, objects: sent.objects }).toEqual(expected);
       expect(sent).toMatchObject({ old: null, ref: "refs/heads/main", token: "private-token-1", binding: { mint, write, writeAttempt: 1 } });
       f.record(write, written!);
@@ -242,7 +243,7 @@ describe("destination outside adapter; scripted host, platform judgments in memo
       const changed = structuredClone(request.origin.entry);
       changed.time = t(4);
       const forged: EffectRequest[] = [
-        { ...request, scope: { ...request.scope, inc: newIncarnation(new Uint8Array(16).fill(9)) } },
+        { ...request, scope: { ...request.scope, genesis: `sha256:${"09".repeat(32)}` as const } },
         { ...request, owner: "hold@1" }, { ...request, kind: "push" }, { ...request, attempt: 2 },
         { ...request, origin: { entry: changed, hash: entryHash(changed) } },
         { ...request, origin: { entry: changed, hash: request.origin.hash } },
@@ -286,7 +287,7 @@ describe("destination outside adapter; scripted host, platform judgments in memo
         { effect: "operation", k: 0, owner, kind: RULES_CERTIFICATE_KIND, attempts: 1, for: holder },
         { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null },
       ]);
-      const origin = { entry, hash: entryHash(entry) }, started = factRefOf(entry);
+      const origin = { entry, hash: entryHash(entry) }, started = refOf(entry);
       const recorded: Operation = { id: `${entry.seq}:0`, owner, kind: RULES_CERTIFICATE_KIND, most: 1,
         attempts: [{ attempt: 1, opened: entry.seq, outcomes: [] }], selected: null, for: holder };
       const request: EffectRequest = { scope: f.branch.at, owner, kind: RULES_CERTIFICATE_KIND, operation: recorded.id, attempt: 1, origin };
@@ -303,7 +304,7 @@ describe("destination outside adapter; scripted host, platform judgments in memo
       const given: OutsideGiven = { ...f.given, state: view,
         scope: () => ({ ...f.given.scope()!, status: "active", head: currentHead }),
         genesis: () => ({ ...genesis, seed: { ...genesis.seed, definition: owner } }),
-        own: seq => seq === entry.seq ? origin : f.given.own(seq),
+        own: withSequence((seq: number) => seq === entry.seq ? origin : f.given.own(seq), f.given.own.sequence()),
         retained: (kind, digest, domain) => kind === "value" && digest === proposal.digest && domain === RULES_POLICY_VALUE_V11.domain
           ? { kind: "value", digest, domain, bytes: policyBytes } : null,
       };
@@ -365,8 +366,8 @@ describe("destination outside adapter; scripted host, platform judgments in memo
       expect((f.provider.calls.find((call) => call.kind === "send")?.body as { commit: string }).commit).toBe(HEAD);
       f.record(write, sent!);
       const manifest = handMade(f.branch.lane.at, "propose-manifest", [], rita, { base: HEAD, integration: NEXT, tree: TREE, complete: true, selected: [] });
-      const message = { class: "request", type: "tell", body: { message: "reserve", fields: { operation: { self: true }, manifest: factRefOf(manifest), verdicts: [], jobs: [], links: [], reports: [] } } } as const;
-      expect(f.branch.from(f.branch.lane.at, "change", "merge", message as never, [{ fact: factRefOf(manifest), entry: manifest, under: "change" }]).judgment.result).toBe("write");
+      const message = { class: "request", type: "tell", body: { message: "reserve", fields: { operation: { self: true }, manifest: refOf(manifest), verdicts: [], jobs: [], links: [], reports: [] } } } as const;
+      expect(f.branch.from(f.branch.lane.at, "change", "merge", message as never, [fetched(manifest, "change")]).judgment.result).toBe("write");
       const judge = operation(f.branch, "judge");
       const publication = f.branch.last;
       const use = publication.uses.find((use) => use.fact.hash === entryHash(manifest))!;
@@ -392,7 +393,7 @@ test.each([
     const journey = publicationJourney(data, named, rules);
     const make = () => {
       const ledger = journey.make(), provider = new Provider(), retained = new Map<Digest, RetainedInput>();
-      const given: OutsideGiven = { state: ledger.state, own: ledger.own, scope: () => ledger.state.scope(),
+      const given: OutsideGiven = { localSequence: () => ledger.own.sequence(), state: ledger.state, own: ledger.own, scope: () => ledger.state.scope(),
         genesis: () => { const input = ledger.own(0)?.entry.input; return input?.type === "genesis" ? input : null; },
         retained: (_kind, digest) => retained.get(digest) ?? null, clock: { read: () => ledger.now }, random: { bytes: n => new Uint8Array(n) } };
       const custody = new CredentialStore(state.storage.sql, () => ledger.at);
@@ -421,17 +422,17 @@ test.each([
     const tree = make(), configuration = `sha256:${"8".repeat(64)}` as Digest;
     const reserved = journey.reserve(tree.ledger, { list: true, checks: [{ name: "unit", configuration, checker: keys.una.member.member, required: true }] });
     journey.answer(tree.ledger, reserved.push, { send: "accepted", seen: reserved.publication.values["integration"]!, tree: reserved.publication.values["tree"]! });
-    const job = handMade(reserved.manifest.at, "request-check", [], rita, { manifest: reserved.manifest.seq, name: "unit", configuration }, seq => [
+    const job = handMade(refOf(reserved.manifest).at, "request-check", [], rita, { manifest: reserved.manifest.seq, name: "unit", configuration }, seq => [
       { effect: "value", item: seq, slot: "tree", value: reserved.publication.values["tree"]! }, { effect: "value", item: seq, slot: "deadline", value: t(600) },
     ]);
-    journey.tell(tree.ledger, "check-fence", { operation: factRefOf(reserved.merge) as unknown as FieldValue, job: factRefOf(job) as unknown as FieldValue, name: "unit" }, [reserved.merge, job]);
-    for (const fact of tree.ledger.foldOptions.facts ?? []) { const use = useOf(fact.fact, fact.entry); tree.retained.set(use.content, { kind: "entry", digest: use.content, bytes: canonicalize(fact.entry), under: fact.under }); }
+    journey.tell(tree.ledger, "check-fence", { operation: refOf(reserved.merge) as unknown as FieldValue, job: refOf(job) as unknown as FieldValue, name: "unit" }, [reserved.merge, job]);
+    for (const fact of tree.ledger.foldOptions.facts ?? []) { const use = useOf(fact.fact, fact.entry, fact.sequence.kind); tree.retained.set(use.content, { kind: "entry", digest: use.content, bytes: canonicalize(fact.entry), under: fact.under }); }
     let keyReads = 0;
     const host = new DestinationHost(tree.given, { ...tree.options, snapshotReader: {
-      job: async fact => canonicalize(fact) === canonicalize(factRefOf(job)) ? { entry: job, under: "change", state: "requested" } : null,
+      job: async fact => canonicalize(fact) === canonicalize(refOf(job)) ? { entry: job, under: "change", sequence: sequenceAt(refOf(job).at), state: "requested" } : null,
       key: async () => { keyReads++; return keyObserved(keys.una, tree.ledger.now, { actions: ["change.check"] }); },
     } });
-    const ask = signIntent({ v: 1, to: job.at, actor: keys.una.key, kind: "git-read@1:job-read", on: null, expected: {}, fields: { job: factRefOf(job) as unknown as FieldValue }, idempotencyKey: "D1 scripted job read", notAfter: t(60) }, keys.una.secret);
+    const ask = signIntent({ v: 1, to: refOf(job).at, actor: keys.una.key, kind: "git-read@1:job-read", on: null, expected: {}, fields: { job: refOf(job) as unknown as FieldValue }, idempotencyKey: "D1 scripted job read", notAfter: t(60) }, keys.una.secret);
     expect(await host.snapshot(ask)).toEqual({ refused: "reservation-stage-missing" });
     expect(keyReads).toBe(1);
     expect(tree.provider.calls.map(call => call.kind)).toEqual(["ref"]);

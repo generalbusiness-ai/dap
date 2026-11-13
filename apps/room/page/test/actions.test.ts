@@ -2,7 +2,7 @@ import { commonsNoteForm } from "../src/commons.ts";
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { actsPanel } from "../src/actions.ts";
 import { changeTaskContext, createIssue, issueDialogOutcome, nextChangeAction, requestedReviewCandidates, reviewSelectionProblem, taskForm } from "../src/tasks.ts";
-import { digestBytes, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { digestBytes, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import type { MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import type { ChangeView, Offered, Room } from "../src/data.ts";
 
@@ -248,7 +248,7 @@ test("a Merge task uses the exact observed manifest and selected issue reports w
   const merge: Offered = { kind: "merge", step: "open", on: "merge", line: "Merge", fields: [{ name: "manifest", type: "item", required: true }, { name: "reports", type: "list", required: true }] };
   const missing = asElement(taskForm(merge, () => {}, { defaults: { merge: { fields: { manifest: "12" } } } }, [], "Merge change"));
   expect(missing.textContent).toContain("selected issue-report evidence"); expect(missing.all().filter((node) => node.tag === "input")).toEqual([]);
-  const reports = '[{"at":{"kind":"lane","scope":"recorded-issue","inc":"recorded"},"seq":8,"hash":"recorded-hash"}]';
+  const reports = '[{"at":{"scope":"recorded-issue","genesis":"recorded"},"seq":8,"hash":"recorded-hash"}]';
   const sent: unknown[] = [];
   const ready = asElement(taskForm(merge, (...args) => sent.push(args), { defaults: { merge: { fields: { manifest: "12", reports } } } }, [], "Merge change"));
   expect(ready.all().filter((node) => node.tag === "label")).toEqual([]);
@@ -257,21 +257,21 @@ test("a Merge task uses the exact observed manifest and selected issue reports w
 });
 
 test("task defaults retain selected issue-report order and never fall back to an older manifest or checker jobs", () => {
-  const reports = [{ at: { kind: "lane", scope: "second-issue", inc: "second" }, seq: 9, hash: "second-hash" }, { at: { kind: "lane", scope: "first-issue", inc: "first" }, seq: 4, hash: "first-hash" }];
+  const reports = [{ at: { scope: "second-issue", genesis: textDigest("TEST genesis 4") }, seq: 9, hash: "second-hash" }, { at: { scope: "first-issue", genesis: textDigest("TEST genesis 5") }, seq: 4, hash: "first-hash" }];
   const change = { currentManifest: 12, proposal: 0, manifests: [{ id: 11, state: "superseded", selectedReports: [] }, { id: 12, state: "current", selectedReports: reports }], jobs: [{ id: 99, state: "passed" }], reviewExtents: [{ label: "Docs", value: "docs" }], reviewMembers: [{ label: "@reviewer", value: "@reviewer" }] } as unknown as ChangeView;
   expect(changeTaskContext(change).defaults?.["merge"]?.fields).toEqual({ manifest: "12", reports: JSON.stringify(reports) });
   const unreadable = { ...change as object, currentManifest: null } as never;
   expect(changeTaskContext(unreadable).defaults?.["merge"]).toBeUndefined();
   // Synthetic complete identity, not a native grant. Same handle in another
-  // membership incarnation cannot attach another person's request.
+  // membership genesis cannot attach another person's request.
   const fixtureDigest = digestBytes(new Uint8Array([1]));
-  const membership: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "membership", definition: fixtureDigest, creator: null, cause: fixtureDigest, ordinal: 0 }), inc: newIncarnation(new Uint8Array(16)), kind: "membership" };
-  const lane: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "lane", definition: fixtureDigest, creator: null, cause: fixtureDigest, ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "lane" };
+  const membership: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "membership", definition: fixtureDigest, creator: null, cause: fixtureDigest, ordinal: 0 }), genesis: textDigest("TEST genesis 1") };
+  const lane: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "lane", definition: fixtureDigest, creator: null, cause: fixtureDigest, ordinal: 0 }), genesis: textDigest("TEST genesis 2") };
   const member: MemberRef = { membership, member: "@reviewer" };
   const requester: MemberRef = { membership, member: "@author" };
   const room = { membership, me: { handle: "@reviewer", ref: member } } as unknown as Room;
   const request = (id: number, requestedRef: MemberRef = member, state = "open") => ({ id, state, requested: "@reviewer", requester: "@author", requestedRef, requesterRef: requester });
-  const requested = { ...change, scope: lane.scope, ref: lane, state: "open", reviewMembersByExtent: { docs: [{ label: "@reviewer", value: "@reviewer" }] }, reviewPolicy: { manifest: 12, source: {} as never, extents: [{ name: "docs", patterns: ["README.md"], approvals: 1, approver: "change.review", checks: [], class: "content" }] }, manifests: [{ ...change.manifests[1]!, authors: [], file: { path: "README.md" } }], requests: [request(7, { ...member, membership: { ...membership, inc: newIncarnation(new Uint8Array(16).fill(2)) } }), request(8, member, "met"), request(6)] } as unknown as ChangeView;
+  const requested = { ...change, scope: lane.scope, ref: lane, state: "open", reviewMembersByExtent: { docs: [{ label: "@reviewer", value: "@reviewer" }] }, reviewPolicy: { manifest: 12, source: {} as never, extents: [{ name: "docs", patterns: ["README.md"], approvals: 1, approver: "change.review", checks: [], class: "content" }] }, manifests: [{ ...change.manifests[1]!, authors: [], file: { path: "README.md" } }], requests: [request(7, { ...member, membership: { ...membership, genesis: textDigest("TEST genesis 6") } }), request(8, member, "met"), request(6)] } as unknown as ChangeView;
   const context = changeTaskContext(requested, room);
   expect(context.defaults["review-verdict"]!.fields).toEqual({ manifest: "12", request: "6" });
   const actualReview: Offered = { ...review, fields: [...review.fields, { name: "extent", type: "text", required: false }, { name: "request", type: "item", required: false }] };
@@ -283,7 +283,7 @@ test("task defaults retain selected issue-report order and never fall back to an
   const captured = { scope: lane, member, request: 6 };
   expect(reviewSelectionProblem(room, { ...requested, requests: [...requested.requests, request(9)] }, 12, "docs", captured)).toBeNull();
   expect(reviewSelectionProblem(room, { ...requested, requests: [request(6, member, "met")] }, 12, "docs", captured)).toContain("no longer open");
-  expect(reviewSelectionProblem(room, { ...requested, requests: [request(6, { ...member, membership: { ...membership, inc: newIncarnation(new Uint8Array(16).fill(3)) } })] }, 12, "docs", captured)).toContain("no longer open");
+  expect(reviewSelectionProblem(room, { ...requested, requests: [request(6, { ...member, membership: { ...membership, genesis: textDigest("TEST genesis 7") } })] }, 12, "docs", captured)).toContain("no longer open");
   const multiple = changeTaskContext({ ...requested, requests: [request(6), request(9)] }, room);
   expect(multiple.defaults["review-verdict"]!.fields?.["request"]).toBeUndefined();
   expect(multiple.choices["review-verdict"]!["request"]!.map(choice => choice.value)).toEqual(["6", "9"]);
@@ -343,7 +343,7 @@ test("the next task follows the selected file's recorded requirements and curren
       { name: "source", approvals: 0, approver: "change.review", checks: [], class: "content" },
     ] }, reviewMembersByExtent: { rules: [{ label: "@controller", value: "@controller" }], source: [{ label: "@reader", value: "@reader" }] },
     // Synthetic presentation input; task-data proves the actual native binding.
-    reviewPolicy: { manifest: 12, source: { at: { scope: "rules", kind: "rules", inc: "one" }, seq: 1, hash: "hash" }, extents: [
+    reviewPolicy: { manifest: 12, source: { at: { scope: "rules", genesis: textDigest("TEST genesis 3") }, seq: 1, hash: "hash" }, extents: [
       { name: "rules", patterns: ["AGENTS.md"], approvals: 1, approver: "rules.publish", checks: [], class: "authority" },
       { name: "source", patterns: [], approvals: 0, approver: "change.review", checks: [], class: "content" },
     ] },

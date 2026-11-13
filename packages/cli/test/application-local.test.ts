@@ -4,7 +4,7 @@ import { clockDefinition } from "./definition-corpus-data.ts";
 import { readFile } from "node:fs/promises";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type MemberRef, type ScopeKind, type ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, definitionDigest, scopeIdOf, utf8, textDigest } from "@generalbusiness/dap-bytes";
 import { packApplication, secretSigner, signedIntent } from "@generalbusiness/dap-client";
 import { verify, type HistorySource } from "@generalbusiness/dap-replay";
 import { validateDefinition } from "@generalbusiness/dap-derive";
@@ -14,7 +14,7 @@ import { LocalApplicationScope } from "../src/application-local.ts";
 const time = "2026-10-18T12:00:00Z", now = Date.parse(time);
 const signer = secretSigner(new Uint8Array(32).fill(31)), other = secretSigner(new Uint8Array(32).fill(32));
 function reference(kind: ScopeKind): ScopeRef {
-  return { scope: scopeIdOf({ v: 1, kind, definition: `sha256:${"0".repeat(64)}`, creator: null, cause: `sha256:${"1".repeat(64)}`, ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(2)), kind };
+  return { scope: scopeIdOf({ v: 1, kind, definition: `sha256:${"0".repeat(64)}`, creator: null, cause: `sha256:${"1".repeat(64)}`, ordinal: 0 }), genesis: textDigest("TEST genesis 2") };
 }
 const membership = reference("membership"), member: MemberRef = { membership, member: "@local" }, second: MemberRef = { membership, member: "@second" };
 async function packet(kind: "counter" | "lending") {

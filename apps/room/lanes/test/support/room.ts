@@ -19,7 +19,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Answer, Bounds, DeclaredDefinition, Entry, FactRef, Intent, MemberRef, OperationId, Seed } from "@generalbusiness/dap-contract";
+import type { Answer, Bounds, DeclaredDefinition, FactRef, Intent, MemberRef, OperationId, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, intentDigest, keyIdOfSecret, scopeIdOf, seedDigest, signIntent, signInvitationProof, textDigest } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, declaredHandle } from "@generalbusiness/dap-client";
 import { validateDefinition, valueDigest, type ValidDefinition } from "@generalbusiness/dap-derive";
@@ -34,6 +34,7 @@ import type { Actor as Signer } from "@generalbusiness/dap-derive/testing";
 import type { Item } from "@generalbusiness/dap-derive";
 import { DIGESTS, change, issue, type changeDemo } from "../../src/index.ts";
 import { Host, Node, net, reader, soon } from "./graph.ts";
+import { storedOwn } from "../../../../../packages/scope/src/testing.ts";
 
 export { Platform, copied, rewritten, routed, settle, soon };
 export const { rita, una, vic, paul, sam } = keys;
@@ -93,7 +94,7 @@ export class Room {
     const changed = valueDigest(DESTINATION_CHANGED_SET.domain, changes);
     const answers = await runInDurableObject(this.G.object, (_instance, state) => {
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (closure) => state.storage.transactionSync(closure) });
-      const own = (seq: number) => { const row = store.stored(seq); return row ? { entry: JSON.parse(row.bytes) as Entry, hash: row.hash } : null; };
+      const own = storedOwn(store);
       const head = store.item(0)?.values["head"] as string;
       return store.all().operations.filter((operation) => operation.kind === kind).flatMap((operation) => operation.attempts.filter((attempt) => attempt.outcomes.length === 0).map((attempt) => {
         const publication = operation.for === null || operation.for === undefined ? null : store.item(operation.for);
@@ -286,7 +287,7 @@ export async function room(setup: RoomSetup = {}): Promise<Room> {
   wired.delete(R.name);
   // The creation commit of `platform:destination@2`: one README that names the repository, the creator's handle and the directory.
   const readme = { name: repositoryName(seedDigest(seed), 1), handle: "@rita", directory: D.name };
-  const firstHead = initialCommitObjects("sha1", G.name, (await G.entries())[0]!.time, factRefOf((await R.entries())[1]!), readme).commit;
+  const firstHead = initialCommitObjects("sha1", G.name, (await G.entries())[0]!.time, factRefOf((await R.entries())[1]!, await R.at()), readme).commit;
   const made = new Room(R, D, M, rules, G, firstHead, {}, D, setup.workspaceCohort ?? false);
   for (const kind of ["mint", "first-head", "mint", "receipt", "revoke"] as const) await made.drive(kind);
   expect(await G.item(0)).toMatchObject({ state: "ready", values: { head: firstHead } });

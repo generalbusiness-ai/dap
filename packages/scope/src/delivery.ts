@@ -11,7 +11,7 @@ import { countedEntries } from "@generalbusiness/dap-derive";
  * send, at that ordinal, to that address, with that message. The judgment
  * runs in the scope's turn like any other input: the same queue, drain,
  * snapshot, commit and budgets. An empty store that a `create` reaches
- * writes its genesis the same way, and mints its incarnation in that commit.
+ * writes its genesis the same way, and mints its genesis nonce in that commit.
  *
  * The source entry's bytes are retained with the entry that used it, and the
  * message is inside that entry (section 9.2).
@@ -24,19 +24,20 @@ import { countedEntries } from "@generalbusiness/dap-derive";
  * task.
  */
 
-import type { Bounds, Digest, Entry, FactRef, Incarnation, PlatformDefinition, ScopeId, Seed, UnavailableReason } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isPlatformDefinition, newIncarnation, isSeed, parseStrict, platformName } from "@generalbusiness/dap-bytes";
+import type { Bounds, Digest, Entry, FactRef, GenesisNonce, PlatformDefinition, ScopeId, Seed, UnavailableReason } from "@generalbusiness/dap-contract";
+import { canonicalize, isDigest, isPlatformDefinition, newGenesisNonce, isSeed, parseStrict, platformName, resolveGenesisSelf } from "@generalbusiness/dap-bytes";
 
-import { bound, clockOf, creationFields, factsNamed, isEntryOf, isFactRef, isLocalId, isObject, isScopeRef, judgeDelivery, judgeGenesis, messageFacts, messageTexts, own, prepareRules, readFields, textsNamed } from "@generalbusiness/dap-derive";
-import type { Clock as Reading, Creation, Delivered, DeliveryContext, Fetched, Judgment, PlatformRules, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
-import { NO_INCARNATION, Observes, Received, ownOf, retainedFacts, snapshotsOf, used, valuesOf, type Scope } from "./core.ts";
+import { bound, clockOf, creationFields, factsNamed, isEntryOf, isFactRef, isLocalId, isObject, isScopeRef, judgeDelivery, judgeGenesis, messageFacts, messageTexts, own, prepareRules, readFields, retainedResultContext, textsNamed } from "@generalbusiness/dap-derive";
+import type { ClassifiedRetainedUse, Clock as Reading, Creation, Delivered, DeliveryContext, Fetched, RetainedResultMaterial, Judgment, PlatformRules, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
+import { NO_GENESIS_NONCE, Observes, Received, ownOf, retainedOperands, retainedUsesOf, snapshotsOf, used, valuesOf, type Scope } from "./core.ts";
 import { carryProducerName } from "./receiver-facts.ts";
 import { ReceiverReads } from "./receiver-reads.ts";
 import { namedBy } from "./definitions.ts";
 import { readNativeBirth } from "./native-birth.ts";
+import { admittedOrigin } from "./namespace.ts";
 import type { DefinitionRead, Delivery, Ports } from "./ports.ts";
 import type { Retained, Store } from "./store.ts";
-import { LATE, fetchFacts, within, type Verdict } from "./turn.ts";
+import { LATE, SOURCE_TOO_LARGE, fetchFacts, within, type Verdict } from "./turn.ts";
 
 const retry = (reason: UnavailableReason | "scope-full" | "unsupported-definition"): Delivery => ({ answer: "retry", reason });
 const UNVERIFIED: Delivery = { answer: "source-unverified" };
@@ -77,10 +78,11 @@ export class Deliveries {
    * that this runtime cannot run whole: a version that it lacks, or one
    * with a mark and no rule. Either way nothing is recorded.
    */
-  async #declared(seed: Seed): Promise<{ valid: ValidDefinition; bytes: string | null; children: Retained[]; platform: PlatformRules | null } | "dependency-unavailable" | "unsupported-definition"> {
-    if (!isObject(seed) || !isScopeRef(seed.creator)) return "unsupported-definition";
+  async #declared(seed: Seed, origin: FactRef): Promise<{ valid: ValidDefinition; bytes: string | null; children: Retained[]; platform: PlatformRules | null } | "dependency-unavailable" | "unsupported-definition"> {
+    // A seed in its creator's genesis names that creator by scope alone; the authenticated source fact supplies its genesis.
+    const creator = isObject(seed) ? resolveGenesisSelf(seed.creator, origin) : null;
+    if (!creator) return "unsupported-definition";
     const { definitions } = this.#ports;
-    const creator = seed.creator;
     const seconds = this.#bounds.fetchSeconds;
     const from = async (digest: Digest): Promise<DefinitionRead> => {
       const read = await within(() => definitions.read(digest, creator), seconds);
@@ -150,8 +152,8 @@ export class Deliveries {
     // the actual native parent create before any label reaches a judge.
     const probe = !receiving && creates && message.class === "request" ? await ReceiverReads.probeCreation(this.#ports, { seed: delivered.to as Seed, source: from, n: delivered.n, message }) : undefined;
     if (probe === null) return retry("dependency-unavailable");
-    const read = probe?.source ? { entry: probe.source, under: "" }
-      : await within(() => reader && message.class === "result" ? reader.result(delivered, bounds.fetchSeconds) : (reader ?? this.#ports.resolver).read(from, bounds.fetchSeconds, !!reserve || file), bounds.fetchSeconds);
+    const read = probe?.source ? { entry: probe.source.entry, under: "", sequence: probe.source.sequence }
+      : await within(() => reader && message.class === "result" ? reader.result(delivered, { maxBytes: bounds.entryBytes, milliseconds: Math.floor(bounds.fetchSeconds * 1000) }) : (reader ?? this.#ports.resolver).read(from, { maxBytes: bounds.entryBytes, milliseconds: Math.floor(bounds.fetchSeconds * 1000) }, !!reserve || file), bounds.fetchSeconds);
     if (read === LATE || read === null) return retry("dependency-unavailable");
     if ("archived" in read && previous?.hash === from.hash) {
       // The original source hash/send ordinal were checked when this inbox
@@ -160,11 +162,11 @@ export class Deliveries {
       const receipt = store.stored(previous.by) ?? store.decidedReceipt?.(from, delivered.n);
       if (receipt && receipt.seq === previous.by) return { answer: "recorded", fact: { at: store.scope()!.at, seq: receipt.seq, hash: receipt.hash } };
     }
-    if (!("entry" in read) || !isEntryOf(read.entry, from)) return UNVERIFIED;
-    let source: Fetched = carryProducerName({ fact: from, entry: read.entry, under: read.under }, read);
+    if (!("entry" in read) || !isEntryOf(read.entry, from, read.sequence)) return UNVERIFIED;
+    let source: Fetched = carryProducerName({ fact: from, entry: read.entry, under: read.under, sequence: read.sequence }, read);
 
     // The definition is read only after authenticating the source bytes.
-    const declared = this.#scope.pinned() || !creates ? null : await this.#declared(delivered.to as Seed);
+    const declared = this.#scope.pinned() || !creates ? null : await this.#declared(delivered.to as Seed, from);
     if (typeof declared === "string") return retry(declared);
     const creation = declared;
     const pinned = this.#scope.pinned();
@@ -176,6 +178,9 @@ export class Deliveries {
     let facts: Fetched[] = [];
     let sourcePin: Digest | PlatformDefinition | undefined;
     let origin: Entry | null = null;
+    // For a result: the origin's retained uses, staged for the judge's own admission (ruling a94bfa4d, item 1c).
+    let retained: readonly ClassifiedRetainedUse[] = [];
+    let material: RetainedResultMaterial | null = null;
     let carried: Digest[] = [];
     // Section 7.4, the order of a delivery's checks: a repeat is found after the source entry is read, and before the checks of the
     // message's class. A send that this scope has recorded is answered from that entry. The source entry is still read and checked.
@@ -188,9 +193,9 @@ export class Deliveries {
         ? await ReceiverReads.forCreation(this.#ports, { seed: delivered.to as Seed, source: from, n: delivered.n, message }, isPlatformDefinition((delivered.to as Seed).definition) ? (delivered.to as Seed).definition as PlatformDefinition : creation.valid.declared, probe?.operation)
         : await this.#scope.receiverReads();
       if (!reader) return retry("dependency-unavailable");
-      const named = probe?.source ? await reader.read(from, bounds.fetchSeconds) : source;
+      const named = probe?.source ? await reader.read(from, { maxBytes: bounds.entryBytes, milliseconds: Math.floor(bounds.fetchSeconds * 1000) }, false) : source;
       if (named === null || !("entry" in named)) return retry("dependency-unavailable");
-      source = carryProducerName({ fact: from, entry: named.entry, under: named.under }, named);
+      source = carryProducerName({ fact: from, entry: named.entry, under: named.under, sequence: named.sequence }, named);
     }
     const resolver = reader ?? this.#ports.resolver;
     const destinationPin = pinned?.platform?.named;
@@ -201,7 +206,7 @@ export class Deliveries {
       if (!isScopeRef(directory) || !destination) return retry("dependency-unavailable");
       const policy = answersVersionQuestion(destinationPin, "scopeDeliveryNativeApplicationOrigin")
         ? this.#ports.definitions.platform(destinationPin)?.applicationPublicationOrigin : applicationPublicationOrigin;
-      const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "application") : policy?.(from, directory, destination, read.origin ?? []) ?? null;
+      const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "application") : policy?.(from, directory, destination, admittedOrigin(read.origin ?? [], bounds.entryBytes)) ?? null;
       if (native === null) return retry("dependency-unavailable");
       if (!native) return UNVERIFIED;
     }
@@ -213,7 +218,7 @@ export class Deliveries {
       const directory = store.page("branch", publicationStates, null, 1).items[0]?.refs["directory"];
       const destination = store.scope()?.at;
       if (!isScopeRef(directory) || !destination) return retry("dependency-unavailable");
-      const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "change") : read.origin ? publishingLaneAffiliation(from, directory, destination, read.origin) : null;
+      const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "change") : read.origin ? publishingLaneAffiliation(from, directory, destination, admittedOrigin(read.origin, bounds.entryBytes)) : null;
       if (native === null) return retry("dependency-unavailable");
       if (!native) return UNVERIFIED;
     }
@@ -225,29 +230,34 @@ export class Deliveries {
       // The scope has no genesis yet, so no fact can name it: every fact a creation names is foreign.
       const named = fields?.ok ? factsNamed(act.fields, fields.fields, null) : [];
       const fetched = named.length > bounds.usesPerEntry ? null : await fetchFacts(resolver, bounds, named);
-      if (!Array.isArray(fetched)) return retry("dependency-unavailable");
+      if (!Array.isArray(fetched)) return retry(fetched === SOURCE_TOO_LARGE ? "source-response-too-large" : "dependency-unavailable");
       facts = fetched;
     } else if (message.class === "result" && isObject(message.of) && isFactRef(message.of.from)) {
-      const kept = store.stored(message.of.from.seq);
-      origin = kept ? JSON.parse(kept.bytes) as Entry : null;
-      const retained = origin ? retainedFacts(store, origin) : [];
-      const interpreted = reader ? await reader.retained(retained) : retained;
-      if (!interpreted) return retry("dependency-unavailable");
-      facts = interpreted;
+      // One read of the origin through Own replaces the stored read. A missing or invalid origin or use stages no material,
+      // and the judge answers it unavailable.
+      const sequence = this.#scope.localSequence();
+      const read = sequence ? retainedUsesOf(ownOf(store, sequence), message.of.from.seq) : null;
+      if (read && sequence) {
+        const operands = reader ? await reader.retained(read.uses) : retainedOperands(read.uses);
+        if (!operands) return retry("dependency-unavailable");
+        origin = read.origin.entry; retained = read.uses;
+        material = { localSequence: sequence, origin: read.origin, operands };
+      }
     } else if (!known && pinned?.definition && (message.class === "request" || message.class === "advisory")) {
-      if (bound(pinned.definition, message, from, source.under)?.handler?.from.pin) {
+      if (bound(pinned.definition, message, from, source.sequence.kind, source.under)?.handler?.from.pin) {
         const birth = await within(() => this.#ports.births?.read(from.at, bounds.fetchSeconds * 1000, bounds.entryBytes) ?? Promise.resolve(null), bounds.fetchSeconds);
-        const checked = birth === LATE ? null : readNativeBirth(birth, from.at, bounds.entryBytes);
+        // This one read has its own fetch deadline and entry allowance and no preparation ledger, so nothing else is debited.
+        const checked = birth === LATE ? null : readNativeBirth(birth, from.at, bounds.entryBytes, () => {});
         if (!checked) return retry("dependency-unavailable");
-        sourcePin = checked.named;
+        sourcePin = checked.birth.named;
       }
       // Section 6.4: the foreign entries that the declared fields of the message name. More than one entry may use are not fetched:
       // the judge refuses that message, `bad-field`, before it reads any.
-      const wanted = messageFacts(store, pinned.definition, message, from, bounds, source.under);
+      const wanted = messageFacts(store, pinned.definition, message, from, source.sequence.kind, bounds, source.under);
       const fetched = wanted.length >= bounds.usesPerEntry ? [] : await fetchFacts(resolver, bounds, wanted);
-      if (!Array.isArray(fetched)) return retry("dependency-unavailable");
+      if (!Array.isArray(fetched)) return retry(fetched === SOURCE_TOO_LARGE ? "source-response-too-large" : "dependency-unavailable");
       facts = fetched;
-      carried = messageTexts(pinned.definition, message, from, source.under);
+      carried = messageTexts(pinned.definition, message, from, source.sequence.kind, source.under);
     }
     const texts = await this.#texts(from, carried);
     if (!texts) return retry("dependency-unavailable");
@@ -256,27 +266,31 @@ export class Deliveries {
     // the scope reads one observation for each subject of the rows of the clause that runs, before the turn, and the commit
     // derives the list again (`Observes`). No other delivery may hold `observed`, so nothing is read for one.
     const rows = message.class === "result" && !known ? this.#scope.observes() : new Observes(null, bounds);
-    const context = (clock: Reading): Omit<DeliveryContext, "prepared"> =>
-      ({ clock, bounds, facts, own: ownOf(store), snapshot: snapshotsOf(store), texts: texts.sizes, capabilities: this.#ports.capabilities ?? undefined, platform: (this.#scope.pinned() ?? creation)?.platform ?? undefined, source: { entry: source.entry, under: source.under, ...(sourcePin === undefined ? {} : { pin: sourcePin }) }, origin, ...rows.hand() });
+    // A result stages its retained material in one owned context; the judge admits it after its own result checks.
+    const context = (clock: Reading, prepared: DeliveryContext["prepared"]): DeliveryContext => {
+      const sequence = this.#scope.localSequence();
+      const base = { clock, bounds, prepared, own: sequence ? ownOf(store, sequence) : undefined, snapshot: snapshotsOf(store), texts: texts.sizes, capabilities: this.#ports.capabilities ?? undefined, platform: (this.#scope.pinned() ?? creation)?.platform ?? undefined, source: { entry: source.entry, sequence: source.sequence, under: source.under, ...(sourcePin === undefined ? {} : { pin: sourcePin }) }, ...rows.hand() };
+      return message.class === "result" ? retainedResultContext(base, delivered, material) : { ...base, facts, origin };
+    };
     /** The definition a section of the turn runs under: the pinned one, or before the genesis the one the seed names. */
     const definition = (): ValidDefinition => this.#scope.pinned()?.definition ?? creation!.valid;
     /** A `create` goes to the genesis judge, which answers a repeat from the genesis when the scope exists. */
-    const judge = (view: StateView, inc: Incarnation, reading: DeliveryContext): Judgment =>
-      (creates ? judgeGenesis(view, definition(), { name, inc, to: delivered.to as Seed, from, n: delivered.n, message } as Creation, reading) : judgeDelivery(view, definition(), delivered, reading));
+    const judge = (view: StateView, nonce: GenesisNonce, reading: DeliveryContext): Judgment =>
+      (creates ? judgeGenesis(view, definition(), { name, nonce, to: delivered.to as Seed, from, n: delivered.n, message } as Creation, reading) : judgeDelivery(view, definition(), delivered, reading));
 
     if (pinned?.definition && !creates) {
       const at = pinned.definition;
-      await rows.before(() => { const planned = judgeDelivery(store, at, delivered, { ...context(clockOf(store, this.#ports.clock.read())), prepared: [] }); return planned.result === "unavailable" ? planned.missing : undefined; });
+      await rows.before(() => { const planned = judgeDelivery(store, at, delivered, context(clockOf(store, this.#ports.clock.read()), [])); return planned.result === "unavailable" ? planned.missing : undefined; });
     }
     const end = await rows.turn((stop) => this.#scope.turns.run<Delivery>({
       asks: (view, clock) => {
-        const reading = { ...context(clock), prepared: [] };
-        return creates ? prepareRules(view, definition(), { genesis: { name, inc: NO_INCARNATION, to: delivered.to as Seed, from, n: delivered.n, message } as Creation, context: reading }) : prepareRules(view, definition(), { delivery: delivered, context: reading });
+        const reading = context(clock, []);
+        return creates ? prepareRules(view, definition(), { genesis: { name, nonce: NO_GENESIS_NONCE, to: delivered.to as Seed, from, n: delivered.n, message } as Creation, context: reading }) : prepareRules(view, definition(), { delivery: delivered, context: reading });
       },
       judge: (view, clock, prepared) => {
         const genesis = view.scope() === null;
-        // Section 2.2: the incarnation is minted in the transaction that writes the first entry.
-        const judged = judge(view, genesis ? newIncarnation(this.#ports.random.bytes(16)) : NO_INCARNATION, { ...context(clock), prepared });
+        // Section 2.2: the genesis nonce is minted in the transaction that writes the first entry.
+        const judged = judge(view, genesis ? newGenesisNonce(this.#ports.random.bytes(16)) : NO_GENESIS_NONCE, context(clock, prepared));
         // Section 16.1, "In the commit": a subject of the commit's list with no observation at hand stops the commit. The scope
         // reads what is missing, and the turn starts again. The delivery is tried again.
         stop(judged.result === "unavailable" ? judged.missing : undefined);
@@ -285,7 +299,7 @@ export class Deliveries {
             // Section 9.2: an entry that settles nothing is written only while the scope has room; one that settles is counted for.
             if (!definition().declared.capacity && countedEntries(view) >= bounds.scopeEntries) return said(retry("scope-full"));
             // Section 16.1, "A value that a row may retain": each value that a retained observation names is kept with the entry.
-            const retain: Retained[] = [...used(judged.draft, [source, ...facts]), ...texts.retain(definition(), judged.draft, source.under), ...valuesOf(judged.draft)];
+            const retain: Retained[] = [...used(judged.draft, [source, ...facts], retained), ...texts.retain(definition(), judged.draft, source.under), ...valuesOf(judged.draft)];
             if (genesis && creation) {
               store.cover(creation.valid.indexes);
               // A platform definition is pinned by its name and version, and no bytes are retained for it.
@@ -294,7 +308,7 @@ export class Deliveries {
             }
             return {
               verdict: "write", draft: judged.draft, facts: [source, ...facts], retain,
-              sealed: ({ entry, hash }) => { rows.sealed({ entry, hash }); this.#ports.sealedDelivery?.(entry); return { answer: "recorded", fact: { at: entry.at, seq: entry.seq, hash } }; },
+              sealed: ({ entry, hash }) => { rows.sealed({ entry, hash }); this.#ports.sealedDelivery?.(entry); return { answer: "recorded", fact: { at: store.scope()!.at, seq: entry.seq, hash } }; },
               // An entry that cannot be written now is not a decision: the sender keeps the task.
               unfit: () => retry("unavailable"), full: (_head, bound) => ({ ...retry("scope-full"), ...(definition().declared.capacity ? { name: bound } : {}) }),
             };
@@ -314,7 +328,7 @@ export class Deliveries {
           case "refused": return said(retry("unavailable"));
         }
       },
-    }, creation?.valid));
+    }, creation ? { named: (delivered.to as Seed).definition, definition: creation.valid, platform: creation.platform } : undefined));
     return end.end === "answer" ? end.answer : retry(end.end === "idle" ? "unavailable" : end.end);
   }
 }

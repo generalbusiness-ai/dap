@@ -35,7 +35,7 @@ export async function nativelyCreatedChild(room: Room, parent: Node<typeof issue
   const answer = await parent.submit(signed);
   if (answer.answer !== "accepted") throw new Error(`Native add-concern was not accepted: ${JSON.stringify(answer)}`);
   const receipt = answer.receipt, entry = await parent.entry(receipt.fact.seq);
-  if (canonicalize(factRefOf(entry)) !== canonicalize(receipt.fact) || canonicalize(receipt.fact.at) !== canonicalize(parent.at)
+  if (canonicalize(factRefOf(entry, parent.at)) !== canonicalize(receipt.fact) || canonicalize(receipt.fact.at) !== canonicalize(parent.at)
     || entry.input.type !== "act" || canonicalize(entry.input.signed) !== canonicalize(signed.signed)) throw new Error("Native add-concern receipt must name the actual signed parent entry");
   const creates = entry.sends.filter(send => send.message.class === "request" && send.message.type === "create" && isSeed(send.to));
   if (creates.length !== 1 || canonicalize(creates[0]!.to) !== canonicalize(seed)) throw new Error("Native add-concern must record exactly its predicted creation seed");

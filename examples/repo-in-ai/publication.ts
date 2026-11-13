@@ -2,7 +2,7 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { canonicalize, isEntry, isFactRef, isScopeRef, timeMs } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isEntry, isFactRef, isScopeRef, scopeIdOf, timeMs } from "@generalbusiness/dap-bytes";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as cohort, initialCommitObjects } from "@generalbusiness/dap-platform";
 import { cloneRetained } from "../../packages/cli/src/commands.ts";
@@ -100,7 +100,7 @@ export async function buildPhase(owner: Session, plan: SetupPlan): Promise<Phase
   const claim = branch.refs["claim"], directory = branch.refs["directory"], repository = branch.values["repository"] as { name?: unknown; namespace?: unknown; host?: unknown } | null;
   const genesis = (await owner.call("step", { scope: refs.destination.scope, seq: 0 })).result.structuredContent["entry"];
   if (!isFactRef(claim) || !isScopeRef(directory) || !equal(directory, refs.directory) || !repository || repository.host !== "artifacts" || repository.namespace !== plan.namespace || typeof repository.name !== "string"
-    || branch.values["founderHandle"] !== plan.handles.owner || !isEntry(genesis) || genesis.input.type !== "genesis" || !equal(genesis.at, refs.destination)) throw new Error("The founding destination data is unavailable or differs.");
+    || branch.values["founderHandle"] !== plan.handles.owner || !isEntry(genesis) || genesis.input.type !== "genesis" || entryHash(genesis) !== refs.destination.genesis || scopeIdOf(genesis.input.seed) !== refs.destination.scope) throw new Error("The founding destination data is unavailable or differs.");
   const initial = initialCommitObjects("sha1", refs.destination.scope, genesis.time, claim, { name: repository.name, handle: plan.handles.owner, directory: refs.directory.scope });
   if (branch.values["head"] !== initial.commit) throw new Error("The room head is no longer its founding commit.");
   const seed = seedTree(initial, loadTaskList(resolve(fileURLToPath(new URL("./task-list/", import.meta.url)))));

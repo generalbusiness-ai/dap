@@ -37,8 +37,8 @@ describe("the operator's record and the requests that wait (authority note, sect
     const S = await ticket(D, "S");
     const metrics: MetricPoint[] = [];
     metricBindings.set(S.object.id.toString(), { DEPLOYMENT: "operator-metrics-test", METRICS: { writeDataPoint: p => metrics.push(structuredClone(p)) } });
-    // A request to an incarnation that the desk does not have: every attempt is refused, and it ends `undelivered`. It waits in no list.
-    const lost = { ...(await D.at()), inc: (await S.at()).inc };
+    // A request to a genesis hash that the desk does not have: every attempt is refused, and it ends `undelivered`. It waits in no list.
+    const lost = { ...(await D.at()), genesis: (await S.at()).genesis };
     const refused = await S.did(una, "ask", { fields: { desk: lost } });
     await settle(S);
     // A second one whose first attempt gets no answer: it ends `delivery-unavailable`, and stays pending.
@@ -63,7 +63,7 @@ describe("the operator's record and the requests that wait (authority note, sect
     net.hold = (envelope: Delivered) => { if (envelope.message.class !== "result") sent.push(envelope); return envelope.message.class === "result"; };
     const answer = await surface(S).resend(outboxId(diagnosed));
     // One dispatch, of the same envelope: the same source entry, ordinal and message. The request keeps its identity.
-    expect([answer, sent]).toEqual([{ sent: true, answer: "wrong-incarnation" }, [await S.envelope(diagnosed.fact.seq)]]);
+    expect([answer, sent]).toEqual([{ sent: true, answer: "wrong-genesis" }, [await S.envelope(diagnosed.fact.seq)]]);
     // It is bookkeeping: no entry, the same state at the same head, no second diagnosis, and one more attempt in the log of that send. No
     // retry follows by itself. The request still waits, in the same list.
     const after = (await S.outboxItems()).find((d) => d.outboxId === outboxId(diagnosed))!;
@@ -105,12 +105,12 @@ describe("the operator's record and the requests that wait (authority note, sect
   });
 
   test("T41: an incident that writes an entry is in that entry, and the record reads it from there: a creation's result that ran `conflict` names its entry and the entry of its request. The entry is MADE BY HAND: no second incarnation can be made in one namespace", () => {
-    const at = { scope: "s", inc: "i", kind: "directory" } as never;
+    const at = { scope: "s", genesis: "g" } as never;
     const entry = {
-      v: 1, at, seq: 9, prev: null, time: net.clock.now, clamped: false, epoch: 0, uses: [], prepared: [], effects: [{ effect: "state", item: 3, state: "conflicted" }], sends: [],
+      v: 1, genesis: "g", seq: 9, prev: null, time: net.clock.now, clamped: false, epoch: 0, uses: [], prepared: [], effects: [{ effect: "state", item: 3, state: "conflicted" }], sends: [],
       input: { type: "delivery", from: { at, seq: 0, hash: "sha256:" + "1".repeat(64) }, n: 0, clause: "conflict", message: { class: "result", type: "create", outcome: "applied", of: { from: { at, seq: 3, hash: "sha256:" + "2".repeat(64) }, n: 0 } } },
     } as unknown as Entry;
     const hash = entryHash(entry);
-    expect([incidentsOf(entry, hash), incidentsOf({ ...entry, input: { ...entry.input, clause: "applied" } } as Entry, hash)]).toEqual([[{ kind: "incarnation-conflict", refs: [{ entry: 9, hash }, { entry: 3 }] }], []]);
+    expect([incidentsOf(entry, hash), incidentsOf({ ...entry, input: { ...entry.input, clause: "applied" } } as Entry, hash)]).toEqual([[{ kind: "genesis-conflict", refs: [{ entry: 9, hash }, { entry: 3 }] }], []]);
   });
 });

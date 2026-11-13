@@ -1,11 +1,14 @@
+import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type ScopeId, type Seed } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { intentDigest, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { RuleGiven } from "@generalbusiness/dap-derive";
 import { PARTITION_COHORT as C } from "@generalbusiness/dap-platform";
 import { directoryRules10 } from "../../../../packages/platform/src/directory-partitions.ts";
 import { SqliteStore } from "../../../../packages/scope/src/sqlite.ts";
+import { withSequence } from "../../../../packages/scope/src/testing.ts";
+import { foreignOf } from "../../../../packages/scope/test/support.ts";
 import { net } from "./support/graph.ts";
 import { room, rita, Platform, Room, settle } from "./support/room.ts";
 import { DIGESTS, issue } from "../src/index.ts";
@@ -36,7 +39,9 @@ test("a foreign native directory-kind partition cannot redirect its seal into an
     const sealing = await P.did(rita, "seal", { on: 0, expected: await P.expected({ on: 0 }) });
     const entry = (await P.entries())[sealing]!, send = entry.sends[0]!;
     expect(send).toMatchObject({ to: await foreign.root.at(), message: { class: "request", type: "tell", body: { message: "seal" } } });
-    const from = factRefOf(entry), before = await receiving.root.summary();
+    const from = await P.fact(sealing), before = await receiving.root.summary();
+    const fetched = await foreignOf(from, "platform:directory-partition", env.PLATFORM);
+    if (!fetched) throw new Error("The foreign source must admit its genesis");
     expect(await receiving.root.stub.deliver({ to: await receiving.root.at(), from, n: send.n, message: send.message })).toEqual({ answer: "source-unverified" });
     expect((await receiving.root.summary()).at).toEqual(before.at);
     expect((await receiving.root.summary()).value.items.filter(item => item.type === "partition")).toEqual(before.value.items.filter(item => item.type === "partition"));
@@ -47,8 +52,8 @@ test("a foreign native directory-kind partition cannot redirect its seal into an
       const store = new SqliteStore({ exec: (query, ...args) => storage.storage.sql.exec(query, ...args), transaction: work => storage.storage.transactionSync(work) });
       const rule = directoryRules10["active-partition"]!;
       if (rule.place !== "guard") throw new Error("wrong native guard place");
-      const given: RuleGiven = { state: store, input: { type: "delivery", from, n: send.n, message: send.message }, time: entry.time,
-        uses: [{ fact: from, entry, under: "platform:directory-partition" }], own: () => null,
+      const given: RuleGiven = { state: store, input: { type: "delivery", from, sourceKind: "directory", n: send.n, message: send.message }, time: entry.time,
+        uses: [{ fact: from, entry, under: "platform:directory-partition", sequence: fetched.sequence }], own: withSequence(() => null, null),
         resolved: { at: store.scope()!.at, self: store.scope()!.head.seq + 1, fields: {}, subjects: new Map(), signer: null, bounds: { ...PROPOSED_BOUNDS, scopeEntries: 3012 } },
         observed: () => null, value: () => undefined, placed: () => undefined };
       return rule.run(given);

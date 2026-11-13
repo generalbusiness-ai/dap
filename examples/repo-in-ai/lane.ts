@@ -1,7 +1,7 @@
 /** One agent-authored seed Change, using the explicit J4 profile. */
 import type { Entry, FactRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isEntry, isSeed, scopeIdOf } from "@generalbusiness/dap-bytes";
-import { sentBy } from "@generalbusiness/dap-derive";
+import { canonicalize, entryHash, isEntry, isEntryBodyOf, isSeed, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { sentByBody } from "@generalbusiness/dap-derive";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as cohort } from "@generalbusiness/dap-platform";
 import { J4_DIGESTS } from "../../apps/room/lanes/src/digests-j4.ts";
 import type { Session, SessionMode } from "./session.ts";
@@ -12,7 +12,8 @@ const equal = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
 async function entry(session: Session, fact: FactRef): Promise<Entry> {
   const read = (await session.call("step", { scope: fact.at.scope, seq: fact.seq })).result;
   const value = read.structuredContent["entry"];
-  if (read.isError || !isEntry(value) || entryHash(value) !== fact.hash || !equal(value.at, fact.at) || value.seq !== fact.seq) throw new Error("The exact phase entry is unavailable. Nothing was submitted.");
+  if (read.isError || !isEntry(value) || !isEntryBodyOf(value, fact)
+    || (value.input.type === "genesis" && scopeIdOf(value.input.seed) !== fact.at.scope)) throw new Error("The exact phase entry is unavailable. Nothing was submitted.");
   return value;
 }
 
@@ -29,8 +30,8 @@ export async function seedLane(owner: Session): Promise<ScopeRef> {
   const genesisRead = (await owner.call("step", { scope: summary.scope.scope, seq: 0 })).result;
   const genesis = genesisRead.structuredContent["entry"];
   if (genesisRead.isError || !isEntry(genesis) || genesis.input.type !== "genesis" || genesis.input.n === null || genesis.input.message === null || !equal(genesis.input.seed, seed)
-    || !equal(genesis.input.source, opened.fact) || !equal(genesis.at, summary.scope)
-    || !sentBy(opening, { from: opened.fact, n: genesis.input.n, to: seed, message: genesis.input.message })) throw new Error("The Change genesis does not match its retained directory creation.");
+    || !equal(genesis.input.source, opened.fact) || entryHash(genesis) !== summary.scope.genesis || scopeIdOf(genesis.input.seed) !== summary.scope.scope
+    || !sentByBody(opening, { from: opened.fact, n: genesis.input.n, to: seed, message: genesis.input.message })) throw new Error("The Change genesis does not match its retained directory creation.");
   await retain(owner.ctx.store, "s1-seed-lane", summary.scope);
   return summary.scope;
 }

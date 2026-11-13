@@ -1,7 +1,7 @@
 import { runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test } from "vitest";
-import type { Entry, Intent, ScopeId, Seed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import type { Intent, ScopeId, Seed } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, factRefOf, intentDigest, scopeIdOf, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { requestSession, sessionRequest, type Fetch } from "@generalbusiness/dap-client";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { DIRECTORY, REGISTER, destinationMembership, destinationReceipt, destinationTarget, initialCommitObjects } from "@generalbusiness/dap-platform";
@@ -9,7 +9,7 @@ import { ZERO_ID } from "@generalbusiness/dap-git";
 import { decodePack, type DecodedObject } from "@generalbusiness/dap-git/http-read";
 import { SqliteStore, mintSession, readerOf, sessionsOf } from "../src/index.ts";
 import { gitHubOutside, type GitHubBindings } from "../src/github-wiring.ts";
-import { net } from "../src/testing.ts";
+import { net, storedOwn } from "../src/testing.ts";
 import { soon } from "./net.ts";
 import { Platform, quiet, rita, routed, sam, settle } from "./repository.ts";
 import { reader } from "./fixtures-native.ts";
@@ -203,7 +203,7 @@ test("real PLATFORM founding through production GitHub factory writes exact firs
     const registerEntries = await R.entries();
     const genesis = (await G.entries())[0]!;
     // The creation commit of `platform:destination@2`: one README that names the repository, the creator's handle and the directory.
-    const first = initialCommitObjects("sha1", G.name, genesis.time, factRefOf(registerEntries[1]!), { name: host.name!, handle: "@rita", directory: D.name });
+    const first = initialCommitObjects("sha1", G.name, genesis.time, factRefOf(registerEntries[1]!, await R.at()), { name: host.name!, handle: "@rita", directory: D.name });
     expect(host.creates).toBe(1);
     expect(host.emptyAdvertisements).toBeGreaterThan(0);
     expect(await G.item(0)).toMatchObject({ state: "ready", values: { head: first.commit } });
@@ -211,12 +211,12 @@ test("real PLATFORM founding through production GitHub factory writes exact firs
     for (const object of first.objects) expect(host.objects.get(object.id)).toMatchObject({ type: object.kind, data: object.body });
     expect(await D.item(0)).toMatchObject({ refs: { register, membership: await membership.at(), rules: await rules.at(), destination: await G.at() }, values: { repository: { host: "github.com", namespace: ACCOUNT.login, name: host.name, id: "71" } } });
     const summaries = await Promise.all([R, D, membership, rules, G].map((node) => node.summary()));
-    expect(summaries.map((summary) => [summary.value.scope.kind, summary.value.status])).toEqual([["register", "active"], ["directory", "active"], ["membership", "active"], ["rules", "active"], ["destination", "active"]]);
+    expect(await Promise.all([R, D, membership, rules, G].map(async (node, n) => [await node.kind(), summaries[n]!.value.status]))).toEqual([["register", "active"], ["directory", "active"], ["membership", "active"], ["rules", "active"], ["destination", "active"]]);
     const outboxItems = await D.stub.outbox(reader);
     expect(outboxItems.ok && outboxItems.value.every((outboxId) => outboxId.acknowledged !== null)).toBe(true);
     const privateState = () => runInDurableObject(G.object, (_instance, state) => {
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (closure) => state.storage.transactionSync(closure) });
-      const own = (seq: number) => { const row = store.stored(seq); return row ? { entry: JSON.parse(row.bytes) as Entry, hash: row.hash } : null; };
+      const own = storedOwn(store);
       const receipts = store.all().operations.filter((operation) => operation.kind === "receipt").map((operation) => destinationReceipt(store, own, destinationTarget(store, own, operation)!, "sha1"));
       return {
         receipts,
@@ -249,7 +249,7 @@ test("real PLATFORM founding through production GitHub factory writes exact firs
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (closure) => state.storage.transactionSync(closure) });
       return destinationMembership(store);
     });
-    expect(await recordedMembership()).toEqual({ scope: (await membership.at()).scope, inc: null, kind: "membership" });
+    expect(await recordedMembership()).toEqual({ scope: (await membership.at()).scope, pending: true });
     const seat = await membership.did(rita, "seat", { expected: await membership.expected({ roster: 0 }) });
     await membership.did(rita, "first-key", { fields: { member: seat }, expected: await membership.expected({ roster: 0, member: seat }) });
     owner.configure({ sessions: true });
@@ -264,13 +264,13 @@ test("real PLATFORM founding through production GitHub factory writes exact firs
       expect(history.ok && history.value.map(({ entry }) => entry)).toEqual(beforeRestart.entries);
       const retained = await G.stub.retained(native, "entry", retainedUse.content);
       expect(retained.ok && JSON.parse(retained.value.bytes)).toEqual((await D.entries())[0]);
-      expect(await recordedMembership()).toEqual({ scope: issued.session.claims.membership.scope, inc: null, kind: "membership" });
+      expect(await recordedMembership()).toEqual({ scope: issued.session.claims.membership.scope, pending: true });
     };
     await nativeReads();
     // MAC-authentic controls under the TEST SECRET, not membership-issued
     // tokens: neither another membership ID nor another incarnation reads.
     const configured = sessionsOf(platformNet.secret, TEST_DEPLOYMENT)!;
-    for (const membershipRef of [{ ...issued.session.claims.membership, scope: R.name }, { ...issued.session.claims.membership, inc: newIncarnation(new Uint8Array(16).fill(9)) }]) {
+    for (const membershipRef of [{ ...issued.session.claims.membership, scope: R.name }, { ...issued.session.claims.membership, genesis: `sha256:${"09".repeat(32)}` as const }]) {
       const wrong = readerOf(mintSession(configured, { ...issued.session.claims, membership: membershipRef }));
       expect(await G.stub.history(wrong)).toMatchObject({ ok: false, reason: "forbidden" });
     }

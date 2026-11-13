@@ -6,7 +6,7 @@ import { archiveInventoryChange, archiveLeafData, archiveInventoryParentChange, 
  * No inventory result proves authority, replay, ancestry or host custody. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Digest, Entry, Head, Input, Seed} from "@generalbusiness/dap-contract";
+import type { Digest, Entry, GenesisEntry, Head, Input, Seed} from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, entryHash, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import type { OperationRules, ValidDefinition } from "@generalbusiness/dap-derive";
 import { MemorySource, verify } from "@generalbusiness/dap-replay";
@@ -87,7 +87,7 @@ test("forbidden final metadata and missing reviewed inline-class coverage fail b
   expect(entryReads(coverage.calls)).toEqual([]); expect(payloadReads(coverage.calls)).toEqual([]);
   await lane.inside(state => {
     const original = state.storage.sql.exec<{ bytes: string }>("SELECT bytes FROM entry WHERE seq = ?", through.seq).one().bytes;
-    const entry: Entry = JSON.parse(original); entry.uses = [{ fact: lane.genesis.fact, content: lane.genesis.fact.hash }]; const bytes = canonicalize(entry);
+    const entry: Entry = JSON.parse(original); entry.uses = [{ fact: lane.genesis.fact, content: lane.genesis.fact.hash, kind: "directory" }]; const bytes = canonicalize(entry);
     state.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", bytes, utf8(bytes).length, through.seq);
   });
   const forbidden = await scan(lane, through);
@@ -432,10 +432,11 @@ test("archive-only closure requires a missing unused child; later bytes complete
  * Native SQLite, canonical/hash binding and inventory reads remain real. */
 async function appendInputs(lane: Lane, inputs: readonly Input[], prepared?: Digest): Promise<Head> {
   return lane.inside(state => {
-    const genesis = JSON.parse(state.storage.sql.exec<{ bytes: string }>("SELECT bytes FROM entry WHERE seq = 0").one().bytes) as Entry;
+    const genesis = JSON.parse(state.storage.sql.exec<{ bytes: string }>("SELECT bytes FROM entry WHERE seq = 0").one().bytes) as GenesisEntry;
     let head: Head = lane.genesis.fact;
     for (const [index, input] of inputs.entries()) {
-      const entry: Entry = { ...genesis, seq: index + 1, prev: head.hash, input, effects: [], sends: [], uses: [], prepared: prepared && index === 0 ? [{ rule: "always", input: prepared, result: true }] : [] };
+      if (input.type === "genesis") throw new Error("a later entry cannot hold a genesis input");
+      const entry: Entry = { ...genesis, genesis: lane.at.genesis, seq: index + 1, prev: head.hash, input, effects: [], sends: [], uses: [], prepared: prepared && index === 0 ? [{ rule: "always", input: prepared, result: true }] : [] };
       const bytes = canonicalize(entry), hash = entryHash(entry);
       state.storage.sql.exec("INSERT INTO entry (seq, hash, time, bytes, size) VALUES (?, ?, ?, ?, ?)", entry.seq, hash, entry.time, bytes, utf8(bytes).length);
       head = { seq: entry.seq, hash };
@@ -541,7 +542,7 @@ test("all eight closed local variants plan only native typed consumers; checkpoi
   const signed = lane.intent(rita, "remark", { on: 0, fields: { text: omitted } });
   const through = await appendInputs(lane, [
     { type: "act", signed, authority: [], presented: {} },
-    { type: "delivery", from: lane.genesis.fact, n: 0, message: { class: "control", type: "confirm", genesis: lane.genesis.fact } },
+    { type: "delivery", from: lane.genesis.fact, sourceKind: "directory", n: 0, message: { class: "control", type: "confirm", genesis: lane.genesis.fact } },
     { type: "timed", item: 0, rule: unrelated, due: lane.signed.intent.notAfter },
     { type: "diagnosis", of: { seq: 1, n: 0 }, finding: "undelivered", attempts: [] },
     { type: "outcome", owner: "hold@1", kind: "archive-fixture", operation: "0:0", attempt: 0, result: "confirmed", evidence: { basis: "own-answer", body: base.digest } },

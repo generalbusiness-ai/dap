@@ -82,7 +82,7 @@ import { SESSION_DOMAINS } from "@generalbusiness/dap-contract";
 import type { Head, ScopeRef, SessionAnswer, SessionClaims, SessionRefusal, SignedSessionRequest } from "@generalbusiness/dap-contract";
 import { hex } from "@generalbusiness/dap-bytes";
 import { b64url, canonicalBytes, canonicalize, hmacSha256, isKeyId, isMemberId, isSignature, parseStrict, taggedBytes, unb64url, utf8, verifySessionRequest } from "@generalbusiness/dap-bytes";
-import { isObject, isScopeRef, same, timeMs, timeOf, type RecordedRef, type ScopeState, type StateView } from "@generalbusiness/dap-derive";
+import { isObject, isScopeRef, observedOf, same, timeMs, timeOf, type RecordedRef, type ScopeState, type StateView } from "@generalbusiness/dap-derive";
 
 import type { Clock, ReadName, Readers } from "./ports.ts";
 
@@ -146,7 +146,7 @@ const only = (v: Record<string, unknown>, ...members: string[]): boolean => Obje
 
 function isClaims(v: unknown): v is SessionClaims {
   return isObject(v) && only(v, "v", "deployment", "membership", "member", "key", "reads", "ends") && v["v"] === 1 && typeof v["deployment"] === "string"
-    && isScopeRef(v["membership"]) && v["membership"].kind === "membership" && isMemberId(v["member"]) && isKeyId(v["key"])
+    && isScopeRef(v["membership"]) && isMemberId(v["member"]) && isKeyId(v["key"])
     && Array.isArray(v["reads"]) && v["reads"].length <= READ_NAMES.size && v["reads"].every((read) => typeof read === "string" && READ_NAMES.has(read))
     && timeMs(v["ends"]) !== null;
 }
@@ -254,9 +254,9 @@ export function checkSession(config: SessionReading, reader: unknown, chained = 
   if (!("claims" in authentic)) return authentic;
   const { claims, scope } = authentic;
   // A register records no membership: with `chained`, it takes the token's, and reads by the cause chain (`chainedSession`).
-  const own = !scope ? null : chained ? (scope.at.kind === "register" ? claims.membership : null) : scope.at.kind === "membership" ? scope.at : config.membership(scope.at);
-  // A scope accepts a session only when the membership reference in the token is the scope's own: the scope ID and the incarnation.
-  if (!scope || !own || own.scope !== claims.membership.scope || own.inc !== claims.membership.inc || own.kind !== claims.membership.kind) return { refused: false };
+  const own = !scope ? null : chained ? (scope.kind === "register" ? claims.membership : null) : scope.kind === "membership" ? scope.at : config.membership(scope.at);
+  // A scope accepts a session only when the membership reference in the token is the scope's own full reference.
+  if (!scope || !own || !same(own, claims.membership)) return { refused: false };
   const refused = sessionClock(config, scope, claims);
   if (refused !== null) return { refused };
   return { claims };
@@ -277,7 +277,7 @@ export function sessionReaders(config: SessionReading): Readers {
     const fixed = config.membership(scope);
     if (fixed) return fixed;
     const recorded = config.membershipPreparation?.recorded(scope);
-    return resolved && recorded && same(resolved.scope, scope) && resolved.membership.scope === recorded.scope && resolved.membership.kind === recorded.kind && (recorded.inc === null || recorded.inc === resolved.membership.inc) ? resolved.membership : null;
+    return resolved && recorded && same(resolved.scope, scope) && observedOf(resolved.membership, recorded) ? resolved.membership : null;
   };
   const checking: SessionReading = { ...config, membership };
   return {
@@ -290,14 +290,14 @@ export function sessionReaders(config: SessionReading): Readers {
         const { claims, scope } = authentic;
         if (membership(scope.at)) return;
         const recorded = preparation.recorded(scope.at);
-        if (!recorded || recorded.scope !== claims.membership.scope || recorded.kind !== claims.membership.kind || (recorded.inc !== null && recorded.inc !== claims.membership.inc) || sessionClock(config, scope, claims) !== null || !claims.reads.includes(read)) return;
+        if (!recorded || !observedOf(claims.membership, recorded) || sessionClock(config, scope, claims) !== null || !claims.reads.includes(read)) return;
         // The native issuer always includes summary. Manually restricted
         // history-only sessions conservatively cannot resolve this reference.
         if (!claims.reads.includes("summary")) return;
         const reference = await preparation.resolve(scope.at, reader as string);
         const current = config.scope();
         const after = current && same(current.at, scope.at) ? preparation.recorded(current.at) : null;
-        if (reference && isScopeRef(reference) && same(reference, claims.membership) && after?.scope === reference.scope && after.kind === reference.kind && (after.inc === null || after.inc === reference.inc)) resolved = { scope: scope.at, membership: reference };
+        if (reference && isScopeRef(reference) && same(reference, claims.membership) && after && observedOf(reference, after)) resolved = { scope: scope.at, membership: reference };
       } catch { /* A failed private read provides no session authority. */ }
     },
     allows(reader, read) {
@@ -379,9 +379,9 @@ export function issueSession(
   const { to, actor, notAfter } = asked.request;
   const scope = state.scope();
   // A provisional membership answers no session (section 12.1.3).
-  if (!scope || scope.status !== "active" || scope.at.kind !== "membership" || !(pinned && (answersVersionQuestion(pinned.named, "scopeSessionMembership")) && platform(pinned.named))) return no("not-found");
+  if (!scope || scope.status !== "active" || scope.kind !== "membership" || !(pinned && (answersVersionQuestion(pinned.named, "scopeSessionMembership")) && platform(pinned.named))) return no("not-found");
 
-  if (to.scope !== scope.at.scope || to.inc !== scope.at.inc || to.kind !== scope.at.kind) return no("misaddressed");
+  if (!same(to, scope.at)) return no("misaddressed");
   const [reading, previous, ends] = [timeMs(config.clock.read()), timeMs(scope.time), timeMs(notAfter)!];
   if (reading === null || previous === null || reading < previous) return no("clock-behind");
   if (reading >= ends) return no("expired");

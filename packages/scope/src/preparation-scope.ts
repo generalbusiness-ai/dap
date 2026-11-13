@@ -1,7 +1,7 @@
 /** The current metadata row is bounded before any transfer or parsing. */
 import { isLocalId as integer } from "@generalbusiness/dap-bytes";
 import { freeze } from "@generalbusiness/dap-bytes";
-import { canonicalize, isDigest, isFactRef, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
+import { canonicalize, isDigest, isFactRef, isScopeKind, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
 import { isObject, timeMs, type ScopeState } from "@generalbusiness/dap-derive";
 import { PreparationBudget } from "./preparation-budget.ts";
 import type { Sql } from "./sqlite.ts";
@@ -19,7 +19,7 @@ export function preparationScope(sql: Pick<Sql, "exec">, budget: PreparationBudg
     if (!rows[0]) return { kind: "missing" };
     if (typeof rows[0]["v"] !== "string") return unavailable();
     const value: unknown = parseStrict(rows[0]["v"]);
-    if (!isObject(value) || !keys(value, "at,creator,genesis,head,held,status,time") || !isScopeRef(value["at"])
+    if (!isObject(value) || !keys(value, "at,creator,genesis,head,held,kind,status,time") || !isScopeRef(value["at"]) || !isScopeKind(value["kind"])
       || !(value["creator"] === null || isScopeRef(value["creator"])) || !["active", "provisional", "refused"].includes(value["status"] as string)
       || typeof value["time"] !== "string" || timeMs(value["time"]) === null
       || !isObject(value["head"]) || !keys(value["head"], "hash,seq") || !integer(value["head"]["seq"]) || !isDigest(value["head"]["hash"])

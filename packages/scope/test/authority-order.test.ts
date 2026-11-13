@@ -2,7 +2,7 @@ import { expect, onTestFinished, test, vi } from "vitest";
 import { entryHash } from "@generalbusiness/dap-bytes";
 import { variant, d, membership } from "@generalbusiness/dap-derive/testing";
 import { ReceiverReads } from "../src/receiver-reads.ts";
-import { HOLD, at, create, definition, rita, una } from "./fixtures-native.ts";
+import { HOLD, at, create, definition, foreignOf, rita, una } from "./fixtures-native.ts";
 import { wired } from "./outside.ts";
 
 // Real ScopeObject, judgments, SQLite, foreign entry and timed alarm. Membership,
@@ -35,7 +35,7 @@ test("a failed authority observation reaches no receiver or foreign work and dra
     freshActAdmission: { read: async () => { calls.provenance++; return { current: () => "allowed" as const }; } },
     resolver: { read: async asked => {
       calls.foreign++;
-      return asked.hash === fact.hash ? { fact, entry, under: definition.declared.name } : null;
+      return asked.hash === fact.hash ? foreignOf(fact, definition.declared.name) : null;
     } },
   }));
   onTestFinished(() => { wired.delete(scope.name); });

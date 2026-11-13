@@ -20,7 +20,7 @@ export function rulesSummaryV11(item: Item, destination: ScopeId): RulesSummaryV
   if (!isRecord(certificate) || Object.keys(certificate).length !== 4 || !["request", "certificate", "proof", "commit"].every(key => Object.hasOwn(certificate, key))
     || !isFactRef(certificate["request"]) || !isFactRef(certificate["certificate"]) || !isDigest(certificate["proof"])
     || typeof certificate["commit"] !== "string" || !/^(?!0{40}$)[0-9a-f]{40}$/.test(certificate["commit"])
-    || certificate["request"].at.kind !== "destination" || certificate["request"].at.scope !== destination
+    || certificate["request"].at.scope !== destination
     || !same(certificate["request"].at, certificate["certificate"].at) || certificate["request"].seq >= certificate["certificate"].seq) return null;
   if (["approvals", "ownerMayReview", "checks", "labels", "extents", "singleControllerException"]
     .some(key => !Object.hasOwn(values, key) || values[key] === undefined)) return null;

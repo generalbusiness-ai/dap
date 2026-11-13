@@ -35,8 +35,10 @@ const ok = (answer: Outcome): Outcome => {
 
 test("a real 2000-member room keeps handle uniqueness and verifies every actual scope under shipped defaults", async context => {
   const previousClock = net.clock, clock = new ScriptedClock(timeOf(Date.now()));
-  const indexId = env.SCOPE_INDEX.idFromName(`fixed-slot-room-${crypto.randomUUID()}`);
-  const indexBinding = new Proxy(env.SCOPE_INDEX, { get(target, property) {
+  // A fresh TEST owner in STARTUP_INDEX: it works under the shipped default
+  // limits, and a ScopeIndex under another name in SCOPE_INDEX does no work.
+  const indexId = env.STARTUP_INDEX.idFromName(`fixed-slot-room-${crypto.randomUUID()}`);
+  const indexBinding = new Proxy(env.STARTUP_INDEX, { get(target, property) {
     if (property === "idFromName") return (name: string) => name === SCOPE_INDEX_NAME ? indexId : target.idFromName(name);
     const value = Reflect.get(target, property, target);
     return typeof value === "function" ? value.bind(target) : value;
@@ -229,7 +231,7 @@ test("a real 2000-member room keeps handle uniqueness and verifies every actual 
       const signer = secretSigner(seed), at = repository.membership;
       const inboxOf = async (fact: FactRef): Promise<Node> => {
         const read = await wait(() => M.stub.entry(reader, fact.seq));
-        if (!read.ok || !same(factRefOf(read.value.entry), fact)) throw Error("Fixed-slot source entry does not match the accepted receipt");
+        if (!read.ok || !same(factRefOf(read.value.entry, at), fact)) throw Error("Fixed-slot source entry does not match the accepted receipt");
         const creates = read.value.entry.sends.filter(send => isSeed(send.to) && send.to.kind === "inbox");
         const target = creates[0]?.to;
         if (creates.length !== 1 || !isSeed(target) || !same(target.creator, at)) throw Error("Fixed-slot add has no exact actual Inbox create seed");

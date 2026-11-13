@@ -1,8 +1,8 @@
 /** One bounded asynchronous archive pass. No entry, operation or public RPC.
  * Configuration and reviewed policy belong to the trusted object owner. */
 import { canonicalize, digestBytes, isDigest, same, utf8 } from "@generalbusiness/dap-bytes";
-import type { Bounds, Head, ScopeRef, Seed, Timestamp } from "@generalbusiness/dap-contract";
-import { isScopeRef, timeMs, timeOf } from "@generalbusiness/dap-bytes";
+import type { Bounds, Head, SequenceRef, Seed, Timestamp } from "@generalbusiness/dap-contract";
+import { isSequenceRef, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { captureJournalParentFrontier, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, type ArchiveCapacityRefusal } from "./archive-budget.ts";
 import { archiveParent, copyArchiveObjects } from "./archive-parent.ts";
@@ -12,6 +12,7 @@ import { admitArchiveMigration } from "./archive-bootstrap-cost.ts";
 import { planPublishedArchiveConversion, rebuildArchive, rebuildArchivePass, type ArchiveFixedFinish } from "./archive-build.ts";
 import { planAdaptiveArchivePass, planRootAdaptiveArchivePass, planRootFixedArchivePass, planRootFixedUnpublishedArchivePass } from "./archive-adaptive.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
+import { archiveOwnReplayContext, type ArchiveReplayContext } from "./archive-publication.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, archivePinReadBytes, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { ArchiveRows, type ArchiveMark, type ArchiveRow } from "./archive-row.ts";
@@ -25,7 +26,7 @@ import { createObservedArchiveBudget, registerCustomArchiveBudget, observeArchiv
 
 export interface ArchiveCredential { readonly id: string; readonly ends: Timestamp; readonly plaintext: string }
 export interface ArchiveSend {
-  readonly repository: DestinationRepository; readonly at: ScopeRef; readonly ref: string;
+  readonly repository: DestinationRepository; readonly at: SequenceRef; readonly ref: string;
   readonly old: string | null; readonly commit: string; readonly objects: readonly JournalObject[];
   readonly credential: ArchiveCredential; readonly allowed: () => boolean;
   /** Only a v2 append uses old tree edges. Validation spends the same pass
@@ -41,7 +42,7 @@ export interface ArchiveProvider {
   /** One shallow filtered current-parent read and one exact head blob; no history. */
   readParent?(repository: DestinationRepository, commit: string, allowed: () => boolean, budget: ArchiveBudget): Promise<JournalObjectSource>;
   readObject?(repository: DestinationRepository, object: { readonly id: string; readonly type: JournalObject["type"]; readonly maximum: number }, allowed: () => boolean, budget: ArchiveBudget): ReturnType<JournalObjectSource["object"]>;
-  mintArchive(repository: DestinationRepository, at: ScopeRef, allowed: () => boolean): Promise<ArchiveCredential | null>;
+  mintArchive(repository: DestinationRepository, at: SequenceRef, allowed: () => boolean): Promise<ArchiveCredential | null>;
   sendArchive(request: ArchiveSend): Promise<unknown>;
   revokeArchive(credential: ArchiveCredential): Promise<void>;
 }
@@ -51,23 +52,23 @@ export interface FixtureArchiveProvider extends ArchiveProvider { readonly fixtu
 export interface FixtureArchivePolicies { readonly fixture: "archive-policies"; readonly registry: ArchivePolicyRegistry }
 export interface FixtureArchiveTarget {
   readonly fixture: "archive-target";
-  resolve(at: ScopeRef, seed: Seed, budget: ArchiveBudget): Promise<DestinationRepository | null>;
+  resolve(at: SequenceRef, seed: Seed, budget: ArchiveBudget): Promise<DestinationRepository | null>;
 }
 export interface ArchiveTarget {
-  resolve(at: ScopeRef, seed: Seed, budget: ArchiveBudget): Promise<DestinationRepository | null>;
+  resolve(at: SequenceRef, seed: Seed, budget: ArchiveBudget): Promise<DestinationRepository | null>;
 }
 export interface RoomArchiveDriverOptions extends Omit<FixtureArchiveDriverOptions, "policies" | "provider" | "target"> {
   readonly production: "room-binding";
   readonly policies: { readonly registry: ArchivePolicyRegistry };
   readonly target: ArchiveTarget;
   readonly provider: ArchiveProvider;
-  readonly admit: (at: ScopeRef, seed: Seed) => boolean;
+  readonly admit: (at: SequenceRef, seed: Seed) => boolean;
   /** Fresh bounded source identity preparation, charged to the same pass. */
-  readonly sources?: (after: Head | null, through: Head, budget: ArchiveBudget, exact: boolean) => Promise<{ readonly pins: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[]; readonly prepare?: (seq: number, budget: ArchiveBudget) => Promise<void> }>;
+  readonly sources?: (after: Head | null, through: Head, budget: ArchiveBudget, exact: boolean) => Promise<{ readonly pins: FixtureArchiveSourcePins; readonly replayScopes?: readonly SequenceRef[]; readonly replayContext?: ArchiveReplayContext; readonly prepare?: (seq: number, budget: ArchiveBudget) => Promise<void> }>;
 }
 export interface FixtureArchiveDriverOptions {
   readonly sql: Sql;
-  readonly current: () => { readonly at: ScopeRef; readonly head: Head } | null;
+  readonly current: () => { readonly at: SequenceRef; readonly head: Head } | null;
   readonly clock: () => Timestamp;
   readonly bounds: Bounds;
   readonly policies: FixtureArchivePolicies;
@@ -99,7 +100,7 @@ export class ArchiveDriver {
   }
   #store(): ArchiveRows | null {
     const current = this.#options.current();
-    return current && isScopeRef(current.at) ? this.#rows ??= new ArchiveRows(this.#options.sql, current.at) : null;
+    return current && isSequenceRef(current.at) ? this.#rows ??= new ArchiveRows(this.#options.sql, current.at) : null;
   }
   /** Internal deployment directive; no pass, host call, native turn or Mark. */
   restart(raw: unknown): "applied" | "already-applied" | "refused" {
@@ -323,6 +324,10 @@ export class ArchiveDriver {
         }
       }) : null;
       const sources = preparedSources?.pins ?? this.#options.fixtureSources;
+      // A fixture pass has no target to read its sequences. It classifies
+      // its own sequence from its own genesis, the one root that needs no
+      // outside read. Copied sources come from the fixture pins.
+      const replayContext = preparedSources?.replayContext ?? (!("production" in this.#options) ? archiveOwnReplayContext(this.#options.sql, at, this.#options.bounds.entryBytes, budget) : undefined);
       let archive: JournalArchive | JournalPassArchive;
       let mark: ArchiveMark;
       let selectedParentObjects: readonly string[] | undefined;
@@ -330,7 +335,9 @@ export class ArchiveDriver {
       if (row.pending) {
         step = "rebuild";
         const rebuild = row.pending.layout === 2 ? rebuildArchivePass : rebuildArchive;
-        const rebuilt = await rebuild(this.#options.sql, row, previous.parent, budget, sources);
+        // Stored refs describe the exact pending closure. Only this pass's
+        // already-read target/source context can classify those roots.
+        const rebuilt = await rebuild(this.#options.sql, row, previous.parent, budget, sources, replayContext);
         if (!rebuilt.ok) { sourceFailure = rebuilt.sourceFailure ?? null; rows.stop(rebuilt.reason, "where" in rebuilt ? rebuilt.where ?? null : null, budget); return done({ state: "stopped", next: null, reason: rebuilt.reason }); }
         archive = rebuilt.archive;
         mark = row.pending;
@@ -343,7 +350,8 @@ export class ArchiveDriver {
           ? (await this.#parent(row, budget, allowed, frontiers, null)).parent : null;
         const common = { bounds: this.#options.bounds, policies: this.#options.policies.registry, parent: previous.parent,
           markedAt: this.#options.clock(), ...(sources ? { fixtureSources: sources } : {}),
-          ...(preparedSources?.replayScopes ? { replayScopes: preparedSources.replayScopes } : {}) };
+          ...(preparedSources?.replayScopes ? { replayScopes: preparedSources.replayScopes } : {}),
+          ...(replayContext ? { replayContext } : {}) };
         let planned: Awaited<ReturnType<typeof planPublishedArchiveConversion>>;
         if (row.confirmed && row.confirmed.layout !== 2) {
           captureStrategy = 4; captureThrough = through.seq; captureThroughHash = through.hash;

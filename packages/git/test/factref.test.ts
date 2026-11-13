@@ -9,7 +9,7 @@ afterAll(cleanup);
 // a host. The fixed parts are made up: `refs/artroom/receipts/` is the contract's example, and no version of a platform definition
 // states a part yet. The word `receipt` of the commit's line is made up too: the authority note's rows state the word.
 const HEX = "0123456789abcdef".repeat(4);
-const F: FactRef = { at: { scope: `sc_${"b".repeat(51)}a`, inc: `in_${"c".repeat(25)}a`, kind: "lane" }, seq: 41, hash: `sha256:${HEX}` };
+const F: FactRef = { at: { scope: `sc_${"b".repeat(51)}a`, genesis: `sha256:${"c".repeat(64)}` }, seq: 41, hash: `sha256:${HEX}` };
 const PARTS: readonly (readonly [string, string])[] = [
   ["refs/artroom/receipts/", ""],
   ["refs/", ""],

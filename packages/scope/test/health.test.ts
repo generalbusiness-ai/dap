@@ -71,6 +71,16 @@ test("production health keeps indexed transport identity for concurrent and cach
   expect((await scopeWorker.fetch(request(), { ...base, SCOPE_INDEX: replacement })).status).toBe(503);
   expect(replacementReads).toBe(1);
   expect(calls).toBe(1);
+
+  // A retired readiness RPC is unavailable, not evidence of an absent room.
+  let retiredCalls = 0;
+  const retired = { idFromName: () => name, get: () => ({ readiness: async () => { retiredCalls++; return { stop: "retired" } as const; } }) };
+  const retiredProbe = new HealthProbe(() => 0, promise => promise);
+  expect(await retiredProbe.read(retired, name)).toBe("unavailable");
+  const unavailable = await health(request(), { ...settings, SCOPES: retired, GITHUB_APP_CONFIG: github(name) }, retiredProbe);
+  expect([unavailable?.status, (await unavailable!.json<{ register: string }>()).register]).toEqual([503, "unavailable"]);
+  expect(unavailable?.headers.get("cache-control")).toBe("no-store");
+  expect(retiredCalls).toBe(1);
 });
 
 // Invariant: health reveals only validated public deployment metadata and

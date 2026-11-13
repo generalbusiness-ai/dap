@@ -249,7 +249,7 @@ only what that party may read. A message retains its whole source entry
 in the receiving scope, and that room's readers can read it, so each
 sending act holds only that party's part and uses no other scope's
 facts. The party holds a fact reference to the sending act,
-`{ at: { scope, inc, kind }, seq, hash }`, with its entry. That proves
+`{ at: { scope, genesis }, seq, hash }`, with its entry. That proves
 what the party was told and where it stands. It does not let the party
 replay the comparison behind the decision. Membership is the boundary,
 and dap checks it. Private views in one record remain for the

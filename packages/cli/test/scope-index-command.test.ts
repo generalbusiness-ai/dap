@@ -2,8 +2,8 @@ import { expect, test } from "vitest";
 import { mkdtemp, readFile, rm, symlink, truncate, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Entry, ScopeRef, Seed, Sealed } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, factRefOf, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import type { Entry, FactRef, GenesisEntry, GenesisSelfRef, ScopeKind, ScopeRef, Seed, Sealed, SequenceEntry } from "@generalbusiness/dap-contract";
+import { canonicalize, digestBytes, entryHash, factRefOf, newGenesisNonce, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { captureIndexManifest, INDEX_INVENTORY_BOUNDS, indexManifestVersions, readIndexManifest, verifyIndexManifest, type IndexReads } from "../src/scope-index-manifest.ts";
 import { readIndexFile, saveIndexFile, scopeIndexCommand, type IndexFiles } from "../src/scope-index-command.ts";
 import { memoryStore } from "../src/store.ts";
@@ -13,18 +13,25 @@ import { Stop } from "../src/command-support.ts";
 // Typed HTTP/history STAND-INs. These hashes bind observed bytes and sends;
 // no native judgment, registration or deployment mode is proved here.
 function fixture(ordinals: { root?: number; child?: number; commons?: true; definitions?: { register?: Seed["definition"]; directory?: Seed["definition"]; rules?: Seed["definition"] } } = {}) {
-  const ref = (seed: Seed, n: number): ScopeRef => ({ scope: scopeIdOf(seed), kind: seed.kind, inc: newIncarnation(new Uint8Array(16).fill(n)) });
+  const time = "2099-01-01T00:00:00Z", create = { class: "request", type: "create", body: {} } as const;
+  const sealed = (entry: Entry): Sealed => ({ entry, hash: entryHash(entry) });
+  /** A genesis written here, one nonce byte for each. Its reference is its seed's scope ID and its own hash. */
+  const birth = (seed: Seed, fill: number, from: { source: FactRef; sourceKind: ScopeKind; n: number } | null): GenesisEntry => ({ v: 1, seq: 0, prev: null, time, clamped: false, epoch: 0,
+    input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(fill)), kind: "create", founding: null,
+      ...(from ? { ...from, message: create } : { source: null, sourceKind: null, n: null, message: null }), decision: "applied" }, uses: [], prepared: [], effects: [], sends: [] });
+  const refOf = (entry: Entry): ScopeRef => {
+    if (entry.input.type !== "genesis") throw Error("fixture genesis");
+    return { scope: scopeIdOf(entry.input.seed), genesis: entryHash(entry) };
+  };
   const registerSeed: Seed = { v: 1, kind: "register", definition: ordinals.definitions?.register ?? (ordinals.commons ? COMMONS_COHORT.register : "platform:register@18"), creator: null, cause: textDigest("operator inventory register"), ordinal: 0 };
-  const R = ref(registerSeed, 1);
+  const registerBirth = birth(registerSeed, 1, null), R = refOf(registerBirth);
   const rootSeed: Seed = { ...registerSeed, kind: "directory", definition: ordinals.definitions?.directory ?? (ordinals.commons ? COMMONS_COHORT.directory : "platform:directory@17"), creator: R, cause: textDigest("operator inventory root"), ordinal: ordinals.root ?? 0 };
-  const D = ref(rootSeed, 2);
   const otherSeed: Seed = { ...rootSeed, cause: textDigest("another room is not traversed") };
-  const childSeed: Seed = { ...rootSeed, kind: "rules", definition: ordinals.definitions?.rules ?? (ordinals.commons ? COMMONS_COHORT.rules : "platform:rules@10"), creator: D, cause: textDigest("operator inventory child"), ordinal: ordinals.child ?? (ordinals.commons ? 1 : 0) };
-  const A = ref(childSeed, 3);
-  const base = (at: ScopeRef, seed: Seed): Entry => ({ v: 1, at, seq: 0, prev: null, time: "2099-01-01T00:00:00Z", clamped: false, epoch: 0,
-    input: { type: "genesis", seed, inc: at.inc, kind: "create", founding: null, source: null, n: null, message: null, decision: "applied" }, uses: [], prepared: [], effects: [], sends: [] });
-  const r = base(R, registerSeed);
-  r.sends = [rootSeed, otherSeed].map((to, n) => ({ n, to, message: { class: "request", type: "create", body: {} } }));
+  // The Register's later entry creates the Directory: a creator named from a later entry is a full reference.
+  const r: SequenceEntry = { v: 1, genesis: R.genesis, seq: 1, prev: R.genesis, time, clamped: false, epoch: 0, input: { type: "checkpoint", through: 0, state: textDigest("TEST register state") },
+    uses: [], prepared: [], effects: [], sends: [rootSeed, otherSeed].map((to, n) => ({ n, to, message: create })) };
+  const dSelf: GenesisSelfRef = { scope: scopeIdOf(rootSeed), genesis: null };
+  const childSeed: Seed = { ...rootSeed, kind: "rules", definition: ordinals.definitions?.rules ?? (ordinals.commons ? COMMONS_COHORT.rules : "platform:rules@10"), creator: dSelf, cause: textDigest("operator inventory child"), ordinal: ordinals.child ?? (ordinals.commons ? 1 : 0) };
   // Commons Directory birth creates Membership, Rules, Destination, Commons in
   // this order. These remain scripted observations; no native judge runs here.
   const siblings: Seed[] = ordinals.commons ? [
@@ -33,31 +40,26 @@ function fixture(ordinals: { root?: number; child?: number; commons?: true; defi
     { ...childSeed, kind: "destination", definition: COMMONS_COHORT.destination, ordinal: 2 },
     { ...childSeed, kind: "commons", definition: COMMONS_COHORT.commons, ordinal: 3 },
   ] : [childSeed];
-  const d = base(D, rootSeed);
-  if (d.input.type !== "genesis") throw Error("fixture genesis");
-  d.input = { ...d.input, source: factRefOf(r), n: 0, message: { class: "request", type: "create", body: {} } };
+  const d = birth(rootSeed, 2, { source: factRefOf(r, R), sourceKind: "register", n: 0 });
   d.sends = [
-    { n: 0, to: R, message: { class: "result", of: { from: factRefOf(r), n: 0 }, outcome: "applied" } },
-    ...siblings.map((to, index) => ({ n: index + 1, to, message: { class: "request", type: "create", body: {} } as const })),
+    { n: 0, to: R, message: { class: "result", of: { from: factRefOf(r, R), n: 0 }, outcome: "applied" } },
+    ...siblings.map((to, index) => ({ n: index + 1, to, message: create })),
   ];
-  const a = base(A, childSeed);
-  if (a.input.type !== "genesis") throw Error("fixture genesis");
-  a.input = { ...a.input, source: factRefOf(d), n: ordinals.commons ? 2 : 1, message: { class: "request", type: "create", body: {} } };
-  const extras = siblings.flatMap((seed, index) => {
-    if (seed === childSeed) return [];
-    const at = ref(seed, index + 4), entry = base(at, seed);
-    if (entry.input.type !== "genesis") throw Error("fixture genesis");
-    entry.input = { ...entry.input, source: factRefOf(d), n: index + 1, message: { class: "request", type: "create", body: {} } };
-    return [entry];
-  });
-  const sealed = (entry: Entry): Sealed => ({ entry, hash: factRefOf(entry).hash });
-  const entries = new Map([r, d, a, ...extras].map(entry => [entry.at.scope, sealed(entry)]));
+  const D = refOf(d);
+  const a = birth(childSeed, 3, { source: factRefOf(d, D), sourceKind: "directory", n: ordinals.commons ? 2 : 1 });
+  const A = refOf(a);
+  const extras = siblings.flatMap((seed, index) => seed === childSeed ? [] : [birth(seed, index + 4, { source: factRefOf(d, D), sourceKind: "directory", n: index + 1 })]);
+  const entries = new Map([registerBirth, d, a, ...extras].map(entry => [refOf(entry).scope, sealed(entry)]));
+  /** The Register's entry at position 1, the one that creates the Directory. */
+  const registerLater = { value: sealed(r) };
+  /** Seal a changed genesis again under its scope ID. */
+  const put = (entry: Entry) => { entries.set(refOf(entry).scope, sealed(entry)); };
   const calls: string[] = [];
   const reads: IndexReads = {
-    entry: async (scope, seq) => { calls.push(`entry:${scope}:${seq}`); const value = entries.get(scope)!; return { ok: true, value, at: { seq: 0, hash: value.hash }, complete: true }; },
+    entry: async (scope, seq) => { calls.push(`entry:${scope}:${seq}`); const value = scope === R.scope && seq === 1 ? registerLater.value : entries.get(scope)!; return { ok: true, value, at: { seq: value.entry.seq, hash: value.hash }, complete: true }; },
     history: async scope => { calls.push(`history:${scope}`); const value = entries.get(scope)!; return { ok: true, value: [value], at: { seq: 0, hash: value.hash }, complete: true }; },
   };
-  return { R, D, A, r, d, a, extras, entries, calls, reads, sealed };
+  return { R, D, A, r, d, a, extras, entries, registerLater, put, refOf, calls, reads, sealed };
 }
 
 // Invariant: capture binds actual full genesis/send facts for only this room;
@@ -67,7 +69,7 @@ test("scope inventory observes the configured creation tree and refuses incomple
   const manifest = await captureIndexManifest(service, f.D, f.reads);
   expect(manifest.scopes.map(row => row.at.scope).sort()).toEqual([f.R.scope, f.D.scope, f.A.scope].sort());
   expect(f.calls.filter(call => call.startsWith("history:"))).toEqual([`history:${f.D.scope}`, `history:${f.A.scope}`]);
-  expect(manifest.scopes.find(row => row.at.scope === f.A.scope)).toEqual({ at: f.A, genesis: factRefOf(f.a).hash });
+  expect(manifest.scopes.find(row => row.at.scope === f.A.scope)).toEqual({ at: f.A, kind: "rules" });
   expect(readIndexManifest(utf8(canonicalize(manifest)), service, f.D)).toEqual(manifest);
   // Genuine native ordinal semantics: a child's result occupies n=0, so
   // its first creation has seed.ordinal=0 but send/input.n=1.
@@ -76,16 +78,16 @@ test("scope inventory observes the configured creation tree and refuses incomple
   const broken = fixture();
   if (broken.a.input.type !== "genesis") throw Error("fixture genesis");
   broken.a.input = { ...broken.a.input, seed: { ...broken.a.input.seed, cause: textDigest("wrong child seed") } };
-  broken.entries.set(broken.A.scope, broken.sealed(broken.a));
-  await expect(captureIndexManifest(service, broken.D, broken.reads)).rejects.toThrow("applied genesis");
+  broken.put(broken.a);
+  await expect(captureIndexManifest(service, broken.D, broken.reads)).rejects.toThrow("wrong entry identity");
   let pages = 0;
   await expect(captureIndexManifest(service, f.D, { ...f.reads, history: async () => {
-    pages++; return { ok: true, at: { seq: 0, hash: factRefOf(f.d).hash }, complete: false, value: [], next: "still-pending" };
+    pages++; return { ok: true, at: { seq: 0, hash: entryHash(f.d) }, complete: false, value: [], next: "still-pending" };
   } })).rejects.toThrow("nonadvancing or oversized history cursor");
   expect(pages).toBe(1);
   await expect(captureIndexManifest(service, f.D, { ...f.reads, history: async () => ({ ok: false, reason: "archived", archived: { floor: 1, commit: "a".repeat(40), through: { seq: 1, hash: textDigest("archive") } } }) })).rejects.toThrow("archived");
   const badRegister = fixture();
-  badRegister.r.sends = []; badRegister.entries.set(badRegister.R.scope, badRegister.sealed(badRegister.r));
+  badRegister.r.sends = []; badRegister.registerLater.value = badRegister.sealed(badRegister.r);
   await expect(captureIndexManifest(service, badRegister.D, badRegister.reads)).rejects.toThrow("actual Register send");
 });
 
@@ -97,8 +99,9 @@ test("scope inventory checks exact creation envelopes on root, descendant and re
       const f = fixture(), entry = where === "root" ? f.d : f.a;
       if (entry.input.type !== "genesis") throw Error("fixture genesis");
       entry.input = { ...entry.input, message };
-      f.entries.set(entry.at.scope, f.sealed(entry));
-      await expect(captureIndexManifest("https://service.test", f.D, f.reads)).rejects.toThrow("actual creation envelope");
+      f.put(entry);
+      // A changed Directory genesis has another hash, so the configured reference is that genesis's own.
+      await expect(captureIndexManifest("https://service.test", where === "root" ? f.refOf(entry) : f.D, f.reads)).rejects.toThrow("actual creation envelope");
     }
     const f = fixture({ [where]: 1 });
     await expect(captureIndexManifest("https://service.test", f.D, f.reads)).rejects.toThrow("creation rank");
@@ -107,11 +110,12 @@ test("scope inventory checks exact creation envelopes on root, descendant and re
   // structurally valid but inconsistent observation is not native evidence.
   const repeated = fixture(), duplicate = repeated.d.sends[1]!;
   repeated.d.sends = [...repeated.d.sends, { ...duplicate, n: 2, message: { class: "request", type: "create", body: { changed: true } } }];
-  if (repeated.a.input.type !== "genesis") throw Error("fixture genesis");
-  repeated.a.input = { ...repeated.a.input, source: factRefOf(repeated.d) };
-  repeated.entries.set(repeated.D.scope, repeated.sealed(repeated.d));
-  repeated.entries.set(repeated.A.scope, repeated.sealed(repeated.a));
-  await expect(captureIndexManifest("https://service.test", repeated.D, repeated.reads)).rejects.toThrow("actual creation envelope");
+  if (repeated.a.input.type !== "genesis" || repeated.a.input.source === null) throw Error("fixture genesis with a source");
+  const repeatedD = repeated.refOf(repeated.d);
+  repeated.a.input = { ...repeated.a.input, source: factRefOf(repeated.d, repeatedD) };
+  repeated.put(repeated.d);
+  repeated.put(repeated.a);
+  await expect(captureIndexManifest("https://service.test", repeatedD, repeated.reads)).rejects.toThrow("actual creation envelope");
 });
 
 // Invariant: a saved manifest is validated before authentication/network, and
@@ -119,7 +123,7 @@ test("scope inventory checks exact creation envelopes on root, descendant and re
 test("operator sweep validates locally and reports exact listed genesis outcomes without inferring mode", async () => {
   const f = fixture(), manifest = await captureIndexManifest("https://service.test", f.D, f.reads);
   const store = memoryStore(); await store.keep("device", new Uint8Array(32).fill(7));
-  await store.save({ v: 1, service: "https://service.test", key: "device", repository: { directory: f.D, membership: { ...f.A, kind: "membership" }, rules: f.A.scope, destination: f.A.scope } });
+  await store.save({ v: 2, service: "https://service.test", key: "device", repository: { directory: f.D, membership: { ...f.A, genesis: textDigest("TEST membership genesis") }, rules: f.A.scope, destination: f.A.scope } });
   let held = utf8(canonicalize({ ...manifest, service: "https://foreign.test" }));
   const calls: string[] = [], files: IndexFiles = { read: async () => held, save: async () => { throw Error("sweep must not save"); } };
   const ctx = { store, now: () => Date.parse("2099-01-01T00:00:00Z"), fetch: async (url: string, init?: { method?: string }) => {
@@ -132,7 +136,7 @@ test("operator sweep validates locally and reports exact listed genesis outcomes
   } };
   expect((await scopeIndexCommand(ctx, ["sweep", "--manifest", "saved.json"], files)).code).toBe(1);
   expect(calls).toEqual([]);
-  for (const invalid of [{ ...manifest, root: { ...f.D, inc: f.A.inc } }, { ...manifest, scopes: [...manifest.scopes, manifest.scopes[0]] }]) {
+  for (const invalid of [{ ...manifest, root: { ...f.D, genesis: f.A.genesis } }, { ...manifest, scopes: [...manifest.scopes, manifest.scopes[0]] }]) {
     held = utf8(canonicalize(invalid)); expect((await scopeIndexCommand(ctx, ["verify", "--manifest", "saved.json"], files)).code).toBe(1); expect(calls).toEqual([]);
   }
   held = utf8(canonicalize(manifest));
@@ -152,7 +156,9 @@ test("operator sweep validates locally and reports exact listed genesis outcomes
     if (scope === f.R.scope) return { ok: false, reason: "not-found" };
     const got = await f.reads.entry(scope, seq);
     if (scope !== f.A.scope || !got.ok) return got;
-    return { ...got, value: { ...got.value, entry: { ...got.value.entry, at: { ...f.A, inc: f.D.inc } } } };
+    const entry = got.value.entry; if (entry.input.type !== "genesis") return got;
+    const changed: GenesisEntry = { ...(entry as GenesisEntry), input: { ...entry.input, nonce: newGenesisNonce(new Uint8Array(16).fill(99)) } };
+    return { ...got, value: { ...got.value, entry: changed } };
   } });
   expect(report).toMatchObject({ listed: 3, verified: 1, unavailable: 1, mismatch: 1 });
 });
@@ -200,17 +206,19 @@ test("operator versions binds saved genesis and separates observed catalog pins 
   const refused = fixture(), refusedManifest = await captureIndexManifest("https://service.test", refused.D, refused.reads);
   if (refused.a.input.type !== "genesis") throw Error("fixture genesis");
   refused.a.input = { ...refused.a.input, decision: "refused" };
-  refused.entries.set(refused.A.scope, refused.sealed(refused.a));
+  refused.put(refused.a);
   expect(await indexManifestVersions(refusedManifest, refused.reads)).toMatchObject({ ready: false, rows: expect.arrayContaining([
     expect.objectContaining({ at: refused.A, result: "mismatch", reason: "genesis-identity" }),
   ]) });
-  const altered = { ...manifest, scopes: manifest.scopes.map(row => row.at.scope === f.A.scope ? { ...row, genesis: textDigest("different saved bytes") } : row) };
-  expect(await indexManifestVersions(altered, f.reads)).toMatchObject({ ready: false, usableCreationCohorts: [], rows: expect.arrayContaining([expect.objectContaining({ at: f.A, result: "mismatch", reason: "genesis-hash" })]) });
+  const altered = { ...manifest, scopes: manifest.scopes.map(row => row.at.scope === f.A.scope ? { ...row, at: { ...row.at, genesis: textDigest("different saved bytes") } } : row) };
+  expect(await indexManifestVersions(altered, f.reads)).toMatchObject({ ready: false, usableCreationCohorts: [], rows: expect.arrayContaining([expect.objectContaining({ at: { ...f.A, genesis: textDigest("different saved bytes") }, result: "mismatch", reason: "genesis-hash" })]) });
   const substituted: IndexReads = { ...f.reads, entry: async (scope, seq) => {
     if (scope === f.R.scope) return { ok: false, reason: "not-found" };
     const got = await f.reads.entry(scope, seq);
     if (!got.ok || scope !== f.A.scope) return got;
-    return { ...got, value: { ...got.value, entry: { ...got.value.entry, at: { ...f.A, inc: f.D.inc } } } };
+    const entry = got.value.entry; if (entry.input.type !== "genesis") return got;
+    const changed: GenesisEntry = { ...(entry as GenesisEntry), input: { ...entry.input, nonce: newGenesisNonce(new Uint8Array(16).fill(99)) } };
+    return { ...got, value: { ...got.value, entry: changed } };
   } };
   expect(await indexManifestVersions(manifest, substituted)).toMatchObject({ ready: false, usableCreationCohorts: [], rows: expect.arrayContaining([
     expect.objectContaining({ at: f.R, result: "unavailable" }), expect.objectContaining({ at: f.A, result: "mismatch" }),
@@ -224,22 +232,22 @@ test("operator versions binds saved genesis and separates observed catalog pins 
 test("Commons inventory discovers and exports closed sibling references before reporting its cohort", async () => {
   const f = fixture({ commons: true }), service = "https://service.test";
   const manifest = await captureIndexManifest(service, f.D, f.reads);
-  const q = f.extras.find(entry => entry.at.kind === "commons");
+  const q = f.extras.find(entry => entry.input.type === "genesis" && entry.input.seed.kind === "commons");
   if (!q) throw Error("The scripted Commons birth must be observed.");
   expect(manifest.scopes).toHaveLength(6);
-  expect(new Set(manifest.scopes.map(row => row.at.kind))).toEqual(new Set(["register", "directory", "membership", "rules", "destination", "commons"]));
-  expect(manifest.scopes.find(row => row.at.scope === q.at.scope)).toEqual({ at: q.at, genesis: factRefOf(q).hash });
+  expect(new Set(manifest.scopes.map(row => row.kind))).toEqual(new Set(["register", "directory", "membership", "rules", "destination", "commons"]));
+  expect(manifest.scopes.find(row => row.at.scope === f.refOf(q).scope)).toEqual({ at: f.refOf(q), kind: "commons" });
   const exported = utf8(`${canonicalize(manifest)}\n`);
   expect(readIndexManifest(exported, service, f.D)).toEqual(manifest);
-  const wire = JSON.parse(new TextDecoder().decode(exported)) as { scopes: { at: object; genesis: string }[] };
+  const wire = JSON.parse(new TextDecoder().decode(exported)) as { scopes: { at: object; kind: string }[] };
   expect(Object.keys(wire).sort()).toEqual(["root", "scopes", "service", "v"]);
-  expect(wire.scopes.every(row => Object.keys(row).sort().join(",") === "at,genesis"
-    && Object.keys(row.at).sort().join(",") === "inc,kind,scope")).toBe(true);
+  expect(wire.scopes.every(row => Object.keys(row).sort().join(",") === "at,kind"
+    && Object.keys(row.at).sort().join(",") === "genesis,scope")).toBe(true);
   const versions = await indexManifestVersions(manifest, f.reads);
   expect(versions).toMatchObject({ ready: true, usableCreationCohorts: ["failed-claim", "commons"],
     observedPins: ["platform:commons@1", "platform:destination@16", "platform:directory@22", "platform:membership@9", "platform:register@23", "platform:rules@14"] });
   expect(versions.rows.every(row => row.result === "verified")).toBe(true);
-  const partial = { ...manifest, scopes: manifest.scopes.filter(row => row.at.scope !== q.at.scope) };
+  const partial = { ...manifest, scopes: manifest.scopes.filter(row => row.at.scope !== f.refOf(q).scope) };
   expect(await indexManifestVersions(partial, f.reads)).toMatchObject({ ready: true,
     usableCreationCohorts: ["failed-claim"] });
 });

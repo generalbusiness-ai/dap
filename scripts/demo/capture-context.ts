@@ -7,7 +7,8 @@ import { canonicalize, keyIdOfSecret, textDigest } from "@generalbusiness/dap-by
 import type { Context } from "../../packages/cli/src/commands.ts";
 import type { Room } from "./rehearse.ts";
 import { captureBinding, type CaptureObservations } from "./capture-binding.ts";
-export { captureBinding, observeCaptures, initializeCapture, type CaptureObservations } from "./capture-binding.ts";
+export { captureBinding, observeCaptures, type CaptureObservations } from "./capture-binding.ts";
+export { initializeCapture } from "./page-key-custody.ts";
 export const CAPTURE_CONTEXT = "capture-observations.json";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const same = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
@@ -18,7 +19,7 @@ const stop = (): never => { throw new Error("Capture binding is missing, unsuppo
  * or remote semantic archive is inferred from this local snapshot. */
 export function captureSource(): string {
   const git = (args: string[]) => execFileSync("git", args, { cwd: ROOT, encoding: "utf8" }).trim();
-  const paths = new Set(["scripts/demo/rehearse.ts", "scripts/demo/capture-context.ts", "scripts/demo/capture-binding.ts", "scripts/demo-run.ts", "scripts/demo-captures.ts", "package.json", "package-lock.json"]);
+  const paths = new Set(["scripts/demo/rehearse.ts", "scripts/demo/capture-context.ts", "scripts/demo/capture-binding.ts", "scripts/demo/page-key-custody.ts", "scripts/demo-run.ts", "scripts/demo-captures.ts", "package.json", "package-lock.json"]);
   const changed = [...git(["diff", "--name-only", "HEAD", "--"]).split("\n"), ...git(["ls-files", "--others", "--exclude-standard"]).split("\n")];
   for (const path of changed) if (/^packages\/(cli|client|platform|scope|bytes|contract|derive|lanes)\/src\/.*\.(ts|json)$/.test(path)) paths.add(path);
   return canonicalize({ head: git(["rev-parse", "HEAD"]), tree: git(["rev-parse", "HEAD^{tree}"]), localCaptureAndChangedRuntime: textDigest(canonicalize([...paths].sort().map((path) => {

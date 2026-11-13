@@ -1,7 +1,7 @@
 /** Bounded private content and state preparation. No read authority here. */
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import type { Digest, Input, PlatformDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, domainBytes, isDigest, isPlatformDefinition, utf8, wellFormed } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize, definitionDigest, digestBytes, domainBytes, isDigest, isPlatformDefinition, utf8, wellFormed, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { same, type ScopeState, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { platform as exactPlatform } from "@generalbusiness/dap-platform";
 import type { Pinned, Supplied } from "./core.ts";
@@ -25,13 +25,14 @@ export class PreparedRead {
   readonly scope: ScopeState;
   readonly genesis: Genesis;
   readonly birth: ProofBody;
+  readonly sequence: CheckedSequence;
   readonly budget: PreparationBudget;
   readonly view: ReturnType<typeof preparationView>;
   readonly #sql: Pick<Sql, "exec">;
   readonly #support: () => Pinned | null;
   #pinned: Pinned;
-  constructor(sql: Pick<Sql, "exec">, scope: ScopeState, genesis: Genesis, birth: ProofBody, pinned: Pinned, budget: PreparationBudget, support: () => Pinned | null) {
-    this.#sql = sql; this.scope = scope; this.genesis = genesis; this.birth = birth; this.#pinned = pinned; this.budget = budget; this.#support = support;
+  constructor(sql: Pick<Sql, "exec">, scope: ScopeState, genesis: Genesis, birth: ProofBody, sequence: CheckedSequence, pinned: Pinned, budget: PreparationBudget, support: () => Pinned | null) {
+    this.#sql = sql; this.scope = scope; this.genesis = genesis; this.birth = birth; this.sequence = sequence; this.#pinned = pinned; this.budget = budget; this.#support = support;
     this.view = preparationView(sql, scope, budget);
   }
   get pinned(): Pinned { return this.#pinned; }
@@ -92,7 +93,14 @@ export class ReadPreparation {
       const reader = new ProofBytes(this.#sql, () => budget.spend({ calls: 1, candidates: 1, metadata: 4096 }));
       const stored = applied ? reader.own(0, maxBytes) : reader.birth(maxBytes), expected = { at: snapshot.scope.at, seq: 0, hash: snapshot.scope.genesis.hash };
       if (stored.kind !== "body" || !same(stored.value.fact, expected)) return budget.stop();
-      const entry = proofEntry(stored.value, expected, maxBytes);
+      // The genesis byte ceiling is already prepaid. Charge the additional
+      // bounded validation as one validation candidate. It makes no SQL
+      // call, so it spends no `calls`: a session read of a destination
+      // uses all 16 calls without it.
+      budget.spend({ candidates: 1 });
+      const sequence = admitSequenceGenesis(stored.value.bytes, expected.at, maxBytes);
+      if (!sequence) return budget.stop();
+      const entry = proofEntry(stored.value, expected, maxBytes, sequence);
       if (!entry || entry.input.type !== "genesis" || applied && entry.input.decision !== "applied") return budget.stop();
       const named = entry.input.seed.definition;
       if (named.length > 128) return budget.stop();
@@ -114,7 +122,7 @@ export class ReadPreparation {
       const pinned = this.#pin(named, raw, budget);
       if (!pinned || !budget.available) return budget.stop();
       if (raw !== null) this.#content = { id, bytes: raw };
-      return new PreparedRead(this.#sql, snapshot.scope, entry.input, stored.value, pinned, budget, () => {
+      return new PreparedRead(this.#sql, snapshot.scope, entry.input, stored.value, sequence, pinned, budget, () => {
         if (this.#policy(budget) !== policy) return null;
         return this.#pin(named, raw, budget);
       });

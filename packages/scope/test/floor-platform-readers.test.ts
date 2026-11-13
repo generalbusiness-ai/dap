@@ -1,3 +1,4 @@
+import { storedSequenceOf } from "./support/local-sequence.ts";
 /** Real PLATFORM births, member authority, rules, turns, operations and SQLite.
  * The package/Git peer, outside replies, clock and setup read inspector are
  * fixtures. Direct internal floor offers use test-authored receipts; this
@@ -130,8 +131,10 @@ test("Native live install and destination mint/read origins survive a floor and 
       expect(after.payloads.filter(seq => seq < 100).length).toBeLessThan(100);
     }
     const readers = await runInDurableObject(G.object, (_instance, state) => {
-      const store = new SqliteStore(archiveSql(state)), own = ownOf(store), readOperation = store.operation(read!.id)!, revokeOperation = store.operation(revoke!.id)!;
-      const missingMint: Own = seq => seq === mintOutcome ? null : own(seq);
+      const store = new SqliteStore(archiveSql(state));
+      const sequence = storedSequenceOf(store, PROPOSED_BOUNDS.entryBytes); // fixture setup only
+      const own = ownOf(store, sequence), readOperation = store.operation(read!.id)!, revokeOperation = store.operation(revoke!.id)!;
+      const missingMint: Own = Object.assign((seq: number) => seq === mintOutcome ? null : own(seq), { sequence: () => own.sequence() });
       // Read-only missing-ancestor control: the genuine helper loses the
       // exact old token proof when its confirmed mint outcome is masked.
       expect(() => revokedToken(store, missingMint, revokeOperation)).toThrow(`this scope's own entry ${mintOutcome} is not at hand`);

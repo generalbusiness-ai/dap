@@ -34,7 +34,7 @@ function decode(bytes: string, binding: string): Journal {
   return journal as unknown as Journal;
 }
 const custody = custodyKind<Journal, ConnectionStatus>({
-  kind: "connection", prefix: "artroom-page-connections", most: MOST,
+  kind: "connection", prefix: "dap-page-connections-2", most: MOST,
   unavailable, full: () => new Error("Private connection custody is full. Originals are retained; nothing further was submitted."),
   bindingOf: journal => journal.binding, decode, readBack: "clone",
   publicOf: journal => {
@@ -57,7 +57,7 @@ async function withCreator<T>(origin: string, storage: ClaimStorage, expected: C
     if (!result.repository || !signer || result.operation !== expected.operation || result.key !== expected.key || canonicalize(result.repository.membership) !== canonicalize(expected.membership)) throw new Error("The original creator proof is not verified. Check the original Start. This step sent nothing. A saved connection stays kept, and an earlier send of it can have gone.");
     const room = await openRoom({ service: origin, signer, ...(options.fetch ? { fetch: options.fetch } : {}), ...(options.now ? { now: options.now } : {}) }, { directory: result.repository.directory.scope, membership: result.repository.membership });
     if (options.current?.() === false || room.session.service !== origin || room.directory !== result.repository.directory.scope || canonicalize(room.membership) !== canonicalize(expected.membership) || room.key !== expected.key || room.key !== signer.key || room.me?.handle !== result.handle) throw unavailable();
-    return await work(room, { v: 1, service: origin, key: "browser", register: result.configured.register, repository: result.repository, handle: result.handle });
+    return await work(room, { v: 2, service: origin, key: "browser", register: result.configured.register, repository: result.repository, handle: result.handle });
   }
 }
 export async function connectInvitation(origin: string, storage: ClaimStorage, expected: CreatorBinding, input: InvitationIssueInput, options: ConnectionOptions): Promise<InvitationIssueResult> {
@@ -65,7 +65,7 @@ export async function connectInvitation(origin: string, storage: ClaimStorage, e
   const locks = options.locks ?? browser.navigator?.locks;
   if (!locks) throw unavailable();
   const binding = bindingOf(origin, expected);
-  return locks.request(`artroom-page-connections:${binding}`, () => withCreator(origin, storage, expected, options, async (room, base) => {
+  return locks.request(`dap-page-connections-2:${binding}`, () => withCreator(origin, storage, expected, options, async (room, base) => {
     let journal = read(storage, binding) ?? { v: 1 as const, binding, active: "", rows: {} };
     const active = journal.active ? journal.rows[journal.active] : undefined;
     for (const stored of Object.values(journal.rows)) {

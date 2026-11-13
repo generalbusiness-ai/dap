@@ -21,13 +21,57 @@ import { countedEntries } from "@generalbusiness/dap-derive";
 import type { Bounds, ScopeBoundName, FactRef, Head, Prepared, SignedIntent } from "@generalbusiness/dap-contract";
 import { isScopeBoundName } from "@generalbusiness/dap-contract";
 import { carryProducerName } from "./receiver-facts.ts";
-import { CanonicalError, canonicalize, entryHash, parseStrict, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { AmountError, applyEntry, clockOf, entryOf, capacityFull, reserved, fits, isEntryOf, isIntent, same, judgeTimed, nextDue, StandingError, timeMs, timeOf } from "@generalbusiness/dap-derive";
-import type { Clock as Reading, Draft, Due, Fetched, Owners, PlatformRules, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
-import { ownOf, retainedFacts, snapshotsOf } from "./core.ts";
-import type { Ports, Resolver } from "./ports.ts";
+import { CanonicalError, admitSequenceGenesis, isEntry, canonicalize, entryHash, scopeIdOf, parseStrict, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { AmountError, applyEntry, clockOf, entryOf, capacityFull, reserved, fits, isEntryOf, isIntent, judgeTimed, nextDue, StandingError, timeMs, timeOf } from "@generalbusiness/dap-derive";
+import type { Clock as Reading, Draft, Due, Fetched, RetainedOwn, Owners, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
+import { bornOf, genuineRetained, ownOf, retainedUsesOf, snapshotsOf, type BirthCandidate, type PinCell, type Pinned, type ResolvedPin } from "./core.ts";
+import type { Ports, Resolver, SourceReadContext } from "./ports.ts";
 import type { Retained, Sealed, Store } from "./store.ts";
 import { entryCorrelation, inOperation, measured, metric, operational, type Operational } from "./operational.ts";
+
+/** The facts that the fold reads for one just-sealed entry. Its retained uses must read whole: a sealed entry whose own
+ * retained rows do not read is not folded (the transaction rolls back). */
+function sealedFacts(own: RetainedOwn, seq: number, fresh: readonly Fetched[]): Fetched[] {
+  const read = retainedUsesOf(own, seq);
+  if (!read) throw new PinUnavailable();
+  return genuineRetained(read.uses, fresh);
+}
+
+/** Current-position reads use the bytes already appended in this transaction.
+ * Each returns a fresh parsed body as ownOf did; other positions still SELECT.
+ * The view is invalid immediately after the synchronous fold callback returns. */
+function withAppendedOwn(store: Store, sequence: ResolvedPin["sequence"], sealed: Sealed, bytes: string, fold: (own: RetainedOwn) => void): void {
+  const base = ownOf(store, sequence);
+  let active = true;
+  const check = () => { if (!active) throw new Error("post-append Own escaped its synchronous fold"); };
+  const own = Object.assign((seq: number): Sealed | null => {
+    check();
+    if (seq !== sealed.entry.seq) return base(seq);
+    const entry: unknown = parseStrict(bytes);
+    if (!isEntry(entry) || !isEntryOf(entry, { at: sequence.at, seq, hash: sealed.hash }, sequence)) throw new PinUnavailable();
+    return { entry, hash: sealed.hash };
+  }, {
+    sequence: () => { check(); return base.sequence(); },
+    retainedRow: (content: Parameters<RetainedOwn["retainedRow"]>[0]) => { check(); return base.retainedRow(content); },
+    retainedBirth: (at: Parameters<RetainedOwn["retainedBirth"]>[0]) => { check(); return base.retainedBirth(at); },
+    ...(base.retained ? { retained: (use: Parameters<NonNullable<RetainedOwn["retained"]>>[0]) => { check(); return base.retained!(use); } } : {}),
+    ...(base.positions ? { positions: (before: number) => {
+      check();
+      const source = base.positions!(before)[Symbol.iterator]();
+      const iterator: IterableIterator<number> = {
+        [Symbol.iterator]() { check(); return iterator; },
+        next() { check(); return source.next(); },
+        return() { check(); return source.return ? source.return() : { done: true, value: undefined }; },
+        throw(error?: unknown) { check(); if (source.throw) return source.throw(error); throw error; },
+      };
+      return iterator;
+    } } : {}),
+    ...(base.sizeProofs ? { sizeProofs: () => { check(); return base.sizeProofs!(); } } : {}),
+    ...(base.archived ? { archived: (seq: number) => { check(); return base.archived!(seq); } } : {}),
+  });
+  try { fold(own); }
+  finally { active = false; }
+}
 
 // ---------------------------------------------------------------- step 1: before the turn
 
@@ -52,21 +96,56 @@ export async function turnDeadline<T>(work: () => Promise<T>, seconds: number): 
   }
 }
 
+/** One logical source deadline. Invalid or backward clock readings stop it permanently.
+ * The caller still owns physical work after a timeout. This creates no timer. */
+export function sourceReadRemaining(context: SourceReadContext): (() => number | null) | null {
+  if (!context || !Number.isSafeInteger(context.maxBytes) || context.maxBytes <= 0
+    || !Number.isSafeInteger(context.milliseconds) || context.milliseconds <= 0) return null;
+  let previous = performance.now(), stopped = false;
+  const deadline = previous + context.milliseconds;
+  if (!Number.isFinite(previous) || previous < 0 || !Number.isFinite(deadline)) return null;
+  return () => {
+    const now = performance.now();
+    if (stopped || !Number.isFinite(now) || now < previous || now >= deadline) { stopped = true; return null; }
+    previous = now;
+    const milliseconds = Math.floor(deadline - now);
+    if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0) { stopped = true; return null; }
+    return milliseconds;
+  };
+}
+
 /**
  * The foreign entries an input names, each read through the resolver within
- * the fetch time limit and checked against the fact that names it. Null: one
+ * one shared fetch deadline and checked against the fact that names it. Null: one
  * could not be read, and the input is answered `dependency-unavailable`.
+ * `SOURCE_TOO_LARGE`: one answer did not fit its entry allowance, and the input
+ * is answered `source-response-too-large`. An archived fact takes precedence.
  * Nothing is held.
  */
 export const ARCHIVED_FACT = Symbol("archived-fact");
-export async function fetchFacts(resolver: Resolver, bounds: Bounds, named: readonly FactRef[]): Promise<Fetched[] | typeof ARCHIVED_FACT | null> {
-  const read = await Promise.all(named.map(async (fact): Promise<Fetched | typeof ARCHIVED_FACT | null> => {
-    const matched = await turnDeadline(() => resolver.read(fact, bounds.fetchSeconds), bounds.fetchSeconds);
+export const SOURCE_TOO_LARGE = Symbol("source-response-too-large");
+export async function fetchFacts(resolver: Resolver, bounds: Bounds, named: readonly FactRef[]): Promise<Fetched[] | typeof ARCHIVED_FACT | typeof SOURCE_TOO_LARGE | null> {
+  if (named.length === 0) return [];
+  const maxBytes = bounds.entryBytes;
+  const remaining = sourceReadRemaining({ maxBytes, milliseconds: Math.floor(bounds.fetchSeconds * 1000) });
+  if (!remaining) return null;
+  const read = await Promise.all(named.map(async (fact): Promise<Fetched | typeof ARCHIVED_FACT | typeof SOURCE_TOO_LARGE | null> => {
+    const milliseconds = remaining();
+    if (milliseconds === null) return null;
+    const matched = await turnDeadline(() => {
+      const milliseconds = remaining();
+      return milliseconds === null ? Promise.resolve(null) : resolver.read(fact, { maxBytes, milliseconds }, false);
+    }, milliseconds / 1000);
+    if (remaining() === null) return null;
     if (matched !== LATE && matched !== null && "archived" in matched) return ARCHIVED_FACT;
-    return matched !== LATE && matched !== null && "entry" in matched && isEntryOf(matched.entry, fact) ? carryProducerName({ fact, entry: matched.entry, under: matched.under }, matched) : null;
+    if (matched !== LATE && matched !== null && "tooLarge" in matched) return SOURCE_TOO_LARGE;
+    const accepted = matched !== LATE && matched !== null && "entry" in matched && isEntryOf(matched.entry, fact, matched.sequence) ? carryProducerName({ fact, entry: matched.entry, under: matched.under, sequence: matched.sequence }, matched) : null;
+    return remaining() === null ? null : accepted;
   }));
-  if (read.includes(ARCHIVED_FACT)) return ARCHIVED_FACT;
-  return read.every((f): f is Fetched => f !== null && f !== ARCHIVED_FACT) ? read : null;
+  const accepted: Fetched[] | typeof ARCHIVED_FACT | typeof SOURCE_TOO_LARGE | null = read.includes(ARCHIVED_FACT) ? ARCHIVED_FACT
+    : read.includes(SOURCE_TOO_LARGE) ? SOURCE_TOO_LARGE
+    : read.every((f): f is Fetched => f !== null && f !== ARCHIVED_FACT && f !== SOURCE_TOO_LARGE) ? read : null;
+  return remaining() === null ? null : accepted;
 }
 
 // ---------------------------------------------------------------- the waiting input
@@ -75,7 +154,7 @@ export async function fetchFacts(resolver: Resolver, bounds: Bounds, named: read
 export type Verdict<A> =
   /** Write the draft. `retain`: the inputs it names by digest. `sealed` builds the answer from the sealed entry. `unfit` answers for a draft that cannot be an entry: over the size bound, or not canonical values. */
   /** `full` answers for an entry that admits new pending work and would leave no room for it to settle (section 9.2). Nothing is written then. */
-  | { verdict: "write"; draft: Draft; retain: readonly Retained[]; facts?: readonly Fetched[]; sealed(sealed: Sealed): A; unfit(why: "size" | "form"): A; full(head: Head, bound: ScopeBoundName): A }
+  | { verdict: "write"; draft: Draft; retain: readonly Retained[]; facts?: readonly Fetched[]; born?: readonly Fetched[]; sealed(sealed: Sealed, pinned: Pinned): A; unfit(why: "size" | "form"): A; full(head: Head, bound: ScopeBoundName): A }
   /** Step 6.3: a transition is due. Nothing is written, and the turn goes back to step 3. */
   | { verdict: "stop" }
   /** Nothing is written. */
@@ -112,6 +191,11 @@ class Queue {
 /** Thrown inside a commit's transaction after the entry was written and folded: the transaction keeps nothing. */
 class Full extends Error {}
 
+/** A local birth/pin could not be admitted. It must unwind the transaction, never commit as Unfit. */
+class PinUnavailable extends Error {}
+interface Committed<T> { ordinary: T; birth: ResolvedPin | null }
+const committed = <T>(ordinary: T, birth: ResolvedPin | null = null): Committed<T> => ({ ordinary, birth });
+
 /** A draft that cannot be an entry. Thrown before anything is written. */
 class Unfit extends Error {
   constructor(readonly why: "size" | "form") { super(why); }
@@ -143,17 +227,19 @@ export class Turns {
   readonly #ports: Pick<Ports, "clock" | "rules" | "alarm" | "capabilities">;
   readonly #bounds: Bounds;
   readonly #pinned: PinnedDefinition;
-  readonly #owners: () => Owners | undefined;
-  readonly #platform: () => PlatformRules | undefined;
+  readonly #owners: (pinned?: Pinned) => Owners | undefined;
+  readonly #pinCell: PinCell;
+  readonly #resolvePin: (candidate?: BirthCandidate) => ResolvedPin | null;
 
   /** `owners`: the rules of the owners of outside operations for this scope, with those of its platform definition (`Scope.owners`). */
-  constructor(store: Store, ports: Pick<Ports, "clock" | "rules" | "alarm" | "capabilities">, bounds: Bounds, pinned: PinnedDefinition, owners: () => Owners | undefined, platform: () => PlatformRules | undefined = () => undefined) {
+  constructor(store: Store, ports: Pick<Ports, "clock" | "rules" | "alarm" | "capabilities">, bounds: Bounds, pinned: PinnedDefinition, owners: (pinned?: Pinned) => Owners | undefined, pinCell: PinCell, resolvePin: (candidate?: BirthCandidate) => ResolvedPin | null) {
     this.#store = store;
     this.#ports = ports;
     this.#bounds = bounds;
     this.#pinned = pinned;
     this.#owners = owners;
-    this.#platform = platform;
+    this.#pinCell = pinCell;
+    this.#resolvePin = resolvePin;
   }
 
   /**
@@ -193,7 +279,7 @@ export class Turns {
    * is used only while the scope has no genesis; after that the pinned
    * definition is.
    */
-  async run<A>(waiting: Waiting<A> | null, creation?: ValidDefinition): Promise<End<A>> {
+  async run<A>(waiting: Waiting<A> | null, creation?: Pinned): Promise<End<A>> {
     const current = operational();
     if (!current && this.#measurement) return measured(this.#measurement(), () => this.run(waiting, creation));
     const context = current, started = performance.now();
@@ -206,7 +292,7 @@ export class Turns {
     metric({ kind: "turn", place: context?.place ?? "alarm", end: end.end, answer: typeof answer?.answer === "string" ? answer.answer : "none", reason: answer?.reason === "scope-full" && isScopeBoundName(answer.name) ? answer.name : typeof answer?.reason === "string" ? answer.reason : turn.full ?? "none", duration: Math.max(0, Math.floor(performance.now() - started)), a: turn.restarts, b: turn.attempts, c: turn.timed, flag: turn.wrote ? 1 : 0 });
     return end;
   }
-  async #run<A>(waiting: Waiting<A> | null, creation: ValidDefinition | undefined, turn: Counts): Promise<End<A>> {
+  async #run<A>(waiting: Waiting<A> | null, creation: Pinned | undefined, turn: Counts): Promise<End<A>> {
     let resume: Attempt | null = null;
     for (;;) {
       const attempt: Attempt | null = resume;
@@ -220,9 +306,9 @@ export class Turns {
   }
 
   /** The definition this section runs under: the pinned one, or before the genesis the one the creation asks for. */
-  #definition(creation: ValidDefinition | undefined): ValidDefinition | null | undefined {
+  #definition(creation: Pinned | undefined): ValidDefinition | null | undefined {
     const pinned = this.#pinned();
-    return pinned === undefined ? creation : pinned;
+    return pinned === undefined ? creation?.definition : pinned;
   }
 
   /**
@@ -230,7 +316,7 @@ export class Turns {
    * turn ends or has rules to evaluate. Nothing here waits but the alarm at
    * the end.
    */
-  async #section<A>(creation: ValidDefinition | undefined, waiting: Waiting<A> | null, turn: Counts, resume: Attempt | null): Promise<End<A> | Attempt> {
+  async #section<A>(creation: Pinned | undefined, waiting: Waiting<A> | null, turn: Counts, resume: Attempt | null): Promise<End<A> | Attempt> {
     const definition = this.#definition(creation);
     if (!definition) return { end: "unavailable" };
     for (let attempt = resume; ; attempt = null) {
@@ -292,29 +378,33 @@ export class Turns {
    */
   #commitTimed(definition: ValidDefinition, turn: Counts, selected: Due, snapshot: Head): "written" | "dropped" | "clock-behind" | "unfit" {
     try {
-      return this.#telling(() => this.#timed(definition, turn, selected, snapshot));
+      return this.#telling(() => {
+        const result = this.#timed(definition, turn, selected, snapshot);
+        if (result.birth) this.#pinCell.value = result.birth;
+        return result.ordinary;
+      });
     } catch (error) {
-      if (error instanceof Unfit || error instanceof Full || error instanceof AmountError) return "unfit"; // the transaction retained no write
+      if (error instanceof Unfit || error instanceof Full || error instanceof AmountError || error instanceof PinUnavailable) return "unfit"; // the transaction retained no write
       throw error;
     }
   }
 
-  #timed(definition: ValidDefinition, turn: Counts, selected: Due, snapshot: Head): "written" | "dropped" | "clock-behind" | "unfit" {
+  #timed(definition: ValidDefinition, turn: Counts, selected: Due, snapshot: Head): Committed<"written" | "dropped" | "clock-behind" | "unfit"> {
     return this.#store.transaction(() => {
       const clock = clockOf(this.#store, this.#ports.clock.read());    // 6.1
       turn.last = clock;
       const head = this.#store.scope()?.head;
-      if (head?.seq !== snapshot.seq || head.hash !== snapshot.hash) return "dropped";   // 6.2
-      const judged = judgeTimed(this.#store, definition, selected, { clock, bounds: this.#bounds, capabilities: this.#ports.capabilities ?? undefined, platform: this.#platform() });   // 6.3 and 6.4
-      if (judged.result === "unavailable") return judged.reason === "clock-behind" ? "clock-behind" : "unfit";
-      if (judged.result === "dropped") return "dropped";
-      const sealed = this.#seal(definition, judged.draft, clock, []);                 // 6.5
+      if (head?.seq !== snapshot.seq || head.hash !== snapshot.hash) return committed("dropped");   // 6.2
+      const judged = judgeTimed(this.#store, definition, selected, { clock, bounds: this.#bounds, capabilities: this.#ports.capabilities ?? undefined, platform: this.#resolvePin()?.pinned.platform ?? undefined });   // 6.3 and 6.4
+      if (judged.result === "unavailable") return committed(judged.reason === "clock-behind" ? "clock-behind" : "unfit");
+      if (judged.result === "dropped") return committed("dropped");
+      const { sealed, pin } = this.#seal(definition, judged.draft, clock, []);                 // 6.5
       if (definition.declared.capacity?.name === "whole-scope") {
-        const bound = this.#full(definition, sealed.entry.input, true);
+        const bound = this.#full(definition, sealed.entry.input, true, pin);
         if (bound) { turn.full = bound; throw new Full(); }
       }
       turn.wrote = true;
-      return "written";
+      return committed("written", this.#pinCell.value ? null : pin);
     });
   }
 
@@ -322,24 +412,28 @@ export class Turns {
   #commit<A>(definition: ValidDefinition, waiting: Waiting<A>, turn: Counts, attempt: Attempt): End<A> | "stopped" {
     let full: (() => A) | null = null;
     try {
-      return this.#telling(() => this.#store.transaction((): End<A> | "stopped" => this.#judged(definition, waiting, turn, attempt, (answer) => { full = answer; })));
+      return this.#telling(() => {
+        const result = this.#store.transaction(() => this.#judged(definition, waiting, turn, attempt, (answer) => { full = answer; }));
+        if (result.birth) this.#pinCell.value = result.birth;
+        return result.ordinary;
+      });
     } catch (error) {
       // The entry would have left an admitted task no room to settle. The transaction wrote nothing.
       if (error instanceof Full && full) return { end: "answer", answer: (full as () => A)() };
-      if (error instanceof StandingError || error instanceof AmountError) return { end: "unavailable" };
+      if (error instanceof StandingError || error instanceof AmountError || error instanceof PinUnavailable) return { end: "unavailable" };
       throw error;
     }
   }
 
-  #judged<A>(definition: ValidDefinition, waiting: Waiting<A>, turn: Counts, attempt: Attempt, refuse: (full: () => A) => void): End<A> | "stopped" {
+  #judged<A>(definition: ValidDefinition, waiting: Waiting<A>, turn: Counts, attempt: Attempt, refuse: (full: () => A) => void): Committed<End<A> | "stopped"> {
     {
       const clock = clockOf(this.#store, this.#ports.clock.read());    // 6.1: the one reading
       turn.last = clock;
       const head = this.#store.scope()?.head ?? null;
-      if (head?.seq !== attempt.head?.seq || head?.hash !== attempt.head?.hash) return "stopped";   // 6.2
+      if (head?.seq !== attempt.head?.seq || head?.hash !== attempt.head?.hash) return committed<End<A> | "stopped">("stopped");   // 6.2
       const verdict = waiting.judge(this.#store, clock, attempt.prepared);   // 6.3 and 6.4
-      if (verdict.verdict === "stop") return "stopped";
-      if (verdict.verdict === "answer") return { end: "answer", answer: verdict.answer };
+      if (verdict.verdict === "stop") return committed<End<A> | "stopped">("stopped");
+      if (verdict.verdict === "answer") return committed<End<A> | "stopped">({ end: "answer", answer: verdict.answer });
       // Section 9.2: the input of each rule result the entry records is retained under its digest.
       const rules = verdict.draft.prepared.map((p): Retained => {
         const asked = attempt.asks.find((a) => a.rule === p.rule && a.digest === p.input);
@@ -351,32 +445,32 @@ export class Turns {
         // its digest. The opt-in producer ceiling must also constrain the
         // bytes retained by this writer; an evaluator budget alone does not.
         if (definition.ruleInputBytes !== undefined && rules.some((input) => utf8(input.bytes).length > definition.ruleInputBytes!)) throw new Unfit("size");
-        const sealed = this.#seal(definition, verdict.draft, clock, [...verdict.retain, ...rules], verdict.facts);   // 6.5
+        const { sealed, pin } = this.#seal(definition, verdict.draft, clock, [...verdict.retain, ...rules], verdict.facts, verdict.born ?? verdict.facts);   // 6.5
         // Count after folding, retaining inputs and redacting. Every opt-in
         // settlement spends its own reserved room inside the same transaction.
-        const bound = this.#full(definition, sealed.entry.input, verdict.draft.settles);
+        const bound = this.#full(definition, sealed.entry.input, verdict.draft.settles ?? false, pin);
         if (bound) {
           if (definition.declared.capacity) turn.full = bound;
           refuse(() => verdict.full(head ?? { seq: sealed.entry.seq, hash: sealed.hash }, bound));
           throw new Full();
         }
         turn.wrote = true;
-        return { end: "answer", answer: verdict.sealed(sealed) };
+        return committed<End<A> | "stopped">({ end: "answer", answer: verdict.sealed(sealed, pin.pinned) }, this.#pinCell.value ? null : pin);
       } catch (error) {
-        if (error instanceof Unfit) return { end: "answer", answer: verdict.unfit(error.why) };
+        if (error instanceof Unfit) return committed<End<A> | "stopped">({ end: "answer", answer: verdict.unfit(error.why) });
         throw error;
       }
     }
   }
 
-  #full(definition: ValidDefinition, input: Sealed["entry"]["input"], settles = false): ScopeBoundName | null {
-    if (definition.declared.capacity?.name !== "whole-scope") return fits(this.#store, definition, this.#bounds, input, settles, this.#owners()) ? null : "scopeEntries";
+  #full(definition: ValidDefinition, input: Sealed["entry"]["input"], settles: boolean, pin: ResolvedPin): ScopeBoundName | null {
+    if (definition.declared.capacity?.name !== "whole-scope") return fits(this.#store, definition, this.#bounds, input, settles, this.#owners(pin.pinned)) ? null : "scopeEntries";
     const used = { entries: countedEntries(this.#store), bytes: this.#store.logicalBytes(), ...this.#store.keyCounts() };
     // A floor must reclaim room even when the old journal was at capacity.
     // Its after-effect must leave an entry slot; all other dimensions and
     // existing pending reservations retain their ordinary comparisons.
     if (input.type === "floor" && used.entries >= this.#bounds.scopeEntries) return "scopeEntries";
-    return capacityFull(used, reserved(this.#store, definition, input, this.#owners()), this.#bounds);
+    return capacityFull(used, reserved(this.#store, definition, input, this.#owners(pin.pinned)), this.#bounds);
   }
 
   /**
@@ -385,11 +479,14 @@ export class Turns {
    * inputs, the fold, and the removal of each text the entry redacts.
    * `applyEntry` is the only code that changes folded state.
    */
-  #seal(definition: ValidDefinition, draft: Draft, clock: Reading, retain: readonly Retained[], facts?: readonly Fetched[]): Sealed {
+  #seal(definition: ValidDefinition, draft: Draft, clock: Reading, retain: readonly Retained[], facts?: readonly Fetched[], born: readonly Fetched[] = []): { sealed: Sealed; pin: ResolvedPin } {
     // The foreign-entry term uses this scope's entry ceiling. Constrain
     // accepted retained copies at the same boundary, including results;
     // a peer's independently configured ceiling is not that guarantee.
     if (definition.declared.capacity?.name === "whole-scope" && retain.some(input => input.kind === "entry" && utf8(input.bytes).length > this.#bounds.entryBytes)) throw new Unfit("size");
+    // Ruling 4f697a7a: the first entry of each foreign sequence whose later entry this entry uses, from the read already made.
+    const births = bornOf(draft, born);
+    if (definition.declared.capacity?.name === "whole-scope" && births.some(({ input }) => utf8(input.bytes).length > this.#bounds.entryBytes)) throw new Unfit("size");
     const entry = entryOf(this.#store, draft, clock);
     let bytes: string;
     try {
@@ -401,16 +498,28 @@ export class Turns {
     const size = utf8(bytes).length;
     if (size > this.#bounds.entryBytes) throw new Unfit("size");
     const hash = entryHash(entry);
+    let candidate: BirthCandidate | undefined;
+    if (entry.input.type === "genesis") {
+      const sequence = admitSequenceGenesis(bytes, { scope: scopeIdOf(entry.input.seed), genesis: hash }, this.#bounds.entryBytes);
+      if (!sequence) throw new PinUnavailable();
+      candidate = { sequence, bytes, hash };
+    }
     this.#store.append(entry, hash, bytes, size);
     for (const input of retain) this.#store.retain(input);
-    applyEntry(this.#store, definition, entry, hash, {
-      bounds: this.#bounds, platform: this.#platform(), own: ownOf(this.#store), facts: retainedFacts(this.#store, entry).map(read => facts?.find(fact => same(fact.fact, read.fact)) ?? read), snapshot: snapshotsOf(this.#store),
+    for (const { at, input } of births) this.#store.retainBirth(at, input);
+    // This is the old #platform read point. Resolve by value, not into the memo, until commit returns.
+    const pin = this.#resolvePin(candidate);
+    if (!pin) throw new PinUnavailable();
+    // The post-append Own reads this entry's retained uses without another stored read. The fold reads genuine uses only:
+    // a fresh fact of this turn where fact, content and kind agree, else a retained use that its origin holds a birth for.
+    withAppendedOwn(this.#store, pin.sequence, { entry, hash }, bytes, own => applyEntry(this.#store, definition, entry, hash, {
+      bounds: this.#bounds, platform: pin.pinned.platform ?? undefined, own, facts: sealedFacts(own, entry.seq, facts ?? []), snapshot: snapshotsOf(this.#store),
       values: draft.values?.map(value => value.bytes),
       texts: (digest) => { const kept = this.#store.retained("text", digest); if (!kept) return undefined; const text: unknown = parseStrict(kept.bytes); return typeof text === "string" ? utf8(text).length : undefined; },
-    });
+    }));
     // Section 6.6: a redaction removes the bytes of each text it lists from the retained inputs, in the commit that seals its tombstone.
     for (const effect of entry.effects) if (effect.effect === "redact") for (const text of effect.texts) this.#store.forget("text", text);
-    return { entry, hash };
+    return { sealed: { entry, hash }, pin };
   }
 
   /** The end of a turn. If it wrote, left work due, or was an alarm's, the alarm is set for what is due next. */

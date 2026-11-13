@@ -2,7 +2,7 @@
  * including future generations, must fit before the first capture. */
 import type { Bounds, Effect, Entry, FactRef, FactUse, KeyId, RulesObservation } from '@generalbusiness/dap-contract';
 import { canonicalize, isDigest, isFactRef, isKeyId, isMemberRef, isRecord, memberFits, parseStrict, same, timeMs, utf8 } from '@generalbusiness/dap-bytes';
-import { observationBytes, operationOpening, type Opening, type RuleEffect, type RuleGiven, type RuleRequest } from '@generalbusiness/dap-derive';
+import { observationBytes, operationOpening, sealedAt, sequenceEffects, type Opening, type RuleEffect, type RuleGiven, type RuleRequest } from '@generalbusiness/dap-derive';
 import { isObjectId } from './reservation.ts';
 import { readRulesPolicyObservationV15, requiredChecksV15, type ReservationPolicyInputV15 } from './reservation-v15.ts';
 import type { RulesCheckV11 } from './rules-policy-v11.ts';
@@ -27,9 +27,9 @@ const TIME = '9999-12-31T23:59:59.999Z';
 const HASH = `sha256:${'f'.repeat(64)}` as const;
 // Longest real forms, not guessed per-entry slack. All numbers remain safe
 // integers and every identifier has the protocol's maximum encoded width.
-const SCOPE = { scope: `sc_${'a'.repeat(52)}`, inc: `in_${'a'.repeat(26)}`, kind: 'destination' } as const;
+const SCOPE = { scope: `sc_${'a'.repeat(52)}`, genesis: HASH } as const;
 const FACT: FactRef = { at: SCOPE, seq: MAX, hash: HASH };
-const USE: FactUse = { fact: FACT, content: HASH };
+const USE: FactUse = { fact: FACT, content: HASH, kind: 'destination' }; // the longest kind a use of this budget names
 const OPERATION = `${MAX}:${MAX}` as const;
 const KEY = `key_${'A'.repeat(43)}` as const;
 const TEXT128 = '\u0000'.repeat(128); // six canonical bytes for each permitted text byte
@@ -68,7 +68,7 @@ function generations(value: unknown, bounds: Bounds): value is readonly Certifie
 }
 
 const frame = (input: unknown, effects: readonly unknown[], sends: readonly unknown[]) => ({
-  v: 1, at: SCOPE, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0,
+  v: 1, genesis: HASH, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0,
   input, uses: [USE, USE, USE, USE], prepared: [], effects, sends,
 });
 const passes = { effect: 'value', item: MAX, slot: 'passes', value: null } as const;
@@ -173,9 +173,9 @@ export function certifiedCaptureBudgetV15(record: CertifiedPublicationStateV15, 
  * already known. Only the observation cohort uses its declared maxima. */
 export function certifiedReservationBudgetV15(given: RuleGiven, record: CertifiedPublicationStateV15, capture: CaptureEnvelopeV15) {
   if (given.input.type !== 'outcome') throw Error('A certified capture is an outcome');
-  const effects: Effect[] = [{ effect: 'attempt', operation: given.input.operation, attempt: given.input.attempt, result: given.input.result, selected: null },
-    ...capture.effects, ...capture.opens.flatMap((open, n) => operationOpening(n, open))];
-  const entry: Entry = { v: 1, at: given.resolved.at, seq: given.resolved.self, prev: given.state.scope()!.head.hash, time: given.time, clamped: false, epoch: 0,
+  const effects: Effect[] = sequenceEffects([{ effect: 'attempt', operation: given.input.operation, attempt: given.input.attempt, result: given.input.result, selected: null },
+    ...capture.effects, ...capture.opens.flatMap((open, n) => operationOpening(n, open))]);
+  const entry: Entry = { v: 1, genesis: sealedAt(given.resolved.at).genesis, seq: given.resolved.self, prev: given.state.scope()!.head.hash, time: given.time, clamped: false, epoch: 0,
     input: given.input, uses: capture.uses, prepared: [], effects, sends: capture.sends.map((send, n) => ({ n, ...send })) };
   return certifiedCaptureBudgetV15(record, given.resolved.bounds, entry);
 }

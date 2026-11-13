@@ -1,7 +1,7 @@
 /** Worker-wide registered identities, never native authority or an atomic cut. */
 import type { FactRef, ScopeId, SignedRead } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { same, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, scopeIdOf, verifySignedIntent, within, LATE } from "@generalbusiness/dap-bytes";
+import { same, intentDigest, admitSequenceGenesis, isPlatformDefinition, isScopeId, isScopeKind, isSequenceRef, scopeIdOf, verifySignedIntent, within, LATE } from "@generalbusiness/dap-bytes";
 import { platform } from "@generalbusiness/dap-platform";
 import { readRegisterScope } from "./register-setting.ts";
 import { proofEntry, PROOF_BYTE_BOUNDS, EXACT_PROOF_RECEIVER_BOUNDS, type ProofBody } from "./proof-bytes.ts";
@@ -43,10 +43,10 @@ export class ScopeIndexCensus {
   #registration(scope: ScopeId): ScopeRegistration | null {
     const exists = this.ports.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='known_scope'").toArray();
     if (exists.length !== 1) return null;
-    const rows = this.ports.sql.exec("SELECT inc,kind,genesis FROM known_scope WHERE scope=? LIMIT 2", scope).toArray();
+    const rows = this.ports.sql.exec("SELECT genesis,kind FROM known_scope WHERE scope=? LIMIT 2", scope).toArray();
     if (rows.length !== 1) return null;
-    const at = { scope, inc: rows[0]?.["inc"], kind: rows[0]?.["kind"] }, genesis = rows[0]?.["genesis"];
-    return isScopeRef(at) && at.kind === "register" && isDigest(genesis) ? { at: { ...at }, genesis } : null;
+    const at = { scope, genesis: rows[0]?.["genesis"] }, kind = rows[0]?.["kind"];
+    return isSequenceRef(at) && kind === "register" ? { at: { ...at }, kind } : null;
   }
   async list(after: string, limit: number, reader: unknown): Promise<ScopeCensusResult> {
     let pinned: ScopeId | null, signed: SignedRead | null, registration: ScopeRegistration | null, began: number;
@@ -56,7 +56,7 @@ export class ScopeIndexCensus {
       if (!signed || pinned === null) return refused("forbidden");
       registration = this.#registration(pinned);
       if (!registration) return refused("forbidden");
-      const fact = { at: { ...registration.at }, seq: 0, hash: registration.genesis };
+      const fact = { at: { ...registration.at }, seq: 0, hash: registration.at.genesis };
       const milliseconds = Math.min(EXACT_PROOF_RECEIVER_BOUNDS.milliseconds, Date.parse(signed.request.notAfter) - began);
       // Exact proofSource bypasses nativeBirth's archive recovery. Both the
       // receiver's existing byte/time/SQL fence and this caller's wait apply.
@@ -64,11 +64,15 @@ export class ScopeIndexCensus {
       const now = this.ports.now();
       if (got === LATE || now < began || now >= began + milliseconds || !requestOf(reader, pinned, after, limit, now)
         || this.ports.register() !== pinned || !same(this.#registration(pinned), registration)) return refused("forbidden");
-      const entry = got && proofEntry(got, fact, PROOF_BYTE_BOUNDS.body);
+      // Admit the same returned genesis bytes; no second source read.
+      if (!got) return refused("forbidden");
+      const sequence = admitSequenceGenesis(got.bytes, fact.at, PROOF_BYTE_BOUNDS.body);
+      if (!sequence) return refused("forbidden");
+      const entry = proofEntry(got, fact, PROOF_BYTE_BOUNDS.body, sequence);
       if (!entry || entry.seq !== 0 || entry.prev !== null || entry.input.type !== "genesis" || entry.input.decision !== "applied") return refused("forbidden");
       const input = entry.input, seed = input.seed, named = seed.definition, founding = input.founding;
       if (!isPlatformDefinition(named) || !named.startsWith("platform:register@") || platform(named) === null
-        || seed.kind !== "register" || seed.creator !== null || scopeIdOf(seed) !== pinned || input.inc !== registration.at.inc
+        || sequence.kind !== "register" || seed.kind !== "register" || seed.creator !== null || scopeIdOf(seed) !== pinned
         || input.kind !== "install" || !founding || founding.intent.kind !== "install" || founding.intent.to !== null
         || !verifySignedIntent(founding) || intentDigest(founding.intent) !== seed.cause || founding.intent.actor !== signed.request.actor) return refused("forbidden");
     } catch { return refused("forbidden"); }
@@ -81,12 +85,12 @@ export class ScopeIndexCensus {
       if (rows.length > limit) return refused("unavailable");
       let previous = after;
       for (const row of rows) {
-        if (!isScopeRef(row.at) || !isDigest(row.genesis) || row.at.scope <= previous) return refused("unavailable");
+        if (!isSequenceRef(row.at) || !isScopeKind(row.kind) || row.at.scope <= previous) return refused("unavailable");
         previous = row.at.scope;
       }
       const last = rows.at(-1)?.at.scope;
       const more = last !== undefined && this.ports.sql.exec("SELECT 1 AS more FROM known_scope WHERE scope > ? LIMIT 1", last).toArray().length !== 0;
-      return { ok: true, rows: rows.map(row => ({ at: { ...row.at }, genesis: row.genesis })), next: more ? last! : null };
+      return { ok: true, rows: rows.map(row => ({ at: { ...row.at }, kind: row.kind })), next: more ? last! : null };
     } catch { return refused("unavailable"); }
   }
 }
@@ -117,11 +121,11 @@ export async function scopeIndexCensusRoute(request: Request, env: ServingEnviro
     if (!Array.isArray(result.rows) || result.rows.length > limit || !(result.next === null || isScopeId(result.next))) return response(refused("unavailable"));
     let previous = after;
     for (const row of result.rows) {
-      if (!row || Object.keys(row).sort().join() !== "at,genesis" || !isScopeRef(row.at)
-        || Object.keys(row.at).sort().join() !== "inc,kind,scope" || !isDigest(row.genesis) || row.at.scope <= previous) return response(refused("unavailable"));
+      if (!row || Object.keys(row).sort().join() !== "at,kind" || !isSequenceRef(row.at)
+        || Object.keys(row.at).sort().join() !== "genesis,scope" || !isScopeKind(row.kind) || row.at.scope <= previous) return response(refused("unavailable"));
       previous = row.at.scope;
     }
     if (result.next !== null && (result.rows.length === 0 || result.next !== previous)) return response(refused("unavailable"));
-    return response({ ok: true, rows: result.rows.map(row => ({ at: { ...row.at }, genesis: row.genesis })), next: result.next });
+    return response({ ok: true, rows: result.rows.map(row => ({ at: { ...row.at }, kind: row.kind })), next: result.next });
   } catch { return response(refused("unavailable")); }
 }

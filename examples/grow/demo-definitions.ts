@@ -60,5 +60,8 @@ export function demoDefinitions(): { site: DeclaredDefinition; room: DeclaredDef
   createRoom.sends = createRoom.sends.map(send => "create" in send && send.create.definition === definitionDigest(maintainedRoom)
     ? { create: { ...send.create, definition: definitionDigest(room), fields: { ...send.create.fields,
       sensors: { slot: "sensors", of: "also.demoSite" }, climate: { slot: "climate", of: "also.demoSite" }, operator: { slot: "operator", of: "also.demoSite" } } } } : send);
+  // Ruling 0a5f97ba: the Site hears the summary from the Room that it creates.
+  const summary = site.receives["room-summary"]!;
+  if (summary.from.pin === definitionDigest(maintainedRoom)) summary.from = { ...summary.from, pin: definitionDigest(room) };
   return { site, room };
 }

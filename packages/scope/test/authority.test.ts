@@ -227,7 +227,7 @@ describe("a compromised notice that lands during the read, with a scripted reade
     const answers: ((answer: unknown) => void)[] = [];
     const port = observing({ clock: { read: () => at(0) }, random: { bytes: (n) => new Uint8Array(n) }, membership: () => membership, reader: { observe: () => new Promise((resolve) => answers.push(resolve)) }, named: (key) => named.has(key) });
     const active = (who: typeof una) => ({ of: membership, head: { seq: 40, hash: d("4") }, key: who.key, keyState: "active", member: who.member.member, memberState: "active", role: "member", actions, within: { membership }, controller: null, controllerActive: null, notAfter: null, definition: "platform:membership@1" });
-    const asked = (who: typeof una, kind: string) => ({ scope: { scope: membership.scope, inc: membership.inc, kind: "destination" }, grants: [], action: actions[0]!, window: WINDOWS.ordinary, signed: { intent: { actor: who.key, kind } } }) as unknown as Asked;
+    const asked = (who: typeof una, kind: string) => ({ scope: { scope: membership.scope, genesis: membership.genesis }, grants: [], action: actions[0]!, window: WINDOWS.ordinary, signed: { intent: { actor: who.key, kind } } }) as unknown as Asked;
     const held = async (who: typeof una, kind: string, name: boolean) => {
       const read = port.read(asked(who, kind), 5);
       if (name) named.add(una.key);

@@ -43,7 +43,7 @@ function scopeOf(sql: Pick<Sql, "exec">, budget: ArchiveBudget): ScopeRef | null
   const bytes = rows[0]?.["v"];
   if (rows.length !== 1 || typeof bytes !== "string" || bytes.length > size || utf8(bytes).length !== size) throw new Error("archive-operator-scope");
   const value: unknown = parseStrict(bytes);
-  if (!isRecord(value) || !fields(value, "at,creator,genesis,head,held,status,time") || canonicalize(value) !== bytes || !isScopeRef(value["at"]) || !fields(value["at"] as unknown as Record<string, unknown>, "inc,kind,scope") || !isHead(value["head"])) throw new Error("archive-operator-scope");
+  if (!isRecord(value) || !fields(value, "at,creator,genesis,head,held,kind,status,time") || canonicalize(value) !== bytes || !isScopeRef(value["at"]) || !fields(value["at"] as unknown as Record<string, unknown>, "genesis,scope") || !isHead(value["head"])) throw new Error("archive-operator-scope");
   return { ...value["at"] };
 }
 const position = (value: ArchivedPosition): ArchivedPosition => ({ commit: value.commit, through: { ...value.through }, ...(value.layout === 2 ? { layout: 2 as const } : {}), ...(value.anchorsPublished ? { anchorsPublished: true as const } : {}) });

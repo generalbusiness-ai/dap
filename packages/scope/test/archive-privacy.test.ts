@@ -54,7 +54,7 @@ test("whole native prefix classification reaches every selected position without
 test("a copied foreign use in the last selected position refuses the whole prefix with no copied-value/text body read", async () => {
   const lane = await create();
   await lane.did(rita, "remark", { on: 0, fields: { text: "last position" } });
-  await damageLast(lane, entry => { entry.uses = [{ fact: lane.genesis.fact, content: lane.genesis.fact.hash }]; });
+  await damageLast(lane, entry => { entry.uses = [{ fact: lane.genesis.fact, content: lane.genesis.fact.hash, kind: "directory" }]; });
   const result = await scan(lane);
   expect(result.reason).toBe("unsupported-foreign-copy"); expect(result.positions).toEqual([]);
   expect(result.queries.filter(row => row.query.includes("AS usesType")).map(row => row.seq)).toEqual([0, 1]);
@@ -86,13 +86,15 @@ test("the native device-command metadata admits only its command record and answ
   expect((await scan(lane, native)).reason).toBe("unsupported-archive-cohort");
 });
 
-test("changed incarnation, an unknown consumer variant and a stopped scan never publish partial privacy admission", async () => {
+test("changed genesis, an unknown consumer variant and a stopped scan never publish partial privacy admission", async () => {
   const lane = await create();
   await lane.did(rita, "remark", { on: 0, fields: { text: "last variant" } });
   await damageLast(lane, entry => { entry.input.type = "new-consumer" as never; });
   expect((await scan(lane)).reason).toBe("unavailable");
-  await damageLast(lane, entry => { entry.input.type = "act"; entry.at.inc = "wrong-incarnation" as never; });
-  const changed = await scan(lane); expect(changed.reason).toBe("unavailable"); expect(changed.positions).toEqual([]);
+  await damageLast(lane, entry => { entry.input.type = "act"; if ("genesis" in entry) entry.genesis = `sha256:${"9".repeat(64)}`; });
+  // The entry header compares the stored genesis column with the pinned
+  // sequence and refuses a different genesis as a mismatch.
+  const changed = await scan(lane); expect(changed.reason).toBe("mismatch"); expect(changed.positions).toEqual([]);
   const stopped = await scan(await create(), support, 7);
   expect(stopped.reason).toBe("limit"); expect(stopped.positions).toEqual([]);
   expect(stopped.queries.filter(row => row.query.includes("AS usesType"))).toEqual([]);

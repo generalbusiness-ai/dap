@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { join, relative, sep } from "node:path";
 import { canonicalize, timeMs } from "@generalbusiness/dap-bytes";
 import { CustodyError, TERMINAL, type CustodyRecord, type CustodyStore, type Outcome } from "./custody.ts";
+import { requireStoreFormat } from "./store-format.ts";
 
 // ---------------------------------------------------------------- custody on files
 
@@ -90,6 +91,7 @@ export function takeLock(path: string, body: Record<string, unknown>): Holding |
 export function fileStore(dir: string, bounds: FileStoreBounds = FILE_STORE_BOUNDS, now: () => number = Date.now): CustodyStore & { archived(): number } {
   const records = join(dir, "records"), locks = join(dir, "locks"), segments = join(dir, "segments"), archives = join(dir, "archive");
   const ensure = () => {
+    requireStoreFormat(dir);
     for (const d of [dir, records, locks, segments, archives]) { mkdirSync(d, { recursive: true, mode: 0o700 }); chmodSync(d, 0o700); }
   };
   const id = (name: string) => { if (!/^[0-9a-f]{64}$/.test(name)) throw new Error("not a record name"); return name; };
@@ -194,7 +196,7 @@ export function fileStore(dir: string, bounds: FileStoreBounds = FILE_STORE_BOUN
   };
 
   return {
-    archived: () => Object.keys(index()).length,
+    archived: () => { requireStoreFormat(dir); return Object.keys(index()).length; },
     lock: async (name, notAfter) => {
       ensure();
       const path = lockPath(name);
@@ -252,6 +254,7 @@ export function fileStore(dir: string, bounds: FileStoreBounds = FILE_STORE_BOUN
       appendFileSync(ends, offsets, { mode: 0o600 });
     },
     segmented: async (name, from, limit) => {
+      requireStoreFormat(dir);
       const { data, ends } = segmentPaths(name);
       if (limit <= 0 || !existsSync(data)) return [];
       const offsets = endsOf(ends, Math.max(0, from - 1), from + limit);

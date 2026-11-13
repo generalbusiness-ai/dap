@@ -26,7 +26,8 @@ export function floorOffer(wiring: Wiring, readSql: Pick<Sql, "exec">, ctx: Dura
   const floorEnabled = wiring.fixtureArchive && [...wiring.fixtureArchive.policies.registry.values()].some(policy => policy.floor !== undefined);
   return floorEnabled ? () => {
     const pinned = scope.pinned(), pin = pinned?.named, policy = pin ? wiring.fixtureArchive!.policies.registry.get(pin)?.floor : null;
-    return policy && pinned?.definition ? offerFloor({ sql: { ...readSql, transaction: closure => ctx.storage.transactionSync(closure) }, store,
-      own: ownOf(store), definition: pinned.definition, platform: pinned.platform ?? undefined, bounds, now: () => ports.clock.read(), discoveries: () => chains.discoveries() }, policy) : null;
+    const sequence = scope.localSequence();
+    return policy && pinned?.definition && sequence ? offerFloor({ sql: { ...readSql, transaction: closure => ctx.storage.transactionSync(closure) }, store,
+      own: ownOf(store, sequence), definition: pinned.definition, platform: pinned.platform ?? undefined, bounds, now: () => ports.clock.read(), discoveries: () => chains.discoveries() }, policy) : null;
   } : null;
 }

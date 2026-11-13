@@ -83,8 +83,8 @@ export function evidenceSourceV17(binding: EvidenceBinding, check: RulesCheckV13
 export function readRulesPolicyObservationV17(observed: RulesObservation | null, input: ReservationPolicyInputV17, time: Timestamp): RulesPolicyObservationV17 {
   const invalid = (): RulesPolicyObservationV17 => ({ ok: false, reason: "evidence-invalid" });
   if (!observed || observed.subject !== "rules" || observed.definition !== "platform:rules@13" || observed.content.asked !== "rules"
-    || !isScopeRef(input.rules) || input.rules.kind !== "rules" || !same(observed.of, input.rules)
-    || !isScopeRef(input.destination) || input.destination.kind !== "destination" || !isHead(observed.head)
+    || !isScopeRef(input.rules) || !same(observed.of, input.rules)
+    || !isScopeRef(input.destination) || !isHead(observed.head)
     || !Number.isSafeInteger(observed.revision) || Object.is(observed.revision, -0) || observed.revision < 0 || observed.revision > observed.head.seq) return invalid();
   const at = timeMs(observed.at), now = timeMs(time);
   if (at === null || now === null || now < at || now - at > 10000) return invalid();

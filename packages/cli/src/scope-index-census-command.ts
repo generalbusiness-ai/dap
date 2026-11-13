@@ -1,7 +1,7 @@
 /** Node-only registered-scope census. The signed read requests no mutation. */
 import { Buffer } from "node:buffer";
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isRecord, isScopeId, isScopeRef, LATE, parseStrictBytes, takeBytes, utf8, within, type ByteStream } from "@generalbusiness/dap-bytes";
+import { canonicalize, isRecord, isScopeId, isScopeKind, isSequenceRef, LATE, parseStrictBytes, takeBytes, utf8, within, type ByteStream } from "@generalbusiness/dap-bytes";
 import { signedReader, type Fetch } from "@generalbusiness/dap-client";
 import type { Context, Outcome } from "./commands.ts";
 import type { IndexFiles } from "./scope-index-command.ts";
@@ -46,11 +46,11 @@ export async function scopeIndexCensusCommand(ctx: Context, argv: readonly strin
       };
       check();
       const config = await ctx.store.config(); check();
-      if (!config || config.v !== 1 || typeof config.service !== "string" || typeof config.key !== "string" || !config.key
-        || !isScopeRef(config.register) || config.register.kind !== "register") return stop("page-failed", "configuration-unavailable");
+      if (!config || config.v !== 2 || typeof config.service !== "string" || typeof config.key !== "string" || !config.key
+        || !isSequenceRef(config.register)) return stop("page-failed", "configuration-unavailable");
       const service = indexService(config.service), root = config.repository?.directory;
       if (root === undefined) return stop("root-unregistered");
-      if (!isScopeRef(root) || root.kind !== "directory") return stop("page-failed", "configuration-unavailable");
+      if (!isSequenceRef(root)) return stop("page-failed", "configuration-unavailable");
       // Snapshot validated configuration before any signing capability awaits.
       const register = config.register.scope, key = config.key, configuredRoot = { ...root };
       const send = (ctx.fetch ?? (globalThis as { fetch?: Fetch }).fetch) as CensusFetch | undefined;
@@ -102,8 +102,8 @@ export async function scopeIndexCensusCommand(ctx: Context, argv: readonly strin
         if (!isRecord(reply) || !exact(reply, ["rows", "next"]) || !Array.isArray(reply["rows"]) || reply["rows"].length > SCOPE_INDEX_CENSUS_BOUNDS.pageSize) return stop("page-failed", "invalid-reply");
         const page: IndexScope[] = []; let previous = cursor;
         for (const row of reply["rows"]) {
-          if (!isRecord(row) || !exact(row, ["at", "genesis"]) || !isScopeRef(row["at"]) || !isDigest(row["genesis"]) || row["at"].scope <= previous) return stop("page-failed", "invalid-row");
-          previous = row["at"].scope; page.push({ at: { ...row["at"] }, genesis: row["genesis"] });
+          if (!isRecord(row) || !exact(row, ["at", "kind"]) || !isSequenceRef(row["at"]) || !isScopeKind(row["kind"]) || row["at"].scope <= previous) return stop("page-failed", "invalid-row");
+          previous = row["at"].scope; page.push({ at: { ...row["at"] }, kind: row["kind"] });
         }
         const next = reply["next"];
         if (next !== null && (!isScopeId(next) || page.length === 0 || next !== previous || next <= cursor)) return stop("page-failed", "invalid-cursor");

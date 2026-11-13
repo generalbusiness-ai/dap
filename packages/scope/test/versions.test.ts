@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Intent, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/dap-bytes";
 import { keys, ticketDefinition } from "@generalbusiness/dap-derive/testing";
 import { firstExtents, initialCommitObjects, platform, repositoryName } from "@generalbusiness/dap-platform";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
@@ -65,7 +65,7 @@ describe("a room founded on version 1 of every definition, on the code that ship
 
     // The creation publication: the first head is version 1's creation commit, the empty tree, with no README.
     await initialPublication(G, lifetime);
-    const emptyTree = initialCommitObjects("sha1", G.name, (await G.entries())[0]!.time, factRefOf((await R.entries())[1]!));
+    const emptyTree = initialCommitObjects("sha1", G.name, (await G.entries())[0]!.time, (await R.fact(1)));
     expect(await G.item(0)).toMatchObject({ state: "ready", values: { head: emptyTree.commit } });
 
     // `read-token` is no act of `platform:destination@1`: the scope refuses it by name, and writes nothing.
@@ -101,7 +101,7 @@ describe("a room founded on version 1 of every definition, on the code that ship
     const options = { mode: "replay", grants: "proven" } as const;
     for (const node of nodes) {
       const { report, why } = await lifetime.wait(async () => verify(httpSource(SERVICE, { fetch }), { ...options, platform, scope: node.name, head: (await node.summary()).at }));
-      expect([(await node.at()).kind, report.result, why]).toEqual([(await node.at()).kind, "consistent", null]);
+      expect([node.name, report.result, why]).toEqual([node.name, "consistent", null]);
     }
     // Control: the finding of 2026-10-07. A verifier that judges version 1 by version 2's code reports membership's history as a
     // mismatch: its genesis wrote version 1's first lists.

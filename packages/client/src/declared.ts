@@ -147,7 +147,8 @@ function shaped(type: ShapeFieldType, value: unknown, path: readonly (string | n
     case "item": return isLocalId(value) ? value : not("item", "is not a local item ID");
     case "fact": return isFactRef(value) ? value : not("fact", "is not a fact reference");
     case "reference": return isReference(value, type.fragment) ? value : not("reference", "is not a document or entry reference with a bounded fragment");
-    case "scope": return isScopeRef(value) && value.kind === type.kind ? value : not("scope", `is not a reference to a scope of kind ${type.kind}`);
+    // A reference names no kind; the declared field fixes it.
+    case "scope": return isScopeRef(value) ? value : not("scope", "is not a scope reference");
     case "digest": return isDigest(value) ? value : not("digest", "is not a digest");
     case "commit": case "tree": return typeof value === "string" && /^([0-9a-f]{40}|[0-9a-f]{64})$/.test(value) ? value : not("git", "is not a Git object ID");
     case "list": {

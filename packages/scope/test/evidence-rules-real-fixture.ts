@@ -1,8 +1,9 @@
+import { storedSequenceOf } from "./support/local-sequence.ts";
 import { expect } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Answer, DeclaredDefinition, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isDigest, isFactRef, isHead, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import type { Answer, DeclaredDefinition, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeKind, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isDigest, isFactRef, isHead, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ANCESTRY_BOUNDS, CAPABILITY_CODE, countedEntries, holding, ledgerOf, localRetainedPlan, outcomeValueDomains, ownersOf, reserved, snapshotInput, stagedRefName, validateDefinition, valueDigest, walk, type Item, type StateView } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
@@ -28,7 +29,7 @@ import type { OutsideGiven } from "../src/given.ts";
 import type { OperationStatus } from "../src/store.ts";
 import { DestinationHost, type DestinationProvider } from "../src/destination-host.ts";
 import { CredentialStore } from "../src/credential-store.ts";
-import { ownOf, retainedFacts, snapshotsOf } from "../src/core.ts";
+import { genuineRetained, ownOf, retainedUsesOf, snapshotsOf } from "../src/core.ts";
 import { SqliteStore } from "../src/sqlite.ts";
 import { readRulesTree } from "../src/rules-tree-provider.ts";
 import { ownHost } from "./hosts.ts";
@@ -93,7 +94,7 @@ export async function evidenceNativeRoom() {
     const D = life.platform(scopeIdOf({ v: 1, kind: "directory", definition: cohort.directory, creator: await R.at(), cause: intentDigest(found.intent), ordinal: 0 }));
     expect(await R.stub.submit(found, [])).toMatchObject({ answer: "accepted" }); await pause([R, D]);
     const directoryBirthEntry = (await D.entries())[0]!;
-    const sibling = (kind: ScopeRef["kind"]) => {
+    const sibling = (kind: ScopeKind) => {
       const send = directoryBirthEntry.sends.find(row => isSeed(row.to) && row.to.kind === kind);
       if (!send || !isSeed(send.to)) throw Error("Actual applied Directory sibling send required");
       return life.platform(scopeIdOf(send.to));
@@ -233,7 +234,7 @@ export async function evidenceHeldDuty(room: EvidenceRoom, job: FactRef) {
 /** A bad frozen room key refuses before selecting a holder or opening work. */
 export async function assertNativePrebindingRefusal(room: EvidenceRoom, lane: Platform, result: FactRef) {
   const source = await evidenceEntry(lane, result.seq);
-  expect(factRefOf(source)).toEqual(result);
+  expect(factRefOf(source, await lane.at())).toEqual(result);
   const deliveries = (await hardeningSealed(room.G)).filter(({ entry }) => entry.input.type === 'delivery' && same(entry.input.from, result));
   expect(deliveries).toHaveLength(1);
   const entry = deliveries[0]?.entry;
@@ -258,7 +259,7 @@ export async function assertNativeCountedEvidence(room: EvidenceRoom, lane: Plat
   if (!isFactRef(decision)) throw Error('Actual counted Native decision reference required');
   expect(decision.at).toEqual(await room.G.at());
   const native = await evidenceEntry(room.G, decision.seq);
-  expect(factRefOf(native)).toEqual(decision);
+  expect(factRefOf(native, await room.G.at())).toEqual(decision);
   expect(native.input).toMatchObject({ type: 'outcome', owner: EVIDENCE_RULES_COHORT.destination, kind: 'evidence-result', result: 'confirmed' });
   const sends = native.sends.filter(send => same(send.to, job.at) && send.message.class === 'request' && send.message.type === 'tell'
     && isRecord(send.message.body) && send.message.body['message'] === 'check-decision' && isRecord(send.message.body['fields'])
@@ -279,8 +280,11 @@ export async function evidenceIntentRoot(room: EvidenceRoom, node: Platform): Pr
   const before = (await node.summary()).at;
   return room.life.wait(() => runInDurableObject(node.object, (_instance, state) => {
     const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
-    expect(store.scope()?.head).toEqual(before);
-    const entry = ownOf(store)(0)?.entry, birth = entry?.input;
+    const scope = store.scope();
+    expect(scope?.head).toEqual(before);
+    const first = store.stored(0), entry = first ? JSON.parse(first.bytes) as import("@generalbusiness/dap-contract").Entry : null, birth = entry?.input;
+    const sequence = first && scope ? admitSequenceGenesis(first.bytes, scope.at, PROPOSED_BOUNDS.entryBytes) : null;
+    if (!sequence) throw new Error("the intent root has no admitted genesis");
     const text = (value: unknown) => typeof value === 'string' ? value.slice(0, 512) : null;
     const results = entry?.sends.flatMap(send => {
       const message = send.message;
@@ -299,7 +303,7 @@ export async function evidenceIntentRoot(room: EvidenceRoom, node: Platform): Pr
     expect(page.more, context).toBe(false); expect(page.items, context).toHaveLength(1);
     const root = page.items[0];
     if (!root) throw Error('Actual singleton Issue intent required');
-    expect(ownOf(store)(root.id)?.entry.effects).toContainEqual({ effect: 'open', item: root.id, type: 'intent', state: 'open' });
+    expect(ownOf(store, sequence)(root.id)?.entry.effects).toContainEqual({ effect: 'open', item: root.id, type: 'intent', state: 'open' });
     expect(store.scope()?.head).toEqual(before);
     return root;
   }));
@@ -356,13 +360,13 @@ export async function openEvidenceRulesCertificate(room: EvidenceRoom, policy: R
   if (!proposal.ok) throw Error("Strict policy required");
   const { D, M, Q, G } = room;
   const signed = await G.intent(rita, RULES_CERTIFICATE_KIND, { on: 0, expected: await G.expected({ on: 0 }), fields: {
-    proposal: proposal.digest, directoryBirth: factRefOf((await D.entries())[0]!),
-    rulesBirth: factRefOf((await Q.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!),
+    proposal: proposal.digest, directoryBirth: (await D.fact(0)),
+    rulesBirth: (await Q.fact(0)), membershipBirth: (await M.fact(0)),
   } });
   const answer = await G.stub.submit(signed, [], { values: [canonicalize(proposal.policy)] });
   expect(answer, canonicalize(answer)).toMatchObject({ answer: "accepted" });
   if (answer.answer !== "accepted") throw Error("Actual certificate opening required");
-  return factRefOf(await evidenceEntry(G, answer.receipt.fact.seq));
+  return (await G.fact(answer.receipt.fact.seq));
 }
 export async function publishEvidenceRulesCertificate(room: EvidenceRoom, policy: RulesPolicyV13, request: FactRef, certificate: FactRef, proof: Digest, proofBytes: string, actor: Actor = rita) {
   const proposed = rulesPolicyProposalV13(policy);
@@ -370,7 +374,7 @@ export async function publishEvidenceRulesCertificate(room: EvidenceRoom, policy
   const { D, M, Q, G } = room;
   return Q.stub.submit(await Q.intent(actor, "publish", { on: 0, expected: await Q.expected({ on: 0 }),
     fields: JSON.parse(canonicalize({ ...proposed.policy, roomService: canonicalize(proposed.policy.roomService), checkers: rulesPolicyCheckersV13(proposed.policy), proposal: proposed.digest, proof, certificateRequest: request, certificate,
-      directoryBirth: factRefOf((await D.entries())[0]!), destinationBirth: factRefOf((await G.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!) })) }), [],
+      directoryBirth: (await D.fact(0)), destinationBirth: (await G.fact(0)), membershipBirth: (await M.fact(0)) })) }), [],
     { values: [canonicalize(proposed.policy), proofBytes] });
 }
 export async function configureEvidenceRules(room: EvidenceRoom, policy: RulesPolicyV13) {
@@ -382,7 +386,7 @@ export async function configureEvidenceRules(room: EvidenceRoom, policy: RulesPo
   if (!isRecord(body) || !isDigest(body["proof"])) throw Error("Actual proof digest required");
   const kept = await room.G.stub.retained(reader, "value", body["proof"], RULES_TREE_PROOF.domain);
   if (!kept.ok) throw Error("Actual retained proof required");
-  const certificate = factRefOf(outcome);
+  const certificate = factRefOf(outcome, await room.G.at());
   const published = await publishEvidenceRulesCertificate(room, policy, request, certificate, body["proof"], kept.value.bytes);
   expect(published, canonicalize(published)).toMatchObject({ answer: "accepted" });
   return { request, certificate, proof: body["proof"] };
@@ -398,7 +402,7 @@ export async function evidenceCertificate(room: EvidenceRoom, policy: RulesPolic
   if (!isRecord(body) || !isDigest(body['proof'])) throw Error("Actual retained proof identity required");
   const read = await room.G.stub.retained(reader, "value", body['proof'], RULES_TREE_PROOF.domain);
   if (!read.ok) throw Error("Actual retained certificate proof required");
-  return { request, certificate: factRefOf(outcome), proof: body['proof'], proofBytes: read.value.bytes };
+  return { request, certificate: factRefOf(outcome, await room.G.at()), proof: body['proof'], proofBytes: read.value.bytes };
 }
 
 export function evidenceRulesPolicy(roomService: RulesPolicyV13['roomService'], checks: RulesPolicyV13['checks'] = []): RulesPolicyV13 {
@@ -540,12 +544,12 @@ export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceW
   room.nodes.push(lane); room.life.outside(lane.name, (given, sql) => evidenceWorkOutside(room, given, room.host.outside(given, sql, room.bindings)));
   await lane.restart(); await room.pause(room.nodes);
   expect((await lane.summary()).value.definition).toBe(definitions.issue);
-  const terms = factRefOf((await lane.entries())[0]!);
+  const terms = (await lane.fact(0));
   const commitment = await lane.did(rita, "offer", { fields: { offeree: { membership, member: "@rita" } }, expected: await lane.expected({ goal: 0 }) });
   await lane.did(rita, "accept", { on: commitment, expected: await lane.expected({ on: commitment }), fields: { terms } });
   const hold = await lane.did(rita, "take-hold", { fields: { commitment }, expected: await lane.expected({ commitment }) });
   const instance: Intent = { v: 1, to: await lane.at(), actor: rita.key, kind: "hold@1:instance", on: null, expected: {},
-    fields: { hold, task: { ...(await lane.at()), kind: "task" }, instance: "TEST-native-evidence-instance" }, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) };
+    fields: { hold, task: await lane.at(), instance: "TEST-native-evidence-instance" }, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) };
   expect(await (lane.stub as NativeReadPort).prepare(signIntent(instance, rita.secret), [], "hold@1", "instance")).toMatchObject({ answer: "accepted" });
   const base = room.host.stand.refs.get("refs/heads/main");
   const initial = base && room.host.stand.objects.get(base);
@@ -580,7 +584,7 @@ export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceW
   const bindingDigest = evidenceBindingDigest(binding), commitProof = canonicalize({ v: 1, id: commit, data: b64url(commitBytes) });
   const job = await lane.did(rita, "request-work-check", { fields: { source: stagedSource, name: configuration.name, configuration: digest,
     checker: service.member, binding: canonicalize(binding), bindingDigest, commitProof, reuse: options.reuse === true }, expected: await lane.expected({ source: stagedSource.seq }) });
-  const jobFact = factRefOf(await evidenceEntry(lane, job));
+  const jobFact = (await lane.fact(job));
   await room.pause(room.nodes);
   const requested = (await hardeningItems(lane, 'job')).find(item => item.id === job), expected = { state: "requested", values: { tree, base, commit, reason: "admitted" } };
   try { expect(requested).toMatchObject(expected); }
@@ -597,7 +601,7 @@ export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceW
     await room.pause(room.nodes);
     const actual = await record();
     expect(actual).toMatchObject({ state: "passed", signer: service.actor.key });
-    const result = (await hardeningSealed(lane)).find(sealed => actual.result && canonicalize(factRefOf(sealed.entry)) === canonicalize(actual.result));
+    const laneAt = await lane.at(), result = (await hardeningSealed(lane)).find(sealed => actual.result && canonicalize(factRefOf(sealed.entry, laneAt)) === canonicalize(actual.result));
     expect(result?.entry.input).toMatchObject({ type: "act", signed: { intent: { kind: "check", actor: service.actor.key } } });
     return actual;
   };
@@ -624,7 +628,7 @@ async function assertEvidenceWorkAdmission(room: EvidenceRoom, lane: Platform, j
   if (record.admittedAt === null) throw Error('Actual Native admission position required for an admitted or reused work job');
   const admission = await evidenceEntry(room.G, record.admittedAt);
   expect(admission.input).toMatchObject({ type: 'outcome', owner: EVIDENCE_RULES_COHORT.destination, kind: 'evidence-admit', result: 'confirmed' });
-  expect(item.refs['admission']).toEqual(factRefOf(admission));
+  expect(item.refs['admission']).toEqual(factRefOf(admission, await room.G.at()));
 }
 
 /** Failure-only capacity read at one actual Native head. All emitted rows
@@ -633,7 +637,8 @@ async function evidenceNativeCapacity(room: EvidenceRoom) {
   const before = (await room.G.summary()).at;
   return room.life.wait(() => runInDurableObject(room.G.object, (_instance, state) => {
     const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
-    const own = ownOf(store), head = store.scope()?.head, native = nativePlatform(EVIDENCE_RULES_COHORT.destination);
+    const sequence = storedSequenceOf(store, PROPOSED_BOUNDS.entryBytes); // fixture setup only
+    const own = ownOf(store, sequence), head = store.scope()?.head, native = nativePlatform(EVIDENCE_RULES_COHORT.destination);
     if (!head || !same(head, before) || !native) throw Error('Actual unchanged G17 head required for capacity context');
     const checked = validateDefinition(native.data, PROPOSED_BOUNDS, RULE_PROFILES, { platform: true, outcomeValues: outcomeValueDomains(native.data, native.rules) });
     if (!checked.ok || !checked.definition.reserving) throw Error('Actual validated Native reservation data required');
@@ -677,7 +682,8 @@ export async function evidenceNativeState(room: EvidenceRoom, replay = false) {
   const before = (await room.G.summary()).at;
   const inspected = await room.life.wait(() => runInDurableObject(room.G.object, (_instance, state) => {
     const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
-    const own = ownOf(store), head = store.scope()?.head;
+    const sequence = storedSequenceOf(store, PROPOSED_BOUNDS.entryBytes); // fixture setup only
+    const own = ownOf(store, sequence), head = store.scope()?.head;
     expect(head).toEqual(before);
     const project = (view: StateView) => {
       const items = view.all().items;
@@ -701,14 +707,16 @@ export async function evidenceNativeState(room: EvidenceRoom, replay = false) {
         if (!sealed) throw Error('Complete actual local history required');
         const { entry, hash } = sealed, operation = entry.input.type === 'outcome' ? view.operation(entry.input.operation) : null;
         const rules = operation ? owners?.rules(operation.owner, operation.kind) ?? null : null;
-        const plan = localRetainedPlan(checked.definition, entry, hash, rules, PROPOSED_BOUNDS);
+        const plan = localRetainedPlan(checked.definition, entry, { at: store.scope()!.at, seq: entry.seq, hash }, rules, PROPOSED_BOUNDS);
         const values = plan.dependencies.flatMap(({ dependency }) => {
           if (dependency.mode !== 'required' || dependency.key.kind !== 'value') return [];
           const kept = store.retained('value', dependency.key.digest, dependency.key.domain);
           if (!kept) throw Error('Actual named retained value required');
           return [kept.bytes];
         });
-        view.fold(checked.definition, entry, hash, { bounds: PROPOSED_BOUNDS, platform: pinned, own, facts: retainedFacts(store, entry), values,
+        const retained = retainedUsesOf(own, seq);
+        if (!retained) throw Error('Actual retained uses required');
+        view.fold(checked.definition, entry, hash, { bounds: PROPOSED_BOUNDS, platform: pinned, own, facts: genuineRetained(retained.uses), values,
           snapshot: snapshotsOf(store), texts: digest => { const kept = store.retained('text', digest); if (!kept) return undefined;
             const text: unknown = JSON.parse(kept.bytes); return typeof text === 'string' ? utf8(text).length : undefined; } });
       }
@@ -723,7 +731,7 @@ export async function evidenceNativeState(room: EvidenceRoom, replay = false) {
     const source = httpSource('https://scopes.test', { reader, fetch: (url, init) => room.life.wait(() => routed(url, init)) });
     const checked = await room.life.wait(() => verify(source, { mode: 'replay', platform: nativePlatform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: 'proven', scope: room.G.name, head: before }));
     expect([checked.report.result, checked.why, checked.report.target]).toEqual(['consistent', null, { at: await room.G.at(), ...before }]);
-    expect(checked.report.coverage).toContainEqual({ scope: await room.G.at(), from: 0, through: before.seq });
+    expect(checked.report.coverage).toContainEqual({ scope: await room.G.at(), kind: 'destination', from: 0, through: before.seq });
   }
   expect((await room.G.summary()).at).toEqual(before);
   return inspected;
@@ -735,7 +743,7 @@ export async function requestEvidenceWork(room: EvidenceRoom, prepared: Prepared
   const seq = await prepared.lane.did(rita, "request-work-check", { fields: { source: prepared.stagedSource, name: prepared.configuration.name,
     configuration: prepared.configurationDigest, checker: binding.checker, binding: canonicalize(binding), bindingDigest,
     commitProof: prepared.commitProof, reuse: options.reuse === true }, expected: await prepared.lane.expected({ source: prepared.stagedSource.seq }) });
-  const job = factRefOf(await evidenceEntry(prepared.lane, seq));
+  const job = (await prepared.lane.fact(seq));
   await room.pause(room.nodes);
   await assertEvidenceWorkAdmission(room, prepared.lane, job);
   return { job, binding, bindingDigest, record: () => evidenceRecord(room, job) };
@@ -746,7 +754,7 @@ export async function claimEvidenceWork(room: EvidenceRoom, prepared: PreparedEv
   job: { job: FactRef; bindingDigest: Digest }, outcome: "passed" | "failed", actor: Actor = prepared.service.actor) {
   const seq = await prepared.lane.did(actor, "check", { fields: { job: job.job.seq, jobFact: job.job, tree: prepared.tree,
     configuration: prepared.configurationDigest, bindingDigest: job.bindingDigest, outcome }, expected: await prepared.lane.expected({ job: job.job.seq }) });
-  const result = factRefOf(await evidenceEntry(prepared.lane, seq));
+  const result = (await prepared.lane.fact(seq));
   await room.pause(room.nodes);
   return result;
 }
@@ -841,14 +849,14 @@ export async function publishEvidenceFile(room: EvidenceRoom, setup: PreparedPub
   const files = [];
   for (const path of setup.paths) {
     const file = await lane.did(rita, "propose-file", { fields: { base, path, content, size, digest }, expected: await lane.expected({ proposal: 0 }) });
-    files.push({ path, entry: factRefOf(await evidenceEntry(lane, file)), digest });
+    files.push({ path, entry: (await lane.fact(file)), digest });
   }
   const manifest = await lane.did(rita, "propose-manifest", { fields: { base, files },
     expected: await lane.expected({ proposal: 0 }) });
   const merge = await lane.did(rita, "merge", { fields: { manifest, reports: [] }, expected: await lane.expected({ proposal: 0, manifest, rules: laneRules.id }) });
-  const operation = factRefOf(await evidenceEntry(lane, merge));
+  const operation = (await lane.fact(merge));
   await room.pause(room.nodes);
-  return { lane, manifest: factRefOf(await evidenceEntry(lane, manifest)), operation, base,
+  return { lane, manifest: (await lane.fact(manifest)), operation, base,
     job: async () => {
       const jobs = (await hardeningItems(lane, "job")).filter(item => item.values['stage'] === "published");
       const failure = jobs.length === 1 ? undefined
@@ -860,7 +868,7 @@ export async function publishEvidenceFile(room: EvidenceRoom, setup: PreparedPub
       if (!sealed) throw Error("Actual automatic published job entry required");
       const binding = typeof held.values['binding'] === "string" ? readEvidenceBinding(JSON.parse(held.values['binding'])) : null;
       if (!binding || binding.stage !== "published" || binding.subject.kind !== "published") throw Error("Actual published subject binding required");
-      const job = factRefOf(sealed.entry), record = await evidenceRecord(room, job);
+      const job = factRefOf(sealed.entry, await lane.at()), record = await evidenceRecord(room, job);
       expect(record).toMatchObject({ state: "admitted", job, binding });
       expect(room.host.stand.refs.get("refs/heads/main")).toBe(record.commit);
       return { job, binding, bindingDigest: record.bindingDigest, record };
@@ -871,7 +879,7 @@ export async function claimPublishedEvidence(room: EvidenceRoom, setup: Prepared
   publication: EvidencePublication, job: PublishedEvidenceJob, outcome: "passed" | "failed") {
   const seq = await publication.lane.did(setup.service.actor, "check", { fields: { job: job.job.seq, jobFact: job.job, tree: job.record.tree!, configuration: setup.configurationDigest,
     bindingDigest: job.bindingDigest, outcome }, expected: await publication.lane.expected({ job: job.job.seq, manifest: publication.manifest.seq }) });
-  const result = factRefOf(await evidenceEntry(publication.lane, seq));
+  const result = (await publication.lane.fact(seq));
   await room.pause(room.nodes);
   return result;
 }
@@ -887,7 +895,7 @@ export async function requestLandingEvidence(room: EvidenceRoom, setup: Prepared
   const binding: EvidenceBinding = { v: 1, source: "member", stage: "landing", checker: setup.service.member,
     policyGeneration: { rules: await room.Q.at(), seq: observed.revision }, roomService: observed.roomService,
     serviceGeneration: observed.serviceGeneration, auditOf: null,
-    subject: { kind: "landing", publication: factRefOf(await evidenceEntry(room.G, reserved.id)), manifest: publication.manifest } };
+    subject: { kind: "landing", publication: (await room.G.fact(reserved.id)), manifest: publication.manifest } };
   const bindingDigest = evidenceBindingDigest(binding), requested = await publication.lane.act(rita, "request-check", { fields: {
     manifest: publication.manifest.seq, name: setup.configuration.name, configuration: setup.configurationDigest, checker: setup.service.member,
     binding: canonicalize(binding), bindingDigest, reuse }, expected: await publication.lane.expected({ manifest: publication.manifest.seq, proposal: 0, rules: rules.id }) });
@@ -907,18 +915,19 @@ export async function claimLandingEvidence(room: EvidenceRoom, setup: PreparedPu
   try { expect(claimed).toMatchObject({ answer: 'accepted' }); }
   catch { expect(claimed, await evidenceNativeDiagnostic([publication.lane, room.G])).toMatchObject({ answer: 'accepted' }); }
   if (claimed.answer !== 'accepted') throw Error('Actual accepted landing result claim required');
-  const result = factRefOf(await evidenceEntry(publication.lane, claimed.receipt.fact.seq));
+  const result = (await publication.lane.fact(claimed.receipt.fact.seq));
   await room.pause(room.nodes);
   return result;
 }
 
 /** Exact retained native send, for transport reordering without inventing a peer or outcome. */
 export async function evidenceFailureNotice(room: EvidenceRoom, job: FactRef) {
+  const destination = await room.G.at();
   for (const { entry } of await hardeningSealed(room.G)) {
     const send = entry.sends.find(send => canonicalize(send.to) === canonicalize(job.at) && send.message.class === "request" && send.message.type === "tell"
       && isRecord(send.message.body) && send.message.body['message'] === "published-check-failure" && isRecord(send.message.body['fields'])
       && canonicalize(send.message.body['fields']['job']) === canonicalize(job));
-    if (send) return { from: factRefOf(entry), n: send.n, to: job.at, message: send.message };
+    if (send) return { from: factRefOf(entry, destination), n: send.n, to: job.at, message: send.message };
   }
   throw Error("Actual native failure notice required");
 }

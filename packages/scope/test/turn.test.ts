@@ -1,13 +1,17 @@
+import { storedSequenceOf } from "./support/local-sequence.ts";
 import { turnWholeChange, turnAbandonChange, turnTargetChange, turnRequestsChange } from "./definition-corpus-data.ts";
 import { describe, expect, onTestFinished, test, vi } from "vitest";
+import { runInDurableObject } from "cloudflare:test";
 import { DOMAINS, PROPOSED_BOUNDS, type Receipt} from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, rawRetainedJSON, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { AmountError, MemoryState, applyEntry, checkpointOf, reserved, stateDigest, timeMs } from "@generalbusiness/dap-derive";
 import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
-import { HOLD, at, definition, create, rita, una, vic } from "./fixtures-native.ts";
-import { testAuthority } from "../src/testing.ts";
+import { HOLD, at, definition, create, creation, foreignOf, objectOf, rita, una, vic } from "./fixtures-native.ts";
+import { controls, testAuthority, testPorts } from "../src/testing.ts";
+import { Scope } from "../src/core.ts";
 import type { FreshActAdmissionDecision } from "../src/applications/act-admission.ts";
+import type { SourceReadContext } from "../src/ports.ts";
 import { wired } from "./outside.ts";
 
 // The shared lane's unused link form names a dummy child digest. These
@@ -42,6 +46,58 @@ test("holder settlement bookkeeping survives actual eviction, rolls back atomica
     return { settled: store.holderSettled(900), rolledBack: store.holderSettled(901), snapshot: store.all() };
   });
   expect(reopened).toEqual({ settled: true, rolledBack: false, snapshot: written.after });
+
+  // The first fold fails after its real pin read. The same Scope retries;
+  // a rolled-back candidate must never become its committed association.
+  const asked = creation(at(60), under);
+  await runInDurableObject(objectOf(asked.name), async (_instance, state) => {
+    const backing = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    expect(backing.scope()).toBeNull();
+    let failOnce = true;
+    const reads = { absent: 0, present: 0 };
+    const store = new Proxy(backing, {
+      get(target, key) {
+        if (key === "stored") return (seq: number) => {
+          const held = target.stored(seq);
+          if (seq === 0) reads[held ? "present" : "absent"]++;
+          return held;
+        };
+        if (key === "setScope") return (scope: Parameters<SqliteStore["setScope"]>[0]) => {
+          if (failOnce) {
+            failOnce = false;
+            expect(reads).toEqual({ absent: 1, present: 1 });
+            throw new Error("first genesis fold rollback");
+          }
+          target.setScope(scope);
+        };
+        const value: unknown = Reflect.get(target, key, target);
+        return typeof value === "function" ? value.bind(target) : value;
+      },
+    });
+    const c = controls(asked.name), ports = { ...production(), ...testPorts(c) };
+    const scope = new Scope(asked.name, store, ports, c.bounds);
+    await expect(scope.create(asked.signed, under.declared)).rejects.toThrow("first genesis fold rollback");
+    expect(reads).toEqual({ absent: 1, present: 1 });
+    // Observation reads use backing directly and are outside the recorded
+    // Scope pipeline. Neither the failed append nor its token survived.
+    expect([backing.scope(), backing.stored(0), scope.localSequence()]).toEqual([null, null, null]);
+    expect(await scope.create(asked.signed, under.declared)).toMatchObject({ answer: "accepted" });
+    expect(reads).toEqual({ absent: 2, present: 2 });
+    const sequence = scope.localSequence();
+    expect(sequence).not.toBeNull();
+    expect(sequence!.at).toEqual(backing.scope()!.at);
+    expect(scope.pinned()?.named).toBe(under.digest);
+    expect(scope.localSequence()).toBe(sequence);
+    expect(reads).toEqual({ absent: 2, present: 2 });
+    const cold = new Scope(asked.name, store, ports, c.bounds);
+    expect(cold.localSequence()).toBeNull();
+    expect(cold.pinned()?.named).toBe(under.digest);
+    expect(cold.localSequence()!.at).toEqual(sequence!.at);
+    const coldSequence = cold.localSequence();
+    expect(cold.pinned()?.named).toBe(under.digest);
+    expect(cold.localSequence()).toBe(coldSequence);
+    expect(reads).toEqual({ absent: 2, present: 3 });
+  });
 });
 
 test("opt-in report duty survives an ordinary final transition and actual object eviction; at a filled scope only its real settlement spends that room", async () => {
@@ -96,7 +152,9 @@ test("the opt-in foreign-entry retained-writer ceiling accepts exact bytes and r
     const s = await create({}, {}, under);
     const results = await s.inside(async (state) => {
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (work) => state.storage.transactionSync(work) });
-      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: { set: () => undefined }, capabilities: null }, s.c.bounds, () => under, () => undefined);
+      // One fixture setup admission; not a read of the Turns path below.
+      const pin = { pinned: { named: under.digest, definition: under, platform: null }, sequence: storedSequenceOf(store, s.c.bounds.entryBytes) };
+      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: { set: () => undefined }, capabilities: null }, s.c.bounds, () => under, () => undefined, { value: pin }, () => pin);
       const run = async (size: number) => {
         const bytes = canonicalize("x".repeat(size - 2)), digest = digestBytes(utf8(bytes));
         const end = await turns.run({ asks: () => [], judge: (view) => ({ verdict: "write", retain: [{ kind: "entry", digest, bytes }], draft: { input: { type: "checkpoint", ...checkpointOf(view) }, uses: [], prepared: [], effects: [], sends: [], judgesTime: false }, sealed: () => "written", unfit: () => "unfit", full: () => "full" }) });
@@ -119,7 +177,9 @@ test("the opt-in rule-input writer ceiling accepts exact canonical bytes and ref
     const s = await create({}, {}, under);
     const result = await s.inside(async (state) => {
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (work) => state.storage.transactionSync(work) });
-      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: { set: () => undefined }, capabilities: null }, s.c.bounds, () => under, () => undefined);
+      // One fixture setup admission; not a read of the Turns path below.
+      const pin = { pinned: { named: under.digest, definition: under, platform: null }, sequence: storedSequenceOf(store, s.c.bounds.entryBytes) };
+      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: { set: () => undefined }, capabilities: null }, s.c.bounds, () => under, () => undefined, { value: pin }, () => pin);
       const limit = 262_144;
       const run = (bytes: number) => {
         const input = "x".repeat(bytes - 2), canonical = canonicalize(input), digest = digestBytes(utf8(canonical));
@@ -210,7 +270,7 @@ test("logical key counts in real SQLite retain final keys, ignore transport ACKs
     const store = open(), before = store.keyCounts(), scope = store.scope()!;
     const item = { ...store.all().items[0]!, id: 900, type: "count-probe", state: "open" };
     const record = { capability: "hold@1" as const, kind: "count-probe", key: ["one"], state: "live", values: {}, seq: 900 };
-    const relation = { owner: scope.at, name: "count-probe", item: 900, state: "live", revision: 900 };
+    const relation = { owner: scope.at, ownerKind: scope.kind, name: "count-probe", item: 900, state: "live", revision: 900 };
     store.transaction(() => { store.putItem(item); store.putRecord(record); store.putRelation(relation); });
     const inserted = store.keyCounts();
     store.transaction(() => {
@@ -241,6 +301,38 @@ test("logical key counts in real SQLite retain final keys, ignore transport ACKs
   expect([counts.acknowledged, counts.unavailable]).toEqual([pending, pending]);
   expect([counts.undelivered, counts.answered, counts.afterRollback, counts.reopened]).toEqual([retained, retained, retained, retained]);
   expect(counts.rolledBack).toBe(true);
+
+  const relationRows = await s.inside(state => {
+    // Raw writer/reopen/rollback scene, not a judged foreign delivery.
+    const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    const scope = store.scope()!, owner = { ...scope.at, genesis: textDigest("SQLite alternate relation genesis") };
+    const other = { owner, ownerKind: scope.kind, name: "count-probe", item: 900, state: "live", revision: 901 };
+    store.transaction(() => { store.putRelation(other); store.putRelation({ ...other, revision: 902 }); });
+    const snapshot = store.all();
+    let rolledBack = false;
+    try {
+      store.transaction(() => { store.putRelation({ ...other, state: "final" }); store.putRelation({ ...other, item: 902 }); throw new Error("rollback relation rows"); });
+    } catch (error) { rolledBack = error instanceof Error && error.message === "rollback relation rows"; }
+    const wrongKind: typeof scope.kind = scope.kind === "directory" ? "lane" : "directory";
+    return { owner: scope.at, other: owner, kind: scope.kind, wrongKind, snapshot, after: store.all(), rolledBack,
+      count: store.copies("count-probe", scope.kind), final: store.copies("count-probe", scope.kind, ["final"]), live: store.copies("count-probe", scope.kind, ["live"]), wrong: store.copies("count-probe", wrongKind),
+      first: store.relation(scope.at, "count-probe", 900), second: store.relation(owner, "count-probe", 900) };
+  });
+  expect([relationRows.count, relationRows.final, relationRows.live, relationRows.wrong, relationRows.rolledBack]).toEqual([2, 1, 1, 0, true]);
+  expect(relationRows.after).toEqual(relationRows.snapshot);
+  expect([relationRows.first?.ownerKind, relationRows.second?.ownerKind]).toEqual([relationRows.kind, relationRows.kind]);
+  expect(relationRows.first?.owner).toEqual(relationRows.owner);
+  expect(relationRows.second?.owner).toEqual(relationRows.other);
+  expect([relationRows.first?.state, relationRows.second?.state]).toEqual(["final", "live"]);
+  await s.restart();
+  const reopenedRelations = await s.inside(state => {
+    const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    return { snapshot: store.all(), count: store.copies("count-probe", relationRows.kind), wrong: store.copies("count-probe", relationRows.wrongKind),
+      first: store.relation(relationRows.owner, "count-probe", 900), second: store.relation(relationRows.other, "count-probe", 900) };
+  });
+  expect(reopenedRelations.snapshot).toEqual(relationRows.snapshot);
+  expect([reopenedRelations.count, reopenedRelations.wrong]).toEqual([2, 0]);
+  expect([reopenedRelations.first, reopenedRelations.second]).toEqual([relationRows.first, relationRows.second]);
 });
 
 test("fresh application admission is rechecked after an async foreign read following standing; accepted keys bypass unavailable admission", async () => {
@@ -248,13 +340,20 @@ test("fresh application admission is rechecked after an async foreign read follo
   // resolver are scripted ports: no native release provenance is proved.
   const under = variant(definition.declared, data => {
     data.acts.remark.fields.proof = { type: "fact", kind: ["remark"], under: data.name, required: false };
+    data.acts.remark.fields.secondProof = { type: "fact", kind: ["remark"], under: data.name, required: false };
   });
   const peer = await create();
   const proof = (await peer.did(rita, "remark", { on: 0, fields: { text: "foreign evidence" } })).fact;
   const evidence = (await peer.entries(proof.seq))[0]!;
+  const secondProof = (await peer.did(rita, "remark", { on: 0, fields: { text: "second foreign evidence" } })).fact;
+  // The peer's sequence, admitted from its own genesis bytes before any timed read.
+  const peerSequence = (await foreignOf(proof, definition.declared.name))!.sequence;
+  const secondEvidence = (await peer.entries(secondProof.seq))[0]!;
   const s = await create({}, {}, under), authority = testAuthority();
   let state: FreshActAdmissionDecision = "allowed", available = true, revokeDuringForeignRead = false;
   const reads = { admission: 0, current: 0, authority: 0 }, observed: FreshActAdmissionDecision[] = [];
+  type SourceCall = { hash: string; maxBytes: number; milliseconds: number; origin: boolean };
+  let sourceGroup: { firstAdvance: number; calls: SourceCall[]; secondReturned(): void } | null = null;
   wired.set(s.name, () => ({
     freshActAdmission: { read: async () => {
       reads.admission++;
@@ -266,10 +365,25 @@ test("fresh application admission is rechecked after an async foreign read follo
       const held = await authority.read(asked, seconds);
       return held;
     } },
-    resolver: { read: async asked => {
+    resolver: { read: async (asked, context: SourceReadContext, origin) => {
+      const group = sourceGroup;
+      if (group) {
+        group.calls.push({ hash: asked.hash, maxBytes: context.maxBytes, milliseconds: context.milliseconds, origin });
+        if (asked.hash === proof.hash) {
+          // Advance synchronously before the parallel map starts its second read.
+          vi.advanceTimersByTime(group.firstAdvance);
+          return { entry: evidence, under: definition.declared.name, sequence: peerSequence };
+        }
+        if (asked.hash === secondProof.hash) {
+          await s.c.gate.pass();
+          group.secondReturned();
+          return { entry: secondEvidence, under: definition.declared.name, sequence: peerSequence };
+        }
+        return null;
+      }
       await Promise.resolve();
       if (revokeDuringForeignRead) state = "application-revoked";
-      return asked.hash === proof.hash ? { fact: proof, entry: evidence, under: definition.declared.name } : null;
+      return asked.hash === proof.hash ? { entry: evidence, under: definition.declared.name, sequence: peerSequence } : null;
     } },
   }));
   onTestFinished(() => { wired.delete(s.name); });
@@ -295,6 +409,66 @@ test("fresh application admission is rechecked after an async foreign read follo
   expect(await s.submit(changed)).toEqual({ answer: "mismatch", reason: "idempotency-mismatch" });
   expect(reads).toEqual(beforeRepeat);
   expect(await s.head()).toEqual(before);
+
+  // The same real foreign-fact path must share one deadline. Authority and
+  // admission remain allowed; only the two resolver replies are held/scripted.
+  available = true; state = "allowed"; revokeDuringForeignRead = false;
+  const milliseconds = Math.floor(s.c.bounds.fetchSeconds * 1000);
+  const firstAdvance = Math.floor(milliseconds * 3 / 5);
+  const remaining = milliseconds - firstAdvance;
+  expect(firstAdvance > 0 && remaining > 1).toBe(true);
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance"] });
+  try {
+    const group = async (late: boolean) => {
+      const head = await s.head(), started = performance.now(), calls: SourceCall[] = [];
+      let secondReturned = () => {};
+      const returned = new Promise<void>(resolve => { secondReturned = resolve; });
+      sourceGroup = { firstAdvance, calls, secondReturned };
+      s.c.gate.hold();
+      const pending = s.submit(s.intent(rita, "remark", { on: 0,
+        fields: { text: late ? "source group passed its deadline" : "source group within its deadline", proof, secondProof } }));
+      try {
+        await s.c.gate.held();
+        // The late release crosses the shared deadline but stays before a
+        // freshly restarted second-read deadline. Release before asserting so
+        // that the wrong implementation differs by an answer, not a timeout.
+        await vi.advanceTimersByTimeAsync(late ? remaining + 1 : Math.floor(remaining / 2));
+        const releasedAt = performance.now() - started;
+        s.c.gate.release();
+        await returned;
+        const answer = await pending;
+        return { head, calls, releasedAt, answer, after: await s.head(), entries: await s.entries(head.seq + 1) };
+      } finally {
+        s.c.gate.release();
+        sourceGroup = null;
+        await pending;
+      }
+    };
+    const late = await group(true);
+    expect(late.calls).toEqual([
+      { hash: proof.hash, maxBytes: s.c.bounds.entryBytes, milliseconds, origin: false },
+      { hash: secondProof.hash, maxBytes: s.c.bounds.entryBytes, milliseconds: remaining, origin: false },
+    ]);
+    expect(late.calls.every(call => Number.isSafeInteger(call.maxBytes) && call.maxBytes > 0
+      && Number.isSafeInteger(call.milliseconds) && call.milliseconds > 0 && call.milliseconds <= milliseconds)).toBe(true);
+    expect(late.releasedAt).toBe(milliseconds + 1);
+    expect(late.answer).toEqual({ answer: "unavailable", reason: "dependency-unavailable" });
+    expect(late.after).toEqual(late.head);
+    expect(late.entries).toEqual([]);
+
+    // The same actual peer facts and allowed standing are valid when the
+    // second read finishes within the group's original allowance.
+    const inTime = await group(false);
+    expect(inTime.calls).toEqual(late.calls);
+    expect(inTime.releasedAt).toBe(firstAdvance + Math.floor(remaining / 2));
+    expect(inTime.answer).toMatchObject({ answer: "accepted" });
+    expect(inTime.after.seq).toBe(inTime.head.seq + 1);
+    expect(inTime.entries).toHaveLength(1);
+  } finally {
+    s.c.gate.release();
+    sourceGroup = null;
+    vi.useRealTimers();
+  }
 });
 
 describe("the head check (section 5.2, steps 4 to 6)", () => {
@@ -353,7 +527,9 @@ describe("what follows the head is told of each commit (`Turns.onSealed`)", () =
     const told = await s.inside(async (state) => {
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (closure) => state.storage.transactionSync(closure) });
       const wakes = new Wakes(store, { set: (time) => (time === null ? state.storage.deleteAlarm() : state.storage.setAlarm(timeMs(time)!)) }, false);
-      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: wakes.deadline, capabilities: null }, s.c.bounds, () => definition, () => undefined);
+      // One fixture setup admission; not a read of the Turns path below.
+      const pin = { pinned: { named: definition.digest, definition: definition, platform: null }, sequence: storedSequenceOf(store, s.c.bounds.entryBytes) };
+      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: wakes.deadline, capabilities: null }, s.c.bounds, () => definition, () => undefined, { value: pin }, () => pin);
       const heads: number[] = [];
       turns.onSealed(() => { heads.push(store.scope()!.head.seq); });
       // An input that writes one entry: a checkpoint, as the scope's own `checkpoint` drafts it.
@@ -407,7 +583,9 @@ describe("the budget of timed attempts, here 2 for a turn (section 5.2, step 7)"
     const ended = await s.inside(async state => {
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
       const wakes = new Wakes(store, { set: time => time === null ? state.storage.deleteAlarm() : state.storage.setAlarm(timeMs(time)!) }, false);
-      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: wakes.deadline, capabilities: null }, s.c.bounds, () => definition, () => undefined);
+      // One fixture setup admission; not a read of the Turns path below.
+      const pin = { pinned: { named: definition.digest, definition: definition, platform: null }, sequence: storedSequenceOf(store, s.c.bounds.entryBytes) };
+      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: wakes.deadline, capabilities: null }, s.c.bounds, () => definition, () => undefined, { value: pin }, () => pin);
       return turns.run(null);
     });
     expect([ended, s.c.clock.script, await s.head()]).toEqual([{ end: "busy" }, [], head]);

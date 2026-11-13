@@ -3,7 +3,7 @@ import { applicationAdmissionCohort, platform } from "@generalbusiness/dap-platf
 /** Deployment admission for fresh acts only. Immutable native creation proves
  * which installed release owns a scope; current trust is never cached. */
 import type { Digest, Entry, FactRef } from "@generalbusiness/dap-contract";
-import { canonicalize, deliveryCauseDigest, isDigest, isFactRef, isMemberRef, isPlatformDefinition, isRecord, isScopeRef, isSeed, messageDigest, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, deliveryCauseDigest, isDigest, type CheckedSequence, isFactRef, isMemberRef, isPlatformDefinition, isRecord, isScopeRef, isSeed, messageDigest, resolveGenesisSelf, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { same, sentBy } from "@generalbusiness/dap-derive";
 
 import { readApplicationTrust } from "./admission.ts";
@@ -33,9 +33,9 @@ type Cache = { identity: string; provenance: Provenance };
 type AdmissionAnswer = { current(): FreshActAdmissionDecision };
 type Flight = { identity: string; promise: Promise<AdmissionAnswer | null> };
 type GenesisEntry = Entry & { input: Extract<Entry["input"], { type: "genesis" }> };
-const birthEntry = (entry: Entry | null): entry is GenesisEntry => entry?.input.type === "genesis" && entry.input.decision === "applied"
-  && entry.seq === 0 && entry.prev === null && entry.input.inc === entry.at.inc && entry.input.seed.kind === entry.at.kind
-  && scopeIdOf(entry.input.seed) === entry.at.scope;
+/** An applied genesis admitted under its own checked sequence: proofEntry already matched its digest to the full reference. */
+const birthEntry = (entry: Entry | null, sequence: CheckedSequence): entry is GenesisEntry => entry?.input.type === "genesis" && entry.input.decision === "applied"
+  && entry.seq === 0 && entry.prev === null && entry.input.seed.kind === sequence.kind && scopeIdOf(entry.input.seed) === sequence.at.scope;
 
 export class ApplicationActAdmission implements FreshActAdmission {
   readonly #options: ApplicationActAdmissionOptions;
@@ -108,7 +108,7 @@ export class ApplicationActAdmission implements FreshActAdmission {
       if (identity !== expectedIdentity || this.#identity() !== identity) return null;
       if (this.#cache?.identity !== identity) this.#cache = null;
       const provenance: Provenance | null = isPlatformDefinition(frame.pinned.named) ? { kind: "unpackaged" }
-        : await this.#discover(frame.birth, run);
+        : await this.#discover(frame.birth, frame.sequence, run);
       if (!provenance || !run.active() || this.#identity() !== identity) return null;
       // No peer reply, entry body, trust row, or failed proof survives this
       // flight. Only authenticated immutable provenance is reusable.
@@ -117,29 +117,34 @@ export class ApplicationActAdmission implements FreshActAdmission {
     } catch { return null; }
   }
 
-  async #discover(first: ProofBody, run: PreparationRun): Promise<Provenance | null> {
+  async #discover(first: ProofBody, own: CheckedSequence, run: PreparationRun): Promise<Provenance | null> {
     const o = this.#options, b = APPLICATION_ACT_ADMISSION_BOUNDS;
     let bodies = 0, bytes = 0, rpcs = 0;
     const active = () => { if (!run.active()) throw Error("application-admission-unavailable"); };
     const capacity = () => { active(); if (bodies >= b.bodies || bytes >= b.bytes) throw Error("application-admission-unavailable"); return Math.min(b.body, b.bytes - bytes); };
-    const body = (value: ProofBody, fact: FactRef, content?: Digest): Entry | null => {
+    const body = (value: ProofBody, fact: FactRef, sequence: CheckedSequence, content?: Digest): Entry | null => {
       const cap = capacity();
       if (typeof value.bytes !== "string" || value.bytes.length > cap) return null;
       const count = utf8(value.bytes).length;
       if (count > cap) return null;
       bodies++; bytes += count;
-      return proofEntry(value, fact, cap, content);
+      return proofEntry(value, fact, cap, sequence, content);
     };
+    // A Native birth spends the same allowance through its debit, before parsing. Admission already bounded it by `cap`.
+    const debit = (count: number): void => { active(); bodies++; bytes += count; };
     const rpc = () => { active(); if (++rpcs > b.rpcs) throw Error("application-admission-unavailable"); };
-    const initial = body(first, first.fact);
-    if (!birthEntry(initial)) return null;
+    const initial = body(first, first.fact, own);
+    if (!birthEntry(initial, own)) return null;
     let child: GenesisEntry = initial;
-    const seen = new Set([canonicalize(child.at)]);
+    const seen = new Set([canonicalize(own.at)]);
     for (let ancestor = 0; ancestor < b.ancestors; ancestor++) {
       active();
-      const born = child.input, parent = born.seed.creator;
+      // A creator that creates in its own genesis names itself by the
+      // genesis self reference; the birth's source fact resolves it.
+      const born = child.input, named = born.seed.creator;
+      const parent = named === null ? null : isFactRef(born.source) ? resolveGenesisSelf(named, born.source) : named;
       // A genuine parentless declared birth is not a package installation.
-      if (parent === null) return born.source === null && born.n === null && born.message === null && born.founding !== null ? { kind: "unpackaged" } : null;
+      if (named === null) return born.source === null && born.n === null && born.message === null && born.founding !== null ? { kind: "unpackaged" } : null;
       if (!isScopeRef(parent) || !isFactRef(born.source) || !same(born.source.at, parent) || born.n === null || !born.message
         || born.message.class !== "request" || born.message.type !== "create" || seen.has(canonicalize(parent))) return null;
       seen.add(canonicalize(parent));
@@ -150,16 +155,17 @@ export class ApplicationActAdmission implements FreshActAdmission {
       rpc();
       const reply = await o.births.read(parent, run.remaining(), cap);
       active();
-      const birth = readNativeBirth(reply, parent, cap);
-      if (!birth) return null;
-      const creator = body(birth.proof, birth.proof.fact);
-      if (!birthEntry(creator)) return null;
+      const admitted = readNativeBirth(reply, parent, cap, debit);
+      if (!admitted) return null;
+      const birth = admitted.birth, creator: Entry = admitted.entry;
+      if (!birthEntry(creator, admitted.sequence)) return null;
       // NativeBirth supplies the current exact pin, never a retained alias.
       if (birth.native && (!isPlatformDefinition(birth.named) || !platform(birth.named))) return null;
       let source: Entry | null = null;
       if (ancestor === 0) {
         const retained = o.local.retained(use, capacity());
-        if (retained.kind === "body") source = body(retained.value, born.source, use.content);
+        // The retained creator entry associates through the parent birth that this walk holds (ruling b7c58915).
+        if (retained.kind === "body") source = body(retained.value, born.source, admitted.sequence, use.content);
       }
       if (!source) {
         if (!o.proofs) return null;
@@ -168,10 +174,10 @@ export class ApplicationActAdmission implements FreshActAdmission {
         const exact = await o.proofs.read(born.source, sourceCap, run.remaining());
         active();
         if (!exact) return null;
-        source = body(exact, born.source, use.content);
+        source = body(exact, born.source, admitted.sequence, use.content);
       }
       if (!source || source.sends.filter(send => send.n === born.n).length !== 1
-        || !sentBy(source, { from: born.source, n: born.n, to: born.seed, message: born.message })) return null;
+        || !sentBy(source, { from: born.source, n: born.n, to: born.seed, message: born.message }, admitted.sequence)) return null;
       if (!birth.native) { child = creator; continue; }
 
       const made = source.input;
@@ -182,13 +188,17 @@ export class ApplicationActAdmission implements FreshActAdmission {
       // recognized native factory is incomplete, never an exemption.
       if (!installing) return { kind: "unpackaged" };
       const cohort = applicationAdmissionCohort(birth.named);
-      if (!cohort || parent.kind !== "directory" || creator.input.seed.kind !== "directory" || made.type !== "delivery"
+      if (!cohort || admitted.sequence.kind !== "directory" || creator.input.seed.kind !== "directory" || made.type !== "delivery"
         || !("decision" in made) || made.decision !== "applied" || !isRecord(made.message.body)
         || !isRecord(made.message.body["fields"])) return null;
       const fields = made.message.body["fields"];
-      const sibling = (kind: "rules" | "membership", pin: string, at: unknown) => isScopeRef(at) && at.kind === kind && creator.sends.some(send => {
+      // A reference names no kind. The Directory's send states the sibling seed's kind, and the seed's digest names the scope.
+      // `creator` is the Directory's genesis, so its sends name their creator
+      // by the genesis self reference; resolve it from that genesis fact.
+      const origin: FactRef = { at: parent, seq: 0, hash: parent.genesis };
+      const sibling = (kind: "rules" | "membership", pin: string, at: unknown) => isScopeRef(at) && creator.sends.some(send => {
         const seed = send.to;
-        return isSeed(seed) && seed.kind === kind && seed.definition === pin && same(seed.creator, parent) && scopeIdOf(seed) === at.scope;
+        return isSeed(seed) && seed.kind === kind && seed.definition === pin && same(resolveGenesisSelf(seed.creator, origin), parent) && scopeIdOf(seed) === at.scope;
       });
       if (!sibling("rules", cohort.rules, made.from.at) || !isMemberRef(fields["installer"])
         || !sibling("membership", cohort.membership, fields["installer"].membership)

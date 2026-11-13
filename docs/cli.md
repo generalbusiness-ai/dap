@@ -860,6 +860,20 @@ scopes.`, or `All consistent: <n> scopes, and <m> creation results of other
 rooms on the service's word.`, or the first finding, and then the command
 exits 1. A journal that cannot be read is a finding.
 
+Offline Replay can use exact caller anchors for private Register or
+Membership entries without reading their journals. It takes a varying kind
+from the receiving entry's `sourceKind` or exact fact-use row. A grant and
+a creation context fix Membership by their place. A lane's creation
+context fixes Directory at `directory`. Replay compares these kinds with a verified genesis when it has one; a disagreement is a mismatch.
+Otherwise the report lists the recorded or fixed kind under `trusts`.
+
+`artroom-replay --git <clone> --all --trust-published-anchors` supplies
+anchors alone. The manifest row and finite catalog retain their separate
+role in naming a retained definition. Neither a recorded kind nor an
+anchor supplies a verified genesis, Native birth proof or `from.pin`
+evidence. A handler that needs `from.pin` without genuine genesis evidence
+stops `incomplete`, without opening a private journal.
+
 ```
 register sc_3kisrweg..., entry 3: consistent.
 directory sc_6frfaa2y..., entry 21: consistent.

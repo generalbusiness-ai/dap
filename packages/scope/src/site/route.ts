@@ -47,8 +47,9 @@
 import { GitRefusal, READ_BOUNDS, Reader, type ObjectId, type TreeEntry } from "@generalbusiness/dap-git";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { credentialInUrl } from "../sessions.ts";
+import { roomRetiredResponse } from "../room-retired.ts";
 import { admitServing } from "../serving-admission.ts";
-import { SiteTokenUnavailable, StepError, publicationOf, publishedCommitOf, readerOf, roomOf, type Opened, type SiteEnv, type SiteStep } from "./host.ts";
+import { SiteRoomRetired, SiteTokenUnavailable, StepError, publicationOf, publishedCommitOf, readerOf, roomOf, type Opened, type SiteEnv, type SiteStep } from "./host.ts";
 import { renderMarkdown, titleOf } from "./markdown.ts";
 import { escapeHtml } from "./node.ts";
 
@@ -279,6 +280,7 @@ export async function site(request: Request, env: SiteEnv, fetch?: (request: Req
   try {
     room = await roomOf(env.SCOPES, directory);
   } catch (e) {
+    if (e instanceof SiteRoomRetired) return roomRetiredResponse();
     logged("room", e);
     return refusal("unreadable", e instanceof Error && e.message === "publication-history-limit" ? "publication-history-limit" : "the room could not be read", "room");
   }
@@ -287,7 +289,7 @@ export async function site(request: Request, env: SiteEnv, fetch?: (request: Req
   roomName = room.repository.name;
   let publication;
   try { publication = await publicationOf(env.SCOPES, directory, room); }
-  catch (e) { logged("room", e); return refusal("unreadable", e instanceof Error && e.message === "publication-history-limit" ? "publication-history-limit" : "the room could not be read", "room"); }
+  catch (e) { if (e instanceof SiteRoomRetired) return roomRetiredResponse(); logged("room", e); return refusal("unreadable", e instanceof Error && e.message === "publication-history-limit" ? "publication-history-limit" : "the room could not be read", "room"); }
   if (!publication) return refusal("not-published", "the room has no confirmed publication");
   // Full canonical object IDs take precedence over branch-like hash names.
   const immutable = /^[0-9a-f]{40}$/.test(ref);
@@ -302,7 +304,7 @@ export async function site(request: Request, env: SiteEnv, fetch?: (request: Req
         ? refusal("unreadable", "publication-history-limit", "room")
         : refusal("not-published", "the room has no written publication receipt for that commit");
       proof = selection.proof;
-    } catch (e) { logged("room", e); return refusal("unreadable", "the publication proof could not be read", "room"); }
+    } catch (e) { if (e instanceof SiteRoomRetired) return roomRetiredResponse(); logged("room", e); return refusal("unreadable", "the publication proof could not be read", "room"); }
   }
   const tokenRef = versions ? `refs/heads/${room.branch}` : immutable ? proof!.receipt.ref : selected!.ref;
   const open = readerOf(env, room, fetch, tokenRef);
@@ -402,6 +404,7 @@ export async function site(request: Request, env: SiteEnv, fetch?: (request: Req
       headers: { ...cached, "content-type": type ?? "application/octet-stream", ...(type ? {} : { "content-disposition": "attachment" }), "content-security-policy": FILE_POLICY, "x-content-type-options": "nosniff" },
     }));
   } catch (e) {
+    if (e instanceof SiteRoomRetired) return roomRetiredResponse();
     logged(step, e, opened);
     if (e instanceof GitRefusal && e.reason === "too-large" && e.what === "page") return refusal("too-large", `a file of more than ${FILE_BYTES} bytes is not served`, step);
     return refusal("unreadable", e instanceof Error && e.message === "publication-history-limit" ? "publication-history-limit" : "the repository could not be read", step);

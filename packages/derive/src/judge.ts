@@ -12,16 +12,17 @@
  */
 
 import { nativeMark } from "./program/native.ts";
-import type { Effect, Entry, FactRef, FactUse, Grant, Head, Input, MismatchReason, ObservationUse, Prepared, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
-import { intentDigest, scopeIdOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import type { Entry, FactRef, FactUse, Grant, Head, Input, MismatchReason, ObservationUse, Prepared, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
+import { intentDigest, isEffect, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import { withinCounts } from "./draws.ts";
 import { namedBody } from "./program/structure.ts";
 import { executeBody } from "./program/body.ts";
 import { declarationOf } from "./program/declaration.ts";
-import { isIntent, presentedTypes, readFacts, readFields, type Reading } from "./fields.ts";
+import { isIntent, presentedTypes, readFields, type Reading } from "./fields.ts";
 import { covers } from "./grant.ts";
-import type { Judging } from "./guards.ts";
+import type { Judging, ReplayAssumptions } from "./guards.ts";
+import { judgmentFacts, readJudgmentFacts, replayContext, verifiedContext } from "./operand.ts";
 import { alsoItems, giving } from "./handlers.ts";
 import { actionOf, atHand, atHandByRows, fieldOutsideType, grantByRule, placeWithoutValue, placesOf, retainedOf, selectedBy, unjudged, type JudgedInput, type ValueRead } from "./marks.ts";
 import { listedBy, rowsOfAct, settle, type Listed, type Needed, type Observing, type Settled } from "./observes.ts";
@@ -107,7 +108,7 @@ export interface Draft {
   input: Input;
   uses: readonly FactUse[];
   prepared: readonly Prepared[];
-  effects: readonly Effect[];
+  effects: readonly import("@generalbusiness/dap-contract").GenesisEffect[];
   sends: readonly Send[];
   /** It judges an expiry, a freshness or a deadline, so it is never written while the clock is behind (section 5.3). */
   judgesTime: boolean;
@@ -181,7 +182,13 @@ export type Judgment =
  * judged: `unavailable`, and nothing is written (section 6.1).
  */
 export function judgeAct(view: StateView, definition: ValidDefinition, signed: SignedIntent, context: JudgeContext): ActJudgment {
-  return withinCounts(view, definition, unjudged(() => actJudged(view, definition, signed, context, false)));
+  return withinCounts(view, definition, unjudged(() => actJudged(view, definition, signed, verifiedContext(context, { act: signed }), false)));
+}
+
+/** Replay runs the same judge with explicitly separate caller assumptions. */
+export function judgeActForReplay(view: StateView, definition: ValidDefinition, signed: SignedIntent, verified: JudgeContext, assumed: ReplayAssumptions): ActJudgment {
+  const context = replayContext(verified, assumed, { act: signed });
+  return context ? withinCounts(view, definition, unjudged(() => actJudged(view, definition, signed, context, false))) : { result: "unavailable", reason: "dependency-unavailable" };
 }
 
 /**
@@ -197,7 +204,7 @@ export function judgeAct(view: StateView, definition: ValidDefinition, signed: S
  */
 export function actNeeds(view: StateView, definition: ValidDefinition, signed: SignedIntent, context: JudgeContext): readonly Needed[] {
   if (!definition.observing) return [];
-  const planned = unjudged(() => actJudged(view, definition, signed, { ...context, grants: null }, true));
+  const planned = unjudged(() => actJudged(view, definition, signed, verifiedContext({ ...context, grants: null }, { act: signed }), true));
   return (planned.result === "unavailable" && "missing" in planned ? planned.missing : undefined) ?? [];
 }
 
@@ -241,8 +248,8 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   const read = readFields(act.fields, intent.fields, bounds);
   if (!read.ok) return refused("bad-field", read.detail);
   // Section 6.2: a fact that names this scope is a local fact. It is checked against this scope's own entry, and is then its `seq`.
-  const local = { at: scope.at, own: context.own, texts: context.texts };
-  const named = readFacts(view, act.fields, read.fields, context.facts, local);
+  const local = { at: scope.at, own: context.own, texts: context.texts }; // Own.sequence is the held genesis admission, never scope.at alone.
+  const named = readJudgmentFacts(view, act.fields, read.fields, judgmentFacts(context), local);
   if (named.result === "unavailable") return { result: "unavailable", reason: "dependency-unavailable" };
   if (named.result !== "read") return refused(named.result, named.detail);
   const { fields } = named;
@@ -251,7 +258,7 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   const presents = presentedTypes(act.presents);
   const shown = readFields(presents, context.presented ?? {}, bounds);
   if (!shown.ok) return refused("bad-field", `presented: ${shown.detail}`);
-  const shownFacts = readFacts(view, presents, shown.fields, context.facts, local);
+  const shownFacts = readJudgmentFacts(view, presents, shown.fields, judgmentFacts(context), local);
   if (shownFacts.result === "unavailable") return { result: "unavailable", reason: "dependency-unavailable" };
   if (shownFacts.result !== "read") return refused(shownFacts.result, `presented: ${shownFacts.detail}`);
   const facts = new Map([...named.facts, ...shownFacts.facts]);
@@ -434,7 +441,8 @@ export function judgeTimed(view: StateView, definition: ValidDefinition, selecte
  * The entry a draft becomes at this head and this reading (section 5.3): the
  * reading is its time, or, when the clock is behind, the previous entry's
  * time with `clamped: true`. A genesis draft becomes entry 0 of the scope its
- * seed and incarnation name. The hash is computed afterwards, over these
+ * seed addresses. The finished genesis has no sequence header. Its hash is
+ * computed afterwards, over these
  * bytes.
  */
 export function entryOf(view: StateView, draft: Draft, clock: Clock): Entry {
@@ -442,9 +450,10 @@ export function entryOf(view: StateView, draft: Draft, clock: Clock): Entry {
   const input = draft.input;
   if ((scope === null) !== (input.type === "genesis")) throw new Error("a scope's first entry is its genesis, and it has one");
   if (clock.behind && draft.judgesTime) throw new Error("an entry that judges time is not written while the clock is behind");
-  const at: ScopeRef = scope?.at ?? (input.type === "genesis" ? { scope: scopeIdOf(input.seed), inc: input.inc, kind: input.seed.kind } : null as never);
-  return {
-    v: 1, at, seq: scope ? scope.head.seq + 1 : 0, prev: scope ? scope.head.hash : null, time: clock.asOf, clamped: clock.behind, epoch: 0,
-    input, uses: draft.uses, prepared: draft.prepared, effects: draft.effects, sends: draft.sends,
-  };
+  const body = { v: 1 as const, time: clock.asOf, clamped: clock.behind, epoch: 0 as const, uses: draft.uses, prepared: draft.prepared, sends: draft.sends };
+  if (input.type === "genesis") return { ...body, seq: 0, prev: null, input, effects: draft.effects };
+  if (!scope) throw new Error("a later entry requires its sequence");
+  // An encoded genesis self cannot escape into a later entry's effects.
+  if (!draft.effects.every(isEffect)) throw new Error("a later entry contains an encoded genesis self");
+  return { ...body, genesis: scope.at.genesis, seq: scope.head.seq + 1, prev: scope.head.hash, input, effects: draft.effects };
 }

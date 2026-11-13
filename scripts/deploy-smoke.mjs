@@ -70,8 +70,8 @@ export async function smokeWorker({ config, url }, { fetch: fetcher = globalThis
     if (policy.offer) {
       const actual = offer.body, expected = policy.offer;
       if (!actual || actual.v !== 2 || actual.origin !== expected.origin || actual.definition !== expected.definition
-          || !actual.register || Object.keys(actual.register).sort().join() !== "inc,kind,scope"
-          || ["kind", "scope", "inc"].some(key => actual.register[key] !== expected.register[key])) throw new Error("Creation offer names another register.");
+          || !actual.register || Object.keys(actual.register).sort().join() !== "genesis,scope"
+          || ["scope", "genesis"].some(key => actual.register[key] !== expected.register[key])) throw new Error("Creation offer names another register.");
     }
     return { pass: true, coldStart, checks };
   } catch (error) {

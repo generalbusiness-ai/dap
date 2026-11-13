@@ -1,5 +1,4 @@
 import { packageReportDefinition } from "./definition-corpus-data.ts";
-import { freshCountingSource } from "../../derive/test/support/fresh-counting-source.ts";
 /** Real filesystem/package/key witnesses. These are not installs, scenarios or
  * rendered Counter/Lending screen checks. All keys below are public TEST data. */
 import { mkdtemp, mkdir, readFile, readdir, realpath, rm, stat, symlink, truncate, writeFile } from "node:fs/promises";
@@ -23,8 +22,7 @@ async function fixture(kind: "counter" | "lending" = "lending") {
   const root = await realpath(await mkdtemp(join(tmpdir(), "dap-pack-")));
   const original = new URL(kind === "counter" ? "../../../apps/counter/definition.json" : "../../../examples/lending/definition.json", import.meta.url);
   const retained = JSON.parse(await readFile(original, "utf8"));
-  // Only a new Counter authoring copy drops the five retained empty exceptions.
-  const definition = kind === "counter" ? freshCountingSource(retained) : retained;
+  const definition = retained;
   const grant = kind === "counter" ? "counting.spoken" : "lending.member";
   const config = { v: 1, name: `ai.generalbusiness.${kind}`, version: "0.1.0", entry: "definition.json", definitions: ["definition.json"],
     host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], projections: {}, roles: { member: [grant] }, predecessor: null,

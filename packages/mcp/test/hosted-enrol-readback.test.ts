@@ -6,9 +6,11 @@
 import { DatabaseSync } from "node:sqlite";
 import { expect, test } from "vitest";
 import type { ControlRequest, Input, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, readMinimumParameter, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, digestBytes, readMinimumParameter, signControlWith, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { encodeAgentKeyInvitation, httpTransport, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
 import { HostedAgent, hostedRolePort, type AgentPorts } from "../src/hosted.ts";
+import { RETIRED_STORE_STOP } from "../src/hosted-store-stop.ts";
+import { enrolledKeyItem, retirementBody } from "../src/hosted-retirement.ts";
 import { identityId, type Identity } from "@generalbusiness/dap-client";
 import { sqliteStore, type Sql, type SqlValue } from "../src/sqlite-custody.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";
@@ -72,6 +74,7 @@ test.each([
     };
     const sent: { signed?: SignedIntent; receipt?: Receipt } = {};
     let dispatches = 0, entryReads = 0, randomCalls = 0;
+    const postedActs: string[] = [];
     peer.answers.set("enrol", signed => {
       sent.signed = signed; dispatches++;
       // The signature fault changes only retained signed bytes. Its hash and
@@ -85,6 +88,11 @@ test.each([
     });
     const fetch: Fetch = async (url, init) => {
       const parsed = new URL(url);
+      // Record attempts before delegating. The stand-in still receives the
+      // original request, including a revoke that the old catch would send.
+      if (parsed.pathname === `/v1/scopes/${peer.membership.scope}/acts` && init?.method === "POST") {
+        postedActs.push(typeof init.body === "string" ? init.body : "");
+      }
       if (parsed.pathname.startsWith(`/v1/scopes/${peer.membership.scope}/entries/`)) {
         entryReads++;
         const minimum = readMinimumParameter(parsed.searchParams.get("atLeast"));
@@ -102,8 +110,7 @@ test.each([
     const memberSequence = member.receipt.fact.seq;
     const invitationSequence = invitation.receipt.fact.seq;
     const roleStanding = hostedRolePort(async asked => {
-      if (asked.membership.scope !== peer.membership.scope || asked.membership.inc !== peer.membership.inc
-        || asked.membership.kind !== peer.membership.kind) return { status: "unavailable" };
+      if (asked.membership.scope !== peer.membership.scope || asked.membership.genesis !== peer.membership.genesis) return { status: "unavailable" };
       const head = peer.head(membership);
       const memberInput = membership.entries[memberSequence]?.entry.input;
       const invitationInput = membership.entries[invitationSequence]?.entry.input;
@@ -118,8 +125,7 @@ test.each([
         return input.type === "act" && input.signed.intent.kind === "enrol"
           && input.signed.intent.actor === agentSigner.key && input.signed.intent.idempotencyKey === `enrol:${OP}`
           && input.signed.intent.to !== null
-          && input.signed.intent.to.scope === peer.membership.scope && input.signed.intent.to.inc === peer.membership.inc
-          && input.signed.intent.to.kind === peer.membership.kind;
+          && input.signed.intent.to.scope === peer.membership.scope && input.signed.intent.to.genesis === peer.membership.genesis;
       });
       const controller = { member: link.controller.member, state: "active", role: "member", activeKey: true, controller: null, actions: [] };
       const agentRole = { member: link.handle, state: "active", role: "agent", activeKey: enrolled, controller: link.controller.member, actions: [] };
@@ -183,5 +189,95 @@ test.each([
     expect(agent.durable().bearer).toBe(fault === "none");
     if (fault !== "none") expect(sql.exec("SELECT bearer, answer FROM agent WHERE id = 1").toArray()[0]).toMatchObject({ bearer: null, answer: null });
     else expect(repeated.body).toMatchObject({ bearerShown: true });
+
+    if (fault === "none") {
+      // This accepted original is the real fallback prerequisite. A missing
+      // custody target or an invalid revoke must not explain zero posts.
+      const revoke = await signedIntent(owner, { to: peer.membership, kind: "revoke-key",
+        on: invitation.receipt.fact.seq, fields: { as: "retired" } }, { idempotencyKey: `${OP}-revoke`, now: NOW });
+      const retireBytes = utf8(canonicalize({ revoke }));
+      expect(verifySignedIntent(revoke)).toBe(true);
+      expect(retirementBody(retireBytes, peer.membership, owner.key)).toEqual({ valid: true, revoke });
+      expect(enrolledKeyItem(record, identity)).toBe(revoke.intent.on);
+      expect(await store.read(identityId(identity))).toEqual(record);
+      const retirement = await signControlWith({ ...request, action: "retire", agent: ports.id,
+        op: `${OP}-late-retire`, body: digestBytes(retireBytes) }, owner);
+      const originalRoleStanding = ports.roleStanding;
+      type ReadMode = "retired-stop" | "error" | "active" | "missing" | "retired" | "compromised";
+      let readMode: ReadMode = "retired-stop", authorityReads = 0;
+      const keyReads: unknown[] = [];
+      let enter!: () => void, release!: () => void;
+      const entered = new Promise<void>(resolve => { enter = resolve; });
+      const waiting = new Promise<void>(resolve => { release = resolve; });
+      const ordinaryError = new Error("TEST observation failed after shutdown");
+      ports.roleStanding = hostedRolePort(async asked => {
+        if (asked.actor === owner.key) {
+          authorityReads++;
+          return originalRoleStanding(asked);
+        }
+        // Only the exact cleanup role read is held. Management authority
+        // retains this case's signed-fixture role port, not Native evidence.
+        if (!("agent" in asked) || asked.actor !== null || asked.agentKey !== agentSigner.key) return { status: "unavailable" };
+        keyReads.push(asked);
+        if (readMode === "retired-stop") { enter(); await waiting; throw RETIRED_STORE_STOP; }
+        if (readMode === "error") throw ordinaryError;
+        const read = await originalRoleStanding(asked);
+        if (read.status !== "observed" || read.agentKey === null) return { status: "unavailable" };
+        return { ...read, agentKey: readMode === "missing" ? null : { ...read.agentKey, keyState: readMode } };
+      });
+      try {
+        const postsBefore = postedActs.length;
+        expect(postsBefore).toBe(1);
+        let failure: unknown, returned: unknown;
+        const settled = agent.control(retirement, "retire", retireBytes).then(
+          value => { returned = value; }, failed => { failure = failed; });
+        try {
+          // An earlier refusal must fail immediately, not hang on the gate.
+          expect(await Promise.race([entered.then(() => true), settled.then(() => false)])).toBe(true);
+          expect(authorityReads).toBe(1);
+          expect(keyReads).toEqual([{ membership: peer.membership, agent: link.handle,
+            agentKey: agentSigner.key, expectedController: null, actor: null }]);
+          expect(sql.exec("SELECT state, length(seed) AS seedBytes, bearer FROM agent WHERE id = 1").toArray())
+            .toEqual([{ state: "retired", seedBytes: 0, bearer: null }]);
+          expect(sql.exec("SELECT state, answer FROM control WHERE op = ?", retirement.request.op).toArray())
+            .toEqual([{ state: "pending", answer: null }]);
+          expect(sql.exec("SELECT revoke FROM agent_retirement WHERE id = 1").toArray())
+            .toEqual([{ revoke: canonicalize(revoke) }]);
+          expect(postedActs).toHaveLength(postsBefore);
+        } finally { release(); await settled; }
+        expect(failure).toBeUndefined();
+        expect(returned).toMatchObject({ status: 503, body: { error: "temporarily_unavailable" } });
+        expect(postedActs).toHaveLength(postsBefore);
+        expect(sql.exec("SELECT state FROM control WHERE op = ?", retirement.request.op).toArray())
+          .toEqual([{ state: "pending" }]);
+        expect(agent.durable()).toMatchObject({ state: "retired", bearer: false });
+        expect(await store.read(identityId(identity))).toEqual(record);
+
+        // An ordinary role-read rejection also withholds the fallback POST.
+        // Active and missing observations below still reach the valid revoke.
+        readMode = "error";
+        const ordinary = await agent.control(retirement, "retire", retireBytes);
+        expect(ordinary.status).toBe(503);
+        expect(ordinary.body).toMatchObject({ error: "temporarily_unavailable" });
+        expect(postedActs).toHaveLength(postsBefore);
+        expect(keyReads.slice(1)).toEqual([
+          { membership: peer.membership, agent: link.handle, agentKey: agentSigner.key, expectedController: null, actor: null },
+        ]);
+
+        // Ordinary key values keep their old no-confirmation/confirmation
+        // distinction. Replays reuse the same retained revoke and identity.
+        for (const mode of ["active", "missing", "retired", "compromised"] as const) {
+          readMode = mode;
+          const beforePosts = postedActs.length;
+          const answer = await agent.control(retirement, "retire", retireBytes);
+          const confirmed = mode === "retired" || mode === "compromised";
+          expect(answer.status).toBe(confirmed ? 200 : 202);
+          expect(answer.body).toMatchObject({ retired: confirmed, endpointDisabled: true, seedErased: true });
+          expect(postedActs.length - beforePosts).toBe(confirmed ? 0 : 1);
+          if (!confirmed) expect(JSON.parse(postedActs.at(-1)!)).toMatchObject({ signed: revoke });
+        }
+        expect(await store.read(identityId(identity))).toEqual(record);
+      } finally { release(); ports.roleStanding = originalRoleStanding; }
+    }
   } finally { agent?.abrupt(); sql.db.close(); }
 });

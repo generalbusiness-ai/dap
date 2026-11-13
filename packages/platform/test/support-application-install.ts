@@ -3,10 +3,10 @@
  * explicit fixtures; no runtime storage, Git provider or replay verifier runs. */
 import type { PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { intentDigest, isSeed, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { intentDigest, isSeed, scopeIdOf, newGenesisNonce } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeDelivery, judgeGenesis, judgeOutcome, validateDefinition, type Judgment } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
-import { Ledger, T0, arriving, creation, keys, sent } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, arriving, creation, fixtureSequence, keys, sent } from "@generalbusiness/dap-derive/testing";
 import { platform, repositoryName, TRUSTED_APPLICATION_COHORT as C } from "../src/index.ts";
 import { installing } from "./support-creation.ts";
 export class InstallNode extends Ledger {
@@ -34,7 +34,7 @@ export class InstallNode extends Ledger {
 }
 export function installGraph(cohort: Readonly<{ register: PlatformDefinition }> = C, archive?: "journal") {
   const nodes: InstallNode[] = [], R = new InstallNode(cohort.register); nodes.push(R);
-  const allFacts = () => nodes.flatMap(node => node.entries.map(({ entry }, seq) => ({ fact: node.fact(seq), entry, under: node.under })));
+  const allFacts = () => nodes.flatMap(node => node.entries.map(({ entry }, seq) => ({ fact: node.fact(seq), entry, under: node.under, sequence: fixtureSequence(node) })));
   const send = (to: InstallNode, from: InstallNode, seq: number, n = 0, write = true) => {
     const { delivered, source } = sent(from, seq, n);
     const judged = judgeDelivery(to.state, to.definition, delivered, { ...arriving(to, delivered, source, allFacts()), platform: to.authority, texts: from.texts });
@@ -53,7 +53,7 @@ export function installGraph(cohort: Readonly<{ register: PlatformDefinition }> 
     return node;
   };
   const signed = installing(keys.rita, "keys", [keys.rita.key]), seed: Seed = { v: 1, kind: "register", definition: cohort.register, creator: null, cause: intentDigest(signed.intent), ordinal: 0 };
-  R.take(judgeGenesis(R.state, R.definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(7)), seed, creation: signed },
+  R.take(judgeGenesis(R.state, R.definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(7)), seed, creation: signed },
     { clock: clockOf(R.state, T0), bounds: R.bounds, facts: [], prepared: [], source: null, platform: R.authority }));
   const found = R.act(keys.rita, "found", { expected: { register: R.item(0).revision }, fields: { branch: "main", "founderHandle": "@rita", recoveryKey: keys.sam.key, ...(archive === undefined ? {} : { archive }) } }, { grants: [] });
   if (found.result !== "write") throw Error(JSON.stringify(found));

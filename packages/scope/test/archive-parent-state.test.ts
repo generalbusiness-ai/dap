@@ -2,7 +2,7 @@
  * signed and hash checked; no Native judgment or export authority is claimed. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type Head, type Intent, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, entryHash, intentDigest, keyIdOfSecret, newGenesisNonce, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { GitRefusal, objectId, parseCommit, parseTree, Reader } from "@generalbusiness/dap-git";
 import { buildJournalPass, captureJournalParentFrontier, JOURNAL_PARENT_FRONTIER_BYTES, JOURNAL_PARENT_FRONTIER_OBJECTS,
   journalRef, journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath, type JournalInputSource,
@@ -30,7 +30,11 @@ function selectedPasses(count: number) {
     idempotencyKey: "TEST fixed parent frontier", notAfter: "2030-01-01T00:00:00Z" };
   const seed: Seed = { v: 1, kind: "register", definition: "platform:register@1", creator: null,
     cause: intentDigest(intent), ordinal: 0 };
-  const at = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(29)), kind: "register" as const };
+  const born: Entry = { v: 1, seq: 0, prev: null, time: timeOf(1_700_000_000_900), clamped: false, epoch: 0,
+    input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(0x1d)), kind: intent.kind, founding: signIntent(intent, secret),
+      source: null, sourceKind: null, n: null, message: null, decision: "applied" },
+    uses: [], prepared: [], effects: [], sends: [] };
+  const at = { scope: scopeIdOf(seed), genesis: entryHash(born) };
   const entries: { body: string; head: Head }[] = [];
   const retained = new Map<string, string>();
   const passes: {
@@ -39,12 +43,11 @@ function selectedPasses(count: number) {
     description: Record<string, unknown>;
   }[] = [];
   for (let seq = 0; seq < count; seq++) {
-    const input: Entry["input"] = seq === 0
-      ? { type: "genesis", seed, inc: at.inc, kind: intent.kind, founding: signIntent(intent, secret), source: null, n: null, message: null, decision: "applied" }
-      : { type: "checkpoint", through: seq - 1, state: digestBytes(utf8(`TEST state ${seq}`)) };
-    const entry: Entry = { v: 1, at, seq, prev: entries.at(-1)?.head.hash ?? null,
-      time: timeOf(1_700_000_000_900 + seq * 1000), clamped: false, epoch: 0, input,
+    const entry: Entry = seq === 0 ? born : { v: 1, genesis: at.genesis, seq, prev: entries.at(-1)!.head.hash,
+      time: timeOf(1_700_000_000_900 + seq * 1000), clamped: false, epoch: 0,
+      input: { type: "checkpoint", through: seq - 1, state: digestBytes(utf8(`TEST state ${seq}`)) },
       uses: [], prepared: [], effects: [], sends: [] };
+    const input = entry.input;
     const body = canonicalize(entry), head = { seq, hash: entryHash(entry) };
     const files = [0, 1].map(file => {
       const body = canonicalize({ fixture: "fixed-parent", pass: seq, file });

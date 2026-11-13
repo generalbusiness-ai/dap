@@ -1,6 +1,6 @@
 /** C1's bounded singleton selection and shared prospective counter check. */
 import { natural } from "@generalbusiness/dap-bytes";
-import type { Effect, StandingReservation } from "@generalbusiness/dap-contract";
+import type { StandingReservation, GenesisEffect } from "@generalbusiness/dap-contract";
 import { NOTHING, amountMath, type Amount } from "./held.ts";
 import { changeItem, newItem } from "./item-effects.ts";
 import type { Item, StateView } from "./state.ts";
@@ -69,7 +69,7 @@ export function standingEntries(view: StateView, definition: ValidDefinition): n
 /** Uses the existing item transformations, never a second slot interpreter.
  * Judgment checks derived effects; fold independently checks recorded ones
  * before writing them. Only the participating singleton is projected. */
-export function checkStandingEntry(view: StateView, definition: ValidDefinition, effects: readonly Effect[], seq: number): void {
+export function checkStandingEntry(view: StateView, definition: ValidDefinition, effects: readonly GenesisEffect[], seq: number): void {
   const term = definition.standing;
   if (!term) return;
   const before = standingCounter(view, definition);

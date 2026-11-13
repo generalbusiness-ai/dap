@@ -1,15 +1,17 @@
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { net as sourceNet } from "../src/testing.ts";
 import { scopePublisher as publisher, publisherContainerData } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import type { DeclaredDefinition, FactRef, Intent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, FactRef, Intent, ScopeKind, Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, factRefOf, intentDigest, isSeed, scopeIdOf, signIntent, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { applicationPublicationOrigin, archiveDevicePublicationOrigin, FAILED_CLAIM_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, FILE_PUBLICATION_COHORT, fileReceiptRef, platform } from "@generalbusiness/dap-platform";
 import { Reader } from "@generalbusiness/dap-git";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { SqliteStore } from "../src/index.ts";
 import type { EffectAnswer, EffectRequest, LateAnswers } from "../src/operations.ts";
-import { namespace } from "../src/namespace.ts";
+import { admittedOrigin, namespace } from "../src/namespace.ts";
 import { site } from "../src/site/route.ts";
 import { ownHost } from "./hosts.ts";
 import { soon } from "./net.ts";
@@ -91,7 +93,7 @@ test("a native application publishes once after missing proof, keeps later sourc
     expect(await R.stub.submit(matched, [])).toMatchObject({ answer: "accepted" });
     await pause([R, D]);
     const initial = (await D.entries())[0]!;
-    const sibling = (kind: ScopeRef["kind"]) => {
+    const sibling = (kind: ScopeKind) => {
       const send = initial.sends.find(row => "definition" in row.to && row.to.kind === kind);
       if (!send || !("definition" in send.to)) throw new Error("the actual Directory creates each sibling");
       return life.platform(scopeIdOf(send.to));
@@ -115,8 +117,8 @@ test("a native application publishes once after missing proof, keeps later sourc
     await pause([R, D, M, Q, G, C]);
     expect((await G.item(0)).state).toBe("ready");
     expect((await C.item(0)).refs["destination"]).toEqual(await G.at());
-    const genesis = factRefOf((await C.entries())[0]!);
-    const peer = await life.wait(() => namespace(env.PLATFORM).resolver.read(genesis, 30, true));
+    const genesis = (await C.fact(0));
+    const peer = await life.wait(() => namespace(env.PLATFORM).resolver.read(genesis, { maxBytes: (sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 30_000 }, true));
     expect(peer && "entry" in peer ? peer.origin?.length : null).toBe(3);
     expect(peer && "entry" in peer ? peer.under : null).toBe("declared:change");
     rooms.push(R, D, M, Q, G, C);
@@ -128,7 +130,7 @@ test("a native application publishes once after missing proof, keeps later sourc
   }));
   const envelope = async (C: Platform, seq: number) => {
     const entry = (await C.entries())[seq]!, send = entry.sends[0]!;
-    return { from: factRefOf(entry), n: send.n, to: send.to, message: send.message };
+    return { from: factRefOf(entry, await C.at()), n: send.n, to: send.to, message: send.message };
   };
   const readReceipt = async (host: ReturnType<typeof ownHost>, from: FactRef, n: number) => {
     const ref = fileReceiptRef({ from, n });
@@ -151,8 +153,8 @@ test("a native application publishes once after missing proof, keeps later sourc
     const a = await setup();
     let proofAvailable = false;
     const actual = namespace(env.PLATFORM).resolver;
-    life.wire(a.G.name, () => ({ resolver: { read: async (fact, seconds, origin) => {
-      const matched = await life.wait(() => actual.read(fact, seconds, origin));
+    life.wire(a.G.name, () => ({ resolver: { read: async (fact, context, origin) => {
+      const matched = await life.wait(() => actual.read(fact, context, origin));
       return matched && "entry" in matched && origin && !proofAvailable ? { ...matched, origin: matched.origin?.slice(0, 2) ?? [] } : matched;
     } } }));
     await a.G.restart();
@@ -164,9 +166,10 @@ test("a native application publishes once after missing proof, keeps later sourc
     expect((await a.G.summary()).at).toEqual(before);
     expect((await state(a.G)).items.filter(item => item.type === "file-publication")).toHaveLength(0);
     proofAvailable = true;
-    const firstCause = factRefOf((await a.C.entries())[first]!);
-    const proof = await life.wait(() => actual.read(firstCause, 30, true));
-    expect(proof && "entry" in proof ? applicationPublicationOrigin(firstCause, (await a.D.at()), (await a.G.at()), proof.origin ?? []) : null).toBe(true);
+    const firstCause = (await a.C.fact(first));
+    const maxBytes = (sourceNet.sized.get(a.C.name) ?? PROPOSED_BOUNDS).entryBytes;
+    const proof = await life.wait(() => actual.read(firstCause, { maxBytes, milliseconds: 30_000 }, true));
+    expect(proof && "entry" in proof ? applicationPublicationOrigin(firstCause, (await a.D.at()), (await a.G.at()), admittedOrigin(proof.origin ?? [], maxBytes)) : null).toBe(true);
     life.advance(2000);
     await pause(rooms);
     let written = (await state(a.G)).items.filter(item => item.type === "file-publication");
@@ -264,12 +267,12 @@ test("a native application publishes once after missing proof, keeps later sourc
     expect(a.host.stand.refs.get("refs/heads/main")).toBe(newerMain);
     expect(a.host.stand.pushes.filter(push => push.ref === "refs/heads/main")).toHaveLength(beforeRelease);
     const oldReceipt = await readReceipt(a.host, old.receipt.fact, 0);
-    const laterCause = factRefOf((await a.C.entries())[later]!);
+    const laterCause = (await a.C.fact(later));
     expect(oldReceipt.file).toMatchObject({ cause: { from: old.receipt.fact, n: 0 }, supersededBy: { from: laterCause, n: 0 },
       path: "shelf/native.md", contentDigest: textDigest("# Older delayed shelf\n"), commit: newerMain });
     const pair = await a.C.did(rita, "pair", { on: 0, expected: await a.C.expected({ on: 0 }), fields: { first: "shelf/ordinal-0.md", second: "shelf/ordinal-1.md", content: "# Both actual sends\n" } });
     await pause(rooms);
-    const pairCause = factRefOf((await a.C.entries())[pair]!);
+    const pairCause = (await a.C.fact(pair));
     const receipts = await Promise.all([0, 1].map(n => readReceipt(a.host, pairCause, n)));
     expect(receipts[0]!.ref).not.toBe(receipts[1]!.ref);
     expect(receipts[0]!.target).not.toBe(receipts[1]!.target);
@@ -387,7 +390,7 @@ test.each([
     expect(await R.stub.submit(found, [])).toMatchObject({ answer: "accepted" });
     await pause([R, D]);
     const initial = (await D.entries())[0]!;
-    const sibling = (kind: ScopeRef["kind"]) => {
+    const sibling = (kind: ScopeKind) => {
       const send = initial.sends.find(row => "definition" in row.to && row.to.kind === kind);
       if (!send || !("definition" in send.to)) throw Error("The real Directory creates each sibling");
       return life.platform(scopeIdOf(send.to));
@@ -451,12 +454,13 @@ test.each([
       expected: await C.expected({ on: device, root: 0 }), fields: { reported: 80, path: "device/reading.md", content } });
     const first = await report("# First device reading\n");
     await pause(nodes);
-    const firstCause = factRefOf((await C.entries())[first]!);
-    const proof = await life.wait(() => namespace(env.PLATFORM).resolver.read(firstCause, 30, true));
+    const firstCause = (await C.fact(first));
+    const maxBytes = (sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).entryBytes;
+    const proof = await life.wait(() => namespace(env.PLATFORM).resolver.read(firstCause, { maxBytes, milliseconds: 30_000 }, true));
     const publicationOrigin = platform(cohort.destination)?.applicationPublicationOrigin;
-    expect(proof && "entry" in proof ? publicationOrigin?.(firstCause, directory, await G.at(), proof.origin ?? []) : null).toBe(true);
+    expect(proof && "entry" in proof ? publicationOrigin?.(firstCause, directory, await G.at(), admittedOrigin(proof.origin ?? [], maxBytes)) : null).toBe(true);
     if (cohort.destination !== ARCHIVE_DEVICE_PUBLICATION_COHORT.destination)
-      expect(proof && "entry" in proof ? archiveDevicePublicationOrigin(firstCause, directory, await G.at(), proof.origin ?? []) : null).toBe(false);
+      expect(proof && "entry" in proof ? archiveDevicePublicationOrigin(firstCause, directory, await G.at(), admittedOrigin(proof.origin ?? [], maxBytes)) : null).toBe(false);
     expect((await state()).items.find(item => item.type === "file-publication" && item.values["sourceSeq"] === first)).toMatchObject({ state: "published" });
     const receiptReader = new Reader({
       object: async objectId => { const object = host.stand.objects.get(objectId); return object ? { type: object.type, size: object.data.length, data: object.data } : null; },
@@ -492,7 +496,7 @@ test.each([
     expect(after.sending.find(row => row.id === oldPush.id)?.mark).toBeNull();
     expect(pushedOperations).not.toContain(oldPush.id);
     expect(pushedOperations).toHaveLength(pushCount + 1);
-    const oldCause = factRefOf((await C.entries())[old]!), latestCause = factRefOf((await C.entries())[latest]!);
+    const oldCause = (await C.fact(old)), latestCause = (await C.fact(latest));
     const head = host.stand.refs.get("refs/heads/main");
     expect(await receipt(oldCause)).toMatchObject({ cause: { from: oldCause, n: 0 }, supersededBy: { from: latestCause, n: 0 },
       path: "device/reading.md", contentDigest: textDigest("# Older queued device reading\n"), commit: queuedHead });

@@ -4,19 +4,23 @@ import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import type { Answer, Digest, Entry, FactRef, Intent, MemberId, ObservationRequest, ObservationUse, OperationId, PlatformDefinition, RetainedInput, Seed, Send } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { timeMs, timeOf, valueDigest } from "@generalbusiness/dap-derive";
-import { d, keys, membership, notesDefinition, otherLane, type Actor } from "@generalbusiness/dap-derive/testing";
+import { d, keys, membership, notesDefinition, type Actor } from "@generalbusiness/dap-derive/testing";
 import { EXTENTS, RULEBOOK, rulebook, signers, weigherRules, weigherWith, type Seen } from "../../derive/test/fixtures-observes.ts";
 import { MEMBERSHIP, platform } from "@generalbusiness/dap-platform";
 import { httpSource, MemorySource, TRUSTS, verify, type MemoryScope } from "@generalbusiness/dap-replay";
 import type { Delivery } from "../src/index.ts";
-import { controls, type Controls } from "../src/testing.ts";
+import { controls, type Controls, scriptedSequence } from "../src/testing.ts";
 import { outsideOf, wired } from "./outside.ts";
 import { copied, repository, rewritten } from "./repository.ts";
 import { START, at, objectOf, reader, stubOf } from "./fixtures-native.ts";
 import { fixtureRoute as route } from "./support/serving-route.ts";
 import { observing } from "../src/authority.ts";
+
+/** SCRIPTED: the peer lane of these tests, written by hand under a real canonical genesis. Nothing judged it. */
+const peerLane = scriptedSequence({ v: 1, kind: "lane", definition: d("3"), creator: null, cause: d("3"), ordinal: 0 }, START, 3);
+const otherLane = peerLane.at;
 
 // Scope contract, revisions 20 and 21, sections 5.2 (step 1) and 16.1; source rows I3-40, I3-41 and I3-53; witnesses 18.46 (cases 4,
 // 5, 7, 8, 10 and 11), 18.48 (cases 6 to 8), 18.50 (cases 4 to 8) and 18.52 (case 5), on real storage with a scripted clock.
@@ -143,9 +147,9 @@ test("18.46 cases 4 and 5, an act with a row, on real storage: the scope reads o
 /** A lane's entry that decides one check, MADE BY HAND and signed by that key, which the scope's resolver can read. */
 function decided(c: Controls, seq: number, who: Actor, name: string): FactRef {
   const signed = signIntent({ v: 1, to: otherLane, actor: who.key, kind: "decide", on: null, expected: {}, fields: { check: name }, idempotencyKey: `d${seq}`, notAfter: at(60) }, who.secret);
-  const entry: Entry = { v: 1, at: otherLane, seq, prev: d("0"), time: START, clamped: false, epoch: 0, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [] };
-  const fact = factRefOf(entry);
-  c.foreign.set(fact.hash, { entry, under: "lane" });
+  const entry = peerLane.entry(seq, { type: "act", signed, authority: [], presented: {} });
+  const fact = peerLane.fact(entry);
+  c.foreign.set(fact.hash, peerLane.source(entry, "lane"));
   return fact;
 }
 
@@ -238,12 +242,13 @@ test.each([EXTENTS, DOMAINS.definition])("18.48 cases 6 to 8, and 18.50 cases 4 
     /** One `ask`, and the applied result of it as it arrives, from an entry of the peer MADE BY HAND. */
     const asked = async (seq: number) => {
       expect(said(await s.act(rita, "go", await s.desk()))).toEqual(["accepted", null]);
-      const sent = (await s.entries()).at(-1)!;
+      const sent = (await s.entries()).at(-1)!, born = (await s.entries())[0]!;
+      if (born.input.type !== "genesis") throw new Error("the sending scope has no genesis");
       const request = { from: { at: s.scope, seq: sent.seq, hash: entryHash(sent) }, n: 0 };
       const answer: Send = { n: 0, to: s.scope, message: { class: "result", of: request, outcome: "applied" } };
-      const entry: Entry = { v: 1, at: otherLane, seq, prev: d("0"), time: START, clamped: false, epoch: 0, input: { type: "delivery", from: request.from, n: 0, message: sent.sends[0]!.message as never, decision: "applied" }, uses: [], prepared: [], effects: [], sends: [answer] };
-      c.foreign.set(entryHash(entry), { entry, under: "lane" });
-      return { ...answer, from: factRefOf(entry) };
+      const entry = peerLane.entry(seq, { type: "delivery", from: request.from, sourceKind: born.input.seed.kind, n: 0, message: sent.sends[0]!.message as never, decision: "applied" }, [answer]);
+      c.foreign.set(entryHash(entry), peerLane.source(entry, "lane"));
+      return { ...answer, from: peerLane.fact(entry) };
     };
     const kept = () => runInDurableObject(objectOf(name), (_instance, state) => state.storage.sql.exec(DOMAIN === DOMAINS.definition
       ? "SELECT kind, digest, length(bytes) AS size FROM retained_input WHERE kind='definition' ORDER BY digest"
@@ -280,7 +285,7 @@ test.each([EXTENTS, DOMAINS.definition])("18.48 cases 6 to 8, and 18.50 cases 4 
     const source = httpSource("https://scope.test", { reader, fetch: async (url, init) => { const response = await route(new Request(url, init), env.SCOPES); return { status: response.status, body: response.body }; } });
     // The scoped producer, SQLite and service are native. Membership/rules
     // observations and foreign entries remain explicitly anchored stand-ins.
-    const anchors = [{ scope: membership.scope, seq: 40, hash: d("4") }, { scope: rulebook.scope, seq: 7, hash: d("7") }, ...[...c.foreign.values()].map(({ entry }) => ({ scope: entry.at.scope, seq: entry.seq, hash: entryHash(entry) }))];
+    const anchors = [{ scope: membership.scope, seq: 40, hash: d("4") }, { scope: rulebook.scope, seq: 7, hash: d("7") }, ...[...c.foreign.values()].map(({ entry }) => ({ scope: peerLane.at.scope, seq: entry.seq, hash: entryHash(entry) }))];
     const data = weigherWith(change).declared;
     const options = { mode: "replay", scope: name, anchors, platform: (named: PlatformDefinition) => named === MADE
       ? { data: data as never, rules: weigherRules().rules, membership: () => membership, rulesScope: () => rulebook }
@@ -341,11 +346,15 @@ test("a scope with rows reads the real membership scope of the platform package:
     if (!sealed.ok) throw new Error("no history");
     const retained: RetainedInput[] = [];
     for (const { entry } of sealed.value) for (const use of entry.uses) retained.push(...await kept("entry", use.content));
+    // Rulings 4f697a7a and ae48dd39: a use at a later entry of a foreign sequence also needs that sequence's `birth` row.
+    const births = new Set<Digest>();
+    for (const { entry } of sealed.value) for (const use of entry.uses) if (use.fact.seq > 0) births.add(use.fact.at.genesis);
+    for (const digest of births) retained.push(...await kept("birth", digest));
     const W: MemoryScope = { scope: s.scope, entries: sealed.value.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained };
     const data = weigherWith(membershipObservationChange()).declared;
     const code = (named: PlatformDefinition) => (named === MADE ? { data: data as never, rules: weigherRules().rules, membership: () => of, rulesScope: () => rulebook }
       : named === RULEBOOK ? { data: { items: { rules: { values: {} } } } as never, rules: {} } : platform(named));
-    const lane = [...c.foreign.values()].map(({ entry }) => { const fact = factRefOf(entry); return { scope: fact.at.scope, seq: fact.seq, hash: fact.hash }; });
+    const lane = [...c.foreign.values()].map(({ entry }) => { const fact = peerLane.fact(entry); return { scope: fact.at.scope, seq: fact.seq, hash: fact.hash }; });
     const world = async () => [W, await copied(O), await copied(M), await copied(ritasInbox), await copied(unasInbox)];
     const options = { mode: "replay", scope: s.name, platform: code, anchors: [{ scope: rulebook.scope, seq: 7, hash: d("7") }, ...lane] } as const;
     const good = await verify(new MemorySource(await world()), options);

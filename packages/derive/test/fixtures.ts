@@ -12,9 +12,10 @@
  */
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Bounds, DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Grant, Input, Intent, KeyId, MemberRef, ObservationUse, ScopeRef, Seed, Send, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
-import { entryHash, factRefOf, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import type { Bounds, DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Grant, Input, Intent, KeyId, MemberRef, ObservationUse, ScopeRef, GenesisEntry, Seed, Send, SequenceEntry, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, entryHash, factRefOf, intentDigest, keyIdOfSecret, newGenesisNonce, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { MemoryState, actionOf, applyEntry, clockOf, entryOf, judgeAct, judgeDelivery, judgeGenesis, judgeTimed, messageFacts, nextDue, timeMs, timeOf, validateDefinition } from "../src/index.ts";
+import type { CheckedSequence } from "@generalbusiness/dap-bytes";
 import type { ActJudgment, Creation, Delivered, DeliveryContext, Draft, Fetched, JudgeContext, Judgment, Presented, Source, TimedJudgment, ValidDefinition, Validation } from "../src/index.ts";
 
 import { lane, small, notes, ticket, desk } from "./definition-corpus/fixture-data.ts";
@@ -24,7 +25,7 @@ export { lane, small, notes, ticket, desk } from "./definition-corpus/fixture-da
 declare function structuredClone<T>(value: T): T;
 
 import { d, T0, membership, directory, member } from "./definition-corpus/fixture-identities.ts";
-export { d, T0, membership, directory, otherLane, member } from "./definition-corpus/fixture-identities.ts";
+export { d, T0, membership, directory, otherLane, member, fixtureScope, membershipSequence, directorySequence, otherLaneSequence } from "./definition-corpus/fixture-identities.ts";
 /** `seconds` after T0. */
 export const t = (seconds: number): Timestamp => timeOf(timeMs(T0)! + seconds * 1000);
 
@@ -97,7 +98,10 @@ export class Ledger {
   get last() { return this.entries.at(-1)!.entry; }
   item(id: number) { return this.state.item(id)!; }
   /** This scope's own entry at a position, as a commit reads it from its history. */
-  readonly own = (seq: number) => this.entries[seq] ?? null;
+  readonly own = Object.assign((seq: number) => this.entries[seq] ?? null, { sequence: (): CheckedSequence | null => {
+    const birth = this.entries[0], scope = this.state.scope();
+    return birth && scope ? admitSequenceGenesis(canonicalize(birth.entry), scope.at, this.bounds.entryBytes) : null;
+  } });
   /** The fact of a sealed entry: a view beside it. */
   fact(seq: number): FactRef { return { at: this.at, seq, hash: this.entries[seq]!.hash }; }
   get foldOptions(): import("../src/index.ts").DrawOptions { return { bounds: this.bounds, own: this.own, facts: [...this.#received.values()] }; }
@@ -180,20 +184,19 @@ export class Scope extends Ledger {
     const declared = definition.declared;
     const type = declared.acts[declared.genesis]!.on!;
     const seed: Seed = { v: 1, kind: "lane", definition: definition.digest, creator: directory, cause: d("c"), ordinal };
-    const at: ScopeRef = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(9 + ordinal)), kind: "lane" };
     const source = { at: directory, seq: 17, hash: d("7") };
     const message = { class: "request", type: "create", body: { fields: { opener } } } as const;
     const slot = Object.keys(declared.items[type]!.parties)[0]!;
     this.fold({
-      v: 1, at, seq: 0, prev: null, time: T0, clamped: false, epoch: 0,
-      input: { type: "genesis", seed, inc: at.inc, kind: declared.genesis, "founding": null, source, n: 0, message, decision: "applied" }, uses: [], prepared: [],
+      v: 1, seq: 0, prev: null, time: T0, clamped: false, epoch: 0,
+      input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(9 + ordinal)), kind: declared.genesis, "founding": null, source, sourceKind: "directory", n: 0, message, decision: "applied" }, uses: [], prepared: [],
       effects: [{ effect: "open", item: 0, type, state: declared.items[type]!.initial }, { effect: "party", item: 0, slot, member: opener }],
       sends: [{ n: 0, to: directory, message: { class: "result", of: { from: source, n: 0 }, outcome: "applied" } }],
     });
     if (confirmed) {
       this.fold({
-        v: 1, at, seq: 1, prev: this.head.hash, time: T0, clamped: false, epoch: 0,
-        input: { type: "delivery", from: { at: directory, seq: 18, hash: d("8") }, n: 0, message: { class: "control", type: "confirm", genesis: this.fact(0) } },
+        v: 1, genesis: this.at.genesis, seq: 1, prev: this.head.hash, time: T0, clamped: false, epoch: 0,
+        input: { type: "delivery", from: { at: directory, seq: 18, hash: d("8") }, sourceKind: "directory", n: 0, message: { class: "control", type: "confirm", genesis: this.fact(0) } },
         uses: [], prepared: [], effects: [{ effect: "activate" }], sends: [],
       });
     }
@@ -211,7 +214,7 @@ export function created(definition: ValidDefinition = deskDefinition, given: Int
   const creation = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: given, idempotencyKey: key, notAfter: t(60) }, keys.rita.secret);
   const seed: Seed = { v: 1, kind: "directory", definition: definition.digest, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
   const context = { clock: clockOf(ledger.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null };
-  const judgment = judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(1)), seed, creation: creation }, context);
+  const judgment = judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(1)), seed, creation: creation }, context);
   if (judgment.result !== "write") throw new Error(`the directory was not founded: ${JSON.stringify(judgment)}`);
   ledger.seal(judgment.draft);
   return ledger;
@@ -224,7 +227,7 @@ export function sent(from: Ledger, seq: number, n = 0): { delivered: Delivered; 
   const birth = from.entries[0]?.entry.input;
   // This in-memory source reader has the actual ledger's genesis. Tests of
   // missing metadata must omit it explicitly; no payload supplies this pin.
-  return { delivered: { to: send.to, from: from.fact(seq), n, message: send.message }, source: { entry, under: from.under, ...(birth?.type === "genesis" ? { pin: birth.seed.definition } : {}) } };
+  return { delivered: { to: send.to, from: from.fact(seq), n, message: send.message }, source: { entry, sequence: fixtureSequence(from), under: from.under, ...(birth?.type === "genesis" ? { pin: birth.seed.definition } : {}) } };
 }
 
 /** What a test changes in a delivery: the envelope, or the source entry that is read. */
@@ -232,7 +235,7 @@ export type Arrival = Partial<Delivered> & { source?: Source | null };
 
 /** The context of a delivery to `to`: the source entry, the foreign entries that were fetched, and for a result this scope's own entry that sent the request. */
 export function arriving(to: Ledger, delivered: Delivered, source: Source | null, facts: readonly Fetched[] = []): DeliveryContext {
-  to.remember([...facts, ...(source ? [{ fact: delivered.from, entry: source.entry, under: source.under }] : [])]);
+  to.remember([...facts, ...(source ? [{ fact: delivered.from, entry: source.entry, sequence: source.sequence, under: source.under }] : [])]);
   const of = delivered.message.class === "result" ? delivered.message.of : null;
   return { clock: clockOf(to.state, to.now), bounds: to.bounds, facts, prepared: [], own: to.own, source, origin: of ? (to.entries[of.from.seq]?.entry ?? null) : null };
 }
@@ -247,8 +250,8 @@ export function judged(to: Ledger, from: Ledger, seq: number, n = 0, over: Arriv
   const { source: read = source, ...envelope } = over;
   const arrival = { ...delivered, ...envelope };
   const message = arrival.message;
-  const named = message.class === "request" || message.class === "advisory" ? messageFacts(to.state, to.definition, message, arrival.from, to.bounds, read?.under ?? from.under) : [];
-  const facts = named.flatMap((fact): Fetched[] => (fact.at.scope === from.at.scope && from.entries[fact.seq] ? [{ fact, entry: from.entries[fact.seq]!.entry, under: from.under }] : []));
+  const named = message.class === "request" || message.class === "advisory" ? messageFacts(to.state, to.definition, message, arrival.from, fixtureSequence(from).kind, to.bounds, read?.under ?? from.under) : [];
+  const facts = named.flatMap((fact): Fetched[] => (fact.at.scope === from.at.scope && from.entries[fact.seq] ? [{ fact, entry: from.entries[fact.seq]!.entry, sequence: fixtureSequence(from), under: from.under }] : []));
   return judgeDelivery(to.state, to.definition, arrival, arriving(to, arrival, read, facts));
 }
 
@@ -259,11 +262,11 @@ export function deliver(to: Ledger, from: Ledger, seq: number, n = 0): Judgment 
   return judgment;
 }
 
-/** The creation that send `n` of entry `seq` of `from` asks for, as it reaches the object its seed names. `mint` makes the incarnation. */
+/** The creation that send `n` of entry `seq` of `from` asks for, as it reaches the object its seed names. `mint` chooses the deterministic genesis nonce. */
 export function creation(from: Ledger, seq: number, n = 0, mint = 20): { asked: Creation; source: Source } {
   const { delivered, source } = sent(from, seq, n);
   const seed = delivered.to as Seed;
-  return { asked: { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(mint)), to: seed, from: delivered.from, n, message: delivered.message as Creation["message"] }, source };
+  return { asked: { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(mint)), to: seed, from: delivered.from, n, message: delivered.message as Creation["message"] }, source };
 }
 
 /** A new store that receives that creation: the child's genesis is judged and, if it is to be written, sealed. */
@@ -275,9 +278,52 @@ export function born(from: Ledger, seq: number, n = 0, mint = 20): { child: Ledg
   return { child, judgment };
 }
 
-/** An entry made by hand, as a source that some scope might return: it has a hash, and nothing judged it. */
-export function forged(at: ScopeRef, seq: number, input: Input, sends: readonly Send[]): Source {
-  return { entry: { v: 1, at, seq, prev: d("0"), time: T0, clamped: false, epoch: 0, input, uses: [], prepared: [], effects: [], sends }, under: "ticket" };
+/**
+ * An entry made by hand, as a source that some scope might return: it has a
+ * hash, and nothing judged it. A later entry names `of`, the sequence that a
+ * fixture admitted: a fixture scope (`fixtureScope`) or a fixture ledger
+ * (`fixtureSequence`). A genesis is admitted from its own bytes, and its
+ * address is `source.sequence.at`: `of` gives only the scope ID.
+ */
+export function forged(of: CheckedSequence | ScopeRef, seq: number, input: Input, sends: readonly Send[]): Source {
+  const body = { v: 1 as const, time: T0, clamped: false, epoch: 0 as const, uses: [], prepared: [], effects: [], sends };
+  const sequence = "at" in of ? of : null, scope = "at" in of ? of.at.scope : of.scope;
+  if (input.type === "genesis") {
+    if (seq !== 0) throw new Error("a scripted genesis has position zero");
+    const entry: Entry = { ...body, seq: 0, prev: null, input };
+    const admitted = sequence ?? admitSequenceGenesis(canonicalize(entry), { scope, genesis: entryHash(entry) }, PROPOSED_BOUNDS.entryBytes);
+    if (!admitted) throw new Error("a scripted genesis must admit its own bytes");
+    return { entry, sequence: admitted, under: "ticket" };
+  }
+  if (!sequence) throw new Error("a later scripted entry names the sequence that a fixture admitted");
+  return { entry: { ...body, genesis: sequence.at.genesis, seq, prev: d("0"), input }, sequence, under: "ticket" };
+}
+
+/**
+ * A read of a scope's own entries with the sequence it admitted. `sequence`:
+ * null where the fixture's entries are made up and no genesis was admitted.
+ */
+export function ownWith<T>(read: (seq: number) => T, sequence: CheckedSequence | null = null): ((seq: number) => T) & { sequence(): CheckedSequence | null } {
+  return Object.assign(read, { sequence: () => sequence });
+}
+
+/** Only the actual fixture ledger can supply its admitted genesis association. */
+/** A test reads this entry as a later entry of its sequence, which binds its genesis. */
+export function later(entry: Entry): SequenceEntry {
+  if (entry.input.type === "genesis") throw new Error("the entry is a genesis, not a later entry");
+  return entry as SequenceEntry;
+}
+
+/** A test reads this entry as the genesis of its sequence. */
+export function genesisOnly(entry: Entry): GenesisEntry {
+  if (entry.input.type !== "genesis") throw new Error("the entry is not a genesis");
+  return entry as GenesisEntry;
+}
+
+export function fixtureSequence(ledger: Ledger): CheckedSequence {
+  const sequence = ledger.own.sequence();
+  if (!sequence) throw new Error("the fixture ledger has no admitted genesis");
+  return sequence;
 }
 
 let made = 100;
@@ -289,8 +335,8 @@ let made = 100;
  */
 export function arrive(to: Ledger, from: Ledger, message: Send["message"], input: Input = from.entries[1]!.entry.input, facts: readonly Fetched[] = []): Judgment {
   const send: Send = { n: 0, to: to.at, message };
-  const source = forged(from.at, ++made, input, [send]);
-  const arrival = { ...send, from: factRefOf(source.entry) };
+  const source = forged(fixtureSequence(from), ++made, input, [send]);
+  const arrival = { ...send, from: factRefOf(source.entry, from.at) };
   const judgment = judgeDelivery(to.state, to.definition, arrival, arriving(to, arrival, source, facts));
   if (judgment.result === "write") to.seal(judgment.draft);
   return judgment;

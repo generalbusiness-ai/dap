@@ -56,7 +56,7 @@ test("native field projection returns only requested digest scalars, preserves s
   // SCRIPTED scalar SQL port: selector identity, grammar and mutation guards
   // only. The separate native G14 journey owns real SQL/body correspondence,
   // authenticated certificate provenance and full archive export.
-  const at = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "destination" } as ScopeRef;
+  const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
   const proposal = textDigest("SCRIPTED admitted policy"), proof = textDigest("SCRIPTED admitted tree proof"), hash = textDigest("SCRIPTED selected outcome");
   const started = { at, seq: 1, hash: textDigest("SCRIPTED certificate opening") }, position = { seq: 2, hash, bytes: 512 };
   const pin = ARCHIVE_CERTIFIED_RULES_COHORT.destination, native = platform(pin);
@@ -73,7 +73,7 @@ test("native field projection returns only requested digest scalars, preserves s
   const owners = (given: OperationRules, owner: string = ARCHIVE_CERTIFIED_RULES_COHORT.destination, kind: string = RULES_CERTIFICATE_KIND) => new Map([[owner, new Map([[kind, given]])]]);
   const budget = new ArchiveBudget(), queries: string[] = [];
   const good: Record<string, SqlValue> = { body_object: 1, body_keys: 3, proposal, proof, started_object: 1, started_keys: 3,
-    at_object: 1, at_keys: 3, scope: at.scope, inc: at.inc, kind: at.kind, seq: started.seq, hash: started.hash };
+    at_object: 1, at_keys: 2, scope: at.scope, genesis: at.genesis, seq: started.seq, hash: started.hash };
   let projected = good;
   let mutate: (() => void) | undefined;
   const sql = { exec(query: string) {

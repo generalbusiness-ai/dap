@@ -7,7 +7,7 @@ import type { SavedDevice } from "./device-key.ts";
 interface Device { publicKey: import("@generalbusiness/dap-contract").KeyId; pair: CryptoKeyPair }
 export function counterEnrollment(context: ApplicationScreenContext, current: () => boolean, fetch?: Fetch) {
   if (context.definition !== COUNTING_COMMITMENTS_DEFINITION) throw Error("This presentation does not match the installed Counter definition.");
-  const prefix = canonicalize(context.scope), slots = browserPrivateSlots({ database: "dap-counter-enrollment-1", store: "slots", lock: "dap-counter-enrollment" });
+  const prefix = canonicalize(context.scope), slots = browserPrivateSlots({ database: "dap-counter-enrollment-2", store: "slots", lock: "dap-counter-enrollment" });
   const get = (name: string) => slots.load(prefix + ":" + name), put = (name: string, value: unknown) => slots.save(prefix + ":" + name, value);
   const device = (make: boolean) => slots.run(async (): Promise<Device | null> => {
     if (!current()) throw Error("This device context is no longer current.");

@@ -174,7 +174,7 @@ export type Delivered =
 
 export const RUNNING = "running";
 
-const flightOf = (job: Job): string => `${job.fact.at.scope}/${job.fact.at.inc}/${job.fact.seq}/${job.fact.hash}`;
+const flightOf = (job: Job): string => `${job.fact.at.scope}/${job.fact.at.genesis}/${job.fact.seq}/${job.fact.hash}`;
 
 export class CheckerService {
   readonly #o: ServiceOptions;
@@ -444,8 +444,9 @@ export class CheckerService {
 }
 
 const stageIdentity = (snapshot: StageSnapshot): string => canonicalize({ binding: snapshot.binding, destination: snapshot.destination,
-  job: { at: snapshot.job.entry.at, seq: snapshot.job.entry.seq, hash: snapshot.job.hash },
-  admission: { at: snapshot.admission.entry.at, seq: snapshot.admission.entry.seq, hash: snapshot.admission.hash },
+  // An entry's hash binds its genesis, so the position and hash name each entry.
+  job: { seq: snapshot.job.entry.seq, hash: snapshot.job.hash },
+  admission: { seq: snapshot.admission.entry.seq, hash: snapshot.admission.hash },
   commit: snapshot.commit, tree: snapshot.tree, base: snapshot.base });
 
 export type { JobRecord };

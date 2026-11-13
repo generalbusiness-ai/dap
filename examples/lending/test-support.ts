@@ -4,7 +4,7 @@ import { prepareRules, validateDefinition } from "@generalbusiness/dap-derive";
 import { evaluateRules, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { created, keys, directory, valid, type Actor, type Ledger } from "@generalbusiness/dap-derive/testing";
 import { lending } from "./definition.ts";
-export const destination = { ...directory, kind: "destination" as const };
+export const destination = directory;
 export const make = () => created(valid(validateDefinition(lending, PROPOSED_BOUNDS, RULE_PROFILES)), { opener: keys.rita.member, destination });
 export async function submit(s: Ledger, who: Actor, kind: string, over: Parameters<Ledger["intent"]>[2] = {}, context: Parameters<Ledger["context"]>[0] = {}) {
   const signed = s.intent(who, kind, over), ctx = s.context(context);

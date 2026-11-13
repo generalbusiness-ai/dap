@@ -28,7 +28,7 @@ export class SurfacePanels {
   readonly #panels = new Map<string, Panel>();
   show(surface: DeclaredSurface, data: ApplicationProjectionData,
     open: SurfaceApi["open"], current: () => boolean, members: MemberTable = { records: {}, overflow: 0 }): HTMLElement {
-    const key = JSON.stringify([surface.screen, surface.resource, surface.html, [data.scope.scope, data.scope.inc, data.scope.kind]]);
+    const key = JSON.stringify([surface.screen, surface.resource, surface.html, [data.scope.scope, data.scope.genesis]]);
     let panel = this.#panels.get(key);
     if (!panel) {
       if (this.#panels.size >= 32) throw Error("This kit retains its maximum of 32 surface resources.");

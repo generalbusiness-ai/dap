@@ -5,8 +5,8 @@ import { canonicalize, textDigest } from "@generalbusiness/dap-bytes";
 import { applicationProjectionId, applicationProjectionQueryDigest, encodeApplicationProjectionQuery, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
 import { ScopeHandle, TransportError, applicationItemSnapshot, completeApplicationItems, completeApplicationProjection, bindingTransport, httpTransport, signedReads, type Fetch, type ServiceBinding, type Transport } from "../src/index.ts";
 
-const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
-const query: ApplicationProjectionQuery = { v: 1, scope, directory: { ...scope, kind: "directory" }, install: 7, projection: "board", items: { board: 2 } };
+const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
+const query: ApplicationProjectionQuery = { v: 1, scope, directory: { ...scope }, install: 7, projection: "board", items: { board: 2 } };
 const good: Extract<ApplicationProjectionRead, { ok: true }> = { ok: true, query: applicationProjectionQueryDigest(query)!, value: {
   v: 1, scope, projection: `sha256:${"b".repeat(64)}`, at: { seq: 3, hash: `sha256:${"c".repeat(64)}` },
   sources: { board: [{ id: 2, type: "board", state: "open", revision: 1, fields: { number: 4 } }] },
@@ -27,8 +27,8 @@ test("HTTP and binding retain canonical bytes, bind the whole request and use on
     expect(Object.isFrozen(value.value.sources["board"]![0]!.fields)).toBe(true);
     for (const changed of [
       { ...query, install: query.install + 1 }, { ...query, items: { board: 3 } },
-      { ...query, scope: { ...scope, inc: `in_${"b".repeat(26)}` as const } },
-      { ...query, directory: { ...query.directory, inc: `in_${"b".repeat(26)}` as const } },
+      { ...query, scope: { ...scope, genesis: `sha256:${"b".repeat(64)}` as const } },
+      { ...query, directory: { ...query.directory, genesis: `sha256:${"b".repeat(64)}` as const } },
     ]) await expect(new ScopeHandle(transport, scope.scope, "Session fixture").applicationProjection(changed)).rejects.toThrow(TransportError);
   }
   expect(sent[0]).toEqual({ url: `https://scopes.test/v1/scopes/${scope.scope}/application-projection?p=${encoded}`, reader: "Session fixture" });
@@ -89,7 +89,7 @@ test("declared item observations resolve aliases and merge identical subjects wi
     board: { item: "board", read: "many", states: ["open"], limit: 1, fields },
     selected: { item: "board", read: "item", states: ["open"], limit: 1, fields: { number: fields.number } },
   } });
-  const writer = { membership: { ...scope, kind: "membership" as const }, member: "@ada" as const };
+  const writer = { membership: { ...scope }, member: "@ada" as const };
   const data = { ...good.value, projection: applicationProjectionId(declaration), sources: {
     board: [{ id: 2, type: "board", state: "open", revision: 1, fields: { number: 4, writer, linked: null, seenTime: "2026-10-16T08:00:00Z", seenBy: writer } }],
     selected: [{ id: 2, type: "board", state: "open", revision: 1, fields: { number: 4 } }],

@@ -1,7 +1,7 @@
 /** Derived signer evidence. No public admission, replay judgment or resolver work. */
 import { isLocalId as integer } from "@generalbusiness/dap-bytes";
 import type { Digest, Entry, Head, KeyId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isDigest, isEntry, isKeyId, isScopeRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isDigest, isEntry, isKeyId, isScopeRef, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { isObject, same, timeMs, type ScopeState } from "@generalbusiness/dap-derive";
 import { signerOf } from "./entry-signer.ts";
 import type { Sql, SqlValue } from "./sqlite.ts";
@@ -21,6 +21,11 @@ export interface LocalSignerWork { call(metadataBytes: number): void; body(bytes
 type One = (query: string, ...bindings: SqlValue[]) => Record<string, SqlValue> | null;
 const head = (v: unknown): v is Head => isObject(v) && Object.keys(v).length === 2 && integer(v["seq"]) && isDigest(v["hash"]);
 const faults: readonly string[] = ["generation", "tail", "missing-entry", "metadata", "unfit-entry", "entry", "chain", "cutoff"];
+/** Private index context, not foreign fact admission. The native append supplies
+ * the actual sealing hash; cold body reads check that hash before this match. */
+const inSequence = (entry: Entry, hash: Digest, at: ScopeRef): boolean => entry.input.type === "genesis"
+  ? entry.seq === 0 && entry.prev === null && hash === at.genesis && scopeIdOf(entry.input.seed) === at.scope
+  : entry.seq > 0 && "genesis" in entry && entry.genesis === at.genesis;
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS local_signer_control (id INTEGER PRIMARY KEY CHECK (id = 1), value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS latest_local_signer (actor TEXT PRIMARY KEY, generation TEXT NOT NULL, seq INTEGER NOT NULL, time TEXT NOT NULL, hash TEXT NOT NULL) WITHOUT ROWID;
@@ -94,10 +99,10 @@ export class LocalSigners {
     let c = this.#load();
     if (c === "invalid" || c?.phase === "stopped") return;
     if (c === null) {
-      if (entry.seq !== 0 || entry.prev !== null || entry.input.type !== "genesis") return;
-      c = { v: 1, at: { ...entry.at }, phase: "ready", cutoff: { seq: 0, hash }, next: 1, prev: hash, time: entry.time, tail: { seq: 0, hash }, tailTime: entry.time };
+      if (entry.seq !== 0 || entry.prev !== null || entry.input.type !== "genesis" || !isEntry(entry) || entryHash(entry) !== hash) return;
+      c = { v: 1, at: { scope: scopeIdOf(entry.input.seed), genesis: hash }, phase: "ready", cutoff: { seq: 0, hash }, next: 1, prev: hash, time: entry.time, tail: { seq: 0, hash }, tailTime: entry.time };
     } else {
-      if (!same(c.at, entry.at)) { this.#stop(c, "generation"); return; }
+      if (!inSequence(entry, hash, c.at)) { this.#stop(c, "generation"); return; }
       if (entry.seq !== c.tail.seq + 1 || entry.prev !== c.tail.hash || timeMs(entry.time)! < timeMs(c.tailTime)!) { this.#stop(c, "tail"); return; }
       c.tail = { seq: entry.seq, hash }; c.tailTime = entry.time;
     }
@@ -140,7 +145,7 @@ export class LocalSigners {
         const m = this.#metadata(one(`SELECT ${META} FROM entry WHERE seq=?`, row["seq"]));
         if (!m || m.hash !== row["hash"] || m.time !== row["time"]) return { state: "unknown" };
         const e = this.#entry(m, one, bytes => work?.body(bytes));
-        if (!e || !same(e.at, c.at) || signerOf(e) !== actor) return { state: "unknown" };
+        if (!e || !inSequence(e, m.hash, c.at) || signerOf(e) !== actor) return { state: "unknown" };
         if (timeMs(e.time)! >= since) return { state: "positive", seq: e.seq, time: e.time };
       }
       return { state: c.phase === "ready" ? "negative" : "unknown" };
@@ -174,7 +179,7 @@ export class LocalSigners {
         if (m.bytes > SIGNER_INDEX_BOUNDS.bytes - bytes) { deferred = true; break; }
         rows++; bytes += m.bytes; // charge admitted work even when validation stops
         const e = this.#entry(m);
-        if (!e || !same(e.at, c.at)) { this.#stop(c, "entry"); break; }
+        if (!e || !inSequence(e, m.hash, c.at)) { this.#stop(c, "entry"); break; }
         if (e.prev !== c.prev || (c.time !== null && timeMs(e.time)! < timeMs(c.time)!)) { this.#stop(c, "chain"); break; }
         if (e.seq === 0 && (e.input.type !== "genesis" || e.prev !== null)) { this.#stop(c, "chain"); break; }
         this.#keep(c, e, m.hash); c.next++; c.prev = m.hash; c.time = e.time;

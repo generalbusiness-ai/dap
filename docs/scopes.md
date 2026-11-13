@@ -671,6 +671,13 @@ The five scope budgets are the `SCOPE_BOUNDS`. A definition without
 `whole-scope` capacity is checked against all five. A refusal for a spent
 budget is `scope-full`, with the budget's name as `name`.
 
+One `entryBytes` allowance funds a whole foreign source answer. The answer
+counts the requested entry's original bytes, the original first entry of its
+scope for a later entry, the producer label and any origin rows. A scope
+reads a later foreign entry only when that entry and its scope's first entry
+fit one allowance together. An answer that does not fit is not parsed, and
+the input waits with the reason `source-response-too-large`.
+
 ## Reads and settlement
 
 `packages/contract/src/read.ts` holds the reads and their results.
@@ -700,7 +707,7 @@ or `archived` with the archive receipt.
 | `outbox` | A page of the scope's sends, with the attempts and result of each. |
 | `outboxItem` | The outbox row of one send, by its outbox ID. |
 | `log` | A page of the journal as stored: each entry's canonical bytes. For a verifier. |
-| `retained` | One retained input, by kind and digest: a definition, a foreign entry, a rule's input, a detached text until it is redacted, a snapshot, or a value in its byte domain. |
+| `retained` | One retained input, by kind and digest: a definition, a foreign entry, a rule's input, a detached text until it is redacted, a snapshot, a value in its byte domain, or a `birth`. A `birth` is the first entry of a foreign sequence that a retained entry of this scope uses at a later entry. Its digest is that sequence's genesis entry hash, not a digest of the bytes. The reader checks the bytes against the full sequence reference with `admitSequenceGenesis`. |
 
 The Worker serves `ScopeApi` over HTTP through `route`, with the routes in
 the [scope package guide](../packages/scope/README.md#routes). Hosted
@@ -723,7 +730,7 @@ A minimum grants no access. The read checks its existing authority before
 waiting and again after an arrival or timeout. It waits at most one second for
 the named head, then performs the normal read. A full head also requires the
 retained hash at that sequence. A missing or different hash returns
-`unavailable`. Another incarnation returns `wrong-incarnation`. For an entry
+`unavailable`. Another genesis returns `wrong-genesis`. For an entry
 below the archive floor, the existing `archived` answer takes precedence over a
 minimum's kind or incarnation mismatch. If the scope remains behind, an
 authorized reader receives `{ ok: false, reason: "behind", current: FactRef }`

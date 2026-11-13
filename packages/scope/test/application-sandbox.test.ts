@@ -3,7 +3,7 @@
  * Maintained packets use the existing TEST signer; no hosted browser proof. */
 import { env } from "cloudflare:test";
 import { expect, inject, onTestFinished, test } from "vitest";
-import { b64url, newIncarnation, scopeIdOf, unb64url } from "@generalbusiness/dap-bytes";
+import { b64url, scopeIdOf, unb64url } from "@generalbusiness/dap-bytes";
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { PROPOSED_BOUNDS, type ScopeKind, type ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationScreenPath, readApplicationScreenHost } from "@generalbusiness/dap-client/application";
@@ -17,7 +17,7 @@ import { repository, una } from "./repository.ts";
 import { beginSessionFixture } from "./session-settings.ts";
 import { soon } from "./net.ts";
 import { SCREEN_TEST_HOST } from "./worker.ts";
-const ref = (kind: ScopeKind, ordinal: number): ScopeRef => ({ kind, scope: scopeIdOf({ v: 1, kind, definition: "platform:directory@16", creator: null, cause: `sha256:${"a".repeat(64)}`, ordinal }), inc: newIncarnation(new Uint8Array(16).fill(ordinal)) });
+const ref = (kind: ScopeKind, ordinal: number): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: "platform:directory@16", creator: null, cause: `sha256:${"a".repeat(64)}`, ordinal }), genesis: `sha256:${ordinal.toString(16).padStart(2, "0").repeat(32)}` });
 
 test("the public Room serves no package bytes before any scope or content lookup", async () => {
   const directory = ref("directory", 1), base = applicationScreenPath(directory.scope, 7, `sha256:${"b".repeat(64)}`);

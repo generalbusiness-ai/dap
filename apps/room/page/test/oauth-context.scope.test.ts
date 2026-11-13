@@ -40,7 +40,7 @@ test("consent retains lost grants and reuses each controller's Native agent in t
     const link = "artroom-invite:" + b64url(utf8(canonicalize({ v: 1, service: origin, repository: { directory: room.directory, membership: room.membership, rules: room.rules.scope, destination: destination.scope }, invitation, secret, handle: "@consent", definition: OWN_AGENT_COHORT.membership })));
     const joined = await life.wait(() => joinInvitation(origin, link, storage, { keys: { ...keys, create: async () => signer }, now: life.now, lock: { run: run => run() }, fetch: routed }));
     expect(joined).toMatchObject({ status: "verified", answer: { answer: "accepted" } });
-    values.set("artroom-page", canonicalize({ publicKey: signer.key, place: { directory: room.directory.scope, membership: room.membership }, service: "https://obsolete.invalid" }));
+    values.set("dap-page-settings-2", canonicalize({ publicKey: signer.key, place: { directory: room.directory.scope, membership: room.membership }, service: "https://obsolete.invalid" }));
     const requests: string[] = [], grantBodies: string[] = []; let loseGrant = true;
     const fetch = async (url: string, init?: Parameters<typeof routed>[1]) => {
       requests.push(url); const path = new URL(url).pathname;
@@ -156,14 +156,15 @@ test("consent retains lost grants and reuses each controller's Native agent in t
     const adminLink = "artroom-invite:" + b64url(utf8(canonicalize({ v: 1, service: origin, repository: { directory: room.directory, membership: room.membership, rules: room.rules.scope, destination: destination.scope }, invitation: adminInvitation, secret: adminSecret, handle: "@consent-admin", definition: OWN_AGENT_COHORT.membership })));
     const adminJoined = await life.wait(() => joinInvitation(origin, adminLink, adminStorage, { keys: { ...keys, create: async () => adminSigner }, now: life.now, lock: { run: run => run() }, fetch }));
     expect(adminJoined).toMatchObject({ status: "verified", answer: { answer: "accepted" } });
-    adminValues.set("artroom-page", canonicalize({ publicKey: adminSigner.key, place: { directory: room.directory.scope, membership: room.membership } }));
+    adminValues.set("dap-page-settings-2", canonicalize({ publicKey: adminSigner.key, place: { directory: room.directory.scope, membership: room.membership } }));
     const adminSelection = await life.wait(() => selectedOAuthRoom(origin, adminStorage, contextOptions));
     const preparedMember = await life.wait(() => M.did(rita, "add-member", { fields: { handle: "@admin-connected", kind: "agent", controller: selection.controller } }));
     const preparedSecret = b64url(crypto.getRandomValues(new Uint8Array(32)));
     const preparedInvite = await life.wait(async () => M.did(rita, "invite-key", { fields: { member: preparedMember, kind: "agent", ...invitationIssueFields(OWN_AGENT_COHORT.membership, preparedSecret), inviteEnds: timeOf(life.now() + 3_600_000) }, expected: await M.expected({ member: preparedMember }) }));
     const preparedHistory = await life.wait(() => M.entries());
+    const membershipAt = await life.wait(() => M.at());
     const prepared = { v: 1 as const, kind: "agent-key" as const, service: origin, repository: { directory: room.directory, membership: room.membership, rules: room.rules.scope, destination: destination.scope }, definition: OWN_AGENT_COHORT.membership, handle: "@admin-connected", controller: selection.controller,
-      member: factRefOf(preparedHistory.find(entry => entry.seq === preparedMember)!), invitation: factRefOf(preparedHistory.find(entry => entry.seq === preparedInvite)!), secret: preparedSecret,
+      member: factRefOf(preparedHistory.find(entry => entry.seq === preparedMember)!, membershipAt), invitation: factRefOf(preparedHistory.find(entry => entry.seq === preparedInvite)!, membershipAt), secret: preparedSecret,
       expected: { on: (await life.wait(() => M.item(0))).revision, member: (await life.wait(() => M.item(preparedMember))).revision } };
     const preparedLink = encodeAgentKeyInvitation(prepared);
     expect(preparedOAuthInvitation(adminSelection, preparedLink)).toMatchObject({ handle: "@admin-connected", controller: selection.controller });
@@ -185,7 +186,7 @@ test("consent retains lost grants and reuses each controller's Native agent in t
     expect([...adminValues.values()].join("\n")).not.toContain(new URL(adminFresh.redirect!).searchParams.get("code"));
     expect((await life.wait(() => M.entries())).filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "enrol")).toHaveLength(2);
     const before = (await life.wait(() => M.entries())).filter(entry => entry.input.type === "act").length;
-    values.set("artroom-page", canonicalize({ publicKey: signer.key, place: null }));
+    values.set("dap-page-settings-2", canonicalize({ publicKey: signer.key, place: null }));
     await expect(oauthControl(selection, "grant", null, "{}", crypto.randomUUID())).rejects.toThrow("selected room or browser key changed");
     expect((await life.wait(() => M.entries())).filter(entry => entry.input.type === "act").length).toBe(before);
   } finally {

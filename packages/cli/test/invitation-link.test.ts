@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { ScopeKind } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, intentDigest, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { AGENT_KEY_LINK, INVITATION_LINK, agentKeyInvitationOf, invitationOf, secretSigner, signedIntent, wellFormedInvitation, type InvitationLink, type InvitedRepository } from "@generalbusiness/dap-client";
 import { LINK, linkOf } from "../src/commands.ts";
 import { command } from "../src/line.ts";
@@ -13,8 +13,7 @@ import type { Store } from "../src/store.ts";
 test("person-link parity uses the actual pending CLI entry and fresh discovery is CLI only", async () => {
   expect(INVITATION_LINK).toBe(LINK);
   const id = (kind: ScopeKind) => scopeIdOf({ v: 1, kind, definition: "platform:directory@3", creator: null, cause: textDigest(kind), ordinal: 0 });
-  const inc = (n: number) => newIncarnation(new Uint8Array(16).fill(n));
-  const repository: InvitedRepository = { directory: { scope: id("directory"), inc: inc(1), kind: "directory" }, membership: { scope: id("membership"), inc: inc(2), kind: "membership" }, rules: id("rules"), destination: id("destination") };
+  const repository: InvitedRepository = { directory: { scope: id("directory"), genesis: textDigest("TEST genesis 1") }, membership: { scope: id("membership"), genesis: textDigest("TEST genesis 2") }, rules: id("rules"), destination: id("destination") };
   const link: InvitationLink = { v: 1, service: "https://scopes.test", repository, invitation: 5, secret: "s".repeat(43), handle: "@una", definition: "platform:membership@2" };
   const text = (value: unknown) => `${LINK}${b64url(utf8(JSON.stringify(value)))}`;
   const cases = [text(link), text({ ...link, definition: undefined }), text({ ...link, v: 2 }), text({ ...link, invitation: 1.5 }), text({ ...link, secret: 7 }), `${LINK}not-base64!`, "https://not-a-link", text(null)];
@@ -65,7 +64,7 @@ test("person-link parity uses the actual pending CLI entry and fresh discovery i
     if (row.surface === "all") {
       await inner.keep("device", seedBytes);
       await inner.keepPrivate("TEST-person-join", originalBytes);
-      await inner.save({ v: 1, service: PERSON_SERVICE, key: "device", join: {
+      await inner.save({ v: 2, service: PERSON_SERVICE, key: "device", join: {
         request: "TEST-person-join", intent: intentDigest(original.intent),
         link: textDigest(canonicalize(row.normalized ?? PERSON_INVITATION)), repository: PERSON_INVITATION.repository, handle: PERSON_INVITATION.handle,
       } });

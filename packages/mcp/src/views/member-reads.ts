@@ -7,7 +7,7 @@ import type { MembershipDisplaySnapshot } from "./member-types.ts";
 /** One bounded membership window, including final states. No cursor follow,
  * wider lookup, signed fallback or retry. Missing identities stay unknown. */
 export async function readMembershipDisplay(reads: Reads, scope: ScopeRef): Promise<MembershipDisplaySnapshot | null> {
-  if (scope.kind !== "membership" || reads.hasHeld(scope.scope) && !reads.held(scope)) return null;
+  if (reads.hasHeld(scope.scope) && !reads.held(scope)) return null;
   const session = await reads.session(scope);
   if (!session || session.claims.key !== reads.signer.key || canonicalize(session.claims.membership) !== canonicalize(scope)) return null;
   const handle = new ScopeHandle(reads.transport, scope.scope, session.reader());

@@ -1,5 +1,6 @@
 import { addressKey, isMemberId, isRecord, same } from "@generalbusiness/dap-bytes";
 import { invitationRedemptionFields } from "@generalbusiness/dap-client";
+import { isRetiredStoreStop, type RetiredStoreStop } from "./hosted-store-stop.ts";
 /**
  * The hosted MCP endpoint (notes/2026-10-13-hosted-mcp-endpoint.md): the
  * registry of one repository's agents and the object of one agent, each over
@@ -32,7 +33,7 @@ import { McpRequestWindows } from "./request-window.ts";
 import { ROLE_LISTS, isActions } from "@generalbusiness/dap-platform/membership-actions";
 import type { ControlAction, ControlRequest, Digest, Head, KeyId, MemberId, ScopeRef, Seed, SignedControl, SignedIntent } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, isHead, isKeyId, isScopeRef, keyIdOfSecret, parseStrict, scopeIdOf, sign, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, digestBytes, isHead, isKeyId, isSequenceRef, keyIdOfSecret, parseStrict, scopeIdOf, sign, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/dap-bytes";
 import { TransportError, agentKeyInvitationOf, httpTransport, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
 import { CustodyError, Lost, identityId, meaningOf, type Envelope, type Identity, type CustodyRecord } from "@generalbusiness/dap-client";
 import { enrolledKeyItem, retirementBody } from "./hosted-retirement.ts";
@@ -121,7 +122,8 @@ export function controlOf(authorization: string | null): SignedControl | null {
     const request = parseStrict(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes));
     if (!closed(request, ["v", "action", "service", "membership", "agent", "actor", "body", "op", "notAfter"]) || request["v"] !== 1) return null;
     if (!["create", "bearer", "retire", "grant", "connections", "revoke-grant"].includes(request["action"] as string) || typeof request["service"] !== "string") return null;
-    if (!isScopeRef(request["membership"]) || (request["membership"] as ScopeRef).kind !== "membership") return null;
+    // This fixed protocol place names Membership; a reference supplies no kind proof.
+    if (!isSequenceRef(request["membership"])) return null;
     if (request["agent"] !== null && (typeof request["agent"] !== "string" || !/^[0-9a-f]{64}$/.test(request["agent"]))) return null;
     if (!isKeyId(request["actor"]) || typeof request["body"] !== "string" || !/^sha256:[0-9a-f]{64}$/.test(request["body"])) return null;
     if (typeof request["op"] !== "string" || utf8(request["op"]).length < 1 || utf8(request["op"]).length > OP_BYTES || typeof request["notAfter"] !== "string" || timeMs(request["notAfter"]) === null) return null;
@@ -197,7 +199,7 @@ export type HostedStandingRead = HostedRoleRead | HostedActorRead;
 
 /** Exact request keys select the existing Agent or actor-only shape. */
 function hostedRoleRequestKind(request: unknown): "agent" | "actor" | null {
-  if (!isRecord(request) || !isScopeRef(request["membership"]) || request["membership"].kind !== "membership") return null;
+  if (!isRecord(request) || !isSequenceRef(request["membership"])) return null;
   const fields = Object.keys(request).sort().join(",");
   if (fields === "actor,membership") return isKeyId(request["actor"]) ? "actor" : null;
   return fields === "actor,agent,agentKey,expectedController,membership" && isMemberId(request["agent"])
@@ -243,7 +245,7 @@ export type HostedAgentIdentityRead =
 /** Decode only this internal fact union, bound to the addressed Agent. */
 export function hostedAgentIdentity(expectedAgent: string, value: unknown): HostedAgentIdentityRead {
   const unavailable = { status: "unavailable" } as const;
-  if (!isRecord(value)) return unavailable;
+  if (isRetiredStoreStop(value) || !isRecord(value)) return unavailable;
   const fields = Object.keys(value).sort().join(",");
   if (value["status"] === "absent") return fields === "agent,status" && value["agent"] === expectedAgent
     ? { status: "absent", agent: expectedAgent } : unavailable;
@@ -251,7 +253,7 @@ export function hostedAgentIdentity(expectedAgent: string, value: unknown): Host
   const identity = value["identity"];
   if (Object.keys(identity).sort().join(",") !== "agent,handle,key,membership,op,state"
     || identity["agent"] !== expectedAgent || typeof identity["op"] !== "string" || identity["op"].length === 0 || utf8(identity["op"]).length > OP_BYTES
-    || !isScopeRef(identity["membership"]) || identity["membership"].kind !== "membership" || !isKeyId(identity["key"]) || !isMemberId(identity["handle"])) return unavailable;
+    || !isSequenceRef(identity["membership"]) || !isKeyId(identity["key"]) || !isMemberId(identity["handle"])) return unavailable;
   const state = identity["state"];
   if (state !== "enrolling" && state !== "enrolled" && state !== "retired" && state !== "refused") return unavailable;
   return { status: "observed", identity: { agent: expectedAgent, op: identity["op"], state,
@@ -287,14 +289,14 @@ export function hostedRoleRead(request: HostedStandingRequest, value: unknown): 
   };
   if (!("agent" in request)) {
     if (!isRecord(value) || value["status"] !== "observed" || !fields(value, "actor,head,of,status")
-      || !isScopeRef(value["of"]) || !same(value["of"], request.membership) || !isHead(value["head"])) return unavailable;
+      || !isSequenceRef(value["of"]) || !same(value["of"], request.membership) || !isHead(value["head"])) return unavailable;
     const actor = value["actor"] === null ? null : key(value["actor"]);
     if (value["actor"] !== null && (!actor || actor.key !== request.actor)) return unavailable;
     return { status: "observed", of: { ...value["of"] }, head: { ...value["head"] }, actor };
   }
   if (!isRecord(value) || value["status"] !== "observed"
-    || !fields(value, "actor,agent,agentKey,controller,head,of,status") || !isScopeRef(value["of"])
-    || !same(value["of"], request.membership) || request.membership.kind !== "membership" || !isHead(value["head"])) return unavailable;
+    || !fields(value, "actor,agent,agentKey,controller,head,of,status") || !isSequenceRef(value["of"])
+    || !same(value["of"], request.membership) || !isHead(value["head"])) return unavailable;
   const agent = member(value["agent"]), controller = value["controller"] === null ? null : member(value["controller"]);
   const agentKey = value["agentKey"] === null ? null : key(value["agentKey"]);
   const actor = value["actor"] === null ? null : key(value["actor"]);
@@ -466,7 +468,7 @@ export interface RegistryPorts extends Authority, HostedRolePorts {
   /** A fresh, unique agent object ID. */
   mintId(): string;
   /** The agent object by its ID: its `create`. */
-  agent(id: string): { create(op: string, request: ControlRequest, link: AgentKeyInvitation): Promise<ControlAnswer>; grant?(signed: SignedControl, body: Uint8Array, context: OAuthGrantContext): Promise<ControlAnswer>; agentState?(): Promise<string | null>; roleIdentity(): Promise<unknown> };
+  agent(id: string): { create(op: string, request: ControlRequest, link: AgentKeyInvitation): Promise<ControlAnswer | RetiredStoreStop>; grant?(signed: SignedControl, body: Uint8Array, context: OAuthGrantContext): Promise<ControlAnswer | RetiredStoreStop>; agentState?(): Promise<string | null | RetiredStoreStop>; roleIdentity(): Promise<unknown> };
 }
 
 /** One repository's registry: the only place that creates an agent object. Named by the membership scope ID. */
@@ -560,9 +562,11 @@ export class HostedRegistry {
       return { mapping: owned, control };
     });
     if ("status" in reserved) return reserved;
-    let result: ControlAnswer;
-    try { result = await this.ports.agent(request.agent).grant?.(signed, body, context) ?? answer(503, { error: "unavailable" }); }
+    let handoff: ControlAnswer | RetiredStoreStop;
+    try { handoff = await this.ports.agent(request.agent).grant?.(signed, body, context) ?? answer(503, { error: "unavailable" }); }
     catch { return answer(503, { error: "temporarily_unavailable" }); }
+    if (isRetiredStoreStop(handoff)) return answer(503, { error: "unavailable" });
+    const result = handoff;
     const handoffAt = this.#factClock();
     if (handoffAt === null || handoffAt < admitted.at) return this.#withheldGrant(result, answer(503, { error: "temporarily_unavailable" }));
     const finalIdentity = await this.#identityFact(request.agent);
@@ -851,9 +855,11 @@ export class HostedRegistry {
     if ("status" in reserved) return reserved;
     this.ports.fault?.("reservation");
     const target = this.ports.agent(reserved.agent);
-    let given: ControlAnswer;
-    try { given = context ? await target.grant?.(signed, body, context) ?? answer(503, { error: "unavailable" }) : await target.create(request.op, request, link); }
+    let handoff: ControlAnswer | RetiredStoreStop;
+    try { handoff = context ? await target.grant?.(signed, body, context) ?? answer(503, { error: "unavailable" }) : await target.create(request.op, request, link); }
     catch { return answer(503, { error: "temporarily_unavailable" }); }
+    if (isRetiredStoreStop(handoff)) return answer(503, { error: "unavailable" });
+    const given = handoff;
     const handoffAt = this.#factClock();
     if (handoffAt === null || handoffAt < admissionAt) return this.#withheldGrant(given, answer(503, { error: "temporarily_unavailable" }));
     const after = await this.#identityFact(reserved.agent);

@@ -1,19 +1,21 @@
 import { replayHolding, replayChained } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 import { replayReservedSource, replayReservedReceiver, replayQualifiedReceiver } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { describe, expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type ObservationUse, type Report } from "@generalbusiness/dap-contract";
-import { canonicalize, textDigest } from "@generalbusiness/dap-bytes";
-import { grantFrom, namedBy, observationOf, validateDefinition } from "@generalbusiness/dap-derive";
-import { created, keys, notesDefinition, on, otherLane, t, type Actor, type Ledger } from "@generalbusiness/dap-derive/testing";
+import { coverageRow } from "./coverage-rows.ts";
+import { PROPOSED_BOUNDS, type Entry, type ObservationUse, type Report, type ScopeKind } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, entryHash, isEntry, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { grantFrom, namedBy, observationOf, stateDigest, validateDefinition, type RecordedRef } from "@generalbusiness/dap-derive";
+import { created, keys, notesDefinition, on, otherLane, t, type Actor, type Ledger, fixtureSequence } from "@generalbusiness/dap-derive/testing";
 import { C, cap, clean } from "../../derive/test/fixtures-hold.ts";
 import { MEMBERSHIP, RULES_SCOPE as RULES, firstExtents, platform, sourceName, standingOf } from "../../../packages/platform/src/index.ts";
 import { Roster } from "../../../packages/platform/test/support.ts";
 import { Rulebook } from "../../../packages/platform/test/support-rules.ts";
 import { MemorySource, TRUSTS, platformCode, render, verify, type MemoryScope, type Options, type Tally } from "../src/index.ts";
 import { View } from "../src/view.ts";
+import { IdentityEvidence, type IdentityFrame, type ReceiverIdentityCode } from "../src/identity.ts";
 import { Gate, Lane, OWNER, RULES_SCOPE } from "./staging.ts";
 import { VALUE, Weighing } from "./weighing.ts";
-import { entryOf, histories as ledgers, rewrite, served, sourceOf, unsupportedDefinitionHistory, world, type World } from "./world.ts";
+import { entryOf, histories as ledgers, reseal, rewrite, served, sourceOf, unsupportedDefinitionHistory, world, type World } from "./world.ts";
 
 /**
  * The fixture histories were written under the test authority of derive's fixtures, a STAND-IN whose grants hold no freshness
@@ -28,7 +30,7 @@ describe("replay of a good history (sections 9.3 to 9.5)", () => {
     const { report, why } = await replay(w);
     expect([report.result, why, report.target]).toEqual(["consistent", null, { at: w.I.scope, seq: 2, hash: w.I.entries[2]!.hash }]);
     // I.0 used D.4, I.1 used D.5, I.2 used P.2. D.5 used I.0, D.2 used P.0, P.1 used D.2: each prefix advanced as needed, and no further.
-    expect(report.coverage).toEqual([{ scope: w.I.scope, from: 0, through: 2 }, { scope: w.D.scope, from: 0, through: 5 }, { scope: w.P.scope, from: 0, through: 2 }]);
+    expect(report.coverage).toEqual([coverageRow(w.I.scope, entryOf(w.I, 0), 2), coverageRow(w.D.scope, entryOf(w.D, 0), 5), coverageRow(w.P.scope, entryOf(w.P, 0), 2)]);
     // Seven distinct foreign facts: D.1, D.2, D.4, D.5, P.0, P.2 and I.0, which D.5 used and which was already checked.
     expect([report.dependencies, report.anchors]).toEqual([{ verified: 7, anchored: 0, missing: [] }, []]);
     expect(report.trusts).toEqual([TRUSTS.clock, TRUSTS.head, TRUSTS.sources, TRUSTS.minted, TRUSTS.held, TRUSTS.delivered, TRUSTS.authority, TRUSTS.bounds]);
@@ -72,7 +74,7 @@ test("a replay without native identity policy leaves a reserved declared source 
   const written = S.act(keys.rita, "write", { ...on(S, 0), fields: { body: textDigest(body) } }, { texts: () => body.length });
   expect(written.result).toBe("write");
   const fact = S.fact(S.last.seq);
-  const vouched = T.act(keys.rita, "vouch", { ...on(T, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: S.last, under: "change" }] });
+  const vouched = T.act(keys.rita, "vouch", { ...on(T, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: S.last, sequence: fixtureSequence(S), under: "change" }] });
   expect(vouched.result).toBe("write");
   const all = [S, T], source = () => new MemorySource(all.map(L => served(L, all)));
   const options = { mode: "replay" as const, scope: T.at.scope, ...AS_RECORDED };
@@ -87,7 +89,7 @@ test("a replay without native identity policy leaves a reserved declared source 
   const qualifiedReceiver = validateDefinition(replayQualifiedReceiver(), PROPOSED_BOUNDS);
   if (!qualifiedReceiver.ok) throw new Error("the qualified fixture definition must validate");
   const Q = created(qualifiedReceiver.definition, {}, "qualified-receiving-note");
-  expect(Q.act(keys.rita, "vouch", { ...on(Q, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: S.last, under: "declared:change" }] }).result).toBe("write");
+  expect(Q.act(keys.rita, "vouch", { ...on(Q, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: S.last, sequence: fixtureSequence(S), under: "declared:change" }] }).result).toBe("write");
   const qualifiedHistory = served(Q, [S, Q]);
   // served() normally reconstructs fixture metadata from the declaration's
   // raw name. This retention records the qualified name actually given to Q.
@@ -97,8 +99,168 @@ test("a replay without native identity policy leaves a reserved declared source 
   const qualifiedSource = new MemorySource([qualifiedSender, qualifiedHistory]);
   const qualified = await verify(qualifiedSource, { ...options, scope: Q.at.scope, sourceName });
   expect([qualified.report.result, qualified.why, qualified.report.dependencies.missing, qualified.report.anchors]).toEqual(["consistent", null, [], []]);
-  const anchored = await verify(source(), { ...options, anchors: [{ scope: fact.at.scope, seq: fact.seq, hash: fact.hash }] });
+  const anchoredSource = source(), opened: string[] = [];
+  const page = anchoredSource.page.bind(anchoredSource);
+  anchoredSource.page = async (...args) => { opened.push(args[0]); return page(...args); };
+  let anchoredPolicyCalls = 0;
+  const anchored = await verify(anchoredSource, { ...options, anchors: [{ scope: fact.at.scope, seq: fact.seq, hash: fact.hash }],
+    sourceName: () => { anchoredPolicyCalls++; return null; } });
   expect([anchored.report.result, anchored.why, anchored.report.trusts.includes(TRUSTS.anchors), anchored.report.anchors]).toEqual(["consistent", null, true, [fact]]);
+  expect(opened).not.toContain(S.at.scope);
+  expect(anchoredPolicyCalls).toBe(0);
+  expect(anchored.report.trusts.filter(trust => trust === TRUSTS.recordedKinds)).toEqual([TRUSTS.recordedKinds]);
+
+  // Exercise the actual Replay collector, with process-local associations
+  // admitted from original canonical birth bytes. These pure code callbacks
+  // are fixture policy, not a Native factory or a host admission.
+  const original = ledgers(), creator = original.D, child = original.I;
+  const creatorBirth = creator.entries[0]!.entry, childBirth = child.entries[0]!.entry;
+  if (creatorBirth.input.type !== "genesis" || childBirth.input.type !== "genesis" || childBirth.input.source === null) throw Error("the existing histories have actual births");
+  const creatorInput = creatorBirth.input;
+  const creatorAt = { scope: scopeIdOf(creatorBirth.input.seed), genesis: entryHash(creatorBirth) };
+  const creatorSequence = admitSequenceGenesis(canonicalize(creatorBirth), creatorAt, PROPOSED_BOUNDS.entryBytes);
+  if (!creatorSequence) throw Error("the actual creator birth must admit its association");
+  const creatorFrame: IdentityFrame = { fact: { at: creatorAt, seq: 0, hash: creatorAt.genesis }, entry: creatorBirth,
+    sequence: creatorSequence, named: creator.definition.digest, declarationName: "notes", native: false };
+  const wrongRecorded = { ...childBirth, input: { ...childBirth.input, sourceKind: "lane" } };
+  if (!isEntry(wrongRecorded) || wrongRecorded.input.type !== "genesis") throw Error("the changed input remains a closed genesis");
+  const childAt = { scope: scopeIdOf(wrongRecorded.input.seed), genesis: entryHash(wrongRecorded) };
+  const childSequence = admitSequenceGenesis(canonicalize(wrongRecorded), childAt, PROPOSED_BOUNDS.entryBytes);
+  if (!childSequence || wrongRecorded.input.type !== "genesis" || !wrongRecorded.input.source) throw Error("the changed word must remain a closed, admitted birth");
+  const childFrame: IdentityFrame = { fact: { at: childAt, seq: 0, hash: childAt.genesis }, entry: wrongRecorded,
+    sequence: childSequence, named: child.definition.digest, declarationName: "change", native: false };
+  const cause = wrongRecorded.input.source, causeEntry = creator.entries[cause.seq]!.entry;
+  const causeFrame: IdentityFrame = { ...creatorFrame, fact: cause, entry: causeEntry };
+  let policyCalls = 0;
+  const code: ReceiverIdentityCode = { version: 1,
+    bounds: { facts: 32, laneDepth: 16, entryBytes: PROPOSED_BOUNDS.entryBytes, bytes: 16 * 1024 * 1024 },
+    cohort: { directory: "platform:directory@15", partition: "platform:directory-partition@1", membership: "platform:membership@8",
+      rules: "platform:rules@1", destination: "platform:destination@1", inbox: "platform:inbox@1" },
+    receiver: () => { policyCalls++; return null; }, creation: () => { policyCalls++; return null; },
+    producer: at => { policyCalls++; return canonicalize(at) === canonicalize(creatorAt) ? "declared:notes" : "declared:change"; },
+    source: () => { policyCalls++; return "declared:change"; },
+    publication: () => { policyCalls++; return true; } };
+  const frames = [creatorFrame, causeFrame, childFrame];
+  const evidence = () => new IdentityEvidence(code, {
+    birth: async at => frames.find(frame => frame.fact.seq === 0 && canonicalize(frame.fact.at) === canonicalize(at)) ?? null,
+    fact: async from => frames.find(frame => canonicalize(frame.fact) === canonicalize(from)) ?? null,
+  });
+  expect(await evidence().name(creatorFrame.fact)).toEqual({ producer: "declared:notes", under: "declared:notes" });
+  policyCalls = 0;
+  expect(creatorSequence.kind).toBe("directory");
+  expect(childSequence.kind).toBe("lane");
+  expect(wrongRecorded.input.sourceKind).toBe("lane");
+  expect(await evidence().name(childFrame.fact)).toBeNull();
+  expect(policyCalls).toBe(0);
+  const wrongOwnKind = { ...creatorFrame, declarationName: "change" };
+  expect(await new IdentityEvidence(code, { birth: async () => wrongOwnKind, fact: async () => wrongOwnKind }).name(wrongOwnKind.fact)).toBeNull();
+  expect(policyCalls).toBe(0);
+  expect(await new IdentityEvidence(code, { birth: async () => null, fact: async () => causeFrame }).name(childFrame.fact)).toBeNull();
+  expect(policyCalls).toBe(0);
+
+  // The matching creator is complete legacy evidence, not a kind inferred
+  // from an alias. Only the existing naming policy selects the result.
+  const matching = { ...childBirth, input: { ...childBirth.input, sourceKind: creatorSequence.kind } };
+  if (!isEntry(matching) || matching.input.type !== "genesis") throw Error("the matching fixture birth must remain closed");
+  const matchingAt = { scope: scopeIdOf(matching.input.seed), genesis: entryHash(matching) };
+  const matchingSequence = admitSequenceGenesis(canonicalize(matching), matchingAt, PROPOSED_BOUNDS.entryBytes);
+  if (!matchingSequence) throw Error("the matching original birth must admit its association");
+  const matchingFrame: IdentityFrame = { ...childFrame, entry: matching, sequence: matchingSequence,
+    fact: { at: matchingAt, seq: 0, hash: matchingAt.genesis } };
+  const matchingFrames = [creatorFrame, causeFrame, matchingFrame];
+  const checkedSource = (rows: readonly IdentityFrame[]) => ({
+    birth: async (at: IdentityFrame["fact"]["at"]) => rows.find(frame => frame.fact.seq === 0 && canonicalize(frame.fact.at) === canonicalize(at)) ?? null,
+    fact: async (from: IdentityFrame["fact"]) => rows.find(frame => canonicalize(frame.fact) === canonicalize(from)) ?? null,
+  });
+  expect(await new IdentityEvidence(code, checkedSource(matchingFrames)).name(matchingFrame.fact)).toEqual({ producer: "declared:change", under: "declared:change" });
+  expect(policyCalls).toBe(2);
+  policyCalls = 0;
+  // Malformed cohort metadata over the original declared birth cannot use
+  // the legacy path. This is a contradiction stand-in, not Native admission.
+  const cohortCreator = { ...creatorFrame, native: true, named: code.cohort.partition };
+  expect(await new IdentityEvidence(code, checkedSource([cohortCreator, causeFrame, matchingFrame])).name(matchingFrame.fact)).toBeNull();
+  expect(policyCalls).toBe(0);
+
+  // Scripted canonical frames exercise this collector, not Native admission
+  // or the supplied policy's ancestry algorithm. Every association still
+  // comes from the original bytes of its own closed genesis.
+  const birthFrame = (kind: ScopeKind, named: IdentityFrame["named"], origin: IdentityFrame | null,
+    body: unknown = { fields: {} }): IdentityFrame => {
+    const candidate: unknown = { ...creatorBirth, input: { ...creatorInput,
+      seed: { ...creatorInput.seed, kind, definition: named, creator: origin?.fact.at ?? null,
+        cause: origin ? entryHash(origin.entry) : creatorInput.seed.cause },
+      source: origin?.fact ?? null, sourceKind: origin?.sequence.kind ?? null, n: origin ? 0 : null,
+      message: origin ? { class: "request", type: "create", body } : null } };
+    if (!isEntry(candidate) || candidate.input.type !== "genesis") throw Error("collector frame needs a closed canonical birth");
+    const at = { scope: scopeIdOf(candidate.input.seed), genesis: entryHash(candidate) };
+    const sequence = admitSequenceGenesis(canonicalize(candidate), at, PROPOSED_BOUNDS.entryBytes);
+    if (!sequence) throw Error("collector frame needs a genuinely admitted association");
+    return { fact: { at, seq: 0, hash: at.genesis }, entry: candidate, sequence, named,
+      declarationName: kind === "lane" ? "change" : `platform:${kind}`, native: kind !== "lane" };
+  };
+  const register = birthFrame("register", "platform:register@19", null);
+  const root = birthFrame("directory", code.cohort.directory, register);
+  const siblings = [
+    birthFrame("membership", code.cohort.membership, root), birthFrame("rules", code.cohort.rules, root),
+    birthFrame("destination", code.cohort.destination, root),
+  ];
+  const fields = { membership: siblings[0]!.fact.at, rules: siblings[1]!.fact.at, destination: siblings[2]!.fact.at };
+  for (const sealed of [false, true]) {
+    const sealSender = birthFrame("directory", "platform:directory@14", null);
+    const openingBody: unknown = { ...causeFrame.entry, genesis: root.fact.at.genesis, seq: 1, prev: root.fact.hash,
+      ...(sealed ? { input: { type: "delivery", from: sealSender.fact, sourceKind: "directory", n: 0,
+        message: { class: "request", type: "tell", body: { message: "seal", fields: {} } }, decision: "applied" } } : {}) };
+    if (!isEntry(openingBody) || openingBody.input.type === "genesis") throw Error("collector opening needs one closed non-genesis entry");
+    const opening: IdentityFrame = { ...root, fact: { at: root.fact.at, seq: 1, hash: entryHash(openingBody) }, entry: openingBody };
+    const partition = birthFrame("directory", code.cohort.partition, opening, { fields });
+    const rows = [register, root, ...siblings, opening, partition, ...(sealed ? [sealSender] : [])];
+    let parent = partition;
+    // Nine concern births for act, eight for seal: both views total16.
+    for (let n = 0; n < (sealed ? 8 : 9); n++) { parent = birthFrame("lane", child.definition.digest, parent); rows.push(parent); }
+    expect(rows).toHaveLength(16);
+    const asked = parent.fact, reads: string[] = [], kept: (readonly IdentityFrame[])[] = [];
+    const boundedCode: ReceiverIdentityCode = { ...code, bounds: { ...code.bounds, facts: 16 },
+      producer: (_at, frames) => { kept.push(frames); return "declared:change"; }, source: () => "declared:change" };
+    const inputSource = checkedSource(rows);
+    const boundedSource = { ...inputSource, birth: async (at: IdentityFrame["fact"]["at"]) => { reads.push(canonicalize(at)); return inputSource.birth(at); } };
+    const collector = new IdentityEvidence(boundedCode, boundedSource);
+    expect(await collector.name(asked)).toEqual({ producer: "declared:change", under: "declared:change" });
+    expect(kept[0]).toHaveLength(16);
+    expect(kept[0]).toContain(register);
+    if (sealed) expect(kept[0]).toContain(sealSender);
+    expect(reads.filter(at => at === canonicalize(register.fact.at))).toHaveLength(1);
+    // Reusing a held Register costs no second source read or duplicate view.
+    expect(await collector.name(asked)).toEqual({ producer: "declared:change", under: "declared:change" });
+    expect(reads.filter(at => at === canonicalize(register.fact.at))).toHaveLength(1);
+    expect(await new IdentityEvidence({ ...boundedCode, bounds: { ...boundedCode.bounds, facts: 15 } }, checkedSource(rows)).name(asked)).toBeNull();
+    expect(await new IdentityEvidence(boundedCode, checkedSource(rows.filter(frame => frame !== register))).name(asked)).toBeNull();
+    if (sealed) expect(await new IdentityEvidence(boundedCode, checkedSource(rows.filter(frame => frame !== sealSender))).name(asked)).toBeNull();
+    // A late dependency supplies no callback before its actual promise
+    // settles. The enclosing Verifier, not this fixture, owns the deadline.
+    let release!: (frame: IdentityFrame | null) => void, began!: () => void;
+    const held = new Promise<IdentityFrame | null>(resolve => { release = resolve; });
+    const entered = new Promise<void>(resolve => { began = resolve; });
+    const before = kept.length;
+    const pending = new IdentityEvidence(boundedCode, { ...inputSource, birth: async at => {
+      if (canonicalize(at) === canonicalize(register.fact.at)) { began(); return held; }
+      return inputSource.birth(at);
+    } }).name(asked);
+    await entered;
+    expect(kept).toHaveLength(before);
+    release(null);
+    expect(await pending).toBeNull();
+    expect(kept).toHaveLength(before);
+    // Bootstrap uses the same Register and conditional sender dependency.
+    const born = partition.entry.input;
+    if (born.type !== "genesis" || !born.source || born.sourceKind === null || born.n === null || !born.message) throw Error("the fixture partition has its full creation input");
+    let bootstrapFrames: readonly IdentityFrame[] = [];
+    expect(await new IdentityEvidence({ ...boundedCode, creation: (_creation, _definition, frames) => {
+      bootstrapFrames = frames; return { mode: "partition-v1" };
+    } }, checkedSource(rows)).bootstrap({ seed: born.seed, source: born.source, sourceKind: born.sourceKind, n: born.n, message: born.message }, code.cohort.partition)).toEqual({ mode: "partition-v1" });
+    expect(bootstrapFrames).toContain(register);
+    if (sealed) expect(bootstrapFrames).toContain(sealSender);
+  }
+
 });
 
 describe("a detached text whose bytes are gone (section 9.3)", () => {
@@ -118,7 +280,7 @@ describe("a detached text whose bytes are gone (section 9.3)", () => {
       return L.last.seq;
     };
     const wrote = (L: Ledger, body: string) => did(L, "write", { body: textDigest(body) }, { texts: () => body.length });
-    const vouched = (L: Ledger, from: Ledger, seq: number) => did(L, "vouch", {}, { presented: { proof: from.fact(seq) }, facts: [{ fact: from.fact(seq), entry: from.entries[seq]!.entry, under: from.under }] });
+    const vouched = (L: Ledger, from: Ledger, seq: number) => did(L, "vouch", {}, { presented: { proof: from.fact(seq) }, facts: [{ fact: from.fact(seq), entry: from.entries[seq]!.entry, sequence: fixtureSequence(from), under: from.under }] });
     const [s, u] = [wrote(S, "the body of S"), wrote(U, "the body of U")];
     vouched(T, S, s);
     vouched(S, U, u);
@@ -139,7 +301,7 @@ describe("a detached text whose bytes are gone (section 9.3)", () => {
     const whole = histories(true);
     const matched = await verify(whole.source, { mode: "replay", scope: whole.T.at.scope, ...AS_RECORDED });
     expect([matched.report.result, matched.why, matched.report.redacted.map((r) => r.tombstone)]).toEqual(["consistent", null, [whole.S.fact(3), whole.U.fact(2)]]);
-    expect(matched.report.coverage).toEqual([whole.T, whole.S, whole.U].map((L) => ({ scope: L.at, from: 0, through: L.head.seq })));
+    expect(matched.report.coverage).toEqual([whole.T, whole.S, whole.U].map((L) => coverageRow(L.at, L.entries[0]?.entry, L.head.seq)));
 
     // The limit on depth counts foreign facts from the target, also in the settlement. S is one fact from T, so U.1, which S.2 uses, is two.
     const within = async (depth: number) => { const { report, why } = await verify(histories(true).source, { mode: "replay", ...AS_RECORDED, scope: whole.T.at.scope, limits: { depth } }); return [report.result, report.at?.seq ?? null, why]; };
@@ -180,7 +342,7 @@ describe("a history that is not consistent is reported with the right result, at
       change: (w) => rewrite(w.I, 2, (entry) => { entry.input.decision = "superseded"; }), result: "mismatch", at: ["I", 2], why: /recorded input, with its decision/ },
     // Witness 18.26, case 6. P.3 used I.2, so I is replayed as a source, and its genesis is checked against the definition that I pins.
     { name: "a source's genesis that records another kind than the genesis act of the definition it pins: `genesis-kind`, at that genesis",
-      change: (w) => { rewrite(w.I, 0, (entry) => { entry.input.kind = "link"; }); return { scope: w.P.scope.scope }; }, result: "mismatch", at: ["I", 0], why: /^genesis-kind: / },
+      change: (w) => { reseal(w, "I", 0, (entry) => { entry.input.kind = "link"; }); return { scope: w.P.scope.scope }; }, result: "mismatch", at: ["I", 0], why: /^genesis-kind: / },
     // The member is always present, and is never the empty text (section 4.1). Without it, the bytes are no entry of the contract.
     { name: "a genesis whose kind is the empty text: its bytes are not an entry", change: (w) => rewrite(w.I, 0, (entry) => { entry.input.kind = ""; }), result: "mismatch", at: ["I", 0], why: /bytes are not an entry/ },
     // Section 9.3, point E13: a verifier that is given no code for the step of a preparation entry says so, and never reports `consistent`. The same entry without its step is no entry.
@@ -193,8 +355,9 @@ describe("a history that is not consistent is reported with the right result, at
       change: (w) => rewrite(w.I, 2, (entry) => { entry.input = preparing(w); }), result: "mismatch", at: ["I", 2], why: /bytes are not an entry/ },
     // I.0 used D.4, and D.2, on the way to it, used P.0: the entry named is the one that used the history that cannot be read.
     { name: "a source history that cannot be read", change: (w) => { w.P.entries.length = 0; }, result: "missing-dependency", at: ["D", 2], why: /cannot be read, and no anchor/ },
-    { name: "a wrong incarnation in a reference: the source scope's genesis minted another",
-      change: (w) => rewrite(w.I, 1, (entry) => { entry.input.from.at.inc = w.P.scope.inc; entry.uses[0].fact.at.inc = w.P.scope.inc; }), result: "mismatch", at: ["I", 1], why: /wrong incarnation/ },
+    // The changed reference no longer names the fact its retained body records, so replay refuses the body at I.1.
+    { name: "a wrong genesis in a reference: the source scope's genesis is another",
+      change: (w) => rewrite(w.I, 1, (entry) => { entry.input.from.at.genesis = w.P.scope.genesis; entry.uses[0].fact.at.genesis = w.P.scope.genesis; }), result: "mismatch", at: ["I", 1], why: /a retained foreign body does not match its exact fact/ },
     { name: "a history cut short of the head the caller holds", change: (w) => { const head = w.I.entries.pop()!; return { head: { seq: head.seq, hash: head.hash } }; }, result: "mismatch", at: ["I", 1], why: /does not reach the expected head/ },
     { name: "a history that forks from the head the caller holds: sealed again, and consistent with itself",
       change: (w) => { const head = w.I.entries[2]!; rewrite(w.I, 2, (entry) => { entry.time = "2026-10-04T12:00:01Z"; }); return { head: { seq: 2, hash: head.hash } }; }, result: "mismatch", at: ["I", 2], why: /forks from the expected head/ },
@@ -221,7 +384,7 @@ describe("a history that is not consistent is reported with the right result, at
     // Whatever stopped it, the report claims only what it covered: in the scope of the entry it names, nothing at or after that entry.
     const covered = matched.report.coverage.find((c) => c.scope.scope === matched.report.at?.at.scope)?.through ?? -1;
     expect(covered).toBeLessThan(matched.report.at?.seq ?? 0);
-    if (stated) expect(matched.report.coverage).toEqual(stated.map(([scope, through]) => ({ scope: w[scope].scope, from: 0, through })));
+    if (stated) expect(matched.report.coverage).toEqual(stated.map(([scope, through]) => coverageRow(w[scope].scope, entryOf(w[scope], 0), through)));
   });
 });
 
@@ -230,7 +393,7 @@ describe("integrity mode (section 9.5)", () => {
     const w = world();
     altered(w);
     const { report, why } = await replay(w, { mode: "integrity" });
-    expect([report.result, report.coverage, report.dependencies.verified]).toEqual(["consistent", [{ scope: w.I.scope, from: 0, through: 2 }], 0]);
+    expect([report.result, report.coverage, report.dependencies.verified]).toEqual(["consistent", [coverageRow(w.I.scope, entryOf(w.I, 0), 2)], 0]);
     expect(report.trusts).toEqual([TRUSTS.judgments, TRUSTS.facts, TRUSTS.clock, TRUSTS.head]);
     const text = render(report, why);
     expect(text).toMatch(/Mode: integrity\..* No judgment was derived again\./);
@@ -238,10 +401,10 @@ describe("integrity mode (section 9.5)", () => {
     // Section 9.5: the word is not used alone. This rendering does not use it at all.
     expect(text).not.toMatch(/verified/i);
     expect((await replay(w)).report.result).toBe("mismatch");
-    // Integrity mode reads no definition, so it does not check the kind that a genesis records (section 4.1).
+    // Integrity mode reads no definition. A genesis changed in place no longer binds the digest that names its sequence.
     const k = world();
     rewrite(k.I, 0, (entry) => { entry.input.kind = "link"; });
-    expect((await replay(k, { mode: "integrity" })).report.result).toBe("consistent");
+    expect((await replay(k, { mode: "integrity" })).report.result).toBe("mismatch");
   });
 });
 
@@ -262,7 +425,7 @@ describe("a preparation, its outcomes and an ancestry record are derived again (
    */
   function staged(checked = true) {
     const s = new Lane();
-    s.prepare(una, "instance", { hold: s.hold, task: { ...otherLane, kind: "task" }, instance: "i1" });
+    s.prepare(una, "instance", { hold: s.hold, task: otherLane, instance: "i1" });
     const report = s.intent(una, "report", { expected: { commitment: s.item(s.commitment).revision }, fields: { commitment: s.commitment, commit: X } });
     const stage = s.asked(report, "stage");
     const live = s.outcome(s.opened(stage.seq, "stage"), "confirmed", {}, "read");
@@ -281,9 +444,9 @@ describe("a preparation, its outcomes and an ancestry record are derived again (
   test("a lane's history with preparations and their outcomes, and no ancestry record, is consistent, and the report lists what of the outside is trusted (witness 18.4)", async () => {
     const s = staged(false);
     const { report, why } = await replayed(s, s.served());
-    expect([s.last.input.type, report.result, why, report.coverage]).toEqual(["outcome", "consistent", null, [{ scope: s.at, from: 0, through: 7 }]]);
+    expect([s.last.input.type, report.result, why, report.coverage]).toEqual(["outcome", "consistent", null, [{ scope: s.at, kind: "lane", from: 0, through: 7 }]]);
     // The stand-ins are anchored: the directory's two entries and the one head of membership.
-    expect(report.trusts).toEqual([TRUSTS.clock, TRUSTS.head, TRUSTS.minted, TRUSTS.held, TRUSTS.delivered, TRUSTS.observed, TRUSTS.outcomes, TRUSTS.dispatched, TRUSTS.anchors, TRUSTS.bounds]);
+    expect(report.trusts).toEqual([TRUSTS.clock, TRUSTS.head, TRUSTS.minted, TRUSTS.held, TRUSTS.delivered, TRUSTS.observed, TRUSTS.outcomes, TRUSTS.dispatched, TRUSTS.anchors, TRUSTS.recordedKinds, TRUSTS.bounds]);
   });
 
   test("a lane's history with a check entry, after the root is retired: every entry is derived, the act that the guard `ancestry` admitted among them, from the record and the retained snapshot; the walk is not derived, so the result is `incomplete` at the check entry and never `consistent` (T24; witness 18.10; I3 deltas, entry EU2)", async () => {
@@ -291,10 +454,10 @@ describe("a preparation, its outcomes and an ancestry record are derived again (
     expect([s.entries.map(({ entry }) => entry.input.type).slice(5), s.state.record("hold@1", "root", [1])?.state]).toEqual([["preparation", "preparation", "outcome", "outcome", "act", "act", "timed", "preparation", "outcome"], "retired"]);
     const { report, why } = await replayed(s, s.served());
     // No entry is a mismatch through the head, entry 13, which follows the retirement. The one thing not shown is the walk of the record in entry 8.
-    expect([report.result, report.at, report.coverage]).toEqual(["incomplete", s.fact(8), [{ scope: s.at, from: 0, through: 13 }]]);
+    expect([report.result, report.at, report.coverage]).toEqual(["incomplete", s.fact(8), [{ scope: s.at, kind: "lane", from: 0, through: 13 }]]);
     expect(why).toBe(`the walk of the ancestry record in entry 8 of ${s.at.scope} was not derived: this replay reads no commit, so the stops, the basis of the start, \`published\`, the list F and the count of visited commits are not shown`);
     // Nothing of the Git host is read: that it returned the snapshot and the head is listed as trusted.
-    expect(report.trusts).toEqual([TRUSTS.clock, TRUSTS.head, TRUSTS.minted, TRUSTS.held, TRUSTS.delivered, TRUSTS.observed, TRUSTS.outcomes, TRUSTS.dispatched, TRUSTS.staged, TRUSTS.anchors, TRUSTS.bounds]);
+    expect(report.trusts).toEqual([TRUSTS.clock, TRUSTS.head, TRUSTS.minted, TRUSTS.held, TRUSTS.delivered, TRUSTS.observed, TRUSTS.outcomes, TRUSTS.dispatched, TRUSTS.staged, TRUSTS.anchors, TRUSTS.recordedKinds, TRUSTS.bounds]);
   });
 
   /** Both copies of the ancestry record that the check entry holds: in its evidence, and in the `check` record that its rule derives. */
@@ -404,7 +567,7 @@ describe("an outcome entry of a platform definition, and where a scope records i
       return [matched.report.result, matched.report.at?.seq, matched.why];
     };
     expect(await changed((o) => { o.at = "2026-10-04T11:55:00Z"; })).toEqual(["mismatch", 2, "derived again on the entry's time, a retained observation is outside its window of 300 seconds"]);
-    expect(await changed((o) => { o.of.inc = otherLane.inc; })).toEqual(["mismatch", 2, "a retained observation is not of the membership scope that the scope records, with that incarnation"]);
+    expect(await changed((o) => { o.of.genesis = otherLane.genesis; })).toEqual(["mismatch", 2, "a retained observation is not of the membership scope that the scope records, with that incarnation"]);
   });
 
   // Sections 4.1 and 16.1; witness 18.34, cases 3, 9 and 10 (I3 deltas, entries EU4 and FC4). The rule and the observation are STAND-INS.
@@ -438,12 +601,12 @@ describe("an outcome entry of a platform definition, and where a scope records i
     // an incarnation, or with the scope ID alone, which the entry's own observation then fixes. Its value is taken on the anchor
     // of that head: no version of a rules scope answers a read yet. With no such rule the entry is `unsupported-definition`.
     const ruled = new Gate(((given: Parameters<typeof reads>[0]) => { if (!given.observed({ asked: "rules" })) throw new Error("the rules are not at hand"); return opens(given); }) as never, true);
-    const under = async (rulesScope?: () => { scope: string; kind: string; inc: string | null }) => {
+    const under = async (rulesScope?: () => RecordedRef) => {
       const matched = await replayed(ruled, ruled.served(), ruled.coded(ruled.rules, undefined, rulesScope as never));
       return [matched.report.result, matched.report.at?.seq ?? null, matched.why];
     };
     expect(entryOf(ruled.served(), 3).input).toMatchObject({ observed: [{ observation: { subject: "rules", of: RULES_SCOPE } }] });
-    expect([await under(() => RULES_SCOPE), await under(() => ({ ...RULES_SCOPE, inc: null })), await under(() => ({ ...RULES_SCOPE, inc: otherLane.inc })), await under()]).toEqual([
+    expect([await under(() => RULES_SCOPE), await under(() => ({ scope: RULES_SCOPE.scope, pending: true })), await under(() => ({ ...RULES_SCOPE, genesis: otherLane.genesis })), await under()]).toEqual([
       ["consistent", null, null], ["consistent", null, null],
       ["mismatch", 3, "a retained observation of the rules is not of the rules scope that the scope records, with that incarnation"],
       ["unsupported-definition", 3, "the entry retains an observation of the rules, and this replay has no rule for where a scope records its rules reference"],
@@ -560,7 +723,8 @@ describe("the value of an observation is derived once from the history of its so
     const tally = tallied();
     const { report, why } = await replayed(scopes(), r, tally);
     // What the code before this change answered for this history, taken from it: the result, the coverage, the facts and the trusts.
-    expect([L, H, report.result, why, report.coverage.map((covered) => [covered.scope.kind, covered.through]), report.dependencies]).toEqual([
+    // Each row that covers entry 0 states the kind that its genesis names (ruling 4393b366 T3(a)).
+    expect([L, H, report.result, why, report.coverage.map((covered) => [covered.kind, covered.through]), report.dependencies]).toEqual([
       5, 45, "consistent", null, [["rules", 42], ["directory", 1], ["membership", 45], ["directory", 1]], { verified: 8, anchored: 0, missing: [] },
     ]);
     expect(report.trusts).toEqual([TRUSTS.clock, TRUSTS.head, TRUSTS.sources, TRUSTS.minted, TRUSTS.held, TRUSTS.delivered, TRUSTS.observed, TRUSTS.bounds, platformCode(MEMBERSHIP), platformCode(RULES)]);
@@ -597,7 +761,7 @@ describe("the value of an observation is derived once from the history of its so
   test("a view gives the state of a scope at every head that it was folded through, asked in any order, and it is the state that a fold from the genesis to that head gives", () => {
     const { una: performer } = keys;
     const lane = new Lane();
-    lane.prepare(performer, "instance", { hold: lane.hold, task: { ...otherLane, kind: "task" }, instance: "i1" });
+    lane.prepare(performer, "instance", { hold: lane.hold, task: otherLane, instance: "i1" });
     const note = created(notesDefinition, {}, "s");
     for (const [kind, over] of [["write", { fields: { body: textDigest("a body") } }], ["strike", {}]] as const) if (note.act(rita, kind, { ...on(note, 0), ...over }, { texts: () => 6 }).result !== "write") throw new Error(`${kind} was not written`);
     const { D, P, I } = ledgers();
@@ -608,6 +772,28 @@ describe("the value of an observation is derived once from the history of its so
       const last = ledger.entries.length - 1;
       // From the last head down, and then an early head after a late one.
       for (const seq of [...ledger.entries.map((_, i) => last - i), last, 0]) expect([ledger.definition.declared.name, seq, canonicalize(view.at(seq).state.all())]).toEqual([ledger.definition.declared.name, seq, ledger.replay(seq + 1).snapshot()]);
+      if (ledger === I) {
+        const original = ledger.state.all().relations[0];
+        if (!original || last === 0) throw new Error("the existing relation history must hold its copied row");
+        const owner = [D, P, I].find(scope => scope.at.scope === original.owner.scope && scope.at.genesis === original.owner.genesis);
+        if (!owner) throw new Error("the relation owner must be one of the actual fixture histories");
+        expect(original.ownerKind).toBe(owner.state.scope()!.kind);
+        // Raw derived writer plus a synthetic checkpoint fold. This probes
+        // the history log; it is not another valid Native relation judgment.
+        const additional = { ...original, owner: { ...original.owner, genesis: textDigest("historical alternate relation genesis") } };
+        view.putRelation(additional);
+        expect(view.relation(original.owner, original.name, original.item)).toEqual(original);
+        expect(view.relation(additional.owner, additional.name, additional.item)).toEqual(additional);
+        const tail = ledger.entries[last]!;
+        const checkpoint: Entry = { v: 1, genesis: ledger.at.genesis, seq: last + 1, prev: tail.hash, time: tail.entry.time, clamped: false, epoch: 0,
+          input: { type: "checkpoint", through: last, state: stateDigest(view.all()) }, uses: [], prepared: [], effects: [], sends: [] };
+        view.fold(ledger.definition, checkpoint, entryHash(checkpoint));
+        const historical = view.at(last).state;
+        expect(historical.relation(original.owner, original.name, original.item)).toEqual(original);
+        expect(historical.relation(additional.owner, additional.name, additional.item)).toEqual(additional);
+        expect(historical.copies(original.name, original.ownerKind)).toBe(view.copies(original.name, original.ownerKind));
+        expect(view.at(last - 1).state.relation(additional.owner, additional.name, additional.item)).toBeNull();
+      }
     }
   });
 });

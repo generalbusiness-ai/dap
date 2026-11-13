@@ -2,35 +2,35 @@
  * historical observations. This witnesses provenance selection only, not
  * real @5 admission, fresh standing or a provider send. */
 import { expect, test } from "vitest";
-import type { Entry, FactRef, FieldValue, Input, KeyId } from "@generalbusiness/dap-contract";
-import { entryHash, keyIdOfSecret, newIncarnation } from "@generalbusiness/dap-bytes";
+import type { FactRef, FieldValue, KeyId, SequenceEntry } from "@generalbusiness/dap-contract";
+import { entryHash, keyIdOfSecret, textDigest } from "@generalbusiness/dap-bytes";
 import type { Item, Operation } from "@generalbusiness/dap-derive";
-import { d, directory, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { d, otherLane, t, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { MEMBERSHIP, keyObserved, retained, destinationRita as rita } from "./fixtures-entry.ts";
 import { publicationStandingKeys, publicationStandingRecord, type PublicationStandingContext, type PublicationStandingRecord, type StandingCheck } from "../src/publication-standing.ts";
 
-const at = { ...directory, kind: "destination" as const }, from = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
+const atSequence = fixtureScope("destination", 17), at = atSequence.at, from = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
 const owner = "platform:destination@5" as const, item = 2;
 const copy = <T>(value: T): T => structuredClone(value);
 function fixture(count = 1) {
-  const entries = new Map<number, { entry: Entry; hash: ReturnType<typeof entryHash> }>(), operations = new Map<Operation["id"], Operation>(), calls: number[] = [];
-  const seal = (seq: number, input: Input, effects: Entry["effects"], uses: Entry["uses"] = []) => {
-    const entry: Entry = { v: 1, at, seq, prev: d("0"), time: t(seq), clamped: false, epoch: 0, input, effects, uses, sends: [], prepared: [] };
+  const entries = new Map<number, { entry: SequenceEntry; hash: ReturnType<typeof entryHash> }>(), operations = new Map<Operation["id"], Operation>(), calls: number[] = [];
+  const seal = (seq: number, input: SequenceEntry["input"], effects: SequenceEntry["effects"], uses: SequenceEntry["uses"] = []) => {
+    const entry: SequenceEntry = { v: 1, genesis: at.genesis, seq, prev: d("0"), time: t(seq), clamped: false, epoch: 0, input, effects, uses, sends: [], prepared: [] };
     entries.set(seq, { entry, hash: entryHash(entry) });
   };
   const accepted = (seq: number, opening: number, kind: string, record: PublicationStandingRecord, keys: readonly KeyId[], result?: FactRef) => {
-    const input: Input = { type: "outcome", owner, kind, operation: `${opening}:0`, attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: result ? { result } : {} }, observed: keys.map((key, n) => retained(keyObserved(rita, t(seq), { key }), n)) };
+    const input: SequenceEntry["input"] = { type: "outcome", owner, kind, operation: `${opening}:0`, attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: result ? { result } : {} }, observed: keys.map((key, n) => retained(keyObserved(rita, t(seq), { key }), n)) };
     seal(seq, input, [
       { effect: "value", item, slot: "passes", value: copy(record) as unknown as FieldValue },
       ...(kind === "judge" ? [{ effect: "value" as const, item, slot: "reservedAt", value: seq }] : []),
-    ], [record.base.merger, ...record.base.approvals].map(base => ({ fact: base.from, content: base.from.hash })));
+    ], [record.base.merger, ...record.base.approvals].map(base => ({ fact: base.from, content: base.from.hash, kind: "lane" as const })));
     operations.set(input.operation, { id: input.operation, owner, kind, most: 1, for: item, selected: null, attempts: [{ attempt: 1, opened: opening, outcomes: [{ seq, result: "confirmed", evidence: d("b"), selected: null }] }] });
   };
   let record: PublicationStandingRecord = { reservation: 5, base: { merger: { key: rita.key, from: from(100) }, approvals: [] }, checks: [] };
   accepted(5, 3, "judge", record, [rita.key]);
   const add = (name: string, n: number, key = keyIdOfSecret(new Uint8Array(32).fill(n + 10))) => {
     const opening = 10 + n * 2, decided = opening + 1, job = from(200 + n), result = from(300 + n);
-    seal(opening, { type: "delivery", from: result, n: 0, message: { class: "request", type: "tell", body: { message: "checked", fields: { job, result } } }, decision: "applied" }, [{ effect: "operation", k: 0, owner, kind: "check-judge", attempts: 1, for: item }]);
+    seal(opening, { type: "delivery", from: result, sourceKind: "lane", n: 0, message: { class: "request", type: "tell", body: { message: "checked", fields: { job, result } } }, decision: "applied" }, [{ effect: "operation", k: 0, owner, kind: "check-judge", attempts: 1, for: item }]);
     const row: StandingCheck = { name, job, passed: true, proof: { key, result, decided } };
     record = { ...record, checks: [...record.checks.filter(check => check.name !== name), row] };
     accepted(decided, opening, "check-judge", record, [key], result);
@@ -38,7 +38,7 @@ function fixture(count = 1) {
   };
   for (let n = 0; n < count; n++) add(`check-${n}`, n);
   const publication = (): Item => ({ id: item, type: "publication", state: "reserved", revision: 4, opened: d("2"), parties: {}, refs: { lane: otherLane }, values: { reservedAt: 5, passes: copy(record) as unknown as FieldValue, requiredChecks: record.checks.map(check => check.name) }, attributed: [] });
-  const context: PublicationStandingContext = { at, membership: MEMBERSHIP, owner, before: 100, own: seq => { calls.push(seq); return entries.get(seq) ?? null; }, operation: id => operations.get(id) ?? null };
+  const context: PublicationStandingContext = { at, membership: MEMBERSHIP, owner, before: 100, own: Object.assign((seq: number) => { calls.push(seq); return entries.get(seq) ?? null; }, { sequence: () => atSequence }), operation: id => operations.get(id) ?? null };
   const read = (over: Partial<PublicationStandingContext> = {}, pub = publication()) => publicationStandingKeys({ ...context, ...over }, pub);
   return { entries, operations, calls, add, read, publication, record: () => record };
 }
@@ -72,7 +72,7 @@ test("exactly nine distinct provenance keys are complete; ten refuse rather than
 
 test("wrong frame, holder, attempt, accepted effect and missing or ambiguous metadata are unavailable, never an empty active set", () => {
   const frame = fixture();
-  expect(frame.read({ membership: { ...MEMBERSHIP, inc: newIncarnation(new Uint8Array(16).fill(45)) } })).toEqual({ ok: false, reason: "unavailable" });
+  expect(frame.read({ membership: { ...MEMBERSHIP, genesis: textDigest("TEST genesis 45") } })).toEqual({ ok: false, reason: "unavailable" });
   const holder = fixture(), op = holder.operations.get("10:0")!;
   holder.operations.set("10:0", { ...op, for: 99 });
   expect(holder.read()).toEqual({ ok: false, reason: "unavailable" });

@@ -50,8 +50,8 @@ function record(value: unknown, names: readonly string[]): Record<string, unknow
   return copy;
 }
 function scope(value: unknown): ScopeRef | null {
-  const given = record(value, ["scope", "inc", "kind"]);
-  return isScopeRef(given) ? { scope: given["scope"], inc: given["inc"], kind: given["kind"] } : null;
+  const given = record(value, ["scope", "genesis"]);
+  return isScopeRef(given) ? { scope: given["scope"], genesis: given["genesis"] } : null;
 }
 function fact(value: unknown): FactRef | null {
   const given = record(value, ["at", "seq", "hash"]), at = given && scope(given["at"]);
@@ -61,11 +61,11 @@ function fact(value: unknown): FactRef | null {
 function member(value: unknown): MemberRef | null {
   const given = record(value, ["membership", "member"]), membership = given && scope(given["membership"]);
   const copy = given && membership ? { membership, member: given["member"] } : null;
-  return isMemberRef(copy) && copy.membership.kind === "membership" ? copy : null;
+  return isMemberRef(copy) ? copy : null;
 }
 function generation(value: unknown): ScopedRulesPosition | null {
   const given = record(value, ["rules", "seq"]), rules = given && scope(given["rules"]);
-  return given && rules?.kind === "rules" && typeof given["seq"] === "number" && Number.isSafeInteger(given["seq"]) && !Object.is(given["seq"], -0) && given["seq"] >= 0
+  return given && rules && typeof given["seq"] === "number" && Number.isSafeInteger(given["seq"]) && !Object.is(given["seq"], -0) && given["seq"] >= 0
     ? { rules, seq: given["seq"] } : null;
 }
 function mark(value: unknown): ServiceMark | null {

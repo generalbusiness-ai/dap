@@ -14,8 +14,9 @@ import type { FreshActAdmission } from "./applications/act-admission.ts";
 import type { ReadTokenAdmission } from "./read-token-quota.ts";
 import type { ProofSource } from "./proof-bytes.ts";
 import type { Archived, Digest, Entry, FactRef, Grant, KeyId, ObservationUse, PlatformDefinition, Prepared, RoutingRefusal, ScopeRef, SignedIntent, Timestamp, UnavailableReason } from "@generalbusiness/dap-contract";
-import { CAPABILITY_CODE, timeOf, type Capabilities, type Clock as Reading, type Delivered, type Fetched, type Owners, type Presented, type RuleInput, type StateView, type Needed, type Observing, type Window } from "@generalbusiness/dap-derive";
+import { CAPABILITY_CODE, timeOf, type Capabilities, type Clock as Reading, type Delivered, type Owners, type Presented, type RuleInput, type StateView, type Needed, type Observing, type Window } from "@generalbusiness/dap-derive";
 import { evaluateRules } from "@generalbusiness/dap-derive/rule";
+import type { CheckedSequence } from "@generalbusiness/dap-bytes";
 import { platform, type Platform } from "@generalbusiness/dap-platform";
 import { toConsole, type DiagnosisSink } from "./diag.ts";
 import { NO_OUTSIDE, type Outside } from "./operations.ts";
@@ -31,7 +32,7 @@ export interface Random { bytes(length: number): Uint8Array }
  * act needs (authority note, section 3.3).
  */
 export interface Asked {
-  /** The scope that judges, with its incarnation. */
+  /** The scope that judges, addressed by its scope ID and genesis hash. */
   scope: ScopeRef;
   /** The act, or the intent that a capability's step prepares for, with its signature and shape checked. Its signer is the intent's `actor`. */
   signed: SignedIntent;
@@ -151,11 +152,27 @@ export interface Further {
  * 7.4), with the name of the definition its scope pins. Null: it cannot be
  * read now, and may be later. `absent`: the object with that name answered,
  * and it does not hold that entry: it is empty, it is another incarnation,
- * or it has no entry there. The core also stops waiting after `seconds`,
- * and checks the entry against the fact's hash itself.
+ * or it has no entry there. The caller supplies a required byte allowance
+ * and remaining milliseconds. A logical timeout does not cancel a physical
+ * call. The resolver admits the source's original first entry against the
+ * full reference that the fact names, and keeps that genuine `sequence`
+ * beside the entry. Admission takes only canonical bytes, so the canonical
+ * form of `entry` is the original string the source sent. `tooLarge`: the
+ * answer's body, birth, labels and origin strings do not fit the one entry
+ * allowance together; nothing of it is parsed or used, and the input is
+ * answered `source-response-too-large`.
  */
-export type Foreign = { entry: Entry; under: string; origin?: readonly Fetched[] } | { absent: true } | { archived: Archived } | null;
-export interface Resolver { read(fact: FactRef, seconds: number, origin?: boolean): Promise<Foreign> }
+export type Foreign = { entry: Entry; under: string; sequence: CheckedSequence; origin?: readonly OriginRow[] } | { absent: true } | { archived: Archived } | { tooLarge: true } | null;
+/**
+ * One origin row exactly as its source sent it: the original bytes, their
+ * parsed body and the label the source stated. The body matches its fact
+ * (`isEntryBodyOf`), and nothing more: an origin row carries no address
+ * association and is never a `Fetched` by itself.
+ */
+export interface OriginRow { readonly fact: FactRef; readonly entry: Entry; readonly under: string; readonly bytes: string }
+/** Limits for one existing source call. These values do not prove byte admission. */
+export interface SourceReadContext { readonly maxBytes: number; readonly milliseconds: number }
+export interface Resolver { read(fact: FactRef, context: SourceReadContext, origin: boolean): Promise<Foreign> }
 
 /**
  * How transport answers one delivery (section 7.4). None of these is an

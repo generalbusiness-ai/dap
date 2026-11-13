@@ -1,13 +1,13 @@
 import { expect, test, vi } from "vitest";
-import { base32, keyIdOfSecret, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { base32, keyIdOfSecret, timeOf, utf8, textDigest } from "@generalbusiness/dap-bytes";
 import { Session, type CompleteSnapshot } from "@generalbusiness/dap-client";
 import type { Head, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { PageObservation, pollingInterval, type PageObservationSource } from "../src/page-observation.ts";
 import { workbenchFixtures } from "./workbench-fixture.ts";
 
 // Scripted authenticated data and stream ports. No Native scope or browser runs.
-const scope: ScopeRef = { scope: `sc_${base32(new Uint8Array(32))}`, inc: `in_${base32(new Uint8Array(16))}`, kind: "lane" };
-const membership: ScopeRef = { ...scope, scope: `sc_${base32(new Uint8Array(32).fill(1))}`, kind: "membership" };
+const scope: ScopeRef = { scope: `sc_${base32(new Uint8Array(32))}`, genesis: textDigest("TEST genesis 26") };
+const membership: ScopeRef = { ...scope, scope: `sc_${base32(new Uint8Array(32).fill(1))}`, genesis: textDigest("TEST genesis membership") };
 const key = keyIdOfSecret(new Uint8Array(32));
 const definition = `sha256:${"1".repeat(64)}` as const;
 const head = (seq: number): Head => ({ seq, hash: `sha256:${String(seq).padStart(64, "0")}` });
@@ -49,7 +49,6 @@ for (const { setting, storedInterval, interval } of [
   const loadKey = vi.fn(async (_key: unknown) => room.session.signer), saveSettings = vi.fn(async () => {});
   const openRoom = vi.fn(async (_session: unknown, _place: unknown) => room);
   vi.doMock("../src/browser-key-store.ts", () => ({ pageKeyStore: () => ({ load: loadKey, saveSettings }) }));
-  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   vi.doMock("../src/data.ts", async () => ({ ...await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts"),
     openRoom, roomInitialization: async () => ({ state: "configured" }), initializationStillCurrent: async () => true,
     actsOn: async () => ({ acts: [], hidden: 0 }),
@@ -65,7 +64,7 @@ for (const { setting, storedInterval, interval } of [
   vi.stubGlobal("document", { title: "", activeElement: null, getElementById: () => root, createElement: (tag: string) => new Element(tag), createElementNS: (_namespace: string, tag: string) => new Element(tag) });
   vi.stubGlobal("location", location);
   const originalSettings = JSON.stringify({ place, publicKey: key, pollIntervalMs: storedInterval });
-  const setItem = vi.fn(), getItem = (name: string) => name === "artroom-page" ? originalSettings : null;
+  const setItem = vi.fn(), getItem = (name: string) => name === "dap-page-settings-2" ? originalSettings : null;
   vi.stubGlobal("localStorage", { getItem, setItem });
   vi.stubGlobal("window", { addEventListener: (_name: string, listener: () => void) => { redraw = listener; } });
   try {
@@ -74,7 +73,7 @@ for (const { setting, storedInterval, interval } of [
     expect(loadKey).toHaveBeenCalledWith(key);
     expect(openRoom).toHaveBeenCalledWith({ service: context.origin, signer: room.session.signer }, place);
     expect(saveSettings).not.toHaveBeenCalled(); expect(setItem).not.toHaveBeenCalled();
-    expect(localStorage.getItem("artroom-page")).toBe(originalSettings);
+    expect(localStorage.getItem("dap-page-settings-2")).toBe(originalSettings);
     expect(root.textContent).toContain(`Live updates unavailable. Checking every ${interval / 1_000} ${interval === 1_000 ? "second" : "seconds"}.`);
     expect(polls).toBe(0); seq = 1;
     await vi.advanceTimersByTimeAsync(interval - 1); expect(polls).toBe(0);
@@ -84,10 +83,10 @@ for (const { setting, storedInterval, interval } of [
     await vi.advanceTimersByTimeAsync(interval * 2); expect(polls).toBe(1);
     await main.workbenchLifecycle.retire(); await vi.advanceTimersByTimeAsync(interval * 2); expect(polls).toBe(1);
     expect(saveSettings).not.toHaveBeenCalled(); expect(setItem).not.toHaveBeenCalled();
-    expect(localStorage.getItem("artroom-page")).toBe(originalSettings);
+    expect(localStorage.getItem("dap-page-settings-2")).toBe(originalSettings);
   } finally {
     await fixture.retire(); vi.useRealTimers(); vi.unstubAllGlobals();
-    vi.doUnmock("../src/data.ts"); vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/page-key-migration.ts"); vi.resetModules();
+    vi.doUnmock("../src/data.ts"); vi.doUnmock("../src/browser-key-store.ts"); vi.resetModules();
   }
 }));
 

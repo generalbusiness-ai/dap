@@ -3,7 +3,7 @@
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { archivedPosition, clockOf, judgeFloor, validateDefinition, type Own } from "../src/index.ts";
 import { fixedSlotData } from "./definition-corpus/fixed-slot-data.ts";
-import { on, keys, Scope, t, valid } from "./fixtures.ts";
+import { on, keys, ownWith, Scope, t, valid } from "./fixtures.ts";
 
 const { rita } = keys;
 
@@ -20,6 +20,6 @@ export function structuralFloorHistory(final = false) {
   const judged = judgeFloor(scope.state, definition, input, { clock: clockOf(scope.state, scope.now), bounds: PROPOSED_BOUNDS, own: scope.own });
   if (judged.result !== "write") throw new Error(`structural fixed-slot floor was not written: ${judged.result}`);
   scope.seal(judged.draft);
-  const heldOwn: Own = seq => archivedPosition(scope.state, seq) ? null : scope.own(seq);
+  const heldOwn: Own = ownWith(seq => archivedPosition(scope.state, seq) ? null : scope.own(seq), scope.own.sequence());
   return { definition, scope, item, reference, before, floor: scope.head.seq, heldOwn };
 }

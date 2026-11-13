@@ -16,7 +16,7 @@ test("native prepared-rule projection names the actual retained input without ex
     // Full-byte access belongs only to this oracle, not to the projector.
     const row = state.storage.sql.exec<{ bytes: string; hash: `sha256:${string}`; size: number }>("SELECT bytes, hash, size FROM entry WHERE seq = 2 LIMIT 1").one();
     const entry = parseStrict(row.bytes); if (!isEntry(entry)) return expect.fail("The genuine assignment entry is required.");
-    const all = localRetainedPlan(definition, entry, row.hash, null, PROPOSED_BOUNDS).dependencies;
+    const all = localRetainedPlan(definition, entry, { at: lane.at, seq: entry.seq, hash: row.hash }, null, PROPOSED_BOUNDS).dependencies;
     const expected = all.filter(({ dependency }) => dependency.mode === "required" && dependency.consumer === "rule-input");
     const cells: unknown[] = [], queries: string[] = [], budget = new ArchiveBudget();
     const sql = { exec(query: string, ...args: SqlValue[]) {

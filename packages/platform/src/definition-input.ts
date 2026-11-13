@@ -35,7 +35,8 @@ export function definitionClosure(given: RuleGiven, field: "digest" | "definitio
     // not a substitute for that predecode bound.
     const value = given.placed(name);
     if (value === undefined) return { result: "unavailable" };
-    const checked = validateDefinition(value, given.resolved.bounds, RULE_PROFILES);
+    // Activation and creation admit a definition into the room: only its one canonical spelling, as scope `validate` admits it.
+    const checked = validateDefinition(value, given.resolved.bounds, RULE_PROFILES, { canonical: true });
     if (!checked.ok || checked.definition.digest !== next) return { result: "unsupported" };
     bytes += utf8(canonicalize(value)).length;
     // Finite per-invocation closure allocation bound, not retained-history capacity.

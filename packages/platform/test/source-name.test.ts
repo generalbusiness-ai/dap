@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
-import type { Digest, Entry, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
-import { d, keys, T0, t } from "@generalbusiness/dap-derive/testing";
+import type { Digest, ScopeRef, Seed, SequenceEntry } from "@generalbusiness/dap-contract";
+import { canonicalize, factRefOf, intentDigest, newGenesisNonce, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
+import { d, forged, keys, T0, t } from "@generalbusiness/dap-derive/testing";
 import { applicationPublicationOrigin, sourceName, publishingLaneOrigin, publishingLaneAffiliation } from "../src/publishing-provenance.ts";
 import { scriptedApplicationOrigin, scriptedOrigin } from "./fixtures-entry.ts";
 
@@ -15,22 +15,23 @@ test("supported change and issue pins acquire native names only through their au
     const first = native.genesis;
     if (first.input.type !== "genesis") throw new Error("scripted origin has genesis");
     const seed = { ...first.input.seed, creator: null };
-    const top = { ...first, at: { ...first.at, scope: scopeIdOf(seed) }, input: { ...first.input, source: null, seed } };
-    expect(sourceName(native.definition, name, [{ fact: factRefOf(top), entry: top, under: name }])).toBe(`declared:${name}`);
+    // SCRIPTED: the same genesis with no creator and no source, admitted from its own bytes.
+    const top = forged({ scope: scopeIdOf(seed), genesis: d("0") }, 0, { ...first.input, seed, source: null, sourceKind: null }, []);
+    expect(sourceName(native.definition, name, [{ fact: factRefOf(top.entry, top.sequence.at), entry: top.entry, bytes: canonicalize(top.entry), under: name, sequence: top.sequence }])).toBe(`declared:${name}`);
   }
 });
 
 test("native publishing origin binds full Directory and destination incarnations and refuses missing closure", () => {
   const native = scriptedOrigin();
   expect(publishingLaneOrigin(native.from, native.directory, native.destination, native.origin)).toBe(true);
-  const otherInc = newIncarnation(new Uint8Array(16).fill(31));
-  expect(publishingLaneOrigin(native.from, { ...native.directory, inc: otherInc }, native.destination, native.origin)).toBe(false);
-  expect(publishingLaneOrigin(native.from, native.directory, { ...native.destination, inc: otherInc }, native.origin)).toBe(false);
-  expect(publishingLaneOrigin({ ...native.from, at: { ...native.from.at, inc: otherInc } }, native.directory, native.destination, native.origin)).toBe(false);
+  const otherGenesis = textDigest("TEST genesis 31");
+  expect(publishingLaneOrigin(native.from, { ...native.directory, genesis: otherGenesis }, native.destination, native.origin)).toBe(false);
+  expect(publishingLaneOrigin(native.from, native.directory, { ...native.destination, genesis: otherGenesis }, native.origin)).toBe(false);
+  expect(publishingLaneOrigin({ ...native.from, at: { ...native.from.at, genesis: otherGenesis } }, native.directory, native.destination, native.origin)).toBe(false);
   expect(publishingLaneOrigin(native.from, native.directory, native.destination, [native.origin[0]!])).toBe(false);
   expect(publishingLaneAffiliation(native.from, native.directory, native.destination, native.origin)).toBe(true);
-  expect(publishingLaneAffiliation(native.from, { ...native.directory, inc: otherInc }, native.destination, native.origin)).toBe(false);
-  expect(publishingLaneAffiliation(native.from, native.directory, { ...native.destination, inc: otherInc }, native.origin)).toBe(false);
+  expect(publishingLaneAffiliation(native.from, { ...native.directory, genesis: otherGenesis }, native.destination, native.origin)).toBe(false);
+  expect(publishingLaneAffiliation(native.from, native.directory, { ...native.destination, genesis: otherGenesis }, native.origin)).toBe(false);
 });
 
 test("application publication requires its own exact native Directory8 factory and treats missing immutable proof as pending", () => {
@@ -41,9 +42,9 @@ test("application publication requires its own exact native Directory8 factory a
   expect(applicationPublicationOrigin(noField.from, noField.directory, noField.destination, noField.origin)).toBe(true);
   expect(applicationPublicationOrigin(legacy.from, legacy.directory, legacy.destination, legacy.origin)).toBe(false);
   expect(applicationPublicationOrigin(native.from, native.directory, native.destination, native.origin.slice(0, 2))).toBeNull();
-  const other = newIncarnation(new Uint8Array(16).fill(31));
-  expect(applicationPublicationOrigin(native.from, { ...native.directory, inc: other }, native.destination, native.origin)).toBe(false);
-  expect(applicationPublicationOrigin(native.from, native.directory, { ...native.destination, inc: other }, native.origin)).toBe(false);
+  const other = textDigest("TEST genesis 31");
+  expect(applicationPublicationOrigin(native.from, { ...native.directory, genesis: other }, native.destination, native.origin)).toBe(false);
+  expect(applicationPublicationOrigin(native.from, native.directory, { ...native.destination, genesis: other }, native.origin)).toBe(false);
   expect(applicationPublicationOrigin(native.from, native.directory, native.destination,
     native.origin.map((copy, index) => index === 1 ? { ...copy, under: "declared:platform:directory" } : copy))).toBe(false);
   const change = scriptedOrigin();
@@ -71,18 +72,18 @@ test("an issue concern child keeps its authenticated parent's role only with exa
     idempotencyKey: "scripted-concern", notAfter: t(60) }, keys.rita.secret);
   const childOrigin = (definition: Digest = parent.definition, directory: ScopeRef = parent.directory, marker: object = { self: true }) => {
     const seed: Seed = { v: 1, kind: "lane", definition, creator: parent.at, cause: intentDigest(signed.intent), ordinal: 0 };
-    const at: ScopeRef = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(21)), kind: "lane" };
-    const base: Entry = { v: 1, at: parent.at, seq: 3, prev: factRefOf(parent.genesis).hash, time: T0, clamped: false, epoch: 0,
+    const base: SequenceEntry = { v: 1, genesis: parent.at.genesis, seq: 3, prev: factRefOf(parent.genesis, parent.at).hash, time: T0, clamped: false, epoch: 0,
       input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [] };
     // Native creation retains the exact self marker; creationFields resolves
     // it to the parent act fact when the child judges its genesis.
     const message = { class: "request", type: "create", body: { directory,
       fields: { opener: keys.rita.member, title: "Child", conditions: [], origin: marker } } } as const;
-    const creator: Entry = { ...base, sends: [{ n: 0, to: seed, message }] };
-    const genesis: Entry = { ...parent.genesis, at, input: { type: "genesis", seed, inc: at.inc, kind: "file", "founding": null,
-      source: factRefOf(creator), n: 0, message, decision: "applied" } };
-    return [{ fact: factRefOf(genesis), entry: genesis, under: "issue" },
-      { fact: factRefOf(creator), entry: creator, under: "issue" }, parent.origin[0]!];
+    const creator: SequenceEntry = { ...base, sends: [{ n: 0, to: seed, message }] };
+    // SCRIPTED: the child's genesis, made by hand and admitted from its own bytes.
+    const child = forged({ scope: scopeIdOf(seed), genesis: d("0") }, 0, { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(21)), kind: "file", "founding": null,
+      source: factRefOf(creator, parent.at), sourceKind: "lane", n: 0, message, decision: "applied" }, []);
+    return [{ fact: factRefOf(child.entry, child.sequence.at), entry: child.entry, bytes: canonicalize(child.entry), under: "issue", sequence: child.sequence },
+      { fact: factRefOf(creator, parent.at), entry: creator, bytes: canonicalize(creator), under: "issue", sequence: parent.sequence }, parent.origin[0]!];
   };
   const origin = childOrigin();
   expect(sourceName(parent.definition, "issue", origin)).toBe("issue");
@@ -92,6 +93,6 @@ test("an issue concern child keeps its authenticated parent's role only with exa
   // creation invariant differs, rather than a broken entry digest.
   expect(sourceName(d("f"), "issue", childOrigin(d("f")))).toBe("declared:issue");
   expect(sourceName(parent.definition, "issue", childOrigin(parent.definition,
-    { ...parent.directory, inc: newIncarnation(new Uint8Array(16).fill(31)) }))).toBe("declared:issue");
+    { ...parent.directory, genesis: textDigest("TEST genesis 31") }))).toBe("declared:issue");
   expect(sourceName(parent.definition, "issue", childOrigin(parent.definition, parent.directory, { self: true, extra: true }))).toBe("declared:issue");
 });

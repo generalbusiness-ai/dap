@@ -10,7 +10,7 @@
  * are the contract's, and are exported here again.
  */
 
-import type { Digest, Dispatched, OutboxItem, Entry, FactRef, Message, OperationId, RetainedInput, ScopeRef, Sealed, Seed, Timestamp } from "@generalbusiness/dap-contract";
+import type { Digest, Dispatched, OutboxItem, Entry, FactRef, Message, OperationId, RetainedInput, ScopeRef, Sealed, Seed, SequenceRef, Timestamp } from "@generalbusiness/dap-contract";
 import type { Operation, RangeIndex, StateWriter, ValidDefinition } from "@generalbusiness/dap-derive";
 
 export type { Dispatched, OutboxItem, Sealed };
@@ -77,6 +77,11 @@ export interface Store extends StateWriter {
    */
   append(entry: Entry, hash: Digest, bytes: string, size: number): void;
   retain(input: Retained): void;
+  /** Ruling 4f697a7a: retain the first entry of a foreign sequence, an `entry` row under its content digest, and its association
+   * from (scope, genesis) to that row. A second call for the same sequence writes nothing. */
+  retainBirth(at: SequenceRef, input: Retained & { kind: "entry" }): void;
+  /** The retained first entry of a foreign sequence, by its association, or null. One read. */
+  retainedBirth(at: SequenceRef): Retained | null;
   /** Remove the bytes of one retained input. Only a redaction does: the entry that holds the `redact` effect is the tombstone (section 6.6). */
   forget(kind: Retained["kind"], digest: Digest): void;
 

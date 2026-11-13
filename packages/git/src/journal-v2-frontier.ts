@@ -74,7 +74,7 @@ const bindingFields = ["format", "repository", "at", "through", "commit"] as con
 function binding(value: JournalParentBinding, work: JournalWork): JournalParentBinding {
   work.metadata(1024);
   const row = journalRecord(value, bindingFields);
-  journalRecord(row["at"], ["scope", "inc", "kind"]);
+  journalRecord(row["at"], ["scope", "genesis"]);
   journalRecord(row["through"], ["seq", "hash"]);
   if (!isDigest(row["repository"]) || !isScopeRef(row["at"]) || !isHead(row["through"])
     || row["through"].seq > JOURNAL_V2_LAST_POSITION) return refuseJournal("parent");

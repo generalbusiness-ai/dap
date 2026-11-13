@@ -4,14 +4,14 @@ import { renderMarkdown, titleOf } from "../../packages/scope/src/site/markdown.
 import { make, submit, donation, over } from "./test-support.ts";
 import { literal, shelfPage, shelfPath, thingsOf, type RecordPointer, type Thing } from "./shelf.ts";
 
-const record: RecordPointer = { scope: "sc_example", incarnation: "in_example", seq: 7, hash: "sha256:" + "a".repeat(64) };
+const record: RecordPointer = { scope: "sc_example", genesis: "sha256:" + "e".repeat(64), seq: 7, hash: "sha256:" + "a".repeat(64) };
 const pot: Thing = { id: 2, revision: 2, page: "shelf/0123456789abcdef.md", state: "lent", name: "Big pot", description: "A heavy copper pot. Holds eight litres.", donor: "@neighbour", borrower: "@nasruddin", reason: null, seq: 3 };
 
 test("a shelf page is the design's page: a title, the description, and three generated lines", () => {
   expect(shelfPage({ ...pot, name: "Big pot", description: "Holds eight litres" }, record)).toBe([
     "# Big pot", "", "Holds eight litres", "",
     "- Status: lent to \\@nasruddin", "- Donated by: \\@neighbour",
-    `- Record: lending scope sc_example, incarnation in_example`, "",
+    `- Record: lending scope sc_example, genesis sha256:${"e".repeat(64)}`, "",
   ].join("\n"));
   expect(shelfPage({ ...pot, state: "available", borrower: null }, record)).toContain("- Status: available\n");
   expect(shelfPage({ ...pot, state: "gone", borrower: null, reason: "Nasruddin says the pot died" }, record)).toContain("- Status: gone: Nasruddin says the pot died\n");
@@ -80,7 +80,7 @@ test("thingsOf reads every thing from the record, with the gone ones and their r
 
 // The longest bounded user values remain below the signed publication content limit after escaping.
 test("maximum escaped name, description and reason fit 4096 UTF-8 bytes without a future entry claim", () => {
- const page = shelfPage({ ...pot, state:"gone", name:"!".repeat(80), description:"!".repeat(1000), reason:"!".repeat(280), donor:"@"+"d".repeat(63), borrower:null }, {scope:"sc_"+"a".repeat(52),incarnation:"in_"+"b".repeat(26)});
+ const page = shelfPage({ ...pot, state:"gone", name:"!".repeat(80), description:"!".repeat(1000), reason:"!".repeat(280), donor:"@"+"d".repeat(63), borrower:null }, {scope:"sc_"+"a".repeat(52),genesis:"sha256:"+"b".repeat(64)});
  expect(new TextEncoder().encode(page).length).toBeLessThanOrEqual(4096);
  expect(page).not.toContain("entry "); expect(page).not.toContain("hash ");
 });

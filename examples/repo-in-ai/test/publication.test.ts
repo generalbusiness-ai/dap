@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
-import type { ScopeRef, Summary } from "@generalbusiness/dap-contract";
+import { scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import type { ScopeKind, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as cohort } from "@generalbusiness/dap-platform";
 import { memoryStore } from "../../../packages/cli/src/store.ts";
 import { laneState } from "../journal.ts";
@@ -13,7 +13,7 @@ import type { Session } from "../session.ts";
 // test/session.test.mjs reads a pending lane through the actual session and fold.
 vi.mock("../journal.ts", () => ({ laneState: vi.fn() }));
 
-const ref = (kind: ScopeRef["kind"]): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: "platform:membership@8", creator: null, cause: textDigest("SCRIPTED publication " + kind), ordinal: 0 }), kind, inc: newIncarnation(new Uint8Array(16).fill(5)) });
+const ref = (kind: ScopeKind): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: "platform:membership@8", creator: null, cause: textDigest("SCRIPTED publication " + kind), ordinal: 0 }), genesis: textDigest("SCRIPTED publication genesis " + kind) });
 const WORDS = {
   "stage-ready": "The actual stage/check outcome is not ready. Read this phase again.",
   published: "The actual publication is not complete. Read this phase again.",
@@ -37,7 +37,7 @@ async function fixture(phase: Phase, script: { laneAt?: number; headAt?: number 
     return summary(target, "lane");
   };
   const session = (ctx: Session["ctx"]): Session => ({ ctx, read, intent: written("intent"), resolve: written("resolve"), call: written("call"), request: written("request"), submitPrepared: written("submitPrepared"), accepted: written("accepted") });
-  await store.save({ v: 1, service: "https://publication.test", key: "operator", repository: { directory: refs.directory, membership: refs.membership, rules: refs.rules.scope, destination: refs.destination.scope } });
+  await store.save({ v: 2, service: "https://publication.test", key: "operator", repository: { directory: refs.directory, membership: refs.membership, rules: refs.rules.scope, destination: refs.destination.scope } });
   await retain(store, "s1-seed-lane", lane);
   await retain(store, "s1-done-hold", { phase: "hold", status: "accepted", fact: { seq: 1 } });
   await retain(store, "s1-done-manifest-stage", { phase: "manifest-stage", status: "accepted", intent: INTENT });

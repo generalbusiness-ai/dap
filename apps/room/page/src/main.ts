@@ -15,20 +15,19 @@ import { WorkbenchWork } from "./workbench-work.ts";
  * The page is served by the scope Worker at `/page/` and reads that Worker.
  *
  * The signing key is nonextractable WebCrypto custody in IndexedDB. Settings
- * and resumable operations retain public key references; legacy seeds move
- * only after the same key commits and passes durable readback. Same-origin
- * trusted code can still invoke signing: screens must use the sandbox host.
+ * and resumable operations retain public key references. The new storage
+ * names leave old browser rows unread. Same-origin trusted code can still
+ * invoke signing: screens must use the sandbox host.
  */
 
 import { creationOffer, DEVICE_KEY_LINK, type Signer } from "@generalbusiness/dap-client";
-import { legacySettingsKey, pageKeyStore } from "./browser-key-store.ts";
-import { migratePageOperations } from "./page-key-migration.ts";
+import { pageKeyStore } from "./browser-key-store.ts";
 import { connectInvitation, originalConnection, creatorConnectionFiles, type CreatorBinding } from "./connection-custody.ts";
 import { originalStart, startRoom, type StartedRoom } from "./start-custody.ts";
 import type { Answer, FieldValue, Head, MemberRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, isKeyId, isScopeId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
+import { RETIRED_ROOM_READER_COMMIT, b64url, canonicalize, isKeyId, isScopeId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
 import { ORIGINALS_UNREAD, checkAnswerLine, checkOriginalRequest, liftFences, lockedScopes, openOriginals, originalLine, type OpenOriginals } from "./original-check.ts";
-import { act, actAssociation, actsOn, issueDeviceKey, issueCreation, fieldValue, listLanes, loadCommonsView, loadChange, loadIssue, loadNeedsYou, loadRules, pageObservationSource, roomInitialization, initializationStillCurrent, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
+import { act, actAssociation, actsOn, issueDeviceKey, issueCreation, fieldValue, listLanes, loadCommonsView, loadChange, loadIssue, loadNeedsYou, loadRules, pageObservationSource, roomInitialization, initializationStillCurrent, isRetiredConfig, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
 import { PageObservation, pollingInterval } from "./page-observation.ts";
 import { bindDisclosures, openDialog, releaseDialog } from "./popups.ts";
 import { actsPanel, answerLine, nonacceptedAnswerText, changeScreen, failureScreen, h, icon, whoLine, issueScreen, roomScreen, rulesScreen } from "./view.ts";
@@ -44,7 +43,8 @@ import { controlKey, keepFocus, restoreFocus } from "./focus.ts";
 import { allowedClaim, claimRoom, claimStatus, type ClaimRegister } from "./claim.ts";
 import { joinInvitation, checkOriginal, originalJoin, type JoinResult } from "./join-custody.ts";
 
-const KEPT = "artroom-page";
+// Rooms of the new format keep the settings slot under a new name. The old name is never read.
+const KEPT = "dap-page-settings-2";
 // This owner covers rendering, workbench submissions/source loads and native
 // creation-follow reads. Entry enrollment/connection and clipboard handlers
 // are not a whole-page shutdown contract.
@@ -87,11 +87,11 @@ function settings(): Settings | null {
   ignoredSavedAddress = false;
   try {
     const kept = JSON.parse(localStorage.getItem(KEPT) ?? "null") as (Settings & { service?: unknown; secret?: unknown }) | null;
-    // Migration only: an obsolete saved address never chooses where this page reads or signs.
+    // A saved address never chooses where this page reads or signs.
     ignoredSavedAddress = !!kept && Object.hasOwn(kept, "service");
     if (!kept || !isKeyId(kept.publicKey) || kept.secret !== undefined) return null;
     const place = kept.place ?? null;
-    const register = isScopeRef(kept.register) && kept.register.kind === "register" ? kept.register : undefined;
+    const register = isScopeRef(kept.register) ? kept.register : undefined;
     const label = labelFor(kept.label, place, register);
     const selected = kept.claimSelection;
     const claimSelection = selected && typeof selected.operation === "string" && selected.operation.length > 0 && selected.origin === location.origin && selected.key === kept.publicKey && labelFor({ text: "selection", place: selected.place, register: selected.register }, place, register) ? selected : undefined;
@@ -119,14 +119,6 @@ const sessionOf = (kept: Settings): Session => {
   return { service: location.origin, signer };
 };
 async function prepareSettings(): Promise<void> {
-  await migratePageOperations(location.origin, localStorage, privateKeys);
-  const raw = localStorage.getItem(KEPT);
-  if (raw === null) return;
-  const value: unknown = JSON.parse(raw);
-  if (value && typeof value === "object" && typeof (value as { secret?: unknown }).secret === "string") {
-    const signer = await privateKeys.migrate(legacySettingsKey(localStorage, KEPT));
-    signers.set(signer.key, signer);
-  }
   const kept = settings();
   if (kept && isKeyId(kept.publicKey)) signers.set(kept.publicKey, await privateKeys.load(kept.publicKey));
 }
@@ -924,12 +916,13 @@ function connectionScreen(path: "join" | "invitation" | "config", connected: Roo
       connectionBusy = true; submit.setAttribute("disabled", ""); tell("Working on joining the room");
       let decodedSecret: Uint8Array | null = null;
       try {
+        if (isRetiredConfig(config.value)) { tell(`Refused because this config.json names rooms of the old format. Those rooms retired at the identifier cutover, and commit ${RETIRED_ROOM_READER_COMMIT} reads them. Use a config.json of the new format to join a room. Nothing was imported.`, true); return; }
         const typed = config.value.trim(), raw = key.value.trim(), place = placeOf(typed);
         decodedSecret = unb64url(raw);
         const secret = decodedSecret;
         if (!typed || typed.startsWith("artroom-invite:") || !place || !secret || secret.length !== 32) { tell("Refused because config.json and its matching 32-byte device key are both required. Use the invitation path for an invitation link.", true); return; }
         const parsed = JSON.parse(typed) as { register?: unknown };
-        if (parsed.register !== undefined && (!isScopeRef(parsed.register) || parsed.register.kind !== "register")) { tell("Refused because the config register reference is invalid.", true); return; }
+        if (parsed.register !== undefined && !isScopeRef(parsed.register)) { tell("Refused because the config register reference is invalid.", true); return; }
         const signer = await privateKeys.migrate({ seed: b64url(secret), current, removeSecret: () => {} });
         signers.set(signer.key, signer);
         if (await selectRoom({ place, publicKey: signer.key, ...(parsed.register ? { register: parsed.register as ScopeRef } : {}) })) key.value = "";

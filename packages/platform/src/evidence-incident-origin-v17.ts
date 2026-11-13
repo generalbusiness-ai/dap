@@ -2,9 +2,9 @@
  * This is no history search and never promotes another delivery-created lane. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { natural, canonicalize, deliveryCauseDigest, intentDigest, isDigest, isFactRef, isMemberRef, isRecord, isSeed, messageDigest, same, scopeIdOf, seedDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { natural, canonicalize, deliveryCauseDigest, genesisInputDigest, intentDigest, isDigest, isEntryOf, isFactRef, isMemberRef, isRecord, isSeed, messageDigest, resolveGenesisSelf, same, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, readEvidenceBinding } from "./evidence.ts";
-import { isEntryOf, sentBy, type Fetched } from "@generalbusiness/dap-derive";
+import { sentBySource, type SourceCopy } from "@generalbusiness/dap-derive";
 import { EVIDENCE_LANE_PINS } from "./evidence-lane-pins.generated.ts";
 import { EVIDENCE_RULES_COHORT as C } from "./evidence-cohort.ts";
 import { readEvidenceWireV17 } from "./evidence-wire-v17.ts";
@@ -74,8 +74,10 @@ export function evidenceIncidentAdmissionPositionV17(entry: Entry): number | nul
 }
 
 /** Null: a named immutable body is missing. False: supplied proof is forged,
- * borrowed, duplicated, malformed, or outside this exact successor path. */
-export function evidenceIncidentOriginV17(named: Digest, facts: readonly Fetched[], at?: ScopeRef): boolean | null {
+ * borrowed, duplicated, malformed, or outside this exact successor path.
+ * The nine rows hold each parent birth, so every row carries a genuine
+ * sequence (ruling 080e7c84, item 2d), and each kind is its `sequence.kind`. */
+export function evidenceIncidentOriginV17(named: Digest, facts: readonly SourceCopy[], at?: ScopeRef): boolean | null {
   try {
     if (named !== EVIDENCE_LANE_PINS.issue || facts.length > 9) return false;
     const missing = facts.length === 9 ? false : null;
@@ -83,16 +85,16 @@ export function evidenceIncidentOriginV17(named: Digest, facts: readonly Fetched
     if (!child) return missing;
     if (child.fact.seq !== 0 || at && !same(child.fact.at, at)) return false;
     const keys = facts.map(copy => canonicalize(copy.fact));
-    if (new Set(keys).size !== keys.length || facts.some(copy => !isEntryOf(copy.entry, copy.fact) || utf8(canonicalize(copy.entry)).length > PROPOSED_BOUNDS.entryBytes)) return false;
+    if (new Set(keys).size !== keys.length || facts.some(copy => copy.sequence === null || !isEntryOf(copy.entry, copy.fact, copy.sequence) || utf8(canonicalize(copy.entry)).length > PROPOSED_BOUNDS.entryBytes)) return false;
     const find = (fact: FactRef) => facts.find(copy => same(copy.fact, fact));
     const birth = child.entry.input;
     if (birth.type !== "genesis" || birth.decision !== "applied" || birth.kind !== "file" || !isSeed(birth.seed)
-      || birth.seed.definition !== named || birth.seed.kind !== "lane" || birth.seed.ordinal !== 0 || birth.inc !== child.fact.at.inc
-      || child.fact.at.kind !== "lane" || scopeIdOf(birth.seed) !== child.fact.at.scope || !isFactRef(birth.source)
+      || birth.seed.definition !== named || birth.seed.kind !== "lane" || birth.seed.ordinal !== 0
+      || child.sequence?.kind !== "lane" || scopeIdOf(birth.seed) !== child.fact.at.scope || !isFactRef(birth.source)
       || birth.n === null || !birth.message || birth.message.class !== "request" || birth.message.type !== "create") return false;
     const creator = find(birth.source);
     if (!creator) return missing;
-    if (creator !== facts[1] || creator.under !== "change" || !same(birth.seed.creator, creator.fact.at)) return false;
+    if (creator !== facts[1] || creator.under !== "change" || !same(birth.seed.creator, creator.fact.at) || creator.sequence?.kind !== "lane" || birth.sourceKind !== "lane") return false;
     const fields = body(creator.entry, "published-check-failure");
     if (!fields || creator.entry.input.type !== "delivery" || !isFactRef(fields["job"]) || !isFactRef(fields["publication"]) || !isFactRef(fields["manifest"])) return false;
     const parent = facts.find(copy => copy.fact.seq === 0 && same(copy.fact.at, creator.fact.at));
@@ -101,7 +103,7 @@ export function evidenceIncidentOriginV17(named: Digest, facts: readonly Fetched
     if (parentBirth.type !== "genesis" || parentBirth.decision !== "applied" || parentBirth.kind !== "open" || !isSeed(parentBirth.seed)
       || !evidenceIncidentParentV17(parentBirth.seed.definition)
       || parentBirth.seed.kind !== "lane" || parentBirth.seed.ordinal !== 0
-      || parentBirth.inc !== parent.fact.at.inc || scopeIdOf(parentBirth.seed) !== parent.fact.at.scope || !isFactRef(parentBirth.source)
+      || parent.sequence?.kind !== "lane" || scopeIdOf(parentBirth.seed) !== parent.fact.at.scope || !isFactRef(parentBirth.source)
       || parentBirth.n === null || !parentBirth.message || parentBirth.message.class !== "request" || parentBirth.message.type !== "create") return false;
     const opened = find(parentBirth.source);
     if (!opened) return missing;
@@ -109,27 +111,27 @@ export function evidenceIncidentOriginV17(named: Digest, facts: readonly Fetched
     if (opened.under !== "platform:directory" || made.type !== "act" || made.signed.intent.kind !== "open-pr" || !verifySignedIntent(made.signed)
       || made.signed.intent.fields["definition"] !== parentBirth.seed.definition || !same(made.signed.intent.to, opened.fact.at)
       || !same(parentBirth.seed.creator, opened.fact.at) || parentBirth.seed.cause !== intentDigest(made.signed.intent)
-      || !sentBy(opened.entry, { from: opened.fact, n: parentBirth.n, to: parentBirth.seed, message: parentBirth.message })) return false;
+      || !sentBySource(opened, { from: opened.fact, n: parentBirth.n, to: parentBirth.seed, message: parentBirth.message })) return false;
     const directory = facts.find(copy => copy.fact.seq === 0 && same(copy.fact.at, opened.fact.at));
     if (!directory) return missing;
     const office = directory.entry.input;
     if (directory.under !== "platform:directory" || office.type !== "genesis" || office.decision !== "applied" || office.kind !== "establish"
-      || !isSeed(office.seed) || office.seed.definition !== C.directory || office.seed.kind !== "directory" || directory.fact.at.kind !== "directory"
-      || office.inc !== directory.fact.at.inc || scopeIdOf(office.seed) !== directory.fact.at.scope || !isRecord(parentBirth.message.body)
+      || !isSeed(office.seed) || office.seed.definition !== C.directory || office.seed.kind !== "directory" || directory.sequence?.kind !== "directory"
+      || scopeIdOf(office.seed) !== directory.fact.at.scope || !isRecord(parentBirth.message.body)
       || !same(parentBirth.message.body["directory"], directory.fact.at) || !isRecord(parentBirth.message.body["fields"])) return false;
     const native = find(creator.entry.input.from);
     if (!native) return missing;
     const position = evidenceIncidentAdmissionPositionV17(native.entry);
     if (native.under !== "platform:destination" || position === null || !selfOr(fields["decision"], native.fact)
-      || !sentBy(native.entry, { from: native.fact, n: creator.entry.input.n, to: creator.fact.at, message: creator.entry.input.message })) return false;
+      || !sentBySource(native, { from: native.fact, n: creator.entry.input.n, to: creator.fact.at, message: creator.entry.input.message })) return false;
     const destination = facts.find(copy => copy.fact.seq === 0 && same(copy.fact.at, native.fact.at));
     if (!destination) return missing;
     const target = destination.entry.input;
     if (destination.under !== "platform:destination" || target.type !== "genesis" || target.decision !== "applied" || target.kind !== "establish"
       || !isSeed(target.seed) || target.seed.definition !== C.destination || target.seed.kind !== "destination" || target.seed.ordinal !== 2
-      || target.inc !== destination.fact.at.inc || scopeIdOf(target.seed) !== destination.fact.at.scope || !same(target.seed.creator, directory.fact.at)
-      || target.seed.cause !== seedDigest(office.seed) || !same(target.source, directory.fact) || target.n === null || !target.message
-      || !sentBy(directory.entry, { from: directory.fact, n: target.n, to: target.seed, message: target.message })
+      || destination.sequence?.kind !== "destination" || scopeIdOf(target.seed) !== destination.fact.at.scope || !same(resolveGenesisSelf(target.seed.creator, directory.fact), directory.fact.at)
+      || target.seed.cause !== genesisInputDigest(office) || !same(target.source, directory.fact) || target.n === null || !target.message
+      || !sentBySource(directory, { from: directory.fact, n: target.n, to: target.seed, message: target.message })
       || !same(parentBirth.message.body["fields"]["destination"], destination.fact.at)) return false;
     const held = record(native.entry)!, binding = readEvidenceBinding(held["binding"]);
     if (!binding || binding.stage !== "published" || binding.subject.kind !== "published" || binding.auditOf !== null || !isDigest(held["bindingDigest"])
@@ -164,7 +166,7 @@ export function evidenceIncidentOriginV17(named: Digest, facts: readonly Fetched
       || !(fields["result"] === undefined ? childFields["failedResult"] === undefined : same(childFields["failedResult"], fields["result"]))
       || childFields["publishedCommit"] !== held["commit"] || !same(childFields["triagers"], fields["triagers"])
       || birth.seed.cause !== deliveryCauseDigest({ v: 1, from: creator.entry.input.from, n: creator.entry.input.n, message: messageDigest(creator.entry.input.message) })
-      || !sentBy(creator.entry, { from: creator.fact, n: birth.n, to: birth.seed, message: birth.message })) return false;
+      || !sentBySource(creator, { from: creator.fact, n: birth.n, to: birth.seed, message: birth.message })) return false;
     const required = [child, creator, parent, opened, directory, native, destination, admitted, job];
     return facts.length === 9 && new Set(required).size === 9 && facts.every(copy => required.includes(copy));
   } catch { return false; }

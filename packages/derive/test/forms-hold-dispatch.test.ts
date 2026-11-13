@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import type { Entry, Evidence, FieldValue, OperationId, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Effect, Entry, GenesisEffect, Evidence, FieldValue, OperationId, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { entryHash, intentDigest } from "@generalbusiness/dap-bytes";
 import {
@@ -11,7 +11,7 @@ import {
 import type { Fetched, ValidDefinition } from "../src/index.ts";
 import { stagingData } from "./definition-corpus/staging-data.ts";
 import { C, Staging, clean, snapshots } from "./fixtures-hold.ts";
-import { grantOf, keys, t, valid, type Actor, type Context } from "./fixtures.ts";
+import { grantOf, keys, t, valid, type Actor, type Context, fixtureSequence, later } from "./fixtures.ts";
 
 const COMMIT = C("a");
 const definition = (version: 1 | 2, name?: string): ValidDefinition => {
@@ -84,7 +84,7 @@ function checked(version: 1 | 2, tooLarge = false) {
   const report = s.intent(keys.una, "report", { expected: { commitment: s.item(s.commitment).revision }, fields: { commitment: s.commitment, commit: COMMIT } });
   const stage = s.asked(report, "stage");
   if (typeof stage === "string") throw new Error("stage did not write");
-  expect(stage.effects.filter(e => e.effect === "record").every(e => e.capability === s.owner)).toBe(true);
+  expect((stage.effects as readonly (Effect | GenesisEffect)[]).filter(e => e.effect === "record").every(e => e.capability === s.owner)).toBe(true);
   accounting(s);
   const mints = s.state.records(s.owner, "token", { states: ["minting"] });
   expect(mints).toHaveLength(2);
@@ -108,7 +108,7 @@ test("the full registry dispatches each listed hold family through stage, mints,
     const { s, report } = checked(version);
     expect(s.submit(report, { capabilities: CAPABILITY_CODE }).result).toBe("write");
     expect(s.state.record(s.owner, "pin", [s.at, intentDigest(report.intent)])?.state).toBe("held");
-    expect(s.last.effects.filter(e => e.effect === "record").every(e => e.capability === s.owner)).toBe(true);
+    expect((s.last.effects as readonly (Effect | GenesisEffect)[]).filter(e => e.effect === "record").every(e => e.capability === s.owner)).toBe(true);
     accounting(s);
     expect(s.replay().all()).toEqual(s.state.all());
   }
@@ -126,8 +126,8 @@ test("the v2 foreign check path binds the exact full fact and confirmed source o
   const ask = (target: Dispatched, fetched: Fetched, pin = fetched.fact) => CAPABILITY_CODE.guard("git-read@1", "ancestry", {
     commit: COMMIT, row: "report", pin,
   }, target.given({ facts: new Map([[pin.hash, fetched]]) }));
-  const actual = { fact: current.fact, entry: current.entry, under: current.s.under };
-  const old = { fact: legacy.fact, entry: legacy.entry, under: legacy.s.under };
+  const actual = { fact: current.fact, entry: current.entry, sequence: fixtureSequence(current.s), under: current.s.under };
+  const old = { fact: legacy.fact, entry: legacy.entry, sequence: fixtureSequence(legacy.s), under: legacy.s.under };
   expect(ask(consumer, actual)).toBe(true);
   expect(ask(oldConsumer, old)).toBe(true);
   expect(ask(consumer, old)).toBe("ancestry-stale");
@@ -137,10 +137,10 @@ test("the v2 foreign check path binds the exact full fact and confirmed source o
   if (actual.entry.input.type !== "outcome") throw new Error("fixture check is not an outcome");
   // A self-consistent hash cannot turn another owner's input into a v2
   // check. This control scripts a forged source, not an authorized outcome.
-  const forged: Entry = { ...actual.entry, input: { ...actual.entry.input, owner: HOLD } };
+  const forged: Entry = { ...later(actual.entry), input: { ...actual.entry.input, owner: HOLD } };
   expect(ask(consumer, { ...actual, entry: forged, fact: { ...actual.fact, hash: entryHash(forged) } })).toBe("ancestry-stale");
   const large = checked(2, true);
-  expect(ask(consumer, { fact: large.fact, entry: large.entry, under: large.s.under })).toBe("ancestry-too-large");
+  expect(ask(consumer, { fact: large.fact, entry: large.entry, sequence: fixtureSequence(large.s), under: large.s.under })).toBe("ancestry-too-large");
 });
 
 test("v2 native snapshot selection requires the shared selector; retained snapshot bytes alone grant no native ancestry shortcut", () => {

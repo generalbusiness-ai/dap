@@ -8,8 +8,8 @@ import { answersVersionQuestion, isStandingDestination, publicationStandingRecor
  * inspection of those objects. For its push it builds the same objects again, with
  * the time of the entry that reserved it, and sends them with the base's closure.
  * Every provider sends them the same way. */
-import type { ReservationSnapshot, SignedIntent, Entry, FactRef, FactUse, FieldValue, KeyId, ObservedScope, OperationId, RetainedInput, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, b64url, entryHash, isEntry, isOperationId, isFactRef, rawRetainedJSON, verifySignedIntent, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import type { ReservationSnapshot, SignedIntent, Entry, FactRef, FactUse, FieldValue, KeyId, ObservedScope, OperationId, RetainedInput, ScopeId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalize, b64url, entryHash, isEntry, isEntryBodyOf, isOperationId, isFactRef, rawRetainedJSON, verifySignedIntent, parseStrict, timeMs, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { isEntryOf, valueDigest, type Item, type Operation, type Own } from "@generalbusiness/dap-derive";
 
 
@@ -62,10 +62,12 @@ export interface DestinationProvider {
 /** What the one-time credential read answers: the plaintext, its end, and the remote URL it opens. */
 export interface ReadCredential { token: string; ends: string; remote: string }
 export interface SnapshotReader {
-  job(fact: FactRef): Promise<{ entry: Entry; under: string; state: string; decidedBy?: FactRef | null } | null>;
-  key(membership: string, key: KeyId): Promise<unknown>;
-  /** Actual authenticated immutable source entry, including foreign source facts. */
-  source?(fact: FactRef): Promise<Sealed | null>;
+  /** The job entry, admitted under the birth of its sequence, with its current state. */
+  job(fact: FactRef): Promise<{ entry: Entry; under: string; sequence: CheckedSequence; state: string; decidedBy?: FactRef | null } | null>;
+  /** One key's standing. `membership` is the full reference when the caller holds it, or the first-read form. */
+  key(membership: ObservedScope, key: KeyId): Promise<unknown>;
+  /** Actual authenticated immutable source entry, including foreign source facts, with the association that admitted it. */
+  source?(fact: FactRef): Promise<(Sealed & { sequence: CheckedSequence }) | null>;
   /** Exact current declared source item, not a scan or a replacement for its immutable fact. */
   sourceState?(fact: FactRef): Promise<string | null>;
   /** Fresh authenticated Rules observation with its exact retained extent value. */
@@ -81,6 +83,11 @@ const MINTS: readonly string[] = [DESTINATION_KINDS.mint, DESTINATION_KINDS.mint
 const OWNER = "platform:destination";
 
 const sameScope = (a: ScopeRef, b: ScopeRef) => canonicalize(a) === canonicalize(b);
+/** A sealed entry of this scope, matched under the local association against the reference a caller names. */
+const ownEntry = (given: OutsideGiven, sealed: Sealed, at: ScopeRef): boolean => {
+  const local = given.localSequence();
+  return !!local && isEntryOf(sealed.entry, { at, seq: sealed.entry.seq, hash: sealed.hash }, local);
+};
 const objectId = (v: unknown): v is string => typeof v === "string" && /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(v);
 const destinationText = (v: unknown): v is string => typeof v === "string" && v.length > 0 && utf8(v).length <= 256;
 function members(reply: unknown, names: readonly string[]): Record<string, unknown> | null {
@@ -104,6 +111,7 @@ export class DestinationHost implements Outside {
     // The outside port exposes retained bytes separately from own history.
     // Reconstruct only an already retained entry, with Core's hash/parser checks.
     this.#evidenceOwn = Object.assign((seq: number) => given.own(seq), {
+      sequence: () => given.localSequence(),
       retained: (use: FactUse) => {
         const held = given.retained("entry", use.content), entry = held && rawRetainedJSON(use.content, held.bytes);
         return isEntry(entry) ? entry : null;
@@ -365,7 +373,7 @@ export class DestinationHost implements Outside {
     const outcome = sealed ?? this.#confirmation(operation, at.attempt);
     const recorded = outcome ? this.#given.own(outcome.entry.seq) : null;
     const input = recorded?.entry.input;
-    const valid = outcome && recorded?.hash === outcome.hash && canonicalize(recorded.entry) === canonicalize(outcome.entry) && sameScope(recorded.entry.at, at.scope) && input?.type === "outcome" && input.operation === at.operation && input.attempt === at.attempt && isOf(input.owner, OWNER) && input.kind === operation.kind && input.result === "confirmed" && input.evidence.basis === "own-answer";
+    const valid = outcome && recorded?.hash === outcome.hash && canonicalize(recorded.entry) === canonicalize(outcome.entry) && ownEntry(this.#given, recorded, at.scope) && input?.type === "outcome" && input.operation === at.operation && input.attempt === at.attempt && isOf(input.owner, OWNER) && input.kind === operation.kind && input.result === "confirmed" && input.evidence.basis === "own-answer";
     if (operation.kind === DESTINATION_KINDS.revoke) {
       const body = valid && input.type === "outcome" ? members(input.evidence.body, ["token"]) : null;
       const mint = body ? destinationRevokedMint(this.#given.state, this.#given.own, operation) : null;
@@ -411,7 +419,7 @@ export class DestinationHost implements Outside {
     const reader = this.#options.snapshotReader;
     const scope = this.#given.scope();
     const intent = asked?.intent;
-    if (!reader || scope?.at.kind !== "destination" || !usesStagedPublicationProtocol(this.#given.genesis()?.seed.definition ?? "") || !verifySignedIntent(asked)
+    if (!reader || scope?.kind !== "destination" || !usesStagedPublicationProtocol(this.#given.genesis()?.seed.definition ?? "") || !verifySignedIntent(asked)
       || intent.kind !== "git-read@1:job-read" || intent.on !== null || Object.keys(intent.expected).length || Object.keys(intent.fields).length !== 1 || !isFactRef(intent.fields["job"])) return null;
     const jobFact = intent.fields["job"];
     if (!intent.to || canonicalize(intent.to) !== canonicalize(jobFact.at)) return null;
@@ -419,7 +427,7 @@ export class DestinationHost implements Outside {
     const now = timeMs(this.#given.clock.read()), until = timeMs(intent.notAfter), previous = timeMs(scope.time);
     if (now === null || previous === null || now < previous || until === null || until <= now || until - now > 900_000) return null;
     const jobRead = await reader.job(jobFact);
-    if (!jobRead || jobRead.under !== "change" || jobRead.state !== "requested" || !isEntryOf(jobRead.entry, jobFact) || jobRead.entry.input.type !== "act" || jobRead.entry.input.signed.intent.kind !== "request-check") return null;
+    if (!jobRead || jobRead.under !== "change" || jobRead.state !== "requested" || !isEntryOf(jobRead.entry, jobFact, jobRead.sequence) || jobRead.entry.input.type !== "act" || jobRead.entry.input.signed.intent.kind !== "request-check") return null;
     const job = jobRead.entry;
     const fields = job.input.type === "act" ? job.input.signed.intent.fields : {};
     const manifestId = fields["manifest"];
@@ -460,7 +468,8 @@ export class DestinationHost implements Outside {
     };
     if (!generationFits()) return null;
     const readAt = timeMs(this.#given.clock.read());
-    const standing = await reader.key(membership, intent.actor) as { key?: unknown; keyState?: unknown; member?: unknown; memberState?: unknown; actions?: unknown; at?: unknown; controllerActive?: unknown } | null;
+    // The branch records the membership by scope ID only, so this is the first-read form; the answer names the full reference.
+    const standing = await reader.key({ scope: membership as ScopeId, kind: "membership" }, intent.actor) as { key?: unknown; keyState?: unknown; member?: unknown; memberState?: unknown; actions?: unknown; at?: unknown; controllerActive?: unknown } | null;
     if (!standing || standing.key !== intent.actor || standing.keyState !== "active" || standing.memberState !== "active" || standing.member !== check.checker || !Array.isArray(standing.actions) || !standing.actions.includes("change.check") || standing.controllerActive === false) return null;
     const observedAt = readAt;
     const afterRead = timeMs(this.#given.clock.read());
@@ -485,7 +494,7 @@ export class DestinationHost implements Outside {
     if (!(await closureReader.closure(built.commit)).complete) return null;
     const currentJob = await reader.job(jobFact);
     const finalReadAt = timeMs(this.#given.clock.read());
-    const currentKey = await reader.key(membership, intent.actor) as { key?: unknown; keyState?: unknown; member?: unknown; memberState?: unknown; actions?: unknown; controllerActive?: unknown } | null;
+    const currentKey = await reader.key({ scope: membership as ScopeId, kind: "membership" }, intent.actor) as { key?: unknown; keyState?: unknown; member?: unknown; memberState?: unknown; actions?: unknown; controllerActive?: unknown } | null;
     // Recheck after the awaits, against the current retained history.
     const completed = timeMs(this.#given.clock.read()), retained = timeMs(this.#given.scope()?.time);
     if (!generationFits() || completed === null || retained === null || completed < retained || finalReadAt === null || completed < finalReadAt || completed - finalReadAt > 10_000 || completed >= end || completed >= until || !currentJob || currentJob.state !== "requested" || this.#given.state.item(publication.id)?.state !== "reserved"
@@ -511,17 +520,17 @@ export class DestinationHost implements Outside {
     const confirmed = operation.attempts.find((opened) => opened.attempt === attempt)?.outcomes.find((outcome) => outcome.result === "confirmed");
     const sealed = confirmed ? this.#given.own(confirmed.seq) : null;
     const input = sealed?.entry.input;
-    return scope && sealed && sameScope(sealed.entry.at, scope.at) && entryHash(sealed.entry) === sealed.hash && input?.type === "outcome" && input.operation === operation.id && input.attempt === attempt && isOf(input.owner, OWNER) && input.kind === operation.kind && input.result === "confirmed" && input.evidence.basis === "own-answer" ? sealed : null;
+    return scope && sealed && ownEntry(this.#given, sealed, scope.at) && entryHash(sealed.entry) === sealed.hash && input?.type === "outcome" && input.operation === operation.id && input.attempt === attempt && isOf(input.owner, OWNER) && input.kind === operation.kind && input.result === "confirmed" && input.evidence.basis === "own-answer" ? sealed : null;
   }
 
   #bound(request: EffectRequest): { operation: Operation; repository: DestinationRepository; ref: string } | null {
     const scope = this.#given.scope();
-    if (!scope || scope.at.kind !== "destination" || !sameScope(scope.at, request.scope) || this.#given.genesis()?.seed.definition !== request.owner || !this.accepts(request.owner, request.kind) || !isOperationId(request.operation) || !Number.isSafeInteger(request.attempt) || request.attempt < 1) return null;
+    if (!scope || scope.kind !== "destination" || !sameScope(scope.at, request.scope) || this.#given.genesis()?.seed.definition !== request.owner || !this.accepts(request.owner, request.kind) || !isOperationId(request.operation) || !Number.isSafeInteger(request.attempt) || request.attempt < 1) return null;
     const operation = this.#given.state.operation(request.operation);
     if (!operation || operation.owner !== request.owner || operation.kind !== request.kind || !operation.attempts.some((attempt) => attempt.attempt === request.attempt)) return null;
     const [seq, k] = request.operation.split(":").map(Number);
     const origin = this.#given.own(seq!);
-    if (!origin || !sameScope(origin.entry.at, request.scope) || origin.hash !== request.origin.hash || entryHash(request.origin.entry) !== origin.hash || canonicalize(origin.entry) !== canonicalize(request.origin.entry)) return null;
+    if (!origin || !ownEntry(this.#given, origin, request.scope) || origin.hash !== request.origin.hash || entryHash(request.origin.entry) !== origin.hash || canonicalize(origin.entry) !== canonicalize(request.origin.entry)) return null;
     const opening = origin.entry.effects.filter((effect) => effect.effect === "operation" && effect.k === k);
     if (opening.length !== 1 || opening[0]!.effect !== "operation" || opening[0]!.owner !== operation.owner || opening[0]!.kind !== operation.kind) return null;
     const branch = destinationBranch(this.#given.state);
@@ -688,7 +697,8 @@ export class DestinationHost implements Outside {
     if (fixed) return { refusal: fixed };
     const rules = destinationRulesScope(this.#given.state), reader = this.#options.snapshotReader;
     if (!rules || !reader?.rules) return null;
-    const of: ObservedScope = rules.inc === null ? { scope: rules.scope, kind: rules.kind } : { ...rules, inc: rules.inc };
+    // A rules scope recorded before its first observation is asked by its ID and kind; afterwards by its full reference.
+    const of: ObservedScope = "pending" in rules ? { scope: rules.scope, kind: "rules" } : rules;
     const extents = publicationExtents(await reader.rules(of), rules);
     return extents ? { refusal: publicationRefusal(path, parsed, extents) } : null;
   }
@@ -706,8 +716,9 @@ export class DestinationHost implements Outside {
     const use = entry.uses.find((use) => canonicalize(use.fact) === canonicalize(fact));
     const kept = use ? this.#given.retained("entry", use.content) : null;
     if (!kept) return null;
+    // A retained body under this scope's own recorded use: body integrity only, with no birth of the other sequence.
     const copy = parseStrict(kept.bytes) as unknown as Entry;
-    return isEntryOf(copy, fact) ? copy : null;
+    return isEntryBodyOf(copy, fact) ? copy : null;
   }
   /** The publication whose `judge` is open. */
   #judging(): Item | null {
@@ -780,7 +791,7 @@ export class DestinationHost implements Outside {
     const manifest = this.#fact(reserve, statement.manifest);
     if (!manifest || !sourcesOf(manifest) || manifest.input.type !== "act") return null;
     const uses = reserve.uses.flatMap((use) => { const entry = this.#fact(reserve, use.fact); return entry ? [{ fact: use.fact, entry }] : []; });
-    const files = manifestFiles(manifest, uses);
+    const files = manifestFiles(manifest, statement.manifest.at, uses);
     const base = manifest.input.signed.intent.fields["base"];
     return objectId(base) ? { files: files ?? [], base, operation: statement.operation } : null;
   }

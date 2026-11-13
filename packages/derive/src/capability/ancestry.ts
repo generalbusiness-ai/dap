@@ -75,16 +75,20 @@ const STAGED = "refs/artroom/staged/";
 /** The length of a Git object ID that is well formed: 40 for SHA-1, 64 for SHA-256. Null: it is no object ID. */
 export const objectIdLength = (id: unknown): 40 | 64 | null => (typeof id === "string" && /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(id) ? (id.length as 40 | 64) : null);
 
-/** The name of a staged ref (authority note, section 6.2, "The root"): the lane, its incarnation, the commit and the root number. Null: the name has another form. */
-export function stagedRef(ref: string): { scope: string; inc: string; commit: string; root: number } | null {
+/**
+ * The name of a staged ref (authority note, section 6.2, "The root"): the lane, the hex of its genesis hash, the commit and the
+ * root number. A ref name cannot hold the `:` of a digest, so the name holds the hex only. Null: the name has another form.
+ */
+export function stagedRef(ref: string): { scope: string; genesis: string; commit: string; root: number } | null {
   const parts = ref.startsWith(STAGED) ? ref.slice(STAGED.length).split("/") : [];
-  const [scope, inc, commit, number] = parts;
-  if (parts.length !== 4 || !isScopeRef({ scope, inc, kind: "lane" }) || objectIdLength(commit) === null || !/^[1-9][0-9]*$/.test(number!) || !Number.isSafeInteger(Number(number))) return null;
-  return { scope: scope!, inc: inc!, commit: commit!, root: Number(number) };
+  const [scope, hex, commit, number] = parts;
+  const genesis = `sha256:${hex}`;
+  if (parts.length !== 4 || !/^[0-9a-f]{64}$/.test(hex ?? "") || !isScopeRef({ scope, genesis }) || objectIdLength(commit) === null || !/^[1-9][0-9]*$/.test(number!) || !Number.isSafeInteger(Number(number))) return null;
+  return { scope: scope!, genesis, commit: commit!, root: Number(number) };
 }
 
 /** The ref name of a lane's root for a commit. */
-export const stagedRefName = (lane: Pick<ScopeRef, "scope" | "inc">, commit: string, root: number): string => `${STAGED}${lane.scope}/${lane.inc}/${commit}/${root}`;
+export const stagedRefName = (lane: ScopeRef, commit: string, root: number): string => `${STAGED}${lane.scope}/${lane.genesis.slice("sha256:".length)}/${commit}/${root}`;
 
 /**
  * A snapshot as the record names it: the pairs in byte order of ref, their
@@ -154,11 +158,11 @@ export interface PriorCheck { commit: string; root: number; checked: FactRef; fo
  * another incarnation, of this lane under another commitment, or with a
  * name of another form. An own ref never hides a foreign one.
  */
-export function foreignOn(pairs: readonly StagedRef[], commit: string, lane: Pick<ScopeRef, "scope" | "inc">, roots: readonly OwnRoot[]): string | null {
+export function foreignOn(pairs: readonly StagedRef[], commit: string, lane: ScopeRef, roots: readonly OwnRoot[]): string | null {
   for (const { ref, target } of pairs) {
     if (target !== commit) continue;
     const named = stagedRef(ref);
-    if (!named || named.scope !== lane.scope || named.inc !== lane.inc || named.commit !== commit || !roots.some((r) => r.number === named.root && r.commit === commit)) return ref;
+    if (!named || named.scope !== lane.scope || named.genesis !== lane.genesis || named.commit !== commit || !roots.some((r) => r.number === named.root && r.commit === commit)) return ref;
   }
   return null;
 }
@@ -206,7 +210,7 @@ export interface WalkInput {
   commit: string;                                  // the start: the commit that the act names
   head: string;                                    // the destination branch's head, as read for this check
   snapshot: readonly StagedRef[];                  // the staged refs, as the host returned them then
-  lane: Pick<ScopeRef, "scope" | "inc">;           // the staging lane
+  lane: ScopeRef;                            // the staging lane
   root: number;                                    // the lane's `live` root for the commit, which the act relies on
   roots: readonly OwnRoot[];                       // the lane's roots under the source commitment
   checks: readonly PriorCheck[];                   // the prior checks under the source commitment, each an earlier entry

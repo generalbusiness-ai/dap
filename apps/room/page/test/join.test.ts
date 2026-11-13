@@ -2,7 +2,7 @@ import { answerText, nonacceptedAnswerText } from "../src/view.ts";
 import { expect, test, vi } from "vitest";
 import type { SignedIntent, SignedRead } from "@generalbusiness/dap-contract";
 import * as bytes from "@generalbusiness/dap-bytes";
-import { b64url, definitionDigest, intentDigest, keyIdOfSecret, newIncarnation, textDigest, utf8, verifyInvitationProof, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { b64url, definitionDigest, intentDigest, keyIdOfSecret, textDigest, utf8, verifyInvitationProof, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { changeDemo } from "@generalbusiness/dap-lanes";
 import { INVITATION_MEMBERSHIPS, Session as ReadSession, type Fetch } from "@generalbusiness/dap-client";
 import { sessionKey, invitationTarget, prepareJoin, joinAssociation, joinRoom, placeOf, type Session } from "../src/index.ts";
@@ -14,8 +14,8 @@ import { PERSON_INVITATION, PERSON_INVITATION_CASES, PERSON_SERVICE } from "../.
 // supported membership encodings submit to the configured service only.
 test("page join refuses mismatched encoding before submission and accepts scripted supported-version replies on the configured service", async () => {
   const repository = {
-    directory: { scope: `sc_${"a".repeat(52)}` as const, inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "directory" as const },
-    membership: { scope: `sc_${"b".repeat(51)}a` as const, inc: newIncarnation(new Uint8Array(16).fill(2)), kind: "membership" as const },
+    directory: { scope: `sc_${"a".repeat(52)}` as const, genesis: textDigest("TEST genesis 13") },
+    membership: { scope: `sc_${"b".repeat(51)}a` as const, genesis: textDigest("TEST genesis 14") },
     rules: `sc_${"c".repeat(51)}a` as const,
     destination: `sc_${"d".repeat(51)}a` as const,
   };
@@ -42,7 +42,7 @@ test("page join refuses mismatched encoding before submission and accepts script
   const session: Session = { service: "https://page.test", secret: new Uint8Array(32).fill(7), fetch, now: () => Date.parse("2026-10-08T12:00:00Z") };
   expect(joinAssociation(session, encode({ ...original, invitation: 4, secret: "another-link" }))).toBe(joinAssociation(session, encode(original)));
   expect(joinAssociation({ ...session, secret: new Uint8Array(32).fill(8) }, encode(original))).not.toBe(joinAssociation(session, encode(original)));
-  const malformed = { ...original, repository: { ...repository, membership: { ...repository.membership, inc: "malformed" } } };
+  const malformed = { ...original, repository: { ...repository, membership: { ...repository.membership, genesis: "malformed" } } };
   expect([placeOf(encode(malformed)), placeOf(JSON.stringify({ repository: malformed.repository })), placeOf(encode({ ...original, repository: undefined }))]).toEqual([null, null, null]);
   expect(placeOf(JSON.stringify({ repository }))).toEqual({ directory: repository.directory.scope, membership: repository.membership });
   for (const changed of [
@@ -90,7 +90,7 @@ test("page join refuses mismatched encoding before submission and accepts script
     key: sessionKey(session), answer: archived, scope: repository.membership.scope, kind: "join", on: null,
     before: { seq: 12, hash: archived.archived.through.hash }, after: null, observation: null });
   expect(archivedLines[0]).toContain(`Archived: original entry ${repository.membership.scope}:4`);
-  expect(archivedLines[0]).toContain(`hash ${archived.fact.hash}, incarnation ${repository.membership.inc}`);
+  expect(archivedLines[0]).toContain(`hash ${archived.fact.hash}, genesis ${repository.membership.genesis}`);
   expect(archivedLines[0]).toContain(`through entry 12, hash ${archived.archived.through.hash}`);
   expect(archivedLines.join(" ")).toContain(`Verify archive commit ${archived.archived.commit}`);
   expect(archivedLines.join(" ")).toContain("same signed envelope; this page does not retain it");
@@ -115,7 +115,7 @@ test("incomplete projections stay unreadable and a real returned submit answer s
   const { failureScreen } = await import("../src/view.ts");
   type Acted = import("../src/data.ts").Acted;
   type Room = import("../src/data.ts").Room;
-  const ref = (letter: string, kind: string) => ({ scope: `sc_${letter.repeat(51)}a` as const, inc: newIncarnation(new Uint8Array(16).fill(3)), kind });
+  const ref = (letter: string, kind: string) => ({ scope: `sc_${letter.repeat(51)}a` as const, genesis: textDigest("TEST genesis " + kind) });
   const M = ref("b", "membership"), R = ref("c", "rules"), G = ref("d", "destination"), C = ref("e", "lane");
   const head = { seq: 0, hash: textDigest("scripted head") };
   const changeDigest = definitionDigest(changeDemo);
@@ -158,7 +158,7 @@ test("incomplete projections stay unreadable and a real returned submit answer s
       return new Response(JSON.stringify({ ok: false, reason: "forbidden" }));
     }
     const scope = path.endsWith(M.scope) ? M : path.endsWith(R.scope) ? R : path.endsWith(G.scope) ? G : C;
-    const definition = scope === C ? changeDigest : `platform:${scope.kind}@1`;
+    const definition = scope === C ? changeDigest : `platform:${scope === M ? "membership" : scope === R ? "rules" : "destination"}@1`;
     const items = scope === M ? [item("roster")] : scope === R ? [item("rules")] : scope === C ? [item("proposal")] : [item("publication", 3, { operation: { at: C, seq: 5, hash: textDigest("scripted merge") } })];
     return read({ scope, status: "active", definition, time: "2026-10-08T12:00:00Z", counts: [], items }, !(scope === G && mode === "destination-incomplete"));
   };

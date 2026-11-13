@@ -1,5 +1,5 @@
 /** One authenticated, bounded collection. No room inventory or background read. */
-import { canonicalize, entryHash, isFactRef, isMemberRef, isScopeRef, readMinimum, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, isEntryBodyOf, isFactRef, isMemberRef, isScopeRef, readMinimum, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest, FactRef, Head, Item, MemberRef, ReadMinimum, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
 import { ScopeHandle, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { actSigner, type ActSigner, ReadSessions, Reads, type McpConfig } from "@generalbusiness/dap-mcp";
@@ -62,7 +62,7 @@ export class Collection {
     this.guard();
     if (!isScopeRef(ref)) throw new Unread("scope-shape");
     const old = this.admitted.get(ref.scope);
-    if (old) { if (!sameOptional(old, ref)) throw new Unread("incarnation-conflict"); return; }
+    if (old) { if (!sameOptional(old, ref)) throw new Unread("genesis-conflict"); return; }
     if (this.admitted.size >= LIMITS.scopes) throw new Unread("scope-limit");
     this.admitted.set(ref.scope, structuredClone(ref)); this.counters.scopes++;
   }
@@ -130,7 +130,7 @@ export class Collection {
   }
   async frame(ref: ScopeRef, minimum?: ReadMinimum): Promise<Frame> {
     const floor = minimumFor(ref, minimum);
-    const held = this.frames.get(ref.scope); if (held) { if (!sameOptional(ref, held.ref)) throw new Unread("incarnation-conflict"); requireMinimum(held.head, floor); return held; }
+    const held = this.frames.get(ref.scope); if (held) { if (!sameOptional(ref, held.ref)) throw new Unread("genesis-conflict"); requireMinimum(held.head, floor); return held; }
     const got = await this.read(ref, handle => handle.summary(floor));
     if (!sameOptional(got.value.scope, ref) || !got.complete || got.value.status !== "active") throw new Unread("summary-incomplete");
     this.#keepItems(ref, got.at, got.value.items);
@@ -162,7 +162,7 @@ export class Collection {
     if (!Array.isArray(actions) || actions.some(action => typeof action !== "string")) throw new Unread("viewer-role");
     this.actions = actions as string[];
     const refs = laneRefs(D.items);
-    if (!refs) throw new Unread("incarnation-conflict");
+    if (!refs) throw new Unread("genesis-conflict");
     this.discoveryComplete = true;
     if (target && !refs.some(ref => sameOptional(ref, target))) throw new Unread("outside-room");
     if (target) refs.sort((a, b) => Number(sameOptional(b, target)) - Number(sameOptional(a, target)));
@@ -190,7 +190,7 @@ export class Collection {
   }
   keepEntry(frame: Frame, sealed: Sealed): Sealed {
     const seq = sealed.entry.seq, key = canonicalize([frame.ref, seq]), old = this.#entries.get(key);
-    if (!Number.isSafeInteger(seq) || seq < 0 || seq > frame.head.seq || !sameOptional(sealed.entry.at, frame.ref) || entryHash(sealed.entry) !== sealed.hash || (seq === frame.head.seq && sealed.hash !== frame.head.hash)) throw new Unread("entry-mismatch");
+    if (!Number.isSafeInteger(seq) || seq < 0 || seq > frame.head.seq || !isEntryBodyOf(sealed.entry, { at: frame.ref, seq, hash: sealed.hash }) || (seq === frame.head.seq && sealed.hash !== frame.head.hash)) throw new Unread("entry-mismatch");
     if (old) { if (!sameOptional(old, sealed)) throw new Unread("entry-mismatch"); return old; }
     if (this.counters.history >= LIMITS.history) throw new Unread("history-limit");
     this.counters.history++; this.#entries.set(key, sealed); return sealed;

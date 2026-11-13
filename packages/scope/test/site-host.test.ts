@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import { canonicalize, digestBytes, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
-import type { Seed } from "@generalbusiness/dap-contract";
+import { canonicalize, digestBytes, entryHash, newGenesisNonce, scopeIdOf, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import type { Entry, Seed } from "@generalbusiness/dap-contract";
 import { COMMONS_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 import { otherLane } from "@generalbusiness/dap-derive/testing";
 import { readerOf, roomOf, type Room, type SiteEnv } from "../src/site/host.ts";
@@ -19,12 +19,16 @@ const packet = (value: string) => `${(new TextEncoder().encode(value).length + 4
 test("scripted Site metadata distinguishes exact unpublished and Commons births from older missing or malformed repository fields", async () => {
   // This is a parser boundary, not a native birth/authority witness. The
   // integrated host-none story separately reads genuine Native source bytes.
-  const creator = { ...otherLane, kind: "register" as const };
+  const creator = otherLane;
   const seed: Seed = { v: 1, kind: "directory", definition: UNPUBLISHED_COHORT.directory, creator, cause: digestBytes(utf8("TEST unpublished site metadata")), ordinal: 0 };
   const read = async (selected: Seed, fields: Record<string, unknown>, wrongAt = false) => {
-    const directory = scopeIdOf(selected), at = { ...otherLane, scope: directory, kind: "directory" as const };
-    const bytes = canonicalize({ at: wrongAt ? otherLane : at, input: { type: "genesis", decision: "applied", seed: selected, inc: at.inc,
-      message: { class: "request", type: "create", body: { fields } } } });
+    const directory = scopeIdOf(selected);
+    const born: Entry = { v: 1, seq: 0, prev: null, time: timeOf(1_700_000_000_000), clamped: false, epoch: 0,
+      input: { type: "genesis", seed: selected, nonce: newGenesisNonce(new Uint8Array(16).fill(7)), kind: "create", founding: null,
+        source: { at: creator, seq: 1, hash: digestBytes(utf8("TEST register entry")) }, sourceKind: "register", n: 0,
+        message: { class: "request", type: "create", body: { fields } } as never, decision: "applied" },
+      uses: [], prepared: [], effects: [], sends: [] };
+    const bytes = canonicalize(born), at = { scope: directory, genesis: wrongAt ? digestBytes(utf8("TEST wrong genesis")) : entryHash(born) };
     const scopes: Binding<string> = { idFromName: value => value, get: () => ({ siteRoom: async () => ({ at, under: "TEST-scripted", bytes }) }) };
     return roomOf(scopes, directory);
   };

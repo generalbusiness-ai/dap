@@ -9,7 +9,7 @@ import { tsImport } from "tsx/esm/api";
 // StandIn scripts HTTP summaries, standing and decisions; it judges nothing.
 // These are local custody/transport witnesses, not Worker or Native authority.
 const load = source => tsImport(source, import.meta.url);
-const { canonicalize, entryHash, factRefOf, intentDigest, isLogPage, newIncarnation, textDigest, timeOf, verifySignedIntent } = await load("@generalbusiness/dap-bytes");
+const { canonicalize, entryHash, factRefOf, intentDigest, isLogPage, newGenesisNonce, textDigest, timeOf, verifySignedIntent } = await load("@generalbusiness/dap-bytes");
 const { secretSigner } = await load("@generalbusiness/dap-client");
 const { firstExtents, ARCHIVE_DEVICE_APPLICATION_COHORT: setupCohort } = await load("@generalbusiness/dap-platform");
 const { identityId } = await load("@generalbusiness/dap-mcp");
@@ -36,7 +36,7 @@ async function fixture(t) {
   const peer = new StandIn(signer.key, "admin", ["membership.manage", "rules.activate", "rules.publish", "change.propose"]);
   const store = durableCliStore(home);
   await store.keep("session-test", secret);
-  await store.save({ v: 1, key: "session-test", ...peer.config() });
+  await store.save({ v: 2, key: "session-test", ...peer.config() });
   const custody = durableRequestStore(join(home, "private", "mcp-custody"));
   const calls = [], mutations = [];
   const script = { loseNextAct: false, acceptPreparation: false };
@@ -64,7 +64,7 @@ async function fixture(t) {
           // A scripted capability acknowledgement over the actual signed
           // intent. No hold/stage rule or Native preparation runs here.
           const entry = peer.append(scope, { type: "preparation", signed: body.signed, authority: [], capability: body.capability, step: body.step });
-          return json({ answer: "accepted", receipt: { fact: factRefOf(entry.entry), definition: scope.definition,
+          return json({ answer: "accepted", receipt: { fact: factRefOf(entry.entry, scope.ref), definition: scope.definition,
             intent: intentDigest(body.signed.intent), effects: [], sends: [], epoch: 0 } });
         }
       }
@@ -130,7 +130,7 @@ test("the actual session retains a lost act, Check sends no mutation, and explic
   await reopened.request("continue", "act", args, binding);
   assert.equal(f.mutations.length, 2, "A terminal original must not become a replacement act");
 
-  const wrong = { ...f.peer.rules, inc: newIncarnation(new Uint8Array(16).fill(99)) };
+  const wrong = { ...f.peer.rules, genesis: textDigest("SCRIPTED another rules genesis") };
   await assert.rejects(reopened.request("check", "act", args, { target: wrong }), error => error instanceof SessionRefusal && error.reason === "incomplete-or-wrong-scope");
   assert.equal(f.mutations.length, 2);
   assert.deepEqual(f.original(), original);
@@ -181,7 +181,7 @@ test("room discovery reads every pinned sibling through one actual session and r
     id: 0, type: "repository", state: "open", revision: 0, opened: null,
     parties: {}, attributed: [], values: {}, refs,
   }]);
-  await store.save({ v: 1, key: "session-test", ...f.peer.config() });
+  await store.save({ v: 2, key: "session-test", ...f.peer.config() });
   const expected = { directory: f.peer.directory, ...refs }, opened = await f.open();
   const pendingReads = [];
   // Observe the actual promises only to drain a failed discovery before
@@ -283,9 +283,9 @@ test("laneState refuses malformed, noncanonical, hash-substituted, misbound and 
     ["substituted hash", wire => {
       wire.value.entries[0].hash = textDigest("SCRIPTED substituted entry hash"); return wire;
     }, "incomplete or misbound"],
-    ["another incarnation with matching canonical bytes and hash", wire => {
+    ["another genesis with matching canonical bytes and hash", wire => {
       const entry = JSON.parse(wire.value.entries[0].bytes);
-      entry.at.inc = newIncarnation(new Uint8Array(16).fill(99));
+      entry.input.nonce = newGenesisNonce(new Uint8Array(16).fill(99));
       wire.value.entries[0].bytes = canonicalize(entry); wire.value.entries[0].hash = entryHash(entry); return wire;
     }, "incomplete or misbound"],
     ["internally intact prefix below advertised head", wire => {

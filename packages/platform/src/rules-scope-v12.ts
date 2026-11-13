@@ -122,8 +122,8 @@ function observationPolicy(state:Pick<StateView,'page'>) {
 export function rulesAnswerV12(state:Pick<StateView,'scope'|'page'>,asked:ObservationRequest):Omit<RulesObservation,'at'>|null {
   if('asked'in asked&&asked.asked==='definitions')return rulesAnswer(state,asked,'platform:rules@12');
   const scope=state.scope(),held=observationPolicy(state),revision=revisionOf(state);
-  if(!scope||scope.status!=='active'||scope.at.kind!=='rules'||asked.of.scope!==scope.at.scope||asked.of.kind!=='rules'
-    ||('inc'in asked.of&&asked.of.inc!==scope.at.inc)||!('asked'in asked)||asked.asked!=='rules'||!held||revision===null)return null;
+  if(!scope||scope.status!=='active'||scope.kind!=='rules'||asked.of.scope!==scope.at.scope
+    ||('genesis'in asked.of?asked.of.genesis!==scope.at.genesis:asked.of.kind!=='rules')||!('asked'in asked)||asked.asked!=='rules'||!held||revision===null)return null;
   const checks=held.policy.checks as unknown as {name:string;configuration:Digest;required:boolean;checker:{member:import('@generalbusiness/dap-contract').MemberId}}[];
   return {subject:'rules',of:scope.at,head:scope.head,revision,definition:'platform:rules@12',content:{asked:'rules',
     approvals:held.policy.approvals,ownerMayReview:held.policy.ownerMayReview,checks:checks.map(row=>({...row,checker:row.checker.member})),

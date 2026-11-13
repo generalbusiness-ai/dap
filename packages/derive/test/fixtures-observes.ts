@@ -20,10 +20,9 @@
  */
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Digest, Entry, KeyId, MemberId, ObservationUse, PlatformDefinition, RulesContent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import type { Digest, Entry, KeyId, MemberId, ObservationUse, PlatformDefinition, RulesContent, ScopeRef } from "@generalbusiness/dap-contract";
 import { PROFILES, validateDefinition, type ContentStates, type FirstStep, type OutcomeRule, type PlatformRules, type RuleEffect, type RuleGiven, type Rules, type ValidDefinition } from "../src/index.ts";
-import { T0, changedDraft, d, membership, valid } from "./fixtures.ts";
+import { T0, changedDraft, d, fixtureScope, membership, valid } from "./fixtures.ts";
 
 import { weigher } from "./definition-corpus/observes-data.ts";
 export { EXTENTS, EXTENTS_MAX, WEIGH_ROWS, STEP_ROWS, weigher } from "./definition-corpus/observes-data.ts";
@@ -42,10 +41,7 @@ export const weighed = (change: (data: any) => void = () => {}, platform = true)
 export const weigherWith = (change: (data: any) => void = () => {}): ValidDefinition => valid(weighed(change));
 
 /** A rules scope that the made-up scope records, and the made-up name of the definition that it pins. Neither is a scope or a definition of Artroom. */
-export const rulebook: ScopeRef = (() => {
-  const seed: Seed = { v: 1, kind: "rules", definition: d("e"), creator: null, cause: d("c"), ordinal: 9 };
-  return { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(9)), kind: "rules" };
-})();
+export const rulebook: ScopeRef = fixtureScope("rules", 9).at;
 export const RULEBOOK = "platform:rules@2" as PlatformDefinition;
 
 /** What the data of the made-up rules definition states of the two members: `content` below says which. */

@@ -97,21 +97,21 @@ test("a detached text in a creation message: the child reads the bytes from its 
     const result = await runInDurableObject(node.object, (_instance, state) => {
       const row = state.storage.sql.exec<{ bytes: string; hash: Digest; size: number }>("SELECT bytes, hash, size FROM entry WHERE seq = 0 LIMIT 1").one();
       const entry = parseStrict(row.bytes); if (!isEntry(entry)) return expect.fail("The native genesis is required.");
-      const expected = localRetainedPlan(notes, entry, row.hash, null, PROPOSED_BOUNDS).dependencies.filter(({ dependency }) => dependency.mode === "text");
+      const expected = localRetainedPlan(notes, entry, { at: { scope: node.name, genesis: row.hash }, seq: 0, hash: row.hash }, null, PROPOSED_BOUNDS).dependencies.filter(({ dependency }) => dependency.mode === "text");
       const cells: unknown[] = [], budget = new ArchiveBudget(), sql = { exec(query: string, ...args: SqlValue[]) {
         const rows = state.storage.sql.exec(query, ...args).toArray();
         for (const held of rows) cells.push(...Object.values(held));
         return { toArray: () => rows };
       } };
-      const projector = new ArchiveGenesisFields(notes, budget, PROPOSED_BOUNDS), position = { seq: 0, hash: row.hash, bytes: row.size };
-      const projected = projector.project(sql, entry.at, position), before = budget.admitted();
-      const repeated = projector.project(sql, entry.at, position), after = budget.admitted();
+      const projector = new ArchiveGenesisFields(notes, budget, PROPOSED_BOUNDS), position = { seq: 0, hash: row.hash, bytes: row.size }, birthAt = { scope: node.name, genesis: row.hash };
+      const projected = projector.project(sql, birthAt, position), before = budget.admitted();
+      const repeated = projector.project(sql, birthAt, position), after = budget.admitted();
       // Separate lower-bound refusal scenario, not a reset or continuation
       // of the positive projection budget. There is room for the old SQL
       // debits but not for the derived path/map allocation.
       const tight = new ArchiveBudget({ metadata: PROPOSED_BOUNDS.definitionBytes + 256 + 512 });
       const limited = new ArchiveGenesisFields(notes, tight, PROPOSED_BOUNDS);
-      expect(() => limited.project(sql, entry.at, position)).toThrow("archive-limit");
+      expect(() => limited.project(sql, birthAt, position)).toThrow("archive-limit");
       return { projected, expected, repeated, before, after, cells, tight: tight.admitted() };
     });
     expect(result.projected).toEqual(result.expected);
@@ -186,13 +186,13 @@ test("a repeat of a decided send is answered from the entry that recorded it, an
   await settle(P, A, B);
   const shared = await A.did(rita, "share", { on: 0, expected: { on: 1 }, fields: { peer: await B.at() } });
   await settle(A, B);
-  const told = (await B.sealed()).at(-1)!;
+  const told = (await B.sealed()).at(-1)!, toldAt = await B.at();
   expect(told.entry).toMatchObject({ input: { type: "delivery", from: shared.fact, decision: "applied" }, effects: [{ effect: "open" }, { effect: "value", slot: "body", value: textDigest(text) }] });
   // The actual retained source pins notes. A matching name and sender kind
   // alone cannot give a differently pinned sender's fields this meaning.
   const projected = await runInDurableObject(B.object, (_instance, state) => {
     const row = state.storage.sql.exec<{ size: number }>("SELECT size FROM entry WHERE seq = ? LIMIT 1", told.entry.seq).one();
-    const all = localRetainedPlan(notes, told.entry, told.hash, null, PROPOSED_BOUNDS, "notes").dependencies;
+    const all = localRetainedPlan(notes, told.entry, { at: toldAt, seq: told.entry.seq, hash: told.hash }, null, PROPOSED_BOUNDS, "notes").dependencies;
     const expected = all.filter(({ dependency }) => dependency.mode === "text");
     const cells: unknown[] = [], budget = new ArchiveBudget(), sql = { exec(query: string, ...args: SqlValue[]) {
       const rows = state.storage.sql.exec(query, ...args).toArray();
@@ -200,10 +200,10 @@ test("a repeat of a decided send is answered from the entry that recorded it, an
       return { toArray: () => rows };
     } };
     const projector = new ArchiveDeliveryFields(notes, budget, PROPOSED_BOUNDS), position = { seq: told.entry.seq, hash: told.hash, bytes: row.size };
-    const correct = projector.project(sql, told.entry.at, position, shared.fact, "notes"), before = budget.admitted();
-    const repeated = projector.project(sql, told.entry.at, position, shared.fact, "notes"), after = budget.admitted();
-    const other = projector.project(sql, told.entry.at, position, shared.fact, "other");
-    expect(() => projector.project(sql, told.entry.at, position, shared.fact)).toThrow("unsupported-foreign-copy");
+    const correct = projector.project(sql, toldAt, position, shared.fact, "notes"), before = budget.admitted();
+    const repeated = projector.project(sql, toldAt, position, shared.fact, "notes"), after = budget.admitted();
+    const other = projector.project(sql, toldAt, position, shared.fact, "other");
+    expect(() => projector.project(sql, toldAt, position, shared.fact)).toThrow("unsupported-foreign-copy");
     const fieldCells = [...cells];
     const references = new ArchiveLocalReferences({ named: notes.digest, definition: notes,
       owners: new Map(), records: new Map(), preparations: new Map() }, PROPOSED_BOUNDS, budget);
@@ -214,7 +214,7 @@ test("a repeat of a decided send is answered from the entry that recorded it, an
     // STAND-IN for the whole-prefix foreign classifier's lookup port. All
     // returned metadata comes from this real peer, its exact definition and
     // B's actual retained copy. No foreign privacy/policy proof is supplied.
-    const composed = references.read(sql, told.entry.at, { ...position, input: "delivery" }, { source(from) {
+    const composed = references.read(sql, toldAt, { ...position, input: "delivery" }, { source(from) {
       senders.push(from);
       return canonicalize(from) === canonicalize(shared.fact)
         ? { fact: shared.fact, content: copy.content, bytes: size, pin: notes.digest, under: notes.declared.name } : null;
@@ -228,7 +228,8 @@ test("a repeat of a decided send is answered from the entry that recorded it, an
   expect(projected.repeated).toEqual(projected.correct); expect(projected.other).toEqual([]);
   expect(projected.after.calls).toBeGreaterThan(projected.before.calls);
   expect(projected.after.inputWork).toBeGreaterThan(projected.before.inputWork);
-  expect(new Set(projected.cells.filter(cell => typeof cell === "string"))).toEqual(new Set(["request", "tell", "noted", textDigest(text)]));
+  // "lane" is the sourceKind column (src/archive-delivery-fields.ts:55): the sender kind that the delivered entry records.
+  expect(new Set(projected.cells.filter(cell => typeof cell === "string"))).toEqual(new Set(["request", "tell", "noted", "lane", textDigest(text)]));
   expect(projected.cells).not.toContain(text);
 
   // Both redact the text, so neither holds its bytes. The same envelope again is still that send of that entry of A. B answers it
@@ -242,7 +243,7 @@ test("a repeat of a decided send is answered from the entry that recorded it, an
     await asks.text(shared.fact.seq, textDigest(text)), await keeps.retained(reader, "text", textDigest(text)),
     await B.stub.deliver(await A.envelope(shared.fact.seq)),
     (await B.summary()).at,
-  ]).toMatchObject([null, { ok: false }, { answer: "recorded", fact: { at: told.entry.at, seq: told.entry.seq, hash: told.hash } }, head]);
+  ]).toMatchObject([null, { ok: false }, { answer: "recorded", fact: { at: toldAt, seq: told.entry.seq, hash: told.hash } }, head]);
 });
 
 test("native related-text projection follows self and earlier owner items, and ignores another owner's item", async () => {
@@ -265,13 +266,13 @@ test("native related-text projection follows self and earlier owner items, and i
     expect(answer.answer, JSON.stringify(answer)).toBe("accepted"); if (answer.answer !== "accepted") return;
     if (index === 0) opened = answer.receipt.fact.seq;
     await settle(A, B);
-    const sealed = (await B.sealed()).at(-1)!, input = sealed.entry.input;
+    const sealed = (await B.sealed()).at(-1)!, input = sealed.entry.input, sealedAt = await B.at();
     if (input.type !== "delivery" || !("decision" in input) || input.message.class !== "request" || input.message.type !== "relate") return expect.fail("The actual relationship delivery is required.");
     const messageBody = input.message.body as Record<string, unknown>, item = messageBody["item"];
     expect(index === 0 ? item : isFactRef(item)).toEqual(index === 0 ? { self: true } : true);
     const result = await runInDurableObject(B.object, (_instance, state) => {
       const row = state.storage.sql.exec<{ bytes: string; size: number }>("SELECT bytes, size FROM entry WHERE seq = ? LIMIT 1", sealed.entry.seq).one();
-      const expected = localRetainedPlan(linked, sealed.entry, sealed.hash, null, PROPOSED_BOUNDS, "notes").dependencies.filter(({ dependency }) => dependency.mode === "text");
+      const expected = localRetainedPlan(linked, sealed.entry, { at: sealedAt, seq: sealed.entry.seq, hash: sealed.hash }, null, PROPOSED_BOUNDS, "notes").dependencies.filter(({ dependency }) => dependency.mode === "text");
       const cells: unknown[] = [], sql = { exec(query: string, ...args: SqlValue[]) {
         const rows = state.storage.sql.exec(query, ...args).toArray();
         for (const held of rows) cells.push(...Object.values(held));
@@ -279,17 +280,19 @@ test("native related-text projection follows self and earlier owner items, and i
       } };
       const projector = new ArchiveDeliveryFields(linked, new ArchiveBudget(), PROPOSED_BOUNDS);
       const position = { seq: sealed.entry.seq, hash: sealed.hash, bytes: row.size };
-      const projected = projector.project(sql, sealed.entry.at, position, input.from, "notes");
+      const projected = projector.project(sql, sealedAt, position, input.from, "notes");
       let other: unknown = null;
       if (isFactRef(item)) {
         // Negative metadata probe only: alter an opaque body item's owner,
         // not an accepted native history. Restore its exact original bytes
         // and size before returning; no integrity/export claim is made.
-        const bad: Entry = { ...sealed.entry, input: { ...input, message: { ...input.message, body: { ...messageBody, item: { ...item, at: { ...item.at, scope: B.name } } } } } };
+        const later = sealed.entry;
+        if (!("genesis" in later)) throw new Error("a delivery is a later entry");
+        const bad: Entry = { ...later, input: { ...input, message: { ...input.message, body: { ...messageBody, item: { ...item, at: { ...item.at, scope: B.name } } } } } };
         const bytes = canonicalize(bad), size = utf8(bytes).length;
         try {
           state.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", bytes, size, sealed.entry.seq);
-          other = projector.project(sql, sealed.entry.at, { ...position, bytes: size }, input.from, "notes");
+          other = projector.project(sql, sealedAt, { ...position, bytes: size }, input.from, "notes");
         } finally { state.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", row.bytes, row.size, sealed.entry.seq); }
       }
       return { projected, expected, other, cells };
@@ -297,7 +300,8 @@ test("native related-text projection follows self and earlier owner items, and i
     expect(result.projected).toEqual(result.expected);
     expect(result.projected.map(plan => plan.dependency.mode === "text" ? plan.dependency.key : null)).toEqual([{ kind: "text", digest: textDigest(text) }]);
     expect(result.other).toEqual(index === 0 ? null : []);
-    expect(new Set(result.cells.filter(cell => typeof cell === "string"))).toEqual(new Set(["request", "relate", "linked", textDigest(text)]));
+    // "lane" is the sourceKind column (src/archive-delivery-fields.ts:55): the sender kind that the delivered entry records.
+    expect(new Set(result.cells.filter(cell => typeof cell === "string"))).toEqual(new Set(["request", "relate", "linked", "lane", textDigest(text)]));
     expect(result.cells).not.toContain(text);
   }
 });

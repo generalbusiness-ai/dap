@@ -9,8 +9,8 @@ import { answersVersionQuestion } from "@generalbusiness/dap-platform";
  *
  * `originOf` is that check, as a pure function of what the service read:
  *
- * 1. The entry is the lane's entry at that position: it names that lane,
- *    with its incarnation, and that position, and its bytes hash to the hash
+ * 1. The entry is the lane's entry at that position: it names the lane's
+ *    genesis hash and that position, and its bytes hash to the hash
  *    that the lane served with it and to the hash of the fact.
  * 2. It is a `request-check` act: an act whose signed intent verifies, is
  *    addressed to that lane, and has that kind. Its own effects open one
@@ -35,8 +35,8 @@ import { answersVersionQuestion } from "@generalbusiness/dap-platform";
  * the actual native admission checked by `stage-origin.ts`.
  */
 
-import type { ReservationSnapshot, Digest, Effect, FactRef, PlatformDefinition, ScopeRef, Sealed, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, utf8, entryHash, isDigest, isEntry, isFactRef, isLocalId, isScopeRef, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import type { ReservationSnapshot, Digest, FactRef, GenesisEffect, PlatformDefinition, ScopeRef, Sealed, Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalize, digestBytes, utf8, entryHash, isDigest, isEntry, isFactRef, isLocalId, isScopeRef, scopeIdOf, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { EvidenceBinding } from "@generalbusiness/dap-platform";
 import { idOf, READ_BOUNDS, parseCommit, isObjectId, type ObjectId, type OwnedCheckoutSnapshot } from "@generalbusiness/dap-git";
 
@@ -94,19 +94,27 @@ export type NotAJob =
 
 export type Origin = { job: Job } | { not: NotAJob };
 
-const sameScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.inc === b.inc && a.kind === b.kind;
-const valueOf = (effects: readonly Effect[], item: number, slot: string): unknown => {
+const sameScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.genesis === b.genesis;
+/**
+ * Body association: the entry belongs to the sequence at `at`. A genesis states
+ * its scope by its seed and its hash is the genesis hash. A later entry names
+ * the genesis hash.
+ */
+export const isAt = (sealed: Sealed, at: ScopeRef): boolean => sealed.entry.input.type === "genesis"
+  ? sealed.hash === at.genesis && scopeIdOf(sealed.entry.input.seed) === at.scope
+  : "genesis" in sealed.entry && sealed.entry.genesis === at.genesis;
+const valueOf = (effects: readonly GenesisEffect[], item: number, slot: string): unknown => {
   const matched = effects.filter((e) => e.effect === "value" && e.item === item && e.slot === slot);
   return matched.length === 1 && matched[0]!.effect === "value" ? matched[0]!.value : undefined;
 };
-const opens = (effects: readonly Effect[], item: number, type: string): boolean => effects.filter((e) => e.effect === "open").length === 1 && effects.some((e) => e.effect === "open" && e.item === item && e.type === type);
+const opens = (effects: readonly GenesisEffect[], item: number, type: string): boolean => effects.filter((e) => e.effect === "open").length === 1 && effects.some((e) => e.effect === "open" && e.item === item && e.type === type);
 /** The entry as the lane served it, when it is the lane's entry at that position and its bytes hash to the served hash. */
 const ownEntry = (sealed: Sealed | null, lane: ScopeRef, seq: number): Sealed["entry"] | null =>
-  sealed !== null && isEntry(sealed.entry) && sameScope(sealed.entry.at, lane) && sealed.entry.seq === seq && entryHash(sealed.entry) === sealed.hash ? sealed.entry : null;
+  sealed !== null && isEntry(sealed.entry) && entryHash(sealed.entry) === sealed.hash && isAt(sealed, lane) && sealed.entry.seq === seq ? sealed.entry : null;
 
 export function originOf(notice: Notice, read: OriginRead): Origin {
   const { lane, job: fact } = notice;
-  if (!isScopeRef(lane) || lane.kind !== "lane" || !isFactRef(fact) || !sameScope(fact.at, lane) || typeof notice.name !== "string" || !isObjectId(notice.tree)) return { not: "bad-notice" };
+  if (!isScopeRef(lane) || !isFactRef(fact) || !sameScope(fact.at, lane) || typeof notice.name !== "string" || !isObjectId(notice.tree)) return { not: "bad-notice" };
   if (read.entry === null) return { not: "no-entry" };
   const entry = ownEntry(read.entry, lane, fact.seq);
   if (!entry || read.entry.hash !== fact.hash) return { not: "not-this-entry" };
@@ -140,7 +148,7 @@ export function manifestOf(sealed: Sealed | null, job: FactRef): number | null {
 
 function reservationOrigin(notice: Notice, job: Sealed["entry"], manifest: Sealed["entry"], snapshot: ReservationSnapshot, configuration: Digest, deadline: Timestamp): Origin {
   const reservation = ownEntry(snapshot.reservation, snapshot.destination, snapshot.reservation.entry.seq);
-  if (!reservation || snapshot.destination.kind !== "destination" || reservation.input.type !== "outcome" || !answersVersionQuestion(reservation.input.owner, "checkerReservationOriginDestination") || reservation.input.kind !== "judge" || reservation.input.result !== "confirmed"
+  if (!reservation || reservation.input.type !== "outcome" || !answersVersionQuestion(reservation.input.owner, "checkerReservationOriginDestination") || reservation.input.kind !== "judge" || reservation.input.result !== "confirmed"
     || entryHash(snapshot.job.entry) !== snapshot.job.hash || snapshot.job.hash !== notice.job.hash || canonicalize(snapshot.job.entry) !== canonicalize(job)
     || entryHash(snapshot.manifest.entry) !== snapshot.manifest.hash || canonicalize(snapshot.manifest.entry) !== canonicalize(manifest)) return { not: "no-manifest" };
   if (!reservation.uses.some((use) => use.fact.hash === snapshot.manifest.hash && sameScope(use.fact.at, notice.lane))) return { not: "no-manifest" };
@@ -170,7 +178,7 @@ function reservationOrigin(notice: Notice, job: Sealed["entry"], manifest: Seale
     const sourceFact = file.entry;
     if (!reservation.uses.some((use) => use.fact.hash === sourceFact.hash && sameScope(use.fact.at, sourceFact.at))) return { not: "no-manifest" };
     const source = snapshot.sources.find((source) => source.hash === sourceFact.hash);
-    if (!source || !sameScope(source.entry.at, notice.lane) || source.entry.seq !== file.entry.seq || entryHash(source.entry) !== source.hash || source.entry.input.type !== "act" || !verifySignedIntent(source.entry.input.signed) || source.entry.input.signed.intent.kind !== "propose-file") return { not: "no-manifest" };
+    if (!source || !isAt(source, notice.lane) || source.entry.seq !== file.entry.seq || entryHash(source.entry) !== source.hash || source.entry.input.type !== "act" || !verifySignedIntent(source.entry.input.signed) || source.entry.input.signed.intent.kind !== "propose-file") return { not: "no-manifest" };
     const fields = source.entry.input.signed.intent.fields;
     if (fields["base"] !== base || fields["path"] !== file.path || fields["digest"] !== file.digest || typeof fields["content"] !== "string") return { not: "no-manifest" };
     const bytes = utf8(fields["content"]);

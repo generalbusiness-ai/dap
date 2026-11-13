@@ -4,7 +4,7 @@
  */
 import { expect } from "vitest";
 import type { Entry, FactRef, MemberRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, keyIdOfSecret, signInvitationProof, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, isScopeId, keyIdOfSecret, signInvitationProof, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { INVITATION_LINK, invitationIssueFields } from "@generalbusiness/dap-client";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, ROLE_LISTS } from "@generalbusiness/dap-platform";
@@ -20,8 +20,9 @@ export const act = async (agent: Pick<Agent, "ok">, target: string, kind: string
 };
 export const factOf = async (agent: Pick<Agent, "ok">, scope: string, seq: number): Promise<FactRef> => {
   const step = await agent.ok("step", { scope, seq });
-  const entry = step["entry"] as Entry;
-  return { at: entry.at, seq, hash: step["hash"] as FactRef["hash"] };
+  const entry = step["entry"] as Entry, hash = step["hash"] as FactRef["hash"];
+  if (!isScopeId(scope)) throw Error("A step names a scope ID");
+  return { at: { scope, genesis: "genesis" in entry ? entry.genesis : hash }, seq, hash };
 };
 
 export interface AskingRoom {

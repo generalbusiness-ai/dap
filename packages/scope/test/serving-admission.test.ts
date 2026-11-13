@@ -3,7 +3,7 @@
 import { env, evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Intent, ItemQuery, SignedIntent } from "@generalbusiness/dap-contract";
-import { encodeItemQueryParameter, itemQueryArgument, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
+import { encodeItemQueryParameter, itemQueryArgument, keyIdOfSecret, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { httpTransport, secretSigner, signedReader } from "@generalbusiness/dap-client";
 import { SERVING_CREATION_BYTES, ServingAdmission, type ServingDecision, type ServingRequest } from "../src/serving-admission.ts";
 import { SCOPE_INDEX_NAME } from "../src/scope-index.ts";
@@ -99,7 +99,7 @@ test("synthetic HTTP ignores forwarded edge headers; only an explicit trusted tr
 
 test("the direct HTTP item-query shortcut and in-process API each charge a signed attempt exactly once", async () => {
   const owner = fixed(), query: ItemQuery = { v: 1,
-    scope: { scope: target, inc: newIncarnation(new Uint8Array(16).fill(9)), kind: "register" },
+    scope: { scope: target, genesis: `sha256:${"09".repeat(32)}` as const },
     type: "claim", states: ["open"], ids: null, limit: 1, cursor: null };
   const encoded = encodeItemQueryParameter(query), argument = itemQueryArgument(query);
   if (!encoded || !argument) throw Error("Valid bounded query required");
@@ -253,7 +253,7 @@ test("found custody windows stop one key across addresses and one address across
   const binding: Binding<string> = { idFromName: name => name, get: () => ({
     submit: async () => { submits++; return { answer: "unavailable", reason: "unavailable" }; },
   }) };
-  const found = (n: number) => signIntent({ ...creation(secret(n)).intent, to: { scope: target, inc: newIncarnation(new Uint8Array(16).fill(9)), kind: "register" }, kind: "found" }, secret(n));
+  const found = (n: number) => signIntent({ ...creation(secret(n)).intent, to: { scope: target, genesis: `sha256:${"09".repeat(32)}` as const }, kind: "found" }, secret(n));
   const attempt = (n: number, address: string) => api(binding, address, owner.environment).submit(target, found(n), []);
   expect(await attempt(21, "192.0.2.1")).toEqual({ answer: "unavailable", reason: "unavailable" });
   expect(await attempt(21, "192.0.2.2")).toEqual({ answer: "unavailable", reason: "unavailable" });
@@ -273,7 +273,7 @@ test("every found submit charges its address, including one over the serving bou
   const binding: Binding<string> = { idFromName: name => name, get: () => ({
     submit: async () => { submits++; return { answer: "refused", reason: "source-unverified" }; },
   }) };
-  const found = (n: number) => signIntent({ ...creation(secret(n)).intent, to: { scope: target, inc: newIncarnation(new Uint8Array(16).fill(9)), kind: "register" }, kind: "found" }, secret(n));
+  const found = (n: number) => signIntent({ ...creation(secret(n)).intent, to: { scope: target, genesis: `sha256:${"9".repeat(64)}` }, kind: "found" }, secret(n));
   const oversized = (n: number): SignedIntent => { const signed = found(n); return { ...signed, intent: { ...signed.intent, fields: { pad: "x".repeat(SERVING_CREATION_BYTES) } } }; };
   const scopes = api(binding, address, owner.environment);
   for (let n = 41; n < 44; n++) expect(await scopes.submit(target, oversized(n), [])).toEqual({ answer: "refused", reason: "source-unverified" });

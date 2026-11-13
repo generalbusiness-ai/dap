@@ -13,9 +13,9 @@ const standing: Observation = {
   of: membership, head: { seq: 40, hash: d("4") }, key: rita.key, keyState: "active", member: "@rita", memberState: "active", role: "member", actions: actionsOf(ROLES, "member"),
   within: { membership }, controller: null, controllerActive: null, notAfter: null, definition: "platform:membership@1", at: t(0),
 };
-/** The membership scope of another repository, and the same membership scope in another incarnation. */
+/** The membership scope of another repository, and the same membership scope ID with another genesis. */
 const elsewhere = { ...membership, scope: otherLane.scope };
-const reborn = { ...membership, inc: otherLane.inc };
+const reborn = { ...membership, genesis: otherLane.genesis };
 const fresh: ObservationUse = { observation: standing, read: { run: "r1", n: 7 }, use: "fresh", prior: null };
 const at = (seconds: number) => ({ reading: t(seconds), behind: false, asOf: t(seconds) });
 const asked: GrantAsked = { scope: otherLane, membership, key: rita.key, action: "issue.comment", window: WINDOWS.ordinary, clock: at(299), last: null, highest: null };
@@ -59,7 +59,7 @@ describe("the grant guard and the commit guards of an observation (authority not
       ["a reading earlier than the read began proves nothing", fresh, { clock: at(-1) }, "authority-unavailable: age"],
       ["a ten-second kind, at its edge", fresh, { window: WINDOWS.once, clock: at(10) }, "authority-unavailable: age"],
       ["the wrong key: an observation of rita's key is no grant to una's", fresh, { key: una.key }, "unauthorized: key"],
-      ["the wrong incarnation of membership", of({ of: { ...membership, inc: otherLane.inc } }), {}, "authority-unavailable: of"],
+      ["the wrong genesis of membership", of({ of: { ...membership, genesis: otherLane.genesis } }), {}, "authority-unavailable: of"],
       // Section 16.1, "How a scope is covered"; witness 18.40. A filter covers a scope exactly when its `membership` is the reference
       // that the scope itself records, with that incarnation. The lane records `membership`, and the answer above names it.
       ["`within` names the membership scope of another repository", of({ within: { membership: elsewhere } }), {}, "unauthorized: within"],
@@ -72,11 +72,10 @@ describe("the grant guard and the commit guards of an observation (authority not
       // record membership's scope ID and, before their first retained observation, no incarnation. Guard 1 then takes an observation
       // of that ID, of the kind `membership`, and the grant covers the scope by the reference that answered. Once an incarnation is
       // recorded it is the first case above again: another incarnation is discarded.
-      ["a scope that records the ID and no incarnation: the answer of that ID passes guard 1, and its filter covers the scope", fresh, { membership: { ...membership, inc: null } }, "current"],
-      ["the same scope: an answer of that ID in any incarnation, whose filter names the incarnation that answered", of({ of: reborn, within: { membership: reborn } }), { membership: { ...membership, inc: null } }, "current"],
-      ["the same scope: an answer of another scope ID", fresh, { membership: { ...elsewhere, inc: null } }, "authority-unavailable: of"],
-      ["the same scope: an answer of that ID from a scope of another kind", of({ of: { ...membership, kind: "rules" } }), { membership: { ...membership, inc: null } }, "authority-unavailable: of"],
-      ["the same scope: a filter that names another incarnation than the one that answered", of({ within: { membership: reborn } }), { membership: { ...membership, inc: null } }, "unauthorized: within"],
+      ["a scope that records the ID and no incarnation: the answer of that ID passes guard 1, and its filter covers the scope", fresh, { membership: { scope: membership.scope, pending: true } }, "current"],
+      ["the same scope: an answer of that ID in any incarnation, whose filter names the incarnation that answered", of({ of: reborn, within: { membership: reborn } }), { membership: { scope: membership.scope, pending: true } }, "current"],
+      ["the same scope: an answer of another scope ID", fresh, { membership: { scope: elsewhere.scope, pending: true } }, "authority-unavailable: of"],
+      ["the same scope: a filter that names another incarnation than the one that answered", of({ within: { membership: reborn } }), { membership: { scope: membership.scope, pending: true } }, "unauthorized: within"],
       ["revoked as retired: refused, also long past the window", of({ keyState: "retired" }), { clock: at(9000) }, "unauthorized: revoked"],
       ["the member removed", of({ memberState: "removed" }), {}, "unauthorized: revoked"],
       ["a key that membership does not hold", of({ keyState: "unknown" }), {}, "unauthorized: key-state"],
@@ -138,7 +137,7 @@ describe("the grant guard and the commit guards of an observation (authority not
     const counted = { steps: 0 };
     const many = new MemoryState(counted);
     for (let i = 0; i < 1000; i++) many.putObserved({ of: i % 2 === 0 ? membership : reborn, subject: `@m${i}`, seq: i });
-    expect([many.incarnations(membership.scope), many.incarnations(otherLane.scope), counted.steps]).toEqual([[membership.inc, reborn.inc].sort(), [], 4]);
+    expect([many.geneses(membership.scope), many.geneses(otherLane.scope), counted.steps]).toEqual([[membership.genesis, reborn.genesis].sort(), [], 4]);
     // A scope with no recorded membership reference is covered by no filter, and by its own reference.
     expect([covers({ membership }, otherLane, null), covers(otherLane, otherLane, null), covers({ membership }, otherLane, membership), covers({ membership }, membership, membership)]).toEqual([false, true, true, true]);
   });

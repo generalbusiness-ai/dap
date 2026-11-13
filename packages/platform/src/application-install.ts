@@ -100,7 +100,7 @@ function proof(given: RuleGiven): ApplicationReleaseProof | null {
   for (let index = 0; index < result.semantic.definitions.length; index++) {
     const part = result.semantic.definitions[index]!;
     if (utf8(part.bytes).length > INSTALL_DEFINITION_BYTES || fields[`definitionText${index}`] !== textDigest(part.bytes)) throw Error("exact native declaration text required");
-    const value = parseStrict(part.bytes), checked = validateDefinition(value, given.resolved.bounds, RULE_PROFILES);
+    const value = parseStrict(part.bytes), checked = validateDefinition(value, given.resolved.bounds, RULE_PROFILES, { canonical: true });
     if (!checked.ok || checked.definition.digest !== part.id || canonicalize(value) !== part.bytes) throw Error("unsupported native definition");
     requireReferenceInstall(checked.definition.declared, pinnedBy(given));
   }
@@ -233,7 +233,7 @@ export const applicationInstallRules: Rules = {
     const job = given.resolved.subjects.get("also.installation"), fields = given.resolved.fields;
     const matches = job?.state === "pending" && job.values["phase"] === "creation" && ["definition", "release", "semantic", "presentation"].every(key => fields[key] === job.values[key]);
     const created = fields["result"] === "created", scope = fields["scope"];
-    return matches && (created ? isScopeRef(scope) && scope.kind === "lane" : scope === undefined) ? { holds: true } : { holds: false, name: "invalid-application-result" };
+    return matches && (created ? isScopeRef(scope) : scope === undefined) ? { holds: true } : { holds: false, name: "invalid-application-result" };
   } },
   "application-keep-creation": { place: "effect", most: 2, run: given => {
     const job = given.resolved.subjects.get("also.installation")!;

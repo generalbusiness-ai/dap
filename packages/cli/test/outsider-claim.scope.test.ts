@@ -40,7 +40,7 @@ test("dedicated public offer lets an outsider claim Register17 without a member 
           const response = await life.wait(() => demoCreationRoute(new Request(url, { ...init, redirect: "manual" }), {
             SCOPES: env.PLATFORM as unknown as Binding, DEPLOYMENT: "TEST outsider demo",
             ARTIFACTS_NAMESPACE: "outsider-fixture", ARTIFACTS_CONFIG: canonicalize({ registerScope: register!.name, namespace: "outsider-fixture", host: "service.invalid", maxBytes: 10485760, credentialIdentity: "adapter-attempt" }),
-            DEMO_START_CONFIG: canonicalize({ v: 3, origin: SERVICE, deployment: "TEST outsider demo", register: { scope: register!.name, kind: "register", inc: current!.inc }, definition: C.register }),
+            DEMO_START_CONFIG: canonicalize({ v: 3, origin: SERVICE, deployment: "TEST outsider demo", register: { scope: register!.name, genesis: current!.genesis }, definition: C.register }),
           }));
           // Exact local playback metadata, as serving-startup.scope.test.ts.
           // The body/status remain those of the actual route and Native offer.
@@ -59,7 +59,7 @@ test("dedicated public offer lets an outsider claim Register17 without a member 
       life.wire(register.name, () => ({ outside: outsideOf(register!.name) }));
       await life.wait(() => register!.restart());
       const visitor = memoryStore(); await visitor.keep("visitor", sam.secret);
-      await visitor.save({ v: 1, service: SERVICE, key: "visitor", register: current });
+      await visitor.save({ v: 2, service: SERVICE, key: "visitor", register: current });
       expect((await installer.store.secret(config.key))!).not.toEqual(sam.secret);
       const pause: NonNullable<Context["pause"]> = async waiting => {
         life.active();
@@ -93,7 +93,7 @@ test("dedicated public offer lets an outsider claim Register17 without a member 
         // The injected port owns a body until strict fetch metadata is checked.
         // No read/recovery signer/claim may survive this preflight refusal.
         const malformedStore = memoryStore();await malformedStore.keep("visitor",sam.secret);
-        await malformedStore.save({v:1,service:SERVICE,key:"visitor",register:current});
+        await malformedStore.save({v:2,service:SERVICE,key:"visitor",register:current});
         let canceled=0,read=0;
         const malformedFetch: Fetch = async () => ({status:200,body:{getReader:()=>({
           read:async()=>{read++;return {done:true as const,value:undefined};},

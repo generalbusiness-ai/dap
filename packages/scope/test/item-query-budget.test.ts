@@ -26,9 +26,9 @@ test("causal query SQL admits its 128th call and refuses the 129th before execut
 // Invariant: signer metadata shares the existing source budget even after
 // a full item page; exhaustion prevents SQL. SQL answers are stand-ins.
 test("fact-signer metadata admits no entry bodies and cannot top up the source allowance", () => {
-  const scope = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" as const };
+  const scope = { scope: `sc_${"a".repeat(52)}` as const, genesis: `sha256:${"a".repeat(64)}` as const };
   const hash = textDigest("PUBLIC TEST exact recorded signer"), frame = { scope: { at: scope, head: { seq: 100, hash } } } as Parameters<typeof applicationProjectionFactSigners>[1];
-  const signer = { membership: { ...scope, kind: "membership" }, member: "@recorded" };
+  const signer = { membership: { ...scope }, member: "@recorded" };
   const refs = Array.from({ length: 100 }, (_, seq) => ({ seq, hash })), queries: string[] = [];
   const sql = { exec(query: string, ...args: SqlValue[]) {
     queries.push(query);
@@ -61,7 +61,7 @@ test("query preparation preserves phase limits, accounts genesis reservation onc
 });
 
 test("fact-time metadata spends the existing source allowance before its bounded indexed lookups", () => {
-  const scope = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" as const };
+  const scope = { scope: `sc_${"a".repeat(52)}` as const, genesis: `sha256:${"a".repeat(64)}` as const };
   const hash = textDigest("PUBLIC TEST fact-time metadata"), frame = { scope: { at: scope, head: { seq: 200, hash } } } as Parameters<typeof applicationProjectionFactTimes>[1];
   const refs = Array.from({ length: 200 }, (_, i) => ({ seq: i + 1, hash: null }));
   const queries: string[] = [];

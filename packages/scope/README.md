@@ -37,7 +37,7 @@ what a judge drafts, in one storage transaction for each entry.
 | `signed-reads` | `checkSignedRead`: a read signed by a key with a recent local signed entry or a recent signed root of this scope's cause chain. `rootOf` follows at most four causes through verified source entries. The read covers summary, genesis, that key's signed and causally rooted entries, and their typed retained inputs. At a register, a recent local signer reads the whole history. It grants no stream. |
 | `limits` | `JoinLimits`: the serving limits of a join at the front of a membership scope. `addressKey`, `isJoin`, `PROPOSED_LIMITS`. |
 | `operator` | `OperatorRecord`: the operator's record of a scope, outside its history. `incidentsOf`, `waitingIn`, and `sendAgain`, the instruction to dispatch a waiting request once more. |
-| `reads` | `Reads`: `summary`, `items`, `history`, `entry`, `outbox`, and `outboxItem`, one send's row; `operations` and `operation`, the outside operations with their attempts and outcomes; `incidents`, a page of the operator's record, and `waiting`, the two lists of requests that wait. For a verifier: `log`, a history page as stored bytes, and `retained`, one retained input by kind and digest, with a domain for `value`. `ReadBounds` and `READ_BOUNDS`. |
+| `reads` | `Reads`: `summary`, `items`, `history`, `entry`, `outbox`, and `outboxItem`, one send's row; `operations` and `operation`, the outside operations with their attempts and outcomes; `incidents`, a page of the operator's record, and `waiting`, the two lists of requests that wait. For a verifier: `log`, a history page as stored bytes, and `retained`, one retained input by kind and digest, with a domain for `value`. The kind `birth` takes a genesis entry hash in the digest place and serves the first entry of that foreign sequence. `ReadBounds` and `READ_BOUNDS`. |
 | `delivery` | `Deliveries.deliver(envelope)`: receiving. It reads the source entry through the resolver, checks it against the fact's hash, and runs derive's delivery judge, or its genesis judge for a `create` that reaches an empty store, in the scope's turn. It answers as transport does: `recorded` with a fact, `retry`, `routing` or `source-unverified`. |
 | `outbox` | `Dispatcher.run()`: sending. One pass at a time over the sends that are due: a durable record before each dispatch and after its answer, a retry delay that doubles, and a `diagnosis` input through the turn when a request is given up. `Wakes`: one alarm for the earliest deadline, the next dispatch and the next attempt of an outside operation. |
 | `operations` | `Operations.run()`: the driver of outside effects, beside the dispatcher. An attempt is recorded by its entry, marked durably before its one request leaves, and never sent twice: one that is found marked with no outcome is recorded `unknown`. An answer becomes an `outcome` input through the turn. `Operations.answered()` takes an answer at any later time. `Outside` is the port, and `NO_OUTSIDE`, the default of `production()`, sends nothing. The driver matches owner-declared evidence values by domain, digest and canonical byte bound and retains them with the outcome entry. |
@@ -304,7 +304,8 @@ whose stored bytes are the canonical bytes.
 | `folded` | Folded records that are not items: relationship copies, held creations, and the digests of the texts a slot has held. |
 | `operation` | The outside operations, folded, by the entry that opened each and its ordinal there, with what each still reserves. |
 | `attempt` | One row for each attempt that an entry opened, written with that entry. The driver's bookkeeping is in three columns: `next`, when it looks at the attempt next; `sent`, the time written before its one request left; and `outcome`, the entry that recorded its first outcome. |
-| `retained_input` | What an entry names by digest and does not carry: the definition's declaration, the bytes of each foreign entry in a `uses`, and the input of each rule evaluation. A delivered message and a rule's result are inside their entry. Outcome evidence carries its body; a value that the body names by digest is in `retained_value`. |
+| `retained_input` | What an entry names by digest and does not carry: the definition's declaration, the bytes of each foreign entry in a `uses`, the first entry of each foreign sequence that a `uses` names at a later entry, and the input of each rule evaluation. A delivered message and a rule's result are inside their entry. Outcome evidence carries its body; a value that the body names by digest is in `retained_value`. |
+| `retained_birth` | For each foreign sequence that a retained entry uses at a later entry: the genesis, the scope, and the content digest of that sequence's first entry in `retained_input`. The `birth` read looks a row up by genesis alone. `pass` records the journal pass that first wrote the row's `birth` archive path. |
 | `item_key` | The indexes that an item type of platform data declares (the contract's revision 23, section 17.2a): one row for each indexed slot of each item, written with the item by the entry that opens it. `StateView.lookup` reads it, after it has read that the index holds a row for every item of the type. The destination declares the publication's `operation` index, used to bind `withdraw` to its holder. |
 | `retained_value` | Each value named by an intent place, an observation or an owner's outcome evidence, by domain and digest. It is written with the entry; RPC and HTTP retained reads serve it by domain and digest under the same reader authority and byte bound. |
 
@@ -369,7 +370,7 @@ record. So an attempt with no recorded completion reads as unanswered.
 |---|---|
 | `recorded`, with the fact of the entry that recorded the message | Marks the send acknowledged with that fact. This is bookkeeping, not an entry. A request then waits for its result, which arrives as a delivery. |
 | `retry`, with any reason, or `source-unverified` | Logs `retry` and sends again after the delay. |
-| `routing`: `wrong-incarnation` or `not-found` | Logs it and sends again after the delay. When a request's log holds as many routing refusals as `routingRefusals`, it is given up. |
+| `routing`: `wrong-genesis` or `not-found` | Logs it and sends again after the delay. When a request's log holds as many routing refusals as `routingRefusals`, it is given up. |
 | No answer within `dispatchSeconds` | Leaves the record `none`. |
 
 A request that is given up becomes a `diagnosis` input with the log, in the
@@ -383,7 +384,7 @@ that records the confirmation clears the flag. No attempt of it starts.
 **Receiving.** `deliver(envelope)`:
 
 1. The resolver of the name answers first, from the scope's record:
-   `not-found` or `wrong-incarnation`. Nothing was judged or recorded.
+   `not-found` or `wrong-genesis`. Nothing was judged or recorded.
 2. The source entry is read from the source scope's object, by its scope
    ID. Not readable now: `retry`. Another incarnation, no such entry, or
    bytes that do not match the fact's hash: `source-unverified`.
@@ -410,14 +411,14 @@ contract's own answer.
 | `POST /v1/scopes/:scope/acts`, body `{ signed, grants, texts?, presented?, values? }`. `texts`: each detached text that a field of the intent names by digest. `presented`: the facts presented beside the intent, by name. `values`: each value that a place of the act names by digest, as its canonical bytes; only an act of a platform definition whose data states a place has one. The rules scope states a place for check configuration | `Answer` | 200 accepted; 403 refused `unauthorized`; 422 refused otherwise; 409 mismatch; 503 unavailable |
 | `POST /v1/scopes/:scope/preparations`, body `{ signed, grants, capability, step }`. One step of a capability, asked for with the signed intent that it prepares for. With no code for the step, as in production, nothing is judged: 503 `unavailable` | `Answer` | as an act |
 | `POST /v1/scopes/:scope/settle`, body `{ signed }` | `Settlement` | as a read |
-| `GET /v1/scopes/:scope` | The summary | 200; 404 `not-found`; 403 `forbidden`; 409 `wrong-incarnation`, `scope-provisional`; 413 `too-large`; 501 `unsupported-definition`; 503 otherwise |
+| `GET /v1/scopes/:scope` | The summary | 200; 404 `not-found`; 403 `forbidden`; 409 `wrong-genesis`, `scope-provisional`; 413 `too-large`; 501 `unsupported-definition`; 503 otherwise |
 | `GET /v1/scopes/:scope/items/:type?cursor=` | A page of retained final items | as above |
 | `GET /v1/scopes/:scope/history?cursor=` | A page of the history | as above |
 | `GET /v1/scopes/:scope/entries/:seq` | One entry | as above |
 | `GET /v1/scopes/:scope/outbox?cursor=` | A page of the outbox | as above |
 | `GET /v1/scopes/:scope/outbox/:outboxId` | The outbox status of one send, by its outbox ID | as above |
 | `GET /v1/scopes/:scope/log?cursor=` | A page of the history as stored: each entry's canonical bytes and hash, for a verifier | as above |
-| `GET /v1/scopes/:scope/retained/:kind/:digest` | One retained input: a `definition`, an `entry`, a `rule` input, a detached `text` or a `snapshot` of staged refs, by digest. A text that was redacted is `not-found`. For `value`, `?domain=<encoded domain>` is required; another or missing domain is `not-found` | as above; 413 past `ReadBounds.retainedBytes` |
+| `GET /v1/scopes/:scope/retained/:kind/:digest` | One retained input: a `definition`, an `entry`, a `rule` input, a detached `text` or a `snapshot` of staged refs, by digest. A text that was redacted is `not-found`. For `value`, `?domain=<encoded domain>` is required; another or missing domain is `not-found`. For `birth`, the digest is a genesis entry hash, and the read serves the first entry of that foreign sequence under `entry` permission; a domain is `not-found` | as above; 413 past `ReadBounds.retainedBytes` |
 
 A body is at most 1 MiB of bytes, counted while it is read: a larger body
 is cancelled and is not held. A body over that, or one that is not a JSON

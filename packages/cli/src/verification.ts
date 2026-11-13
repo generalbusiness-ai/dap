@@ -1,7 +1,7 @@
 /** One command's read-only verification work, including authentication and cleanup. */
 import type { Digest, Entry, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import type { Fetch } from "@generalbusiness/dap-client";
-import { canonicalize, entryHash, isDigest, isEntry, isRecord, isScopeRef, isSealed, natural, parseStrict } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isDigest, isEntry, isEntryBodyOf, isRecord, isScopeRef, isSealed, natural, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { hashOfBytes } from "@generalbusiness/dap-replay";
 import { failed, stopCommand, usage } from "./command-support.ts";
 
@@ -79,10 +79,11 @@ export class Verification {
   }
   #entry(scope: ScopeId, entry: Entry, hash: Digest): void {
     this.check();
-    if (entry.at.scope !== scope) this.#invalidEntry();
-    const frame = canonicalize(entry.at), knownFrame = this.#entryScopes.get(scope);
+    // A genesis frames its scope by its seed and its own hash; a later entry by the genesis it names.
+    if (entry.input.type === "genesis" ? scopeIdOf(entry.input.seed) !== scope : !("genesis" in entry)) this.#invalidEntry();
+    const frame: Digest = "genesis" in entry ? entry.genesis : hash, knownFrame = this.#entryScopes.get(scope);
     if (knownFrame !== undefined && knownFrame !== frame) this.#invalidEntry();
-    const position = canonicalize([scope, entry.at.inc, entry.seq]), knownHash = this.#entryHashes.get(position);
+    const position = canonicalize([scope, frame, entry.seq]), knownHash = this.#entryHashes.get(position);
     if (knownHash !== undefined) {
       if (knownHash !== hash) this.#invalidEntry();
       return;
@@ -111,7 +112,7 @@ export class Verification {
     let entry: unknown;
     try { entry = parseStrict(value["bytes"]); } catch { this.#invalidEntry(); }
     if (canonicalize(entry) !== value["bytes"] || !isEntry(entry)
-      || entry.seq !== value["seq"] || canonicalize(entry.at) !== canonicalize(at)) this.#invalidEntry();
+      || !isEntryBodyOf(entry, { at, seq: value["seq"], hash })) this.#invalidEntry();
     this.#entry(scope, entry, hash);
   }
   historyRead(accounting: "count" | "unique" = "count"): void {

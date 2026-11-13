@@ -1,13 +1,15 @@
 import { answersVersionQuestion, evidenceBindingDigest, readEvidenceBinding, readEvidenceBatchWireV17, type EvidenceBatchRecordV17, type EvidenceBinding, type StageSnapshot, type StageSnapshotReply } from "@generalbusiness/dap-platform";
 /** Successor job origin: an actual G17 admission, never a synthetic legacy manifest. */
-import type { Digest, Effect, FactRef, KeyId, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalBytes, canonicalize, entryHash, isDigest, isEntry, isFactRef, isLocalId, isOperationId, isRecord, parseStrict, same, timeMs, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import type { Digest, FactRef, GenesisEffect, KeyId, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
+import { canonicalBytes, canonicalize, entryHash, isDigest, isEntry, isFactRef, isLocalId, isOperationId, isRecord, isScopeRef, parseStrict, same, timeMs, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 
 import { isObjectId, readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS } from "@generalbusiness/dap-git";
-import type { Job, Notice, Origin, OriginRead } from "./job.ts";
+import { isAt, type Job, type Notice, type Origin, type OriginRead } from "./job.ts";
 
-const factOf = (sealed: Sealed): FactRef => ({ at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash });
-const value = (effects: readonly Effect[], item: number, slot: string): unknown => {
+// `isAt` is body association; the snapshot's destination genesis is among its sources.
+const isFactOf = (sealed: Sealed, fact: FactRef): boolean => sealed.entry.seq === fact.seq && sealed.hash === fact.hash && isAt(sealed, fact.at);
+const genesisOf = (sealed: Sealed): Digest => sealed.entry.input.type === "genesis" || !("genesis" in sealed.entry) ? sealed.hash : sealed.entry.genesis;
+const value = (effects: readonly GenesisEffect[], item: number, slot: string): unknown => {
   const rows = effects.filter(effect => effect.effect === "value" && effect.item === item && effect.slot === slot);
   return rows.length === 1 && rows[0]!.effect === "value" ? rows[0]!.value : undefined;
 };
@@ -21,8 +23,8 @@ function admissionRecord(value: unknown): Record<string, unknown> | null {
 }
 const sent = (source: Sealed, target: Sealed): boolean => {
   const input = target.entry.input;
-  if (input.type !== "delivery" || !same(factOf(source), input.from)) return false;
-  return source.entry.sends.some(send => send.n === input.n && same(send.to, target.entry.at) && same(send.message, input.message));
+  if (input.type !== "delivery" || !isFactOf(source, input.from)) return false;
+  return source.entry.sends.some(send => send.n === input.n && isScopeRef(send.to) && isAt(target, send.to) && same(send.message, input.message));
 };
 function admissionOpening(source: Sealed, admission: Sealed, holder: number): boolean {
   const input = admission.entry.input;
@@ -45,13 +47,13 @@ function boundFence(source: Sealed, admission: Sealed, sources: ReadonlyMap<stri
   const writes = source.entry.effects.filter(effect => effect.effect === "value" && effect.slot === "batch");
   if (writes.length !== 1 || writes[0]!.effect !== "value" || writes[0]!.item !== holder) return false;
   const claimed = readEvidenceBatchWireV17(writes[0]!.value);
-  const births = [...sources.values()].filter(entry => same(entry.entry.at, source.entry.at) && entry.entry.seq === holder);
+  const births = [...sources.values()].filter(entry => genesisOf(entry) === genesisOf(source) && entry.entry.seq === holder);
   const birth = births.length === 1 ? births[0] : null;
   if (!claimed || !birth || holder >= source.entry.seq || birth.entry.effects.filter(effect => effect.effect === "open").length !== 1
     || !birth.entry.effects.some(effect => effect.effect === "open" && effect.item === holder && effect.type === "evidence-batch" && effect.state === "funded")) return false;
   const original = readEvidenceBatchWireV17(value(birth.entry.effects, holder, "batch"));
   const input = birth.entry.input;
-  if (!original || input.type !== "delivery" || !("decision" in input) || input.decision !== "applied" || !same(input.from.at, birth.entry.at)
+  if (!original || input.type !== "delivery" || !("decision" in input) || input.decision !== "applied" || !isAt(birth, input.from.at)
     || input.message.class !== "request" || input.message.type !== "tell" || !isRecord(input.message.body)
     || Object.keys(input.message.body).sort().join() !== "fields,message" || input.message.body["message"] !== "evidence-fund"
     || !same(input.message.body["fields"], { publication: original.publication, operation: original.operation, capture: original.capture, ordinal: original.ordinal })) return false;
@@ -75,8 +77,8 @@ export function stageOriginOf(notice: Notice, read: Pick<OriginRead, "entry" | "
   try {
     if (!isRecord(snapshot) || Object.keys(snapshot).sort().join() !== "admission,base,binding,commit,destination,job,objects,sources,tree,v"
       || snapshot.v !== 1 || !read.entry || !sound(snapshot.job) || !sound(snapshot.admission) || !same(snapshot.job, read.entry)
-      || !same(factOf(snapshot.job), notice.job) || !same(snapshot.job.entry.at, notice.lane) || snapshot.destination.kind !== "destination"
-      || !same(snapshot.admission.entry.at, snapshot.destination) || !Array.isArray(snapshot.sources) || snapshot.sources.length > 32 || snapshot.sources.some(source => !sound(source))) return no();
+      || !isFactOf(snapshot.job, notice.job) || !isAt(snapshot.job, notice.lane) || !isScopeRef(snapshot.destination)
+      || !isAt(snapshot.admission, snapshot.destination) || !Array.isArray(snapshot.sources) || snapshot.sources.length > 32 || snapshot.sources.some(source => !sound(source))) return no();
     const sourceEntries: readonly Sealed[] = snapshot.sources;
     const proof = { v: snapshot.v, destination: snapshot.destination, job: snapshot.job, admission: snapshot.admission, binding: snapshot.binding,
       sources: sourceEntries, base: snapshot.base, commit: snapshot.commit, tree: snapshot.tree };
@@ -98,11 +100,18 @@ export function stageOriginOf(notice: Notice, read: Pick<OriginRead, "entry" | "
     if (!record || !effect || effect.effect !== "value" || record["v"] !== 1 || record["state"] !== "admitted" || record["admittedAt"] !== admitted.seq || !same(record["binding"], binding)
       || record["bindingDigest"] !== evidenceBindingDigest(binding) || !same(record["job"], notice.job) || record["commit"] !== snapshot.commit || record["tree"] !== snapshot.tree || record["base"] !== snapshot.base
       || !Array.isArray(record["sourceFacts"]) || record["sourceFacts"].length > 32 || !record["sourceFacts"].every(isFactRef)) return no();
-    const sources = new Map(sourceEntries.map(source => [canonicalize(factOf(source)), source]));
-    if (sources.size !== sourceEntries.length || record["sourceFacts"].length !== sources.size || record["sourceFacts"].some(fact => !sources.has(canonicalize(fact)))) return no();
-    const genesis = sourceEntries.find(source => source.entry.at.kind === "destination" && same(source.entry.at, snapshot.destination) && source.entry.input.type === "genesis");
-    if (!genesis || genesis.entry.input.type !== "genesis" || !answersVersionQuestion(genesis.entry.input.seed.definition, "evidenceStageOrigin")) return no();
-    const pendingRows = sourceEntries.filter(source => same(source.entry.at, snapshot.destination) && sent(snapshot.job, source));
+    // Each recorded source fact names exactly one source body, and every body is named once.
+    const sources = new Map<string, Sealed>();
+    for (const fact of record["sourceFacts"] as FactRef[]) {
+      const matched = sourceEntries.filter(source => isFactOf(source, fact));
+      if (matched.length !== 1) return no();
+      sources.set(canonicalize(fact), matched[0]!);
+    }
+    if (sources.size !== sourceEntries.length || record["sourceFacts"].length !== sources.size || new Set(sources.values()).size !== sources.size) return no();
+    // The destination's own genesis fixes its address and states its kind.
+    const genesis = sourceEntries.find(source => source.entry.input.type === "genesis" && isAt(source, snapshot.destination));
+    if (!genesis || genesis.entry.input.type !== "genesis" || genesis.entry.input.seed.kind !== "destination" || !answersVersionQuestion(genesis.entry.input.seed.definition, "evidenceStageOrigin")) return no();
+    const pendingRows = sourceEntries.filter(source => isAt(source, snapshot.destination) && sent(snapshot.job, source));
     const pending = pendingRows.length === 1 ? pendingRows[0] : null;
     if (!pending || pending.entry.input.type !== "delivery" || pending.entry.input.message.class !== "request" || !("decision" in pending.entry.input) || pending.entry.input.decision !== "applied" || !sent(snapshot.job, pending)
       || pending.entry.input.message.type !== "tell" || !isRecord(pending.entry.input.message.body)
@@ -115,7 +124,7 @@ export function stageOriginOf(notice: Notice, read: Pick<OriginRead, "entry" | "
       if (jobInput.type !== "delivery" || jobInput.message.class !== "request" || !("decision" in jobInput) || jobInput.decision !== "applied" || !isRecord(jobInput.message.body)
         || !["admit-published-check", "admit-audit-check"].includes(jobInput.message.body["message"] as string)) return no();
       const sender = sources.get(canonicalize(jobInput.from));
-      if (!sender || !same(sender.entry.at, snapshot.destination) || !sent(sender, snapshot.job)) return no();
+      if (!sender || !isAt(sender, snapshot.destination) || !sent(sender, snapshot.job)) return no();
     }
     const texts = value(jobEntry.effects, jobEntry.seq, "binding");
     if (typeof texts !== "string" || utf8(texts).length > 16_384 || !same(readEvidenceBinding(parseStrict(texts)), binding)
@@ -140,8 +149,8 @@ export function stageOriginOf(notice: Notice, read: Pick<OriginRead, "entry" | "
     if (required.some(fact => !sources.has(canonicalize(fact)))) return no();
     if (binding.subject.kind === "work") {
       const source = sources.get(canonicalize(binding.subject.source))!;
-      if (!same(source.entry.at, notice.lane) || source.entry.input.type !== "act" || source.entry.input.signed.intent.kind !== "stage-work" || !verifySignedIntent(source.entry.input.signed)
-        || !same(source.entry.input.signed.intent.to, source.entry.at) || value(source.entry.effects, source.entry.seq, "commit") !== snapshot.commit) return no();
+      if (!isAt(source, notice.lane) || source.entry.input.type !== "act" || source.entry.input.signed.intent.kind !== "stage-work" || !verifySignedIntent(source.entry.input.signed)
+        || !same(source.entry.input.signed.intent.to, notice.lane) || value(source.entry.effects, source.entry.seq, "commit") !== snapshot.commit) return no();
     } else {
       if (!same(binding.subject.publication.at, snapshot.destination) || !same(binding.subject.manifest.at, notice.lane)) return no();
       if (binding.subject.kind === "published") {
@@ -153,7 +162,7 @@ export function stageOriginOf(notice: Notice, read: Pick<OriginRead, "entry" | "
     }
     const overlay = readOwnedCheckoutSnapshot({ commit: snapshot.commit, tree: snapshot.tree, base: snapshot.base, objects: snapshot.objects });
     if (!overlay) return no();
-    const laneRef = { ...snapshot.job.entry.at }, jobFact = { at: { ...laneRef }, seq: snapshot.job.entry.seq, hash: snapshot.job.hash };
+    const laneRef = { ...notice.lane }, jobFact = { at: { ...laneRef }, seq: snapshot.job.entry.seq, hash: snapshot.job.hash };
     const job: Job = { lane: laneRef, fact: jobFact, name, tree: snapshot.tree, configuration, deadline: deadline as string, commit: snapshot.commit, base: snapshot.base, evidence: binding, overlay };
     return { job };
   } catch { return no(); }

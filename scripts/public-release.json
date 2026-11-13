@@ -25,6 +25,7 @@
         ".": "src/index",
         "./rule": "src/rule/index",
         "./field-types": "src/field-types",
+        "./scripted": "src/scripted",
         "./testing": "test/fixtures"
       },
       "dependencies": {

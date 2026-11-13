@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Answer, Head, Intent, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
+import { scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { d } from "@generalbusiness/dap-derive/testing";
 import { JoinLimits, isJoin, type LimitConfig } from "../src/index.ts";
 import { soon } from "./net.ts";
@@ -16,7 +16,7 @@ import type { Api } from "../src/worker.ts";
 const SECRET = "the secret of an invitation, which has 32 bytes or more";
 const FIXTURE: LimitConfig = { windowSeconds: 60, failures: 3, windows: 2, waiting: 1, joinBytes: 16 * 1024 };
 const HEAD: Head = { seq: 7, hash: d("7") };
-const M: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "membership", definition: d("a"), creator: null, cause: d("b"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(3)), kind: "membership" };
+const M: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "membership", definition: d("a"), creator: null, cause: d("b"), ordinal: 0 }), genesis: `sha256:${"03".repeat(32)}` as const };
 let keys = 0;
 const join = (who: typeof una, secret = SECRET): SignedIntent => {
   const intent: Intent = { v: 1, to: M, actor: who.key, kind: "join", on: null, expected: {}, fields: { invitation: 3, secret }, idempotencyKey: `j${keys++}`, notAfter: soon(60) };

@@ -10,9 +10,10 @@ import type { Store } from "./store.ts";
 import { PROOF_BYTE_BOUNDS } from "./proof-bytes.ts";
 
 export function creationDeclaration(store: Store, pinned: Pinned | null, at: unknown, digest: unknown, maxBytes: number, active: () => boolean): string | null {
-  if (!active() || !isScopeRef(at) || at.kind !== "directory" || !isDigest(digest) || !Number.isSafeInteger(maxBytes) || maxBytes <= 0 || maxBytes > PROOF_BYTE_BOUNDS.body) return null;
+  if (!active() || !isScopeRef(at) || !isDigest(digest) || !Number.isSafeInteger(maxBytes) || maxBytes <= 0 || maxBytes > PROOF_BYTE_BOUNDS.body) return null;
   const scope = store.scope();
-  if (!active() || !scope || scope.status !== "active" || !same(scope.at, at) || !pinned?.platform
+  // A reference names no kind: this scope answers only as a Directory, by its own folded kind.
+  if (!active() || !scope || scope.status !== "active" || scope.kind !== "directory" || !same(scope.at, at) || !pinned?.platform
     || !answersVersionQuestion(pinned.named, "scopeCreationDeclarationDirectory")) return null;
 
   const directSize = store.retainedSize("definition", digest);

@@ -1,10 +1,12 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type Item, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, newIncarnation, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { applyEntry, PROFILES, validateDefinition, type RuleGiven } from "@generalbusiness/dap-derive";
+import { PROPOSED_BOUNDS, type Entry, type Item, type Seed, type SequenceEntry } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, factRefOf, newGenesisNonce, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { forged } from "@generalbusiness/dap-derive/testing";
+import { applyEntry, PROFILES, sequenceEffects, validateDefinition, type RuleGiven } from "@generalbusiness/dap-derive";
 import { directoryPartition1, directoryPartitionRules1, partitionGeneration, partitionLane, partitionNumber, PARTITION_COHORT } from "../../platform/src/directory-partitions.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { create } from "./fixtures-native.ts";
+import { withSequence } from "../src/testing.ts";
 
 // Actual Durable Object SQLite and production lookup code. Item/index rows
 // are explicit storage fixtures; no new factory or Authority path ran here.
@@ -14,10 +16,12 @@ test("directory partition point reads stay bounded beside 3000 unrelated lane ro
     const actual: Sql = { exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: work => state.storage.transactionSync(work) };
     const store = new SqliteStore(actual), sample = store.item(0)!;
     const seed: Seed = { v: 1, kind: "lane", definition: PARTITION_COHORT.partition, creator: null, cause: `sha256:${"0".repeat(64)}`, ordinal: 3000 };
+    // The stand-in lane (ordinal 3000): a genesis of its seed, made by hand and admitted from its own bytes.
+    const birth = forged({ scope: scopeIdOf(seed), genesis: `sha256:${"0".repeat(64)}` }, 0, { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(7)), kind: "fixture", founding: null, source: null, sourceKind: null, n: null, message: null, decision: "applied" }, []);
     store.transaction(() => {
       for (let n = 0; n <= 3000; n++) {
         const digest = seedDigest({ ...seed, ordinal: n });
-        const item: Item = { ...sample, id: n + 100, type: "lane", state: "listed", refs: { scope: { scope: scopeIdOf({ ...seed, ordinal: n }), kind: "lane", inc: newIncarnation(new Uint8Array(16).fill(7)) } }, values: { seed: digest, number: n + 1 } };
+        const item: Item = { ...sample, id: n + 100, type: "lane", state: "listed", refs: { scope: { scope: scopeIdOf({ ...seed, ordinal: n }), genesis: n === 3000 ? birth.sequence.at.genesis : `sha256:${"07".repeat(32)}` as const } }, values: { seed: digest, number: n + 1 } };
         store.putItem(item); store.addCount(item.type, item.state, 1);
         store.putIndexed("lane", "seed", canonicalize(digest), item.id);
         store.putIndexed("lane", "number", String(n + 1), item.id);
@@ -42,10 +46,13 @@ test("directory partition point reads stay bounded beside 3000 unrelated lane ro
     // SCRIPTED source and direct native rule/fold specimen. The real
     // runtime's Authority/delivery is covered in the native journeys; this
     // storage fixture measures the actual index-update implementation.
-    const source = { ...JSON.parse(store.stored(0)!.bytes) as Entry, at: { scope: scopeIdOf(seed), kind: "lane" as const, inc: newIncarnation(new Uint8Array(16).fill(7)) }, seq: 9, time: "2099-01-01T00:00:01Z" };
-    const from = factRefOf(source);
-    const input = { type: "delivery" as const, from, n: 0, message: { class: "advisory" as const, type: "index" as const, body: { title: "Updated by point lookup" } } };
-    const given: RuleGiven = { state: counted, input, time: source.time, uses: [{ fact: from, entry: source, under: "issue" }], own: () => null,
+    // A later entry of the stand-in lane's sequence, made by hand. No judge wrote it.
+    const message = { class: "advisory" as const, type: "index" as const, body: { title: "Updated by point lookup" } };
+    const made = forged(birth.sequence, 9, { type: "checkpoint", through: 8, state: `sha256:${"0".repeat(64)}` }, [{ n: 0, to: store.scope()!.at, message }]);
+    const source: Entry = { ...made.entry, time: "2099-01-01T00:00:01Z" };
+    const from = factRefOf(source, birth.sequence.at);
+    const input = { type: "delivery" as const, from, sourceKind: "lane" as const, n: 0, message };
+    const given: RuleGiven = { state: counted, input, time: source.time, uses: [{ fact: from, entry: source, under: "issue", sequence: birth.sequence }], own: withSequence(() => null, null),
       resolved: { at: store.scope()!.at, self: store.scope()!.head.seq + 1, fields: { title: "Updated by point lookup" }, subjects: new Map(), signer: null, bounds: PROPOSED_BOUNDS },
       observed: () => null, value: () => undefined, placed: () => undefined };
     const ready = directoryPartitionRules1["index-ready"]!, row = directoryPartitionRules1["index-row"]!, numbered = directoryPartitionRules1["index-number"]!;
@@ -57,7 +64,7 @@ test("directory partition point reads stay bounded beside 3000 unrelated lane ro
     const updateRuleStats = { queries: queries.slice(stats.queries.length), rowsRead: rowsRead - stats.rowsRead, rowsWritten: rowsWritten - stats.rowsWritten, plans: plans.slice(stats.plans.length) };
     const beforeFold = { queries: queries.length, rowsRead, rowsWritten, plans: plans.length };
     const head = counted.scope()!;
-    const update: Entry = { ...source, at: head.at, seq: head.head.seq + 1, prev: head.head.hash, input, uses: [], effects, sends: [] };
+    const update: SequenceEntry = { v: 1, time: source.time, clamped: source.clamped, epoch: 0, prepared: source.prepared, genesis: head.at.genesis, seq: head.head.seq + 1, prev: head.head.hash, input, uses: [], effects: sequenceEffects(effects), sends: [] };
     // SCRIPTED journal append, outside the counted fold boundary, just as
     // the runtime stores a sealed entry before deriving its state.
     const bytes = canonicalize(update), hash = entryHash(update);

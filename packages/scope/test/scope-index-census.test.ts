@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { PROPOSED_BOUNDS, type ScopeRef } from "@generalbusiness/dap-contract";
-import { digestBytes, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { digestBytes, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { secretSigner, signedReader } from "@generalbusiness/dap-client";
 import { ScopeIndexRows, type ScopeRegistration } from "../src/scope-index.ts";
 import { route } from "../src/worker.ts";
@@ -73,7 +73,6 @@ test("census binds trusted native row identity, preserves modes and absence, and
     expect(await full.json()).toEqual({ rows: f.rows, next: null });
     const original = f.rows.find(row => row.at.scope === f.register.scope)!;
     for (const [column, wrong] of [
-      ["inc", newIncarnation(crypto.getRandomValues(new Uint8Array(16)))],
       ["genesis", digestBytes(utf8("TEST wrong pinned genesis"))],
       ["kind", "directory"],
     ] as const) {
@@ -81,7 +80,7 @@ test("census binds trusted native row identity, preserves modes and absence, and
       const before = await written(f.stub);
       expect((await f.request(await f.reading())).status).toBe(403);
       expect(await written(f.stub)).toEqual(before);
-      const restored = column === "genesis" ? original.genesis : original.at[column];
+      const restored = column === "genesis" ? original.at.genesis : original.kind;
       await runInDurableObject(f.stub, (_instance, state) => { state.storage.sql.exec(`UPDATE known_scope SET ${column}=? WHERE scope=?`, restored, f.register.scope); });
     }
     f.settings.SCOPE_INDEX_MODE = "register";
@@ -105,8 +104,8 @@ test("census returns next null on an exactly 100-row final SQLite page under nat
     for (let ordinal = 0; ordinal < 100 - f.rows.length; ordinal++) {
       const hash = digestBytes(utf8(`TEST census metadata ${ordinal}`));
       const seed = { v: 1 as const, kind: "lane" as const, definition: hash, creator: null, cause: hash, ordinal };
-      const at: ScopeRef = { scope: scopeIdOf(seed), inc: newIncarnation(crypto.getRandomValues(new Uint8Array(16))), kind: "lane" };
-      extras.push({ at, genesis: hash });
+      const at: ScopeRef = { scope: scopeIdOf(seed), genesis: hash };
+      extras.push({ at, kind: "lane" });
     }
     await runInDurableObject(f.stub, (_instance, state) => {
       const rows = new ScopeIndexRows(state.storage.sql);

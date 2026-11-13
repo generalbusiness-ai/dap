@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import type { Entry, FactRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, intentDigest, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
+import type { Entry, FactRef, FactUse, GenesisEntry, ScopeKind, ScopeRef, Seed, SequenceEntry } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, factRefOf, intentDigest, newGenesisNonce, genesisInputDigest, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { useOf } from "@generalbusiness/dap-derive";
 import { GenesisProofs, GENESIS_PROOF_BOUNDS as B, type ProofTimer } from "../src/genesis-proof.ts";
 import { ProofBytes, type ProofBody, type ProofSource } from "../src/proof-bytes.ts";
@@ -20,15 +20,50 @@ class Timer implements ProofTimer {
 const deferred = <T>() => { let resolve!: (v: T) => void; const promise = new Promise<T>(r => { resolve = r; }); return { promise, resolve }; };
 const microtasks = async () => { for (let n = 0; n < 12; n++) await Promise.resolve(); };
 
+/** The address of each later entry that these tests make. A genesis entry's address follows from its own seed and hash. */
+const addresses = new WeakMap<Entry, ScopeRef>();
+const addressOf = (entry: Entry): ScopeRef => {
+  if (entry.seq === 0 && entry.input.type === "genesis") return { scope: scopeIdOf(entry.input.seed), genesis: entryHash(entry) };
+  const at = addresses.get(entry);
+  if (!at) throw new Error("this later entry has no recorded address");
+  return at;
+};
+/** The kind of the sequence of each later entry, read from its genesis. */
+const kinds = new WeakMap<Entry, ScopeKind>();
+const kindOfEntry = (entry: Entry): ScopeKind => {
+  if (entry.seq === 0 && entry.input.type === "genesis") return entry.input.seed.kind;
+  const kind = kinds.get(entry);
+  if (!kind) throw new Error("this later entry has no recorded sequence kind");
+  return kind;
+};
+/** `entry` at the address of `of`: a later entry of the same sequence. */
+const beside = (entry: Entry, of: Entry): Entry => { addresses.set(entry, addressOf(of)); kinds.set(entry, kindOfEntry(of)); return entry; };
+const refOf = (entry: Entry): FactRef => factRefOf(entry, addressOf(entry));
+const use = (entry: Entry): FactUse => useOf(refOf(entry), entry, kindOfEntry(entry));
+/** A genesis entry, or a test failure. */
+const genesisOf = (entry: Entry): GenesisEntry => {
+  if ("genesis" in entry || entry.input.type !== "genesis") throw new Error("a genesis entry is required");
+  return entry as GenesisEntry;
+};
+/** A later entry, or a test failure. */
+const laterOf = (entry: Entry): SequenceEntry => {
+  if (!("genesis" in entry)) throw new Error("a later entry is required");
+  return entry;
+};
+
 /** Explicitly synthetic genesis chain, canonical/hash-linked on actual SQLite.
  * The signed root act is native; no native judgment/replay is claimed for
  * the constructed creations. Only the helper's proof/content behavior. */
 function chain(sample: Entry, act: Entry, count: number): Entry[] {
   if (act.input.type !== "act" || sample.input.type !== "genesis") throw new Error("native fixture lacks genesis/act");
+  beside(act, sample);
   const entries: Entry[] = [act]; let previous = act;
   for (let n = 1; n <= count; n++) {
-    const seed: Seed = { ...sample.input.seed, creator: previous.at, cause: previous.input.type === "genesis" ? seedDigest(previous.input.seed) : intentDigest(act.input.signed.intent), ordinal: n };
-    const genesis: Entry = { ...sample, at: { ...sample.at, scope: scopeIdOf(seed) }, time: at(n), input: { ...sample.input, seed, "founding": null, source: factRefOf(previous), decision: "applied" }, uses: [useOf(factRefOf(previous), previous)] };
+    // A child of a genesis names its creator in the self form, and its cause is the creator's complete genesis input.
+    const seed: Seed = { ...sample.input.seed, creator: previous.input.type === "genesis" ? { scope: addressOf(previous).scope, genesis: null } : addressOf(previous),
+      cause: previous.input.type === "genesis" ? genesisInputDigest(previous.input) : intentDigest(act.input.signed.intent), ordinal: n };
+    const born = genesisOf(sample);
+    const genesis: Entry = { ...born, time: at(n), input: { ...born.input, seed, "founding": null, source: refOf(previous), sourceKind: born.input.seed.kind, decision: "applied" }, uses: [use(previous)] };
     entries.push(genesis); previous = genesis;
   }
   return entries;
@@ -37,10 +72,10 @@ function install(state: DurableObjectState, entry: Entry) {
   const store = new SqliteStore(sqlOf(state)), current = store.scope()!, hash = entryHash(entry), bytes = canonicalize(entry);
   state.storage.sql.exec("DELETE FROM entry");
   state.storage.sql.exec("INSERT INTO entry(seq,hash,time,bytes,size) VALUES(0,?,?,?,?)", hash, entry.time, bytes, new TextEncoder().encode(bytes).length);
-  store.setScope({ ...current, at: entry.at, head: { seq: 0, hash }, genesis: { hash, source: entry.input.type === "genesis" ? entry.input.source : null, n: 0 }, time: entry.time });
+  store.setScope({ ...current, at: addressOf(entry), head: { seq: 0, hash }, genesis: { hash, source: entry.input.type === "genesis" ? entry.input.source : null, n: 0 }, time: entry.time });
 }
 function scripted(entries: readonly Entry[]) {
-  const map = new Map(entries.map(entry => [canonicalize(factRefOf(entry)), { fact: factRefOf(entry), bytes: canonicalize(entry) }]));
+  const map = new Map(entries.map(entry => [canonicalize(refOf(entry)), { fact: refOf(entry), bytes: canonicalize(entry) }]));
   const calls: { fact: FactRef; max: number }[] = [];
   const source: ProofSource = { async read(fact, max) { calls.push({ fact, max }); return map.get(canonicalize(fact)) ?? null; } };
   return { map, calls, source };
@@ -85,17 +120,17 @@ test("parent-owned genesis proof inherits remaining time and fences a late peer 
     const source: ProofSource = { async read(_fact, _max, milliseconds) {
       requests.push(milliseconds ?? -1); peerCalls++;
       if (peerCalls === 1) { entered.resolve(); return release.promise; }
-      return { fact: factRefOf(entries[0]!), bytes: canonicalize(entries[0]!) };
+      return { fact: refOf(entries[0]!), bytes: canonicalize(entries[0]!) };
     } };
     const proof = new GenesisProofs(bytes, source, clock);
     const meter = { attempt() {}, visit() {}, peer(_max: number, milliseconds: number) { if (milliseconds <= 0) throw new Error("unadmitted peer"); } };
-    const run = () => flights.run(async owner => { clock.advance(1000); return proof.owned(factRefOf(start), owner, meter); });
+    const run = () => flights.run(async owner => { clock.advance(1000); return proof.owned(refOf(start), owner, meter); });
     const pending = run(); await entered.promise;
     clock.advance(9000);
     const expired = await pending, before = sqlCalls;
     let extraRan = false;
     const blocked = await flights.run(async () => { extraRan = true; return true; });
-    release.resolve({ fact: factRefOf(entries[0]!), bytes: canonicalize(entries[0]!) });
+    release.resolve({ fact: refOf(entries[0]!), bytes: canonicalize(entries[0]!) });
     await cleaned.promise;
     const after = sqlCalls;
     const fresh = await run();
@@ -118,7 +153,7 @@ test("exact genesis chain shares rootOf semantics at four steps and separates co
       const result = await proof.root(), beforeCache = scriptedSource.calls.length;
       const cached = await proof.root();
       expect(cached).toEqual(result); expect(scriptedSource.calls.length).toBe(beforeCache);
-      const old = await rootOf(start, async use => { const value = scriptedSource.map.get(canonicalize(use.fact)); return value ? JSON.parse(value.bytes) as Entry : null; });
+      const old = await rootOf({ entry: start, scope: addressOf(start).scope }, async use => { const value = scriptedSource.map.get(canonicalize(use.fact)); return value ? JSON.parse(value.bytes) as Entry : null; });
       const unsupported = await new GenesisProofs(new ProofBytes(sqlOf(state)), null, new Timer()).root();
       return { result, old, unsupported, calls: scriptedSource.calls };
     });
@@ -130,7 +165,7 @@ test("exact genesis chain shares rootOf semantics at four steps and separates co
   }
 });
 
-test("unknown dependency is retried, full content/fact conflict is refused and an incarnation change invalidates content cache", async () => {
+test("unknown dependency is retried, full content/fact conflict is refused and a genesis change invalidates content cache", async () => {
   const scope = await create(); await scope.commitment();
   const got = await scope.inside(async state => {
     const store = new SqliteStore(sqlOf(state)), entries = chain(JSON.parse(store.stored(0)!.bytes), JSON.parse(store.stored(1)!.bytes), 1), start = entries[1]!;
@@ -141,8 +176,7 @@ test("unknown dependency is retried, full content/fact conflict is refused and a
     const broken = { ...start, uses: [{ ...start.uses[0]!, content: `sha256:${"0".repeat(64)}` as const }] };
     install(state, broken);
     const conflict = await proof.root(); await microtasks();
-    const inc = `in_${"a".repeat(26)}` as const;
-    const changed: Entry = { ...start, at: { ...start.at, inc }, input: { ...start.input as Extract<Entry["input"], { type: "genesis" }>, inc } };
+    const changed: Entry = { ...genesisOf(start), input: { ...genesisOf(start).input, nonce: newGenesisNonce(new Uint8Array(16).fill(0xaa)) } };
     install(state, changed);
     const next = await proof.root();
     return { unknown, recovered: recovered.kind, conflict, next: next.kind, calls: fixture.calls.length };
@@ -164,7 +198,7 @@ test("absolute completion deadline retains single-flight ownership through never
     const timeout = await first;
     const repeated = await Promise.all(Array.from({ length: 12 }, () => proof.root()));
     const pendingCalls = calls;
-    late.resolve(fixture.map.get(canonicalize(factRefOf(entries[0]!)))!); await microtasks();
+    late.resolve(fixture.map.get(canonicalize(refOf(entries[0]!)))!); await microtasks();
     const retry = await proof.root();
     return { timeout, repeated, pendingCalls, retry: retry.kind, calls };
   });
@@ -178,13 +212,13 @@ test("body capacity counts the genesis and repeated uses spend work even when th
     const got = await scope.inside(async state => {
       const store = new SqliteStore(sqlOf(state)), act = JSON.parse(store.stored(1)!.bytes) as Entry;
       const creations = chain(JSON.parse(store.stored(0)!.bytes), act, 1), start = creations[1]!;
-      const unsigned = (seq: number): Entry => ({ ...act, seq, input: { type: "checkpoint", through: 0, state: act.prev! } });
+      const unsigned = (seq: number): Entry => beside({ ...laterOf(act), seq, input: { type: "checkpoint", through: 0, state: act.prev! } }, act);
       const source = unsigned(10), extras = Array.from({ length: mode === "extra-body" ? 14 : 13 }, (_, n) => unsigned(n + 20));
-      const uses = [useOf(factRefOf(source), source), ...extras.map(entry => useOf(factRefOf(entry), entry)), useOf(factRefOf(act), act)];
-      if (mode === "repeated-uses") uses.splice(1, 0, ...Array.from({ length: B.attempts }, () => useOf(factRefOf(source), source)));
-      if (mode === "conflicting-uses") uses.splice(1, 0, { fact: factRefOf(source), content: `sha256:${"0".repeat(64)}` });
-      if (mode === "uses-search") uses.unshift(...Array.from({ length: B.visits }, () => useOf(factRefOf(extras[0]!), extras[0]!)));
-      const genesis: Entry = { ...start, input: { ...start.input as Extract<Entry["input"], { type: "genesis" }>, source: factRefOf(source) }, uses };
+      const uses = [use(source), ...extras.map(entry => use(entry)), use(act)];
+      if (mode === "repeated-uses") uses.splice(1, 0, ...Array.from({ length: B.attempts }, () => use(source)));
+      if (mode === "conflicting-uses") uses.splice(1, 0, { fact: refOf(source), content: `sha256:${"0".repeat(64)}`, kind: kindOfEntry(source) });
+      if (mode === "uses-search") uses.unshift(...Array.from({ length: B.visits }, () => use(extras[0]!)));
+      const genesis: Entry = { ...genesisOf(start), input: { ...genesisOf(start).input, source: refOf(source), sourceKind: kindOfEntry(source) }, uses };
       install(state, genesis); const fixture = scripted([act, source, ...extras]);
       const result = await new GenesisProofs(new ProofBytes(sqlOf(state)), fixture.source, new Timer()).root();
       return { result: result.kind, calls: fixture.calls.length };
@@ -198,9 +232,11 @@ test("remaining cumulative bytes are offered to the source before another body c
   const scope = await create(); await scope.commitment();
   const got = await scope.inside(async state => {
     const store = new SqliteStore(sqlOf(state)), sample = JSON.parse(store.stored(0)!.bytes) as Entry, nativeAct = JSON.parse(store.stored(1)!.bytes) as Entry;
-    const pad = (entry: Entry): Entry => ({ ...entry, effects: [...entry.effects, { effect: "record", capability: "hold@1", kind: "padding", key: [], state: "padded", values: { text: "x".repeat(600_000) } }] });
-    const act = pad(nativeAct), start = pad(chain(sample, act, 1)[1]!);
-    install(state, start); const body = { fact: factRefOf(act), bytes: canonicalize(act) };
+    const padding = { effect: "record", capability: "hold@1", kind: "padding", key: [], state: "padded", values: { text: "x".repeat(600_000) } } as const;
+    const padLater = (entry: Entry): Entry => { const later = laterOf(entry); return { ...later, effects: [...later.effects, padding] }; };
+    const padGenesis = (entry: Entry): Entry => { const born = genesisOf(entry); return { ...born, effects: [...born.effects, padding] }; };
+    const act = beside(padLater(nativeAct), sample), start = padGenesis(chain(sample, act, 1)[1]!);
+    install(state, start); const body = { fact: refOf(act), bytes: canonicalize(act) };
     let asked = 0, sourceBodies = 0;
     // Labelled source stand-in implements the separately native-tested
     // sender contract: admit bytes before handing a body to the consumer.

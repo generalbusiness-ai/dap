@@ -11,7 +11,7 @@
  * one, and nothing else that it prints holds a secret (a read token is never printed by `dap clone`; a key is printed by its ID).
  */
 
-import { b64url, digestBytes, entryHash, canonicalize, intentDigest, isDigest, isPlatformDefinition, isReceipt, isScopeId, isScopeRef, isSignedIntentShape, keyIdOfSecret, platformName, scopeIdOf, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { b64url, digestBytes, entryHash, canonicalize, factRefOf, intentDigest, isDigest, isPlatformDefinition, isReceipt, isScopeId, isScopeRef, isSignedIntentShape, keyIdOfSecret, platformName, scopeIdOf, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest, signedReads } from "@generalbusiness/dap-client";
 import { command, type Context, type Outcome } from "@generalbusiness/dap-cli";
 import { DEMO_DIGESTS, MANIFEST_DIGESTS, changeDemo, changeDemo3, issueDemo } from "@generalbusiness/dap-lanes";
@@ -455,28 +455,29 @@ export function judgedRoomProof(expected: { code: number; lines: readonly string
   const prefix = outcome.lines.slice(0, Math.max(0, start));
   const header = /^Shared room proof: (\d+) roots; (\d+) verified dependencies; 0 anchored dependencies; 0 missing dependencies\.$/.exec(prefix[0] ?? "");
   if (!header || targets.size === 0 || !integer(header[1]!) || !integer(header[2]!) || Number(header[1]) !== targets.size) return "shared proof: missing or invalid room header";
-  const coverage = new Map<string, { inc: string; kind: string; through: number; roots: Set<string> }>();
+  const coverage = new Map<string, { genesis: string; kind: string; through: number; roots: Set<string> }>();
   const texts = new Set<string>(), trusts = new Set<string>();
   const allowedTrusts = new Set<string>(Object.values(TRUSTS).filter(trust => ![TRUSTS.judgments, TRUSTS.facts, TRUSTS.anchors, TRUSTS.redacted, TRUSTS.omitted].some(excluded => excluded === trust)));
   let section = 0;
   for (const line of prefix.slice(1)) {
-    const span = /^Shared coverage: (\S+), incarnation (\S+), kind (\S+), entries (\d+) to (\d+); proving root (\S+)\.$/.exec(line);
+    // Only the row that covers entry 0 states the kind, which the replay read from the genesis.
+    const span = /^Shared coverage: (\S+), genesis (\S+)(?:, kind (\S+))?, entries (\d+) to (\d+); proving root (\S+)\.$/.exec(line);
     if (span) {
-      const [, scope, inc, kind, from, through, root] = span;
-      const prior = coverage.get(scope!);
-      if (section !== 0 || !isScopeRef({ scope, inc, kind }) || !integer(from!) || !integer(through!) || Number(from) > Number(through)
-        || !targets.has(root!) || Number(from) !== (prior ? prior.through + 1 : 0)
-        || (prior && (prior.inc !== inc || prior.kind !== kind)) || (targets.has(scope!) && (targets.get(scope!)!.kind !== kind || Number(through) > targets.get(scope!)!.head))) return "shared proof: invalid coverage provenance";
+      const [, scope, genesis, stated, from, through, root] = span;
+      const prior = coverage.get(scope!), kind = prior?.kind ?? stated;
+      if (section !== 0 || !isScopeRef({ scope, genesis }) || !integer(from!) || !integer(through!) || Number(from) > Number(through)
+        || !targets.has(root!) || Number(from) !== (prior ? prior.through + 1 : 0) || (stated === undefined) !== (prior !== undefined) || kind === undefined
+        || (prior && prior.genesis !== genesis) || (targets.has(scope!) && (targets.get(scope!)!.kind !== kind || Number(through) > targets.get(scope!)!.head))) return "shared proof: invalid coverage provenance";
       const roots = prior?.roots ?? new Set<string>(); roots.add(root!);
-      coverage.set(scope!, { inc: inc!, kind: kind!, through: Number(through), roots });
+      coverage.set(scope!, { genesis: genesis!, kind, through: Number(through), roots });
       continue;
     }
-    const text = /^Shared checked text: (\S+); source (\S+), incarnation (\S+), kind (\S+); proving root (\S+); consumers (.+)\.$/.exec(line);
+    const text = /^Shared checked text: (\S+); source (\S+), genesis (\S+); proving root (\S+); consumers (.+)\.$/.exec(line);
     if (text) {
-      const [, digest, scope, inc, kind, root, consumers] = text;
+      const [, digest, scope, genesis, root, consumers] = text;
       const source = coverage.get(scope!);
       const users = consumers === "none" ? [] : consumers!.split(", ");
-      if (section > 1 || !isDigest(digest) || texts.has(digest) || !source || source.inc !== inc || source.kind !== kind || !source.roots.has(root!)
+      if (section > 1 || !isDigest(digest) || texts.has(digest) || !source || source.genesis !== genesis || !source.roots.has(root!)
         || users.length === 0 || new Set(users).size !== users.length || users.some(user => !coverage.has(user))) return "shared proof: invalid checked text provenance";
       section = 1; texts.add(digest);
       continue;
@@ -537,7 +538,7 @@ export async function plannedOperator(ctx: Context, stage: Pick<Stage, "service"
     const receipt = acknowledgement["receipt"];
     if (acknowledgement["status"] !== "service-acknowledged" || acknowledgement["service"] !== stage.service || !isReceipt(receipt)
       || receipt.definition !== definition || receipt.intent !== intentDigest(creation.intent) || receipt.fact.at.scope !== register
-      || receipt.fact.at.kind !== "register" || receipt.fact.seq !== 0 || !isScopeRef(config.register) || canonicalize(config.register) !== canonicalize(receipt.fact.at)) return null;
+      || receipt.fact.seq !== 0 || !isScopeRef(config.register) || canonicalize(config.register) !== canonicalize(receipt.fact.at)) return null;
   }
   return creation.intent.actor;
 }
@@ -586,7 +587,10 @@ export async function prepareConcurrentAndMerge(ctx: Context, oldBase: string, c
   if (manifest) {
     const source = await handle(v["stale"]).entry(Number(v["staleSource"]));
     if (!source.ok || source.value.entry.input.type !== "act" || source.value.entry.input.signed.intent.kind !== "propose-file") return failure();
-    const entry = { at: source.value.entry.at, seq: source.value.entry.seq, hash: entryHash(source.value.entry) };
+    // The source entry names the genesis of the lane that the CLI reported by scope ID.
+    const read = source.value.entry, stale = v["stale"];
+    if (!("genesis" in read) || !isScopeId(stale)) return failure();
+    const entry = factRefOf(read, { scope: stale, genesis: read.genesis });
     if (!await run(["act", "propose-manifest", "--on", v["stale"], "--set", `base=${oldBase}`, "--set", `files=${JSON.stringify([{ path: "guide/concurrent.md", entry, digest: digestBytes(FILES["concurrent.md"]!) }])}`], 0, 12, 13)) return failure();
   }
   const offset = manifest ? 3 : 0;

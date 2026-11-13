@@ -20,7 +20,9 @@ const atTime = at(0);
 export function driver(lane: Lane, state: DurableObjectState, host: ScriptedHost, budget?: () => ArchiveBudget, after?: number, policies: ArchivePolicyRegistry = archivePolicies, sql: Sql = archiveSql(state)) {
   return new ArchiveDriver({
     sql: after === undefined ? sql : { transaction: sql.transaction, exec(query, ...args) {
-      if (/\bFROM entry\b/.test(query)) {
+      // A fixture pass reads its own genesis for its replay context
+      // (archiveOwnReplayContext); every other entry read is new.
+      if (/\bFROM entry\b/.test(query) && !query.startsWith("SELECT bytes FROM entry WHERE seq = 0 AND ")) {
         // Scalar projection may bind JSON paths before the position. Check
         // the actual seq predicate's parameter, never the first argument.
         const source = query.replace(/'(?:''|[^'])*'/g, "''"), predicate = /\b(?:entry\.)?seq (>=|>|=) \?/.exec(source);

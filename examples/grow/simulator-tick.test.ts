@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeviceCommandGrant, type SignedIntent } from "@generalbusiness/dap-contract";
 import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { secretSigner } from "@generalbusiness/dap-client";
-import { clockOf, deviceCommand, judgePreparation, prepareRules, validateDefinition } from "@generalbusiness/dap-derive";
+import { clockOf, deviceCommand, judgePreparation, prepareRules, resolvedEntryEffects, validateDefinition } from "@generalbusiness/dap-derive";
 import { evaluateRules } from "@generalbusiness/dap-derive/rule";
 import { receiptOf } from "@generalbusiness/dap-scope/runtime";
 import { created, deliver, grantOf, t, valid } from "@generalbusiness/dap-derive/testing";
@@ -65,7 +65,7 @@ async function fixture() {
       sent.push(signed);
       const context = ledger.context({ capabilities: code }), prepared = await evaluateRules(prepareRules(ledger.state, ledger.definition, { act: signed, context }));
       const result = ledger.submit(signed, { prepared, capabilities: code });
-      if (result.result === "write") return { answer: "accepted", receipt: receiptOf(ledger.entries.at(-1)!, ledger.definition.digest) };
+      if (result.result === "write") return { answer: "accepted", receipt: receiptOf(ledger.entries.at(-1)!, ledger.definition.digest, ledger.at, resolvedEntryEffects(ledger.state, ledger.definition, ledger.entries.at(-1)!.entry, ledger.at)) };
       if (result.result === "refused") return { answer: "refused", reason: result.reason, ...(result.name ? { name: result.name } : {}), judgedAt: ledger.head };
       expect.fail(`Unexpected native judgment: ${JSON.stringify(result)}`);
     },
@@ -76,7 +76,7 @@ async function fixture() {
       });
       if (result.result === "write") {
         ledger.seal(result.draft);
-        return { answer: "accepted", receipt: receiptOf(ledger.entries.at(-1)!, ledger.definition.digest) };
+        return { answer: "accepted", receipt: receiptOf(ledger.entries.at(-1)!, ledger.definition.digest, ledger.at, resolvedEntryEffects(ledger.state, ledger.definition, ledger.entries.at(-1)!.entry, ledger.at)) };
       }
       if (result.result === "refused") return { answer: "refused", reason: result.reason, ...(result.name ? { name: result.name } : {}), judgedAt: ledger.head };
       expect.fail(`Unexpected native preparation: ${JSON.stringify(result)}`);

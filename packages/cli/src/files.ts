@@ -12,13 +12,36 @@
 import { randomUUID } from "node:crypto";
 import { chmodSync, closeSync, existsSync, linkSync, mkdirSync, openSync, readFileSync, readSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { b64url, unb64url } from "@generalbusiness/dap-bytes";
+import { RETIRED_ROOM_READER_COMMIT, b64url, isRecord, isScopeId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
 import type { Config, Store } from "./store.ts";
 import { READ_SESSION_CACHE_BYTES } from "./store.ts";
 
 export { configDir } from "./config-dir.ts";
 
 const NAME = /^[a-z][a-z0-9-]{0,31}$/;
+
+/**
+ * A home whose config.json has `v: 1`. Its rooms have the old format, and
+ * they retired at the identifier cutover. The command changes nothing in the
+ * home: the config, the keys and the custody records stay as they are.
+ */
+export class RetiredHomeError extends Error {
+  override name = "RetiredHomeError";
+  constructor(home: string) {
+    super(`The home ${home} names rooms of the old format. Those rooms retired at the identifier cutover, and commit ${RETIRED_ROOM_READER_COMMIT} reads them. Set a new DAP_HOME to join a room of the new format. Nothing in this home was changed.`);
+  }
+}
+
+const optional = (value: unknown, check: (v: unknown) => boolean) => value === undefined || check(value);
+const isText = (value: unknown) => typeof value === "string";
+/** The shape of a config.json of format 2. A nested record that a command writes is checked where that command reads it. */
+function isConfig(value: Record<string, unknown>): value is Record<string, unknown> & Config {
+  return value["v"] === 2 && isText(value["service"]) && isText(value["key"])
+    && optional(value["register"], isScopeRef) && optional(value["handle"], isText) && optional(value["remote"], isText)
+    && optional(value["plan"], isRecord) && optional(value["repository"], isRecord) && optional(value["claim"], isRecord)
+    && optional(value["join"], isRecord) && optional(value["invitationIssue"], isRecord)
+    && optional(value["roots"], (roots) => Array.isArray(roots) && roots.every((root) => isRecord(root) && isScopeId(root["scope"]) && (root["membership"] === null || isScopeRef(root["membership"]))));
+}
 
 export function fileStore(dir: string): Store {
   const ensure = () => {
@@ -103,8 +126,10 @@ export function fileStore(dir: string): Store {
     config: async () => {
       const path = join(dir, "config.json");
       if (!existsSync(path)) return null;
-      const config = JSON.parse(readFileSync(path, "utf8")) as Config;
-      if (config.v !== 1) throw new Error(`${path} was written by another version of this command; it is not read`);
+      const config: unknown = JSON.parse(readFileSync(path, "utf8"));
+      if (isRecord(config) && config["v"] === 1) throw new RetiredHomeError(dir);
+      if (!isRecord(config) || config["v"] !== 2) throw new Error(`${path} was written by another version of this command; it is not read`);
+      if (!isConfig(config)) throw new Error(`${path} is not a configuration of this command; it is not read`);
       return config;
     },
     save: async (config) => write(join(dir, "config.json"), `${JSON.stringify(config, null, 2)}\n`, false),

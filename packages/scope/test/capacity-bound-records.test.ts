@@ -13,7 +13,7 @@ import { CAPABILITY_CODE } from "../src/ports.ts";
 import { controls } from "../src/testing.ts";
 import { fixtureRoute as route } from "./support/serving-route.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
+import { Lane, START, at, foreignOf, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
 test.each([false, true])("a native bound decision reserves only its actual record producer and settles at the record ceiling (first key %s)", async firstKey => {
   // Real scopes, native holder binding/capability code, SQLite and HTTP
@@ -32,8 +32,7 @@ test.each([false, true])("a native bound decision reserves only its actual recor
     wired.set(name, () => ({ capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE,
       definitions: { read: async () => ({ ok: false, reason: "absent" }), platform: named => named === "platform:task@1" ? { data, rules: {} } : null },
       resolver: { read: async (fact: FactRef) => {
-        const read = await stubOf(fact.at.scope).entry(reader, fact.seq);
-        return read.ok && read.value.hash === fact.hash ? { fact, entry: read.value.entry, under: peers.get(fact.at.scope)!.declared.name } : null;
+        return foreignOf(fact, peers.get(fact.at.scope)!.declared.name);
       } },
     }));
     const created = await stubOf(name).create(signed, platform ? "platform:task@1" : definition.declared);

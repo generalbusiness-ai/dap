@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { textDigest } from "@generalbusiness/dap-bytes";
 import { MemoryState, type Item, type OwnRequest } from "../src/index.ts";
 import { otherLane } from "./fixtures-entry.ts";
 
@@ -11,7 +12,7 @@ test("logical counts keep final item and record keys, replace each key once, and
   const record = { capability: "hold@1" as const, kind: "lease", key: ["repo"], state: "live", values: {}, seq: 1 };
   state.putRecord(record);
   state.putRecord({ ...record, state: "ended", seq: 2 });
-  const relation = { owner: otherLane, name: "peer", item: 1, state: "live", revision: 1 };
+  const relation = { owner: otherLane, ownerKind: "lane" as const, name: "peer", item: 1, state: "live", revision: 1 };
   state.putRelation(relation);
   state.putRelation({ ...relation, state: "ended", revision: 2 });
   const request: OwnRequest = { seq: 1, n: 0, hash: "sha256:request", type: "tell", to: otherLane, result: null, diagnosis: null };
@@ -31,6 +32,17 @@ test("logical counts keep final item and record keys, replace each key once, and
   for (const row of snapshot.records ?? []) rebuilt.putRecord(row);
   for (const row of snapshot.requests) rebuilt.putRequest(row);
   expect(rebuilt.keyCounts()).toEqual(state.keyCounts());
+  // Scripted raw writer rows: two genesis values at one address are two
+  // keys. These rows establish storage behavior, not Native birth evidence.
+  const another = { ...relation, owner: { ...otherLane, genesis: textDigest("another relation-owner genesis") } };
+  state.putRelation(another);
+  state.putRelation({ ...another, state: "ended", revision: 2 });
+  rebuilt.putRelation({ ...another, state: "ended", revision: 2 });
+  expect(state.relation(otherLane, "peer", 1)).toEqual({ ...relation, state: "ended", revision: 2 });
+  expect(state.relation(another.owner, "peer", 1)).toEqual({ ...another, state: "ended", revision: 2 });
+  expect([state.keyCounts().records, state.copies("peer", "lane"), state.copies("peer", "lane", ["ended"]), state.copies("peer", "directory")]).toEqual([3, 2, 2, 0]);
+  expect(rebuilt.all()).toEqual(state.all());
+  expect(rebuilt.snapshot()).toBe(state.snapshot());
 });
 
 test("a page is read from the index by type, state and ID: it reads no item it does not return, and its cursor holds while items change state", () => {

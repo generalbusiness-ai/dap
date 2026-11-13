@@ -74,7 +74,8 @@ export interface PlannedInstall {
 }
 
 export interface Config {
-  v: 1;
+  /** 2: the home names rooms of the format with genesis references. A home with 1 names retired rooms. */
+  v: 2;
   /** The scope service's base URL. */
   service: string;
   /** The name of the key that signs this caller's acts. */

@@ -17,30 +17,32 @@ export function archiveSourceReferences(sql: Pick<Sql, "exec">, seq: number, bou
   const count = shape?.["n"];
   if (shape?.["type"] !== "array" || !natural(count) || count > ARCHIVE_BOUNDS.attempts) return stopArchivePrefix("limit");
   if (count) {
-    const rows = budget.native(sql, () => ({ metadata: count * 256, inputWork: bytes * 32 })).exec(`SELECT ${text("$.fact.at.scope", 71, "value")} AS scope,${text("$.fact.at.inc", 64, "value")} AS inc,${text("$.fact.at.kind", 16, "value")} AS kind FROM entry,json_each(entry.bytes,'$.uses') WHERE seq=? LIMIT ?`, seq, count).toArray();
+    const rows = budget.native(sql, () => ({ metadata: count * 256, inputWork: bytes * 32 })).exec(`SELECT ${text("$.fact.at.scope", 71, "value")} AS scope,${text("$.fact.at.genesis", 71, "value")} AS genesis FROM entry,json_each(entry.bytes,'$.uses') WHERE seq=? LIMIT ?`, seq, count).toArray();
     if (rows.length !== count) return stopArchivePrefix("unavailable");
     for (const row of rows) {
-      const at = { scope: row["scope"], inc: row["inc"], kind: row["kind"] };
+      const at = { scope: row["scope"], genesis: row["genesis"] };
       if (!isScopeRef(at)) return stopArchivePrefix("unavailable");
       sources.set(canonicalize(at), at);
       if (sources.size > ARCHIVE_SOURCE_PINS) return stopArchivePrefix("limit");
     }
   }
+  // A reference names no kind. The slot positions select register and membership references: grant issuers,
+  // fresh membership observations, and every observation except a rules observation.
   // Only the contract's retained authority/observation slots supplement
   // admitted uses. Do not interpret similarly shaped user-field values as
   // a request to read another private scope's birth.
-  const identities = budget.native(sql, () => ({ metadata: (ARCHIVE_SOURCE_PINS + 1) * 256, inputWork: bytes * 32 })).exec(`SELECT ${text("$.scope", 71, "value")} AS scope,${text("$.inc", 64, "value")} AS inc,${text("$.kind", 16, "value")} AS kind
+  const identities = budget.native(sql, () => ({ metadata: (ARCHIVE_SOURCE_PINS + 1) * 256, inputWork: bytes * 32 })).exec(`SELECT ${text("$.scope", 71, "value")} AS scope,${text("$.genesis", 71, "value")} AS genesis
     ,(SELECT count(*) FROM json_each(refs.value)) AS keys
     FROM (SELECT CASE WHEN type='object' THEN value ELSE '{}' END AS value
       FROM entry,json_tree(entry.bytes) WHERE entry.seq=? AND (
         fullkey GLOB '$.input.authority[[]*[]].issued.at'
         OR fullkey GLOB '$.input.authority[[]*[]].fresh.observation.of'
-        OR fullkey GLOB '$.input.observed[[]*[]].observation.of')) AS refs
-    WHERE json_extract(value,'$.kind') IN ('register','membership') LIMIT ?`, seq, ARCHIVE_SOURCE_PINS + 1).toArray();
+        OR (fullkey GLOB '$.input.observed[[]*[]].observation.of' AND json_extract(entry.bytes, path || '.subject') IS NOT 'rules'))) AS refs
+    LIMIT ?`, seq, ARCHIVE_SOURCE_PINS + 1).toArray();
   if (identities.length > ARCHIVE_SOURCE_PINS) return stopArchivePrefix("limit");
   for (const row of identities) {
-    const at = { scope: row["scope"], inc: row["inc"], kind: row["kind"] };
-    if (row["keys"] !== 3 || !isScopeRef(at)) return stopArchivePrefix("unavailable");
+    const at = { scope: row["scope"], genesis: row["genesis"] };
+    if (row["keys"] !== 2 || !isScopeRef(at)) return stopArchivePrefix("unavailable");
     sources.set(canonicalize(at), at);
     if (sources.size > ARCHIVE_SOURCE_PINS) return stopArchivePrefix("limit");
   }

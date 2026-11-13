@@ -16,13 +16,13 @@
  */
 
 import { CAPABILITIES } from "@generalbusiness/dap-contract";
-import type { Bounds, Capability, CapabilityName, DeclaredDefinition, Effect, FieldValue, Guard, ScopeRef, UnavailableReason } from "@generalbusiness/dap-contract";
-import type { GuardResult, Judging } from "./guards.ts";
+import type { Bounds, Capability, CapabilityName, DeclaredDefinition, Effect, FieldValue, Guard, Digest, ScopeKind, ScopeRef, SequenceRef, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Fetched, GuardResult, Judging } from "./guards.ts";
 import type { Underived } from "./validate/capability.ts";
 import { coveredItems } from "./lists.ts";
 import { readValue, type ElementValues } from "./program/read-value.ts";
 import type { CapabilityEffectPlan, CapabilityGuardPlan } from "./program/capability-plan.ts";
-import { slotOf } from "./operand.ts";
+import { copyFact, matchesCopy, slotOf } from "./operand.ts";
 import type { HoldEffect } from "./hold.ts";
 import type { Most } from "./ledger.ts";
 import type { Item, StateView } from "./state.ts";
@@ -61,7 +61,15 @@ export interface CapabilityDerived { records: readonly Recorded[]; itemEffects?:
  *   member. The effect `pin-release` finds its pin by it (authority note,
  *   section 5.7, "Which pin a commit alone releases").
  */
-export type CapabilityGiven = Pick<Judging, "view" | "definition" | "scope" | "self" | "kind" | "fields" | "signer" | "intent" | "facts" | "source" | "own" | "snapshot" | "clock"> & {
+export type CapabilityGiven = Pick<Judging, "view" | "definition" | "scope" | "self" | "kind" | "fields" | "signer" | "intent" | "own" | "snapshot" | "clock"> & {
+  /** Capabilities receive genuine verified copies only, including legacy capability versions. */
+  facts: ReadonlyMap<Digest, Fetched>;
+  source?: Fetched | undefined;
+  /** Input words and declared expectations only, never verified evidence. */
+  kindContext: {
+    readonly source: { readonly at: SequenceRef; readonly kind: ScopeKind } | null;
+    readonly declared: Readonly<Record<string, ScopeKind>>;
+  };
   from?: Readonly<Record<string, number>>;
   /** Bound slot subjects as preceding ordinary effects left them. */
   fromItems?: Readonly<Record<string, Item>>;
@@ -123,13 +131,14 @@ export interface Capabilities {
    * Whether a request is bound to a pending record that reserved an entry
    * for it (section 6.11, "Reserved requests"; authority note, section 4.2,
    * "A reserved license decision"). `from` is the envelope's source scope,
-   * as verified, and `fields` the message's own fields, read by themselves.
+   * as verified, `fields` the message's own fields, read by themselves, and
+   * `sourceKind` the actual delivery input's recorded source word.
    * The answer is the one record that the deciding entry holds when it
    * refuses the request. Null: the request is not bound, and its deciding
    * entry is new work. Absent: these rules have no such code, and no
    * request is bound.
    */
-  bound?(capability: CapabilityName, view: StateView, at: ScopeRef, from: ScopeRef, fields: unknown): Recorded | null;
+  bound?(capability: CapabilityName, view: StateView, at: ScopeRef, from: ScopeRef, fields: unknown, sourceKind: ScopeKind): Recorded | null;
   /**
    * The maxima that this code declares (section 6.1). `counted` adds them
    * into each entry of a definition, and a judge refuses to write what
@@ -183,7 +192,16 @@ export function counted(definition: ValidDefinition, capabilities: Capabilities 
   return null;
 }
 
-const given = ({ view, definition, scope, self, kind, fields, signer, intent, facts, source, own, snapshot, clock }: Judging): CapabilityGiven => ({ view, definition, scope, self, kind, fields, signer, intent, facts, source, own, snapshot, clock });
+const given = ({ view, definition, scope, self, kind, fields, signer, intent, facts, source, own, snapshot, clock, judged }: Judging): CapabilityGiven => {
+  const verified = new Map<Digest, Fetched>();
+  for (const [hash, copy] of facts) if (copy.mode === "verified" && matchesCopy(copy, copyFact(copy))) verified.set(hash, copy.value);
+  const verifiedSource = source?.mode === "verified" && matchesCopy(source, copyFact(source)) ? source.value : undefined;
+  const fact = judged?.type === "delivery" ? judged.from : judged?.type === "genesis" ? judged.source : null;
+  const sourceKind = judged?.type === "delivery" || judged?.type === "genesis" ? judged.sourceKind : null;
+  const kindContext = Object.freeze({ source: fact && sourceKind ? Object.freeze({ at: Object.freeze({ ...fact.at }), kind: sourceKind }) : null,
+    declared: Object.freeze({}) });
+  return { view, definition, scope, self, kind, fields, signer, intent, facts: verified, source: verifiedSource, kindContext, own, snapshot, clock };
+};
 
 /** What a capability version declares, or undefined for a version that the contract's tables do not have. */
 export const declaredBy = (capability: string): Capability | undefined => own(CAPABILITIES as Readonly<Record<string, Capability>>, capability);
@@ -261,7 +279,12 @@ export function capabilityEffect(j: Judging, plan: CapabilityEffectPlan, item: I
     const read = id === item?.id ? item : [...j.subjects.values()].find(subject => subject.id === id);
     return read ? [[arg, read]] : [];
   }));
-  const reading = { ...given(j), from, fromItems };
+  // Only the actual admitted direct ACT field can supply an expectation.
+  const declared = Object.fromEntries(j.judged?.type === "act" ? plan.arguments.flatMap(([arg, { read }]): [string, ScopeKind][] =>
+    read.op === "field" && read.projection === null && read.baseType.kind === "declared" && read.baseType.type.type === "scope"
+      ? [[arg, read.baseType.type.kind]] : []) : []);
+  const base = given(j);
+  const reading = { ...base, from, fromItems, kindContext: Object.freeze({ source: base.kindContext.source, declared: Object.freeze(declared) }) };
   const made = matched.rules.deriveEffect ? observeCapabilityCall(j.definition, "deriveEffect", matched.version, plan.action, () => matched.rules.deriveEffect!(matched.version, plan.action, args, reading))
     : observeCapabilityCall(j.definition, "effect", matched.version, plan.action, () => matched.rules.effect(matched.version, plan.action, args, reading));
   if ("unavailable" in made) return "unavailable";

@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { after, test } from 'node:test';
 import { createServer } from 'node:http';
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
+import fs, { mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { syncBuiltinESMExports } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { register } from 'tsx/esm/api';
@@ -176,7 +177,7 @@ test('work retains the real agent controller; an unresolved controller never bec
   assert.equal(clipped.isError, false, 'The application preserves its bounded result instead of triggering a generic replacement');
   assert.equal(clipped.structuredContent.rows.length, 0); assert.equal(clipped.structuredContent.omittedRows, 1); assert.equal(clipped.structuredContent.complete, false);
   assert.ok(utf8(canonicalize(clipped)).length <= 256 * 1024, 'The whole CallResult, including its text copy, fits the catalogue bound');
-  f.M.items.at(-1).parties.controller = { membership: { ...f.peer.membership, inc: 'in_' + 'a'.repeat(26) }, member: '@vic' };
+  f.M.items.at(-1).parties.controller = { membership: { ...f.peer.membership, genesis: 'sha256:' + 'a'.repeat(64) }, member: '@vic' };
   const missing = (await f.app.work()).structuredContent;
   assert.equal(missing.rows.length, 0); assert.ok(missing.unread.some(row => row.reason === 'agent-controller-unavailable'));
   const unsupported = f.lane('sha256:' + 'c'.repeat(64)), change = f.lane(J4_DIGESTS.change);
@@ -232,7 +233,7 @@ test('context attaches comments only to exact retained facts in its own scope', 
   const f = fixture(t), q = await question(f), foreign = await question(f);
   const local = { at: q.state.ref, seq: q.opening.entry.seq, hash: q.opening.hash };
   const references = [local, { at: foreign.state.ref, seq: foreign.opening.entry.seq, hash: foreign.opening.hash },
-    { ...local, at: { ...local.at, inc: f.peer.membership.inc } }, { ...local, hash: 'sha256:' + 'f'.repeat(64) }];
+    { ...local, at: { ...local.at, genesis: f.peer.membership.genesis } }, { ...local, hash: 'sha256:' + 'f'.repeat(64) }];
   for (const [n, about] of references.entries()) {
     const body = 'TEST comment ' + n;
     q.state.items.push(item(10 + n, 'comment', 'posted', { body: textDigest(body) }, { about }, { author: f.viewer }));
@@ -294,6 +295,63 @@ test('since remains a pure read; a local mark survives restart and pre-publicati
   const published = readFileSync(path);
   assert.notDeepEqual(published, original, 'The later head actually publishes a new local mark');
   assert.equal(Buffer.isBuffer(observed) && observed.equals(published), true, 'Publication completes before a microtask queued by the final synchronous admission check');
+  assert.equal(JSON.parse(published.toString('utf8')).version, 2);
+  // The old file is a container to classify, not a source of recoverable marks.
+  const old = { ...JSON.parse(published.toString('utf8')), version: 1 };
+  const oldBytes = Buffer.from(JSON.stringify(old));
+  writeFileSync(path, oldBytes, { mode: 0o600 });
+  const oldMode = statSync(path).mode, oldNames = readdirSync(join(f.home, 'private')).sort();
+  let admissions = 0;
+  assert.throws(() => new ReviewStore(f.home).read(capture), error => error.reason === 'retired');
+  await assert.rejects(() => new ReviewStore(f.home).mark(next, () => { admissions++; }), error => error.reason === 'retired');
+  const refusedRead = await f.app.since();
+  assert.equal(refusedRead.isError, true); assert.equal(refusedRead.structuredContent.reason, 'retired');
+  const refusedMark = await source.markReviewed(next, { view: 'TEST', cut: 1, admit() { admissions++; } });
+  assert.deepEqual(refusedMark.structuredContent, { localStatus: 'unavailable', reason: 'retired' });
+  assert.equal(admissions, 0); assert.deepEqual(readFileSync(path), oldBytes);
+  assert.equal(statSync(path).mode, oldMode);
+  assert.deepEqual(readdirSync(join(f.home, 'private')).sort(), oldNames);
+
+  // A version1 container must retire before interpreting even invalid marks.
+  // Delegate real write attempts so a transient lock cannot hide in cleanup.
+  const malformedOld = Buffer.from(JSON.stringify({ version: 1, marks: [null] }));
+  writeFileSync(path, malformedOld, { mode: 0o600 });
+  const privateDirectory = join(f.home, 'private');
+  const attemptedWrites = [];
+  const inPrivate = value => typeof value === 'string' && (value === privateDirectory || value.startsWith(privateDirectory + '/'));
+  const observedMethods = ['mkdirSync', 'openSync', 'writeFileSync', 'renameSync', 'unlinkSync'];
+  const originals = observedMethods.map(method => ({ method, descriptor: Object.getOwnPropertyDescriptor(fs, method), original: fs[method] }));
+  try {
+    for (const { method, descriptor, original: operation } of originals) Object.defineProperty(fs, method, { ...descriptor, value: (...args) => {
+      const writes = method !== 'openSync' || typeof args[1] === 'string' && /[wax+]/.test(args[1])
+        || typeof args[1] === 'number' && (args[1] & (fs.constants.O_WRONLY | fs.constants.O_RDWR | fs.constants.O_CREAT | fs.constants.O_TRUNC | fs.constants.O_APPEND)) !== 0;
+      const targets = method === 'renameSync' ? args.slice(0, 2) : args.slice(0, 1);
+      if (writes && targets.some(inPrivate)) attemptedWrites.push({ method, paths: targets.filter(inPrivate) });
+      return Reflect.apply(operation, fs, args);
+    } });
+    syncBuiltinESMExports();
+    assert.equal(writeFileSync, fs.writeFileSync);
+    // Calibrate the delegated observer with a fixture-owned write. The zero
+    // count starts afterward and covers only the four production calls.
+    writeFileSync(path, malformedOld, { mode: 0o600 });
+    assert.ok(attemptedWrites.some(attempt => attempt.method === 'writeFileSync' && attempt.paths.includes(path)));
+    attemptedWrites.length = 0;
+    assert.throws(() => new ReviewStore(f.home).read(capture), error => error.reason === 'retired');
+    await assert.rejects(() => new ReviewStore(f.home).mark(next, () => { admissions++; }), error => error.reason === 'retired');
+    const malformedRead = await f.app.since();
+    assert.equal(malformedRead.isError, true); assert.equal(malformedRead.structuredContent.reason, 'retired');
+    const malformedMark = await source.markReviewed(next, { view: 'TEST', cut: 1, admit() { admissions++; } });
+    assert.deepEqual(malformedMark.structuredContent, { localStatus: 'unavailable', reason: 'retired' });
+    assert.equal(admissions, 0);
+    assert.deepEqual(attemptedWrites, []);
+  } finally {
+    for (const { method, descriptor } of originals) Object.defineProperty(fs, method, descriptor);
+    syncBuiltinESMExports();
+  }
+  assert.equal(writeFileSync, fs.writeFileSync);
+  assert.deepEqual(readFileSync(path), malformedOld);
+  assert.equal(statSync(path).mode, oldMode);
+  assert.deepEqual(readdirSync(privateDirectory).sort(), oldNames);
 });
 
 test('review marks stay on one device while another device sees the same room changes (scope answers are stand-ins)', async t => {
@@ -390,9 +448,9 @@ test('an accepted Decision receipt floors the next actual app read; an older coh
   const reached = await sessions.read('floor', behind.cut, { refresh: true });
   assert.equal(reached.status, 'ready'); assert.deepEqual(reached.card.projection, [{ scope: q.state.ref.scope, seq: required.head.seq, hash: required.head.hash }]);
   assert.ok(!reached.card.actions.some(action => action.id === 'approve')); assert.equal(performed, 1);
-  const count = f.peer.requests.length, foreign = { ...required, at: { ...required.at, inc: f.peer.membership.inc } };
+  const count = f.peer.requests.length, foreign = { ...required, at: { ...required.at, genesis: f.peer.membership.genesis } };
   assert.equal((await source.read({ screen: 'decision', subject: questionSubject(q.state.ref, q.opening.entry.seq), position: 0, page: 'summary' }, { call: async () => { throw Error('No generic read.'); } }, foreign)).status, 'unavailable');
-  assert.equal(f.peer.requests.length, count, 'A foreign incarnation refuses before any room read');
+  assert.equal(f.peer.requests.length, count, 'A foreign genesis refuses before any room read');
   assert.equal((await source.read({ screen: 'work', position: 0, page: 'summary' }, { call: async () => { throw Error('No generic read.'); } }, required)).status, 'unavailable');
   assert.equal(f.peer.requests.length, count, 'An unsupported screen cannot silently drop the receipt floor');
   const collection = await new Collection(f.options).begin(q.state.ref);

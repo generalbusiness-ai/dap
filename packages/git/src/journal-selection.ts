@@ -11,7 +11,7 @@ import { JournalWork, refuseJournal, type JournalCost } from "./journal-work.ts"
 import { JOURNAL_V2_LAST_POSITION } from "./journal-v2-path.ts";
 import { ARCHIVE_NATIVE_VALUE_DOMAINS } from "./archive-policy.ts";
 import { JOURNAL_SELECTION_BYTES, JOURNAL_MEASURED_OMISSION_METADATA, journalOrderingInputWork, journalSelectionJSONReservation } from "./journal-selection-cost.ts";
-import { journalAnchors, journalAnchorCopyCount, journalLegacyAnchors, type JournalLegacyAnchors } from "./journal-anchors.ts";
+import { journalAnchorPublication, journalAnchorCopyCount, type JournalLegacyAnchors } from "./journal-anchors.ts";
 
 export { JOURNAL_SELECTION_BYTES } from "./journal-selection-cost.ts";
 const inventoryCeilings: Readonly<JournalCost> = { entries: 4096, attempts: 512, nodes: 64, calls: 16384, metadata: 4 * 1024 * 1024, inputWork: 64 * 1024 * 1024 };
@@ -25,7 +25,7 @@ const requiredKinds: Readonly<Record<string, readonly string[]>> = {
   declaration: ["definition"], "definition-child": ["definition"],
   "rule-input": ["rule"], "act-value": ["definition", "value"],
   "outcome-value": ["definition", "value"], "outcome-snapshot": ["snapshot"],
-  "foreign-use": ["entry"],
+  "foreign-use": ["entry"], "foreign-birth": ["birth"],
 };
 export interface JournalEntrySelection { readonly seq: number; readonly hash: Digest; readonly bytes: number }
 export interface JournalOrigin { readonly at: FactRef; readonly input: string }
@@ -52,7 +52,7 @@ export interface JournalPassSelection extends Omit<JournalSelection, "objects"> 
 }
 export const journalKeyName = (key: ArchiveRetainedName | { kind: "text"; digest: Digest }): string =>
   canonicalize(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
-export const sameJournalScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.inc === b.inc && a.kind === b.kind;
+export const sameJournalScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.genesis === b.genesis;
 export const journalNatural = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && v >= 0 && !Object.is(v, -0);
 export function journalRecord(value: unknown, fields: readonly string[]): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return refuseJournal("input");
@@ -79,7 +79,7 @@ export function journalRetainedKey(value: unknown): ArchiveRetainedName {
     if (typeof r["domain"] !== "string" || r["domain"].length === 0 || r["domain"] === DOMAINS.definition) return refuseJournal("input");
     key = { kind: "value", domain: r["domain"], digest: r["digest"] };
   } else {
-    if (r["kind"] !== "definition" && r["kind"] !== "entry" && r["kind"] !== "rule" && r["kind"] !== "snapshot") return refuseJournal("input");
+    if (r["kind"] !== "definition" && r["kind"] !== "entry" && r["kind"] !== "rule" && r["kind"] !== "snapshot" && r["kind"] !== "birth") return refuseJournal("input");
     key = { kind: r["kind"], digest: r["digest"] };
   }
   archiveRetainedPath(key);
@@ -185,9 +185,11 @@ function readSelection(bytes: string, work: JournalWork, incremental: boolean): 
     const r = journalRecord(raw, ["key", "bytes", "consumers", ...(copy ? ["foreign"] : []), ...(incremental ? ["pass"] : [])]), key = currentRetained(r["key"]), name = journalKeyName(key);
     if (incremental && (!journalNatural(r["pass"]) || r["pass"] > first)) return refuseJournal("input");
     let foreign: JournalForeignCopy | undefined;
-    if (key.kind === "entry") {
+    if (key.kind === "entry" || key.kind === "birth") {
       const row = journalRecord(r["foreign"], ["fact", "pin"]), fact = row["fact"];
       if (!isFactRef(fact) || sources.get(canonicalize(fact.at)) !== row["pin"]) return refuseJournal("input");
+      // A birth copy is the seq 0 entry whose hash is the key's genesis.
+      if (key.kind === "birth" && (fact.seq !== 0 || fact.hash !== key.digest || fact.at.genesis !== key.digest)) return refuseJournal("input");
       foreign = { fact: { at: { ...fact.at }, seq: fact.seq, hash: fact.hash }, pin: row["pin"] as Digest | PlatformDefinition };
       usedSources.add(canonicalize(fact.at));
     } else if (copy) return refuseJournal("input");
@@ -228,10 +230,9 @@ function readSelection(bytes: string, work: JournalWork, incremental: boolean): 
   if (inventoryCost.entries < entries.length || inventoryCost.attempts < objects.size) return refuseJournal("input");
   const chosenObjects = journalOrdered([...objects.values()], r => journalKeyName(r.key), work).map(r => ({ key: r.key, bytes: r.bytes, consumers: journalOrdered([...r.consumers.values()], c => c.description, work), ...(r.foreign ? { foreign: r.foreign } : {}), ...(incremental ? { pass: r.pass! } : {}) }));
   const omitted = journalOrdered([...omissions.values()], journalKeyName, work).map(r => ({ kind: r.kind, digest: r.digest, reason: r.reason, consumers: journalOrdered([...r.consumers.values()], c => c.description, work), ...(r.bytes === undefined ? {} : { bytes: r.bytes }) }));
-  const anchors = published ? journalAnchors(top["anchors"], journalAnchorCopyCount(chosenObjects, work), work, [at]) : undefined;
-  const legacyAnchors = legacy ? journalLegacyAnchors(top["legacyAnchors"], first, work) : undefined;
+  const publication = published ? journalAnchorPublication({ anchors: top["anchors"], ...(legacy ? { legacyAnchors: top["legacyAnchors"] } : {}) }, journalAnchorCopyCount(chosenObjects, work), first, work, [at]) : undefined;
   work.check();
-  return { at, through, entries, objects: chosenObjects, omitted, ancestryUnwalked, inventoryCost, ...(foreignSources.length ? { foreignSources } : {}), ...(incremental ? { after } : {}), ...(anchors ? { anchors } : {}), ...(legacyAnchors ? { legacyAnchors } : {}) };
+  return { at, through, entries, objects: chosenObjects, omitted, ancestryUnwalked, inventoryCost, ...(foreignSources.length ? { foreignSources } : {}), ...(incremental ? { after } : {}), ...(publication ?? {}) };
 }
 
 /** Closed v1 decoding remains the default and refuses every v2 extension. */

@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { valueDigest } from "@generalbusiness/dap-derive";
-import { d, otherLane } from "@generalbusiness/dap-derive/testing";
+import { d, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { idOf } from "@generalbusiness/dap-git/tree-proof";
 import { RULES_TREE_PROOF, verifyRulesTree, type RulesTreeBinding, type RulesTreePattern } from "../src/rules-policy-tree.ts";
 
@@ -16,7 +16,7 @@ const tree = (entries: readonly [string, string, string][]): Uint8Array => {
 const commitOf = (root: string): Uint8Array => utf8.encode(`tree ${root}\nauthor A <a@b> 0 +0000\ncommitter A <a@b> 0 +0000\n\nproof\n`);
 function fixture(root: Uint8Array, children: readonly Uint8Array[] = []) {
   const commit = commitOf(idOf("tree", root));
-  const binding: RulesTreeBinding = { rules: { ...otherLane, kind: "rules" }, proposal: d("a"), destination: { ...otherLane, kind: "destination" }, repository: { host: "fixture", namespace: "n", name: "r", id: "1" }, ref: "refs/heads/main", commit: idOf("commit", commit) };
+  const binding: RulesTreeBinding = { rules: fixtureScope("rules", 18).at, proposal: d("a"), destination: fixtureScope("destination", 17).at, repository: { host: "fixture", namespace: "n", name: "r", id: "1" }, ref: "refs/heads/main", commit: idOf("commit", commit) };
   const proof = { v: 1, ...binding, commitBytes: Buffer.from(commit).toString("base64"), trees: [root, ...children].map(bytes => ({ id: idOf("tree", bytes), bytes: Buffer.from(bytes).toString("base64") })).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0) };
   const check = (value: unknown = proof, patterns: readonly RulesTreePattern[] = [], expected = binding) => verifyRulesTree(canonicalize(value), valueDigest(RULES_TREE_PROOF.domain, value), expected, patterns);
   return { binding, proof, check };

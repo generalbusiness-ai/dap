@@ -89,12 +89,12 @@ export function finalStates(declared: unknown): string[] {
 /**
  * The fields as the scope will read them, for resolving the act's subjects only, never signed. Two steps, as derive takes them:
  * readFields gives each declared field the caller gave, else its declared default (an own value, else `default`; an absent
- * optional with no default stays absent); then readFacts puts each local fact, one whose scope and incarnation are the
+ * optional with no default stays absent); then readFacts puts each local fact, one whose scope and genesis hash are the
  * target's, as its `seq`, in a declared fact field and in the lists and records that hold one. A foreign fact stays a fact, so
  * its `seq` never names a local item. The intent carries the fields as given: the original fact, and no default.
  */
-export function effectiveFields(act: { fields: Readonly<Record<string, ExpectedField>> }, fields: Readonly<Record<string, FieldValue>>, at: Pick<ScopeRef, "scope" | "inc"> | null): Record<string, FieldValue> {
-  const local = (v: unknown): boolean => at !== null && isFactRef(v) && v.at.scope === at.scope && v.at.inc === at.inc;
+export function effectiveFields(act: { fields: Readonly<Record<string, ExpectedField>> }, fields: Readonly<Record<string, FieldValue>>, at: Pick<ScopeRef, "scope" | "genesis"> | null): Record<string, FieldValue> {
+  const local = (v: unknown): boolean => at !== null && isFactRef(v) && v.at.scope === at.scope && v.at.genesis === at.genesis;
   const normal = (type: ExpectedField | undefined, value: unknown): unknown => {
     if (type?.type === "list" && Array.isArray(value)) return value.map((v) => normal(type["of"] as ExpectedField, v));
     if (type?.type === "record" && isRecord(value)) {

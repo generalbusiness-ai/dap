@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 import { DOMAINS, PROPOSED_BOUNDS, type Digest, type PlatformDefinition, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, newGenesisNonce, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeGenesis, validateDefinition, valueDigest } from "@generalbusiness/dap-derive";
-import { Ledger, T0, created, keys, notesDefinition, on, t, valid, variant } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, created, keys, notesDefinition, on, t, valid, variant, fixtureSequence } from "@generalbusiness/dap-derive/testing";
 import { capacityLargeTextAgain, recoveredChild, recoveredText } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 import { replayRecoveredAlias } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { MemorySource, roomVerification, TRUSTS, verify, type HistorySource } from "../src/index.ts";
@@ -16,7 +16,7 @@ function vouch(receiver: Ledger, source: Ledger, seq: number) {
   const fact = source.fact(seq);
   expect(receiver.act(keys.rita, "vouch", { ...on(receiver, 0), fields: {} }, {
     presented: { proof: fact },
-    facts: [{ fact, entry: source.entries[seq]!.entry, under: source.definition.declared.name }],
+    facts: [{ fact, entry: source.entries[seq]!.entry, sequence: fixtureSequence(source), under: source.definition.declared.name }],
   }).result).toBe("write");
 }
 
@@ -32,14 +32,14 @@ function contradiction(label: string, body: string) {
   const alias = new Ledger(definition), platform = { named: NAMED, rules: {} };
   const creation = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: {}, idempotencyKey: `${label}-alias`, notAfter: t(60) }, keys.rita.secret);
   const seed: Seed = { v: 1, kind: "directory", definition: NAMED, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
-  const genesis = judgeGenesis(alias.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(2)), seed, creation }, {
+  const genesis = judgeGenesis(alias.state, definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(2)), seed, creation }, {
     clock: clockOf(alias.state, T0), bounds: PROPOSED_BOUNDS, source: null, facts: [], prepared: [], platform,
   });
   if (genesis.result !== "write") throw new Error(`the alias fixture must create: ${JSON.stringify(genesis)}`);
   alias.seal(genesis.draft);
   const fact = original.fact(1);
   expect(alias.act(keys.rita, "vouch", { ...on(alias, 0), fields: {} }, {
-    platform, presented: { proof: fact }, facts: [{ fact, entry: original.entries[1]!.entry, under: "notes" }],
+    platform, presented: { proof: fact }, facts: [{ fact, entry: original.entries[1]!.entry, sequence: fixtureSequence(original), under: "notes" }],
   }).result).toBe("write");
   expect(alias.act(keys.rita, "retain", { ...on(alias, 0), fields: { proof: digest } }, { platform, values: [bytes] }).result).toBe("write");
   const all = [original, consumer, alias], retainedAlias = served(alias, all);
@@ -77,7 +77,7 @@ test("room settlement extends an already-open owing dependency before declaring 
   const b = new Ledger(definition), platform = { named: NAMED, rules: {} };
   const creation = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: {}, idempotencyKey: "owing-supplier-b", notAfter: t(60) }, keys.rita.secret);
   const seed: Seed = { v: 1, kind: "directory", definition: NAMED, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
-  const genesis = judgeGenesis(b.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(3)), seed, creation }, {
+  const genesis = judgeGenesis(b.state, definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(3)), seed, creation }, {
     clock: clockOf(b.state, T0), bounds: PROPOSED_BOUNDS, source: null, facts: [], prepared: [], platform,
   });
   if (genesis.result !== "write") throw new Error(`the supplier fixture must create: ${JSON.stringify(genesis)}`);
@@ -95,7 +95,7 @@ test("room settlement extends an already-open owing dependency before declaring 
   vouch(consumer, a, 1);
   const fact = b.fact(1);
   expect(consumer.act(keys.rita, "vouch-supplier", { ...on(consumer, 0), fields: {} }, {
-    presented: { proof: fact }, facts: [{ fact, entry: b.entries[1]!.entry, under: "platform:task" }],
+    presented: { proof: fact }, facts: [{ fact, entry: b.entries[1]!.entry, sequence: fixtureSequence(b), under: "platform:task" }],
   }).result).toBe("write");
   const independent = created(notesDefinition, {}, "unrelated-root"), all = [a, b, consumer, independent];
   const supplier = served(b, all);

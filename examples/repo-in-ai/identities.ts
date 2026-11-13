@@ -156,7 +156,7 @@ export async function initializeOwner(home: string, input: OwnerInput, mode: Ide
   try { service = new URL(input.service); } catch { return refuse("owner-input-invalid"); }
   // Only a caller that names a local Worker may use its loopback HTTP origin. S1's own plan stays HTTPS.
   const local = options.loopback === true && service.protocol === "http:" && service.hostname === "127.0.0.1";
-  if ((service.protocol !== "https:" && !local) || service.origin !== input.service || !isScopeRef(input.register) || input.register.kind !== "register" || !isHandle(input.handle)) refuse("owner-input-invalid");
+  if ((service.protocol !== "https:" && !local) || service.origin !== input.service || !isScopeRef(input.register) || !isHandle(input.handle)) refuse("owner-input-invalid");
   const store = storeAt(home), expected: OwnerBinding = { v: 1, key: "operator", service: input.service, register: input.register, handle: input.handle };
   if (mode === "new") await keep(store, OWNER_INPUT, expected);
   else if (!same(await readPrivate(store, OWNER_INPUT), expected)) refuse("owner-input-changed");
@@ -174,7 +174,7 @@ export async function initializeOwner(home: string, input: OwnerInput, mode: Ide
   let config = await store.config();
   if (config === null) {
     if (mode === "check") return refuse("owner-config-not-published");
-    config = { v: 1, service: input.service, register: input.register, key: "operator", handle: input.handle };
+    config = { v: 2, service: input.service, register: input.register, key: "operator", handle: input.handle };
     await store.save(config);
   }
   if (config.service !== input.service || config.key !== "operator" || config.handle !== input.handle || !same(config.register, input.register)) refuse("owner-config-changed");

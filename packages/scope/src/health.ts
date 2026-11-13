@@ -1,3 +1,4 @@
+import { isRoomRetiredStop } from "./room-retired.ts";
 /** Public operational readiness, without a scope read or provider call. */
 import type { ScopeId } from "@generalbusiness/dap-contract";
 import { readDeployment } from "./deployment-setting.ts";
@@ -42,7 +43,8 @@ export class HealthProbe {
     if (!pending) {
       const promise = Promise.resolve().then(async () => {
         const object = binding.get(binding.idFromName(scope)) as unknown as { readiness(): Promise<unknown> };
-        return ready(await object.readiness());
+        const result = await object.readiness();
+        return isRoomRetiredStop(result) ? "unavailable" : ready(result);
       }).catch((): Readiness => "unavailable");
       pending = { ...key, promise };
       this.#pending = pending;

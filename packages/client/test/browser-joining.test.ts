@@ -2,11 +2,11 @@
  * session answers, storage and locks are SCRIPTED, not native enrollment. */
 import { expect, test } from "vitest";
 import type { Entry, Receipt, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, utf8, verifyInvitationProof, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, entryHash, intentDigest, keyIdOfSecret, scopeIdOf, textDigest, utf8, verifyInvitationProof, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { browserJoining, generateBrowserDeviceKey, readBrowserInvitation, storedWebCryptoSigner, type BrowserJoinStore, type BrowserKeptJoin, type Fetch, type InvitationLink } from "../src/index.ts";
 const origin = "https://browser.test", start = Date.parse("2026-10-18T12:00:00Z"), seed = new Uint8Array(32).fill(66);
 type Version = "platform:membership@4" | "platform:membership@6" | "platform:membership@7" | "platform:membership@8";
-const reference = (kind: ScopeKind): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: textDigest("TEST browser joining " + kind), creator: null, cause: textDigest("TEST browser joining address"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(2)), kind });
+const reference = (kind: ScopeKind): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: textDigest("TEST browser joining " + kind), creator: null, cause: textDigest("TEST browser joining address"), ordinal: 0 }), genesis: textDigest("TEST genesis 2") });
 function invitation(definition: Version): InvitationLink {
   return { v: 1, service: origin, repository: { directory: reference("directory"), membership: reference("membership"), rules: reference("rules").scope, destination: reference("destination").scope },
     invitation: 1, secret: definition !== "platform:membership@4" ? b64url(seed) : "PUBLIC TEST legacy invitation", handle: "@browser", definition };
@@ -26,9 +26,10 @@ async function fixture(definition: Version = "platform:membership@6") {
     const body = init?.body ? JSON.parse(init.body) : null;
     if (path.endsWith("/acts")) {
       posts.push(structuredClone(body.signed)); calls.push("post");
-      written = { v: 1, at: offered.seat.membership, seq: 1, prev: textDigest("SCRIPTED previous entry"), time: new Date(start).toISOString().replace(".000Z", "Z"), clamped: false, epoch: 0,
+      const entry: Entry = { v: 1, genesis: offered.seat.membership.genesis, seq: 1, prev: textDigest("SCRIPTED previous entry"), time: new Date(start).toISOString().replace(".000Z", "Z"), clamped: false, epoch: 0,
         input: { type: "act", signed: body.signed, authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [] };
-      receipt = { fact: { at: written.at, seq: 1, hash: entryHash(written) }, definition, intent: intentDigest(body.signed.intent), effects: [], sends: [], epoch: 0 };
+      written = entry;
+      receipt = { fact: { at: offered.seat.membership, seq: 1, hash: entryHash(entry) }, definition, intent: intentDigest(body.signed.intent), effects: [], sends: [], epoch: 0 };
       if (lose) throw new Error("SCRIPTED lost reply");
       return reply({ answer: "accepted", receipt });
     }
@@ -93,7 +94,7 @@ test("browser invitation context mismatches and malformed kept joins cannot be s
     expect(readBrowserInvitation(linkText(link), { origin, membershipDefinition: "platform:membership@6" }).ok).toBe(false);
     expect(await f.api.join(link, f.seat)).toMatchObject({ status: "nothing-sent" });
   }
-  expect(await f.api.join(f.link, { ...f.seat, membership: { ...f.seat.membership, inc: newIncarnation(new Uint8Array(16).fill(9)) } })).toMatchObject({ status: "nothing-sent" });
+  expect(await f.api.join(f.link, { ...f.seat, membership: { ...f.seat.membership, genesis: textDigest("TEST genesis 9") } })).toMatchObject({ status: "nothing-sent" });
   expect(f.posts).toHaveLength(0); expect(f.kept()).toBeNull();
   const pending = f.api.join(f.link, f.seat);
   f.link.invitation = 2; f.seat.handle = "@changed";

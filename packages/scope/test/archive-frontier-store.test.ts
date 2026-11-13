@@ -289,10 +289,10 @@ test("frontier size and work are admitted before body reads or writes, without r
     } finally { raceBeforeProjection = null; sql.exec("UPDATE meta SET v = ? WHERE k = ?", markedNative.bytes, "archive-row-1").toArray(); }
     // Equal lengths still require the original scope and repository hash
     // checks. These rows pass the size fences, then fail identity validation.
-    const wrongInc = markedNative.row.at.inc === "in_aaaaaaaaaaaaaaaaaaaaaaaaaa" ? "in_bbbbbbbbbbbbbbbbbbbbbbbbbb" : "in_aaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const wrongGenesis = markedNative.row.at.genesis === `sha256:${"a".repeat(64)}` ? `sha256:${"b".repeat(64)}` : `sha256:${"a".repeat(64)}`;
     const wrongName = (markedNative.row.repository.name.startsWith("x") ? "y" : "x") + markedNative.row.repository.name.slice(1);
     const wrongIdentities = [
-      canonicalize({ ...markedNative.row, at: { ...markedNative.row.at, inc: wrongInc } }),
+      canonicalize({ ...markedNative.row, at: { ...markedNative.row.at, genesis: wrongGenesis } }),
       canonicalize({ ...markedNative.row, repository: { ...markedNative.row.repository, name: wrongName } }),
     ];
     for (const wrong of wrongIdentities) {

@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { ItemQuery, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, encodeItemQueryParameter, itemQueryArgument, newIncarnation, textDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, encodeItemQueryParameter, itemQueryArgument, textDigest } from "@generalbusiness/dap-bytes";
 import { secretSigner, signedReader } from "@generalbusiness/dap-client";
 import { timeOf } from "@generalbusiness/dap-derive";
 import { Scope } from "../src/core.ts";
@@ -114,15 +114,15 @@ test("native unresolved-birth session query hides target clock state until full 
     const observations = await f.life.wait(() => runInDurableObject(child.object, async (_instance, state) => {
       const store = new SqliteStore({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: work => state.storage.transactionSync(work) });
       const current = net.clock.now, scope = store.scope()!, subject = "query-clock-private-fixture";
-      expect(store.incarnations(f.membership.scope)).toEqual([]);
+      expect(store.geneses(f.membership.scope)).toEqual([]);
       const results = [];
       try {
         for (const mode of ["unresolved-wrong", "unresolved-match", "unresolved-valid", "known-wrong", "known-match"] as const) {
           // The histories and birth reference are genuine. This observed
-          // incarnation and the clock faults are explicit storage inputs.
+          // genesis and the clock faults are explicit storage inputs.
           if (mode.startsWith("known")) store.putObserved({ of: f.membership, subject, seq: 0 });
           net.clock.now = mode === "unresolved-valid" ? current : timeOf(Date.parse(scope.time) - 1);
-          const membership = mode.endsWith("wrong") ? { ...f.membership, inc: newIncarnation(new Uint8Array(16).fill(9)) } : f.membership;
+          const membership = mode.endsWith("wrong") ? { ...f.membership, genesis: `sha256:${"09".repeat(32)}` as const } : f.membership;
           const reader = readerOf(mintSession(f.sessions, { ...f.claims, membership, reads: ["summary", "items"] }));
           let peers = 0;
           const native = sessionReferencesIn(env.PLATFORM), timer = new Timer();
@@ -132,7 +132,7 @@ test("native unresolved-birth session query hides target clock state until full 
         }
       } finally {
         net.clock.now = current;
-        state.storage.sql.exec("DELETE FROM folded WHERE kind='observed' AND key=?", canonicalize([f.membership.scope, f.membership.inc, subject]));
+        state.storage.sql.exec("DELETE FROM folded WHERE kind='observed' AND key=?", canonicalize([f.membership.scope, f.membership.genesis, subject]));
       }
       return results;
     }));
@@ -143,7 +143,7 @@ test("native unresolved-birth session query hides target clock state until full 
   } finally { f.life.release(); }
 });
 
-test("full native query checks unchanged head, incarnation and support after peer wait and fresh MAC and expiry after last body SQL", async () => {
+test("full native query checks unchanged head, genesis and support after peer wait and fresh MAC and expiry after last body SQL", async () => {
   const f = await sessionRoom();
   try {
     const child = f.children[1]!;
@@ -151,7 +151,7 @@ test("full native query checks unchanged head, incarnation and support after pee
       const saved = state.storage.sql.exec("SELECT v FROM meta WHERE k='scope'").toArray()[0]!["v"] as string, originalClock = net.clock.now;
       const observations = [];
       try {
-        for (const fault of ["head", "incarnation", "policy", "support", "expiry", "secret"] as const) {
+        for (const fault of ["head", "genesis", "policy", "support", "expiry", "secret"] as const) {
           state.storage.sql.exec("UPDATE meta SET v=? WHERE k='scope'", saved); net.clock.now = originalClock;
           const native = sessionReferencesIn(env.PLATFORM), timer = new Timer();
           let returned = false, bodiesAtPeer = 0;
@@ -160,10 +160,10 @@ test("full native query checks unchanged head, incarnation and support after pee
             returned = true; bodiesAtPeer = query.statements.filter(sql => sql.startsWith("SELECT record FROM item")).length;
             if (fault === "policy") query.policy();
             if (fault === "support") query.unsupported();
-            if (fault === "head" || fault === "incarnation") {
+            if (fault === "head" || fault === "genesis") {
               const scope = JSON.parse(saved);
               if (fault === "head") scope.head = { seq: scope.head.seq + 1, hash: textDigest("SCRIPTED changed native head") };
-              else scope.at.inc = newIncarnation(new Uint8Array(16).fill(9));
+              else scope.at.genesis = `sha256:${"09".repeat(32)}` as const;
               state.storage.sql.exec("UPDATE meta SET v=? WHERE k='scope'", canonicalize(scope));
             }
             return raw;
