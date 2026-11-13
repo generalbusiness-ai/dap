@@ -1,6 +1,7 @@
 import { canonicalize, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
-import { ViewError, signerWords, type ActLike, type ActSigner, type Card, type CardAction, type LocalReviewCapture, type ViewSource } from "@generalbusiness/dap-mcp";
+import { ViewError, signerWords, dataOf, type Card, type CardAction, type ViewSource } from "@generalbusiness/dap-mcp";
+import { type ActLike } from "@generalbusiness/dap-client";
 import { APPROVAL_LIMIT, DECISION_RECORDED, LIST_GRANTS_NOTHING, READING_LEAVES_OPEN, lanesLeftOut, notShown, offerLabel, questionKicker, questionOffers, reasonLines, reviewRecorded, ruleLine, whyLine, workWords, type Reasons } from "./attention.ts";
 import { captureInput } from "./capture.ts";
 import { changeProjection } from "./change.ts";
@@ -41,8 +42,8 @@ function questionActions(context: Context): CardAction[] {
   return questionOffers(context.ask, context.requests, context.approvals, context.bodyAt.seq, context.viewer, context.actions).map(offer => captureQuestionAction(context, offer.kind, offer.request, offer.verdict));
 }
 /** What a list left out, and how to reach what follows. Empty when the list left out no lane. */
-function lanesLeft(data: Readonly<Record<string, unknown>>, screen: string): string {
-  const omitted = (data["omittedScopes"] as unknown[]).length, next = data["next"];
+function lanesLeft(data: { omittedScopes: readonly unknown[]; next?: ScopeRef | null }, screen: string): string {
+  const omitted = data.omittedScopes.length, next = data.next;
   if (omitted === 0) return "";
   // The Work list takes no cursor, so it names the omission and offers no scope.
   if (screen === "work") return ` ${lanesLeftOut(omitted)} The Work list reads only the first lanes.`;
@@ -95,20 +96,20 @@ export function decisionSource(app: RepoInAi): ViewSource {
         const after = query.scope === undefined ? {} : { after: query.scope };
         const response = query.screen === "work" ? await app.work(query.position) : query.screen === "change" ? await app.since(after) : await app.needsYou(after, query.position);
         if (response.isError) return { status: "unavailable", position: 0, count: 0, fallback: "This bounded read is unavailable." };
-        const data = response.structuredContent, rows = data["rows"] as Row[];
+        const data = dataOf(response), rows = data.rows;
         const left = lanesLeft(data, query.screen);
-        if (!rows.length) return { status: data["complete"] ? "empty" : "incomplete", position: 0, count: 0, fallback: data["complete"] ? empty(query.screen) : `${nothingRead(query.screen)}${notShown(data["unread"] as { scope: ScopeRef }[], data["omittedRows"] as number).map(line => ` ${line}`).join("")}${left}` };
+        if (!rows.length) return { status: data.complete ? "empty" : "incomplete", position: 0, count: 0, fallback: data.complete ? empty(query.screen) : `${nothingRead(query.screen)}${notShown(data.unread, data.omittedRows).map(line => ` ${line}`).join("")}${left}` };
         const position = Math.min(query.position, rows.length - 1), current = rows[position]!;
-        const points = data["heads"] as LocalReviewCapture["heads"];
+        const points = data.heads;
         const ranges = query.screen === "change" ? rows.map(row => ({ scope: row.scope.scope, from: row.head.seq, to: row.head.seq })) : [];
         const entries = query.screen === "change" ? rows.map(row => ({ scope: row.scope.scope, seq: row.head.seq, text: changeWords(row) })) : [];
         const actions: CardAction[] = [];
         // A mark covers the heads this window displayed, so a lane outside the window stays unreviewed.
-        if (query.screen === "change" && (data["unread"] as unknown[]).length === 0 && data["omittedRows"] === 0 && isScopeRef(data["directory"]) && isMemberRef(data["viewer"])) actions.push({ id: "mark-reviewed", label: "Mark reviewed", purpose: "mark-reviewed", local: true,
-          capture: { service: app.options.service, directory: data["directory"], viewer: data["viewer"], key: app.options.signer.key, heads: points, ranges } });
+        if (query.screen === "change" && data.unread.length === 0 && data.omittedRows === 0 && isScopeRef(data.directory) && isMemberRef(data.viewer)) actions.push({ id: "mark-reviewed", label: "Mark reviewed", purpose: "mark-reviewed", local: true,
+          capture: { service: app.options.service, directory: data.directory, viewer: data.viewer, key: app.options.signer.key, heads: points, ranges } });
         const identity = { item: String(current.item), kind: current.type, revision: String(current.head.seq), subject: { scope: current.scope.scope, item: current.item }, at: {} };
         const projection = points.map(point => ({ scope: point.scope.scope, seq: point.head.seq, hash: point.head.hash }));
-        const shortfall = [...notShown(data["unread"] as { scope: ScopeRef }[], data["omittedRows"] as number), ...(left ? [left.trim()] : [])];
+        const shortfall = [...notShown(data.unread, data.omittedRows), ...(left ? [left.trim()] : [])];
         const record = { label: "Exact record", text: JSON.stringify(current, null, 2) };
         const work = query.screen === "work" ? workWords(current as unknown as Parameters<typeof workWords>[0]) : null;
         const card: Card = query.screen === "needs-you" ? { identity, kicker: String(current["kicker"]), title: String(current["needs"]), summary: whyLine(current as unknown as Reasons),
@@ -119,7 +120,7 @@ export function decisionSource(app: RepoInAi): ViewSource {
           : { identity, kicker: work!.kicker, title: work!.title, summary: work!.summary,
             reasons: [...work!.lines, ruleLine(current.rule.clause), LIST_GRANTS_NOTHING, ...(left ? [left.trim()] : [])], record, rule: current.rule, projection, reviewIntended: ranges, unavailable: [], entries, waitsOn: [], settles: [], actions, fallback: `Read the named bounded tool for exact rows, heads and omissions.${left}` };
         if (query.screen !== "change") {
-          const attribution = data["cardSigner"] as { scope: ScopeRef; item: number; value: ActSigner | null } | null;
+          const attribution = data.cardSigner;
           const signer = attribution && sameOptional(attribution.scope, current.scope) && attribution.item === current.item ? attribution.value : null;
           if (signer?.actor) { card.actor = signer.actor; card.actorLabel = "Opening act signed by"; }
           else card.reasons.push(signer ? `Opening act signed by ${signerWords(signer)}.` : "The opening act's signer is unavailable in this read.");

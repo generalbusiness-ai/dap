@@ -262,7 +262,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release, roles: productionScenario ? ["admin", "agent"] : ["admin"],
       values: kind === "Grow" ? { label: "TEST archive Grow Site", ...(productionScenario ? demoMembers : {}) } : {},
       ...(kind === "Grow" ? { owner: productionScenario ? demoMembers.sensors : operator } : {}), idempotencyKey: "TEST-archive-installed-scopes" }));
-    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
+    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
     // Independent Native setup oracle, captured BEFORE any archive output.
     // A pre-MCP summary is diagnostic only: standing authority is read later.

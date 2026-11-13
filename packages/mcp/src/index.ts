@@ -3,6 +3,9 @@
 export * from "./words.ts";
 export * from "./marks.ts";
 export * from "./describe.ts";
+export * from "./input-schema.ts";
+export * from "./act-result.ts";
+export { dataOf, type CallResult, type FindingData, type Success, type Failure, type CallOutcome, type ViewOutcomeData, type ExactReadData, type LocalReviewData } from "./results.ts";
 export * from "./catalogue.ts";
 export * from "./errors.ts";
 export * from "./custody.ts";

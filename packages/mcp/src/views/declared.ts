@@ -9,8 +9,8 @@ import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule
 import { ViewError } from "./session.ts";
 import type { Card, CardAction, NativeCardAction, DeclaredSurface, Projection, ViewQuery, ViewSource } from "./types.ts";
 import { PRESENTATION } from "./generated.ts";
-import type { DefinitionLike } from "../describe.ts";
-import { effectiveFields, expectedOf } from "../shape.ts";
+import type { DefinitionLike } from "@generalbusiness/dap-client";
+import { effectiveFields, expectedOf } from "@generalbusiness/dap-client";
 import { formatInteger } from "./numbers.ts";
 import { formatFact } from "./facts.ts";
 import { orderedViewRows } from "./ordering.ts";

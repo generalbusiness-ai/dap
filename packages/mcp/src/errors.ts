@@ -12,7 +12,7 @@
  */
 
 import type { Answer, Archived, FactRef, Head, MismatchReason, ReadRefusal, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
-import { inline, sentenceNamed, type Sentence } from "./describe.ts";
+import { inline, sentenceNamed, type Sentence } from "@generalbusiness/dap-client";
 
 /** What was asked, for the sentence. */
 export interface Asked {

@@ -23,7 +23,9 @@
 import type { Digest, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, hex, isPlatformDefinition, sha256, utf8 } from "@generalbusiness/dap-bytes";
 import { formFor } from "@generalbusiness/dap-client";
-import { describeAct, grantAction, type ActLike, type DefinitionLike, type Described, type Who } from "./describe.ts";
+import { ACT_OUTPUT } from "./act-result.ts";
+import { describeAct, type Described } from "./describe.ts";
+import { grantAction, type ActLike, type DefinitionLike, type Who } from "@generalbusiness/dap-client";
 import { descriptions } from "./description-context.ts";
 import { actInputSchema } from "./input-schema.ts";
 import { surfaceOf, wordsDigest, type Words } from "./words.ts";
@@ -220,20 +222,6 @@ export function describedOf(binding: Binding, inventory: Inventory, mode: Mode):
   return describeAct(binding.holder, binding.kind, binding.act, whoOf(binding, inventory), { pinned: binding.pinned, active: inventory.active },
     { definition: binding.definition, kind: binding.kind, declaration: binding.declaration, digests: binding.digests }, pointer);
 }
-
-/** The output of an act tool: the scope's answer, or the server's finding, with the sentence and the next step. */
-export const ACT_OUTPUT: Record<string, unknown> = {
-  type: "object",
-  properties: {
-    answer: { type: "string", description: "accepted, refused, unavailable, mismatch, or unknown when the reply was lost" },
-    sentence: { type: "string" }, next: { type: "string" },
-    scope: { type: "string" }, kind: { type: "string" }, tool: { type: "string" },
-    fact: { type: "object" }, outboxIds: { type: "array", items: { type: "string" } },
-    reason: { type: "string" }, name: { type: "string" }, judgedAt: { type: "object" },
-    retained: { type: "boolean", description: "true when this is a terminal outcome kept under custody, and nothing was sent" },
-  },
-  required: ["answer", "sentence", "next"],
-};
 
 /** The act tool of one binding. */
 export function actTool(binding: Binding, inventory: Inventory, mode: Mode): Tool {

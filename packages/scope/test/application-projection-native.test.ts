@@ -82,7 +82,7 @@ test("native installed projection reads exact journal state and survives R2 dele
     const args = { uri: f.uri, release: packet.ids.release, roles: ["admin", "member"], values: { target: 7 }, idempotencyKey: "TEST-native-v2-install" };
     const accepted = await life.wait(() => mcp.call("install_application", args));
     expect(accepted.isError, JSON.stringify(accepted.structuredContent)).toBe(false);
-    expect(accepted.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
+    expect(accepted.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
     const job = Number(accepted.structuredContent["item"]);
     const installAds = peer.ads();
     expect((await life.wait(() => mcp.call("install_application", args))).structuredContent).toMatchObject({ item: job, retained: true });

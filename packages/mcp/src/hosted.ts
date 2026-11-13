@@ -42,7 +42,7 @@ import { McpService, failed, type ServerPort } from "./service.ts";
 import { McpMetrics, mcpRead, type McpMetricOptions } from "./metrics.ts";
 import { sqliteStore, type Sql, type SqliteCustodyBounds } from "./sqlite-custody.ts";
 import { Wire } from "./wire.ts";
-import type { CallResult, DispatchContext } from "./results.ts";
+import type { DispatchContext, Failure } from "./results.ts";
 import { remoteCardDomain, type RemoteCardOrigin } from "./views/remote-origins.ts";
 import { mcpChallengeResponse, mcpUnauthorized, publicRequestUrl } from "./oauth-resource.ts";
 import { OAuthAccess, agentRoleDecision, equalTokenDigest, type OAuthAccessCandidate } from "./oauth-access.ts";
@@ -1867,7 +1867,7 @@ export class HostedAgent {
   /** One request's private credential owner; every actual delivery reads fresh facts. */
   #dispatchContext(row: Pick<AgentRow, "op" | "membership" | "key" | "handle"> & { service: string }, owner: string, controller: MemberId, oauth: OAuthAccessCandidate | null, generation: HttpGeneration, admittedAt: number): DispatchContext {
     const epoch = oauth ? this.#oauthEpoch : this.#httpEpoch;
-    const denied = (error: "unavailable" | "unauthorized"): CallResult => failed({ error,
+    const denied = (error: "unavailable" | "unauthorized"): Failure => failed({ error,
       sentence: "This delivery stopped before its Native transport call. A request may already be kept, and earlier sends under the same key may remain unresolved. This local stop records no Native outcome.",
       next: "Keep the same idempotencyKey and exact arguments. Reconcile the kept original with settle before starting another operation." });
     return { prepare: async (binding, source) => {

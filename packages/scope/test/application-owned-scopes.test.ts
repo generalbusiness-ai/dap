@@ -38,7 +38,7 @@ test("native installed roots and children keep exact release ownership after tru
       applicationFetch: fetchPackage, applicationTrust: bindings.APPLICATION_TRUST, fetch: (url, init) => life.wait(() => routed(url, init)) };
     const mcp = new McpService(port);
     const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release, roles: ["admin"], values: {}, idempotencyKey: "TEST-owned-scopes-install" }));
-    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
+    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
     const job = Number(installed.structuredContent["item"]);
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
     const rootCreate = (await life.wait(() => D.entries())).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.definition === rootId);
@@ -71,7 +71,7 @@ test("native installed roots and children keep exact release ownership after tru
     // genuine child is not owned by the first install merely for that reason.
     packageFetch = otherPeer.fetch;
     const installedOther = await life.wait(() => mcp.call("install_application", { uri: other.uri, release: foreign.packet.ids.release, roles: ["admin"], values: {}, idempotencyKey: "TEST-foreign-scopes-install" }));
-    expect(installedOther.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
+    expect(installedOther.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
     const otherJob = Number(installedOther.structuredContent["item"]);
     expect(otherJob).not.toBe(job);
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G, root, child], life.wait);
