@@ -19,7 +19,7 @@ test("bounded owned queries bind their exact selection and incarnation", () => {
   const identity = applicationProjectionQueryDigest(owned);
   expect(applicationProjectionQueryDigest({ ...input, install: 3 })).not.toBe(identity);
   expect(applicationProjectionQueryDigest({ ...input, items: { alert: 8 } })).not.toBe(identity);
-  expect(applicationProjectionQueryDigest({ ...input, scope: { ...scope, inc: `in_${"b".repeat(25)}a` } })).not.toBe(identity);
+  expect(applicationProjectionQueryDigest({ ...input, scope: { ...scope, genesis: textDigest("TEST genesis b") } })).not.toBe(identity);
   let calls = 0;
   const getter = Object.defineProperty(query(), "projection", { enumerable: true, get() { calls++; return "room.alert"; } });
   expect(encodeApplicationProjectionQuery(getter)).toBeNull(); expect(calls).toBe(0);

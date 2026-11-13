@@ -10,7 +10,7 @@ import { initialCommitObjects, importRef, readmeText, receiptObjects, receiptRef
 // A real local Git repository in each object format. Facts are made up:
 // this checks the byte forms and Git's names, and shows no host or creation.
 const scope = `sc_${"g".repeat(51)}a` as ScopeId;
-const claim: FactRef = { at: { kind: "register", scope: `sc_${"r".repeat(51)}a`, inc: `in_${"r".repeat(25)}a` }, seq: 7, hash: `sha256:${"1".repeat(64)}` };
+const claim: FactRef = { at: { scope: `sc_${"r".repeat(51)}a`, genesis: `sha256:${"7".repeat(64)}` }, seq: 7, hash: `sha256:${"1".repeat(64)}` };
 const time = "2026-10-03T02:40:00Z" as Timestamp;
 
 for (const format of ["sha1", "sha256"] as const) test(`Git ${format} gives the destination's computed founding and receipt IDs, including the canonical file and fact's public ref`, () => {
@@ -36,7 +36,7 @@ for (const format of ["sha1", "sha256"] as const) test(`Git ${format} gives the 
     const rawIdentity = `artroom <sc_${"g".repeat(52)}@artroom.invalid> 1791000000 +0000`;
     const rawBody = utf8(`tree ${first.objects[0]!.id}\nauthor ${rawIdentity}\ncommitter ${rawIdentity}\n\nFound this repository.\n\nclaim ${canonicalize(rawClaim)}\n`);
     expect(git(["hash-object", "--stdin", "-t", "commit"], rawBody)).toBe(format === "sha1" ? "9e97ce67bca3ca7616f4c7c6793bd3bbb36428fa" : "ccc9f22b07f47573f9bd0924885ccfe94440e22f594ede3f98797fd0052ce12d");
-    const operation: FactRef = { ...claim, at: { ...claim.at, kind: "destination", scope }, seq: 0, hash: `sha256:${"2".repeat(64)}` };
+    const operation: FactRef = { ...claim, at: { ...claim.at, scope }, seq: 0, hash: `sha256:${"2".repeat(64)}` };
     const firstFact: FactRef = { ...operation, seq: 2, hash: `sha256:${"3".repeat(64)}` };
     const file = { v: 1, first: firstFact, claim, commit: first.commit };
     const receipt = receiptObjects(format, scope, time, operation, file);

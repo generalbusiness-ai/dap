@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, Input, SignedIntent } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, scopeIdOf, seedDigest, textDigest, newGenesisNonce } from "@generalbusiness/dap-bytes";
+import type { CheckedSequence } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize, entryHash, factRefOf, intentDigest, scopeIdOf, seedDigest, newGenesisNonce } from "@generalbusiness/dap-bytes";
 import { clockOf, derivable, judgeDelivery, judgeGenesis, runnable, type OutcomeRule, type PlatformRule, type RuleGiven } from "@generalbusiness/dap-derive";
-import { Ledger, T0, deskDefinition, created } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, deskDefinition, created, fixtureSequence, genesisOnly } from "@generalbusiness/dap-derive/testing";
 import { CREATION_ATTEMPTS, DIRECTORY, REGISTER, directoryIdOf, platform, register, registerRules, repositoryName } from "../src/index.ts";
 import { Directory, Register, installing, creationPaul as paul, registerDefinition, registerPlatform, registerSeed, creationRita as rita, creationUna as una } from "./fixtures-entry.ts";
 
@@ -45,7 +46,7 @@ describe("the rules of platform:register@1, each as a plain function (authority 
   });
   /** What the rule `install` is given: the genesis, with its seed and its creation intent. */
   const installed = (install: SignedIntent, cause = intentDigest(install.intent)): RuleGiven =>
-    ({ ...given(keyed, paul), input: { type: "genesis", seed: registerSeed(install, { cause }), "founding": install, source: null, n: null, message: null } });
+    ({ ...given(keyed, paul), input: { type: "genesis", seed: registerSeed(install, { cause }), nonce: newGenesisNonce(new Uint8Array(16).fill(7)), kind: "install", "founding": install, source: null, sourceKind: null, n: null, message: null, decision: "applied" } });
   const run = (name: string, ...args: unknown[]): unknown => (registerRules[name] as PlatformRule & { run: (...args: unknown[]) => unknown }).run(...args);
   const PASS = { pass: true, member: null };
   const byRita = given(keyed, rita);
@@ -89,7 +90,7 @@ describe("the rules of platform:register@1, each as a plain function (authority 
 test("a register is founded by an install intent, under its own definition and no other; it has no creator and is active from its genesis", () => {
   const r = new Register();
   const genesis = r.last.input as Extract<Input, { type: "genesis" }>;
-  expect([r.at.kind, r.state.scope()!.status, genesis.seed.creator, genesis.kind, genesis.seed.definition, r.at.scope === scopeIdOf(genesis.seed), r.item(0).values])
+  expect([r.state.scope()!.kind, r.state.scope()!.status, genesis.seed.creator, genesis.kind, genesis.seed.definition, r.at.scope === scopeIdOf(genesis.seed), r.item(0).values])
     .toEqual(["register", "active", null, "install", REGISTER, true, { host: "git.example", namespace: "artroom", policy: "keys", "founders": [rita.key] }]);
 
   const install = installing(paul, "keys", []);
@@ -110,7 +111,7 @@ test("a register is founded by an install intent, under its own definition and n
     create(registerSeed(install, { kind: "membership" })),
   ]).toEqual(["write", "refused", "source-unverified", "source-unverified", "source-unverified"]);
   // The first delivery's creation of a directory, by a `found` intent, stands as it was.
-  expect(created().at.kind).toBe("directory");
+  expect(created().state.scope()!.kind).toBe("directory");
 });
 
 // Authority note, section 12.1.1: the row `found`, the cases a to d, and "The rule `create-repository`, whole" of the note's
@@ -216,11 +217,11 @@ test("the directory's applied result runs the clause of the outcome's send: the 
   const sent = claim + 1;
   const result = p.last.sends[0]!;
   /** The delivery of a result of the `create`, from that genesis entry, as the register judges it with its own rules. */
-  const recorded = (genesis: Entry) => judgeDelivery(r.state, registerDefinition, { to: result.to, from: factRefOf(genesis), n: 0, message: result.message },
-    { clock: clockOf(r.state, r.now), bounds: r.bounds, facts: [], prepared: [], own: r.own, source: { entry: genesis, under: "platform:directory" }, origin: r.entries[sent]!.entry, platform: registerPlatform });
+  const recorded = (genesis: Entry, sequence: CheckedSequence) => judgeDelivery(r.state, registerDefinition, { to: result.to, from: factRefOf(genesis, sequence.at), n: 0, message: result.message },
+    { clock: clockOf(r.state, r.now), bounds: r.bounds, facts: [], prepared: [], own: r.own, source: { entry: genesis, under: "platform:directory", sequence }, origin: r.entries[sent]!.entry, platform: registerPlatform });
   expect([r.item(claim).state, r.item(claim).refs]).toEqual(["pending", { directory: null, genesis: null }]);
 
-  const applied = recorded(p.last);
+  const applied = recorded(p.last, fixtureSequence(p));
   if (applied.result !== "write") throw new Error(`the result was not recorded: ${JSON.stringify(applied)}`);
   // The clause is found by the kind of the outcome entry that sent the request. Its rule finds the claim from the result's `of`.
   expect([applied.draft.input, applied.draft.effects, applied.draft.sends]).toMatchObject([
@@ -234,8 +235,11 @@ test("the directory's applied result runs the clause of the outcome's send: the 
   // Case e: the same creation answered `applied` by another incarnation of the directory's name, from a genesis MADE BY HAND. The
   // `conflict` clause has no effect, and no `confirm` is sent. The claim keeps the incarnation that it holds.
   const genesis = p.last.input as Extract<Input, { type: "genesis" }>;
-  const other = { ...p.at, genesis: textDigest("TEST genesis 99") };
-  const second = recorded({ ...p.last, at: other, input: { ...genesis, inc: other.inc } });
+  // Another genesis of the same scope ID: its nonce differs, so its hash does. It is admitted from its own bytes.
+  const another: Entry = { ...genesisOnly(p.last), input: { ...genesis, nonce: newGenesisNonce(new Uint8Array(16).fill(99)) } };
+  const otherSequence = admitSequenceGenesis(canonicalize(another), { scope: p.at.scope, genesis: entryHash(another) }, PROPOSED_BOUNDS.entryBytes);
+  if (!otherSequence) throw new Error("the other genesis must admit its own bytes");
+  const second = recorded(another, otherSequence);
   expect(second.result === "write" && [second.draft.input, second.draft.effects, second.draft.sends]).toMatchObject([{ type: "delivery", clause: "conflict" }, [], []]);
   expect(r.item(claim).refs["directory"]).toEqual(p.at);
 });

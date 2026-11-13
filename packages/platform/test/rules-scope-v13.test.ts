@@ -10,12 +10,12 @@ import { checkedPlatformData } from "./fixtures.ts";
 import { bodyStructure } from "../../derive/src/program/structure.ts";
 
 // Folded state and membership observations are explicit stand-ins. No certificate or native turn runs here.
-const rules: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "rules" };
-const membership: ScopeRef = { ...rules, kind: "membership" };
+const rules: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
+const membership: ScopeRef = { scope: `sc_${"b".repeat(52)}`, genesis: `sha256:${"b".repeat(64)}` };
 const checker: MemberRef = { membership, member: "@checker" };
 const digest = `sha256:${"1".repeat(64)}` as Digest;
 const item = { id: 0, refs: {}, values: { configured: false, membership: membership.scope, approvals: 1, ownerMayReview: false } };
-const state = { page: () => ({ items: [item] }), incarnations: () => [membership.inc], scope: () => ({ status: "active", at: rules, head: { seq: 0, hash: digest } }) } as unknown as StateView;
+const state = { page: () => ({ items: [item] }), geneses: () => [membership.genesis], scope: () => ({ status: "active", at: rules, head: { seq: 0, hash: digest } }) } as unknown as StateView;
 
 test("a native service-generation effect holds its real local position, without fabricating a self fact", () => {
   const row: Item = { ...item, type: "rules", state: "current", revision: 0, opened: digest, parties: {}, attributed: [] };
@@ -29,7 +29,7 @@ test("a native service-generation effect holds its real local position, without 
     const judging: Judging = {
       view: state, definition, bounds: PROPOSED_BOUNDS,
       clock: { reading: "2026-10-28T00:00:00Z", asOf: "2026-10-28T00:00:00Z", behind: false },
-      scope: { at: rules, creator: null }, self, kind: "publish", fields: {}, fieldTypes: {}, subjects: new Map([["on", row]]),
+      scope: { at: rules, kind: "rules", creator: null }, self, kind: "publish", fields: {}, fieldTypes: {}, subjects: new Map([["on", row]]),
       signer: null, facts: new Map(), prepared: [], used: [],
       judged: { type: "diagnosis", of: { seq: 0, n: 0 }, attempts: [] },
       platform: { named: "platform:rules@13", rules: { "q13-publish-policy": { place: "effect", most: 1,

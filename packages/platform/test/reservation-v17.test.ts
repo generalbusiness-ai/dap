@@ -90,7 +90,7 @@ test("current key eligibility requires the exact member and incarnation, checker
   expect(evidenceKeyEligibleV17(memberCheck, good, t(20.001))).toBe(false);
   for (const invalid of [
     null, standing(keys.una.key, { keyState: "compromised" }), standing(keys.una.key, { memberState: "removed" }),
-    standing(keys.una.key, { member: keys.vic.member.member }), standing(keys.una.key, { of: { ...MEMBERSHIP, inc: RULES.inc } }),
+    standing(keys.una.key, { member: keys.vic.member.member }), standing(keys.una.key, { of: { ...MEMBERSHIP, genesis: RULES.genesis } }),
     standing(keys.una.key, { role: "maintainer" }), standing(keys.una.key, { actions: [] }),
     standing(keys.una.key, { controller: keys.rita.member.member, controllerActive: false }),
     standing(keys.una.key, { notAfter: t(10) }), standing(keys.una.key, { at: t(11) }),
@@ -131,7 +131,7 @@ test("Q13 reads complete retained policy against authenticated revision21 Rules 
   expect(withEnvelope({ ...scripted.envelope, serviceGeneration: generation(2) })).toEqual({ ok: false, reason: "evidence-invalid" });
   const { serviceGeneration: _generation, ...missingGeneration } = scripted.observed.content;
   expect(readRulesPolicyObservationV17({ ...scripted.observed, content: missingGeneration }, scripted.input, t(10))).toEqual({ ok: false, reason: "evidence-invalid" });
-  for (const serviceGeneration of [generation(6), generation(0), { ...generation(2), rules: { ...RULES, inc: MEMBERSHIP.inc } }, { ...generation(2), seq: -0 }]) {
+  for (const serviceGeneration of [generation(6), generation(0), { ...generation(2), rules: { ...RULES, genesis: MEMBERSHIP.genesis } }, { ...generation(2), seq: -0 }]) {
     expect(readRulesPolicyObservationV17({ ...scripted.observed, content: { ...scripted.observed.content, serviceGeneration } }, scripted.input, t(10))).toEqual({ ok: false, reason: "evidence-invalid" });
   }
   expect(readRulesPolicyObservationV17({ ...scripted.observed, definition: "platform:rules@12" }, scripted.input, t(10))).toEqual({ ok: false, reason: "evidence-invalid" });

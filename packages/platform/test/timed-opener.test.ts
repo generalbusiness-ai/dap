@@ -16,7 +16,7 @@ test("timed cleanup is platform-only and refuses different kinds, oversized atte
   const due = timeOf(1_900_000_000_000), hash = textDigest("PUBLIC timed cleanup fixture");
   const state = new MemoryState();
   const at = { scope: scopeIdOf({ v: 1, kind: "destination", definition: "platform:destination@3", creator: null, cause: hash, ordinal: 0 }), genesis: textDigest("TEST genesis 7") };
-  state.setScope({ at, creator: null, status: "active", head: { seq: 4, hash }, time: due, genesis: { hash, source: null, n: null }, held: [] });
+  state.setScope({ at, kind: "destination", creator: null, status: "active", head: { seq: 4, hash }, time: due, genesis: { hash, source: null, n: null }, held: [] });
   state.putItem({ id: 1, type: "publication", state: "reserved", revision: 1, opened: hash, attributed: [], parties: {}, refs: {}, values: { checkDeadline: due } });
   state.addCount("publication", "reserved", 1);
   state.putHolder(1, { operations: { "reservation-delete": 3, mint: 1 } });
@@ -43,7 +43,7 @@ test("timed cleanup is platform-only and refuses different kinds, oversized atte
     expect(judge(pin)).toEqual({ result: "unavailable", reason: "unavailable" });
   }
   const originalScope = state.scope()!;
-  state.setScope({ ...originalScope, at: { ...originalScope.at, kind: "lane" } });
+  state.setScope({ ...originalScope, kind: "lane" });
   expect(judge("platform:destination@13")).toEqual({ result: "unavailable", reason: "unavailable" });
   state.setScope(originalScope);
   const refused = validateDefinition({ ...board, timed: { "job-deadline": { ...board.timed["job-deadline"]!, opens: destination3.timed["publication-checks-deadline"]!.opens } } }, PROPOSED_BOUNDS);
