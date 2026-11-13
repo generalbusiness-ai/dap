@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FieldValue, type OperationId, type ScopeId, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, entryHash, intentDigest, newGenesisNonce, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState, clockOf, judgeGenesis, judgeOutcome } from "@generalbusiness/dap-derive";
 import { Ledger, T0, d } from "@generalbusiness/dap-derive/testing";
 import { DESTINATION, DIRECTORY, REGISTER, directoryIdOf, repositoryName } from "@generalbusiness/dap-platform";
@@ -12,6 +12,7 @@ import type { OutsideGiven } from "../src/object.ts";
 import { NO_OUTSIDE, type EffectAnswer, type EffectRequest } from "../src/operations.ts";
 import { outsideOf } from "../src/worker.ts";
 import { create } from "./fixtures-native.ts";
+import { withSequence } from "../src/testing.ts";
 
 // Cloudflare Artifacts is a STAND-IN here: a scripted binding
 // double whose every answer the test writes. No repository or token exists.
@@ -54,11 +55,11 @@ function registerFixture(host: string, namespace: string, installKey = "install"
   const intent = installing(paul, "keys", [rita.key]).intent;
   const install = signIntent({ ...intent, idempotencyKey: installKey, fields: { ...intent.fields, host, namespace } }, paul.secret);
   const seed: Seed = { v: 1, kind: "register", definition: REGISTER, creator: null, cause: intentDigest(install.intent), ordinal: 0 };
-  const genesis = judgeGenesis(register.state, registerDefinition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(7)), seed, creation: install }, { clock: clockOf(register.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: registerPlatform });
+  const genesis = judgeGenesis(register.state, registerDefinition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(0x07)), seed, creation: install }, { clock: clockOf(register.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: registerPlatform });
   expect(genesis.result).toBe("write");
   if (genesis.result === "write") register.seal(genesis.draft);
   const given: OutsideGiven = {
-    state: register.state, own: register.own, retained: () => null, scope: () => register.state.scope(),
+    localSequence: () => register.own.sequence(), state: register.state, own: register.own, retained: () => null, scope: () => register.state.scope(),
     genesis: () => { const input = register.own(0)?.entry.input; return input?.type === "genesis" ? input : null; },
     clock: { read: () => register.now }, random: { bytes: (length) => new Uint8Array(length) },
   };
@@ -85,19 +86,22 @@ function destinationGiven(register: Ledger, creator: ScopeRef): OutsideGiven {
   const claim = register.fact(1);
   const bytes = canonicalize(register.own(1)!.entry);
   const content = digestBytes(utf8(bytes));
-  const seed: Seed = { v: 1, kind: "destination", definition: DESTINATION, creator, cause: d("e"), ordinal: 3 };
-  const at: ScopeRef = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(3)), kind: "destination" };
+  // The destination is born in its directory's genesis: the seed names the directory by the genesis-self form,
+  // and the genesis source is the directory's first entry, which supplies its genesis.
+  const seed: Seed = { v: 1, kind: "destination", definition: DESTINATION, creator: { scope: creator.scope, genesis: null }, cause: d("e"), ordinal: 3 };
+  const source = { at: creator, seq: 0, hash: creator.genesis };
   const entry: Entry = {
-    ...register.own(0)!.entry, at,
-    input: { type: "genesis", seed, inc: at.inc, kind: "establish", "founding": null, source: null, n: null, message: null, decision: "applied" },
-    uses: [{ fact: claim, content }], effects: [], sends: [],
+    v: 1, seq: 0, prev: null, time: register.own(0)!.entry.time, clamped: false, epoch: 0,
+    input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(3)), kind: "establish", "founding": null, source, sourceKind: "directory", n: null, message: null, decision: "applied" },
+    uses: [{ fact: claim, content, kind: "register" }], prepared: [], effects: [], sends: [],
   };
   const hash = entryHash(entry);
+  const at: ScopeRef = { scope: scopeIdOf(seed), genesis: hash };
   const state = new MemoryState();
-  state.setScope({ ...register.state.scope()!, at, creator, head: { seq: 0, hash }, genesis: { hash, source: null, n: null } });
+  state.setScope({ ...register.state.scope()!, at, kind: "destination", creator, head: { seq: 0, hash }, genesis: { hash, source: null, n: null } });
   state.putItem({ id: 0, type: "branch", state: "empty", revision: 0, opened: hash, parties: {}, attributed: [], refs: { directory: creator as unknown as FieldValue, claim: claim as unknown as FieldValue }, values: { repository: register.item(1).values["repository"]!, name: "main" } });
-  return {
-    state, own: (seq) => seq === 0 ? { entry, hash } : null,
+  return { localSequence: () => null,
+    state, own: withSequence((seq: number) => seq === 0 ? { entry, hash } : null, null),
     retained: (kind, digest) => kind === "entry" && digest === content ? { kind, digest, bytes, under: "platform:register" } : null,
     scope: () => state.scope(), genesis: () => entry.input.type === "genesis" ? entry.input : null,
     clock: { read: () => register.now }, random: { bytes: (length) => new Uint8Array(length) },
@@ -135,7 +139,7 @@ test("explicit configuration creates the claim's exact name through the scripted
     expect(denied.accepts(REGISTER, "create-repository")).toBe(false);
     expect(await denied.send(other.claim())).toBeNull();
     // A destination born of this claim's directory takes effect; a forged creator, or a missing retained claim, does not.
-    const expected: ScopeRef = { scope: directoryIdOf(f.register.item(1).values["seed"] as never), inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "directory" };
+    const expected: ScopeRef = { scope: directoryIdOf(f.register.item(1).values["seed"] as never), genesis: `sha256:${"01".repeat(32)}` as const };
     const unrelated: ScopeRef = { ...expected, scope: scopeIdOf({ v: 1, kind: "directory", definition: DIRECTORY, creator: null, cause: d("8"), ordinal: 0 }) };
     expect(artifactsOutside(destinationGiven(f.register, unrelated), state.storage.sql, env).accepts(DESTINATION, "mint")).toBe(false);
     const birth = destinationGiven(f.register, expected);

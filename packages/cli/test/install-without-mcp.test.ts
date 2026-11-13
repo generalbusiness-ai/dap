@@ -49,7 +49,7 @@ beforeAll(async () => {
   home = join(scratch, "home");
   mkdirSync(join(home, "keys"), { recursive: true });
   writeFileSync(join(home, "keys", "device.key"), `${b64url(secret)}\n`, { mode: 0o600 });
-  writeFileSync(join(home, "config.json"), JSON.stringify({ v: 1, key: "device", service, repository: room.repository }));
+  writeFileSync(join(home, "config.json"), JSON.stringify({ v: 2, key: "device", service, repository: room.repository }));
   // The child's preload: record every module URL it loads, and send the package host's HTTPS requests to the loopback peer.
   writeFileSync(join(scratch, "preload.mjs"), `import { registerHooks } from "node:module";
 import { appendFileSync } from "node:fs";

@@ -93,7 +93,7 @@ export interface VoiceController {
   subscribe(listener: (state: VoiceState) => void): () => void;
 }
 
-const scopeKey = (s: ScopeRef): string => JSON.stringify([s.scope, s.inc, s.kind]);
+const scopeKey = (s: ScopeRef): string => JSON.stringify([s.scope, s.genesis]);
 const identityKey = (a: ActorIdentity): string => JSON.stringify([
   a.origin, a.deployment, scopeKey(a.scope), a.definition, scopeKey(a.membership),
   scopeKey(a.member.membership), a.member.member, a.publicKey,

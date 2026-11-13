@@ -52,7 +52,7 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
     if (!siteCreate || !isSeed(siteCreate.to)) throw Error("The native installation must create Site.");
     expect(siteCreate.message).toMatchObject({ body: { creationContext: { v: 2, delegate: true, deviceCommand: { owner: { membership, member: "@rita" }, root: siteId, definitions: [roomId] } } } });
     const site = life.platform(scopeIdOf(siteCreate.to)); await driveFixture([R, D, M, A, G, site], life.wait);
-    const siteAt = await life.wait(() => site.at()); expect(siteAt.kind).toBe("lane");
+    const siteAt = await life.wait(() => site.at()); expect(await life.wait(() => site.kind())).toBe("lane");
     expect(await life.wait(() => A.item(job))).toMatchObject({ state: "active", refs: { scope: siteAt } });
     const created = await life.wait(() => mcp.call("act", { target: site.name, kind: "create-room", digest: siteId, fields: { label: "Room A" }, idempotencyKey: "TEST-grow-create-room" }));
     expect(created.structuredContent).toMatchObject({ answer: "accepted" });
@@ -61,7 +61,7 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
     if (!roomCreate || !isSeed(roomCreate.to)) throw Error("Site must create Room through its maintained declaration.");
     expect(roomCreate.message).toMatchObject({ body: { creationContext: { v: 2, delegate: false, deviceCommand: { owner: { membership, member: "@rita" }, root: siteId, definitions: [roomId] } } } });
     const room = life.platform(scopeIdOf(roomCreate.to)); await driveFixture([R, D, M, A, G, site, room], life.wait);
-    const roomAt = await life.wait(() => room.at()); expect(roomAt.kind).toBe("lane");
+    const roomAt = await life.wait(() => room.at()); expect(await life.wait(() => room.kind())).toBe("lane");
     const siteRows = (await life.wait(() => site.summary())).value.items.filter(item => item.type === "room");
     expect(siteRows).toHaveLength(1); expect(siteRows[0]).toMatchObject({ state: "active", refs: { scope: roomAt } });
     expect(await life.wait(() => room.item(0))).toMatchObject({ refs: { site: siteAt, siteRoom: { at: siteAt, seq: siteRows[0]!.id } }, values: { label: "Room A" } });
@@ -185,7 +185,7 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
     // history too. No copied capability table is passed by this witness.
     const local = cliStore();
     await local.keep("native-member", rita.secret);
-    await local.save({ v: 1, service: port.service, key: "native-member", repository: { directory, membership, rules: A.name, destination: G.name } });
+    await local.save({ v: 2, service: port.service, key: "native-member", repository: { directory, membership, rules: A.name, destination: G.name } });
     const verified = await life.wait(() => dapCommand({ store: local, now: life.now, fetch: (url, init) => life.wait(() => routed(url, init)) }, ["verify", room.name]));
     expect(verified.code, verified.lines.join("\n")).toBe(0);
     expect(verified.lines).toContain("Result: consistent, for the mode, target, coverage and trusts stated below.");

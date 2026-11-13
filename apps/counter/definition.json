@@ -271,17 +271,9 @@
       "fields": {},
       "grant": "counting.join",
       "guards": [
-        {
-          "count": {
-            "except": [],
-            "max": 7,
-            "states": ["joined"],
-            "type": "participant"
-          }
-        },
+        { "count": { "max": 7, "states": ["joined"], "type": "participant" } },
         {
           "none": {
-            "except": [],
             "states": ["joined"],
             "type": "participant",
             "where": [
@@ -673,7 +665,6 @@
         { "signer": ["speaker"] },
         {
           "some": {
-            "except": [],
             "states": ["joined"],
             "type": "participant",
             "where": [
@@ -687,11 +678,7 @@
         {
           "sameSet": {
             "as": "p",
-            "items": {
-              "except": [],
-              "states": ["joined"],
-              "type": "participant"
-            },
+            "items": { "states": ["joined"], "type": "participant" },
             "key": { "element": "p.id" },
             "list": { "field": "basis" },
             "match": [
@@ -762,11 +749,7 @@
         {
           "sameSet": {
             "as": "p",
-            "items": {
-              "except": [],
-              "states": ["joined"],
-              "type": "participant"
-            },
+            "items": { "states": ["joined"], "type": "participant" },
             "key": { "element": "p.id" },
             "list": { "field": "basis" },
             "match": [

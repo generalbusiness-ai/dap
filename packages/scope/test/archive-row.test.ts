@@ -106,10 +106,12 @@ test("preserves a single immutable mark across a native restart and later turn",
   await rows(lane, store => store.confirm(nextMark.commit, finishBudget));
   // Captured from the actual original native ledger before extraction.
   const original = { entries: 0, attempts: 0, nodes: 0, calls: 14, metadata: 5175, inputWork: 19120795 };
-  expect(sizes).toEqual({ oldRowBytes: 501, markedRowBytes: 1344, attemptedRowBytes: 1362, manifestUnits: 528, newRetained: 1 });
-  const compactConfirmation = { ...original, inputWork: 12_878_491 };
+  expect(sizes).toEqual({ oldRowBytes: 528, markedRowBytes: 1371, attemptedRowBytes: 1389, manifestUnits: 528, newRetained: 1 });
+  // `original` was captured with 501-byte rows. Each `at` now names its
+  // genesis, so each of the three rows is 27 bytes longer.
+  const compactConfirmation = { ...original, metadata: 5_256, inputWork: 12_879_544 };
   expect(finishBudget.admitted()).toEqual(compactConfirmation);
-  expect(original.inputWork - finishBudget.admitted().inputWork).toBe(6_242_304);
+  expect(original.inputWork - finishBudget.admitted().inputWork).toBe(6_241_251);
   expect(forecastArchiveBookkeeping(sizes)).toEqual({ ok: true, cost: compactConfirmation });
   (context.task.meta as Record<string, unknown>)["archiveRowCost"] = { sizes, original, cost: finishBudget.admitted(),
     qualification: "Actual SQLite mark, attempt and confirm only on one original default ledger. Test-authored marks and retained rows are not native archive admission, built commits, host receipts or export. Setup row read uses a separate setup budget; no full-pass claim." };
@@ -325,7 +327,7 @@ test("compact confirmation bounds escaped and Unicode metadata while target, pen
     expect(field.length).toBe(1024);
     const lane = await create();
     await lane.inside(state => {
-      const sql = archiveSql(state), at = { ...lane.at, kind: "destination" as const };
+      const sql = archiveSql(state), at = { ...lane.at };
       const repository = { host: field, id: field, name: field, namespace: field };
       const format = index === 0 ? "sha256" as const : "sha1" as const;
       const through = { seq: Number.MAX_SAFE_INTEGER, hash: `sha256:${"f".repeat(64)}` as const };
@@ -348,7 +350,7 @@ test("compact confirmation bounds escaped and Unicode metadata while target, pen
       const confirmed = store.confirm(mark.commit, budget, wake), encoded = canonicalize(confirmed);
       expect(confirmed).toEqual({ v: 1, at, repository, format,
         confirmed: { commit: mark.commit, through, layout: 2, anchorsPublished: true }, pending: null, attempts: 0, next: null, stopped: null });
-      expect(utf8(encoded).length).toBeLessThanOrEqual(25_087);
+      expect(utf8(encoded).length).toBeLessThanOrEqual(25_112);
       expect(utf8(encoded).length).toBeLessThan(ARCHIVE_CONFIRMED_ROW_BYTES);
       expect(charges.filter(cost => cost.calls === 2 && cost.inputWork === 98_304)).toHaveLength(1);
       expect(charges.filter(cost => cost.inputWork === 4096 && cost.calls === undefined)).toHaveLength(1);
@@ -375,7 +377,7 @@ test("compact confirmation bounds escaped and Unicode metadata while target, pen
       expect(stoppedRows[0]?.['v']).toBe(canonicalize(store.load()));
     });
     await lane.restart();
-    expect(await lane.inside(state => new ArchiveRows(archiveSql(state), { ...lane.at, kind: "destination" }).load()?.stopped?.reason)).toBe("TEST stopped metadata");
+    expect(await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).load()?.stopped?.reason)).toBe("TEST stopped metadata");
   }
 });
 
@@ -458,7 +460,7 @@ test("an expiring deployment directive atomically restarts only its exact stoppe
     sql.exec("INSERT INTO meta(k,v) VALUES('archive-wake-1',?)",canonicalize({ pending:false,stopped:true,next:null }));
     sql.exec("INSERT INTO meta(k,v) VALUES('archive-frontier-confirmed-1',?)","TEST opaque frontier bytes, never parsed");
     const before = sql.exec("SELECT k,v FROM meta WHERE k LIKE 'archive-%' ORDER BY k").toArray();
-    for (const changed of [{ ...payload,at:{ ...lane.at,inc:"in_aaaaaaaaaaaaaaaaaaaaaaaaaa" } },{ ...payload,repository:{ ...repository,id:"another" } },{ ...payload,rowDigest:digestBytes(utf8("stale")) },{ ...payload,generation:1 },{ ...payload,confirmed:{ ...original.confirmed,commit:"b".repeat(40) } }]) {
+    for (const changed of [{ ...payload,at:{ ...lane.at,genesis:`sha256:${"aa".repeat(32)}` } },{ ...payload,repository:{ ...repository,id:"another" } },{ ...payload,rowDigest:digestBytes(utf8("stale")) },{ ...payload,generation:1 },{ ...payload,confirmed:{ ...original.confirmed,commit:"b".repeat(40) } }]) {
       const wrong = readArchiveRestart(encoded(changed),at(0)); if (!wrong) expect.fail("bounded mismatched directive must remain well formed");
       expect(store.restart(wrong,at(1),at(0))).toBe("refused");
       expect(sql.exec("SELECT k,v FROM meta WHERE k LIKE 'archive-%' ORDER BY k").toArray()).toEqual(before);

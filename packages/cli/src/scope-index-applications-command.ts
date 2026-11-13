@@ -102,12 +102,13 @@ export async function scopeIndexApplicationsCommand(ctx: Context, argv: readonly
   const transport = signedReads(httpTransport(manifest.service, { fetch, bytes: 4 * 1024 * 1024, seconds: 30 }), signer, ctx.now ? { now: ctx.now } : {});
   const report = new Report(identity.manifestPath, identity.manifestDigest);
   try {
-    for (const { at } of manifest.scopes) {
+    for (const row of manifest.scopes) {
+      const at = row.at;
       // The validated manifest's kind selects relevance; no read rechecks it.
-      if (at.kind !== "rules") { report.skip(at); continue; }
+      if (row.kind !== "rules") { report.skip(at); continue; }
       try {
         const reply = await transport.summary(at.scope, reader);
-        const result = projectScopeApplications(at, reply);
+        const result = projectScopeApplications(row, reply);
         report.add(result.applications, result.errors);
       } catch (error) {
         if (error === TOO_LARGE) throw error;

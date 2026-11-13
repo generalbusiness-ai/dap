@@ -10,11 +10,10 @@ import type { DefinitionLike } from "@generalbusiness/dap-client";
 import type { Held, Inventory, Place, Standing } from "../../src/index.ts";
 
 export const MEMBERSHIP = "sc_membershipxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" as ScopeId;
-const ref = (scope: string, kind: ScopeRef["kind"]): ScopeRef => ({ scope: scope as ScopeId, inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa", kind });
+const ref = (scope: string): ScopeRef => ({ scope: scope as ScopeId, genesis: `sha256:${"a".repeat(64)}` });
 
 export function heldOf(scope: string, place: Place, pinned: Digest | PlatformDefinition, definition: DefinitionLike, membership: ScopeId | null = MEMBERSHIP): Held {
-  const kind = place === "partition" ? "directory" : place === "lane" || place === "root" || place === "application" ? "lane" : place;
-  return { scope: scope as ScopeId, ref: ref(scope, kind), place, pinned, definition, membership };
+  return { scope: scope as ScopeId, ref: ref(scope), place, pinned, definition, membership };
 }
 
 export const platformData = (named: PlatformDefinition): DefinitionLike => platform(named)!.data as unknown as DefinitionLike;

@@ -10,12 +10,14 @@
  */
 
 import { CAPABILITIES, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Bounds, Capability, CapabilityName, Digest, Entry, ObservationRequest, PlatformDefinition, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import type { Capabilities, ContentStates, Delivered, Fetched, Owners, Recorded, StateView, Steps, ValidDefinition, Window } from "@generalbusiness/dap-derive";
+import type { Bounds, Capability, CapabilityName, Digest, Entry, FactRef, ObservationRequest, PlatformDefinition, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, isEntryOf, type CheckedSequence } from "@generalbusiness/dap-bytes";
+import type { Capabilities, ContentStates, Delivered, Own, Owners, Recorded, StateView, Steps, ValidDefinition, Window } from "@generalbusiness/dap-derive";
+import type { Store } from "./store.ts";
 import { ownerReservations, NOTHING } from "@generalbusiness/dap-derive";
 import { observing } from "./authority.ts";
 import type { EffectAnswer, EffectRequest, Outside } from "./operations.ts";
-import type { Authority, Clock, Definitions, Ports, Readers, Resolver, Rules, Transport } from "./ports.ts";
+import type { Authority, Clock, Definitions, Foreign, OriginRow, Ports, Readers, Resolver, Rules, SourceReadContext, Transport } from "./ports.ts";
 import { CAPABILITY_CODE, production } from "./ports.ts";
 import { READ_BOUNDS, type ReadBounds } from "./reads.ts";
 
@@ -195,12 +197,78 @@ export class Gate {
   }
 }
 
+/**
+ * An entry that a test supplies for a scripted source, with the original
+ * genesis bytes of its sequence. `birth`: the canonical bytes of the genesis
+ * of the sequence that the entry is said to belong to. An entry at position
+ * zero is its own birth, so it needs none. The test writes these, and
+ * nothing judged them.
+ */
+export interface ScriptedSource { entry: Entry; under: string; birth?: string; origin?: readonly OriginRow[] }
+
+/**
+ * The answer of a scripted source for one fact: the entry, admitted under
+ * the sequence that its supplied genesis bytes establish. The resolver
+ * checks those bytes as it checks a real source's: genesis bytes that do
+ * not match the fact's sequence, or an entry that the fact does not name,
+ * give nothing. So a scripted entry reaches a scope only under a sequence
+ * that real genesis bytes establish.
+ */
+export function scriptedSource(fact: FactRef, given: ScriptedSource | undefined, context: SourceReadContext): Foreign {
+  if (!given) return null;
+  const birth = fact.seq === 0 ? canonicalize(given.entry) : given.birth;
+  if (birth === undefined) return null;
+  const sequence = admitSequenceGenesis(birth, fact.at, context.maxBytes);
+  if (!sequence || !isEntryOf(given.entry, fact, sequence)) return null;
+  return given.origin ? { entry: given.entry, under: given.under, sequence, origin: given.origin } : { entry: given.entry, under: given.under, sequence };
+}
+
+/**
+ * SCRIPTED: a sequence that a test writes by hand, for a scripted source.
+ * Its genesis is a real canonical genesis entry, so its reference names the
+ * actual genesis hash, and `scriptedSource` admits the sequence from these
+ * bytes before it gives any of its entries. Nothing judged the genesis or
+ * the later entries, so a test that uses one shows the receiver's side of a
+ * read and nothing about the source.
+ */
+export { scriptedSequence, type ScriptedSequence } from "@generalbusiness/dap-derive/scripted";
+
+/**
+ * A store's own entries, with the sequence that its genesis bytes admit
+ * through the real `admitSequenceGenesis`. The sequence is null until the
+ * store holds a genesis.
+ */
+/** A test's own read, with the sequence the test admitted, or null where it admitted none. */
+export function withSequence<T extends (seq: number) => ReturnType<Own>>(read: T, sequence: CheckedSequence | null): T & { sequence(): CheckedSequence | null } {
+  return Object.assign(read, { sequence: () => sequence });
+}
+
+export function storedOwn(store: Store): Own {
+  const at = store.scope()?.at, genesis = store.stored(0);
+  const sequence = at && genesis ? admitSequenceGenesis(genesis.bytes, at, PROPOSED_BOUNDS.entryBytes) : null;
+  return Object.assign((seq: number) => {
+    const row = store.stored(seq);
+    return row ? { entry: JSON.parse(row.bytes) as Entry, hash: row.hash } : null;
+  }, { sequence: () => sequence });
+}
+
+/**
+ * What a scripted resolver reads for an entry of a fixture ledger that a
+ * test runs outside the namespace: the entry and the canonical bytes of the
+ * ledger's own sealed genesis.
+ */
+export function ledgerSource(ledger: { readonly entries: readonly { readonly entry: Entry }[] }, seq: number, under: string): ScriptedSource {
+  const entry = ledger.entries[seq]?.entry, genesis = ledger.entries[0]?.entry;
+  if (!entry || !genesis) throw new Error("the fixture ledger has no such entry or no genesis");
+  return seq === 0 ? { entry, under } : { entry, under, birth: canonicalize(genesis) };
+}
+
 /** What a test holds of one scope: its clock, its gate, the foreign entries its resolver can read, and its bounds. */
 export interface Controls {
   clock: ScriptedClock;
   gate: Gate;
   /** By the hash of the fact that names it. */
-  foreign: Map<Digest, { entry: Entry; under: string }>;
+  foreign: Map<Digest, ScriptedSource>;
   bounds: Bounds;
   reads: ReadBounds;
   /** The table of the scripted test capability, a stand-in. Null: no capability code, as in a runtime that lacks it. */
@@ -242,15 +310,15 @@ export function controls(name: string, start: Timestamp = "2099-01-01T00:00:00Z"
 export function testPorts(c: Controls): Partial<Ports> {
   const { rules, definitions: given, random } = production();
   const definitions = codeLost(given, () => !c.platformCode);
-  const resolver: Resolver = { read: (fact) => Promise.resolve(c.foreign.get(fact.hash) ?? null) };
+  const resolver: Resolver = { read: (fact, context) => Promise.resolve(scriptedSource(fact, c.foreign.get(fact.hash), context)) };
   const gated: Rules = { evaluate: async (asked) => { await c.gate.pass(); return rules.evaluate(asked); } };
   // One run for the life of these ports, which is the life of the object: a restart makes new ports, and so a new run that holds nothing.
   // The further observations of a row of `observes` are read by the same real read, over the two scripted scopes: each read is
-  // asked of the one whose kind the request names.
+  // asked of the one whose scope the request names.
   const observed = observing({
     clock: c.clock, random, membership: () => c.membership?.at ?? null, rules: () => c.rulebook?.at ?? null,
     content: (named) => (c.rulebook && named === c.rulebook.definition ? c.rulebook.states : null),
-    reader: { observe: (asked) => Promise.resolve((asked.of.kind === "rules" ? c.rulebook : c.membership)?.answers(asked) ?? null) },
+    reader: { observe: (asked) => Promise.resolve((c.rulebook && asked.of.scope === c.rulebook.at.scope ? c.rulebook : c.membership)?.answers(asked) ?? null) },
   });
   const standIn = testAuthority(() => c.authority);
   const authority: Authority = { read: (asked, seconds) => (c.membership ? observed : standIn).read(asked, seconds), further: (scope) => observed.further!(scope) };
@@ -299,7 +367,7 @@ export interface Net {
    * namespace reads one as it reads any source entry, so a test that uses
    * one shows the receiver's side of a delivery and nothing about the peer.
    */
-  peers: Map<Digest, { entry: Entry; under: string; origin?: readonly Fetched[] }>;
+  peers: Map<Digest, ScriptedSource>;
 }
 
 export const net: Net = { clock: new ScriptedClock("2099-01-01T00:00:00Z"), bounds: PROPOSED_BOUNDS, sized: new Map(), hold: null, deaf: null, capability: null, outside: null, platformCode: true, peers: new Map() };
@@ -324,7 +392,7 @@ export function netPorts(n: Net, transport: Transport, resolver?: Resolver): Par
       return null;
     },
   };
-  const scripted: Partial<Ports> = resolver ? { resolver: { read: (fact, seconds, origin) => { const peer = n.peers.get(fact.hash); return peer ? Promise.resolve(peer) : resolver.read(fact, seconds, origin); } } } : {};
+  const scripted: Partial<Ports> = resolver ? { resolver: { read: (fact, context, origin) => { const peer = n.peers.get(fact.hash); return peer ? Promise.resolve(scriptedSource(fact, peer, context)) : resolver.read(fact, context, origin); } } } : {};
   const capability = chosenCapability(() => n.capability);
   const outside: Outside = { accepts: (owner, kind) => n.outside?.accepts(owner, kind) ?? false, send: (request) => Promise.resolve(n.outside?.send(request) ?? null) };
   return { clock: n.clock, authority: testAuthority(), readers: testReaders, transport: disturbed, capabilities: capability, owners: capability, outside, ...scripted };

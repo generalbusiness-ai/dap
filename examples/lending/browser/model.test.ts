@@ -37,6 +37,7 @@ function projected(s: Ledger) {
 // A STAND-IN for a complete authenticated membership summary, not a native authority observation.
 const roster = (role: "member" | "admin"): Summary => ({
   scope: keys.rita.member.membership,
+  definition: "platform:membership@13",
   items: [
     { id: 0, type: "roster", state: "open", values: { memberActions: ["lending.member"], adminActions: ["lending.member", "lending.staff"] } },
     { id: 1, type: "member", state: "active", values: { handle: "@rita", role, kind: "person" }, parties: { member: keys.rita.member }, refs: {} },
@@ -78,6 +79,7 @@ test("the view lists every thing in order, live from the summary and gone from t
   expect(memberForKey(contradictory, keys.rita.key)).toBeNull();
   const ambiguous = { ...original, items: [...original.items, structuredClone(original.items[2]!)] };
   expect(memberForKey(ambiguous, keys.rita.key)).toBeNull();
+  expect(memberForKey({ ...original, definition: "platform:directory@3" }, keys.rita.key)).toBeNull();
   const unknown = [null, membershipActions(roster("admin"), keys.una.member, keys.una.key)];
   expect(unknown).toEqual([null, null]);
   for (const state of ["available", "lent"] as const) {
@@ -98,7 +100,7 @@ test("the view lists every thing in order, live from the summary and gone from t
   expect(after.things[0]).toMatchObject({ reason: "Nasruddin says the pot died", borrower: null });
   expect(actsFor(after.things[0]!)).toEqual(["publish"]);
   expect(offeredActs(after.things[0]!, staff)).toEqual(["publish"]);
-  expect(after.record).toEqual({ scope: s.at.scope, incarnation: s.at.inc, seq: s.last.seq, hash: s.entries.at(-1)!.hash });
+  expect(after.record).toEqual({ scope: s.at.scope, genesis: s.at.genesis, seq: s.last.seq, hash: s.entries.at(-1)!.hash });
   expect(after.behind).toBe(false);
   expect((await send(keys.rita, after, "publish", { thing: big!.id })).result).toBe("write");
   const retained = read(s).entries;
@@ -151,7 +153,7 @@ test("a proposal the view already rules out signs nothing, and a stale one is re
   expect(refusalWords("borrow", "something-new")).toBe("The library refused. (something-new)");
 });
 
-// The signed text describes the state after the act, but only names known Scope/incarnation metadata.
+// The signed text describes the state after the act, but only names the known scope and genesis hash.
 test("publish repairs a gone page on the library with the retained thing revision; page generation occurs once for donation", async () => {
  const {s,send,view}=make();
  expect((await send(keys.rita,view(),"donate",{name:"Sieve",description:"Fine mesh"})).result).toBe("write");

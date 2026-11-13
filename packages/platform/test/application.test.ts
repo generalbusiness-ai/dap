@@ -10,7 +10,7 @@ import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, APPLICATION_VALUES_BYTES, 
 
 // Made-up declaration: a pure schema and version-boundary witness, no native authority or creation claim.
 
-const opener: MemberRef = { membership: { kind: "membership", scope: `sc_${"a".repeat(51)}a`, inc: `in_${"a".repeat(25)}a` }, member: "@admin" };
+const opener: MemberRef = { membership: { scope: `sc_${"a".repeat(51)}a`, genesis: `sha256:${"a".repeat(64)}` }, member: "@admin" };
 
 test("supporting cohort validates with actual embedded rules, grants establishment only to admin, and keeps its pins separate from the newest creation defaults", () => {
   expect(validateDefinition(declaration, PROPOSED_BOUNDS, RULE_PROFILES).ok).toBe(true);
@@ -59,7 +59,7 @@ test("complete static closure requires unique exact declared places; missing bin
 
 // Pure factory policy witness: these full refs are scripted, not a native birth proof.
 test("publication factory reserves destination, injects the recorded full reference only into the exact schema, and keeps legacy values unchanged", () => {
-  const destination = { kind: "destination", scope: `sc_${"b".repeat(51)}a`, inc: `in_${"b".repeat(25)}a` } as const;
+  const destination = { scope: `sc_${"b".repeat(51)}a`, genesis: `sha256:${"b".repeat(64)}` } as const;
   const declared = applicationDestination();
   expect(applicationPublicationValues('{"target":7}', declared, opener, PROPOSED_BOUNDS, destination)).toEqual({ opener, target: 7, destination });
   expect(applicationValues(canonicalize({ target: 7, destination }), declared, opener, PROPOSED_BOUNDS)).toEqual({ opener, target: 7, destination });

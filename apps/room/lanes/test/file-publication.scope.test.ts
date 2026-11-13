@@ -95,7 +95,7 @@ test("a real change and Lending tell share one slot: the held change finishes fi
     if(!isScopeRef(changedScope)) throw new Error("The actual Directory records its native change child.");
     const changed=new Platform(changedScope.scope), actualMerge=(await changed.entries()).find(entry=>entry.input.type==="act"&&entry.input.signed.intent.kind==="merge")!;
     expect((await changed.summary()).value.definition).toBe(definitionDigest(changeDemo3));
-    expect(operation).toEqual(factRefOf(actualMerge));
+    expect(operation).toEqual(factRefOf(actualMerge, await changed.at()));
     const lendingAct=await L.did(rita,"donate",{expected:await L.expected({library:0}),fields:{name:"Pot",description:"Copper",page:path,content:fromLending}});
     await dispatchFixture([L,G],life.wait);
     const queued=await retained(G), file=queued.find(item=>item.type==="file-publication")!;
@@ -119,7 +119,7 @@ test("a real change and Lending tell share one slot: the held change finishes fi
     expect(host.stand.pushes.filter(push=>push.ref==="refs/heads/main"&&push.commit===laterCommit)).toHaveLength(1);
     const read=readerOf(host.stand), later=await read.commit(laterCommit);
     expect(later.parents).toEqual([changePush]);
-    const source=factRefOf((await L.entries())[lendingAct]!);
+    const source=(await L.fact(lendingAct));
     const receipt = async (ref: string) => {
       const commit=await read.commit(host.stand.refs.get(ref)!);
       const tree=await read.tree(commit.tree);

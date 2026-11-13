@@ -8,7 +8,7 @@
 import { join } from "node:path";
 import { fileStore as custodyStore } from "@generalbusiness/dap-client/node";
 import { readFile } from "node:fs/promises";
-import { fileStore } from "./files.ts";
+import { RetiredHomeError, fileStore } from "./files.ts";
 import { configDir, ConfigDirectoryError } from "./config-dir.ts";
 import { nodeGit } from "./git.ts";
 import { command } from "./line.ts";
@@ -35,6 +35,11 @@ export async function main(argv: readonly string[]): Promise<number> {
     return 2;
   }
   const ctx: Context = { store: fileStore(home), git: nodeGit(), read, verify: { progress: line => { process.stderr.write(`${line}\n`); } } };
+  // A home of the retired format is refused before any command signs or reads a target. `dap mcp` reads the same config.
+  try { await ctx.store.config(); }
+  catch (error) {
+    if (error instanceof RetiredHomeError) { process.stderr.write(`${error.message}\n`); return 2; }
+  }
   ctx.applicationCommand = applicationCommands(ctx, custodyStore(join(home, "private", "mcp-custody")), undefined, process.env["APPLICATION_TRUST"]);
   // The MCP server runs until its input ends; its own output is the protocol, so it prints only on failure. Only `dap mcp` loads it.
   const outcome = argv[0] === "scope-index" ? await scopeIndexCommand(ctx, argv.slice(1)) : argv[0] === "pack" ? await packCommand(ctx.store, argv) : argv[0] === "mcp" ? await (await import("./mcp.ts")).mcp(ctx, home, argv.slice(1)) : await command(ctx, argv);

@@ -21,3 +21,5 @@ export * from "./read-minimum.ts";
 export { fitsFieldType, memberFits, isReference } from "./field-value.ts";
 export type { Signer } from "./signer.ts";
 export * from "./citation.ts";
+export * from "./sequence.ts";
+export * from "./retired-room.ts";

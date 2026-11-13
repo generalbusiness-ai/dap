@@ -2,15 +2,15 @@
  * The planner must validate/admit a manifest before marking it; this store
  * only preserves its exact bytes and compares outstanding identities. */
 import { natural, same } from "@generalbusiness/dap-bytes";
-import type { Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, isDigest, isRecord, isScopeRef, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import type { Head, SequenceRef, Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalize, digestBytes, isDigest, isRecord, isSequenceRef, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import type { ArchiveRestartDirective } from "./archive-restart.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { archiveFrontierRowContextBound, archiveFrontierRowCompareCost, archiveFrontierSnapshotCost } from "./archive-frontier-cost.ts";
 import type { Sql } from "./sqlite.ts";
 import { confirmRetainedArchivePass } from "./archive-retained-pass.ts";
-import { archiveReplayScopes, archiveReplayScopeUnits, readArchivePublication } from "./archive-publication.ts";
+import { archiveReplayScopeRefs, archiveReplayScopeUnits, readArchivePublication } from "./archive-publication.ts";
 import { ARCHIVE_ROW_MANIFEST_BYTES as MANIFEST_BYTES, ARCHIVE_ROW_BYTES, ARCHIVE_CONFIRMED_ROW_BYTES, ARCHIVE_ROW_SIZE_METADATA,
   ARCHIVE_ROW_SAVE_FIXED_WORK, archiveRowLoadWork, archivePendingManifestWork, archiveMarkWork,
   archiveRowSaveReservation, archiveConfirmedRowSaveReservation } from "./archive-row-cost.ts";
@@ -36,11 +36,11 @@ export interface ArchiveMark extends Omit<ArchivedPosition, "anchorsPublished"> 
   readonly markedAt: Timestamp;
   /** Exact canonical descriptive lists, finalized after validated inputs. */
   readonly anchorPublication?: string;
-  readonly replayScopes?: readonly ScopeRef[];
+  readonly replayScopes?: readonly SequenceRef[];
 }
 export interface ArchiveRow {
   readonly v: 1;
-  readonly at: ScopeRef;
+  readonly at: SequenceRef;
   readonly repository: DestinationRepository;
   readonly format: Format;
   readonly confirmed: ArchivedPosition | null;
@@ -88,9 +88,9 @@ function position(value: unknown, format: Format): value is ArchivedPosition {
   const head = value["through"];
   return isRecord(head) && fields(head, "hash,seq") && natural(head["seq"]) && isDigest(head["hash"]);
 }
-function checked(value: unknown, at: ScopeRef, budget: ArchiveBudget): ArchiveRow {
+function checked(value: unknown, at: SequenceRef, budget: ArchiveBudget): ArchiveRow {
   budget.check();
-  if (!isRecord(value) || !fields(value, "at,attempts,confirmed,format,next,pending,repository,stopped,v") || value["v"] !== 1 || !isScopeRef(value["at"]) || !same(value["at"], at)) return refuse("unavailable");
+  if (!isRecord(value) || !fields(value, "at,attempts,confirmed,format,next,pending,repository,stopped,v") || value["v"] !== 1 || !isSequenceRef(value["at"]) || !same(value["at"], at)) return refuse("unavailable");
   const format = value["format"], repository = value["repository"];
   if (format !== "sha1" && format !== "sha256" || !isRecord(repository) || !fields(repository, "host,id,name,namespace")) return refuse("unavailable");
   if (Object.values(repository).some(field => typeof field !== "string" || field.length === 0 || field.length > 1024)) return refuse("unavailable");
@@ -112,7 +112,9 @@ function checked(value: unknown, at: ScopeRef, budget: ArchiveBudget): ArchiveRo
       budget.spend({ inputWork: archivePendingManifestWork(publication.length) });
       if (utf8(publication).length > MANIFEST_BYTES) return refuse("limit");
       if (!Array.isArray(pending["replayScopes"])) return refuse("unavailable");
-      archiveReplayScopes(pending["replayScopes"], at, budget);
+      // A stored list carries no kind or birth context. Planning/rebuild
+      // separately require the current pass's checked public-root context.
+      archiveReplayScopeRefs(pending["replayScopes"], at, budget);
     }
     else if (Object.hasOwn(pending, "replayScopes")) return refuse("unavailable");
     if (pending["parent"] !== (confirmed === null ? null : confirmed.commit)) return refuse("unavailable");
@@ -127,13 +129,13 @@ function checked(value: unknown, at: ScopeRef, budget: ArchiveBudget): ArchiveRo
  * synchronous transactions; no host, retention enumeration or history write. */
 export class ArchiveRows {
   readonly #sql: Sql;
-  readonly #at: ScopeRef;
+  readonly #at: SequenceRef;
   // One last owned parse only; no cross-pass cache, allowance or SQL authority.
   #ownedRow: ArchiveRow | null = null;
   #ownedBudget: ArchiveBudget | null = null;
   #ownedText = "";
   #ownedBytes = 0;
-  #ownedAt: ScopeRef | null = null;
+  #ownedAt: SequenceRef | null = null;
   #ownedRepository: DestinationRepository | null = null;
   #ownedConfirmed: ArchivedPosition | null = null;
   #ownedThrough: Head | null = null;
@@ -143,8 +145,8 @@ export class ArchiveRows {
     this.#ownedConfirmed = row.confirmed; this.#ownedThrough = row.confirmed?.through ?? null;
     return row;
   }
-  constructor(sql: Sql, at: ScopeRef) {
-    if (!isScopeRef(at)) refuse("unavailable");
+  constructor(sql: Sql, at: SequenceRef) {
+    if (!isSequenceRef(at)) refuse("unavailable");
     this.#sql = sql; this.#at = { ...at };
   }
   #load(budget: ArchiveBudget): { row: ArchiveRow; bytes: string } | null {
@@ -374,7 +376,7 @@ export class ArchiveRows {
         if (!dataShape(row, ["v", "at", "repository", "format", "confirmed", "pending", "attempts", "next", "stopped"])
           || data("pending") !== null || data("stopped") !== null
           || data("at") !== this.#ownedAt || data("repository") !== this.#ownedRepository || data("confirmed") !== this.#ownedConfirmed
-          || !dataShape(this.#ownedAt!, ["scope", "inc", "kind"]) || !dataShape(this.#ownedRepository!, ["host", "id", "name", "namespace"])
+          || !dataShape(this.#ownedAt!, ["scope", "genesis"]) || !dataShape(this.#ownedRepository!, ["host", "id", "name", "namespace"])
           || this.#ownedConfirmed !== null && (!dataShape(this.#ownedConfirmed, ["commit", "through",
             ...(Object.hasOwn(this.#ownedConfirmed, "layout") ? ["layout"] : []), ...(Object.hasOwn(this.#ownedConfirmed, "anchorsPublished") ? ["anchorsPublished"] : [])])
             || Object.getOwnPropertyDescriptor(this.#ownedConfirmed, "through")?.value !== this.#ownedThrough

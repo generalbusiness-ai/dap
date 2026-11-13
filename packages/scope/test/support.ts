@@ -8,12 +8,13 @@ import { scopeLaneChange } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
 import { evictDurableObject, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Answer, Bounds, Entry, Grant, Head, Intent, MemberRef, Read, Receipt, ScopeId, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
-import { intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import type { Answer, Bounds, Entry, FactRef, Grant, Head, Intent, MemberRef, Read, Receipt, ScopeId, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, intentDigest, isEntryOf, scopeIdOf, signIntent, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { timeMs, timeOf, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { grantOf, keys, lane, variant, type Actor, type Over } from "@generalbusiness/dap-derive/testing";
 import { READ_BOUNDS, type ReadBounds, type Sealed, type Summary } from "../src/index.ts";
 import { controls, type Controls } from "../src/testing.ts";
+import { isRoomRetiredStop, type RoomRetiredStop } from "../src/room-retired.ts";
 import type { TestScope } from "./worker.ts";
 
 export const { rita, una, vic } = keys;
@@ -46,11 +47,53 @@ export function creation(notAfter: Timestamp = at(60), under: ValidDefinition = 
 
 /** The object's surface as a caller over RPC has it: each method, answered in a promise. */
 type Surface = Pick<TestScope, "create" | "submit" | "prepare" | "settle" | "checkpoint" | "summary" | "items" | "history" | "entry" | "outbox">;
-export type Remote = { [K in keyof Surface]: (...args: Parameters<Surface[K]>) => Promise<Awaited<ReturnType<Surface[K]>>> };
+/**
+ * That surface for a room of the current format. A test scope is never a
+ * retired room, so `stubOf` refuses a retired stop as a failure of the
+ * test, and the answers it returns are the scope's own.
+ */
+export type Remote = { [K in keyof Surface]: (...args: Parameters<Surface[K]>) => Promise<Exclude<Awaited<ReturnType<Surface[K]>>, RoomRetiredStop>> };
 
 /** The object with that name, for the pool's own functions: eviction, the alarm, a look at its storage. */
 export const objectOf = (name: string, namespace: DurableObjectNamespace = env.SCOPES): DurableObjectStub => namespace.get(namespace.idFromName(name));
-export const stubOf = (name: string, namespace?: DurableObjectNamespace): Remote => objectOf(name, namespace) as unknown as Remote;
+export const stubOf = (name: string, namespace?: DurableObjectNamespace): Remote => current(objectOf(name, namespace));
+/** The surface with each answer as the object gives it, a retired stop included. */
+export type RawRemote = { [K in keyof Surface]: (...args: Parameters<Surface[K]>) => Promise<Awaited<ReturnType<Surface[K]>>> };
+/** The stub unwrapped: a test that expects a retired stop reads it here. */
+export const rawStubOf = (name: string, namespace?: DurableObjectNamespace): RawRemote => objectOf(name, namespace) as unknown as RawRemote;
+/** An object's methods, each answered in a promise with a retired stop excluded. */
+export type Live<T> = { [K in keyof T]: T[K] extends (...args: infer A) => infer R ? (...args: A) => Promise<Exclude<Awaited<R>, RoomRetiredStop>> : T[K] };
+/** Each method of a test scope, local or a stub, with a retired stop thrown as a test failure. */
+export function live<T extends object>(object: T): Live<T> {
+  return current(object) as unknown as Live<T>;
+}
+/**
+ * A fixture resolver's answer for one fact of a test scope in the pool: the
+ * entry the scope holds at that position, with the sequence that the scope's
+ * own genesis bytes establish. A fact the scope does not hold gives null.
+ */
+export async function foreignOf(fact: FactRef, under: string, namespace?: DurableObjectNamespace, maxBytes: number = PROPOSED_BOUNDS.entryBytes): Promise<{ entry: Entry; under: string; sequence: CheckedSequence } | null> {
+  const stub = stubOf(fact.at.scope, namespace);
+  const read = await stub.entry(reader, fact.seq);
+  if (!read.ok || read.value.hash !== fact.hash) return null;
+  const birth = fact.seq === 0 ? read : await stub.entry(reader, 0);
+  if (!birth.ok) return null;
+  const sequence = admitSequenceGenesis(canonicalize(birth.value.entry), fact.at, maxBytes);
+  return sequence && isEntryOf(read.value.entry, fact, sequence) ? { entry: read.value.entry, under, sequence } : null;
+}
+/** Each method of the stub, with a retired stop thrown as a test failure. */
+function current(stub: object): Remote {
+  return new Proxy(stub, { get(target, key) {
+    const method: unknown = Reflect.get(target, key);
+    if (typeof method !== "function") return method;
+    return async (...args: unknown[]) => {
+      // Reflect.apply calls the function itself. On an RPC stub, `method.apply` would be a remote call to a method named "apply".
+      const answer: unknown = await Reflect.apply(method, target, args);
+      if (isRoomRetiredStop(answer)) throw new Error(`the test scope answered a retired stop to ${String(key)}`);
+      return answer;
+    };
+  } }) as unknown as Remote;
+}
 
 /** One created scope: entry 0 opened intent 0, requested by rita. */
 export class Lane {

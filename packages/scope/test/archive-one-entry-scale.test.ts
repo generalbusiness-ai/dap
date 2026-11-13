@@ -8,16 +8,18 @@ import { scaleDeadline } from "./support/archive-scale-deadline.ts";
 import { expect, test } from "vitest";
 import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { GitRefusal, idOf, parseCommit, parseTree } from "@generalbusiness/dap-git";
-import { journalRef, journalV2PassPath, journalV2RetainedPath, type JournalPassArchive } from "@generalbusiness/dap-git/journal";
-import { readJournalRepositoryArchive } from "@generalbusiness/dap-git/journal-reader";
-import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
+import { journalV2PassPath, journalV2RetainedPath, type JournalPassArchive } from "@generalbusiness/dap-git/journal";
+import { verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
+import { platform } from "@generalbusiness/dap-platform";
+import { CAPABILITY_CODE } from "../src/ports.ts";
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, type ArchiveCost } from "../src/archive-budget.ts";
 import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import type { Sql, SqlValue } from "../src/sqlite.ts";
 import { rita } from "./fixtures-native.ts";
-import { createNativeArchiveApplicationLane, archiveScaleFactoryDefinition, archiveAuthorityAnchors } from "./support/archive-native-authority.ts";
+import { createNativeArchiveApplicationLane, archiveScaleFactoryDefinition } from "./support/archive-native-authority.ts";
+import { archiveAuthorityReplay } from "./support/archive-authority-replay.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { driver, ScriptedHost } from "./support/archive-driver.ts";
 
@@ -87,15 +89,14 @@ test("the Native driver confirms 10,001 one-entry passes and preserves retained 
   expect(host.sends).toHaveLength(10_002); expect(host.appendCalls).toBe(10_001); expect(host.closureReads).toBe(0);
   const retained = await lane.inside(state => state.storage.sql.exec<{ count: number }>("SELECT count(*) AS count FROM retained_input WHERE kind = 'rule' AND pass IS NOT NULL").one().count);
   expect(retained).toBe(9999); expect(retained).toBeGreaterThan(4608);
-  const later = await lane.head(), source = archiveSource({ open: (scope, work) => readJournalRepositoryArchive({
-    format: async () => "sha1", resolve: async ref => ref === journalRef(lane.at.scope) ? host.pointer : null,
-    object: async (id, limit) => { const object = host.data.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; },
-  }, scope, work) });
-  // Explicit caller words from the independently checked actual Directory
-  // create/confirmation facts and Membership read, never archive output.
-  // This does not export either private authority journal.
-  const anchors = archiveAuthorityAnchors(lane); expect(anchors.length).toBeGreaterThan(0);
-  const verified = await verifyArchive(source, { mode: "replay", scope: lane.at.scope, head: later, grants: "as-recorded",
+  // The lane's creator is its room's Directory. Replay proves the room's
+  // public facts by replay and takes only Register and Membership anchors
+  // (decisions 5a642337 and 066e49b3). Replaying the Directory runs its
+  // platform code and capability hooks.
+  const later = await lane.head(), replay = await archiveAuthorityReplay(lane, "sha1", host);
+  if (!replay) return expect.fail("a factory lane keeps its native room");
+  const { source, anchors } = replay; expect(anchors.length).toBeGreaterThan(0);
+  const verified = await verifyArchive(source, { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, scope: lane.at.scope, head: later, grants: "as-recorded",
     anchors: anchors.map(fact => ({ scope: fact.at.scope, seq: fact.seq, hash: fact.hash })) });
   const reason = (verified.kind === "verification" ? verified.verification.why : verified.reason) ?? "";
   const diagnostic = { kind: verified.kind, reason: reason.slice(0, 2048), reasonTruncated: reason.length > 2048,
@@ -104,7 +105,10 @@ test("the Native driver confirms 10,001 one-entry passes and preserves retained 
       coverageCount: verified.verification.report.coverage.length, anchorCount: verified.verification.report.anchors.length,
       missingCount: verified.verification.report.dependencies.missing.length }
       : { result: verified.result, scope: verified.location.scope, commit: verified.location.commit }) };
-  expect(verified, JSON.stringify(diagnostic)).toMatchObject({ kind: "verification", verification: { report: { result: "consistent", anchors, trusts: expect.arrayContaining([TRUSTS.anchors, TRUSTS.observed]) } } });
+  expect(verified, JSON.stringify(diagnostic)).toMatchObject({ kind: "verification", verification: { report: { result: "consistent", trusts: expect.arrayContaining([TRUSTS.anchors, TRUSTS.observed]) } } });
+  // Replay reports the anchors in the order it used them, across three journals.
+  const sorted = (facts: readonly unknown[]) => facts.map(fact => canonicalize(fact)).sort();
+  if (verified.kind === "verification") expect(sorted(verified.verification.report.anchors)).toEqual(sorted(anchors));
   expect(await lane.head()).toEqual(later);
   (context.task.meta as Record<string, unknown>)["nativeOneEntryScale"] = { confirmedPasses: host.sends.length, retainedRuleInputs: retained, samples, maximum,
     extra: extra.cost, pass3700: { digest: old.digest, blob: oldBlob, outgoingAgain: extraObjects.includes(oldBlob), pass: 3700 },

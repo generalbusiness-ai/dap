@@ -120,7 +120,7 @@ class DeploymentSafety(unittest.TestCase):
             config["vars"].update({"GITHUB_APP_CONFIG": json.dumps(github),
                                   "GITHUB_APP_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nVEVTVA==\n-----END PRIVATE KEY-----\n",
                                   "GITHUB_READ_TOKEN": "TEST.private.read.token"})
-            binding = {"destination": {"scope": "sc_" + "a" * 52, "inc": "in_" + "a" * 26, "kind": "destination"},
+            binding = {"destination": {"scope": "sc_" + "a" * 52, "genesis": "sha256:" + "a" * 64},
                        "repository": {"host": "github.com", "namespace": "test-account", "name": "TEST-repo", "id": "71"},
                        "branch": "main"}
             config["vars"]["GITHUB_REPOSITORY_BINDINGS"] = json.dumps([binding])
@@ -130,7 +130,7 @@ class DeploymentSafety(unittest.TestCase):
             self.assertEqual(path.read_bytes(), before)
             for rows in ([binding, binding],
                          [{**binding, "repository": {**binding["repository"], "namespace": "another-account"}}],
-                         [{**binding, "destination": {**binding["destination"], "inc": "in_invalid"}}],
+                         [{**binding, "destination": {**binding["destination"], "genesis": "sha256:invalid"}}],
                          [{**binding, "branch": "../main"}]):
                 config["vars"]["GITHUB_REPOSITORY_BINDINGS"] = json.dumps(rows)
                 path.write_text(json.dumps(config))

@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest";
 import type { FactRef } from "@generalbusiness/dap-contract";
-import { FACT_TEXT_MOST, SCOPE_KINDS, factHex, factOfRefName, factOfText, factRefName, factText, isFactRefParts, utf8 } from "../src/index.ts";
+import { FACT_TEXT_MOST, factHex, factOfRefName, factOfText, factRefName, factText, isFactRefParts, utf8 } from "../src/index.ts";
 
 // Witness 18.48, cases 1 to 3 and 5 (scope contract, section 3). F is the fact of an entry of a lane at position 41. Made up.
 const HEX = "0123456789abcdef".repeat(4);
-const F: FactRef = { at: { scope: `sc_${"b".repeat(51)}a`, inc: `in_${"c".repeat(25)}a`, kind: "lane" }, seq: 41, hash: `sha256:${HEX}` };
+const F: FactRef = { at: { scope: `sc_${"b".repeat(51)}a`, genesis: `sha256:${"c".repeat(63)}a` }, seq: 41, hash: `sha256:${HEX}` };
 // Written by hand, member by member in the order of RFC 8785, not by this package.
-const TEXT = `{"at":{"inc":"in_${"c".repeat(25)}a","kind":"lane","scope":"sc_${"b".repeat(51)}a"},"hash":"sha256:${HEX}","seq":41}`;
+const TEXT = `{"at":{"genesis":"sha256:${"c".repeat(63)}a","scope":"sc_${"b".repeat(51)}a"},"hash":"sha256:${HEX}","seq":41}`;
 const RECEIPTS = "refs/artroom/receipts/";
 
 describe("a fact reference as text", () => {
@@ -14,17 +14,16 @@ describe("a fact reference as text", () => {
     expect(factText(F)).toBe(TEXT);
     expect(/[ \n]/.test(TEXT)).toBe(false);
     // The members may be given in any order: the text is one.
-    expect(factText({ seq: 41, hash: F.hash, at: { kind: "lane", inc: F.at.inc, scope: F.at.scope } })).toBe(TEXT);
+    expect(factText({ seq: 41, hash: F.hash, at: { scope: F.at.scope, genesis: F.at.genesis } })).toBe(TEXT);
     expect(factOfText(TEXT)).toEqual(F);
   });
 
-  test("18.48 case 2: the longest text is 237 bytes, with the kind `destination` at the largest position", () => {
-    const longest = factText({ ...F, at: { ...F.at, kind: "destination" }, seq: Number.MAX_SAFE_INTEGER })!;
-    expect(utf8(longest).byteLength).toBe(237);
-    expect(FACT_TEXT_MOST).toBe(237);
+  test("18.48 case 2: the longest text is 262 bytes, at the largest position", () => {
+    const longest = factText({ ...F, seq: Number.MAX_SAFE_INTEGER })!;
+    expect(utf8(longest).byteLength).toBe(262);
+    expect(FACT_TEXT_MOST).toBe(262);
     expect(factOfText(longest)?.seq).toBe(9_007_199_254_740_991);
-    // No kind and no position gives a longer one, and every byte is printable ASCII.
-    for (const kind of SCOPE_KINDS) expect(factText({ ...F, at: { ...F.at, kind }, seq: Number.MAX_SAFE_INTEGER })!.length, kind).toBeLessThanOrEqual(237);
+    // Every byte is printable ASCII.
     expect(/^[\x20-\x7e]+$/.test(longest)).toBe(true);
   });
 
@@ -43,7 +42,7 @@ describe("a fact reference as text", () => {
     ["a position past the safe integers", { ...F, seq: 2 ** 53 }],
     ["a negative position", { ...F, seq: -1 }],
     ["a position with a fraction", { ...F, seq: 1.5 }],
-    ["a kind that is no scope kind", { ...F, at: { ...F.at, kind: "room" } }],
+    ["a scope address with a kind", { ...F, at: { ...F.at, kind: "lane" } }],
     ["a scope ID of another length", { ...F, at: { ...F.at, scope: "sc_b" } }],
     ["a member more", { ...F, host: "example.invalid" }],
     ["a member less", { at: F.at, hash: F.hash }],

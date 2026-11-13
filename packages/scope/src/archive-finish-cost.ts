@@ -46,6 +46,9 @@ export function forecastArchiveFinish(context: ArchiveFinishContext, preparation
   // Final paid collection, not this quote, chooses the published list.
   const anchors = shape.copies + shape.anchorCandidates, total = anchors + legacyAnchors;
   const publicationUnits = archivePublicationBytesUpper(total);
+  // Keep the prior conservative per-sequence headroom for actual paid
+  // private-source checks. No per-sequence record is serialized.
+  const sourceChecks = Math.min(64, total), copySources = Math.min(64, shape.copies);
   if (![anchors, total, publicationUnits].every(n => Number.isSafeInteger(n) && n >= 0)) return null;
   const sources = context.fixtureSources?.publicationFootprint(budget);
   // Each admitted public copy can add one producer to the target's public
@@ -54,12 +57,17 @@ export function forecastArchiveFinish(context: ArchiveFinishContext, preparation
   if (![scopeBase, shape.copies, scopes].every(n => Number.isSafeInteger(n) && n >= 0)
     || scopeBase === 0 || scopes > 64) return null;
   const publication = sum(sources?.lookups ?? {}, { nodes: scopes,
-    metadata: shape.entryBytes + scopes * 1024 + (context.replayScopes ? shape.copies * 512 : 0)
-      + anchors * 512 + total * (512 * 3 + 128) + publicationUnits * 4,
+    // Existing root snapshots/collector plus two bounded association-map joins.
+    metadata: shape.entryBytes + scopes * 2048 + (context.replayScopes ? shape.copies * 512 : 0)
+      + anchors * 512 + total * (512 * 3 + 128) + publicationUnits * 4
+      + sourceChecks * (512 + 512 * 3 + 128) + copySources * 3 * 256,
     // A canonical full FactRef occupies at least 128 bytes. Its repeated
     // 1024-unit visit is bounded by 8*entryBytes, in addition to parsing.
-    inputWork: shape.entryBytes * 16 + shape.objects * (2048 + 2 * 128 + (context.replayScopes ? 1024 : 0)) + scopes * 2048
-      + anchors * 1024 * (Math.ceil(Math.log2(anchors + 1)) + 1) + total * 3 * 1024 + publicationUnits * 48 });
+    inputWork: shape.entryBytes * 16 + shape.objects * (2048 + 2 * 128 + (context.replayScopes ? 1024 : 0)) + scopes * 4096
+      + anchors * 1024 * (Math.ceil(Math.log2(anchors + 1)) + 1) + total * 3 * 1024 + publicationUnits * 48
+      + total * 1024 + sourceChecks * (1024 + 3 * 1024)
+      + sourceChecks * 1024 * (Math.ceil(Math.log2(sourceChecks + 1)) + 1)
+      + copySources * 3 * 1024 });
   const publishedShape = { ...shape, manifestRows: shape.manifestRows + total, selectionUnits: shape.selectionUnits + publicationUnits,
     manifestBytes: shape.manifestBytes + publicationUnits,
     files: shape.files.map(file => file.path.endsWith("/pass.json") ? { ...file, bytes: file.bytes + publicationUnits } : file) };

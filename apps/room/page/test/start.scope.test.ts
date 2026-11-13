@@ -102,10 +102,10 @@ test("fresh Page Start discovers native Register17, retains before dispatch, Che
       if (init?.method === "POST" && (pathname.endsWith("/acts") || pathname.endsWith("/preparations") || pathname === "/v1/scopes")) mutationPaths.push(pathname);
       const signed = new URL(url).pathname.endsWith("/acts") && typeof init?.body === "string" ? (JSON.parse(init.body) as { signed?: SignedIntent }).signed : undefined;
       if (signed) {
-        const descriptorKey = `artroom-page-start:${origin}`, descriptorBytes = values.get(descriptorKey)!;
+        const descriptorKey = `dap-page-start-2:${origin}`, descriptorBytes = values.get(descriptorKey)!;
         const descriptor = JSON.parse(descriptorBytes) as { publicKey: string; secret?: string; operation: string };
         expect([descriptor.secret === undefined, descriptor.publicKey === installer.key, signed.intent.actor === descriptor.publicKey]).toEqual([true, false, true]);
-        const journalKey = [...values.keys()].find(key => key.startsWith("artroom-page-claim:"))!;
+        const journalKey = [...values.keys()].find(key => key.startsWith("dap-page-claim-2:"))!;
         const journalBytes = values.get(journalKey)!, journal = JSON.parse(journalBytes);
         const kept = JSON.parse(journal.claims[descriptor.operation]);
         expect([journal.active === descriptor.operation, readbacks.get(descriptorKey) === descriptorBytes, readbacks.get(journalKey) === journalBytes]).toEqual([true, true, true]);
@@ -151,8 +151,8 @@ test("fresh Page Start discovers native Register17, retains before dispatch, Che
     expect(completed.repository).not.toBeNull();
     expect(sent.map(s => s.intent.kind)).toEqual(["found", "found", "seat", "first-key"]);
     expect(sent.filter(s => s.intent.kind === "found")).toEqual([original, original]);
-    const descriptor = JSON.parse(values.get(`artroom-page-start:${origin}`)!) as { secret: string; operation: string };
-    const journal = JSON.parse(values.get([...values.keys()].find(key => key.startsWith("artroom-page-claim:"))!)!);
+    const descriptor = JSON.parse(values.get(`dap-page-start-2:${origin}`)!) as { secret: string; operation: string };
+    const journal = JSON.parse(values.get([...values.keys()].find(key => key.startsWith("dap-page-claim-2:"))!)!);
     const kept = JSON.parse(journal.claims[descriptor.operation]);
     expect(canonicalize(kept.completed["found"].signed) === canonicalize(original)).toBe(true);
     expect([kept.completed["found"].signed.intent.idempotencyKey, kept.completed["found"].signed.intent.notAfter]).toEqual([original.intent.idempotencyKey, original.intent.notAfter]);
@@ -189,7 +189,7 @@ test("fresh Page Start discovers native Register17, retains before dispatch, Che
       if (init?.method === "POST" && (path.endsWith("/acts") || path.endsWith("/preparations") || path === "/v1/scopes")) creatorMutationPaths.push(path);
       const signed = typeof init?.body === "string" ? (JSON.parse(init.body) as { signed?: SignedIntent }).signed : undefined;
       if (path.endsWith("/acts") && signed) {
-        const name = [...values.keys()].find(key => key.startsWith("artroom-page-connections:"))!, bytes = values.get(name)!;
+        const name = [...values.keys()].find(key => key.startsWith("dap-page-connections-2:"))!, bytes = values.get(name)!;
         const journal = JSON.parse(bytes), row = journal.rows[journal.active], pointer = row.config.invitationIssue;
         const kept = JSON.parse(row.private[pointer.request]);
         const stage = signed.intent.kind === "add-member" ? kept.member : kept.invitation;

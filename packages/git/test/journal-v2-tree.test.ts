@@ -193,3 +193,20 @@ test("v2 edits only the new pass paths after ten thousand passes and never reloc
     at10000: after.cost.nodes, at10010: final.cost.nodes,
     qualification: "Mechanical tree patches and explicitly TEST-labelled file bodies. Original work caps, frozen test clock as in this existing fixture. Omits commits, receipt checks, native inventory, at-send validation and host confirmation; not10,000nativeconfirmedpasses. Tree override observes real writer rows and forwards every actual construction." };
 }, 60_000);
+
+test("tree objects follow path names, not the order a resumed build prepares them", async () => {
+  const files = [...testPassFiles(0),
+    { path: journalV2RetainedPath(0, { kind: "definition", digest: textDigest("TEST definition") }), data: utf8("TEST definition") },
+    { path: journalV2RetainedPath(0, { kind: "birth", digest: textDigest("TEST birth") }), data: utf8("TEST birth") }];
+  const paths = files.filter(file => file.path !== "journal/v2/head.json" && !file.path.endsWith("/pass.json")).map(file => file.path);
+  const build = async (steps: string[][]) => {
+    const work = new JournalWork(new ArchiveBudget({}, () => 0)), maker = new JournalObjects("sha1", work);
+    const patch = new JournalV2TreePatch(null, null, work);
+    await patch.prepare(["journal/v2/head.json", journalV2PassPath(0)]);
+    for (const step of steps) await patch.prepare(step);
+    patch.finish(files, maker);
+    return maker.objects().map(object => object.id);
+  };
+  // One build prepares every path at once; the other prepares them in reverse, one per step.
+  expect(await build([...paths].reverse().map(path => [path]))).toEqual(await build([paths]));
+});

@@ -4,7 +4,7 @@
 import type { Entry, OperationId } from "@generalbusiness/dap-contract";
 import { factRefOf, entryHash } from "@generalbusiness/dap-bytes";
 import { applyEntry, checkpointOf, clockOf, entryOf, fits, judgeDelivery, reserved, type Draft, type StateView, type ValidDefinition } from "../../src/index.ts";
-import { Scope, arriving, directory, forged, keys, on, otherLane, valid, variant } from "../fixtures.ts";
+import { Scope, arriving, directory, directorySequence, forged, keys, on, otherLaneSequence, valid, variant } from "../fixtures.ts";
 import { Works, changed, opened, OWNER, TELL, works } from "../fixtures-holds.ts";
 import { M } from "../definition-corpus/forms-settles-data.ts";
 import { settlesChanges } from "../definition-corpus/settles-variants.ts";
@@ -77,12 +77,12 @@ export class SettlementFixture {
       const key = `${command.origin}:${command.result}`;
       let source = this.#replies.get(key);
       if (!source) {
-        source = forged(this.family === "marker" ? directory : otherLane, ++this.#source,
-          { type: "delivery", ...request, message: sent.message as never, decision: command.result }, [send]);
+        source = forged(this.family === "marker" ? directorySequence : otherLaneSequence, ++this.#source,
+          { type: "delivery", sourceKind: "lane", ...request, message: sent.message as never, decision: command.result }, [send]);
         this.#replies.set(key, source);
       }
       if (scope instanceof Works) scope.script.after = () => opened(0, "audit", 1);
-      const arrival = { ...send, from: factRefOf(source.entry) };
+      const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) };
       return scope.commit(judgeDelivery(scope.state, scope.definition, arrival,
         { ...arriving(scope, arrival, source), ...(scope instanceof Works ? { platform: scope.rules } : {}) }));
     }

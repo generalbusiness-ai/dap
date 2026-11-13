@@ -18,7 +18,7 @@ export function readDeviceCommandBounds(value: unknown): DeviceCommandBounds | n
 /** Call only after the native source/message/seed proof, or on retained genesis. */
 export function readDeviceCommandGrant(value: unknown, membership: ScopeRef): DeviceCommandGrant | null {
   if (!shape(value, ["capability", "owner", "bounds", "root", "definitions"]) || value["capability"] !== DEVICE_COMMAND
-    || !isMemberRef(value["owner"]) || membership.kind !== "membership" || !same(value["owner"].membership, membership)
+    || !isMemberRef(value["owner"]) || !same(value["owner"].membership, membership)
     || !isDigest(value["root"])) return null;
   const bounds = readDeviceCommandBounds(value["bounds"]), definitions = value["definitions"];
   if (!bounds || !Array.isArray(definitions) || definitions.length < 1 || definitions.length > DEVICE_COMMAND_DEFINITIONS

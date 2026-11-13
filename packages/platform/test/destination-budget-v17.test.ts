@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type FactRef, type Incarnation, type RulesObservation } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Digest, type Entry, type FactRef, type RulesObservation } from "@generalbusiness/dap-contract";
 import { canonicalize, isEntry, isFieldValue, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { observationBytes, valueDigest, type Item, type RuleGiven } from "@generalbusiness/dap-derive";
-import { d, grantOf, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { d, grantOf, keys, otherLane, t, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { evidenceDestinationProfileV17, evidencePolicyV17 } from "../src/destination-evidence-v17.ts";
 import { evidenceBatchWireV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "../src/evidence-batch-v17.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
@@ -12,7 +12,7 @@ import { CERTIFIED_PUBLICATION_TEXT_BYTES_V17, certifiedCaptureBudgetV17, certif
 
 // SCRIPTED policy observations and facts. These tests exercise byte and
 // wire correspondence, not Native certificates or publication authority.
-const destination = { ...otherLane, kind: "destination" as const }, rules = { ...otherLane, kind: "rules" as const };
+const destination = fixtureScope("destination", 17).at, rules = fixtureScope("rules", 18).at;
 const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
 function record(label = "wire"): CertifiedPublicationStateV17 {
   const proposed = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, checks: [], labels: [label], roomService: null,
@@ -29,7 +29,7 @@ function record(label = "wire"): CertifiedPublicationStateV17 {
   return { policy: { observation, input: { rules, destination, extents: envelope }, touched: ["source"], required: [], tree: "a".repeat(40), manifest: fact(4) }, generations: [] };
 }
 function capture(value: CertifiedPublicationStateV17): Entry {
-  return { v: 1, at: destination, seq: 5, prev: d("a"), time: t(0), clamped: false, epoch: 0, prepared: [], uses: [], sends: [],
+  return { v: 1, genesis: destination.genesis, seq: 5, prev: d("a"), time: t(0), clamped: false, epoch: 0, prepared: [], uses: [], sends: [],
     input: { type: "outcome", owner: "platform:destination@17", kind: "judge", operation: "4:0", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: {} } },
     effects: [{ effect: "value", item: 4, slot: "passes", value: certifiedPublicationWireV17(value, PROPOSED_BOUNDS) }] };
 }
@@ -61,9 +61,9 @@ test("capture and future passes budgets include outer text quotes and escapes", 
 
 test("carrying request input matches an isEntry-valid applied delivery including its implicit opening and reply", () => {
   const message = { class: "request" as const, type: "tell" as const, body: { message: "evidence-fund", fields: { publication: fact(1, destination) } } };
-  const offered: RuleGiven["input"] = { type: "delivery", from: fact(4, destination), n: 0, message };
-  const entry: Entry = { v: 1, at: destination, seq: 5, prev: d("a"), time: t(0), clamped: false, epoch: 0, prepared: [], uses: [],
-    input: { type: "delivery", from: fact(4, destination), n: 0, message, decision: "applied" },
+  const offered: RuleGiven["input"] = { type: "delivery", from: fact(4, destination), sourceKind: "destination", n: 0, message };
+  const entry: Entry = { v: 1, genesis: destination.genesis, seq: 5, prev: d("a"), time: t(0), clamped: false, epoch: 0, prepared: [], uses: [],
+    input: { type: "delivery", from: fact(4, destination), sourceKind: "destination", n: 0, message, decision: "applied" },
     effects: [{ effect: "open", item: 5, type: "evidence-batch", state: "funded" }],
     sends: [{ n: 0, to: destination, message: { class: "result", of: { from: fact(4, destination), n: 0 }, outcome: "applied" } }] };
   expect(isEntry(entry)).toBe(true);
@@ -79,7 +79,7 @@ test("carrying act input uses its actual grant authority and presented facts, wi
     expected: { on: 0, job: 3 }, fields: { admission: fact(3, destination) }, idempotencyKey: "scripted-carrier", notAfter: t(60) }, keys.una.secret);
   const grant = grantOf(keys.una, destination, ["destination.read-token"]), presented = { operation: fact(2) };
   const offered: RuleGiven["input"] = { type: "act", signed, grant, presented };
-  const entry: Entry = { v: 1, at: destination, seq: 5, prev: d("a"), time: t(0), clamped: false, epoch: 0, prepared: [], uses: [],
+  const entry: Entry = { v: 1, genesis: destination.genesis, seq: 5, prev: d("a"), time: t(0), clamped: false, epoch: 0, prepared: [], uses: [],
     input: { type: "act", signed, authority: [grant], presented }, effects: [{ effect: "value", item: 3, slot: "record", value: canonicalize({ reason: "\\" }) }], sends: [] };
   expect(isEntry(entry)).toBe(true);
   expect(evidenceCarryingInputV17(offered)).toEqual(entry.input);
@@ -109,7 +109,7 @@ test("published written callbacks and the direct plan outcome fit their frozen-r
   expect(measured.effects).toBe(18);
   for (const variant of measured.variants) {
     const entry = { ...variant.entry, uses: Array.from({ length: PROPOSED_BOUNDS.usesPerEntry }, (_, n) => ({
-      fact: { ...fact(n, destination), seq: Number.MAX_SAFE_INTEGER - n }, content: d("f"),
+      fact: { ...fact(n, destination), seq: Number.MAX_SAFE_INTEGER - n }, content: d("f"), kind: "destination" as const,
     })) };
     expect(isEntry(entry), `${variant.name} complete entry`).toBe(true);
     // Independently materialize the full canonical uses array rather than
@@ -127,7 +127,7 @@ test("published written callbacks and the direct plan outcome fit their frozen-r
   const receipt = measured.variants.find(variant => variant.name === "receipt")!;
   expect(receipt.effects).toBe(13);
   expect(receipt.entry.effects).toContainEqual({ effect: "value", item: Number.MAX_SAFE_INTEGER, slot: "planOpenedAt", value: Number.MAX_SAFE_INTEGER });
-  expect(receipt.entry.effects.filter(effect => effect.effect === "operation").map(effect => effect.kind))
+  expect(receipt.entry.effects.flatMap(effect => effect.effect === "operation" ? [effect.kind] : []))
     .toEqual(["revoke", "reservation-delete", "mint", "evidence-plan"]);
   const read = measured.variants.find(variant => variant.name === "read")!;
   expect(read.effects).toBe(6);
@@ -159,17 +159,17 @@ test("the Native policy reader accepts an unfixed RecordedRef and rejects a diff
   // SCRIPTED authenticated observation/value ports isolate the production
   // reader's recorded-reference comparison; no Native authority is invented.
   const policy = record().policy;
-  const read = (fixed: readonly Incarnation[], observation = policy.observation) => evidencePolicyV17({
+  const read = (fixed: readonly Digest[], observation = policy.observation) => evidencePolicyV17({
     time: t(0), resolved: { at: destination },
-    state: { page: () => ({ items: [{ refs: {}, values: { rules: rules.scope } }] }), incarnations: () => fixed },
+    state: { page: () => ({ items: [{ refs: {}, values: { rules: rules.scope } }] }), geneses: () => fixed },
     observed: () => ({ observation }), value: () => policy.input.extents,
   } as unknown as RuleGiven);
   expect(read([])).toMatchObject({ rules, revision: policy.observation.revision });
-  expect(read([rules.inc])).toMatchObject({ rules, revision: policy.observation.revision });
-  expect(keys.una.member.membership.inc).not.toBe(rules.inc);
-  expect(read([keys.una.member.membership.inc])).toBeNull();
+  expect(read([rules.genesis])).toMatchObject({ rules, revision: policy.observation.revision });
+  expect(keys.una.member.membership.genesis).not.toBe(rules.genesis);
+  expect(read([keys.una.member.membership.genesis])).toBeNull();
   expect(read([], { ...policy.observation, of: { ...rules, scope: keys.una.member.membership.scope } })).toBeNull();
-  expect(read([rules.inc, keys.una.member.membership.inc])).toBeNull();
+  expect(read([rules.genesis, keys.una.member.membership.genesis])).toBeNull();
 });
 
 

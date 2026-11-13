@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { afterAll, beforeAll, expect, test } from "vitest";
-import type { Entry, Intent, Seed, ScopeId } from "@generalbusiness/dap-contract";
+import type { Intent, Seed, ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { DIRECTORY, REGISTER, destinationReceipt, initialCommitOf, repositoryName } from "@generalbusiness/dap-platform";
@@ -9,7 +9,7 @@ import { buildPack, type RawGitObject } from "@generalbusiness/dap-git/http";
 import { SqliteStore } from "../src/index.ts";
 import { site } from "../src/site/route.ts";
 import type { SiteEnv } from "../src/site/host.ts";
-import { net } from "../src/testing.ts";
+import { net, storedOwn } from "../src/testing.ts";
 import { soon } from "./net.ts";
 import { outsideOf, wired } from "./outside.ts";
 import { initialPublication } from "./publication.ts";
@@ -70,7 +70,7 @@ beforeAll(async () => {
   const f = await creation(true); R = f.r; D = f.d; G = f.g; repository = f.repo;
   const commit = await runInDurableObject(G.object, (_instance, state) => {
     const store = new SqliteStore({ exec: (q, ...b) => state.storage.sql.exec(q, ...b), transaction: (f) => state.storage.transactionSync(f) });
-    const own = (seq: number) => { const row = store.stored(seq); return row ? { entry: JSON.parse(row.bytes) as Entry, hash: row.hash } : null; };
+    const own = storedOwn(store);
     const first = initialCommitOf(store, own, "sha1");
     const receipt = destinationReceipt(store, own, store.page("receipt", ["written"], null, 1).items[0]!, "sha1");
     return { ...first, receipt };
@@ -148,6 +148,6 @@ test("immutable proof is read-only and complete-directory-bound", async () => {
   const repo = (await D.item(0)).values["repository"];
   const peer = G.stub as unknown as import("../src/site/publication.ts").SitePublicationPeer;
   expect(await peer.sitePublishedCommit(source, repo as never, published)).toMatchObject({ ok: true, proof: { commit: published, directory: source, receipt: { ref: receiptRef, commit: receiptCommit } } });
-  expect(await peer.sitePublishedCommit({ ...source, inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa" as never }, repo as never, published)).toEqual({ ok: false, reason: "not-published" });
+  expect(await peer.sitePublishedCommit({ ...source, genesis: `sha256:${"aa".repeat(32)}` as const }, repo as never, published)).toEqual({ ok: false, reason: "not-published" });
   expect(await Promise.all([D, G].map(snapshot))).toEqual(before);
 });

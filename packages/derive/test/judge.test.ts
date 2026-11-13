@@ -2,9 +2,9 @@ import { judge_change0, judge_change1, judge_change2, judge_change3, judge_chang
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Effect, MemberRef, RefusalReason } from "@generalbusiness/dap-contract";
-import { canonicalBytes, digestBytes, intentDigest } from "@generalbusiness/dap-bytes";
+import { canonicalBytes, digestBytes, intentDigest, isEntryBodyOf, isEntryOf } from "@generalbusiness/dap-bytes";
 import { type ActJudgment } from "../src/index.ts";
-import { Scope, d, directory, fields, grantOf, keys, lane, laneDefinition, on, otherLane, small, smallDefinition, t, variant, type Actor } from "./fixtures-entry.ts";
+import { Scope, d, directory, fields, grantOf, keys, lane, laneDefinition, on, otherLane, fixtureSequence, small, smallDefinition, t, variant, type Actor } from "./fixtures-entry.ts";
 
 const { rita, una, vic, paul, sam } = keys;
 const names = (list: unknown) => (list as readonly MemberRef[]).map((m) => m.member);
@@ -294,7 +294,7 @@ describe("a foreign fact (sections 5.1 and 6.5)", () => {
     const l = laneWithCommitment();
     const { entry, hash } = l.entries.at(-1)!;        // the lane's `assign` entry, which names una as performer
     const proof = { at: l.at, seq: entry.seq, hash };
-    const fetched = { fact: proof, entry, under: "lane" };
+    const fetched = { fact: proof, entry, sequence: fixtureSequence(l), under: "lane" };
     const s = new Scope(smallDefinition);
     const cite = (who: Actor, facts: (typeof fetched)[]) => s.act(who, "cite", { ...on(s, 0), ...fields({ proof }) }, { facts });
 
@@ -307,7 +307,7 @@ describe("a foreign fact (sections 5.1 and 6.5)", () => {
 
     expect(cite(una, [fetched]).result).toBe("write");
     const written = s.entries.at(-1)!.entry;
-    expect(written.uses).toEqual([{ fact: proof, content: digestBytes(canonicalBytes(entry)) }]);
+    expect(written.uses).toEqual([{ fact: proof, content: digestBytes(canonicalBytes(entry)), kind: "lane" }]);
     // An effect may take a member from a field of the fetched fact.
     expect(names(s.item(0).parties["readers"])).toEqual(["@una"]);
   });
@@ -318,8 +318,14 @@ describe("a foreign fact (sections 5.1 and 6.5)", () => {
     const proof = { at: l.at, seq: entry.seq, hash };
     // `cite` with a second fact field, later in byte order than `proof`.
     const s = new Scope(variant(small, judge_change4));
-    const cite = (second: typeof proof) => s.act(una, "cite", { ...on(s, 0), ...fields({ proof, second }) }, { facts: [{ fact: proof, entry, under: "lane" }] });
+    const sequence = fixtureSequence(l);
+    const fetched = { fact: proof, entry, sequence, under: "lane" };
+    const cite = (second: typeof proof, first = proof) => s.act(una, "cite", { ...on(s, 0), ...fields({ proof: first, second }) }, { facts: [fetched] });
     expect(cite({ at: otherLane, seq: 99, hash })).toEqual({ result: "unavailable", reason: "dependency-unavailable" });
+    const wrongAddress = { ...proof, at: { ...proof.at, scope: otherLane.scope } };
+    expect(isEntryBodyOf(entry, wrongAddress)).toBe(true);
+    expect(isEntryOf(entry, wrongAddress, sequence)).toBe(false);
+    expect([cite(wrongAddress), cite(proof, wrongAddress)]).toEqual([{ result: "unavailable", reason: "dependency-unavailable" }, { result: "unavailable", reason: "dependency-unavailable" }]);
     // Two references that both pass are one reference: the entry is used once.
     expect(cite(proof).result).toBe("write");
     expect(s.last.uses.map((u) => u.fact)).toEqual([proof]);

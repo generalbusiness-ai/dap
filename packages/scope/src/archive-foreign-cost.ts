@@ -57,6 +57,11 @@ export function forecastArchiveForeignRepeat(bytes: number): Readonly<ArchiveCos
 /** Cold keyed size and genesis binding only, not header/privacy/support. */
 export const forecastArchiveForeignCopySize = (): Readonly<ArchiveCost> => foreignNativeMetadata(ARCHIVE_FOREIGN_COPY_SIZE_METADATA);
 export const forecastArchiveForeignGenesis = (): Readonly<ArchiveCost> => foreignNativeMetadata(ARCHIVE_FOREIGN_GENESIS_METADATA);
+/** One keyed `retained_birth` lookup for a sequence that an entry uses at a
+ * later entry (ruling 4f697a7a). Its seq 0 copy then pays an ordinary cold
+ * or repeated copy request. */
+export const ARCHIVE_FOREIGN_BIRTH_METADATA = 128;
+export const forecastArchiveForeignBirth = (): Readonly<ArchiveCost> => foreignNativeMetadata(ARCHIVE_FOREIGN_BIRTH_METADATA);
 
 export const ARCHIVE_MEMBERSHIP_COPY_METADATA = 512;
 export const archiveMembershipCopyWork = (bytes: number): number => bytes * 16;

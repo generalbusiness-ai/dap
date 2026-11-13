@@ -183,7 +183,7 @@ describe("both MCP wire revisions, each by its own rules", () => {
     const home = mkdtempSync(join(tmpdir(), "mcp-home-"));
     mkdirSync(join(home, "keys"), { recursive: true });
     writeFileSync(join(home, "keys", "device.key"), `${b64url(secret)}\n`, { mode: 0o600 });
-    writeFileSync(join(home, "config.json"), JSON.stringify({ v: 1, key: "device", ...configOf() }));
+    writeFileSync(join(home, "config.json"), JSON.stringify({ v: 2, key: "device", ...configOf() }));
     const spawn = (pin: "legacy" | "modern", ...flags: string[]) => {
       const c = client(pin);
       const transport = new StdioClientTransport({ command: process.execPath, args: [CLI, "mcp", ...flags], env: { ...process.env, ARTROOM_HOME: home } as Record<string, string>, stderr: "pipe" });

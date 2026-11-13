@@ -3,6 +3,6 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "include": ["src/node.ts"],
+  "include": ["src/node.ts", "src/store-format.ts"],
   "exclude": []
 }

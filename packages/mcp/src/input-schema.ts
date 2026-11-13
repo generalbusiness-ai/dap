@@ -12,7 +12,7 @@ const or = (words: readonly string[]): string => (words.length <= 1 ? words.join
 const FACT_SCHEMA = {
   type: "object",
   properties: {
-    at: { type: "object", properties: { scope: { type: "string" }, inc: { type: "string" }, kind: { type: "string" } }, required: ["scope", "inc", "kind"], additionalProperties: false },
+    at: { type: "object", properties: { scope: { type: "string" }, genesis: { type: "string", pattern: "^sha256:[0-9a-f]{64}$" } }, required: ["scope", "genesis"], additionalProperties: false },
     seq: { type: "integer", minimum: 0 },
     hash: { type: "string", pattern: "^sha256:[0-9a-f]{64}$" },
   },
@@ -50,8 +50,8 @@ export function schemaOf(type: FieldLike, setting: Setting): Schema {
     case "reference": {
       const fragment = { type: "string", description: `At most ${String(type["fragment"])} UTF-8 bytes` };
       const entry = { type: "object", required: ["at", "seq", "hash"], additionalProperties: false, properties: {
-        at: { type: "object", required: ["scope", "inc", "kind"], additionalProperties: false, properties: {
-          scope: { type: "string" }, inc: { type: "string" }, kind: { type: "string" },
+        at: { type: "object", required: ["scope", "genesis"], additionalProperties: false, properties: {
+          scope: { type: "string" }, genesis: { type: "string", pattern: "^sha256:[0-9a-f]{64}$" },
         } },
         seq: { type: "integer", minimum: 0 }, hash: { type: "string", pattern: "^sha256:[0-9a-f]{64}$" },
       } };
@@ -61,7 +61,7 @@ export function schemaOf(type: FieldLike, setting: Setting): Schema {
       ], description };
     }
     case "fact": return { type: "object", required: ["at", "seq", "hash"], description };
-    case "scope": return { type: "object", required: ["scope", "inc", "kind"], properties: { kind: { const: type["kind"] } }, description };
+    case "scope": return { type: "object", required: ["scope", "genesis"], properties: { scope: { type: "string" }, genesis: { type: "string", pattern: "^sha256:[0-9a-f]{64}$" } }, description };
     case "commit": case "tree": return { type: "string", pattern: "^([0-9a-f]{40}|[0-9a-f]{64})$" };
     case "digest": return { type: "string", pattern: "^sha256:[0-9a-f]{64}$", ...(isRecord(type["value"]) ? { description } : {}) };
     case "record": {

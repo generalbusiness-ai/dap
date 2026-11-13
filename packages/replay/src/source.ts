@@ -174,6 +174,25 @@ export class MemorySource implements HistorySource {
   readonly scopes = new Map<ScopeId, MemoryScope>();
   readonly pageSize: number;
 
+  /**
+   * Rulings 4f697a7a and ae48dd39: a scope keeps the first entry of each foreign sequence that one of its entries uses at a later
+   * entry, and serves it as `birth` under the genesis digest. With no such row in `retained`, this source serves the genesis that
+   * it holds of that sequence, when an entry of `scope` uses a later entry of it. The reader still admits the bytes.
+   */
+  #birth(scope: ScopeId, genesis: Digest): RetainedInput | undefined {
+    const uses = (bytes: string): boolean => {
+      const entry: unknown = JSON.parse(bytes);
+      return isObject(entry) && Array.isArray(entry["uses"]) && entry["uses"].some((use: unknown) => isObject(use) && isObject(use["fact"])
+        && typeof use["fact"]["seq"] === "number" && use["fact"]["seq"] > 0 && isObject(use["fact"]["at"]) && use["fact"]["at"]["genesis"] === genesis);
+    };
+    if (!this.scopes.get(scope)?.entries.some((stored) => uses(stored.bytes))) return undefined;
+    for (const held of this.scopes.values()) {
+      const first = held.entries[0];
+      if (first?.seq === 0 && first.hash === genesis) return { kind: "birth", digest: genesis, bytes: first.bytes };
+    }
+    return undefined;
+  }
+
   constructor(scopes: Iterable<MemoryScope> = [], pageSize = 200) {
     for (const s of scopes) this.scopes.set(s.scope.scope, s);
     this.pageSize = pageSize;
@@ -192,7 +211,8 @@ export class MemorySource implements HistorySource {
   }
 
   retained(scope: ScopeId, kind: RetainedInput["kind"], digest: Digest, allow: Pick<Allow, "bytes">, domain?: string): Promise<{ ok: true; input: RetainedInput; bytes: number } | Unread> {
-    const input = this.scopes.get(scope)?.retained.find((r) => r.kind === kind && r.digest === digest && (kind !== "value" || r.domain === domain));
+    const input = this.scopes.get(scope)?.retained.find((r) => r.kind === kind && r.digest === digest && (kind !== "value" || r.domain === domain))
+      ?? (kind === "birth" && domain === undefined ? this.#birth(scope, digest) : undefined);
     if (!input) return Promise.resolve(unread("not-found"));
     const bytes = utf8(input.bytes).length;
     return Promise.resolve(bytes > allow.bytes ? unread("too-large") : { ok: true, input, bytes });

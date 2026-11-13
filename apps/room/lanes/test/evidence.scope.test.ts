@@ -165,7 +165,7 @@ test("a merged change accepts only its configured native peer's published job an
   // namespace transport. A previously held send may not yet be due in the
   // outbox; this does not mint a new cause, seed, signature or Native proof.
   const wire = namespace(env.NET), incidentFact = await lane.fact(incident.id);
-  const parentSource = await wire.resolver.read(incidentFact, net.bounds.fetchSeconds, true);
+  const parentSource = await wire.resolver.read(incidentFact, { maxBytes: net.bounds.entryBytes, milliseconds: Math.floor(net.bounds.fetchSeconds * 1000) }, true);
   const retried = await wire.transport.send({ to: send.to, from: incidentFact, n: send.n, message: send.message });
   const activation = await transport.summary(childName, reader), first = await transport.entry(childName, reader, 0);
   const born = first.ok && first.value.entry.input.type === "genesis" ? first.value.entry.input : null;

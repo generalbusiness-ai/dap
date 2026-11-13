@@ -3,7 +3,7 @@ import { natural } from "@generalbusiness/dap-bytes";
 import type { Cursor, Digest, OutboxItem, OutboxId, OperationId, Read, ScopeId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { isDigest, isOutboxItem, isOutboxId, isListOf, isOperationId, isRead, isRecord, isScopeRef, timeMs } from "@generalbusiness/dap-bytes";
 
-export type IncidentKind = "outcome-conflict" | "ref-mismatch" | "incarnation-conflict" | "pin-confirm-no-pin" | "unpin-never-admitted" | "token-unowned" | "branch-moved" | "bad-input" | "sent-again";
+export type IncidentKind = "outcome-conflict" | "ref-mismatch" | "genesis-conflict" | "pin-confirm-no-pin" | "unpin-never-admitted" | "token-unowned" | "branch-moved" | "bad-input" | "sent-again";
 export type IncidentReference = { entry: number; hash?: Digest } | { operation: OperationId; attempt: number } | { outboxId: OutboxId };
 export interface OperationalIncident { n: number; time: Timestamp; scope: ScopeRef | null; kind: IncidentKind; refs: readonly IncidentReference[] }
 export interface RequestCorrelation { n: number; request: string; trace: string | null; time: Timestamp; seq: number | null; outboxId: OutboxId | null }
@@ -14,7 +14,7 @@ export interface OperationalApi {
   requests(scope: ScopeId, reader: unknown, request: string, cursor?: Cursor): Promise<Read<RequestCorrelations>>;
 }
 const timestamp = (value: unknown): value is Timestamp => typeof value === "string" && timeMs(value) !== null;
-const kinds: readonly string[] = ["outcome-conflict", "ref-mismatch", "incarnation-conflict", "pin-confirm-no-pin", "unpin-never-admitted", "token-unowned", "branch-moved", "bad-input", "sent-again"];
+const kinds: readonly string[] = ["outcome-conflict", "ref-mismatch", "genesis-conflict", "pin-confirm-no-pin", "unpin-never-admitted", "token-unowned", "branch-moved", "bad-input", "sent-again"];
 function reference(value: unknown): value is IncidentReference {
   if (!isRecord(value)) return false;
   const keys = Object.keys(value);

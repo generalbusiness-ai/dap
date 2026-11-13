@@ -18,7 +18,7 @@ const SERVICE = "service.invalid";
 const NAMESPACE = "artroom-demo";
 const repository = { host: "artifacts", namespace: NAMESPACE, name: "repo-1", id: "repo-1" };
 const REMOTE = `https://${SERVICE}/git/${NAMESPACE}/repo-1.git`;
-const binding: DestinationBinding = { scope: { scope: "sc_scripted", inc: "in_scripted", kind: "destination" }, mint: "1:0", attempt: 1, write: "2:0", writeAttempt: 1, ref: "refs/heads/main" };
+const binding: DestinationBinding = { scope: { scope: "sc_scripted", genesis: `sha256:${"5c".repeat(32)}` }, mint: "1:0", attempt: 1, write: "2:0", writeAttempt: 1, ref: "refs/heads/main" };
 const refused = (code: string) => Object.assign(new Error(code), { code, numericCode: 10000 });
 
 /** A scripted binding: every call is logged; each answer is what the test sets. */

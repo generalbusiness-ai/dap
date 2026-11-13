@@ -7,7 +7,7 @@ import { definitionOf } from "./command-targets.ts";
 import { enrolAgentKey, enrolCheckerKey, enrolDeviceKey } from "./invitations.ts";
 import { newStoredSigner } from "./store-signer.ts";
 import type { Config, PendingJoin } from "./store.ts";
-import { b64url, canonicalize, factRefOf, intentDigest, isFactRef, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, intentDigest, isFactRef, scopeIdOf, textDigest, timeOf, utf8, isEntryBodyOf } from "@generalbusiness/dap-bytes";
 import { AGENT_KEY_LINK, CHECKER_KEY_LINK, DEVICE_KEY_LINK, type DeviceKeyInvitation, encodeDeviceKeyInvitation, invitationIssueFields, invitationRedemptionFields, isAgentKeyMembership, isDeviceKeyInvitation, isInvitationMembership, signedIntent, ScopeHandle, TransportError, wellFormedInvitation } from "@generalbusiness/dap-client";
 import type { FactRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { platform, ROLE_LISTS } from "@generalbusiness/dap-platform";
@@ -101,7 +101,7 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
     let pending: PendingJoin | undefined = before?.join;
     const shared = pending && (({ inbox: _inbox, ...repository }) => repository)(pending.repository);
     if (pending && (pending.link !== linkDigest || before!.service !== link.service || canonicalize(shared) !== canonicalize(link.repository) || pending.handle !== link.handle)) return failed(`The invitation link does not match the pending join. ${joinSent(pending)} Retry the original invitation link.`);
-    const base: Config = before ? { v: 1, service: before.service, key: before.key } : { v: 1, service: link.service, key: "device" };
+    const base: Config = before ? { v: 2, service: before.service, key: before.key } : { v: 2, service: link.service, key: "device" };
     const signer = pending ? await signerOf(ctx, base) : await newStoredSigner(ctx.store, base.key);
     let signed: SignedIntent;
     const keep = async (next: PendingJoin) => { await ctx.store.save({ ...base, join: next }); pending = next; };
@@ -149,7 +149,7 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
     const joined = await handleOf(ctx, config, at.scope, null);
     const entry = await joined.entry(fact.seq);
     if (!entry.ok) return failed(`Cannot read entry ${M.scope}:${fact.seq}: ${entry.reason}. The join remains pending; retry the original invitation link.`);
-    if (canonicalize(factRefOf(entry.value.entry)) !== canonicalize(fact) || entry.value.hash !== fact.hash
+    if (!isEntryBodyOf(entry.value.entry, fact) || entry.value.hash !== fact.hash
       || entry.value.entry.input.type !== "act" || canonicalize(entry.value.entry.input.signed) !== canonicalize(signed)) return failed("The admitted entry does not match this exact join. The join request went ahead, and the join remains pending. Retry the original invitation link.");
     const inbox = entry.value.entry.sends.flatMap((send) => "creator" in send.to && send.to.kind === "inbox" ? [scopeIdOf(send.to as Seed)] : [])[0]
       ?? stopCommand(failed(`Joined, but entry ${M.scope}:${fact.seq} creates no inbox. The join remains pending.`));

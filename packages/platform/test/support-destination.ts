@@ -33,11 +33,11 @@ import { bureau } from "./definition-corpus-data.ts";
  */
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Entry, Evidence, FactRef, FieldValue, Input, MemberObservation, HoldersObservation, Observation, ObservationUse, OperationId, Request, RulesObservation, ScopeRef, Seed, Send, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import type { Entry, Evidence, FactRef, FieldValue, GenesisEntry, Input, MemberObservation, HoldersObservation, Observation, ObservationUse, OperationId, Request, RulesObservation, ScopeId, ScopeKind, ScopeRef, Seed, Send, SequenceEntry, Timestamp } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, entryHash, factRefOf, intentDigest, newGenesisNonce, scopeIdOf, signIntent, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { PROFILES, clockOf, contentStates, valueDigest, outcomeValueDomains, judgeDelivery, judgeGenesis, settleOutcome, validateDefinition } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Fetched, Judgment, OutcomeJudgment, Observing, PlatformRules, Source } from "@generalbusiness/dap-derive";
-import { Ledger, Scope, T0, creation as creationRequest, d, keys, laneDefinition, sent, t, type Actor, type Context, type Over } from "@generalbusiness/dap-derive/testing";
+import { Ledger, Scope, T0, creation as creationRequest, d, fixtureSequence, keys, laneDefinition, sent, t, type Actor, type Context, type Over } from "@generalbusiness/dap-derive/testing";
 import { DESTINATION, DESTINATION_KINDS, destination2, destinationReceipt, destinationRules2, destinationRulesWith, type LaneRead } from "../src/destination.ts";
 import { firstExtents } from "../src/extents.ts";
 import { rulesScope } from "../src/rules-scope.ts";
@@ -52,12 +52,44 @@ export const [HEAD, NEXT, OTHER, TREE] = ["a".repeat(40), "b".repeat(40), "c".re
 /** A made-up commit used only as report data in the hand-written lane entries. */
 export const RECEIPT = "e".repeat(40);
 
-/** STAND-IN: a membership scope and a rules scope that the hand-written observations name. Neither exists. */
-const observedScope = (kind: "membership" | "rules", fill: number): ScopeRef => {
-  const seed: Seed = { v: 1, kind, definition: d("f"), creator: null, cause: d(String(fill)), ordinal: 0 };
-  return { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(fill)), kind };
+/** The admitted sequence of each stand-in scope and each fixture ledger that hand-made entries name, by scope ID. */
+const sequences = new Map<ScopeId, CheckedSequence>();
+/** The canonical genesis bytes of each stand-in scope, by scope ID, for a scripted resolver that admits them. */
+const births = new Map<ScopeId, string>();
+/** The canonical genesis bytes of a stand-in scope. */
+export const birthAt = (at: ScopeRef): string => {
+  const birth = births.get(at.scope);
+  if (birth === undefined || sequences.get(at.scope)?.at.genesis !== at.genesis) throw new Error("no stand-in genesis for this fixture address");
+  return birth;
 };
-export const [MEMBERSHIP, RULES] = [observedScope("membership", 3), observedScope("rules", 4)];
+/** Register a fixture ledger, so that entries made by hand at its address carry its admitted sequence. */
+export const admittedLedger = (ledger: Ledger): ScopeRef => { const sequence = fixtureSequence(ledger); sequences.set(sequence.at.scope, sequence); return sequence.at; };
+/** The admitted sequence of a stand-in scope or a registered fixture ledger. */
+export const sequenceAt = (at: ScopeRef): CheckedSequence => {
+  const sequence = sequences.get(at.scope);
+  if (!sequence || sequence.at.genesis !== at.genesis) throw new Error("no admitted sequence for this fixture address");
+  return sequence;
+};
+/**
+ * STAND-IN: a scope that nothing judged. Its genesis is made by hand and
+ * binds bytes to an address only: no judge admitted it, and no scope of
+ * that address answers.
+ */
+export const standIn = (kind: ScopeKind, fill: number, definition = d("f"), cause = d(String(fill))): ScopeRef => {
+  const seed: Seed = { v: 1, kind, definition, creator: null, cause, ordinal: 0 };
+  const entry: GenesisEntry = { v: 1, seq: 0, prev: null, time: T0, clamped: false, epoch: 0,
+    input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(fill)), kind: "fixture", founding: null, source: null, sourceKind: null, n: null, message: null, decision: "applied" },
+    uses: [], prepared: [], effects: [], sends: [] };
+  const sequence = admitSequenceGenesis(canonicalize(entry), { scope: scopeIdOf(seed), genesis: entryHash(entry) }, PROPOSED_BOUNDS.entryBytes);
+  if (!sequence) throw new Error("the stand-in genesis must bind its address");
+  // Test files share this module in one isolate. A second genesis at one scope ID would replace the first one's sequence.
+  if (sequences.has(sequence.at.scope) && sequences.get(sequence.at.scope)!.at.genesis !== sequence.at.genesis) throw new Error("a stand-in scope ID already binds another genesis");
+  sequences.set(sequence.at.scope, sequence);
+  births.set(sequence.at.scope, canonicalize(entry));
+  return sequence.at;
+};
+/** STAND-IN: a membership scope and a rules scope that the hand-written observations name. Neither exists. */
+export const [MEMBERSHIP, RULES] = [standIn("membership", 3), standIn("rules", 4)];
 
 /** STAND-IN: an observation of one key, written by hand. No membership scope answered it. */
 export const keyObserved = (who: Actor, at: Timestamp, over: Partial<Observation> = {}): Observation => ({
@@ -114,15 +146,25 @@ export { bureau } from "./definition-corpus-data.ts";
 const bureauDefinition = checked(validateDefinition(bureau, PROPOSED_BOUNDS));
 
 let made = 0;
+/** The address of each entry made by hand. An entry states its genesis only, not its scope ID. */
+const madeAt = new WeakMap<Entry, ScopeRef>();
+/** The fact reference of an entry made by hand here. */
+export const refOf = (entry: Entry): FactRef => {
+  const at = madeAt.get(entry);
+  if (!at) throw new Error("refOf names only entries made by hand here");
+  return factRefOf(entry, at);
+};
 /**
  * An entry made by hand at a scope: it has a hash, and nothing judged it. `kind`: the kind of the act that it says it recorded.
  * `fields`: the fields of its intent. `effects`: what it says it derived, given its own position.
  */
-export function handMade(at: ScopeRef, kind: string, sends: readonly Send[] = [], who: Actor = rita, fields: Record<string, FieldValue> = {}, effects: (seq: number) => Entry["effects"] = () => []): Entry {
+export function handMade(at: ScopeRef, kind: string, sends: readonly Send[] = [], who: Actor = rita, fields: Record<string, FieldValue> = {}, effects: (seq: number) => SequenceEntry["effects"] = () => []): SequenceEntry {
   const signed = signIntent({ v: 1, to: at, actor: who.key, kind, on: null, expected: {}, fields, idempotencyKey: `made-${made}`, notAfter: t(60) }, who.secret);
   const input: Input = { type: "act", signed, authority: [], presented: {} };
   const seq = 100 + made++;
-  return { v: 1, at, seq, prev: d("0"), time: T0, clamped: false, epoch: 0, input, uses: [], prepared: [], effects: effects(seq), sends };
+  const entry: SequenceEntry = { v: 1, genesis: at.genesis, seq, prev: d("0"), time: T0, clamped: false, epoch: 0, input, uses: [], prepared: [], effects: effects(seq), sends };
+  madeAt.set(entry, at);
+  return entry;
 }
 /**
  * STAND-IN for a `report` entry of an issue lane, made by hand: it says that it opened a report and set its `commit`, as the
@@ -131,7 +173,7 @@ export function handMade(at: ScopeRef, kind: string, sends: readonly Send[] = []
 export const reportMade = (at: ScopeRef, commit: string | null): Entry =>
   handMade(at, "report", [], rita, {}, (seq) => [{ effect: "open", item: seq, type: "report", state: "reported" }, ...(commit === null ? [] : [{ effect: "value", item: seq, slot: "commit", value: commit } as const])]);
 /** An entry of another scope as it is fetched before a turn, with the name of the definition that its scope pins. */
-export const fetched = (entry: Entry, under: string): Fetched => ({ fact: factRefOf(entry), entry, under });
+export const fetched = (entry: Entry, under: string): Fetched => { const fact = refOf(entry); return { fact, entry, sequence: sequenceAt(fact.at), under }; };
 
 /**
  * STAND-IN for what a lane's `merge` lists in its `reserve`, made by hand: `v` verdicts, each with the entry of its review;
@@ -144,23 +186,20 @@ export function listed(lane: ScopeRef, issue: ScopeRef, v: number, decided: numb
   const [reviews, opened, deciding] = [made(v, "review-verdict"), made(decided + undecided, "request-check"), made(decided, "check")];
   const commits = Array.from({ length: r }, (_, n) => (n + 1).toString(16).padStart(40, "1"));
   const reports = commits.map((commit) => reportMade(issue, commit));
-  const accepted = factRefOf(handMade(issue, "accept-report")) as unknown as FieldValue;
+  const accepted = refOf(handMade(issue, "accept-report")) as unknown as FieldValue;
   return {
     fields: {
-      verdicts: reviews.map((review) => ({ review: factRefOf(review), reviewer: una.member, verdict: "approve" })),
-      jobs: opened.map((job, n) => ({ job: factRefOf(job), name: `job-${n}`, state: n < decided ? "passed" : "requested", ...(n < decided ? { decidedBy: factRefOf(deciding[n]!) } : {}) })),
-      reports: reports.map((report) => factRefOf(report)),
+      verdicts: reviews.map((review) => ({ review: refOf(review), reviewer: una.member, verdict: "approve" })),
+      jobs: opened.map((job, n) => ({ job: refOf(job), name: `job-${n}`, state: n < decided ? "passed" : "requested", ...(n < decided ? { decidedBy: refOf(deciding[n]!) } : {}) })),
+      reports: reports.map((report) => refOf(report)),
     },
     entries: [...reviews, ...opened, ...deciding, ...reports], reports, commits,
-    selected: reports.map((report) => ({ accepted, report: factRefOf(report) as unknown as FieldValue })) as FieldValue[],
+    selected: reports.map((report) => ({ accepted, report: refOf(report) as unknown as FieldValue })) as FieldValue[],
   };
 }
 
 /** STAND-IN: the register's `found` entry that a claim names, made by hand. */
-const register: ScopeRef = (() => {
-  const seed: Seed = { v: 1, kind: "register", definition: d("e"), creator: null, cause: d("c"), ordinal: 0 };
-  return { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(7)), kind: "register" };
-})();
+const register: ScopeRef = standIn("register", 7, d("e"), d("c"));
 const claim = handMade(register, "found");
 
 /** What a judgment answered: the result, with the reason and the refusal's name where it has them. */
@@ -204,12 +243,13 @@ export class Branch extends Ledger {
     this.bureau = new Ledger(bureauDefinition, "platform:directory");
     const creation = signIntent({
       v: 1, to: null, actor: rita.key, kind: "found", on: null, expected: {}, idempotencyKey: `found-${importing}`, notAfter: t(60),
-      fields: { repository: REPOSITORY, branch: "main", import: importing, claim: factRefOf(claim) as unknown as FieldValue, membership: MEMBERSHIP.scope, rules: RULES.scope, "founderHandle": "@rita" },
+      fields: { repository: REPOSITORY, branch: "main", import: importing, claim: refOf(claim) as unknown as FieldValue, membership: MEMBERSHIP.scope, rules: RULES.scope, "founderHandle": "@rita" },
     }, rita.secret);
     const seed: Seed = { v: 1, kind: "directory", definition: bureauDefinition.digest, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
-    this.bureau.seal(written(judgeGenesis(this.bureau.state, bureauDefinition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(1)), seed, creation: creation }, { clock: clockOf(this.bureau.state, T0), bounds: PROPOSED_BOUNDS, facts, prepared: [], source: null })));
+    this.bureau.seal(written(judgeGenesis(this.bureau.state, bureauDefinition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(1)), seed, creation: creation }, { clock: clockOf(this.bureau.state, T0), bounds: PROPOSED_BOUNDS, facts, prepared: [], source: null })));
     const { asked, source } = creationRequest(this.bureau, 0);
     this.seal(written(judgeGenesis(this.state, destinationDefinition, asked, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts, prepared: [], source, platform: this.rules })));
+    for (const ledger of [this.bureau, this.lane, this.other, this]) admittedLedger(ledger);
   }
 
   /** The bureau records the `applied` result and sends the confirmation, which makes the destination active. */
@@ -222,8 +262,8 @@ export class Branch extends Ledger {
   }
 
   /** A message of an entry of another scope, delivered here and judged. The entry is written if the judgment is to write. `source`: the entry that holds the send, as it is read. */
-  delivered(message: Send["message"], source: Source, facts: readonly Fetched[] = [], from: FactRef = factRefOf(source.entry), write = true): Judgment {
-    this.remember([...facts, { fact: from, entry: source.entry, under: source.under }]);
+  delivered(message: Send["message"], source: Source, facts: readonly Fetched[] = [], from: FactRef = factRefOf(source.entry, source.sequence.at), write = true): Judgment {
+    this.remember([...facts, { fact: from, entry: source.entry, sequence: source.sequence, under: source.under }]);
     const origin = message.class === "result" ? this.entries[message.of.from.seq]?.entry ?? null : null;
     const judgment = judgeDelivery(this.state, this.definition, { to: this.at, from, n: 0, message }, { clock: clockOf(this.state, this.now), bounds: this.bounds, facts, prepared: [], own: this.own, source, origin, platform: this.rules });
     if (write && judgment.result === "write") this.seal(judgment.draft);
@@ -233,7 +273,7 @@ export class Branch extends Ledger {
   /** A request from an entry of that scope that is made by hand: the entry holds that one send, and says it recorded an act of that kind. */
   from(at: ScopeRef, under: string, kind: string, message: Request, facts: readonly Fetched[] = [], entry?: Entry): { judgment: Judgment; entry: Entry } {
     const source = entry ?? handMade(at, kind, [{ n: 0, to: this.at, message }]);
-    return { judgment: this.delivered(message, { entry: source, under }, facts), entry: source };
+    return { judgment: this.delivered(message, { entry: source, sequence: sequenceAt(at), under }, facts), entry: source };
   }
 
   /** STAND-IN for the directory's `import` update: a `relate` from the bureau, about its repository item, in that state. */
@@ -254,17 +294,17 @@ export class Branch extends Ledger {
    */
   reserve(over: Record<string, unknown> = {}, sender: Scope = this.lane, named: readonly Entry[] = [], selected: readonly FieldValue[] = []): { judgment: Judgment; operation: FactRef; merge: Entry } {
     const manifest = handMade(sender.at, "propose-manifest", [], rita, { selected });
-    const message: Request = { class: "request", type: "tell", body: { message: "reserve", fields: Object.fromEntries(Object.entries({ operation: { self: true }, manifest: factRefOf(manifest), verdicts: [], jobs: [], links: [], reports: [], ...over }).filter(([, value]) => value !== undefined)) as Record<string, FieldValue> } };
+    const message: Request = { class: "request", type: "tell", body: { message: "reserve", fields: Object.fromEntries(Object.entries({ operation: { self: true }, manifest: refOf(manifest), verdicts: [], jobs: [], links: [], reports: [], ...over }).filter(([, value]) => value !== undefined)) as Record<string, FieldValue> } };
     // A `report` entry of another scope than the sender is read as an entry of an issue lane. Every other entry is read as the lane's.
-    const facts = [manifest, ...named].map((entry) => fetched(entry, entry.input.type === "act" && entry.input.signed.intent.kind === "report" && entry.at.scope !== sender.at.scope ? "issue" : "change"));
+    const facts = [manifest, ...named].map((entry) => fetched(entry, entry.input.type === "act" && entry.input.signed.intent.kind === "report" && refOf(entry).at.scope !== sender.at.scope ? "issue" : "change"));
     const { judgment, entry } = this.from(sender.at, "change", "merge", message, facts);
     if (judgment.result === "write" && this.item(this.head.seq)?.type === "publication") this.#fetched.set(this.head.seq, [fetched(entry, "change"), ...facts]);
-    return { judgment, operation: factRefOf(entry), merge: entry };
+    return { judgment, operation: refOf(entry), merge: entry };
   }
 
   /** STAND-IN for a lane's `cancel-merge` entry and its `withdraw`, for that operation. `again`: the entry of an earlier call, for the same envelope again. */
   withdraw(merge: Entry, sender: Scope = this.lane, again?: Entry): { judgment: Judgment; entry: Entry } {
-    const message: Request = { class: "request", type: "tell", body: { message: "withdraw", fields: { operation: factRefOf(merge) } } };
+    const message: Request = { class: "request", type: "tell", body: { message: "withdraw", fields: { operation: refOf(merge) } } };
     return this.from(sender.at, "change", "cancel-merge", message, [fetched(merge, "change")], again);
   }
 
@@ -292,7 +332,7 @@ export class Branch extends Ledger {
     const holders: HoldersObservation = { subject: "holders", of: MEMBERSHIP, head: merger?.head ?? { seq: 412, hash: d("4") }, action: "rules.publish", count: 2, holders: [rita.member.member], definition: "platform:membership@1", at: this.now };
     const seen = [merger, rules, holders, ...others].filter((observation): observation is Observation | RulesObservation | HoldersObservation => observation !== null);
     return { observed: seen.map((observation, n) => retained(observation, n + 1)), facts: this.#fetched.get(judging) ?? [],
-      values: extents === null ? [] : [canonicalize(extents)], observing: { membership: { ...MEMBERSHIP, inc: null }, rules: { ...RULES, inc: null }, content: () => contentStates(rulesScope) } };
+      values: extents === null ? [] : [canonicalize(extents)], observing: { membership: { scope: MEMBERSHIP.scope, pending: true }, rules: { scope: RULES.scope, pending: true }, content: () => contentStates(rulesScope) } };
   }
 
   /**
@@ -357,7 +397,7 @@ export class Branch extends Ledger {
    */
   compromised(who: Actor): Judgment {
     const entry = handMade(MEMBERSHIP, "revoke-key");
-    const message: Request = { class: "request", type: "tell", body: { message: "compromised", fields: { key: who.key, member: who.member, entry: factRefOf(entry) } } };
+    const message: Request = { class: "request", type: "tell", body: { message: "compromised", fields: { key: who.key, member: who.member, entry: refOf(entry) } } };
     return this.from(this.bureau.at, "platform:directory", "compromised", message, [fetched(entry, "platform:membership")]).judgment;
   }
 

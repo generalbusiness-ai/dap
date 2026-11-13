@@ -13,6 +13,7 @@ type Key = Exclude<RetainedKey, { kind: "text" }>;
 function primary(key: Key): { table: string; where: string; args: SqlValue[] } {
   archiveRetainedPath(key); // Includes the existing finite domain spelling bound.
   return key.kind === "value" ? { table: "retained_value", where: "domain = ? AND digest = ?", args: [key.domain, key.digest] }
+    : key.kind === "birth" ? { table: "retained_birth", where: "genesis = ?", args: [key.digest] }
     : { table: "retained_input", where: "kind = ? AND digest = ?", args: [key.kind, key.digest] };
 }
 export function readRetainedArchivePass(sql: Pick<Sql, "exec">, key: Key, budget: ArchiveBudget): number | null {
@@ -44,7 +45,7 @@ export function confirmRetainedArchivePass(sql: Sql, manifest: string, budget: A
     let key: RetainedKey;
     try { key = checkedRetainedKey(raw["key"] as RetainedKey); } catch { return budget.stop("unavailable"); }
     const name = canonicalize(key);
-    if (key.kind === "entry") copies++;
+    if (key.kind === "entry" || key.kind === "birth") copies++;
     if (seen.has(name)) return budget.stop("unavailable"); seen.add(name);
     if (raw["pass"] === first) keys.push(key);
   }

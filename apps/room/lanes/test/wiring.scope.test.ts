@@ -124,7 +124,7 @@ test("W2, a mixed change touching the source and the rules extents: the source r
   const results = [];
   for (const node of scopes) {
     const { report, why } = await verify(httpSource("https://scopes.test", { fetch: routed }), { ...options, scope: node.name, head: (await node.summary()).at });
-    results.push([(await node.at()).kind, report.result, why?.split(":")[0] ?? null]);
+    results.push([await node.kind(), report.result, why?.split(":")[0] ?? null]);
   }
   expect(results).toEqual([
     ["register", "consistent", null], ["directory", "incomplete", unwalked], ["membership", "consistent", null], ["rules", "consistent", null],

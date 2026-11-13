@@ -4,6 +4,7 @@ import { readPublicOrigin } from "../public-origin.ts";
  * its exact presentation. This serves no application state and grants no
  * member authority. Only the dedicated sandbox service serves package bytes. */
 import { jsonReply } from "../response.ts";
+import { isRoomRetiredStop, roomRetiredResponse, type RoomRetiredStop } from "../room-retired.ts";
 import type { AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
 import { PROPOSED_BOUNDS, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, parseStrict, unb64url } from "@generalbusiness/dap-bytes";
@@ -13,8 +14,8 @@ import { ApplicationAdmissionError, readApplicationTrust, type ApplicationTrust 
 import { ApplicationContentStore } from "./content.ts";
 import type { ApplicationBindings } from "./bindings.ts";
 interface Peer {
-  applicationRoom(): Promise<ApplicationRoom | null>;
-  applicationInstallation(directory: ScopeRef, item: number): Promise<ApplicationInstallation | null>;
+  applicationRoom(): Promise<ApplicationRoom | null | RoomRetiredStop>;
+  applicationInstallation(directory: ScopeRef, item: number): Promise<ApplicationInstallation | null | RoomRetiredStop>;
 }
 import type { Binding } from "../namespace.ts";
 const POLICY = "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'; form-action 'self'";
@@ -69,9 +70,11 @@ async function screenResponse(request: Request, env: ApplicationBindings & { SCO
     const trust = readApplicationTrust(env.APPLICATION_TRUST);
     const room = await within(() => (env.SCOPES.get(env.SCOPES.idFromName(address.directory)) as unknown as Peer).applicationRoom(), PROPOSED_BOUNDS.fetchSeconds);
     if (room === LATE) return applicationJsonReply(503, { error: "application-unavailable" });
+    if (isRoomRetiredStop(room)) return roomRetiredResponse();
     if (!room || room.directory.scope !== address.directory) return applicationJsonReply(404, { error: "not-found" });
     const install = await within(() => (env.SCOPES.get(env.SCOPES.idFromName(room.rules.scope)) as unknown as Peer).applicationInstallation(room.directory, address.item), PROPOSED_BOUNDS.fetchSeconds);
     if (install === LATE) return applicationJsonReply(503, { error: "application-unavailable" });
+    if (isRoomRetiredStop(install)) return roomRetiredResponse();
     if (!install || canonicalize(install.rules) !== canonicalize(room.rules) || canonicalize(install.directory) !== canonicalize(room.directory)
       || install.ids.presentation !== address.presentation || !trust.some(row => row.release === install.ids.release)) return applicationJsonReply(404, { error: "not-found" });
     const context = readApplicationScreenContext({ ...install, v: 1, origin, deployment, membershipDefinition: room.membershipDefinition ?? install.membershipDefinition ?? "platform:membership@7" }, address, origin);

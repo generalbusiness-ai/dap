@@ -48,7 +48,7 @@ function program(definition: ValidDefinition, kind: string): BodyStructure {
 const evaluate = (body: BodyStructure, j: Judging, first = 0, budget?: number) => evaluateAdmitted(body, j, cause, { first }, budget);
 function context(definition: ValidDefinition, kind: string): Judging {
   const view = new MemoryState();
-  return { view, definition, bounds, clock: { reading: t(101), behind: false, asOf: t(101) }, scope: { at: directory, creator: null }, self: 20, kind,
+  return { view, definition, bounds, clock: { reading: t(101), behind: false, asOf: t(101) }, scope: { at: directory, kind: "directory", creator: null }, self: 20, kind,
     fields: {}, fieldTypes: definition.declared.acts[kind]!.fields, subjects: new Map(), signer: { member: keys.rita.member, principal: null }, facts: new Map(), prepared: [], used: [], ran: { clock: false } };
 }
 function item(definition: ValidDefinition, type: string, id: number) {
@@ -261,7 +261,7 @@ describe("typed derivation program", () => {
       { effect: "value", item: 20, slot: "performedTime", value: t(101) },
       { effect: "ref", item: 20, slot: "performedAt", to: 20 },
     ],
-      sends: [], prepared: [{ rule: "water-amount", input: "sha256:45547bba2a16304ebc0176996365e14fc3c2e9acf10fc50e093bc59c51f67c4e", result: true }], judgesTime: true, settles: false });
+      sends: [], prepared: [{ rule: "water-amount", input: "sha256:c8e36a7d2bf533d8e3d29cb812c936224dfa3a3aef8b4c68db28c6616605e58f", result: true }], judgesTime: true, settles: false });
     const noClock = context(fixture, "found"); noClock.ran = { clock: true }; expect(agree(noClock)).toEqual({ result: "ran", effects: [{ effect: "open", item: 20, type: "note", state: "live" }], sends: [], prepared: [], judgesTime: true, settles: false });
   });
   test("effect conditions evaluate unless after false if and retain unavailable precedence", async () => {

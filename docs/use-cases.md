@@ -807,7 +807,7 @@ A message is more than a reference. Native delivery retains the whole
 source entry in the receiving scope, and that room's readers can read
 it. So each act that sends to a party's room holds only what that party
 may read, and it uses no other scope's facts. The party's room then
-holds a fact reference to the sending act, `{ at: { scope, inc, kind },
+holds a fact reference to the sending act, `{ at: { scope, genesis },
 seq, hash }`, with that act's entry. That proves what the party was
 told and where it stands in the authority's record. It does not prove
 the comparison behind the decision, which the party never reads.

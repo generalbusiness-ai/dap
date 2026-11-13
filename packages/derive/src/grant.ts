@@ -121,7 +121,7 @@ export const covers = (within: unknown, scope: ScopeRef, membership: ScopeRef | 
 export function observationOf(answer: unknown, at: Timestamp): Observation | null {
   if (!isRecord(answer) || Object.keys(answer).length !== 13 || timeMs(at) === null) return null;
   const { of, head, key, keyState, member, memberState, role, actions, within, controller, controllerActive, notAfter, definition } = answer as Record<keyof Omit<Observation, "at">, unknown>;
-  if (!isScopeRef(of) || of.kind !== "membership" || !isHead(head) || !isKeyId(key) || !isMemberId(member) || typeof role !== "string") return null;
+  if (!isScopeRef(of) || !isHead(head) || !isKeyId(key) || !isMemberId(member) || typeof role !== "string") return null;
   if (keyState !== "active" && keyState !== "retired" && keyState !== "compromised" && keyState !== "unknown") return null;
   if (memberState !== "active" && memberState !== "removed") return null;
   // Section 16.1: `within` is a filter, and in an observation of a key its `membership` equals `of`. Another form is no answer.
@@ -164,35 +164,17 @@ export function highestHead(view: Pick<StateView, "observed">, observation: Obse
   return held.length === 0 ? null : Math.max(...held);
 }
 
-/**
- * A membership reference as a scope records it (authority note, section
- * 3.3, "Where it records its membership reference"): the scope, with its
- * incarnation. `inc` null: the scope records the ID and no incarnation. That
- * is a rules scope or a destination, which is created beside membership and
- * holds its scope ID alone, before any entry of it retains an observation
- * of that ID (section 12.1, "Where the rules scope and the destination
- * record their membership reference", decided in revision 25).
- */
-export type RecordedRef = Omit<ScopeRef, "inc"> & { inc: ScopeRef["inc"] | null };
+/** A full recorded membership sequence, or only its pending sibling address.
+ * The pending address cannot enter FactRef and is not GenesisSelfRef. */
+export type RecordedRef = ScopeRef | { scope: ScopeRef["scope"]; pending: true };
 
-/**
- * Guard 1 of an observation, "for these two scopes" too: the observation
- * is of the scope's own recorded reference. With an incarnation recorded,
- * `of` is that scope with that incarnation. While none is recorded, `of` is
- * the recorded scope ID, of the recorded kind, whatever incarnation
- * answered: the entry that retains the observation fixes it.
- */
+/** An authenticated observation fixes only the exact recorded address. */
 export const observedOf = (of: ScopeRef, recorded: RecordedRef): boolean =>
-  of.scope === recorded.scope && of.kind === recorded.kind && (recorded.inc === null || of.inc === recorded.inc);
+  of.scope === recorded.scope && ("pending" in recorded || of.genesis === recorded.genesis);
 
-/**
- * The reference with its incarnation, for one entry: the one recorded, or
- * while none is recorded the `of` of the observation that the entry
- * retains, which fixes it. Null: the scope records none; or it records no
- * incarnation and the entry retains no observation of the recorded ID.
- */
+/** Keep the full recorded identity, or bind the pending address from its exact observation. */
 export const fixedBy = (recorded: RecordedRef | null, of: ScopeRef | null | undefined): ScopeRef | null =>
-  (recorded === null ? null : recorded.inc !== null ? (recorded as ScopeRef) : of && observedOf(of, recorded) ? of : null);
+  (recorded === null ? null : !("pending" in recorded) ? recorded : of && observedOf(of, recorded) ? of : null);
 
 /** An earlier entry of the scope that retains a read: the entry, its time, and the observation as it retains it. */
 export interface Retains { entry: Head; time: Timestamp; observation: Observation }

@@ -11,9 +11,11 @@ import { FLOOR_WINDOW } from "@generalbusiness/dap-derive";
 import { canonicalize, digestBytes, intentDigest, isSeed, scopeIdOf, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { growArchivePolicies } from "../../../apps/room/archive-policy.ts";
+import { RECORDED_GROW_RELEASE } from "./support/recorded-grow-release.ts";
 import { buildJournalPass, captureJournalParentFrontier } from "@generalbusiness/dap-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "../src/archive-budget.ts";
 import { planLegacyArchiveAnchors, planPublishedArchivePass, planRootPublishedArchivePass, rebuildArchivePass } from "../src/archive-build.ts";
+import { archiveOwnReplayContext } from "../src/archive-publication.ts";
 import { fixtureArchiveTargetIn } from "../src/archive-target.ts";
 import { archiveSourceReferences } from "../src/archive-source-window.ts";
 import { FixtureArchiveSourcePins, type FixtureArchiveSourceBirth } from "../src/archive-source-pins.ts";
@@ -35,6 +37,7 @@ import { createNativeArchiveLane, archiveAuthorityBasis, archiveAuthorityPolicie
 import { fixtureArchiveWiring } from "./worker.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import type {} from "./support/maintained-applications.ts";
+import { ownReplayContext } from "./support/own-replay-context.ts";
 
 // An old receipt cannot authorize deletion. Only a real new writer's
 // whole-held-prefix publication earns coverage and enables the floor.
@@ -174,7 +177,7 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
     const publicScopes = [directoryAt, await life.wait(() => rules.at()), await life.wait(() => destination.at())];
     const packet = unb64url(inject("maintainedApplications").growDemo.bytes);
     if (!packet) throw Error("Exact deployed Grow policy packet required");
-    const policies = growArchivePolicies(new TextDecoder().decode(packet));
+    const policies = growArchivePolicies(new TextDecoder().decode(packet), RECORDED_GROW_RELEASE);
     const seat = await life.wait(async () => membership.did(rita, "seat", { expected: await membership.expected({ roster: 0 }) }));
     await life.wait(async () => membership.did(rita, "first-key", { fields: { member: seat }, expected: await membership.expected({ roster: 0, member: seat }) }));
     const memberReader = readerOf(mintSession(room.sessions, { ...room.claims, reads: ["summary", "items"] }));
@@ -187,7 +190,7 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
       for (const where of source.sources) {
         budget.spend({ nodes: 1, calls: 1, metadata: 256 * 1024, inputWork: 256 * 1024 * 8 });
         const birth = readNativeBirth(await budget.wait(() => namespace(env.PLATFORM).births.read(where,
-          Math.min(10_000, budget.remaining()), 256 * 1024)), where, 256 * 1024);
+          Math.min(10_000, budget.remaining()), 256 * 1024)), where, 256 * 1024, () => {})?.birth;
         if (!birth) return budget.stop("unavailable");
         expect(birth.named).toBe("platform:register@17");
         births.push({ at: where, birth: { bytes: birth.proof.bytes, hash: birth.proof.fact.hash } });
@@ -217,7 +220,7 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
       if (!discovered) throw Error("Actual native target metadata required");
       const pins = await prepare(sql, budget);
       const result = await planRootPublishedArchivePass(sql, { at: directoryAt, through, after: null, bounds: PROPOSED_BOUNDS,
-        policies, format: "sha1", parent: null, markedAt: timeOf(life.now()), fixtureSources: pins, replayScopes: discovered.publicScopes }, budget);
+        policies, format: "sha1", parent: null, markedAt: timeOf(life.now()), fixtureSources: pins, replayScopes: discovered.publicScopes, replayContext: discovered.replayContext }, budget);
       if (!result.ok) throw Error(canonicalize({ result, cost: budget.admitted() }));
       expect(result.archive.manifest.anchors).toEqual(expectedAnchors);
       expect(result.mark.anchorPublication).toBe(canonicalize({ anchors: expectedAnchors }));
@@ -241,7 +244,7 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
         if (/\bFROM entry\b/.test(query)) expect(args[0]).toBe(0);
         return sql.exec(query, ...args);
       } };
-      const result = await rebuildArchivePass(selectedOnly, row, null, budget, pins);
+      const result = await rebuildArchivePass(selectedOnly, row, null, budget, pins, discovered!.replayContext);
       if (!result.ok) throw Error(canonicalize({ result, cost: budget.admitted() }));
       expect(result.archive.manifest.anchors).toEqual(expectedAnchors);
       expect(result.archive.commit).toBe(planned.result.archive.commit);
@@ -271,8 +274,8 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
       return new ScopeIndexRows(state.storage.sql).has(D.name);
     }));
     const registeredProof = () => life.wait(() => runInDurableObject(indexObject, (_instance, state) =>
-      state.storage.sql.exec("SELECT inc,kind,genesis FROM known_scope WHERE scope = ?", D.name).toArray()
-        .map(row => ({ at: { scope: D.name, inc: row["inc"], kind: row["kind"] }, genesis: row["genesis"] }))));
+      state.storage.sql.exec("SELECT genesis,kind FROM known_scope WHERE scope = ?", D.name).toArray()
+        .map(row => ({ at: { scope: D.name, genesis: row["genesis"] }, kind: row["kind"] }))));
     const registering = api(indexedScopes(env.PLATFORM, { SCOPE_INDEX: env.SCOPE_INDEX, SCOPE_INDEX_MODE: "register" }));
     const enforcing = api(indexedScopes(env.PLATFORM, { SCOPE_INDEX: env.SCOPE_INDEX, SCOPE_INDEX_MODE: "enforce" }));
     const summary = (scopes: typeof registering) => life.owner.required(() => life.wait(() => scopes.summary(D.name, memberReader)));
@@ -281,7 +284,8 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
     expect(await summary(enforcing)).toEqual({ ok: false, reason: "not-found" });
     const registered = await summary(registering);
     expect(registered).toMatchObject({ ok: true, at: later, value: { scope: directoryAt } });
-    expect(await registeredProof()).toEqual([{ at: directoryAt, genesis: genesis.hash }]);
+    expect(await registeredProof()).toEqual([{ at: directoryAt, kind: "directory" }]);
+    expect(directoryAt.genesis).toBe(genesis.hash);
     await life.wait(() => D.restart());
     expect(await summary(enforcing)).toEqual(registered);
 
@@ -323,7 +327,8 @@ test("Native published Mark rebuilds its exact bytes after a later turn and evic
   const planned = await lane.inside(async state => {
     const sql = archiveSql(state), budget = new ArchiveBudget();
     const result = await planPublishedArchivePass(sql, { at: lane.at, through, after: null, bounds: lane.c.bounds,
-      policies: archiveAuthorityPolicies(lane), fixtureSources: archiveAuthorityBasis(lane)!.pins, format: "sha1", parent: null, markedAt: lane.c.clock.now }, budget);
+      policies: archiveAuthorityPolicies(lane), fixtureSources: archiveAuthorityBasis(lane)!.pins, format: "sha1", parent: null, markedAt: lane.c.clock.now,
+      replayContext: ownReplayContext(sql, lane.at, lane.c.bounds.entryBytes, new ArchiveBudget()) }, budget);
     if (!result.ok) throw Error(canonicalize(result));
     expect(result.archive.cost).toEqual(budget.admitted());
     expect(result.archive.manifest.anchors).toEqual(archiveAuthorityAnchors(lane));
@@ -342,7 +347,8 @@ test("Native published Mark rebuilds its exact bytes after a later turn and evic
       if (/\bFROM entry\b/.test(query)) expect([0, 1]).toContain(args[0]);
       return sql.exec(query, ...args);
     } };
-    const result = await rebuildArchivePass(exact, row, null, new ArchiveBudget(), archiveAuthorityBasis(lane)!.pins);
+    const result = await rebuildArchivePass(exact, row, null, new ArchiveBudget(), archiveAuthorityBasis(lane)!.pins,
+      archiveOwnReplayContext(sql, lane.at, lane.c.bounds.entryBytes, new ArchiveBudget()));
     expect(row.pending?.anchorPublication).toBe(planned.mark.anchorPublication);
     expect(row.pending?.replayScopes).toEqual([lane.at]);
     if (result.ok) expect(rows.confirm(result.archive.commit).confirmed).toMatchObject({ anchorsPublished: true, through });

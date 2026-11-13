@@ -12,6 +12,7 @@ import { storageHistories } from "../../derive/test/support/settlement-ledger-hi
 import { SettlementLedger } from "../../derive/test/support/settlement-ledger-model.ts";
 import { SqliteStore } from "../src/index.ts";
 import { objectOf } from "./fixtures-native.ts";
+import { withSequence, storedOwn } from "../src/testing.ts";
 
 for (const [index, history] of storageHistories.entries()) test(`SQLite eviction and replay: ${history.name}`, async () => {
   const actual = new SettlementFixture(history.family, history.capacity, 500 + index);
@@ -37,7 +38,7 @@ for (const [index, history] of storageHistories.entries()) test(`SQLite eviction
     for (const [offset, entry] of entries.entries()) {
       expect(entryHash(entry)).toBe(rows[offset]!.hash);
       applyEntry(replay, actual.definition, entry, rows[offset]!.hash, {
-        ...actual.scope.foldOptions, own: seq => rows[seq] ? { entry: entries[seq]!, hash: rows[seq]!.hash } : null,
+        ...actual.scope.foldOptions, own: withSequence((seq: number) => rows[seq] ? { entry: entries[seq]!, hash: rows[seq]!.hash } : null, storedOwn(store).sequence()),
       });
     }
     expect(settlementProjection(replay, actual.definition, last, origin, history.family)).toEqual(model.snapshot());

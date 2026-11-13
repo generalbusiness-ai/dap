@@ -4,7 +4,7 @@ import { answersVersionQuestion } from "@generalbusiness/dap-platform";
  * Neither phase repeats an application or provider mutation. */
 import type { AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
 import type { Bounds, Digest } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, isDigest, isRecord, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, isDigest, isEntryBodyOf, isRecord, utf8 } from "@generalbusiness/dap-bytes";
 import { ApplicationPackageError } from "@generalbusiness/dap-client/application";
 import { ApplicationGitError } from "@generalbusiness/dap-git";
 
@@ -28,7 +28,7 @@ const admits: Outside["accepts"] = (owner, kind) => acceptsApplicationOperation(
 export function applicationOperationRequest(request: EffectRequest): { uri: string; release: Digest } | null {
   const input = request.origin.entry.input;
   if (!acceptsApplicationOperation(request.owner, request.kind) || request.attempt !== 1 || request.operation !== `${request.origin.entry.seq}:0`
-    || canonicalize(request.scope) !== canonicalize(request.origin.entry.at)) return null;
+    || !isEntryBodyOf(request.origin.entry, { at: request.scope, seq: request.origin.entry.seq, hash: request.origin.hash })) return null;
   const fields = prepares(request.owner, request.kind) && input.type === "act" && input.signed.intent.kind === "install-application" ? input.signed.intent.fields
     : admits(request.owner, request.kind) && input.type === "outcome" && input.kind === "fetch-application" && input.result === "confirmed" && input.evidence.basis === "read" ? input.evidence.body : null;
   return isRecord(fields) && typeof fields["uri"] === "string" && isDigest(fields["release"]) ? { uri: fields["uri"], release: fields["release"] } : null;

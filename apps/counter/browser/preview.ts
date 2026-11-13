@@ -1,8 +1,9 @@
 /** FAKE transport/auth/scope/speech/clock for rendered source QA only. No audio or provider. */
 import "./style.css";
 import "../../../brand/fonts.css";
-import type { Entry, Item, MemberRef, Receipt, ScopeRef, SignedIntent, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import type { Entry, Item, MemberRef, Receipt, ScopeKind, ScopeRef, SignedIntent, Summary } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, factRefOf, intentDigest, keyIdOfSecret, textDigest } from "@generalbusiness/dap-bytes";
+import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
 import { secretSigner, type Fetch, type HeadStreamFetch } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION as COUNTING_DEFINITION } from "../commitments-pin.ts";
 import { nativeGateway } from "./client.ts";
@@ -11,8 +12,9 @@ import { mountCountingStage } from "./app.ts";
 import { privateCommandStore, privatePendingStore } from "./storage.ts";
 import type { ActorIdentity, CustodyLock, SpeechPort } from "./voice-controller.ts";
 const NOW=Date.now(),DEPLOYMENT="fake-u1",ORIGIN="https://counting-fake.test";
-const reference=(name:string,kind:ScopeRef["kind"]):ScopeRef=>({scope:scopeIdOf({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`fake ${name}`),ordinal:0}),inc:newIncarnation(new Uint8Array(16).fill(9)),kind});
-const S=reference("scope","lane"),M=reference("membership","membership");
+// Each fake scope is a scripted sequence: a real genesis that admitSequenceGenesis admits, so its reference holds that genesis hash.
+const sequenceOf=(name:string,kind:ScopeKind)=>scriptedSequence({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`fake ${name}`),ordinal:0},new Date(NOW).toISOString(),9);
+const LANE=sequenceOf("scope","lane"),S:ScopeRef=LANE.at,M:ScopeRef=sequenceOf("membership","membership").at;
 const keys=[new Uint8Array(32).fill(41),new Uint8Array(32).fill(42),new Uint8Array(32).fill(43)];
 const members:MemberRef[]=["@ada","@beau","@cleo"].map(member=>({membership:M,member:member as MemberRef["member"]}));
 type FakeItem={-readonly [K in keyof Item]:Item[K]};
@@ -46,7 +48,7 @@ const fakeFetch:Fetch=async(url,init)=>{
   else if(kind==="participate"){participants.push(make("participant",nextID++,"inactive",{}, {agent:actor}));}
   else if(kind==="activate"||kind==="deactivate"||kind==="force-deactivate"){const target=participants.find(p=>p.id===signed.intent.on);if(target){target.state=kind==="activate"?"active":"inactive";target.revision++;}}
   else if(kind==="remove-participant"){participants=participants.filter(p=>p.id!==signed.intent.on);}
-  seq++;board.revision++;const entry:Entry={v:1,at:S,seq,prev:textDigest("fake previous entry"),time:new Date(NOW).toISOString(),clamped:false,epoch:0,input:{type:"act",signed,authority:[],presented:{}},uses:[],prepared:[],effects:[],sends:[]};entries.set(seq,entry);const receipt:Receipt={fact:factRefOf(entry),definition:COUNTING_DEFINITION,intent:intentDigest(signed.intent),effects:[],sends:[],epoch:0};receipts.set(canonicalize(signed),receipt);notify();
+  seq++;board.revision++;const entry:Entry={...LANE.entry(seq,{type:"act",signed,authority:[],presented:{}},[],textDigest("fake previous entry")),time:new Date(NOW).toISOString()};entries.set(seq,entry);const receipt:Receipt={fact:factRefOf(entry,S),definition:COUNTING_DEFINITION,intent:intentDigest(signed.intent),effects:[],sends:[],epoch:0};receipts.set(canonicalize(signed),receipt);notify();
   if(lost&&kind==="fulfill"){lost=false;throw new Error("FAKE lost accepted reply");}return Response.json({answer:"accepted",receipt});
 };
 const fakeHeads:HeadStreamFetch=async(url,init)=>{if(init.redirect!=="error")throw new Error("Fake metadata contract requires redirect refusal.");const body=new ReadableStream<Uint8Array>({start(controller){heads.add(controller);controller.enqueue(new TextEncoder().encode(JSON.stringify({at:head()})+"\n"));},cancel(){for(const c of heads)try{c.close();}catch{}heads.clear();}});return{status:200,body,headers:new Headers({"content-type":"application/x-ndjson"}),url,redirected:false};};
@@ -55,7 +57,7 @@ const speech:SpeechPort={voices:()=>[{id:"fake-1",name:"Fake voice 1 · en-US"},
 const identity:ActorIdentity={origin:ORIGIN,deployment:DEPLOYMENT,scope:S,definition:COUNTING_DEFINITION,membership:M,member:members[0]!,publicKey:keyIdOfSecret(keys[0]!)};
 // SCRIPTED preview lock; no mounted real credential or durable lease claim.
 const previewLock:CustodyLock={run:async work=>work()};
-const store=privatePendingStore(identity),lock=previewLock,commands=privateCommandStore(identity),gateway=nativeGateway(identity,secretSigner(keys[0]!),{application:{scope:S,directory:reference("directory","directory"),item:7,definition:COUNTING_DEFINITION},current:()=>active,lock,voiceStore:store,commandStore:commands,fetch:fakeFetch,headFetch:fakeHeads,actFetch:async(url,init)=>{const response=await fakeFetch(url,{...init,signal:init.signal as never});return{status:response.status,body:response.body,headers:new Headers({"content-type":"application/json"}),url,redirected:false};}});
+const store=privatePendingStore(identity),lock=previewLock,commands=privateCommandStore(identity),gateway=nativeGateway(identity,secretSigner(keys[0]!),{application:{scope:S,directory:sequenceOf("directory","directory").at,item:7,definition:COUNTING_DEFINITION},current:()=>active,lock,voiceStore:store,commandStore:commands,fetch:fakeFetch,headFetch:fakeHeads,actFetch:async(url,init)=>{const response=await fakeFetch(url,{...init,signal:init.signal as never});return{status:response.status,body:response.body,headers:new Headers({"content-type":"application/json"}),url,redirected:false};}});
 const app=mountCountingStage(document.querySelector<HTMLElement>("#counting")!,{speech,connect:()=>{},fake:true,now:()=>NOW});
 // The Vite preview reads source assets; installed packets carry their own brand/ files.
 const lightMark=document.querySelector<HTMLImageElement>(".wordmark-light"),darkMark=document.querySelector<HTMLImageElement>(".wordmark-dark");

@@ -190,8 +190,21 @@ function packageInput(input: PackageGraphInput): ApplicationPackageInput2 {
 }
 test("the public package byte validator checks signed Grow bytes and preserves the hand-counted instance report", async () => {
   const input = grow(), signer = { key: keys.rita.key, sign: (bytes: Uint8Array) => sign(keys.rita.secret, bytes) };
+  for (const part of input.definitions) expect(validateDefinition(part.definition, PROPOSED_BOUNDS, RULE_PROFILES, { canonical: true }).ok, part.id).toBe(true);
   const packet = await packApplication2(packageInput(input), signer);
   const checked = validatePackage(packet.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, packet.ids.release);
+  const redundant = grow((_parent, child) => { Object.assign(child.acts[child.genesis]!.effects[0]!, { of: "on" }); });
+  const child = redundant.definitions[1]!;
+  expect(validateDefinition(child.definition, PROPOSED_BOUNDS, RULE_PROFILES).ok).toBe(true);
+  expect(validateDefinition(child.definition, PROPOSED_BOUNDS, RULE_PROFILES, { canonical: true }).ok).toBe(false);
+  expect(redundant.entry).not.toBe(input.entry);
+  expect(child.id).not.toBe(input.definitions[1]!.id);
+  expect(redundant.composition.connections[0]!.to).toBe(child.id);
+  const hostile = signedGrowWire(redundant);
+  expect(readApplicationPackage2(hostile.bytes, hostile.release).ids.release).toBe(hostile.release);
+  expect(validatePackage(hostile.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, hostile.release)).toMatchObject({
+    ok: false, kind: "definitions", findings: [expect.objectContaining({ definition: child.id, check: "native-definition", reason: "shape" })],
+  });
   expect(checked.ok ? [] : checked).toEqual([]);
   expect(checked.kind).toBe("graph");
   if (checked.kind !== "graph") return;

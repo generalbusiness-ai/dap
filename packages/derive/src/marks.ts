@@ -18,11 +18,12 @@
 
 import { nativeMark } from "./program/native.ts";
 import { observeNativeCall } from "./program/native-trace.ts";
-import type { ActType, AlsoMark, Attempt, Bounds, CapabilityName, Digest, DomainTag, Effect, Evidence, FactRef, FieldType, FieldValue, Grant, GrantMark, Guard, KeyId, Mark, MemberId, MemberRef, Message, ObservationUse, OperationId, PlatformDefinition, Request, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
+import type { ActType, AlsoMark, Attempt, Bounds, CapabilityName, Digest, DomainTag, Evidence, FactRef, FieldType, FieldValue, GenesisEffect, GenesisInput, GenesisSelfRef, Grant, GrantMark, Guard, KeyId, Mark, MemberId, MemberRef, Message, ObservationUse, OperationId, PlatformDefinition, Request, ScopeKind, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, domainBytes, isDigest, isFieldValue, isMemberRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import type { BindingSelect } from "./binding.ts";
 import type { Own } from "./fields.ts";
+import { copyFact, matchesCopy } from "./operand.ts";
 import type { Fetched, GuardResult, Judging } from "./guards.ts";
 import type { Most, Opening } from "./ledger.ts";
 import type { Item, Operation, StateSnapshot, StateView } from "./state.ts";
@@ -45,8 +46,8 @@ import { isObject, own } from "./values.ts";
  */
 export type JudgedInput =
   | { readonly type: "act"; readonly signed: SignedIntent; readonly grant: Grant | null; readonly presented: Readonly<Record<string, unknown>> }
-  | { readonly type: "genesis"; readonly seed: Seed; readonly "founding": SignedIntent | null; readonly source: FactRef | null; readonly n: number | null; readonly message: Request | null }
-  | { readonly type: "delivery"; readonly from: FactRef; readonly n: number; readonly message: Message }
+  | Readonly<GenesisInput>
+  | { readonly type: "delivery"; readonly from: FactRef; readonly sourceKind: ScopeKind; readonly n: number; readonly message: Message }
   | { readonly type: "outcome"; readonly operation: OperationId; readonly attempt: number; readonly owner: CapabilityName | PlatformDefinition; readonly kind: string; readonly result: "confirmed" | "refused" | "unknown"; readonly evidence: Evidence }
   | { readonly type: "diagnosis"; readonly of: { seq: number; n: number }; readonly attempts: readonly Attempt[] };
 
@@ -224,7 +225,7 @@ export const valueDigest = (domain: string, value: unknown): Digest => digestByt
  * no signer.
  */
 export interface Resolved {
-  readonly at: ScopeRef;
+  readonly at: ScopeRef | GenesisSelfRef;
   readonly self: number;
   readonly fields: Readonly<Record<string, FieldValue>>;
   readonly subjects: ReadonlyMap<string, Item>;
@@ -275,6 +276,7 @@ export interface RuleGiven {
   readonly state: StateView;
   readonly input: JudgedInput;
   readonly time: Timestamp;
+  /** Only genesis-bound fetched facts. Replay assumptions use a separate judgment context. */
   readonly uses: readonly Fetched[];
   readonly own: Own;
   readonly resolved: Resolved;
@@ -301,7 +303,7 @@ export interface RuleGiven {
 }
 
 /** The members of `Effect` that a rule returns (section 6.1, "What a rule returns is in this contract's forms"). */
-export type RuleEffect = Extract<Effect, { effect: "open" | "state" | "party" | "list" | "ref" | "value" | "operation" | "attempt" }>;
+export type RuleEffect = Extract<GenesisEffect, { effect: "open" | "state" | "party" | "list" | "ref" | "value" | "operation" | "attempt" }>;
 
 /** The request that a rule at a send gives: a `create`, a `tell` or a `relate`. The judge gives it the ordinal that a written send would take at the mark's position. */
 export interface RuleRequest { to: ScopeRef | Seed; message: Request }
@@ -459,6 +461,16 @@ export class RuleFault extends Error {
   override readonly name = "RuleFault";
 }
 
+/**
+ * The judging scope's sealed sequence. A rule that names the scope's own
+ * facts, records or certificates runs after its genesis seals. At a genesis
+ * draft the scope has no sealed hash, and such a read is a fault of the rule.
+ */
+export function sealedAt(at: ScopeRef | GenesisSelfRef): ScopeRef {
+  if (at.genesis === null) throw new RuleFault("the rule reads the scope's sealed sequence while its genesis is judged");
+  return at;
+}
+
 /** A fault of a rule leaves the input not judged. Every other failure is the judge's own, and is thrown on. */
 export function unjudged<T>(judge: () => T): T | { result: "unavailable"; reason: "unavailable" } {
   try {
@@ -478,10 +490,16 @@ export type Giving = Pick<Judging, "definition" | "view" | "clock" | "bounds" | 
 /** The six things, and no other (section 6.1). The entries in `uses` are those that the input's fields name, and for a delivery its source entry. */
 export function givenTo(g: Giving): RuleGiven {
   if (!g.judged) throw new RuleFault("a rule is run for an entry whose input the judge did not state");
-  const uses = [...(g.source ? [g.source] : []), ...[...g.facts.values()].filter((fact) => fact.fact.hash !== g.source?.fact.hash)];
+  const copies = [...(g.source ? [g.source] : []), ...g.facts.values()];
+  const uses: Fetched[] = [];
+  for (const copy of copies) {
+    if (!matchesCopy(copy, copyFact(copy))) throw new RuleFault("a rule's foreign entry does not match its evidence");
+    // Caller assumptions never become Native rule uses or checked identities.
+    if (copy.mode === "verified" && !uses.some(value => value.fact.hash === copy.value.fact.hash)) uses.push(copy.value);
+  }
   const hand = g.beside;
   return {
-    state: g.view, input: g.judged, time: g.clock.asOf, uses, own: g.own ?? (() => null),
+    state: g.view, input: g.judged, time: g.clock.asOf, uses, own: g.own ?? Object.assign(() => null, { sequence: () => null }),
     resolved: { at: g.scope.at, self: g.self, fields: g.fields, subjects: g.subjects, signer: g.signer, bounds: g.bounds, ...(g.outcome ? { outcome: g.outcome } : {}) },
     // Sections 4.1 and 16.1: an observation that a rule reads is one that the entry retains. The judge notes each read.
     observed(subject) {

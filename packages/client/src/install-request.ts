@@ -193,8 +193,8 @@ export async function applicationRoom(repository: InstallRoomConfig | null, read
 
   if (!cohort || directory.status !== "active" || canonicalize(directory.scope) !== canonicalize(repository.directory)
     || !row || canonicalize(row.refs["membership"]) !== canonicalize(repository.membership)
-    || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules
-    || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return { refused: "room-siblings" };
+    || !isScopeRef(rules) || rules.scope !== repository.rules
+    || !isScopeRef(destination) || destination.scope !== repository.destination) return { refused: "room-siblings" };
   const summary = await summaryOf(reader, rules.scope, repository.membership);
   if ("refused" in summary) return summary;
   if (summary.status !== "active" || summary.definition !== cohort.rules || canonicalize(summary.scope) !== canonicalize(rules)) return { refused: "rules-sibling" };
@@ -288,7 +288,7 @@ export async function installApplication(handle: InstallHandle, custody: Custody
   catch (error) { if (error instanceof TransportError) return refused({ refused: "accepted-unread", scope }); throw error; }
   if (!read.ok || !read.complete || read.next !== undefined) return refused({ refused: "entry-unread" });
   if (read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
-    || canonicalize(read.value.entry.at) !== canonicalize(room.rules) || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
+    || !("genesis" in read.value.entry) || read.value.entry.genesis !== room.rules.genesis || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
     || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return refused({ refused: "entry" });
   return { outcome: "accepted", rules: room.rules, answer: kept.answer, item: receipt.fact.seq, retained: kept.retained, phase: kept.record.phase };
 }

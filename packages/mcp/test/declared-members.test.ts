@@ -10,7 +10,7 @@ import { readMembershipDisplay } from "../src/views/member-reads.ts";
 import type { Reads } from "@generalbusiness/dap-client";
 import { fixedSigner } from "./fixtures.ts";
 
-const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
 const at = { seq: 200, hash: `sha256:${"a".repeat(64)}` as const };
 const ref = (member: `@${string}`): MemberRef => ({ membership, member });
 const item = (who: MemberRef, kind = "person", state = "active", controller: MemberRef | null = null): Item => ({
@@ -96,7 +96,7 @@ test("party and signer resolve once with controller evidence; arbitrary values n
   } };
   expect((await projectionMembers(declaration, onlyFact, async () => snapshot)).records[canonicalize(agent)]?.controller).toEqual(owner);
   expect(projectionMemberFacts(declaration.sources["benches"]!, ["lastProber"], { lastProber: agent })).toEqual({ 0: { label: "lastProber", refs: [agent] } });
-  const other = { ...agent, membership: { ...membership, inc: `in_${"b".repeat(25)}a` as const } };
+  const other = { ...agent, membership: { ...membership, genesis: `sha256:${"b".repeat(63)}a` as const } };
   expect(isMemberRef(other)).toBe(true);
   const unknown = await projectionMembers(declaration, data([other]), async () => snapshot);
   expect(unknown.records[canonicalize(other)]?.identity).toBeNull();

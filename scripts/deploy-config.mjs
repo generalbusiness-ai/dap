@@ -94,9 +94,9 @@ export function smokePolicy(config) {
   if (Object.hasOwn(vars, "DEMO_START_CONFIG")) {
     if (typeof vars.DEMO_START_CONFIG !== "string" || Buffer.byteLength(vars.DEMO_START_CONFIG) > 4096) throw new Error("Invalid creation offer configuration.");
     offer = JSON.parse(vars.DEMO_START_CONFIG);
-    if (!record(offer) || offer.v !== 3 || !record(offer.register) || Object.keys(offer.register).sort().join() !== "inc,kind,scope" || offer.register.kind !== "register"
+    if (!record(offer) || offer.v !== 3 || !record(offer.register) || Object.keys(offer.register).sort().join() !== "genesis,scope"
         || typeof offer.register.scope !== "string" || !/^sc_[a-z2-7]{52}$/.test(offer.register.scope)
-        || typeof offer.register.inc !== "string" || !/^in_[a-z2-7]+$/.test(offer.register.inc)
+        || typeof offer.register.genesis !== "string" || !/^sha256:[0-9a-f]{64}$/.test(offer.register.genesis)
         || offer.register.scope !== vars.REGISTER_SCOPE || typeof offer.origin !== "string"
         || typeof offer.definition !== "string") throw new Error("Invalid creation offer configuration.");
   }

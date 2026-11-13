@@ -4,7 +4,7 @@
 import { runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { PROPOSED_BOUNDS, type Digest, type FactRef, type Input, type PlatformDefinition } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, isPlatformDefinition, unb64url, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, isPlatformDefinition, scopeIdOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_PATTERNS, RULES_POLICY_VALUE_V11, RULES_TREE_PROOF, platform, rulesPolicyProposalV11 } from "@generalbusiness/dap-platform";
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/dap-client";
 import { localRetainedPlan, ownersOf, outcomeValueDomains, validateDefinition, valueDigest, type OperationRules } from "@generalbusiness/dap-derive";
@@ -17,6 +17,7 @@ import { rita, una } from "../../../../packages/scope/test/repository.ts";
 import { reader } from "../../../../packages/scope/test/fixtures-native.ts";
 import { soon } from "../../../../packages/scope/test/net.ts";
 import { archiveSql } from "../../../../packages/scope/test/support/archive.ts";
+import { ownReplayContext } from "../../../../packages/scope/test/support/own-replay-context.ts";
 import { localClone } from "../../../../packages/scope/test/support/local-clone.ts";
 import { ArchiveBudget } from "../../../../packages/scope/src/archive-budget.ts";
 import { ArchiveRows } from "../../../../packages/scope/src/archive-row.ts";
@@ -71,7 +72,7 @@ test("certified native policy and proof plus its consumed single policy envelope
     expect(configured.values).toMatchObject({ configured: true, policy: proposal.policy, proposal: proposal.digest });
     const envelope = { configured: true, policy: configured.values["policy"], proposal: configured.values["proposal"], certificate: configured.values["certificate"] };
     const envelopeDigest = valueDigest(EXTENTS_DOMAIN, envelope);
-    const rulesHead = factRefOf((await Q.sealed()).at(-1)!.entry);
+    const rulesHead = factRefOf((await Q.sealed()).at(-1)!.entry, await Q.at());
 
     // Real lane creation/review/reserve; no CLI precheck or supplied observation.
     const change = definitionDigest(changeDemo);
@@ -90,11 +91,11 @@ test("certified native policy and proof plus its consumed single policy envelope
     const manifest = await L.did(rita, "propose-file", { fields: { base: firstHead!, path: "archive-native.md", digest: digestBytes(utf8(content)), size: utf8(content).length, content }, expected: await L.expected({ proposal: 0 }) });
     await L.did(una, "review-verdict", { expected: await L.expected({ manifest, proposal: 0 }), fields: { manifest, verdict: "approve" } });
     await L.did(rita, "merge", { expected: await L.expected({ proposal: 0, manifest, rules: laneRules.id }), fields: { manifest, reports: [] } }); await pause(nodes);
-    const gHistory = await G.sealed();
+    const gHistory = await G.sealed(), gAt = await G.at();
     const observed = gHistory.flatMap(sealed => "observed" in sealed.entry.input ? (sealed.entry.input.observed ?? []).flatMap(use => {
       const observation = use.observation;
       return "subject" in observation && observation.subject === "rules" && observation.content.asked === "rules" && observation.content.extents === envelopeDigest
-        ? [{ consumer: factRefOf(sealed.entry), observation }] : [];
+        ? [{ consumer: factRefOf(sealed.entry, gAt), observation }] : [];
     }) : []);
     expect(observed.length).toBeGreaterThan(0);
     expect(observed.some(row => canonicalize(row.observation.of) === canonicalize(rulesHead.at) && row.observation.head.seq >= rulesHead.seq)).toBe(true);
@@ -122,7 +123,7 @@ test("certified native policy and proof plus its consumed single policy envelope
     const gPolicy = policies.get(C.destination)!;
     const rules = gPolicy.support.owners.get(C.destination)?.get(outcome.entry.input.kind);
     if (!rules) throw Error("Actual certificate owner selector required");
-    const nativePlan = localRetainedPlan(gPolicy.support.definition, outcome.entry, outcome.hash, rules, PROPOSED_BOUNDS);
+    const nativePlan = localRetainedPlan(gPolicy.support.definition, outcome.entry, { at: await G.at(), seq: outcome.entry.seq, hash: outcome.hash }, rules, PROPOSED_BOUNDS);
     const outcomeValues = nativePlan.dependencies.flatMap(({ dependency }) => dependency.mode === "required" && dependency.consumer === "outcome-value" && dependency.key.kind === "value" ? [dependency.key] : []);
     expect(outcomeValues).toEqual([
       { kind: "value", domain: RULES_POLICY_VALUE_V11.domain, digest: proposal.digest },
@@ -131,7 +132,7 @@ test("certified native policy and proof plus its consumed single policy envelope
     const births: FixtureArchiveSourceBirth[] = [];
     for (const at of sources.values()) {
       const birth = (await life.platform(at.scope).sealed())[0];
-      if (!birth || birth.entry.input.type !== "genesis" || canonicalize(birth.entry.at) !== canonicalize(at)) throw Error("Actual full source birth required");
+      if (!birth || birth.entry.input.type !== "genesis" || birth.hash !== at.genesis || scopeIdOf(birth.entry.input.seed) !== at.scope) throw Error("Actual full source birth required");
       const pin = birth.entry.input.seed.definition;
       expect(policies.has(pin)).toBe(true);
       births.push({ at, birth: { bytes: canonicalize(birth.entry), hash: birth.hash }, ...(pin === change ? { declaration: canonicalize(changeDemo) } : {}) });
@@ -147,7 +148,8 @@ test("certified native policy and proof plus its consumed single policy envelope
         const sql = archiveSql(state), budget = new ArchiveBudget(), owner = new ArchiveRows(sql, at);
         const target = owner.target(repository, "sha1", budget);
         const made = await planPublishedArchivePass(sql, { at, through: { seq: last.entry.seq, hash: last.hash }, after: null,
-          bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt: soon(0), fixtureSources, replayScopes }, budget);
+          bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt: soon(0), fixtureSources, replayScopes,
+          replayContext: ownReplayContext(sql, at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()) }, budget);
         if (!made.ok) return { ok: false as const, result: made, cost: budget.admitted() };
         const source = { object: async (id: string, maximum: number) => {
           const object = made.archive.objects.find(row => row.id === id);
@@ -155,18 +157,20 @@ test("certified native policy and proof plus its consumed single policy envelope
         } };
         const frontiers = new ArchiveFrontiers(sql, { at, repository: digestBytes(utf8(canonicalize(target.repository))), format: "sha1" });
         const prepared = await frontiers.prepareFromSource(source, made.mark, null, budget);
+        // The full plan leaves too little of its pass budget to stage. This test's Mark runs as its own transaction, with its own budget.
+        const marking = new ArchiveBudget();
         const confirmed = sql.transaction(() => {
-          owner.markAttempt(made.mark, soon(0), budget); frontiers.stage(prepared, budget);
-          frontiers.promote(prepared, budget); return owner.confirm(made.archive.commit, budget).confirmed!;
+          owner.markAttempt(made.mark, soon(0), marking); frontiers.stage(prepared, marking);
+          frontiers.promote(prepared, marking); return owner.confirm(made.archive.commit, marking).confirmed!;
         });
-        return { ok: true as const, archive: made.archive, anchors: made.anchors ?? [], confirmed, cost: budget.admitted() };
+        return { ok: true as const, archive: made.archive, anchors: made.anchors ?? [], confirmed, cost: budget.admitted(), markCost: marking.admitted() };
       }));
       expect(result.ok).toBe(true); if (!result.ok) throw Error("Actual full archive plan/Mark required");
       expect(result.confirmed).toMatchObject({ commit: result.archive.commit, through: { seq: last.entry.seq, hash: last.hash }, layout: 2, anchorsPublished: true });
       for (const object of result.archive.objects) objects.set(object.id, object);
       for (const fact of result.anchors) anchors.set(canonicalize(fact), fact);
       refs.set(journalRef(scope.name), result.archive.commit);
-      costs.push({ scope: scope.name, cost: result.cost });
+      costs.push({ scope: scope.name, cost: result.cost, markCost: result.markCost });
       if (scope === G) for (const value of expectedValues) expect(result.archive.selection.objects.some(row => row.key.kind === "value" && row.key.domain === value.domain && row.key.digest === value.digest)).toBe(true);
     }
     expect(refs.has(journalRef(R.name))).toBe(false); expect(refs.has(journalRef(M.name))).toBe(false);

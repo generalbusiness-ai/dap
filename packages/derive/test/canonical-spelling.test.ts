@@ -8,7 +8,6 @@ import { RULE_PROFILES } from "../src/rule/index.ts";
 import { notes } from "./definition-corpus/fixture-data.ts";
 import { shippedDefinitions } from "./definition-corpus/shipped.ts";
 import { nativeDefinitions } from "./definition-corpus/native.ts";
-import { freshCountingSource, RETAINED_COUNTING_EMPTY_EXCEPT_PATHS } from "./support/fresh-counting-source.ts";
 import type { DefinitionCorpusRow } from "./definition-corpus/row.ts";
 import { change, changeDemo, change3, changeDemo3, changeEvidence4, issueEvidence4 } from "../../../apps/room/lanes/src/index.ts";
 import { changeJ4 } from "../../../apps/room/lanes/src/j4.ts";
@@ -107,19 +106,10 @@ test("nested guards keep distinct subjects while optional list and fact filters 
 });
 
 // Exact retained inputs keep their spelling, bytes and raw digests.
-// Each Counting row permits only its five listed empty range exceptions.
-function emptyExceptPaths(value: unknown, path = ""): string[] {
-  if (Array.isArray(value)) return value.flatMap((part, i) => emptyExceptPaths(part, `${path}/${i}`));
-  if (value === null || typeof value !== "object") return [];
-  return Object.entries(value).flatMap(([name, part]) =>
-    name === "except" && Array.isArray(part) && part.length === 0
-      ? [`${path}/${name}`] : emptyExceptPaths(part, `${path}/${name}`));
-}
 interface RecordedExclusion {
   digest: Digest;
   reason: string;
   canonicalAdmission: boolean;
-  emptyExceptPaths?: readonly string[];
 }
 const recordedExclusions = new Map<string, RecordedExclusion>([
   ["retained Grow demo packet/Room", {
@@ -132,21 +122,9 @@ const recordedExclusions = new Map<string, RecordedExclusion>([
     canonicalAdmission: true,
     reason: "The signed Site declaration is already canonical; its old Room dependency keeps d2bc830e until the identifier cutover.",
   }],
-  ["shipped/Counting", {
-    digest: "sha256:435d9f5745048183d3cf0392ce909cd76909fd69ee368dfc57e142ba96af1d09",
-    canonicalAdmission: false,
-    reason: "The first Counting TypeScript declaration is retained historical data until the identifiers cutover.",
-    emptyExceptPaths: RETAINED_COUNTING_EMPTY_EXCEPT_PATHS,
-  }],
-  ["pinned/apps/counter/definition.json", {
-    digest: "sha256:435d9f5745048183d3cf0392ce909cd76909fd69ee368dfc57e142ba96af1d09",
-    canonicalAdmission: false,
-    reason: "The first Counting JSON declaration is retained historical data until the identifiers cutover.",
-    emptyExceptPaths: RETAINED_COUNTING_EMPTY_EXCEPT_PATHS,
-  }],
 ]);
 
-test("every pinned and generated application and native declaration has canonical spelling except the exact retained Counting and Grow declarations", async () => {
+test("every pinned and generated application and native declaration has canonical spelling except the retained Grow demo declarations", async () => {
   const demo = demoDefinitions();
   const current = { change, changeDemo, change3, changeDemo3, changeEvidence4: changeEvidence4(definitionDigest(issueEvidence4)), changeJ4, changeFinding, room, site, demoRoom: demo.room, demoSite: demo.site };
   expect(Object.keys(current)).toHaveLength(11);
@@ -170,11 +148,6 @@ test("every pinned and generated application and native declaration has canonica
       excluded.push(row.name);
       expect(exclusion.reason).not.toBe("");
       expect(checked.definition.digest, row.name).toBe(exclusion.digest);
-      if (exclusion.emptyExceptPaths !== undefined) {
-        expect(emptyExceptPaths(declaration).sort(), row.name).toEqual([...exclusion.emptyExceptPaths].sort());
-        expect(canonicalize(normalizeDefinition(checked.definition.declared)), row.name)
-          .toBe(canonicalize(freshCountingSource(checked.definition.declared)));
-      }
       expect(checked.definition.digest).toBe(definitionDigest(declaration as DeclaredDefinition));
       expect(canonicalize(checked.definition.declared)).toBe(raw);
       const canonical = validateDefinition(declaration, row.bounds, row.profiles, { ...row.options, canonical: true });
@@ -194,8 +167,7 @@ test("every pinned and generated application and native declaration has canonica
   }
   expect(excluded.sort()).toEqual([...recordedExclusions.keys()].sort());
   expect(excluded).toEqual([
-    "pinned/apps/counter/definition.json", "retained Grow demo packet/Room",
-    "retained Grow demo packet/Site", "shipped/Counting",
+    "retained Grow demo packet/Room", "retained Grow demo packet/Site",
   ].sort());
   expect(failures).toEqual([]);
 });

@@ -14,7 +14,7 @@
  */
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Effect, Entry, Evidence, FieldValue, OperationId, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Effect, Entry, GenesisEffect, Evidence, FieldValue, OperationId, ScopeRef } from "@generalbusiness/dap-contract";
 import { RETIRE_ACTION, capabilitiesOf, checkpointOf, clockOf, gitRead, holdCapability, judgePreparation, owed, settleOutcome, snapshotInput, snapshotOf, stagedRefName, validateDefinition, workspaceEffects } from "../src/index.ts";
 import type { AncestryCheck, CapabilityGiven, StagedRef, ValidDefinition } from "../src/index.ts";
 import { Scope, grantOf, keys, valid, type Actor, type Context } from "./fixtures.ts";
@@ -68,7 +68,7 @@ export class Staging extends Scope {
 
   /** An entry made by hand, with those effects: a stand-in for an entry that a later step makes the judges write. */
   hand(effects: readonly Effect[]): Entry {
-    return this.fold({ v: 1, at: this.at, seq: this.head.seq + 1, prev: this.head.hash, time: this.now, clamped: false, epoch: 0, input: { type: "checkpoint", ...checkpointOf(this.state) }, uses: [], prepared: [], effects, sends: [] });
+    return this.fold({ v: 1, genesis: this.at.genesis, seq: this.head.seq + 1, prev: this.head.hash, time: this.now, clamped: false, epoch: 0, input: { type: "checkpoint", ...checkpointOf(this.state) }, uses: [], prepared: [], effects, sends: [] });
   }
 
   /**
@@ -80,7 +80,8 @@ export class Staging extends Scope {
    */
   derived(): Entry | null {
     if (this.judged) return null;
-    const holds = this.last.effects.filter((e): e is Extract<Effect, { effect: "hold" }> => e.effect === "hold");
+    const written: readonly (Effect | GenesisEffect)[] = this.last.effects;
+    const holds = written.filter((e): e is Extract<Effect, { effect: "hold" }> => e.effect === "hold");
     const effects = workspaceEffects(this.replay(this.entries.length - 1), this.definition, this.head.seq + 1, 0, holds, (id) => this.state.item(id));
     return effects.length > 0 ? this.hand(effects) : null;
   }
@@ -118,7 +119,10 @@ export class Staging extends Scope {
   }
   /** What a capability rule is given for an input of this scope, with that intent digest. */
   given(over: Partial<CapabilityGiven> = {}): CapabilityGiven {
-    return { view: this.state, definition: this.definition, scope: { at: this.at, creator: null }, self: this.head.seq + 1, kind: "", fields: {}, signer: null, facts: new Map(), own: this.own, snapshot: (digest) => snapshots.get(digest) ?? null, clock: clockOf(this.state, this.now), ...over };
+    const scope = this.state.scope();
+    if (!scope) throw new Error("the staging fixture has no local genesis");
+    return { view: this.state, definition: this.definition, scope: { at: this.at, kind: scope.kind, creator: null }, self: this.head.seq + 1, kind: "", fields: {}, signer: null, facts: new Map(),
+      kindContext: { source: null, declared: {} }, own: this.own, snapshot: (digest) => snapshots.get(digest) ?? null, clock: clockOf(this.state, this.now), ...over };
   }
   /** The entries that the pending work reserves, with what the capability declares. */
   reserved(): number { return owed(this.state, this.definition, this.last.input, cap); }

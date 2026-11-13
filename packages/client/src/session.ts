@@ -54,7 +54,7 @@ export class Session {
 
   constructor(token: string, claims: SessionClaims) {
     this.#token = token;
-    this.claims = { v: claims.v, deployment: claims.deployment, membership: { scope: claims.membership.scope, inc: claims.membership.inc, kind: claims.membership.kind },
+    this.claims = { v: claims.v, deployment: claims.deployment, membership: { scope: claims.membership.scope, genesis: claims.membership.genesis },
       member: claims.member, key: claims.key, reads: [...claims.reads], ends: claims.ends };
   }
 
@@ -123,8 +123,8 @@ export async function requestSession(service: string, membership: ScopeId, signe
     const retry = got.status === 429 && answer.reason === "rate-limited" && got.retryAfter !== null && /^[1-9][0-9]{0,15}$/.test(got.retryAfter) ? Number(got.retryAfter) : null;
     return retry !== null && Number.isSafeInteger(retry) ? { ...answer, retryAfterSeconds: retry } : answer;
   }
-  // The session must be the one that was asked for: of that membership scope and incarnation, and for the key that signed.
+  // The session must be the one that was asked for: of that membership scope and genesis hash, and for the key that signed.
   const { membership: of, key } = answer.session;
-  if (of.scope !== signed.request.to.scope || of.inc !== signed.request.to.inc || of.kind !== signed.request.to.kind || key !== signed.request.actor) throw failed("the reply is a session of another repository or key");
+  if (of.scope !== signed.request.to.scope || of.genesis !== signed.request.to.genesis || key !== signed.request.actor) throw failed("the reply is a session of another repository or key");
   return { ok: true, session: new Session(answer.token, answer.session) };
 }

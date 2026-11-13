@@ -10,8 +10,8 @@
  * so a restarted outside port can recover that attempt's own evidence.
  */
 import type { Sql } from "./sqlite.ts";
-import type { OperationId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isEntry, isOperationId, isRecord, utf8 } from "@generalbusiness/dap-bytes";
+import type { Digest, OperationId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalize, isEntry, isEntryBodyOf, isOperationId, isRecord, utf8 } from "@generalbusiness/dap-bytes";
 import { timeMs, timeOf } from "@generalbusiness/dap-derive";
 import { isOf } from "@generalbusiness/dap-platform";
 import type { Entry } from "@generalbusiness/dap-contract";
@@ -188,11 +188,13 @@ export class CredentialStore {
       if (operation.id !== mint || typeof operation.owner !== "string" || !isOf(operation.owner,"platform:destination") || operation.kind !== "mint-read" || !Array.isArray(operation.attempts)) return false;
       const confirmed = operation.attempts.find(a => a.attempt === attempt)?.outcomes.find(o => o.result === "confirmed");
       if (!confirmed || !Number.isSafeInteger(confirmed.seq) || confirmed.seq < 0) return false;
+      const at = this.#current();
+      if (!at) return false;
       const entry = (n: number): Entry | null => {
         const row = this.#sql.exec("SELECT hash,CASE WHEN octet_length(bytes)<=65536 THEN bytes ELSE NULL END AS bytes FROM entry WHERE seq=?",n).toArray()[0];
         if (typeof row?.["bytes"] !== "string") return null;
         const parsed: unknown = JSON.parse(row["bytes"]);
-        return isEntry(parsed) && parsed.seq === n && canonicalize(parsed.at) === scope && entryHash(parsed) === row["hash"] ? parsed : null;
+        return isEntry(parsed) && isEntryBodyOf(parsed, { at, seq: n, hash: row["hash"] as Digest }) ? parsed : null;
       };
       const opening = entry(seq!), outcome = entry(confirmed.seq), input = outcome?.input;
       if (opening?.input.type !== "act" || opening.input.signed.intent.kind !== "read-token" || !opening.effects.some(e => e.effect === "operation" && e.k === k && e.owner === operation.owner && e.kind === "mint-read")) return false;

@@ -45,7 +45,7 @@ async function destinationStateOf(ctx: Context, config: Config): Promise<{ summa
   let read = await (await handleOf(ctx, config, scope, reader)).summary();
   if (!read.ok && read.reason === "forbidden" && reader !== null) read = await (await handleOf(ctx, config, scope, null)).summary();
   if (!read.ok) return stopCommand(failed(`Cannot read ${scope}: ${read.reason}.`));
-  if (read.value.scope.scope !== scope || read.value.scope.kind !== "destination" || !knownPlatform(read.value.definition, "platform:destination")) return stopCommand(failed(`${scope} is no supported destination.`));
+  if (read.value.scope.scope !== scope || !knownPlatform(read.value.definition, "platform:destination")) return stopCommand(failed(`${scope} is no supported destination.`));
   const branch = read.value.items.find((item) => item.type === "branch");
   const repository = branch?.values["repository"] as Recorded | undefined;
   if (read.complete && read.next === undefined && read.value.status === "active" && answersVersionQuestion(read.value.definition, "cliUnpublishedDestination") && branch?.state === "unpublished" && branch.values["repository"] == null && branch.values["head"] == null && branch.values["token"] == null) return { summary: read.value, reader, repository: null };

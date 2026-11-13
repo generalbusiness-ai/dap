@@ -76,7 +76,7 @@ describe("the ancestry walk and the guard `ancestry` (authority note, section 6.
     /** A lane that staged `X` for a report, up to the check entry, with that ancestry record or with none for a read that was cut short. */
     function checked(record: (s: Staging) => AncestryCheck | null) {
       const s = new Staging();
-      s.prepare(una, "instance", { hold: s.hold, task: { ...otherLane, kind: "task" }, instance: "i1" });
+      s.prepare(una, "instance", { hold: s.hold, task: otherLane, instance: "i1" });
       const report = s.intent(una, "report", { expected: { commitment: s.item(s.commitment).revision }, fields: { commitment: s.commitment, commit: X } });
       s.asked(report, "stage");                                                // entry 7
       const before = cap.guard("git-read@1", "ancestry", { commit: X, row: "report" }, s.given({ intent: intentDigest(report.intent) }));

@@ -1,6 +1,6 @@
 import { describe, expect, test, onTestFinished } from "vitest";
 import type { Entry, OperationId, Receipt, Seed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, entryHash, intentDigest, newIncarnation, scopeIdOf, seedDigest, textDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, entryHash, intentDigest, scopeIdOf, seedDigest, textDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import type { EffectRequest } from "../../scope/src/operations.ts";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { DIRECTORY_OF, repositoryName } from "@generalbusiness/dap-platform";
@@ -56,7 +56,7 @@ async function recovering(): Promise<void> {
     const store = memoryStore();
     const submissions: string[] = [];
     let fault = true;
-    let badReceipt: "hash" | "incarnation" | "definition" | "intent" | "kind" | "position" | "malformed-inc" | "malformed-hash" | null = null;
+    let badReceipt: "hash" | "genesis" | "another-genesis" | "definition" | "intent" | "scope" | "position" | "malformed-genesis" | "malformed-hash" | null = null;
     let entryReads = 0;
     const ctx: Context = {
       now: () => timeMs(net.clock.now)!,
@@ -79,10 +79,12 @@ async function recovering(): Promise<void> {
           if (badReceipt === "hash") answer.receipt.fact.hash = textDigest("another entry");
           if (badReceipt === "definition") answer.receipt.definition = answer.receipt.definition === "platform:register@1" ? "platform:register@2" : "platform:register@1";
           if (badReceipt === "intent") answer.receipt.intent = textDigest("another intent");
-          if (badReceipt === "kind") answer.receipt.fact.at.kind = "directory";
+          if (badReceipt === "scope") answer.receipt.fact.at.scope = scopeIdOf({ v: 1, kind: "register", definition: "platform:register@1", creator: null, cause: textDigest("TEST another register"), ordinal: 0 });
           if (badReceipt === "position") answer.receipt.fact.seq = 1;
-          if (badReceipt === "incarnation") answer.receipt.fact.at.inc = newIncarnation(new Uint8Array(16).fill(9));
-          if (badReceipt === "malformed-inc") answer.receipt.fact.at.inc = "malformed" as never;
+          if (badReceipt === "genesis") answer.receipt.fact.at.genesis = textDigest("TEST another genesis");
+          // A whole other genesis: its address names its own hash, so only the retained accepted fact can tell it apart.
+          if (badReceipt === "another-genesis") answer.receipt.fact.at.genesis = answer.receipt.fact.hash = textDigest("TEST another genesis");
+          if (badReceipt === "malformed-genesis") answer.receipt.fact.at.genesis = "malformed" as never;
           if (badReceipt === "malformed-hash") answer.receipt.fact.hash = "malformed" as never;
           return new Response(JSON.stringify(answer), { headers: { "content-type": "application/json" } });
         }
@@ -118,7 +120,7 @@ async function recovering(): Promise<void> {
     expect((await command(untrusted, ["install", "--planned"])).lines[0]).toMatch(/^Held: this injected transport/);
     expect([s.submissions.length, await s.store.config()]).toEqual([sends, pending]);
     if (mode === "reply") {
-      for (const field of ["definition", "intent", "kind", "position", "malformed-inc", "malformed-hash"] as const) {
+      for (const field of ["definition", "intent", "scope", "position", "malformed-genesis", "malformed-hash"] as const) {
         s.receipt(field);
         expect((await command(s.ctx, ["install", "--planned"])).code).toBe(1);
         expect(await s.store.config()).toEqual(pending);
@@ -127,11 +129,15 @@ async function recovering(): Promise<void> {
     } else {
       // Acceptance was durably retained before the injected final-save loss.
       expect(pending.plan!.acknowledged).toMatchObject({ status: "service-acknowledged", service: SERVICE, receipt: { definition: original.definition, intent: intentDigest(original["founding"].intent) } });
-      for (const field of ["hash", "incarnation"] as const) {
+      // A genesis receipt names its own hash as its genesis. A change to one of the two is not the planned register's identity.
+      for (const field of ["hash", "genesis"] as const) {
         s.receipt(field);
-        expect((await command(s.ctx, ["install", "--planned"])).lines[0]).toMatch(/^Held: the install acknowledgement conflicts/);
+        expect((await command(s.ctx, ["install", "--planned"])).lines[0]).toMatch(/^Held: the install acknowledgement does not match the planned register's exact identity/);
         expect(await s.store.config()).toEqual(pending);
       }
+      s.receipt("another-genesis");
+      expect((await command(s.ctx, ["install", "--planned"])).lines[0]).toMatch(/^Held: the install acknowledgement conflicts/);
+      expect(await s.store.config()).toEqual(pending);
       s.receipt(null);
     }
     const recovered = await command(s.ctx, ["install", "--planned"]);
@@ -143,7 +149,7 @@ async function recovering(): Promise<void> {
     const entries = await new Platform(original.register).entries();
     const genesis = entries[0]!;
     expect([entries.length, genesis.input.type === "genesis" && canonicalize(genesis.input["founding"])]).toEqual([1, canonicalize(original["founding"])]);
-    expect(installed.plan!.acknowledged!.receipt.fact).toEqual({ at: genesis.at, seq: 0, hash: entryHash(genesis) });
+    expect(installed.plan!.acknowledged!.receipt.fact).toEqual({ at: { scope: original.register, genesis: entryHash(genesis) }, seq: 0, hash: entryHash(genesis) });
     expect(timeMs(net.clock.now)! - timeMs(genesis.time)!).toBeGreaterThan(900_000);
   }
   const unsent = scenario("unsent");

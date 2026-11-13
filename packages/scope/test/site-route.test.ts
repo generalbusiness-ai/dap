@@ -16,6 +16,7 @@ import { FILE_BYTES, redacted, refused, site } from "../src/site/route.ts";
 import { ServingAdmission, type ServingRequest } from "../src/serving-admission.ts";
 import { SCOPE_INDEX_NAME } from "../src/scope-index.ts";
 import { net } from "../src/testing.ts";
+import { live } from "./support.ts";
 import roomWorker from "../../../apps/room/worker.ts";
 import scopeWorker from "../src/worker.ts";
 import { soon } from "./net.ts";
@@ -240,7 +241,7 @@ const host = new Scripted();
 const publishedScopes: Binding<DurableObjectId> = {
   idFromName: (name) => env.PLATFORM.idFromName(name),
   get: (id) => {
-    const object = env.PLATFORM.get(id) as unknown as import("../src/site/publication.ts").SitePublicationPeer & { siteRoom(): Promise<import("../src/namespace.ts").Sourced | null> };
+    const object = live(env.PLATFORM.get(id) as unknown as import("../src/site/publication.ts").SitePublicationPeer & { siteRoom(): Promise<import("../src/namespace.ts").Sourced | null> });
     return {
       siteRoom: () => object.siteRoom(),
       siteDestination: () => object.siteDestination(),
@@ -535,7 +536,7 @@ test("refusals preserve machine reasons and statuses while browsers get safe Pag
   const unpublishedScopes: Binding<DurableObjectId> = {
     idFromName: (name) => env.PLATFORM.idFromName(name),
     get: (id) => {
-      const object = env.PLATFORM.get(id) as unknown as import("../src/site/publication.ts").SitePublicationPeer & { siteRoom(): Promise<import("../src/namespace.ts").Sourced | null> };
+      const object = live(env.PLATFORM.get(id) as unknown as import("../src/site/publication.ts").SitePublicationPeer & { siteRoom(): Promise<import("../src/namespace.ts").Sourced | null> });
       return { siteRoom: () => object.siteRoom(), siteDestination: () => object.siteDestination(), sitePublication: async () => null };
     },
   };

@@ -5,7 +5,7 @@ import { lineageDeviceRoot, lineageBudgetDefinitions } from "./definition-corpus
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { DEVICE_COMMAND, type Entry, type Intent, type PlatformDefinition, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isSeed, newIncarnation, parseStrict, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, digestBytes, entryHash, factRefOf, intentDigest, isSeed, parseStrict, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import type { Delivered } from "@generalbusiness/dap-derive";
@@ -20,13 +20,14 @@ import { applicationOwnedScopesPacket, applicationResolverFixture, applicationHt
 import { rita, routed, type Platform } from "./repository.ts";
 import { fixedSigner } from "./fixtures-core.ts";
 import { soon } from "./net.ts";
+import { isRoomRetiredStop } from "../src/room-retired.ts";
 
 // Explicit historical-family policy: lineage authority still comes from native proofs.
 const config = (register: string) => ({ PLATFORM_CREATION_PINS: JSON.stringify([...new Set([...Object.values(APPLICATION_COHORT), ...Object.values(ARCHIVE_DEVICE_APPLICATION_COHORT)])]), DEPLOYMENT: "TEST-lineage", ARTIFACTS_CONFIG: JSON.stringify({ registerScope: register, namespace: "lineage", host: "git.example", maxBytes: 1024, credentialIdentity: "adapter-attempt" }) });
-const envelopeOf = (entry: Entry, n: number): Delivered => {
+const envelopeOf = (entry: Entry, n: number, at: ScopeRef): Delivered => {
   const send = entry.sends.find(send => send.n === n);
   if (!send) throw Error("genuine retained create required");
-  return { to: send.to, from: factRefOf(entry), n, message: send.message };
+  return { to: send.to, from: factRefOf(entry, at), n, message: send.message };
 };
 async function declarationsFor(register: PlatformDefinition) {
   const ordinary = await applicationOwnedScopesPacket();
@@ -68,7 +69,7 @@ test("three approved native cohorts admit only operator-listed roots and preserv
       const directoryBirth = (await life.wait(() => D.entries()))[0]!;
       const nativeChild = directoryBirth.sends.find(send => isSeed(send.to) && send.to.kind === "membership")!;
       const child = children[0]!;
-      const delivered = envelopeOf(directoryBirth, nativeChild.n);
+      const delivered = envelopeOf(directoryBirth, nativeChild.n, await D.at());
       // A Register-only setting proves the same actual native child lineage;
       // provider configuration is unnecessary to select its authority root.
       const { PLATFORM_CREATION_PINS, DEPLOYMENT } = config(R.name);
@@ -96,7 +97,7 @@ test("three approved native cohorts admit only operator-listed roots and preserv
 
       // A forged unknown ancestor must not reach even idFromName in register
       // mode. The index is a stand-in; every actual native answer above is not.
-      const unknown: ScopeRef = { ...await D.at(), scope: scopeIdOf({ ...(nativeChild.to as Seed), ordinal: 77 }), inc: newIncarnation(crypto.getRandomValues(new Uint8Array(16))) };
+      const unknown: ScopeRef = { ...await D.at(), scope: scopeIdOf({ ...(nativeChild.to as Seed), ordinal: 77 }), genesis: digestBytes(crypto.getRandomValues(new Uint8Array(16))) };
       const unknownTo = { ...(nativeChild.to as Seed), creator: unknown };
       const trap = recorded([R, D], scopeIdOf(unknownTo));
       expect(await namespace(indexedScopes(trap.binding, { ...trap.env, ...config(R.name), SCOPE_INDEX_MODE: "register" })).transport.send({ ...delivered, to: unknownTo, from: { ...delivered.from, at: unknown } }))
@@ -123,12 +124,14 @@ test("three approved native cohorts admit only operator-listed roots and preserv
 
       // Readable source bytes disprove the changed ordinal/message. A changed
       // sender incarnation also contradicts the unchanged seed.creator before
-      // any birth read. Only the unavailable exact hash needs a retry answer.
+      // any birth read. The source is the Directory's genesis and the seed
+      // names its creator in the self form, so a changed source hash fails
+      // resolveGenesisSelf before any read as well.
       // No answer may reach the child's constructor boundary.
       for (const [label, altered, expected] of [
         ["ordinal contradicted by source", { ...delivered, n: delivered.n + 99 }, { answer: "routing", reason: "not-found" }],
-        ["exact source hash unavailable", { ...delivered, from: { ...delivered.from, hash: digestBytes(utf8("wrong fact")) } }, { answer: "retry", reason: "dependency-unavailable" }],
-        ["creator incarnation mismatch", { ...delivered, from: { ...delivered.from, at: { ...delivered.from.at, inc: newIncarnation(crypto.getRandomValues(new Uint8Array(16))) } } }, { answer: "routing", reason: "not-found" }],
+        ["source hash contradicts the self-form creator", { ...delivered, from: { ...delivered.from, hash: digestBytes(utf8("wrong fact")) } }, { answer: "routing", reason: "not-found" }],
+        ["creator genesis mismatch", { ...delivered, from: { ...delivered.from, at: { ...delivered.from.at, genesis: digestBytes(crypto.getRandomValues(new Uint8Array(16))) } } }, { answer: "routing", reason: "not-found" }],
         ["message contradicted by source", { ...delivered, message: { ...delivered.message, body: { fields: {} } } } as Delivered, { answer: "routing", reason: "not-found" }],
       ] as const) {
         const denied = recorded([R, D, ...children], scopeIdOf(altered.to as Seed));
@@ -156,7 +159,7 @@ test("a late whole-lineage index result and an oversized body never activate any
   const room = await sessionRoom(ARCHIVE_DEVICE_APPLICATION_COHORT.register);
   try {
     const first = (await room.D.entries())[0]!, send = first.sends.find(send => isSeed(send.to))!;
-    const delivered = envelopeOf(first, send.n);
+    const delivered = envelopeOf(first, send.n, await room.D.at());
     let calls = 0, finish!: (value: boolean) => void, timeout!: () => void, now = 0;
     const binding: Binding = { idFromName() { calls++; throw Error("late target"); }, get() { calls++; throw Error("late target"); } };
     const clock: CreationTimer = { now: () => now, after(_milliseconds, work) { timeout = work; return () => {}; } };
@@ -191,7 +194,7 @@ test("an actually supported but unadmitted native cohort and a refused native bi
     const f = recorded([room.R, room.D, ...room.children], child.name);
     // Every proposed pin is configured, so refusal must still enforce the fixed lineage families.
     const settings = { ...f.env, ...config(room.R.name), PLATFORM_CREATION_PINS: JSON.stringify(Object.values(TRUSTED_APPLICATION_COHORT)) };
-    expect(await namespace(indexedScopes(f.binding, settings)).transport.send(envelopeOf(first, send.n)))
+    expect(await namespace(indexedScopes(f.binding, settings)).transport.send(envelopeOf(first, send.n, await room.D.at())))
       .toEqual({ answer: "routing", reason: "not-found" });
     expect(f.counts()).toEqual({ targetNames: 0, targetGets: 0, forbidden: 0 });
 
@@ -204,11 +207,13 @@ test("an actually supported but unadmitted native cohort and a refused native bi
     expect(await room.life.wait(() => refused.stub.create(signIntent(intent, rita.secret), seed.definition))).toMatchObject({ answer: "refused" });
     const entry = await room.life.wait(() => runInDurableObject(refused.object, (_instance, state) => parseStrict(String(state.storage.sql.exec("SELECT bytes FROM entry WHERE seq=0").one()["bytes"])) as Entry));
     expect(entry.input).toMatchObject({ type: "genesis", decision: "refused" });
-    const fresh = signIntent({ ...intent, to: entry.at, kind: "found", idempotencyKey: crypto.randomUUID() }, rita.secret);
+    // The refused scope's address follows from its seed and its genesis hash.
+    const refusedAt: ScopeRef = { scope: scopeIdOf(seed), genesis: entryHash(entry) };
+    const fresh = signIntent({ ...intent, to: refusedAt, kind: "found", idempotencyKey: crypto.randomUUID() }, rita.secret);
     expect(await room.life.wait(() => refused.stub.submit(fresh, [])), "a refused native birth keeps its terminal refusal before release admission")
-      .toEqual({ answer: "refused", reason: "scope-refused", judgedAt: { seq: entry.seq, hash: factRefOf(entry).hash } });
-    const childSeed: Seed = { v: 1, kind: "directory", definition: ARCHIVE_DEVICE_APPLICATION_COHORT.directory, creator: entry.at, cause: seedDigest(seed), ordinal: 0 };
-    const negative: Delivered = { to: childSeed, from: factRefOf(entry), n: 0, message: { class: "request", type: "create", body: { fields: {} } } };
+      .toEqual({ answer: "refused", reason: "scope-refused", judgedAt: { seq: entry.seq, hash: entryHash(entry) } });
+    const childSeed: Seed = { v: 1, kind: "directory", definition: ARCHIVE_DEVICE_APPLICATION_COHORT.directory, creator: refusedAt, cause: seedDigest(seed), ordinal: 0 };
+    const negative: Delivered = { to: childSeed, from: factRefOf(entry, refusedAt), n: 0, message: { class: "request", type: "create", body: { fields: {} } } };
     const closed = recorded([refused], scopeIdOf(childSeed));
     expect(await namespace(indexedScopes(closed.binding, { ...closed.env, ...config(refused.name) })).transport.send(negative))
       .toEqual({ answer: "routing", reason: "not-found" });
@@ -243,7 +248,7 @@ test("the whole creation attempt admits exactly16 bodies before a genuine legacy
     for (let i = 0; i < declarations.length; i++) {
       expect(await life.wait(() => directoryPeer.creationDeclaration!(directory, definitionDigest(declarations[i]!), 1024 * 1024, 10_000))).toBe(values[i]);
     }
-    const directoryBirth = (await life.wait(() => D.entries()))[0]!, registerBirth = (await life.wait(() => R.entries()))[0]!;
+    const directoryBirth = (await life.wait(() => D.entries()))[0]!;
     if (directoryBirth.input.type !== "genesis" || !directoryBirth.input.source || directoryBirth.input.source.seq === 0 || source.seq === 0) throw Error("the fixture needs two actual non-genesis native creator sends");
     const births: { fact: string; bytes: string }[] = [], proofs: { fact: string; bytes: string }[] = [];
     const attempts: string[] = [], obtained: { digest: string; bytes: string }[] = [], missing: string[] = [];
@@ -251,12 +256,14 @@ test("the whole creation attempt admits exactly16 bodies before a genuine legacy
     const f = recorded([R, D, M, A, G], name, target => new Proxy(target, { get(peer, key) {
       if (key === "nativeBirth") return async (...args: Parameters<NonNullable<Peer["nativeBirth"]>>) => {
         const value = await peer.nativeBirth!(...args);
+        if (isRoomRetiredStop(value)) throw Error("the test peer answered a retired stop");
         if (value === null) missing.push(`birth:${args[0].scope}`);
         else births.push({ fact: canonicalize(value.proof.fact), bytes: value.proof.bytes });
         return value;
       };
       if (key === "proofSource") return async (...args: Parameters<NonNullable<Peer["proofSource"]>>) => {
         const value = await peer.proofSource!(...args);
+        if (isRoomRetiredStop(value)) throw Error("the test peer answered a retired stop");
         if (value === null) missing.push(`proof:${canonicalize(args[0])}`);
         else proofs.push({ fact: canonicalize(value.fact), bytes: value.bytes });
         return value;
@@ -264,6 +271,7 @@ test("the whole creation attempt admits exactly16 bodies before a genuine legacy
       if (key === "creationDeclaration") return async (...args: Parameters<NonNullable<Peer["creationDeclaration"]>>) => {
         attempts.push(args[1]);
         const value = await peer.creationDeclaration!(...args);
+        if (isRoomRetiredStop(value)) throw Error("the test peer answered a retired stop");
         if (value === null) missing.push(`declaration:${args[1]}`);
         else obtained.push({ digest: args[1], bytes: value });
         return value;
@@ -276,11 +284,11 @@ test("the whole creation attempt admits exactly16 bodies before a genuine legacy
     // exact successful-reply assertions below. Wrapper ordering/retry-wire
     // semantics are covered separately by the preceding wrapper controls.
     const clock: CreationTimer = { now: () => 0, after(milliseconds, _timeout) { expect(milliseconds).toBe(10_000); timers++; return () => { timerStops++; }; } };
-    const envelope = envelopeOf(source, send.n);
+    const envelope = envelopeOf(source, send.n, await D.at());
     expect(await life.wait(() => admitChildCreation(f.binding, config(R.name), { async has(scope, kind) { indexReads++; return f.index.has(scope, kind); } }, envelope, clock)))
       .toEqual({ kind: "unavailable" });
-    expect(births.map(row => row.fact)).toEqual([canonicalize(factRefOf(directoryBirth)), canonicalize(factRefOf(registerBirth))]);
-    expect(proofs.map(row => row.fact)).toEqual([canonicalize(factRefOf(source)), canonicalize(directoryBirth.input.source)]);
+    expect(births.map(row => row.fact)).toEqual([canonicalize(await D.fact(0)), canonicalize(await R.fact(0))]);
+    expect(proofs.map(row => row.fact)).toEqual([canonicalize(factRefOf(source, await D.at())), canonicalize(directoryBirth.input.source)]);
     // One envelope + two native births + two creator sends + eleven exact
     // declaration bodies =16. A twelfth declaration RPC must not even start.
     expect(attempts).toEqual(declarations.slice(0, 11).map(value => definitionDigest(value)));
@@ -326,7 +334,7 @@ test.each([ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT,
     const rootBirth = (await root.entries())[0]!, childSend = rootBirth.sends.find(send => isSeed(send.to) && send.to.definition === childId);
     if (!childSend || !isSeed(childSend.to)) throw Error("declared root must create its child");
     const child = life.platform(scopeIdOf(childSend.to)); await driveFixture([R, D, M, A, G, root, child], life.wait);
-    const envelope = envelopeOf(rootBirth, childSend.n), held = [R, D, M, A, G, root, child];
+    const envelope = envelopeOf(rootBirth, childSend.n, await root.at()), held = [R, D, M, A, G, root, child];
     const good = recorded(held, child.name);
     expect(await namespace(indexedScopes(good.binding, { ...good.env, ...config(R.name) })).transport.send(envelope)).toMatchObject({ answer: "recorded" });
     expect(good.counts()).toEqual({ targetNames: 1, targetGets: 1, forbidden: 0 });

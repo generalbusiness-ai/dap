@@ -220,7 +220,7 @@ test("the runner's gateway forwards only the two read requests of the job's own 
   // A token of another purpose, of another job, or of another lane opens no grant for this run.
   expect([readGrant(job, repository, { ...token, purpose: "staging" }), readGrant(job, repository, { ...token, for: { job: { ...job.fact, seq: 8 } } }), readGrant(job, repository, { ...token, for: { hold: 1, instance: "i" } })]).toEqual([null, null, null]);
   const grant = readGrant(job, repository, token)!;
-  expect([grant.update, grant.repository, grant.attempt]).toEqual([null, repository, `${lane.scope}.${lane.inc}.7`]);
+  expect([grant.update, grant.repository, grant.attempt]).toEqual([null, repository, `${lane.scope}.${lane.genesis}.7`]);
 
   const reached: { url: string; method: string; auth: string | null; cookie: string | null; redirect: string }[] = [];
   const records: unknown[] = [];

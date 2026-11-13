@@ -14,7 +14,7 @@ import { CREATED, HEAD, TREE, reading } from "./fixtures-entry.ts";
 // format: the facts are made up, and no host, push or creation is shown. The judgment is the plain function, with a reading
 // written by hand.
 const scope = `sc_${"g".repeat(51)}a` as ScopeId;
-const operation: FactRef = { at: { kind: "lane", scope: `sc_${"l".repeat(51)}a`, inc: `in_${"l".repeat(25)}a` }, seq: 9, hash: `sha256:${"5".repeat(64)}` };
+const operation: FactRef = { at: { scope: `sc_${"l".repeat(51)}a`, genesis: `sha256:${"5".repeat(64)}` }, seq: 9, hash: `sha256:${"5".repeat(64)}` };
 const time = "2026-10-07T12:00:00Z" as Timestamp;
 
 for (const format of ["sha1", "sha256"] as const) test(`Git ${format} reads an edit's objects as the published tree with one file written: a new file, a replaced one and one in a new folder; every other entry, a link's among them, is unchanged; a path that a folder, a link or a file on the way holds gives no objects`, () => {

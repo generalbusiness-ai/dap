@@ -1,6 +1,6 @@
 /** TEST person links shared by the actual Start, CLI and MCP entry witnesses.
  * These expected encoding decisions assert no native membership admission. */
-import { b64url, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import type { InvitationLink } from "../../src/invitation.ts";
 
 export const PERSON_SERVICE = "https://person-invitation.test";
@@ -9,8 +9,8 @@ const scope = (kind: "directory" | "membership" | "rules" | "destination") =>
 export const PERSON_INVITATION: InvitationLink = {
   v: 1, service: PERSON_SERVICE,
   repository: {
-    directory: { scope: scope("directory"), inc: newIncarnation(new Uint8Array(16).fill(11)), kind: "directory" },
-    membership: { scope: scope("membership"), inc: newIncarnation(new Uint8Array(16).fill(12)), kind: "membership" },
+    directory: { scope: scope("directory"), genesis: textDigest("TEST genesis 11") },
+    membership: { scope: scope("membership"), genesis: textDigest("TEST genesis 12") },
     rules: scope("rules"), destination: scope("destination"),
   },
   invitation: 5, secret: "TEST person invitation secret", handle: "@test-person", definition: "platform:membership@2",

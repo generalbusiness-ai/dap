@@ -10,7 +10,7 @@ import { initialCommitObjects, importRef, readmeText, receiptObjects, receiptRef
 // A real local Git repository in each object format. Facts are made up:
 // this checks the byte forms and Git's names, and shows no host or creation.
 const scope = `sc_${"g".repeat(51)}a` as ScopeId;
-const claim: FactRef = { at: { kind: "register", scope: `sc_${"r".repeat(51)}a`, inc: `in_${"r".repeat(25)}a` }, seq: 7, hash: `sha256:${"1".repeat(64)}` };
+const claim: FactRef = { at: { scope: `sc_${"r".repeat(51)}a`, genesis: `sha256:${"7".repeat(64)}` }, seq: 7, hash: `sha256:${"1".repeat(64)}` };
 const time = "2026-10-03T02:40:00Z" as Timestamp;
 
 for (const format of ["sha1", "sha256"] as const) test(`Git ${format} gives the destination's computed founding and receipt IDs, including the canonical file and fact's public ref`, () => {
@@ -29,14 +29,14 @@ for (const format of ["sha1", "sha256"] as const) test(`Git ${format} gives the 
     const first = initialCommitObjects(format, scope, time, claim);
     write(first);
     const commit = first.objects.at(-1)!;
-    expect(commit.body.length).toBe(format === "sha1" ? 512 : 536);
+    expect(commit.body.length).toBe(format === "sha1" ? 540 : 564);
     // The authority's original made-up strings have nonzero base32 padding and are no valid references. Check its
-    // published byte example separately with Git; the production builder above takes a valid reference of the same length.
-    const rawClaim = { ...claim, at: { ...claim.at, scope: `sc_${"r".repeat(52)}`, inc: `in_${"r".repeat(26)}` } };
+    // published byte example, in the incarnation form it was published in, separately with Git. The builder above takes the genesis form.
+    const rawClaim = { ...claim, at: { kind: "register", scope: `sc_${"r".repeat(52)}`, inc: `in_${"r".repeat(26)}` } };
     const rawIdentity = `artroom <sc_${"g".repeat(52)}@artroom.invalid> 1791000000 +0000`;
     const rawBody = utf8(`tree ${first.objects[0]!.id}\nauthor ${rawIdentity}\ncommitter ${rawIdentity}\n\nFound this repository.\n\nclaim ${canonicalize(rawClaim)}\n`);
     expect(git(["hash-object", "--stdin", "-t", "commit"], rawBody)).toBe(format === "sha1" ? "9e97ce67bca3ca7616f4c7c6793bd3bbb36428fa" : "ccc9f22b07f47573f9bd0924885ccfe94440e22f594ede3f98797fd0052ce12d");
-    const operation: FactRef = { ...claim, at: { ...claim.at, kind: "destination", scope }, seq: 0, hash: `sha256:${"2".repeat(64)}` };
+    const operation: FactRef = { ...claim, at: { ...claim.at, scope }, seq: 0, hash: `sha256:${"2".repeat(64)}` };
     const firstFact: FactRef = { ...operation, seq: 2, hash: `sha256:${"3".repeat(64)}` };
     const file = { v: 1, first: firstFact, claim, commit: first.commit };
     const receipt = receiptObjects(format, scope, time, operation, file);
@@ -84,7 +84,7 @@ test("Git gives version 2's founding commit with one file, README.md, holding th
     expect([git(["ls-tree", one.commit]), git(["rev-parse", `${one.commit}^{tree}`])]).toEqual(["", "4b825dc642cb6eb9a060e54bf8d69288fbee4904"]);
     expect([git(["log", "-1", "--format=%s", two.commit]), git(["log", "-1", "--format=%s", one.commit])]).toEqual(["Found this repository.", "Found this repository."]);
     // Stable: the same inputs give the same IDs, pinned here; another handle, name or directory gives another commit.
-    expect([one.commit, two.commit]).toEqual(["2de22fdd8dcb8cfca58b57d88fbb3be98a534d04", "fd320962f5cbb89dd5df314f66be0660b45c1530"]);
+    expect([one.commit, two.commit]).toEqual(["daac4b160ae575776db067e63c016f3a4ca80df8", "24d2b4722db25ba263a031715f8a439d78c8871a"]);
     expect([initialCommitObjects("sha1", scope, time, claim, readme).commit, ...(["name", "handle", "directory"] as const).map((part) => initialCommitObjects("sha1", scope, time, claim, { ...readme, [part]: `${readme[part]}x` }).commit === two.commit)])
       .toEqual([two.commit, false, false, false]);
   } finally { rmSync(directory, { recursive: true, force: true }); }

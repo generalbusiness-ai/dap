@@ -4,7 +4,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, FieldValue, Guard, Operand, Send } from "@generalbusiness/dap-contract";
 import { factRefOf } from "@generalbusiness/dap-bytes";
 import { judgeDelivery, validateDefinition, type ActJudgment, type Fetched, type ProblemCode } from "../src/index.ts";
-import { Scope, arriving, fields, forged, created, keys, on, t, ticketDefinition, valid } from "./fixtures-entry.ts";
+import { Scope, arriving, d, fields, forged, created, keys, on, t, ticketDefinition, valid, fixtureSequence } from "./fixtures-entry.ts";
 
 const { rita } = keys;
 
@@ -90,7 +90,7 @@ describe("the list forms (section 6.5)", () => {
     const definition = probing(rows);
     const s = board(definition, [], [["a", "pass"], ["b", null]]);   // entry 3 requests job 3, entry 4 passes it, and entry 5 requests job 5
     const m = board(definition, [], [["c", "pass"]], 1);
-    const fetched: Fetched = { fact: m.fact(4), entry: m.entries[4]!.entry, under: m.under };
+    const fetched: Fetched = { fact: m.fact(4), entry: m.entries[4]!.entry, sequence: fixtureSequence(m), under: m.under };
     const probe = (proofs: FieldValue[], facts: Fetched[] = []) => s.judge(s.intent(rita, "probe-0", { ...on(s, 0), ...fields({ proofs }) }), { facts });
     const foreign = probe([s.fact(4), m.fact(4)], [fetched]);
     expect([said(foreign), foreign.result === "write" && foreign.draft.uses.map((u) => u.fact)]).toEqual(["passes", [m.fact(4)]]);
@@ -103,8 +103,8 @@ describe("the list forms (section 6.5)", () => {
     const timed = (second: Guard) => valid(validateDefinition(timedGuardData(second), PROPOSED_BOUNDS));
     const D = created();
     const tell: Send = { n: 0, to: D.at, message: { class: "request", type: "tell", body: { message: "audit", fields: {} } } };
-    const source = forged(new Scope(ticketDefinition).at, 1, D.entries[0]!.entry.input, [tell]);
-    const arrival = { ...tell, from: factRefOf(source.entry) };
+    const source = forged(fixtureSequence(new Scope(ticketDefinition)), 1, { type: "checkpoint", through: 0, state: d("0") }, [tell]);
+    const arrival = { ...tell, from: factRefOf(source.entry, source.sequence.at) };
     D.now = t(-10);
     const judged = (second: Guard) => { const j = judgeDelivery(D.state, timed(second), arrival, arriving(D, arrival, source)); return j.result === "unavailable" ? j.reason : j.result; };
     expect([judged({ unset: "due" }), judged({ before: { slot: "due" } })]).toEqual(["write", "clock-behind"]);
@@ -116,8 +116,8 @@ describe("the list forms (section 6.5)", () => {
     const X = new Scope(ticketDefinition);
     const decision = (barred: string, checks: unknown = [{ name: "lint", required: true }, { name: "docs", required: false }]) => {
       const tell: Send = { n: 0, to: D.at, message: { class: "request", type: "tell", body: { message: "audit", fields: { barred, checks } } } };
-      const source = forged(X.at, 1, X.entries[1]!.entry.input, [tell]);
-      const arrival = { ...tell, from: factRefOf(source.entry) };
+      const source = forged(fixtureSequence(X), 1, X.entries[1]!.entry.input, [tell]);
+      const arrival = { ...tell, from: factRefOf(source.entry, source.sequence.at) };
       const j = judgeDelivery(D.state, auditing, arrival, arriving(D, arrival, source));
       return j.result === "write" && j.draft.input.type === "delivery" && "decision" in j.draft.input ? [j.draft.input.decision, j.draft.input.reason] : j.result;
     };

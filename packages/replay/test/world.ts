@@ -12,8 +12,8 @@
  */
 
 import type { DeclaredDefinition, Entry, RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
-import { born, deliver, fields, created, keys, notesDefinition, type Ledger } from "@generalbusiness/dap-derive/testing";
+import { canonicalize, definitionDigest, digestBytes, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { born, deliver, fields, created, genesisOnly, keys, notesDefinition, type Ledger } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, hashOfBytes, type MemoryScope } from "../src/index.ts";
 
 function written(judgment: { result: string }): void {
@@ -47,6 +47,9 @@ export function served(ledger: Ledger, all: readonly Ledger[]): MemoryScope {
     for (const use of entry.uses) {
       const owner = all.find((other) => other.at.scope === use.fact.at.scope)!;
       retained.push({ kind: "entry", digest: use.content, bytes: canonicalize(owner.entries[use.fact.seq]!.entry), under: owner.definition.declared.name });
+      // Rulings 4f697a7a and ae48dd39: a later foreign use also keeps that sequence's first entry, served as `birth`.
+      if (use.fact.seq > 0 && use.fact.at.scope !== ledger.at.scope && !retained.some((r) => r.kind === "birth" && r.digest === use.fact.at.genesis))
+        retained.push({ kind: "birth", digest: use.fact.at.genesis, bytes: canonicalize(owner.entries[0]!.entry) });
     }
   }
   return { scope: ledger.at, entries: ledger.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained };
@@ -58,9 +61,9 @@ export function unsupportedDefinitionHistory(declared: DeclaredDefinition, key: 
   const genesis = entryOf(history, 0);
   if (history.entries.length !== 1 || genesis.input.type !== "genesis") throw new Error("unsupported definition fixture needs one genesis");
   const digest = definitionDigest(declared), seed = { ...genesis.input.seed, definition: digest };
-  const at = { ...history.scope, scope: scopeIdOf(seed) };
-  const entry: Entry = { ...genesis, at, input: { ...genesis.input, seed } };
+  const entry: Entry = { ...genesisOnly(genesis), input: { ...genesis.input, seed } };
   const bytes = canonicalize(entry);
+  const at = { scope: scopeIdOf(seed), genesis: hashOfBytes(bytes) };
   return { scope: at, entries: [{ seq: 0, hash: hashOfBytes(bytes), bytes }],
     retained: [{ kind: "definition", digest, bytes: canonicalize(declared) }] };
 }
@@ -98,3 +101,64 @@ export function rewrite(scope: MemoryScope, seq: number, change: (entry: any) =>
 
 /** The digest a `uses` records for a foreign entry: of its canonical bytes. */
 export const contentOf = (bytes: string) => digestBytes(utf8(bytes));
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function resign(before: any, after: any): void {
+  if (typeof after !== "object" || after === null) return;
+  if (typeof after.sig === "string" && typeof after.intent === "object" && after.intent !== null && Object.keys(after).length === 2
+    && canonicalize(after.intent) !== canonicalize(before?.intent)) {
+    const signer = Object.values(keys).find((k) => k.key === after.intent.actor);
+    if (!signer) throw new Error("a changed intent has no fixture key to sign it again");
+    after.sig = signIntent(after.intent, signer.secret).sig;
+    return;
+  }
+  for (const key of Object.keys(after)) resign(before?.[key], after[key]);
+}
+
+/**
+ * Change entry `seq` of one scope and seal every history of the world again, as its writers would have sealed it.
+ * A changed genesis gives its scope a new genesis digest. Each later entry, in any scope, that names a changed
+ * entry or genesis is written again with the new values: its `prev`, its `uses` and every reference in its input.
+ * The entries are sealed in the order in which they used each other, so each history stays bound to its genesis.
+ * A signed intent whose text changed is signed again by its actor's key from the fixture keys.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function reseal(w: World, name: keyof World, seq: number, change: (entry: any) => void): void {
+  const names = Object.keys(w) as (keyof World)[];
+  type Slot = { name: keyof World; seq: number; old: string; bytes: string };
+  const slots: Slot[] = names.flatMap((n) => w[n].entries.map((e) => ({ name: n, seq: e.seq, old: e.hash as string, bytes: e.bytes })));
+  const oldGenesis = new Map(names.map((n) => [n, w[n].scope.genesis as string]));
+  const oldContent = new Map(slots.map((s) => [s.old, contentOf(s.bytes)]));
+  const swap = new Map<string, string>();
+  const done = new Set<Slot>();
+  const needs = (s: Slot): Slot[] => slots.filter((o) => o !== s && (
+    (o.name === s.name && o.seq === s.seq - 1)
+    || s.bytes.includes(o.old) || s.bytes.includes(oldContent.get(o.old)!)
+    || (o.seq === 0 && o.name !== s.name && s.bytes.includes(oldGenesis.get(o.name)!))));
+  const replaceAll = (text: string): string => { for (const [from, to] of swap) text = text.split(from).join(to); return text; };
+  const visit = (s: Slot, path: Set<Slot>): void => {
+    if (done.has(s)) return;
+    if (path.has(s)) throw new Error("the fixture histories use each other in a cycle");
+    path.add(s);
+    for (const o of needs(s)) visit(o, path);
+    path.delete(s);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const before = JSON.parse(s.bytes), entry: any = JSON.parse(replaceAll(s.bytes));
+    if (s.name === name && s.seq === seq) change(entry);
+    resign(before, entry);
+    const bytes = canonicalize(entry), hash = hashOfBytes(bytes) as string;
+    if (hash !== s.old) { swap.set(s.old, hash); swap.set(oldContent.get(s.old)!, contentOf(bytes)); }
+    if (s.seq === 0 && hash !== oldGenesis.get(s.name)) swap.set(oldGenesis.get(s.name)!, hash);
+    s.bytes = bytes; s.old = hash;
+    done.add(s);
+  };
+  for (const s of slots) visit(s, new Set());
+  for (const n of names) {
+    const scope = w[n];
+    scope.scope = { ...scope.scope, genesis: (swap.get(scope.scope.genesis as string) ?? scope.scope.genesis) as never };
+    scope.entries = slots.filter((s) => s.name === n).sort((a, b) => a.seq - b.seq).map((s) => ({ seq: s.seq, hash: s.old as never, bytes: s.bytes }));
+    scope.retained = scope.retained.map((r) => r.kind === "entry"
+      ? (() => { const at = slots.find((s) => contentOf(s.bytes) === (swap.get(r.digest) ?? r.digest))!; return { ...r, digest: contentOf(at.bytes) as never, bytes: at.bytes }; })()
+      : r);
+  }
+}

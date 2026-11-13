@@ -199,7 +199,7 @@ A repository binding has this shape:
 ```json
 [
   {
-    "destination": { "scope": "<destination scope ID>", "inc": "<destination incarnation>", "kind": "destination" },
+    "destination": { "scope": "<destination scope ID>", "genesis": "<destination genesis digest>" },
     "repository": { "host": "github.com", "namespace": "<account login>", "name": "<repository name>", "id": "<numeric stable repository ID>" },
     "branch": "main"
   }

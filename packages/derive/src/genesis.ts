@@ -12,17 +12,18 @@
  */
 
 import { nativeMark } from "./program/native.ts";
-import type { Entry, FactRef, FactUse, Incarnation, Prepared, Reason, Request, ScopeId, ScopeRef, Seed, Send, SignedIntent } from "@generalbusiness/dap-contract";
-import { deliveryCauseDigest, intentDigest, isDigest, isIncarnation, isSeed, messageDigest, scopeIdOf, seedDigest, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { judgeDelivery, reasonOf, sentBy, type DeliveryContext } from "./delivery.ts";
-import { creationFields, isEntryOf, isIntent, readFacts, readFields, textsNamed, useOf, type Texts } from "./fields.ts";
-import type { Fetched, Judging } from "./guards.ts";
+import type { Entry, FactRef, FactUse, GenesisInput, GenesisNonce, GenesisSelfRef, Prepared, Reason, Request, ScopeId, ScopeRef, Seed, Send, SignedIntent } from "@generalbusiness/dap-contract";
+import { deliveryCauseDigest, genesisInputDigest, intentDigest, isDigest, isGenesisNonce, isSeed, messageDigest, resolveGenesisSelf, scopeIdOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { judgeDelivery, judgeDeliveryForReplay, reasonOf, type DeliveryContext } from "./delivery.ts";
+import { creationFields, isEntryOf, isIntent, readFields, textsNamed, useOf, type Texts } from "./fields.ts";
+import { copyEntry, copyFact, copyKind, judgmentFacts, matchesCopy, readJudgmentFacts, replayAssumptions, replayContext, sentByCopy, sourceCopy, verifiedContext, withJudgmentSource, type JudgmentCopy } from "./operand.ts";
+import type { Judging, ReplayAssumptions } from "./guards.ts";
 import { giving } from "./handlers.ts";
 import { executeBody } from "./program/body.ts";
 import { namedBody } from "./program/structure.ts";
 import { declarationOf } from "./program/declaration.ts";
 import { withinCounts } from "./draws.ts";
-import { fieldOutsideType, grantByRule, unjudged, type JudgedInput } from "./marks.ts";
+import { fieldOutsideType, grantByRule, unjudged } from "./marks.ts";
 import { directoryOf } from "./sends.ts";
 import { creationContextOf } from "./creation-context.ts";
 import type { Judgment } from "./judge.ts";
@@ -33,13 +34,13 @@ import { isFactRef, isLocalId, isObject, own, same } from "./values.ts";
 
 /**
  * What asks for a directory (section 7.1). `name` is the name of the object
- * that was reached. `inc` is minted at random by the caller, in the
+ * that was reached. `nonce` is minted at random by the caller, in the
  * transaction that writes the entry (section 2.2).
  */
-export interface SignedCreation { name: ScopeId; inc: Incarnation; seed: Seed; creation: SignedIntent }
+export interface SignedCreation { name: ScopeId; nonce: GenesisNonce; seed: Seed; creation: SignedIntent }
 
 /** What asks for a child (section 7.2): the delivery of a `create`, which is addressed by its seed. */
-export interface Creation { name: ScopeId; inc: Incarnation; to: Seed; from: FactRef; n: number; message: Request }
+export interface Creation { name: ScopeId; nonce: GenesisNonce; to: Seed; from: FactRef; n: number; message: Request }
 
 /** Opt-in signed birth has a body for every named typed detached text,
  * even if another field later makes genesis refuse. A null size is only
@@ -66,13 +67,17 @@ const REGISTER = "platform:register";
  * and it holds the `operation` record of that ordinal. Null: no entry at
  * hand is that one (I3 deltas, entry EP1).
  */
-function openerOf(source: Entry, message: Request, facts: readonly Fetched[]): Entry | null {
+function openerOf(source: Entry, at: ScopeRef, message: Request, facts: readonly JudgmentCopy[]): Entry | null {
   if (source.input.type !== "outcome") return null;
   const [seq, k] = source.input.operation.split(":").map(Number);
   const fields = isObject(message.body) && isObject(message.body["fields"]) ? Object.values(message.body["fields"]) : [];
   const named = (fact: FactRef): boolean => fields.some((value) => isFactRef(value) && same(value, fact));
-  const matched = facts.find(({ fact, entry }) => same(fact.at, source.at) && fact.seq === seq && fact.seq < source.seq && named(fact) && isEntryOf(entry, fact));
-  return matched?.entry.effects.some((effect) => effect.effect === "operation" && effect.k === k) ? matched.entry : null;
+  const matched = facts.find(copy => {
+    const fact = copyFact(copy);
+    return same(fact.at, at) && fact.seq === seq && fact.seq < source.seq && named(fact) && matchesCopy(copy, fact);
+  });
+  const entry = matched ? copyEntry(matched) : null;
+  return entry?.effects.some((effect) => effect.effect === "operation" && effect.k === k) ? entry : null;
 }
 
 /**
@@ -82,13 +87,13 @@ function openerOf(source: Entry, message: Request, facts: readonly Fetched[]): E
  * outcome's operation, in the domain of an act's intent. `facts`: the
  * foreign entries at hand, among which that act's entry is looked for.
  */
-function causeOf(source: Entry, message: Request, facts: readonly Fetched[]): Seed["cause"] | null {
-  const input = source.input;
+function causeOf(source: JudgmentCopy, message: Request, facts: readonly JudgmentCopy[]): Seed["cause"] | null {
+  const input = copyEntry(source).input;
   if (input.type === "act") return intentDigest(input.signed.intent);
   if (input.type === "delivery") return deliveryCauseDigest({ v: 1, from: input.from, n: input.n, message: messageDigest(input.message) });
-  if (input.type === "genesis") return seedDigest(input.seed);
+  if (input.type === "genesis") return genesisInputDigest(input);
   if (input.type === "outcome") {
-    const opener = openerOf(source, message, facts)?.input;
+    const opener = openerOf(copyEntry(source), copyFact(source).at, message, facts)?.input;
     return opener?.type === "act" ? intentDigest(opener.signed.intent) : null;
   }
   return null;
@@ -106,7 +111,13 @@ function causeOf(source: Entry, message: Request, facts: readonly Fetched[]): Se
  * leaves the genesis not judged, and nothing is written (section 6.1).
  */
 export function judgeGenesis(view: StateView, definition: ValidDefinition, asked: SignedCreation | Creation, context: DeliveryContext): Judgment {
-  return withinCounts(view, definition, unjudged(() => genesisJudged(view, definition, asked, context)));
+  return withinCounts(view, definition, unjudged(() => genesisJudged(view, definition, asked, verifiedContext(context, { genesis: asked }))));
+}
+
+/** Replay keeps its explicit assumptions outside the verified delivery context. */
+export function judgeGenesisForReplay(view: StateView, definition: ValidDefinition, asked: SignedCreation | Creation, verified: DeliveryContext, assumed: ReplayAssumptions): Judgment {
+  const context = replayContext(verified, assumed, { genesis: asked });
+  return context ? withinCounts(view, definition, unjudged(() => genesisJudged(view, definition, asked, context))) : { result: "unavailable", reason: "dependency-unavailable" };
 }
 
 function genesisJudged(view: StateView, definition: ValidDefinition, asked: SignedCreation | Creation, context: DeliveryContext): Judgment {
@@ -114,19 +125,22 @@ function genesisJudged(view: StateView, definition: ValidDefinition, asked: Sign
   const { clock, bounds } = context;
   const creation = "creation" in asked ? asked.creation : null;
   const seed = "creation" in asked ? asked.seed : asked.to;
-  if (!isIncarnation(asked.inc)) throw new Error("the caller mints the incarnation");
+  if (!isGenesisNonce(asked.nonce)) throw new Error("the caller mints a canonical 16-byte genesis nonce");
 
   // Section 2.3: at genesis a scope checks that the digest of the seed equals its own name.
   if (!isSeed(seed) || scopeIdOf(seed) !== asked.name) return unverified("the name is not the digest of the seed");
   const existing = view.scope();
   if (existing) {
     // A repeat is answered from the genesis and adds nothing.
-    if (!("creation" in asked)) return judgeDelivery(view, definition, asked, context);
+    if (!("creation" in asked)) {
+      const assumed = replayAssumptions(context);
+      return assumed ? judgeDeliveryForReplay(view, definition, asked, context, assumed) : judgeDelivery(view, definition, asked, context);
+    }
     return existing.at.scope === asked.name && verifySignedIntent(asked.creation) && intentDigest(asked.creation.intent) === seed.cause ? { result: "repeat", seq: 0 } : unverified("the scope has another genesis");
   }
   if (isDigest(seed.definition) && seed.definition !== definition.digest) return unverified("the seed names another definition");
 
-  let source: Fetched | null = null;
+  let source: JudgmentCopy | null = null;
   if ("creation" in asked) {
     // Section 7.1: the creator's signature commits to the inputs of the seed, and the intent's digest is the seed's cause.
     const intent = asked.creation.intent;
@@ -142,24 +156,28 @@ function genesisJudged(view: StateView, definition: ValidDefinition, asked: Sign
     if (notAfter - now > bounds.intentLifetimeSeconds * 1000) return { result: "refused", reason: "bad-intent", detail: "notAfter is further ahead than an intent may live" };
   } else {
     // Section 7.2, "What the child checks at step 2".
-    if (!isFactRef(asked.from) || !isLocalId(asked.n) || !seed.creator || !same(seed.creator, asked.from.at)) return unverified("the source is not the creator the seed names");
+    if (!isFactRef(asked.from) || !isLocalId(asked.n) || !seed.creator || !same(resolveGenesisSelf(seed.creator, asked.from), asked.from.at)) return unverified("the source is not the creator the seed names");
     if (!isObject(asked.message) || asked.message.class !== "request" || asked.message.type !== "create") return unverified("not a creation request");
-    if (!context.source) return { result: "unavailable", reason: "dependency-unavailable" };
-    if (!sentBy(context.source.entry, asked)) return unverified("the source entry holds no create at that ordinal with that seed and that message");
-    if (causeOf(context.source.entry, asked.message, context.facts) !== seed.cause) return unverified("the seed's cause does not match the source entry");
-    source = { fact: asked.from, entry: context.source.entry, under: context.source.under };
+    if (context.source && !isEntryOf(context.source.entry, asked.from, context.source.sequence)) return unverified("the source entry holds no create at that ordinal with that seed and that message");
+    source = sourceCopy(context, asked.from);
+    if (!source) return { result: "unavailable", reason: "dependency-unavailable" };
+    if (!sentByCopy(source, asked)) return unverified("the source entry holds no create at that ordinal with that seed and that message");
+    if (causeOf(source, asked.message, judgmentFacts(context)) !== seed.cause) return unverified("the seed's cause does not match the source entry");
+    context = withJudgmentSource(context, { genesis: asked }, source);
   }
 
   if (creation && !genesisBodiesPresent(definition, creation, context.texts)) return { result: "refused", reason: "bad-field", detail: "a named genesis text has no matching body" };
 
-  const at: ScopeRef = { scope: asked.name, inc: asked.inc, kind: seed.kind };
+  const at: GenesisSelfRef = { scope: asked.name, genesis: null };
+  const creator = seed.creator === null ? null : source ? resolveGenesisSelf(seed.creator, copyFact(source)) : null;
   const child = "creation" in asked ? null : asked;
   const result = (outcome: "applied" | "refused", reason?: Reason): Send[] =>
     (child ? [{ n: 0, to: child.from.at, message: { class: "result", of: { from: child.from, n: child.n }, outcome, ...(reason ? { reason } : {}) } }] : []);
   // Section 4.1: the genesis states its act kind, from the definition that the scope pins. No sender supplies it. A refused genesis holds it too.
-  const input = (decision: "applied" | "refused") =>
-    ({ type: "genesis", seed, inc: asked.inc, kind: declarationOf(definition).genesis, "founding": creation, source: child?.from ?? null, n: child?.n ?? null, message: child?.message ?? null, decision }) as const;
-  const sourceUse = source ? [useOf(source.fact, source.entry)] : [];
+  const provenance = source ? { source: copyFact(source), sourceKind: copyKind(source) } : { source: null, sourceKind: null } as const;
+  const input = (decision: "applied" | "refused"): GenesisInput =>
+    ({ type: "genesis", seed, nonce: asked.nonce, kind: declarationOf(definition).genesis, "founding": creation, ...provenance, n: child?.n ?? null, message: child?.message ?? null, decision });
+  const sourceUse = source ? [useOf(copyFact(source), copyEntry(source), copyKind(source))] : [];
   /**
    * Section 7.2: a refused genesis is written, sends its `refused` result and
    * nothing else, and is terminal. Section 9.2: it records what its judgment
@@ -181,16 +199,16 @@ function genesisJudged(view: StateView, definition: ValidDefinition, asked: Sign
   const read = given ? readFields(act.fields, given, bounds) : null;
   if (!read?.ok) return refuse({ code: "bad-field" });
   // A scope has no entry before its genesis, so a fact that names it names nothing: `fact-mismatch`.
-  const named = readFacts(view, act.fields, read.fields, source ? [...context.facts, source] : context.facts, { at, own: () => null, texts: context.texts });
+  const named = readJudgmentFacts(view, act.fields, read.fields, source ? [...judgmentFacts(context), source] : judgmentFacts(context), { at, own: Object.assign(() => null, { sequence: () => null }), texts: context.texts });
   if (named.result === "unavailable") return { result: "unavailable", reason: "dependency-unavailable" };
   /** The source entry, then each named fact that was read. The source is recorded once. */
-  const uses = [...sourceUse, ...named.uses.filter((u) => u.fact.hash !== source?.fact.hash)];
+  const uses = [...sourceUse, ...named.uses.filter((u) => u.fact.hash !== (source ? copyFact(source).hash : undefined))];
   // A field that names a local item names nothing: no item exists before a genesis. The facts read before it are recorded.
   if (named.result !== "read") return refuse({ code: named.result }, uses);
   // Platform data: what a rule of the genesis act is given (section 6.1). Check 7: a field whose type is a mark is checked by its rule.
   const clocked = { clock: false };
-  const judged: JudgedInput = { type: "genesis", seed, "founding": creation, source: child?.from ?? null, n: child?.n ?? null, message: child?.message ?? null };
-  const g = giving(view, definition, context, { at, creator: seed.creator }, 0, judged, clocked, named.fields, named.facts, source ?? undefined);
+  const judged: GenesisInput = input("applied");
+  const g = giving(view, definition, context, { at, kind: seed.kind, creator }, 0, judged, clocked, named.fields, named.facts, source ?? undefined);
   if (fieldOutsideType(g, act.fields)) return refuse({ code: "bad-field" }, uses);
   // Section 4.2, "A founding": the genesis of a scope with no creator makes no check 9. When the genesis act's `grant` is a mark,
   // its rule is run, after the signature and the seed are checked. A creation that the rule does not pass is refused
@@ -202,13 +220,13 @@ function genesisJudged(view: StateView, definition: ValidDefinition, asked: Sign
   const signer = passed?.pass && passed.member ? { member: passed.member, principal: null } : null;
 
   const j: Judging = {
-    view, definition, bounds, clock, scope: { at, creator: seed.creator }, self: 0, kind: declarationOf(definition).genesis, fields: named.fields, fieldTypes: act.fields,
+    view, definition, bounds, clock, scope: { at, kind: seed.kind, creator }, self: 0, kind: declarationOf(definition).genesis, fields: named.fields, fieldTypes: act.fields,
     subjects: new Map(), signer, facts: named.facts, prepared: context.prepared, used: [], asked: context.asked, capabilities: context.capabilities,
     platform: context.platform, judged, ran: clocked, source: source ?? undefined,
   };
-  // A child's result is at ordinal 0; the sends its act declares follow. Each scope a genesis creates has that genesis's own seed digest as its cause.
+  // A child's result is ordinal 0. Every child seed uses the complete prospective applied input as its cause.
   // Section 6.6: the scope records its directory with this entry: its creator, or the directory that its creator put in the creation.
-  const ran = executeBody(j, namedBody(definition, "act", declarationOf(definition).genesis, "act"), seedDigest(seed), { first: child ? 1 : 0, directory: directoryOf({ seed, message: child?.message ?? null }) });
+  const ran = executeBody(j, namedBody(definition, "act", declarationOf(definition).genesis, "act"), genesisInputDigest(judged), { first: child ? 1 : 0, directory: directoryOf(judged) });
   if (ran.result === "unavailable") return ran;
   if (ran.result === "refused") return refuse(reasonOf(ran), uses, ran.prepared);
   // No item exists before a genesis, so no transition is due (section 5.2, step 6.3), and no entry precedes it, so the clock is not behind.

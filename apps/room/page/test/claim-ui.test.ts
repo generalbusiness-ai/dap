@@ -1,3 +1,4 @@
+import { textDigest } from "@generalbusiness/dap-bytes";
 import { expect, test, vi } from "vitest";
 import { scriptedPageKeys } from "./scripted-page-key-store.ts";
 
@@ -5,7 +6,6 @@ import { scriptedPageKeys } from "./scripted-page-key-store.ts";
 // Native creation/recovery is witnessed separately against real scopes.
 test("only an eligible configured founder sees creation; an in-flight or stale claim cannot replace another room", async () => {
   vi.doMock("../src/browser-key-store.ts", async () => ({ ...await vi.importActual<typeof import("../src/browser-key-store.ts")>("../src/browser-key-store.ts"), pageKeyStore: scriptedPageKeys }));
-  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   const gate = () => { let resolve!: () => void; const promise = new Promise<void>((done) => { resolve = done; }); return { promise, resolve }; };
   let rendered = gate();
   class Element {
@@ -36,8 +36,8 @@ test("only an eligible configured founder sees creation; an in-flight or stale c
   }
   const root = new Element("div");
   const body = new Element("body");
-  const register = { kind: "register", scope: "register", inc: "one" };
-  let settings: { place: { directory: string; membership: { kind: string; scope: string; inc: string } }; publicKey: string; register: typeof register; label?: { text: string; place: { directory: string; membership: { kind: string; scope: string; inc: string } }; register: typeof register } } = { place: { directory: "room", membership: { kind: "membership", scope: "membership", inc: "one" } }, publicKey: "key", register };
+  const register = { kind: "register", scope: "register", genesis: textDigest("TEST genesis 8") };
+  let settings: { place: { directory: string; membership: { scope: string; genesis: string } }; publicKey: string; register: typeof register; label?: { text: string; place: { directory: string; membership: { scope: string; genesis: string } }; register: typeof register } } = { place: { directory: "room", membership: { scope: "membership", genesis: textDigest("TEST genesis 9") } }, publicKey: "key", register };
   settings.label = { text: "Original local label", place: settings.place, register };
   let eligible = true, locked = true, failSave = false;
   let journal: { operation: string; label: string; state: "pending" | "complete" | "failed" } | null = null;
@@ -45,7 +45,7 @@ test("only an eligible configured founder sees creation; an in-flight or stale c
   let finish!: (value: unknown) => void;
   let attempted = gate();
   const claim = vi.fn((..._args: unknown[]) => { attempted.resolve(); return new Promise((resolve) => { finish = resolve; }); });
-  vi.doMock("@generalbusiness/dap-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-bytes")>("@generalbusiness/dap-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), isScopeRef: (value: unknown) => !!value && typeof value === "object" && "kind" in value, keyIdOfSecret: () => "key", isKeyId: () => true }));
+  vi.doMock("@generalbusiness/dap-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-bytes")>("@generalbusiness/dap-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), isScopeRef: (value: unknown) => !!value && typeof value === "object" && "genesis" in value, keyIdOfSecret: () => "key", isKeyId: () => true }));
   vi.doMock("../src/claim.ts", () => ({ allowedClaim: async () => { if (!eligible) throw new Error("Not founder"); return { register, definition: "platform:register@2" }; }, claimRoom: claim, claimStatus: () => journal }));
   vi.doMock("../src/data.ts", () => ({
     sessionKey: () => "key", initializationStillCurrent: async () => true, roomInitialization: async () => ({ state: "configured" }), openRoom: async () => ({ session: { service: "https://page.test", secret: new Uint8Array(32) }, ...settings.place, key: "key", rules: "rules", destination: "destination", name: "Recorded repository", me: { handle: "@founder", role: "admin", actions: [], ref: { membership: settings.place.membership, member: "@founder" } }, definitions: new Map(), reader: null, unsessioned: null }),
@@ -146,5 +146,5 @@ test("only an eligible configured founder sees creation; an in-flight or stale c
     expect(root.find((element) => element.tag === "button" && element.textContent === "Create room")).toBeUndefined();
     eligible = true; locked = false; rendered = gate(); redraw(); await rendered.promise;
     expect(root.find((element) => element.tag === "button" && element.textContent === "Create room")).toBeUndefined();
-  } finally { vi.unstubAllGlobals(); for (const path of ["../src/claim.ts", "../src/data.ts", "../src/view.ts", "../src/browser-key-store.ts", "../src/page-key-migration.ts", "@generalbusiness/dap-bytes"]) vi.doUnmock(path); }
+  } finally { vi.unstubAllGlobals(); for (const path of ["../src/claim.ts", "../src/data.ts", "../src/view.ts", "../src/browser-key-store.ts", "@generalbusiness/dap-bytes"]) vi.doUnmock(path); }
 });

@@ -115,7 +115,7 @@ const identityOf = async (s: Scene, key: string) => {
 };
 /** Fills the object as `original-copy` does: a row that only states its size and its member. */
 const fill = (s: Scene, member: string, digest: string, size: number) => s.d.wait(() => runInDurableObject(s.d.M.object, (_instance, state) => {
-  state.storage.sql.exec("INSERT INTO original_copy (digest, inc, member, actor, target, kind, item, not_after, drop_ms, size, bytes) VALUES (?, ?, ?, 'k', '{}', 'k', NULL, 'never', ?, ?, '')", digest, s.phone.membership.inc, member, s.phone.session.now!() + 8 * 24 * 3600 * 1000, size);
+  state.storage.sql.exec("INSERT INTO original_copy (digest, genesis, member, actor, target, kind, item, not_after, drop_ms, size, bytes) VALUES (?, ?, ?, 'k', '{}', 'k', NULL, 'never', ?, ?, '')", digest, s.phone.membership.genesis, member, s.phone.session.now!() + 8 * 24 * 3600 * 1000, size);
 }));
 const unfill = (s: Scene) => s.d.wait(() => runInDurableObject(s.d.M.object, (_instance, state) => { state.storage.sql.exec("DELETE FROM original_copy WHERE actor = 'k'"); }));
 /** A store whose dispatch write fails while `failing` is set: a stop after the keep and before the send. */

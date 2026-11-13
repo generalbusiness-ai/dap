@@ -11,6 +11,9 @@
       ],
       "@generalbusiness/dap-bytes": ["../../../packages/bytes/src/index.ts"],
       "@generalbusiness/dap-client": ["../../../packages/client/src/index.ts"],
+      "@generalbusiness/dap-derive/scripted": [
+        "../../../packages/derive/src/scripted.ts"
+      ],
       "@generalbusiness/dap-platform/application": [
         "../../../packages/platform/src/application-codec/application.ts"
       ],

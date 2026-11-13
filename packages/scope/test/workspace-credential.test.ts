@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import type { Entry, FieldValue, FactRef, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, factRefOf, intentDigest, newIncarnation, platformName, scopeIdOf, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { PROPOSED_BOUNDS, type Entry, type FieldValue, type GenesisEntry, type ScopeRef, type Seed, type SequenceEntry, type SignedIntent } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, digestBytes, entryHash, factRefOf, intentDigest, newGenesisNonce, platformName, scopeIdOf, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState, type Item, type RecordState } from "@generalbusiness/dap-derive";
 import { grantOf, keys, variant } from "@generalbusiness/dap-derive/testing";
 import { WorkspaceHost } from "../src/workspace-host.ts";
@@ -13,13 +13,14 @@ import type { Sql } from "../src/sqlite.ts";
 import { START, at, create } from "./fixtures-native.ts";
 import { staged } from "./hosted.ts";
 import { workspaceAncestors } from "./support/workspace-ancestors.ts";
+import { withSequence } from "../src/testing.ts";
 
 // Ancestor journals use actual Register, Directory and Destination rules in
 // memory. Proof ports, lane creation, preparations, grants and folded state are
 // STAND-INS, not live Membership or Directory authority. The actual
 // WorkspaceHost, TokenDriver, ArtifactsProvider and Durable Object SQL run.
 // The binding answers are a stand-in provider, with no Git/provider claim.
-function fixture(laneIncarnation = 4) {
+function fixture(laneNonce = 4) {
   const definition = variant(staged.declared, draft => {
     draft.capabilities.find((cap: { name: string }) => cap.name === "hold").version = 2;
     // This made-up hold lasts an hour so the actual 900-second host cap
@@ -31,24 +32,29 @@ function fixture(laneIncarnation = 4) {
   const time = START, hash = digestBytes(utf8("workspace custody fixture"));
   let now = time;
   const seed = (kind: Seed["kind"], named: Seed["definition"], creator: ScopeRef | null, cause = hash, ordinal = 0): Seed => ({ v: 1, kind, definition: named, creator, cause, ordinal });
-  const ref = (seed: Seed, n: number): ScopeRef => ({ scope: scopeIdOf(seed), kind: seed.kind, inc: newIncarnation(new Uint8Array(16).fill(n)) });
-  const sealed = (at: ScopeRef, seq: number, input: Entry["input"], effects: Entry["effects"] = [], sends: Entry["sends"] = []): Entry => ({ v: 1, at, seq, prev: seq === 0 ? null : hash, time, clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends });
-  const genesis = (s: Seed, at: ScopeRef, source: FactRef | null = null, n: number | null = null, message: Extract<Entry["input"], { type: "genesis" }>["message"] = null, sends: Entry["sends"] = []): Entry => sealed(at, 0, { type: "genesis", seed: s, inc: at.inc, kind: "establish", founding: null, source, n, message, decision: "applied" }, [], sends);
+  // A later entry written by hand: it names its sequence's genesis, and nothing judged it.
+  const sealed = (at: ScopeRef, seq: number, input: SequenceEntry["input"], effects: SequenceEntry["effects"] = [], sends: SequenceEntry["sends"] = []): SequenceEntry => ({ v: 1, genesis: at.genesis, seq, prev: hash, time, clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends });
   const signed = (at: ScopeRef, kind: string, fields: SignedIntent["intent"]["fields"]): SignedIntent => signIntent({ v: 1, to: at, actor: keys.rita.key, kind, on: null, fields, expected: {}, idempotencyKey: kind, notAfter: timeOf(timeMs(START)! + 600_000) }, keys.rita.secret);
   const judged = workspaceAncestors(time, "actual-room-space", "workspace custody fixture");
   const { register, directory, repository } = judged;
   const open = signed(directory, "open-issue", { definition: definition.digest });
-  const laneSeed = seed("lane", definition.digest, directory, intentDigest(open.intent)), lane = ref(laneSeed, laneIncarnation);
+  const laneSeed = seed("lane", definition.digest, directory, intentDigest(open.intent));
   const laneMessage = { class: "request", type: "create", body: { fields: {}, directory } } as const;
   const creation = sealed(directory, 5, { type: "act", signed: open, authority: [], presented: {} }, [], [{ n: 0, to: laneSeed, message: laneMessage }]);
-  const born = genesis(laneSeed, lane, factRefOf(creation), 0, laneMessage);
-  const entries = [...judged.entries, creation];
-  const bodies = new Map(entries.map(entry => [entryHash(entry), { fact: factRefOf(entry), bytes: canonicalize(entry) }]));
+  // STAND-IN: the lane's genesis, made by hand from the scripted creation. Its hash is the lane's genesis.
+  const born: GenesisEntry = { v: 1, seq: 0, prev: null, time, clamped: false, epoch: 0,
+    input: { type: "genesis", seed: laneSeed, nonce: newGenesisNonce(new Uint8Array(16).fill(laneNonce)), kind: "establish", founding: null, source: factRefOf(creation, directory), sourceKind: "directory", n: 0, message: laneMessage, decision: "applied" },
+    uses: [], prepared: [], effects: [], sends: [] };
+  const local = admitSequenceGenesis(canonicalize(born), { scope: scopeIdOf(laneSeed), genesis: entryHash(born) }, PROPOSED_BOUNDS.entryBytes);
+  if (!local) throw new Error("the lane's hand-made genesis must bind its address");
+  const lane = local.at;
+  const rows: { at: ScopeRef; entry: Entry }[] = [...judged.rows, { at: directory, entry: creation }];
+  const bodies = new Map(rows.map(row => [entryHash(row.entry), { fact: factRefOf(row.entry, row.at), bytes: canonicalize(row.entry) }]));
   let calls = 0;
   const sources: WorkspaceSources = {
     births: { async read(name, kind) {
       calls++;
-      const entry = entries.find(entry => entry.at.scope === name && entry.at.kind === kind && entry.seq === 0);
+      const entry = rows.find(row => row.at.scope === name && row.entry.input.type === "genesis" && row.entry.input.seed.kind === kind)?.entry;
       if (!entry || entry.input.type !== "genesis") return null;
       const named = entry.input.seed.definition as `platform:${string}@${number}`;
       return { v: 1, proof: bodies.get(entryHash(entry))!, named, declarationName: platformName(named as never), native: true } as NativeBirth;
@@ -57,10 +63,10 @@ function fixture(laneIncarnation = 4) {
   };
   const own = new Map<number, Entry>([[0, born]]);
   const state = new MemoryState();
-  state.setScope({ held: [], at: lane, status: "active", creator: directory, head: { seq: 0, hash: entryHash(born) }, time, genesis: { hash: entryHash(born), source: born.input.type === "genesis" ? born.input.source : null, n: 0 } });
-  const given: OutsideGiven = { definition: () => definition, state, scope: () => state.scope(), own: seq => { const entry = own.get(seq); return entry ? { entry, hash: entryHash(entry) } : null; },
+  state.setScope({ held: [], at: lane, kind: "lane", status: "active", creator: directory, head: { seq: 0, hash: entryHash(born) }, time, genesis: { hash: entryHash(born), source: born.input.type === "genesis" ? born.input.source : null, n: 0 } });
+  const given: OutsideGiven = { localSequence: () => local, definition: () => definition, state, scope: () => state.scope(), own: withSequence((seq: number) => { const entry = own.get(seq); return entry ? { entry, hash: entryHash(entry) } : null; }, local),
     genesis: () => born.input.type === "genesis" ? born.input : null, retained: () => null, clock: { read: () => now }, random: { bytes: n => new Uint8Array(n) } };
-  return { state, given, sources, repository, register, born, own, sealed, now: () => now, clock: (value: string) => { now = value; } };
+  return { state, given, sources, repository, register, born, lane, own, sealed, now: () => now, clock: (value: string) => { now = value; } };
 }
 
 
@@ -71,7 +77,7 @@ function held(f: Fixture, ends = at(3600)): Item {
   const item: Item = { id: HOLD, type: "hold", state: "held", revision: 1, opened: entryHash(f.born),
     parties: { holder: keys.una.member }, refs: { under: 2 }, attributed: [], values: { epoch: 1, until: ends } };
   f.state.putItem(item);
-  f.state.putRecord({ capability: "hold@2", kind: "instance", key: [HOLD, INSTANCE], state: "current", seq: 6, values: { hold: HOLD, task: f.born.at, epoch: 1 } });
+  f.state.putRecord({ capability: "hold@2", kind: "instance", key: [HOLD, INSTANCE], state: "current", seq: 6, values: { hold: HOLD, task: f.lane, epoch: 1 } });
   f.state.putRecord({ capability: "hold@2", kind: "fork", key: [HOLD], state: "selected", seq: 7,
     values: { ...selected, seed: { commit: "1".repeat(40) }, operation: "5:0" } });
   return item;
@@ -106,22 +112,22 @@ async function mint(f: Fixture, host: WorkspaceHost, purpose: "workspace" | "for
   f.state.putRecord(record);
   if (purpose !== "workspace") f.state.putRecord({ capability: "hold@2", kind: "root", key: [1], state: "creating", seq: 6,
     values: { hold: HOLD, instance: INSTANCE, operation: "6:0" } });
-  const signed = signIntent({ v: 1, to: f.born.at, actor: keys.una.key, kind: "hold@2:token", on: null,
+  const signed = signIntent({ v: 1, to: f.lane, actor: keys.una.key, kind: "hold@2:token", on: null,
     fields: { hold: HOLD, instance: INSTANCE }, expected: {}, idempotencyKey: "workspace-mint", notAfter: at(3600) }, keys.una.secret);
-  const input: Entry["input"] = { type: "preparation", signed, authority: [grantOf(keys.una, f.born.at, ["change.work"])], capability: "hold@2", step: "token" };
-  const opening = f.sealed(f.born.at, 10, input, [
+  const input: Entry["input"] = { type: "preparation", signed, authority: [grantOf(keys.una, f.lane, ["change.work"])], capability: "hold@2", step: "token" };
+  const opening = f.sealed(f.lane, 10, input, [
     { effect: "operation", owner: "hold@2", kind: "mint", k: 0, attempts: 1 },
     { effect: "record", capability: "hold@2", kind: "token", key: [TOKEN], state: "minting", values },
   ]);
-  f.own.set(6, f.sealed(f.born.at, 6, input)); f.own.set(10, opening);
-  const request: EffectRequest = { scope: f.born.at, operation, attempt: 1, owner: "hold@2", kind: "mint", origin: { entry: opening, hash: entryHash(opening) } };
+  f.own.set(6, f.sealed(f.lane, 6, input)); f.own.set(10, opening);
+  const request: EffectRequest = { scope: f.lane, operation, attempt: 1, owner: "hold@2", kind: "mint", origin: { entry: opening, hash: entryHash(opening) } };
   const reply = await host.send(request);
   expect(reply?.result, "healthy mint must reach the real TokenDriver").toBe("confirmed");
   if (!reply || reply.result !== "confirmed" || reply.evidence.basis !== "own-answer") return expect.fail("confirmed provider mint reply required");
   const body = reply.evidence.body as { token: string; ends: string };
   const live = { ...record, state: "live", seq: 11, values: { ...values, id: body.token, ends: body.ends } };
   f.state.putRecord(live);
-  const outcome = f.sealed(f.born.at, 11, { type: "outcome", owner: "hold@2", kind: "mint", operation, attempt: 1, result: "confirmed", evidence: reply.evidence }, [
+  const outcome = f.sealed(f.lane, 11, { type: "outcome", owner: "hold@2", kind: "mint", operation, attempt: 1, result: "confirmed", evidence: reply.evidence }, [
     { effect: "record", capability: "hold@2", kind: "token", key: [TOKEN], state: "live", values: live.values },
   ]);
   // The outcome and fold are explicit stand-ins. These real callbacks must
@@ -131,7 +137,7 @@ async function mint(f: Fixture, host: WorkspaceHost, purpose: "workspace" | "for
 }
 
 function custody(sql: Pick<Sql, "exec">, f: Fixture) {
-  return sql.exec("SELECT id,ends,repository,plaintext,actor,mint FROM private_workspace_token WHERE scope=? AND token=?", canonicalize(f.born.at), TOKEN).toArray();
+  return sql.exec("SELECT id,ends,repository,plaintext,actor,mint FROM private_workspace_token WHERE scope=? AND token=?", canonicalize(f.lane), TOKEN).toArray();
 }
 
 test("workspace credential refuses a wrong preparing key, preserves SQL custody and hands off exactly once", async () => {

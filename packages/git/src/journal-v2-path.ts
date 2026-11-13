@@ -40,7 +40,7 @@ export function journalV2Directory(prefix: string): { readonly kind: "fixed" | "
   if (!/^[0-9]{12}$/.test(first) || parts.slice(0, 5).join("") !== first.slice(0, 10)) return null;
   if (parts.length === 6) return { kind: "pass", maximum: 4096, bytes: 4096 * 58 };
   const kind = parts[6];
-  if (parts.length === 7 && ["definition", "entry", "rule", "snapshot"].includes(kind!)) return { kind: "retained", maximum: 512, bytes: 512 * 104 };
+  if (parts.length === 7 && ["birth", "definition", "entry", "rule", "snapshot"].includes(kind!)) return { kind: "retained", maximum: 512, bytes: 512 * 104 };
   if (kind === "value") {
     if (parts.length === 7) return { kind: "retained", maximum: 512, bytes: 512 * 295 };
     if (parts.length === 8 && domainOfArchiveSegment(parts[7]) !== null) return { kind: "retained", maximum: 512, bytes: 512 * 104 };

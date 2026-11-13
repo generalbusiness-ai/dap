@@ -2,9 +2,9 @@ import { expect, test, vi } from "vitest";
 import type { Signer } from "@generalbusiness/dap-client";
 import { scriptedPageKeys } from "./scripted-page-key-store.ts";
 import {
+  RETIRED_ROOM_READER_COMMIT,
   b64url,
   keyIdOfSecret,
-  newIncarnation,
   scopeIdOf,
   textDigest,
 } from "@generalbusiness/dap-bytes";
@@ -12,8 +12,9 @@ import {
 // Actual config entry handlers; DOM, native reads and storage failures are
 // stand-ins. A readable config alone supplies no verified room membership.
 test("Config and key select a room only after matching standing and exact storage readback; legacy Settings shows only the chooser", async () => {
-  vi.doMock("../src/browser-key-store.ts", async () => ({ ...await vi.importActual<typeof import("../src/browser-key-store.ts")>("../src/browser-key-store.ts"), pageKeyStore: scriptedPageKeys }));
-  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
+  const imported: string[] = [];
+  const countedKeys = (): ReturnType<typeof scriptedPageKeys> => { const keys = scriptedPageKeys(); return { ...keys, migrate: async legacy => { imported.push("import"); return keys.migrate(legacy); } }; };
+  vi.doMock("../src/browser-key-store.ts", async () => ({ ...await vi.importActual<typeof import("../src/browser-key-store.ts")>("../src/browser-key-store.ts"), pageKeyStore: countedKeys }));
   class Element {
     children: (Element | string)[] = [];
     attrs: Record<string, string> = {};
@@ -96,11 +97,21 @@ test("Config and key select a room only after matching standing and exact storag
   }
   const root = new Element("div"),
     location = { origin: "https://page.test", hash: "#/settings" };
+  const oldRows = new Map([
+    ["artroom-page", "TEST old settings stay unread"],
+    [`artroom-page-start:${location.origin}`, "TEST old Start stays unread"],
+    [`artroom-page-enrollment:${location.origin}`, "TEST old enrollment stays unread"],
+    ["artroom-page:v2", "TEST old settings slot stays unread"],
+    [`artroom-page-start:v2:${location.origin}`, "TEST old Start stays unread"],
+    [`artroom-page-enrollment:v2:${location.origin}`, "TEST old enrollment stays unread"],
+    ["artroom-page-lists:v2", "TEST old tab list stays unread"],
+  ]);
+  const oldBytes = [...oldRows], storageReads: string[] = [];
+  const retiredAttempts = { get: [] as string[], set: [] as string[], remove: [] as string[], enumerate: [] as (string | number)[] };
   let redraw!: () => void;
   const seed = new Uint8Array(32).fill(82),
     secret = b64url(seed);
   const membership = {
-    kind: "membership" as const,
     scope: scopeIdOf({
       v: 1,
       kind: "membership",
@@ -109,7 +120,7 @@ test("Config and key select a room only after matching standing and exact storag
       cause: textDigest("config UI membership"),
       ordinal: 0,
     }),
-    inc: newIncarnation(new Uint8Array(16).fill(4)),
+    genesis: textDigest("TEST genesis 32"),
   };
   const place = {
     directory: scopeIdOf({
@@ -127,8 +138,7 @@ test("Config and key select a room only after matching standing and exact storag
     repository: {
       directory: {
         scope: place.directory,
-        kind: "directory",
-        inc: membership.inc,
+        genesis: textDigest("TEST genesis directory"),
       },
       membership,
     },
@@ -211,16 +221,25 @@ test("Config and key select a room only after matching standing and exact storag
     },
   });
   vi.stubGlobal("localStorage", {
+    get length() { retiredAttempts.enumerate.push("length"); throw new Error("The new Page must not enumerate old browser rows."); },
+    key: (n: number) => { retiredAttempts.enumerate.push(n); throw new Error("The new Page must not enumerate old browser rows."); },
     getItem: (k: string) => {
-      if (k !== "artroom-page") return null;
+      storageReads.push(k);
+      if (oldRows.has(k)) { retiredAttempts.get.push(k); throw new Error("The new Page opened retired browser storage."); }
+      if (k !== "dap-page-settings-2") return null;
       if (readFails) {
         readFails = false;
         throw new Error("Scripted readback failure");
       }
       return saved;
     },
+    removeItem: (k: string) => {
+      if (oldRows.has(k)) retiredAttempts.remove.push(k);
+      throw new Error("The new Page must not remove browser storage in this scene.");
+    },
     setItem: (k: string, v: string) => {
-      if (k !== "artroom-page") return;
+      if (oldRows.has(k)) { retiredAttempts.set.push(k); throw new Error("The new Page changed retired browser storage."); }
+      if (k !== "dap-page-settings-2") return;
       writes(v);
       if (storageMode !== "drop") saved = v;
       if (storageMode === "readback") readFails = true;
@@ -258,10 +277,18 @@ test("Config and key select a room only after matching standing and exact storag
     await drain();
     expect(open).not.toHaveBeenCalled();
     expect(writes).not.toHaveBeenCalled();
+    // A config of the old format gets the retired-home refusal, and the screen imports nothing from it.
+    fill();
+    root.all().find((e) => e.attrs["name"] === "config")!.value = JSON.stringify({ ...JSON.parse(config) as object, v: 1 });
+    submit();
+    await drain();
+    expect(root.textContent).toContain(`Refused because this config.json names rooms of the old format. Those rooms retired at the identifier cutover, and commit ${RETIRED_ROOM_READER_COMMIT} reads them.`);
+    expect([open.mock.calls.length, writes.mock.calls.length, imported.length]).toEqual([0, 0, 0]);
     fill();
     submit();
     await drain();
     expect(open).toHaveBeenCalledTimes(1);
+    expect(imported).toEqual(["import"]);
     expect(open.mock.calls[0]![0].service).toBe(location.origin);
     expect(writes).not.toHaveBeenCalled();
     expect(location.hash).toBe("#/config");
@@ -321,12 +348,15 @@ test("Config and key select a room only after matching standing and exact storag
         ),
     ).toBe(false);
     expect(document.title).toBe("dap - workroom");
+    expect(storageReads.some(name => oldRows.has(name))).toBe(false);
+    expect([...oldRows]).toEqual(oldBytes);
+    expect(retiredAttempts).toEqual({ get: [], set: [], remove: [], enumerate: [] });
   } finally {
     await drain();
     vi.unstubAllGlobals();
     vi.doUnmock("../src/data.ts");
     vi.doUnmock("../src/view.ts");
-    vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/page-key-migration.ts");
+    vi.doUnmock("../src/browser-key-store.ts");
     vi.resetModules();
   }
 });

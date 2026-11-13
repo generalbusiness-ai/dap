@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { b64url, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { b64url, keyIdOfSecret, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { secretSigner, type CreationOffer } from "@generalbusiness/dap-client";
 import type { StartedRoom, StartOptions, StartStatus } from "../src/start-custody.ts";
 
@@ -79,7 +79,7 @@ class Element {
 test("Start is explicit; Back fences late discovery, reload only offers Check and Continue, and public configuration never exports the browser key", async () => {
   let demoStart = false;
   const root = new Element("div"), location = { origin: "https://dap-demo.inguz.workers.dev", hash: "#/join" };
-  const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@17" : kind === "directory" ? "platform:directory@16" : "platform:membership@8", creator: null, cause: textDigest("SCRIPTED Start UI " + kind), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(5)), kind });
+  const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@17" : kind === "directory" ? "platform:directory@16" : "platform:membership@8", creator: null, cause: textDigest("SCRIPTED Start UI " + kind), ordinal: 0 }), genesis: textDigest("TEST genesis 38") });
   const register = ref("register"), directory = ref("directory"), membership = ref("membership");
   const legacyRegister = { ...register, scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@7", creator: null, cause: textDigest("SCRIPTED retained UI register"), ordinal: 0 }) };
   let selectedDirectory = directory;
@@ -106,7 +106,6 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
   });
   const save = vi.fn((name: string, text: string) => { values.set(name, text); });
   vi.doMock("@generalbusiness/dap-client", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-client")>("@generalbusiness/dap-client"), creationOffer: offerRead }));
-  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   vi.doMock("../src/connection-custody.ts", () => ({ connectInvitation: issue, originalConnection: () => connection, creatorConnectionFiles: files, saveCreatorRecoveryOnce: recovery }));
   vi.doMock("../src/start-custody.ts", () => ({ originalStart: () => original, startRoom: start }));
   vi.doMock("../src/data.ts", async () => ({ ...await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts"), openRoom: async (session: import("../src/data.ts").Session) => ({ session, directory: selectedDirectory.scope, membership, key, name: "Recorded host name", me: verified ? { handle: "@founder", role: "admin", actions: [], ref: { membership, member: "@founder" } } : null }) }));
@@ -243,18 +242,18 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     expect(root.textContent).toContain("new owner-only DAP_HOME directory");
     // A late ready-screen action cannot replace a newly selected connection.
     const changedSettings = JSON.stringify({ place: null, publicKey: keyIdOfSecret(new Uint8Array(32).fill(64)) });
-    values.set("artroom-page", changedSettings);
+    values.set("dap-page-settings-2", changedSettings);
     opening = Promise.resolve(find("button", "Open room").fire("click"));
     await opening;
     expect(save).not.toHaveBeenCalled();
-    expect(values.get("artroom-page")).toBe(changedSettings);
+    expect(values.get("dap-page-settings-2")).toBe(changedSettings);
   } finally {
     // Retain globals until the actual async click callback settles, even if
     // an assertion fails. A rejected callback remains a test failure.
     try { await opening; }
     finally {
       createUrl.mockRestore(); revokeUrl.mockRestore(); vi.unstubAllGlobals();
-      for (const path of ["@generalbusiness/dap-client", "../src/start-custody.ts", "../src/connection-custody.ts", "../src/page-key-migration.ts", "../src/data.ts", "../src/view.ts"]) vi.doUnmock(path);
+      for (const path of ["@generalbusiness/dap-client", "../src/start-custody.ts", "../src/connection-custody.ts", "../src/data.ts", "../src/view.ts"]) vi.doUnmock(path);
     }
   }
 });

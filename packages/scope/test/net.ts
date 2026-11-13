@@ -103,7 +103,7 @@ export class Node {
   async envelope(seq: number, n = 0): Promise<Delivered> {
     const { entry, hash } = (await this.sealed())[seq]!;
     const send = entry.sends.find((s) => s.n === n)!;
-    return { to: send.to, from: { at: entry.at, seq, hash }, n, message: send.message };
+    return { to: send.to, from: { at: await this.at(), seq, hash }, n, message: send.message };
   }
 
   /** Evict the object. Its storage stays; everything in memory is gone. */

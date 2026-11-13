@@ -32,7 +32,7 @@ async function fixture(ordered = false, direction: "asc" | "desc" = "asc", missi
       ec: { kind: "decimal", label: "EC", unit: "mS/cm", min: 0, max: 10000, scale: 3, required: false },
       note: { kind: "text", label: "Note", max: 64, required: false },
     } }] } } } }, { key: keyIdOfSecret(secret), sign: bytes => sign(secret, bytes) });
-  const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
+  const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
   let held = ["counting.control"], revision = 1, answer = "accepted", commitUnknown = false;
   const times: Record<string, string | null> = { 2: "2026-10-17T08:00:00Z", 3: null, 4: "2026-10-16T08:00:00Z", 9: "2026-10-16T08:00:00Z" };
   const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {

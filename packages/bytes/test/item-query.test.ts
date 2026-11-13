@@ -10,7 +10,7 @@ import * as encoding from "../src/encode.ts";
 import { encodeItemQuery, encodeItemQueryCursor, itemQueryArgument, itemQueryContinuation, itemQueryDigest, readItemQuery, readItemQueryCursor } from "../src/item-query.ts";
 
 const digest = (letter: string): Digest => `sha256:${letter.repeat(64)}`;
-const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
+const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"e".repeat(64)}` };
 const head: Head = { seq: 12, hash: digest("a") };
 const query = (over: Partial<ItemQuery> = {}): ItemQuery => ({ v: 1, scope, type: "task", states: ["open"], ids: null, limit: 100, cursor: null, ...over });
 const cursor = (over: Partial<ItemQueryCursor> = {}): ItemQueryCursor => ({ v: 1, scope, head, query: itemQueryDigest(query())!, order: ITEM_QUERY_ORDER, bounds: B, limit: 100, last: 3, ...over });
@@ -100,9 +100,9 @@ test("cursor spelling, schema, UTF8, bound and nesting failures are distinct fro
   expect(itemQueryContinuation(query({ cursor: "" }), scope, head)).toEqual({ ok: false, reason: "invalid-cursor" });
 });
 
-test("authorized continuation checks report full head/incarnation drift and exact query mismatch", () => {
+test("authorized continuation checks report full head/genesis drift and exact query mismatch", () => {
   const current = query({ cursor: encodeItemQueryCursor(cursor())! });
-  for (const of of [{ ...scope, kind: "rules" as const }, { ...scope, inc: `in_${"b".repeat(25)}a` as const }]) {
+  for (const of of [{ ...scope, scope: `sc_${"b".repeat(51)}a` as const }, { ...scope, genesis: `sha256:${"b".repeat(63)}a` as const }]) {
     expect(itemQueryContinuation(current, of, head)).toEqual({ ok: false, reason: "wrong-scope" });
     expect(itemQueryContinuation({ ...current, scope: of }, of, head)).toEqual({ ok: false, reason: "stale-cursor" });
     expect(itemQueryArgument(query({ scope: of }))).not.toBe(itemQueryArgument(query()));

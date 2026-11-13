@@ -10,26 +10,27 @@ import { admitArchivePin } from "@generalbusiness/dap-git/archive-policy";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { growArchivePolicies, GROW_ARCHIVE_DEFINITIONS } from "../../archive-policy.ts";
 import { growArchiveConfiguration } from "../../archive.ts";
+import { RECORDED_GROW_RELEASE } from "../../../../packages/scope/test/support/recorded-grow-release.ts";
 import { ArtifactsProvider } from "../../../../packages/scope/src/artifacts-host.ts";
 
 test("Grow export requires its exact deployed signed release and never admits private source journals", () => {
-  const text = readFileSync(new NodeURL("../../../../examples/grow/demo/application.dap.json", import.meta.url), "utf8"), policies = growArchivePolicies(text);
+  const text = readFileSync(new NodeURL("../../../../examples/grow/demo/application.dap.json", import.meta.url), "utf8"), policies = growArchivePolicies(text, RECORDED_GROW_RELEASE);
   for (const pin of GROW_ARCHIVE_DEFINITIONS) expect(policies.has(pin)).toBe(true);
   for (const pin of ["platform:directory@16", "platform:rules@10", "platform:destination@12"] as const) expect(policies.has(pin)).toBe(true);
   // Register/Membership coverage describes allowed retained copies only.
   // A trusted table cannot override the independent root admission gate.
   for (const pin of ["platform:register@17", "platform:membership@8"] as const) expect(admitArchivePin(pin, new Set(GROW_ARCHIVE_DEFINITIONS)).ok).toBe(false);
   const changed = JSON.parse(text); changed.release.sig = "A".repeat(86);
-  expect(() => growArchivePolicies(JSON.stringify(changed))).toThrow();
+  expect(() => growArchivePolicies(JSON.stringify(changed), RECORDED_GROW_RELEASE)).toThrow();
   const source = readFileSync(new NodeURL("../../wrangler.grow.jsonc", import.meta.url), "utf8");
   const config = JSON.parse(source.replace(/^\s*\/\/.*$/gm, ""));
-  expect(growArchiveConfiguration(config.vars)).toMatchObject({ directory: "sc_ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq", namespace: "artroom-demo" });
-  expect(growArchiveConfiguration({ ...config.vars, GROW_ARCHIVE_CONFIG: JSON.stringify({ ...JSON.parse(config.vars.GROW_ARCHIVE_CONFIG), secret: "not-admitted" }) })).toBeNull();
+  expect(growArchiveConfiguration(config.vars, RECORDED_GROW_RELEASE.release)).toMatchObject({ directory: "sc_ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq", namespace: "artroom-demo" });
+  expect(growArchiveConfiguration({ ...config.vars, GROW_ARCHIVE_CONFIG: JSON.stringify({ ...JSON.parse(config.vars.GROW_ARCHIVE_CONFIG), secret: "not-admitted" }) }, RECORDED_GROW_RELEASE.release)).toBeNull();
 });
 
 test("Artifacts archive mints one service-expiring pass token and the actual send guard rejects another ref and revoked reuse", async () => {
   const repository = { host: "artifacts", namespace: "demo", name: "repo", id: "repo" }, remote = "https://service.invalid/git/demo/repo.git";
-  const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
+  const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
   const expires = "2026-10-21T00:07:00Z", now = "2026-10-21T00:00:00Z", tokens: unknown[] = [], revoked: string[] = [], posts: string[] = [];
   const pkt = (text: string) => `${(utf8(text).length + 4).toString(16).padStart(4, "0")}${text}`;
   const reply = (text: string, kind: string) => new Response(text, { headers: { "content-type": `application/x-git-${kind}` } });

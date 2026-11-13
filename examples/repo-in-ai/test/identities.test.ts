@@ -2,7 +2,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSyn
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, test, vi } from "vitest";
-import { b64url, canonicalize, entryHash, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, entryHash, intentDigest, newGenesisNonce, scopeIdOf, textDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import type { Entry, Item, OutboxId, Receipt, SignedIntent, Summary } from "@generalbusiness/dap-contract";
 import type { Fetch } from "@generalbusiness/dap-client";
 import type { Context } from "@generalbusiness/dap-cli";
@@ -16,6 +16,7 @@ import { failureDiagnostic, invitationCause, newDiagnostics, type EnrollmentDiag
 import { main } from "../setup.ts";
 import { Roster, rita } from "../../../packages/platform/test/support.ts";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as cohort } from "@generalbusiness/dap-platform";
+import { resolvedEntryEffects } from "@generalbusiness/dap-derive";
 import { witnessMembers } from "../members.ts";
 import type { Session } from "../session.ts";
 
@@ -53,13 +54,13 @@ test("a retained invitation chain preserves engine order and refuses a changed o
 async function enrollmentFixture() {
   const home = realpathSync(mkdtempSync(join(tmpdir(), "artroom-s1-first-root-")));
   const roster = new Roster("platform:membership@8").seated(), service = "https://identity.test";
-  const directory = { ...roster.office.at, kind: "directory" as const };
+  const directory = roster.office.at;
   const repository = { directory, membership: roster.at, rules: directory.scope, destination: directory.scope };
-  const setup: SetupPlan = { v: 1, service, providerOrigin: "https://provider.test", deploymentVersion: "11111111-1111-4111-8111-111111111111", register: { ...directory, kind: "register" }, namespace: "dap-demo", name: "test-room", home,
+  const setup: SetupPlan = { v: 1, service, providerOrigin: "https://provider.test", deploymentVersion: "11111111-1111-4111-8111-111111111111", register: directory, namespace: "dap-demo", name: "test-room", home,
     handles: { owner: "@rita", "agent-a": "@agent-a", "agent-b": "@agent-b", checker: "@checker" } };
   const ownerHome = identityHome(setup, "owner"), owner = durableCliStore(ownerHome);
   await owner.keep("operator", rita.secret);
-  await owner.save({ v: 1, service, key: "operator", repository, handle: "@rita" });
+  await owner.save({ v: 2, service, key: "operator", repository, handle: "@rita" });
   await bindPlan(owner, setup);
   const receipts = new Map<string, Receipt>(), sent: SignedIntent[] = [], traces: EnrollmentDiagnostic[] = [];
   let refuseSummary = false, stopAtDispatch = false, unknownSession = false, beforeDispatch: ((signed: SignedIntent) => Promise<void>) | null = null;
@@ -88,7 +89,7 @@ async function enrollmentFixture() {
         const judged = roster.submit(signed, { platform: roster.platformRules, membership: roster.at, grants: roster.held(signed.intent.actor) });
         expect(judged.result).toBe("write");
         const entry = roster.entries.at(-1)!.entry;
-        receipt = { intent: digest, fact: roster.fact(entry.seq), definition: "platform:membership@8", effects: entry.effects, sends: entry.sends.map(send => `${entry.seq}.${send.n}` as OutboxId), epoch: entry.epoch };
+        receipt = { intent: digest, fact: roster.fact(entry.seq), definition: "platform:membership@8", effects: resolvedEntryEffects(roster.state, roster.definition, entry, roster.at), sends: entry.sends.map(send => `${entry.seq}.${send.n}` as OutboxId), epoch: entry.epoch };
         receipts.set(digest, receipt);
       }
       return Response.json({ answer: "accepted", receipt });
@@ -100,8 +101,8 @@ async function enrollmentFixture() {
     for (const member of live().filter(item => item.type === "member" && item.values["kind"] !== "person")) {
       const source = roster.entries[member.id]!.entry, birth = source.sends.find(send => "creator" in send.to && send.to.kind === "inbox");
       if (!birth || !("creator" in birth.to) || !url.includes(scopeIdOf(birth.to))) continue;
-      const at = { scope: scopeIdOf(birth.to), inc: newIncarnation(new Uint8Array(16).fill(member.id + 10)), kind: "inbox" as const };
-      const entry: Entry = { v: 1, at, seq: 0, prev: null, time: roster.now, clamped: false, epoch: 0, input: { type: "genesis", seed: birth.to, inc: at.inc, kind: "establish", founding: null, source: roster.fact(member.id), n: birth.n, message: birth.message.class === "request" ? birth.message : null, decision: "applied" }, uses: [], prepared: [], effects: [], sends: [] };
+      const entry: Entry = { v: 1, seq: 0, prev: null, time: roster.now, clamped: false, epoch: 0, input: { type: "genesis", seed: birth.to, nonce: newGenesisNonce(new Uint8Array(16).fill(member.id + 10)), kind: "establish", founding: null, source: roster.fact(member.id), sourceKind: "membership", n: birth.n, message: birth.message.class === "request" ? birth.message : null, decision: "applied" }, uses: [], prepared: [], effects: [], sends: [] };
+      const at = { scope: scopeIdOf(birth.to), genesis: entryHash(entry) };
       const head = { seq: 0, hash: entryHash(entry) };
       const state = inboxState(path.endsWith("/entries/0") ? inboxSummaryReads : inboxSummaryReads++);
       if (state === "forbidden") return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
@@ -111,7 +112,7 @@ async function enrollmentFixture() {
       if (path.endsWith("/entries/0")) return Response.json({ ok: true, at: head, value: { entry, hash: head.hash }, complete: true });
       return Response.json({ ok: true, at: head, value: { scope: at, status: state, definition: "platform:inbox@1", time: roster.now, counts: [["inbox", "open", 1]], items: [{ id: 0, type: "inbox", state: "open", revision: 1, opened: textDigest("SCRIPTED inbox"), attributed: [], values: {}, parties: { owner: member.parties["member"] }, refs: { membership: roster.at } }] }, complete: true });
     }
-    if (url.includes(directory.scope)) return Response.json({ ok: true, at: { seq: 0, hash: textDigest("SCRIPTED directory") }, complete: true, value: { scope: directory, status: "active", definition: "platform:directory@16", time: roster.now, counts: [["repository", "open", 1]], items: [{ id: 0, type: "repository", state: "open", revision: 1, opened: textDigest("SCRIPTED repository"), attributed: [], parties: {}, values: {}, refs: { membership: roster.at, rules: { ...directory, kind: "rules" }, destination: { ...directory, kind: "destination" } } }] } });
+    if (url.includes(directory.scope)) return Response.json({ ok: true, at: { seq: 0, hash: textDigest("SCRIPTED directory") }, complete: true, value: { scope: directory, status: "active", definition: "platform:directory@16", time: roster.now, counts: [["repository", "open", 1]], items: [{ id: 0, type: "repository", state: "open", revision: 1, opened: textDigest("SCRIPTED repository"), attributed: [], parties: {}, values: {}, refs: { membership: roster.at, rules: directory, destination: directory } }] } });
     if (path.includes("/entries/")) {
       const entry = roster.entries[Number(path.split("/").at(-1))];
       return Response.json({ ok: true, at: roster.head, value: entry, complete: true });
@@ -141,7 +142,8 @@ test("member readback accepts the judged person device key and exact controlled 
     expect((await f.enroll("agent-b", "new")).code).toBe(0);
     expect((await enrollIdentity(f.ctx, identityHome(f.setup, "checker"), "checker", f.setup.handles.checker, "new", { recoveryPlan: f.setup })).code).toBe(0);
     const refs = { directory: f.repository.directory, membership: f.roster.at,
-      rules: { ...f.repository.directory, kind: "rules" as const }, destination: { ...f.repository.directory, kind: "destination" as const } };
+      rules: { ...f.repository.directory, genesis: textDigest("SCRIPTED rules genesis") },
+      destination: { ...f.repository.directory, genesis: textDigest("SCRIPTED destination genesis") } };
     const repository: Item = { id: 0, type: "repository", state: "open", revision: 1, opened: textDigest("SCRIPTED room context"), attributed: [], values: {}, parties: {}, refs: {
       membership: refs.membership, rules: refs.rules, destination: refs.destination,
     } };
@@ -271,7 +273,7 @@ test("plan-only startup refuses absent plans and surviving receiver or owner cus
       if (conflict === "started") await receiver.keepPrivate("s1-receiver-started", utf8("{}"));
       if (conflict === "key") await receiver.keep("k-" + "a".repeat(30), new Uint8Array(32).fill(7));
       if (conflict === "envelope") await receiver.keepPrivate("a-" + "a".repeat(30), utf8("{}"));
-      if (conflict === "config") await receiver.save({ v: 1, service: g.setup.service, key: "missing" });
+      if (conflict === "config") await receiver.save({ v: 2, service: g.setup.service, key: "missing" });
       if (conflict === "pointer") await g.owner.save({ ...(await g.owner.config())!, invitationIssue: { operation, actor: rita.key, membership: (await g.owner.config())!.repository!.membership, request: "i-" + "a".repeat(30), digest: textDigest("orphan") } });
       await expect(g.enroll("agent-b", "continue")).rejects.toBeInstanceOf(IdentityRefusal);
       expect(g.sent).toHaveLength(0);
@@ -489,9 +491,8 @@ test("owner continuation restores configuration only with the exact retained inp
   const home = realpathSync(mkdtempSync(join(tmpdir(), "artroom-s1-owner-")));
   try {
     const register = {
-      kind: "register" as const,
       scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@21", creator: null, cause: textDigest("TEST existing register"), ordinal: 0 }),
-      inc: newIncarnation(new Uint8Array(16).fill(1)),
+      genesis: textDigest("TEST existing register genesis"),
     };
     const input = { service: "https://identity.test", register, handle: "@owner" };
     const fresh = await initializeOwner(home, input, "new");

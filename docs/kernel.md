@@ -332,7 +332,7 @@ application cannot redefine the meaning of an existing read.
 rules belong in the kernel because HTTP, RPC and local clients must accept the
 same record without retaining caller mutation. `isBehindRead` in
 `bytes/src/records.ts` validates the authenticated current `FactRef` that the
-refusal carries. `APPLICATION_PROJECTION_REFUSALS` adds `wrong-incarnation` and
+refusal carries. `APPLICATION_PROJECTION_REFUSALS` adds `wrong-genesis` and
 `behind`, and `ApplicationProjectionRead` carries the dedicated behind record.
 Projection failures therefore stay the same across the native reader, the wire
 codec and the client, and an application has no refusal language of its own.

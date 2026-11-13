@@ -15,6 +15,7 @@ import { certifiedBoundFenceBudgetV17, evidenceCarryingBudgetV17 } from "./desti
 import { evidenceFutureEntriesV17 } from "./evidence-forecast-v17.ts";
 import type { EvidenceJobRecordV17 } from "./destination-evidence-v17.ts";
 import { evidenceWireV17, readEvidenceWireV17 } from "./evidence-wire-v17.ts";
+import { sealedAt } from "@generalbusiness/dap-derive";
 
 export interface EvidenceCapacityAnchorV17 {
   v: 1; owner: number; generation: ScopedRulesPosition;
@@ -27,9 +28,9 @@ export const evidenceCapacityPolicyKeyV17 = (generation: ScopedRulesPosition): D
 export function readEvidenceCapacityAnchorV17(value: unknown): EvidenceCapacityAnchorV17 | null {
   try {
   if (!exact(value, ["v", "owner", "generation", "holds", "incidents"]) || value["v"] !== 1 || !natural(value["owner"])
-    || !exact(value["generation"], ["rules", "seq"]) || !isScopeRef(value["generation"]["rules"]) || value["generation"]["rules"].kind !== "rules" || !natural(value["generation"]["seq"])
+    || !exact(value["generation"], ["rules", "seq"]) || !isScopeRef(value["generation"]["rules"]) || !natural(value["generation"]["seq"])
     || !Array.isArray(value["incidents"]) || value["incidents"].length > 8 || value["incidents"].some(row => !exact(row, ["name", "job"])
-      || typeof row["name"] !== "string" || utf8(row["name"]).length > 128 || !(row["job"] === null || isFactRef(row["job"]) && row["job"].at.kind === "lane"))
+      || typeof row["name"] !== "string" || utf8(row["name"]).length > 128 || !(row["job"] === null || isFactRef(row["job"])))
     || new Set(value["incidents"].map(row => row["name"])).size !== value["incidents"].length) return null;
   if (value["holds"] !== null && (!Array.isArray(value["holds"]) || value["holds"].length > 256 || value["holds"].some(row => !exact(row, ["key", "owner", "pending"])
     || !readEvidenceHoldKeyV17(row["key"]) || !same((row["key"] as EvidenceHoldKeyV17).generation, value["generation"]) || !(row["owner"] === null || natural(row["owner"])) || !readEvidenceHoldPendingV17(row["pending"]))
@@ -65,7 +66,7 @@ function maximumCapacity(value: EvidenceCapacityAnchorV17, publicationAt: FactRe
 export function evidencePendingCapacityForecastV17(given: RuleGiven, owner: number, jobAt: FactRef["at"]): readonly RuleEffect[] {
   const item = given.state.item(owner), capacity = readEvidenceCapacityWireV17(item?.values["capacity"]), batch = readEvidenceBatchWireV17(item?.values["batch"]);
   if (!capacity || !capacity.holds || !batch) throw Error("The future pending capacity record is unavailable");
-  return [{ effect: "value", item: owner, slot: "capacity", value: evidenceCapacityWireV17(maximumCapacity(capacity, given.resolved.at, jobAt, batch.policy.policy)) }];
+  return [{ effect: "value", item: owner, slot: "capacity", value: evidenceCapacityWireV17(maximumCapacity(capacity, sealedAt(given.resolved.at), jobAt, batch.policy.policy)) }];
 }
 function policyAnchor(state: StateView, generation: ScopedRulesPosition): { item: Item; capacity: EvidenceCapacityAnchorV17 } | null {
   const ids = state.lookup("evidence-batch", "policyKey", canonicalize(evidenceCapacityPolicyKeyV17(generation)), 2);
@@ -171,7 +172,7 @@ export function evidenceFundCapacityV17(given: RuleGiven, batch: EvidenceBatchRe
     for (const slot of pending) {
       const publication = given.state.item(slot.publication.seq), sealed = given.own?.(slot.publication.seq);
       if (slot.job !== null || !publication || publication.type !== "publication" || !sealed || sealed.hash !== slot.publication.hash
-        || !same(sealed.entry.at, slot.publication.at) || !same(slot.publication.at, given.resolved.at)
+        || !same(slot.publication.at, given.resolved.at)
         || publication.values["withdrawDecided"] !== true || !["not-reserved", "cleanup-deleted", "cleaned"].includes(publication.state)) continue;
       const removed = withdrawEvidenceHoldPendingV17(pending, slot.publication);
       if (!removed.ok) return null; pending = removed.pending;

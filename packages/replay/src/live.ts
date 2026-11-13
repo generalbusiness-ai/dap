@@ -59,7 +59,7 @@ export function cloneTailSource(initial: HistorySource, service: HistorySource,
             if (checked) return fail(checked);
             clone = next; clones.set(scope, clone); continue;
           }
-          if (!valid(tail.page, tailFrom) || tail.page.scope.inc !== prefix.page.scope.inc || tail.page.scope.kind !== prefix.page.scope.kind
+          if (!valid(tail.page, tailFrom) || tail.page.scope.genesis !== prefix.page.scope.genesis
             || tail.page.head.seq < prefix.page.head.seq || tail.page.head.seq === prefix.page.head.seq && tail.page.head.hash !== prefix.page.head.hash) return fail("floor-commit-mismatch");
           if (from > prefix.page.head.seq) {
             if (from === tailFrom) return { ...tail, bytes };
@@ -80,14 +80,14 @@ export function cloneTailSource(initial: HistorySource, service: HistorySource,
         if (!proof) return "floor-commit-missing";
         if (!charge(proof.bytes)) return "too-large";
         if (!proof.ok) return proof.reason;
-        if (proof.scope.scope !== scope || expected && (proof.scope.inc !== expected.inc || proof.scope.kind !== expected.kind)
+        if (proof.scope.scope !== scope || expected && proof.scope.genesis !== expected.genesis
           || proof.through.seq !== receipt.through.seq || proof.through.hash !== receipt.through.hash) return "floor-commit-mismatch";
         const entry = await next.page(scope, receipt.through.seq, { ...left(), entries: 1 });
         if (!charge(entry.bytes)) return "too-large";
         if (!entry.ok) return entry.reason;
         const row = entry.page.entries[0];
         if (!row || entry.page.head.seq < receipt.through.seq || row.seq !== receipt.through.seq || row.hash !== receipt.through.hash || hashOfBytes(row.bytes) !== receipt.through.hash
-          || entry.page.scope.inc !== proof.scope.inc || entry.page.scope.kind !== proof.scope.kind) return "floor-commit-mismatch";
+          || entry.page.scope.genesis !== proof.scope.genesis) return "floor-commit-mismatch";
         return null;
       }
     },

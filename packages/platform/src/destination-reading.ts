@@ -101,13 +101,13 @@ export function sourcesOf(entry: Entry | null | undefined): readonly ManifestSou
   }
   return new Set(read.map((row) => row.path)).size === read.length ? read : null;
 }
-/** Every source belongs to the manifest's lane and agrees with its frozen row. */
-export function manifestFiles(manifest: Entry, uses: readonly { fact: FactRef; entry: Entry }[]): readonly EditFile[] | null {
+/** Every source belongs to the manifest's lane and agrees with its frozen row. `at`: the manifest's lane, from the manifest's fact. */
+export function manifestFiles(manifest: Entry, at: FactRef["at"], uses: readonly { fact: FactRef; entry: Entry }[]): readonly EditFile[] | null {
   const sources = sourcesOf(manifest);
   const base = fields(manifest, "propose-manifest")?.["base"];
   if (!sources) return null;
   return sources.reduce<EditFile[] | null>((files, row) => {
-    if (!files || !same(row.entry.at, manifest.at)) return null;
+    if (!files || !same(row.entry.at, at)) return null;
     const source = uses.find((use) => same(use.fact, row.entry))?.entry;
     const file = fileOf(source);
     const sourceBase = fields(source ?? null, PROPOSE_FILE)?.["base"];

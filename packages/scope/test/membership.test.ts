@@ -111,7 +111,7 @@ describe("authority on real scopes, under the production wiring (authority note,
     expect([first.answer.answer, (await unasInbox.stub.deliver(first.envelope)), (await unasInbox.summary()).value.counts.find(([type, state]) => type === "notice" && state === "unread")?.[2]])
       .toEqual(["recorded", first.answer, 2]);
     const [one, two] = [(first.answer as { fact: { seq: number } }).fact.seq, (second.answer as { fact: { seq: number } }).fact.seq];
-    expect((await unasInbox.item(one)).values["source"]).toEqual({ scope: first.envelope.from.at.scope, incarnation: first.envelope.from.at.inc, seq: 4, hash: first.envelope.from.hash });
+    expect((await unasInbox.item(one)).values["source"]).toEqual({ scope: first.envelope.from.at.scope, genesis: first.envelope.from.at.genesis, seq: 4, hash: first.envelope.from.hash });
 
     // una marks her notice read. The inbox read her key's standing from M before the turn, and the entry retains that observation: of
     // M with its incarnation, at M's head, with the actions of her role there, and `within` as the repository.
@@ -224,7 +224,7 @@ describe("authority on real scopes, under the production wiring (authority note,
     // The inbox's replay covers membership as far as the highest head that an entry observed, and what membership used that far: the
     // office, and the genesis of rita's inbox, whose result membership recorded.
     const observed = ((await unasInbox.entries())[third]!.input as Extract<Entry["input"], { type: "act" }>).authority[0]!.fresh.observation.head.seq;
-    expect(report.coverage.map((covered) => [covered.scope.kind, covered.through])).toEqual([["inbox", third], ["membership", observed], ["directory", 1], ["inbox", 0]]);
+    expect(report.coverage.map((covered) => [covered.kind, covered.through])).toEqual([["inbox", third], ["membership", observed], ["directory", 1], ["inbox", 0]]);
     // What stays on trust: that each read was made as recorded, and that the rules which ran are those of each name and version. The
     // label of a stand-in's grant is not there: no grant was taken as recorded.
     expect([report.trusts.includes(TRUSTS.observed), report.trusts.includes(TRUSTS.authority), report.trusts.filter((trust) => trust.startsWith("platform-code"))])

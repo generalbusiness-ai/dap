@@ -2,14 +2,14 @@
  * Native Directory/install/authority behavior belongs to the Scope witness. */
 import { expect, test } from "vitest";
 import { ITEM_QUERY_BOUNDS, ITEM_QUERY_ORDER, type Item, type ItemQuery, type ItemQueryRead, type ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, encodeItemQueryCursor, itemQueryArgument, itemQueryDigest, newIncarnation, readItemQueryParameter, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, encodeItemQueryCursor, itemQueryArgument, itemQueryDigest, readItemQueryParameter, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import type { Transport } from "@generalbusiness/dap-client";
 import { counting } from "../../../apps/counter/definition.ts";
 import { applicationList, APPLICATION_LIST_ROWS } from "../src/application-list.ts";
 import { command, type Context } from "../src/index.ts";
 
-const directory: ScopeRef = { kind: "directory", scope: `sc_${"a".repeat(52)}`, inc: newIncarnation(new Uint8Array(16).fill(1)) };
-const child: ScopeRef = { kind: "lane", scope: scopeIdOf({ v: 1, kind: "lane", definition: definitionDigest(counting), creator: directory, cause: textDigest("fixture creation"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(2)) };
+const directory: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: textDigest("TEST genesis 1") };
+const child: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "lane", definition: definitionDigest(counting), creator: directory, cause: textDigest("fixture creation"), ordinal: 0 }), genesis: textDigest("TEST genesis 2") };
 const head = { seq: 9, hash: textDigest("directory head") };
 const declaration = { ...counting, name: 'Count | "notes"\nnext\u0085\u2028\u2029' }, bytes = canonicalize(declaration), digest = definitionDigest(declaration);
 const item = (id: number): Item => ({ id, type: "application", state: "created", revision: 2, opened: null,
@@ -24,7 +24,7 @@ function fixture() {
       const query = readItemQueryParameter(encoded)!; queries.push(query);
       if (mode === "stale") return { ok: false, reason: "stale-cursor" };
       return { ok: true, at: head, complete: mode === "complete", value: { v: 1,
-        scope: mode === "wrong-scope" ? { ...directory, inc: child.inc } : directory,
+        scope: mode === "wrong-scope" ? { ...directory, genesis: child.genesis } : directory,
         query: itemQueryDigest(query)!, argument: itemQueryArgument(query)!, items: mode === "complete" ? [] : [item(2), item(4)] },
         ...(mode === "complete" ? {} : { next: encodeItemQueryCursor({ v: 1, scope: directory, head, query: itemQueryDigest(query)!, order: ITEM_QUERY_ORDER, bounds: ITEM_QUERY_BOUNDS, limit: query.limit, last: 4 })! }) };
     },

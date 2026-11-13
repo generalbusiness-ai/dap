@@ -1,8 +1,8 @@
 import { runInDurableObject } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { describe, expect, test, onTestFinished } from "vitest";
-import type { Entry, FactRef, Item, Read, ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, entryHash, scopeIdOf, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { PROPOSED_BOUNDS, type Entry, type FactRef, type Item, type Read, type ScopeId } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, b64url, canonicalize, definitionDigest, entryHash, scopeIdOf, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { firstExtents, initialCommitObjects, platform } from "@generalbusiness/dap-platform";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
@@ -22,6 +22,7 @@ import { Platform, routed } from "../../../../packages/scope/test/repository.ts"
 import { command, memoryStore, type Context, type Outcome } from "../../../../packages/cli/src/index.ts";
 import { DEMO_DIGESTS, changeDemo } from "../src/index.ts";
 import { editChangeDefinitions } from "./definition-corpus-data.ts";
+import { normalizeDefinition } from "../../../../packages/derive/src/validate/spelling.ts";
 
 const SERVICE = "https://scopes.test";
 /** The test's own reader, which the command never presents. */
@@ -57,7 +58,9 @@ async function publicationCheckpoint(node: Platform) {
       const rule = code && mark && operation.owner === definition ? ruleAt(code.rules, mark.code, "outcome") : null;
       const callback = rule?.rules.publicationOrigin;
       try {
-        const asked = callback?.(store, operation, ownOf(store));
+        const sequence = first && scope ? admitSequenceGenesis(first.bytes, scope.at, PROPOSED_BOUNDS.entryBytes) : null;
+        if (!sequence) throw new Error("the diagnostic scope has no admitted genesis");
+        const asked = callback?.(store, operation, ownOf(store, sequence));
         return { callback: !!callback, result: asked === undefined ? "absent" : asked === null ? "not-required" : asked === false ? "denied" : "required",
           ...(asked && { from: asked.from, directory: asked.directory, destination: asked.destination }) };
       } catch (error) { return { callback: !!callback, result: "threw", errorCategory: error instanceof Error ? error.name.slice(0, 80) : "non-error" }; }
@@ -125,7 +128,9 @@ async function story(at: Stand, wired: Set<ScopeId>, siteCleanups: (() => void)[
   // An older valid change definition has no one-file proposal. Another
   // valid definition has that name but carries detached content, unlike the
   // command's signed-text protocol. Neither supports this edit workflow.
-  const { legacy, detached, extended } = editChangeDefinitions();
+  // Ruling f2f2a7ea: activation admits only the canonical spelling, so the room receives the extension without its redundant `on` selectors.
+  const { legacy, detached, extended: authored } = editChangeDefinitions();
+  const extended = normalizeDefinition(authored);
   const files: Record<string, Uint8Array> = {
     "change-demo.json": utf8(canonicalize(changeDemo)),
     "legacy.json": utf8(canonicalize(legacy)),
@@ -282,8 +287,8 @@ async function story(at: Stand, wired: Set<ScopeId>, siteCleanups: (() => void)[
     // beyond the configured existing tries budget; no infinite stream or
     // timeout is needed to distinguish the former unbounded inner scan.
     const badLane = /as change (sc_\S+),/.exec(outside.lines[0]!)![1]!;
-    const template = (await new Platform(badLane as ScopeId).entries()).find((entry) => entry.effects.length === 0)!;
-    expect(template).toBeDefined();
+    const template = (await new Platform(badLane as ScopeId).entries()).find((entry) => entry.effects.length === 0);
+    if (!template || !("genesis" in template)) return expect.fail("The bad lane must hold a later entry with no effects");
     const tries = 3;
     const reads: number[] = [];
     let mergeSeq: number | null = null;

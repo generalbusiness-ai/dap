@@ -2,9 +2,9 @@
  * Source frames or normally checked replay runs. Hash-valid arbitrary entries
  * are not proof of native execution. Old destination policies remain separate. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { DeclaredDefinition, Digest, Entry, FactRef, PlatformDefinition, Request, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, deliveryCauseDigest, intentDigest, isDigest, isPlatformDefinition, isSeed, messageDigest, platformName, scopeIdOf, seedDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { isEntryOf, isFactRef, isObject, isScopeRef, same, sentBy, type Fetched } from "@generalbusiness/dap-derive";
+import type { DeclaredDefinition, Digest, Entry, FactRef, GenesisInput, PlatformDefinition, Request, ScopeKind, ScopeRef, Seed } from "@generalbusiness/dap-contract";
+import { canonicalize, definitionDigest, deliveryCauseDigest, genesisInputDigest, intentDigest, isDigest, isPlatformDefinition, isScopeKind, isSeed, messageDigest, platformName, scopeIdOf, utf8, verifySignedIntent, resolveGenesisSelf, type CheckedSequence } from "@generalbusiness/dap-bytes";
+import { isEntryOf, isFactRef, isObject, isScopeRef, same, sentBy, type Fetched, type SourceCopy } from "@generalbusiness/dap-derive";
 import { sourceName as legacySourceName } from "./publishing-provenance.ts";
 import { PARTITION_COHORT as COHORT, MAX_GENERATIONS, PARTITION_SPAN } from "./directory-partitions.ts";
 
@@ -15,13 +15,53 @@ export const PARTITION_BASE_PROOF_BOUNDS = {
 } as const;
 /** Same finite decoded chain as the runtime collector, shared by replay. */
 export const PARTITION_IDENTITY_BOUNDS = { facts: 16, laneDepth: 4, bytes: 16 * PROPOSED_BOUNDS.entryBytes } as const;
-export interface PartitionNativeFrame { fact: FactRef; entry: Entry; named: Digest | PlatformDefinition; declarationName: string; native: boolean }
+export interface PartitionNativeFrame { fact: FactRef; entry: Entry; sequence: CheckedSequence; named: Digest | PlatformDefinition; declarationName: string; native: boolean }
 export interface PartitionCreation { seed: Seed; source: FactRef; n: number; message: Request }
 interface Context { root: ScopeRef; partition: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef }
 type Checked<T> = { ok: true; value: T } | { ok: false } | null;
 const invalid = { ok: false } as const;
 const frame = (facts: readonly Fetched[], fact: FactRef): Fetched | undefined => facts.find(copy => same(copy.fact, fact));
 const first = (facts: readonly Fetched[], at: ScopeRef): Fetched | undefined => facts.find(copy => copy.fact.seq === 0 && same(copy.fact.at, at));
+
+const creatorOf = (born: Pick<GenesisInput, "seed" | "source">): ScopeRef | null =>
+  born.seed.creator && born.source ? resolveGenesisSelf(born.seed.creator, born.source) : null;
+const creationCreator = (born: PartitionCreation): ScopeRef | null =>
+  born.seed.creator ? resolveGenesisSelf(born.seed.creator, born.source) : null;
+/** The recorded scalar must agree with actual birth before Native identity. */
+const recordedKind = (input: Entry["input"], source: Pick<Fetched, "sequence">): boolean =>
+  "sourceKind" in input && input.sourceKind === source.sequence.kind;
+
+/** Called only after every frame passed full association and byte checks.
+ * Recorded aliases may agree without a held birth, but grant no authority. */
+function recordedKindsAgree(facts: readonly Fetched[]): boolean {
+  const held = new Map<string, ScopeKind>();
+  for (const copy of facts) {
+    const key = canonicalize(copy.fact.at), kind = copy.sequence.kind;
+    const previous = held.get(key);
+    if (previous !== undefined && previous !== kind) return false;
+    held.set(key, kind);
+  }
+  const recorded = new Map<string, ScopeKind>();
+  const agree = (at: ScopeRef, kind: unknown): boolean => {
+    if (!isScopeKind(kind)) return false;
+    const key = canonicalize(at), actual = held.get(key), previous = recorded.get(key);
+    if (actual !== undefined && actual !== kind || previous !== undefined && previous !== kind) return false;
+    recorded.set(key, kind);
+    return true;
+  };
+  for (const copy of facts) {
+    const input = copy.entry.input;
+    if (input.type === "genesis" || input.type === "delivery") {
+      if (!("sourceKind" in input)) return false;
+      const source = input.type === "genesis" ? input.source : input.from;
+      if (source === null ? input.sourceKind !== null : !agree(source.at, input.sourceKind)) return false;
+    }
+    for (const use of copy.entry.uses) {
+      if (!("kind" in use) || !agree(use.fact.at, use.kind)) return false;
+    }
+  }
+  return true;
+}
 
 function bounded(facts: readonly Fetched[], total = false): boolean {
   const limits = total ? PARTITION_IDENTITY_BOUNDS : PARTITION_BASE_PROOF_BOUNDS;
@@ -35,17 +75,21 @@ function bounded(facts: readonly Fetched[], total = false): boolean {
     const text = canonicalize(copy.entry);
     if (text.length > PARTITION_BASE_PROOF_BOUNDS.entryBytes) return false;
     const size = utf8(text).length;
-    if (size > PARTITION_BASE_PROOF_BOUNDS.entryBytes || (bytes += size) > limits.bytes) return false;
+    if (size > PARTITION_BASE_PROOF_BOUNDS.entryBytes || (bytes += size) > limits.bytes
+      || !isEntryOf(copy.entry, copy.fact, copy.sequence)) return false;
   }
-  return true;
+  return recordedKindsAgree(facts);
 }
 function genesis(facts: readonly Fetched[], at: ScopeRef, pin: PlatformDefinition): Checked<Fetched> {
   const copy = first(facts, at);
   if (!copy) return null;
-  if (!isEntryOf(copy.entry, copy.fact) || copy.entry.prev !== null || copy.entry.input.type !== "genesis") return invalid;
+  if (!isEntryOf(copy.entry, copy.fact, copy.sequence) || copy.entry.prev !== null || copy.entry.input.type !== "genesis") return invalid;
   const born = copy.entry.input;
+  const expected = pin === COHORT.directory || pin === COHORT.partition ? "directory"
+    : pin === COHORT.membership ? "membership" : pin === COHORT.rules ? "rules" : pin === COHORT.destination ? "destination" : null;
+  if (expected === null || copy.sequence.kind !== expected) return invalid;
   if (born.decision !== "applied" || born.kind !== (pin === COHORT.partition ? "establish-partition" : "establish")
-    || born.inc !== at.inc || !isSeed(born.seed) || born.seed.kind !== at.kind || born.seed.definition !== pin
+    || !isSeed(born.seed) || born.seed.kind !== copy.sequence.kind || born.seed.definition !== pin
     || scopeIdOf(born.seed) !== at.scope) return invalid;
   return { ok: true, value: copy };
 }
@@ -56,8 +100,11 @@ function context(facts: readonly Fetched[], partition: ScopeRef, root: ScopeRef,
   const part = genesis(facts, partition, COHORT.partition);
   if (!part || !part.ok) return part;
   const born = part.value.entry.input;
-  if (born.type !== "genesis" || part.value.under !== "platform:directory-partition" || partition.kind !== "directory"
+  if (born.type !== "genesis" || part.value.under !== "platform:directory-partition" || part.value.sequence.kind !== "directory"
     || !isFactRef(born.source) || born.n === null || !born.message) return invalid;
+  const opening = frame(facts, born.source);
+  if (!opening) return null;
+  if (!recordedKind(born, opening)) return invalid;
   const room = rootContext(facts, { seed: born.seed, source: born.source, n: born.n, message: born.message }, root, destination);
   return room?.ok ? { ok: true, value: { ...room.value, partition } } : room;
 }
@@ -68,29 +115,38 @@ function rootContext(facts: readonly Fetched[], partBirth: PartitionCreation, ro
   if (!office || !office.ok) return office;
   const rootBirth = office.value.entry.input;
   if (rootBirth.type !== "genesis" || office.value.under !== "platform:directory"
-    || root.kind !== "directory" || destination.kind !== "destination"
+    || office.value.sequence.kind !== "directory"
     || !isSeed(partBirth.seed) || partBirth.seed.kind !== "directory" || partBirth.seed.definition !== COHORT.partition
-    || !same(partBirth.seed.creator, root) || rootBirth.seed.creator?.kind !== "register" || !isFactRef(rootBirth.source)
-    || !same(rootBirth.source.at, rootBirth.seed.creator) || rootBirth.seed.ordinal !== 0
+    || !same(creationCreator(partBirth), root) || !isFactRef(rootBirth.source)
+    || !same(rootBirth.source.at, creatorOf(rootBirth)) || rootBirth.seed.ordinal !== 0
     || !isFactRef(partBirth.source) || !same(partBirth.source.at, root) || partBirth.seed.ordinal !== 0
     || !Number.isSafeInteger(partBirth.n) || partBirth.n < 0 || partBirth.message.class !== "request"
     || partBirth.message.type !== "create" || !isObject(partBirth.message.body)) return invalid;
+  const register = first(facts, rootBirth.source.at);
+  if (!register) return null;
+  if (!isEntryOf(register.entry, register.fact, register.sequence) || register.entry.input.type !== "genesis"
+    || register.entry.input.decision !== "applied" || register.sequence.kind !== "register"
+    || !recordedKind(rootBirth, register)) return invalid;
   const opening = frame(facts, partBirth.source);
   if (!opening) return null;
-  if (opening.under !== "platform:directory" || !isEntryOf(opening.entry, opening.fact)) return invalid;
+  if (opening.under !== "platform:directory" || !isEntryOf(opening.entry, opening.fact, opening.sequence)) return invalid;
   const input = opening.entry.input;
   if (input.type === "act") {
     if (input.signed.intent.kind !== "open-partition" || !same(input.signed.intent.to, root) || !verifySignedIntent(input.signed)
       || intentDigest(input.signed.intent) !== partBirth.seed.cause) return invalid;
   } else if (input.type === "delivery") {
+    const sender = first(facts, input.from.at);
+    if (!sender) return null;
+    if (!isEntryOf(sender.entry, sender.fact, sender.sequence) || sender.entry.input.type !== "genesis"
+      || sender.entry.input.decision !== "applied" || sender.sequence.kind !== "directory" || !recordedKind(input, sender)) return invalid;
     if (input.message.class !== "request" || input.message.type !== "tell" || !isObject(input.message.body) || input.message.body["message"] !== "seal"
-      || input.from.at.kind !== "directory" || deliveryCauseDigest({ v: 1, from: input.from, n: input.n, message: messageDigest(input.message) }) !== partBirth.seed.cause) return invalid;
+      || deliveryCauseDigest({ v: 1, from: input.from, n: input.n, message: messageDigest(input.message) }) !== partBirth.seed.cause) return invalid;
   } else return invalid;
-  if (!sentBy(opening.entry, { from: partBirth.source, n: partBirth.n, to: partBirth.seed, message: partBirth.message })) return invalid;
+  if (!sentBy(opening.entry, { from: partBirth.source, n: partBirth.n, to: partBirth.seed, message: partBirth.message }, opening.sequence)) return invalid;
   const body = partBirth.message.body, fields = body["fields"];
   if (!isObject(fields) || !same(body["directory"], root) || !same(fields["root"], root)
-    || !isScopeRef(fields["membership"]) || fields["membership"].kind !== "membership"
-    || !isScopeRef(fields["rules"]) || fields["rules"].kind !== "rules" || !same(fields["destination"], destination)
+    || !isScopeRef(fields["membership"])
+    || !isScopeRef(fields["rules"]) || !same(fields["destination"], destination)
     || !same(body["membership"], fields["membership"]) || !Number.isSafeInteger(fields["generation"])
     || (fields["generation"] as number) < 1 || (fields["generation"] as number) > MAX_GENERATIONS
     || fields["base"] !== ((fields["generation"] as number) - 1) * PARTITION_SPAN + 1) return invalid;
@@ -100,10 +156,10 @@ function rootContext(facts: readonly Fetched[], partBirth: PartitionCreation, ro
     if (child === null) return null;
     if (!child.ok) return invalid;
     const birth = child.value.entry.input;
-    if (birth.type !== "genesis" || !same(birth.seed.creator, root) || birth.seed.ordinal !== ordinal
-      || birth.seed.cause !== seedDigest(rootBirth.seed) || !same(birth.source, office.value.fact) || birth.n === null || !birth.message || birth.message.class !== "request" || birth.message.type !== "create"
-      || !sentBy(office.value.entry, { from: office.value.fact, n: birth.n, to: birth.seed, message: birth.message })
-      || !isObject(birth.message.body) || !isObject(birth.message.body["fields"]) || !same(birth.message.body["fields"]["directory"], root)) return invalid;
+    if (birth.type !== "genesis" || !recordedKind(birth, office.value) || !same(creatorOf(birth), root) || birth.seed.ordinal !== ordinal
+      || birth.seed.cause !== genesisInputDigest(rootBirth) || !same(birth.source, office.value.fact) || birth.n === null || !birth.message || birth.message.class !== "request" || birth.message.type !== "create"
+      || !sentBy(office.value.entry, { from: office.value.fact, n: birth.n, to: birth.seed, message: birth.message }, office.value.sequence)
+      || !isObject(birth.message.body) || !isObject(birth.message.body["fields"]) || !same(resolveGenesisSelf(birth.message.body["fields"]["directory"], office.value.fact), root)) return invalid;
     const childFields = birth.message.body["fields"];
     if (ordinal > 0 && childFields["membership"] !== membership.scope || ordinal === 2 && childFields["rules"] !== rules.scope) return invalid;
   }
@@ -115,33 +171,36 @@ function origin(from: FactRef, root: ScopeRef, destination: ScopeRef, facts: rea
     if (!bounded(facts, total)) return null;
     const child = first(facts, from.at);
     if (!child) return null;
-    if (!isEntryOf(child.entry, child.fact) || child.entry.prev !== null || child.entry.input.type !== "genesis") return false;
+    if (!isEntryOf(child.entry, child.fact, child.sequence) || child.entry.prev !== null || child.entry.input.type !== "genesis") return false;
     const born = child.entry.input, seed = born.seed;
-    if (from.at.kind !== "lane" || born.decision !== "applied" || born.inc !== from.at.inc || !isSeed(seed) || seed.kind !== "lane"
-      || !isDigest(seed.definition) || seed.ordinal !== 0 || scopeIdOf(seed) !== from.at.scope || !isScopeRef(seed.creator) || seed.creator.kind !== "directory"
-      || !isFactRef(born.source) || !same(born.source.at, seed.creator) || born.n === null
+    if (child.sequence.kind !== "lane" || born.decision !== "applied" || !isSeed(seed) || seed.kind !== "lane"
+      || !isDigest(seed.definition) || seed.ordinal !== 0 || scopeIdOf(seed) !== from.at.scope || !isScopeRef(creatorOf(born))
+      || !isFactRef(born.source) || !same(born.source.at, creatorOf(born)) || born.n === null
       || !born.message || born.message.class !== "request" || born.message.type !== "create" || !isObject(born.message.body)) return false;
+    const source = frame(facts, born.source);
+    if (!source) return null;
+    if (source.sequence.kind !== "directory" || !recordedKind(born, source)) return false;
     if (kind === "change" && born.kind !== "open") return false;
     return directPublicationCreation({ seed, source: born.source, n: born.n, message: born.message }, root, destination, facts, kind);
   } catch { return false; }
 }
 function directPublicationCreation(born: PartitionCreation, root: ScopeRef, destination: ScopeRef, facts: readonly Fetched[], kind: "application" | "change"): boolean | null {
     const seed = born.seed;
-    if (!isSeed(seed) || seed.kind !== "lane" || !isDigest(seed.definition) || seed.ordinal !== 0 || !isScopeRef(seed.creator) || seed.creator.kind !== "directory"
-      || !isFactRef(born.source) || !same(born.source.at, seed.creator) || !Number.isSafeInteger(born.n) || born.n < 0
+    if (!isSeed(seed) || seed.kind !== "lane" || !isDigest(seed.definition) || seed.ordinal !== 0 || !isScopeRef(creationCreator(born))
+      || !isFactRef(born.source) || !same(born.source.at, creationCreator(born)) || !Number.isSafeInteger(born.n) || born.n < 0
       || born.message.class !== "request" || born.message.type !== "create" || !isObject(born.message.body)) return false;
     const creator = frame(facts, born.source);
     if (!creator) return null;
-    if (creator.under !== "platform:directory-partition" || !isEntryOf(creator.entry, creator.fact) || creator.entry.input.type !== "act") return false;
+    if (creator.sequence.kind !== "directory" || creator.under !== "platform:directory-partition" || !isEntryOf(creator.entry, creator.fact, creator.sequence) || creator.entry.input.type !== "act") return false;
     const made = creator.entry.input.signed;
-    if (made.intent.kind !== (kind === "application" ? "establish-application" : "open-pr") || !same(made.intent.to, seed.creator)
+    if (made.intent.kind !== (kind === "application" ? "establish-application" : "open-pr") || !same(made.intent.to, creationCreator(born))
       || !verifySignedIntent(made) || made.intent.fields["definition"] !== seed.definition || intentDigest(made.intent) !== seed.cause
-      || !sentBy(creator.entry, { from: born.source, n: born.n, to: seed, message: born.message })) return false;
-    const room = context(facts, seed.creator, root, destination);
+      || !sentBy(creator.entry, { from: born.source, n: born.n, to: seed, message: born.message }, creator.sequence)) return false;
+    const room = context(facts, born.source.at, root, destination);
     if (room === null) return null;
     if (!room.ok) return false;
     const body = born.message.body, fields = body["fields"];
-    if (!isObject(fields) || !same(body["directory"], seed.creator) || !same(body["membership"], room.value.membership)) return false;
+    if (!isObject(fields) || !same(body["directory"], born.source.at) || !same(body["membership"], room.value.membership)) return false;
     if (kind === "application") return same(body["creationContext"], { v: 1 }) && (!("destination" in fields) || same(fields["destination"], destination));
     return same(fields["destination"], destination) && same(fields["rules"], room.value.rules);
 }
@@ -154,10 +213,10 @@ export const partitionPublishingLaneOrigin = (from: FactRef, root: ScopeRef, des
  * not turn arbitrary hash-valid caller data into native execution proof. */
 function rawFacts(frames: readonly PartitionNativeFrame[]): readonly Fetched[] | null {
   if (!Array.isArray(frames) || frames.length > PARTITION_IDENTITY_BOUNDS.facts) return null;
-  const facts: Fetched[] = frames.map(copy => ({ fact: copy.fact, entry: copy.entry, under: copy.native && isPlatformDefinition(copy.named) ? platformName(copy.named) : copy.declarationName }));
+  const facts: Fetched[] = frames.map(copy => ({ fact: copy.fact, entry: copy.entry, sequence: copy.sequence, under: copy.native && isPlatformDefinition(copy.named) ? platformName(copy.named) : copy.declarationName }));
   if (!bounded(facts, true)) return null;
   for (const copy of frames) {
-    if (!isEntryOf(copy.entry, copy.fact) || copy.native !== isPlatformDefinition(copy.named)) return null;
+    if (copy.native !== isPlatformDefinition(copy.named)) return null;
     const birth = frames.find(row => row.fact.seq === 0 && same(row.fact.at, copy.fact.at));
     if (!birth || birth.named !== copy.named || birth.native !== copy.native || birth.declarationName !== copy.declarationName
       || birth.entry.input.type !== "genesis" || birth.entry.input.seed.definition !== copy.named) return null;
@@ -172,34 +231,37 @@ function nativeLane(named: Digest, name: "change" | "issue", at: ScopeRef, facts
   seen.add(key);
   const child = first(facts, at);
   if (!child) return null;
-  if (!isEntryOf(child.entry, child.fact) || child.entry.prev !== null || child.entry.input.type !== "genesis") return invalid;
+  if (!isEntryOf(child.entry, child.fact, child.sequence) || child.entry.prev !== null || child.entry.input.type !== "genesis") return invalid;
   const born = child.entry.input, seed = born.seed;
-  if (at.kind !== "lane" || born.kind !== (name === "change" ? "open" : "file") || born.decision !== "applied" || born.inc !== at.inc
+  if (child.sequence.kind !== "lane" || born.kind !== (name === "change" ? "open" : "file") || born.decision !== "applied"
     || !isSeed(seed) || seed.kind !== "lane" || seed.definition !== named || seed.ordinal !== 0 || scopeIdOf(seed) !== at.scope
-    || !isScopeRef(seed.creator) || !isFactRef(born.source) || !same(seed.creator, born.source.at) || born.n !== 0
+    || !isFactRef(born.source) || !same(creatorOf(born), born.source.at) || born.n !== 0
     || !born.message || born.message.class !== "request" || born.message.type !== "create" || !isObject(born.message.body) || !isObject(born.message.body["fields"])) return invalid;
+  const creating = frame(facts, born.source);
+  if (!creating) return null;
+  if (!recordedKind(born, creating)) return invalid;
   return laneCreation(named, name, { seed, source: born.source, n: born.n, message: born.message }, facts, depth, seen);
 }
 function laneCreation(named: Digest, name: "change" | "issue", born: PartitionCreation, facts: readonly Fetched[], depth: number, seen: Set<string>): Checked<Context> {
   const seed = born.seed;
   if (depth > PARTITION_IDENTITY_BOUNDS.laneDepth) return null;
   if (!isSeed(seed) || seed.kind !== "lane" || seed.definition !== named || seed.ordinal !== 0
-    || !isScopeRef(seed.creator) || !isFactRef(born.source) || !same(seed.creator, born.source.at) || born.n !== 0
+    || !isFactRef(born.source) || !same(creationCreator(born), born.source.at) || born.n !== 0
     || born.message.class !== "request" || born.message.type !== "create" || !isObject(born.message.body)) return invalid;
   const creator = frame(facts, born.source);
   if (!creator) return null;
-  if (!isEntryOf(creator.entry, creator.fact) || creator.entry.input.type !== "act") return invalid;
+  if (!isEntryOf(creator.entry, creator.fact, creator.sequence) || creator.entry.input.type !== "act") return invalid;
   const made = creator.entry.input.signed, body = born.message.body, fields = body["fields"];
   if (!isObject(fields)) return invalid;
-  const concern = name === "issue" && seed.creator.kind === "lane";
+  const concern = name === "issue" && creator.sequence.kind === "lane";
   if (made.intent.kind !== (concern ? "add-concern" : name === "change" ? "open-pr" : "open-issue")
-    || !same(made.intent.to, seed.creator) || !verifySignedIntent(made) || intentDigest(made.intent) !== seed.cause
+    || !same(made.intent.to, creationCreator(born)) || !verifySignedIntent(made) || intentDigest(made.intent) !== seed.cause
     || !concern && made.intent.fields["definition"] !== named
-    || !sentBy(creator.entry, { from: born.source, n: born.n, to: seed, message: born.message })) return invalid;
+    || !sentBy(creator.entry, { from: born.source, n: born.n, to: seed, message: born.message }, creator.sequence)) return invalid;
   if (concern) {
-    const parent = first(facts, seed.creator);
+    const parent = first(facts, born.source.at);
     if (!parent) return null;
-    const room = nativeLane(named, "issue", seed.creator, facts, depth + 1, seen);
+    const room = nativeLane(named, "issue", born.source.at, facts, depth + 1, seen);
     if (!room || !room.ok) return room;
     const origin = fields["origin"];
     if (parent.entry.input.type !== "genesis" || !parent.entry.input.message || !isObject(parent.entry.input.message.body)
@@ -209,13 +271,13 @@ function laneCreation(named: Digest, name: "change" | "issue", born: PartitionCr
       || !(isObject(origin) && Object.keys(origin).length === 1 && origin["self"] === true) && !same(origin, born.source)) return invalid;
     return room;
   }
-  const part = first(facts, seed.creator);
+  const part = first(facts, born.source.at);
   if (!part) return null;
-  if (seed.creator.kind !== "directory" || creator.under !== "platform:directory-partition" || part.entry.input.type !== "genesis"
+  if (creator.sequence.kind !== "directory" || creator.under !== "platform:directory-partition" || part.entry.input.type !== "genesis"
     || !part.entry.input.message || !isObject(part.entry.input.message.body) || !isObject(part.entry.input.message.body["fields"])) return invalid;
   const contextFields = part.entry.input.message.body["fields"];
   if (!isScopeRef(contextFields["root"]) || !isScopeRef(contextFields["destination"])) return invalid;
-  const room = context(facts, seed.creator, contextFields["root"], contextFields["destination"]);
+  const room = context(facts, born.source.at, contextFields["root"], contextFields["destination"]);
   if (!room || !room.ok) return room;
   if (!same(body["directory"], room.value.partition) || !same(body["membership"], room.value.membership)
     || name === "change" && (!same(fields["destination"], room.value.destination) || !same(fields["rules"], room.value.rules))) return invalid;
@@ -247,12 +309,12 @@ export interface PartitionReceiverLineage {
 export type PartitionReceiverPolicy = { mode: "legacy" } | { mode: "partition-v1"; lineage: PartitionReceiverLineage };
 function rootSiblingCreation(creation: PartitionCreation, ordinal: number, facts: readonly Fetched[], root: Fetched): boolean {
   const checked = genesis(facts, root.fact.at, COHORT.directory), born = root.entry.input;
-  return checked?.ok === true && born.type === "genesis" && same(creation.seed.creator, root.fact.at) && creation.seed.ordinal === ordinal
-    && creation.seed.cause === seedDigest(born.seed) && same(creation.source, root.fact)
+  return checked?.ok === true && born.type === "genesis" && same(creationCreator(creation), root.fact.at) && creation.seed.ordinal === ordinal
+    && creation.seed.cause === genesisInputDigest(born) && same(creation.source, root.fact)
     && Number.isSafeInteger(creation.n) && creation.n >= 0 && creation.message.class === "request" && creation.message.type === "create"
     && isObject(creation.message.body) && isObject(creation.message.body["fields"])
-    && same(creation.message.body["fields"]["directory"], root.fact.at)
-    && sentBy(root.entry, { from: creation.source, n: creation.n, to: creation.seed, message: creation.message });
+    && same(resolveGenesisSelf(creation.message.body["fields"]["directory"], root.fact), root.fact.at)
+    && sentBy(root.entry, { from: creation.source, n: creation.n, to: creation.seed, message: creation.message }, root.sequence);
 }
 /** Receiver eligibility is separate from a sender's role. Inputs are raw
  * authenticated native metadata or replay's normally checked runs. A locator
@@ -262,7 +324,7 @@ export function partitionReceiverPolicy(at: ScopeRef, frames: readonly Partition
     const facts = rawFacts(frames), own = frames.find(copy => copy.fact.seq === 0 && same(copy.fact.at, at));
     if (!facts || !own || own.entry.input.type !== "genesis") return null;
     const born = own.entry.input;
-    if (born.decision !== "applied" || born.inc !== at.inc || scopeIdOf(born.seed) !== at.scope) return null;
+    if (born.decision !== "applied" || scopeIdOf(born.seed) !== at.scope) return null;
     const selected = (root: ScopeRef): PartitionReceiverPolicy => ({ mode: "partition-v1", lineage: { at, birth: own.fact, named: own.named, root } });
     const legacy = { mode: "legacy" } as const;
     if (own.native) {
@@ -275,17 +337,17 @@ export function partitionReceiverPolicy(at: ScopeRef, frames: readonly Partition
       }
       const ordinal = own.named === COHORT.membership ? 0 : own.named === COHORT.rules ? 1 : own.named === COHORT.destination ? 2 : null;
       if (ordinal !== null) {
-        if (!isScopeRef(born.seed.creator)) return legacy;
-        const root = frames.find(copy => copy.fact.seq === 0 && same(copy.fact.at, born.seed.creator));
+        if (!isScopeRef(creatorOf(born))) return legacy;
+        const root = frames.find(copy => copy.fact.seq === 0 && same(copy.fact.at, creatorOf(born)));
         if (!root) return null;
         if (!root.native || root.named !== COHORT.directory) return legacy;
-        if (!isFactRef(born.source) || born.n === null || !born.message
+        if (!isFactRef(born.source) || !recordedKind(born, root) || born.n === null || !born.message
           || !rootSiblingCreation({ seed: born.seed, source: born.source, n: born.n, message: born.message }, ordinal, facts, frame(facts, root.fact)!)) return null;
         return selected(root.fact.at);
       }
       if (own.named === COHORT.inbox) {
-        if (!isFactRef(born.source) || !isScopeRef(born.seed.creator) || !same(born.source.at, born.seed.creator)) return legacy;
-        const parent = frames.find(copy => copy.fact.seq === 0 && same(copy.fact.at, born.seed.creator));
+        if (!isFactRef(born.source) || !isScopeRef(creatorOf(born)) || !same(born.source.at, creatorOf(born))) return legacy;
+        const parent = frames.find(copy => copy.fact.seq === 0 && same(copy.fact.at, creatorOf(born)));
         if (!parent) return null;
         if (!parent.native || parent.named !== COHORT.membership) return legacy;
         const policy = partitionReceiverPolicy(parent.fact.at, frames);
@@ -295,7 +357,7 @@ export function partitionReceiverPolicy(at: ScopeRef, frames: readonly Partition
           || !same(born.message.body["membership"], parent.fact.at)
           || "directory" in born.message.body && !same(born.message.body["directory"], policy.lineage.root)
           || !same(born.message.body["fields"]["membership"], parent.fact.at)
-          || !sentBy(creating.entry, { from: born.source, n: born.n, to: born.seed, message: born.message })) return null;
+          || !recordedKind(born, creating) || !sentBy(creating.entry, { from: born.source, n: born.n, to: born.seed, message: born.message }, creating.sequence)) return null;
         return selected(policy.lineage.root);
       }
       return legacy;
@@ -312,7 +374,8 @@ export function partitionReceiverPolicy(at: ScopeRef, frames: readonly Partition
     if (!isObject(fields) || !isScopeRef(fields["root"]) || !isScopeRef(fields["destination"])) return null;
     const creating = isFactRef(born.source) ? frame(facts, born.source) : undefined;
     if (creating?.entry.input.type === "act" && creating.entry.input.signed.intent.kind === "establish-application") {
-      return origin(own.fact, fields["root"], fields["destination"], facts, "application") === true ? selected(fields["root"]) : null;
+      // The frames passed the identity bound in rawFacts, as partitionPublicationOrigin's do.
+      return origin(own.fact, fields["root"], fields["destination"], facts, "application", true) === true ? selected(fields["root"]) : null;
     }
     if (own.declarationName === "issue" || own.declarationName === "change") {
       const room = nativeLane(own.named, own.declarationName, at, facts, 1, new Set());
@@ -351,7 +414,7 @@ export function partitionDeclaredCreationPolicy(creation: PartitionCreation, def
     if (creating?.entry.input.type !== "act") return null;
     let room: Checked<Context>;
     if (creating.entry.input.signed.intent.kind === "establish-application") {
-      const part = isScopeRef(creation.seed.creator) ? first(facts, creation.seed.creator) : null;
+      const part = isScopeRef(creationCreator(creation)) ? first(facts, creation.source.at) : null;
       const fields = part?.entry.input.type === "genesis" && isObject(part.entry.input.message?.body) ? part.entry.input.message.body["fields"] : null;
       if (!isObject(fields) || !isScopeRef(fields["root"]) || !isScopeRef(fields["destination"])
         || directPublicationCreation(creation, fields["root"], fields["destination"], facts, "application") !== true) return null;
@@ -371,16 +434,16 @@ export type PartitionCreationSelection = { mode: "legacy" } | PartitionCreationP
 export function partitionNativeCreationPolicy(creation: PartitionCreation, frames: readonly PartitionNativeFrame[]): PartitionCreationSelection | null {
   try {
     const facts = rawFacts(frames), seed = creation.seed;
-    if (!facts || !isSeed(seed) || !isPlatformDefinition(seed.definition) || !isScopeRef(seed.creator)
-      || !isFactRef(creation.source) || !same(creation.source.at, seed.creator) || !Number.isSafeInteger(creation.n) || creation.n < 0
+    if (!facts || !isSeed(seed) || !isPlatformDefinition(seed.definition) || !isScopeRef(creationCreator(creation))
+      || !isFactRef(creation.source) || !same(creation.source.at, creationCreator(creation)) || !Number.isSafeInteger(creation.n) || creation.n < 0
       || creation.message.class !== "request" || creation.message.type !== "create") return null;
     if (seed.definition === COHORT.partition) return partitionCreationPolicy(creation, frames);
     const source = frames.find(copy => same(copy.fact, creation.source));
-    if (!source || !sentBy(source.entry, { from: creation.source, n: creation.n, to: seed, message: creation.message })) return null;
+    if (!source || !sentBy(source.entry, { from: creation.source, n: creation.n, to: seed, message: creation.message }, source.sequence)) return null;
     const selected = (root: ScopeRef | null): PartitionCreationPolicy => ({ mode: "partition-v1", root, creation });
     const legacy = { mode: "legacy" } as const;
     if (seed.definition === COHORT.directory) {
-      return seed.kind === "directory" && seed.ordinal === 0 && source.native && source.named === COHORT.register && source.fact.at.kind === "register" ? selected(null) : null;
+      return seed.kind === "directory" && seed.ordinal === 0 && source.native && source.named === COHORT.register && source.sequence.kind === "register" ? selected(null) : null;
     }
     const ordinal = seed.definition === COHORT.membership ? 0 : seed.definition === COHORT.rules ? 1 : seed.definition === COHORT.destination ? 2 : null;
     if (ordinal !== null) {
@@ -388,7 +451,7 @@ export function partitionNativeCreationPolicy(creation: PartitionCreation, frame
       return rootSiblingCreation(creation, ordinal, facts, frame(facts, source.fact)!) ? selected(source.fact.at) : null;
     }
     if (seed.definition === COHORT.inbox) {
-      const parent = frames.find(copy => copy.fact.seq === 0 && same(copy.fact.at, seed.creator));
+      const parent = frames.find(copy => copy.fact.seq === 0 && same(copy.fact.at, creationCreator(creation)));
       if (!parent) return null;
       if (!parent.native || parent.named !== COHORT.membership) return legacy;
       const policy = partitionReceiverPolicy(parent.fact.at, frames);
@@ -429,18 +492,19 @@ export function partitionProducerName(at: ScopeRef, frames: readonly PartitionNa
       const key = canonicalize(scope);
       if (depth > PARTITION_IDENTITY_BOUNDS.laneDepth || seen.has(key)) return null;
       seen.add(key);
-      const origin: Fetched[] = [{ fact: own.fact, entry: own.entry, under: own.declarationName }];
+      // A sealed entry's bytes are its canonical form, which every frame passed.
+      const origin: SourceCopy[] = [{ fact: own.fact, entry: own.entry, sequence: own.sequence, under: own.declarationName, bytes: canonicalize(own.entry) }];
       const from = own.entry.input.source;
       if (from) {
         const creating = frame(facts, from);
         if (!creating) return null;
         const parentName = name(from.at, depth + 1);
         if (parentName === null) return null;
-        origin.push({ ...creating, under: parentName });
+        origin.push({ ...creating, under: parentName, bytes: canonicalize(creating.entry) });
         if (parentName === "issue") {
           const parent = first(facts, from.at);
           if (!parent) return null;
-          origin.push({ ...parent, under: parentName });
+          origin.push({ ...parent, under: parentName, bytes: canonicalize(parent.entry) });
         }
       }
       return legacySourceName(own.named, own.declarationName, origin);

@@ -1,13 +1,13 @@
 /** Production workspace operations for the explicit hold@2 family. */
 import type { FactRef, FieldValue, KeyId, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isFactRef, isLocalId, isOperationId, isRecord, same, timeMs } from "@generalbusiness/dap-bytes";
+import { canonicalize, isEntryBodyOf, isFactRef, isLocalId, isOperationId, isRecord, same, timeMs } from "@generalbusiness/dap-bytes";
 import { ANCESTRY_BOUNDS, ledgerOf, snapshotInput, stagedRefName, walk, type RecordState } from "@generalbusiness/dap-derive";
 import { TokenDriver, branchRef, isObjectId, type LiveToken, type MintAsk, type RevokeAsk } from "@generalbusiness/dap-git";
 import type { DestinationRepository, ReadCredential } from "./destination-host.ts";
 import type { OutsideGiven } from "./given.ts";
 import type { EffectAnswer, EffectRequest, Outside } from "./operations.ts";
 import type { Sql } from "./sqlite.ts";
-import { proofEntry, PROOF_BYTE_BOUNDS } from "./proof-bytes.ts";
+import { bodyAndDigestProofEntry, PROOF_BYTE_BOUNDS } from "./proof-bytes.ts";
 import { ArtifactsProvider } from "./artifacts-host.ts";
 import { workspaceRepository, type WorkspaceRepository, type WorkspaceSources } from "./workspace-lineage.ts";
 import { report, toConsole } from "./diag.ts";
@@ -37,7 +37,7 @@ export class WorkspaceHost implements Outside {
     this.#tokens = new TokenDriver({ host: { mint: ask => this.#mint(ask), revoke: ask => this.#revoke(ask) }, custody: { take: token => this.#take(token) } });
   }
   accepts(owner: string, kind: string): boolean {
-    return owner === OWNER && kinds.has(kind) && this.#given.scope()?.at.kind === "lane"
+    return owner === OWNER && kinds.has(kind) && this.#given.scope()?.kind === "lane"
       && this.#given.definition?.()?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2) === true;
   }
   /** Target availability only, before the native driver's durable send mark. */
@@ -62,7 +62,8 @@ export class WorkspaceHost implements Outside {
   #scope(): string { return canonicalize(this.#given.scope()!.at); }
   #forkName(hold: number, opening: number, attempt: number): string {
     const at = this.#given.scope()!.at;
-    return `h-${at.scope.slice(3, 35)}-${at.inc.slice(3)}-${hold}-${opening}-${attempt}`;
+    // Twenty-six hex digits of the genesis digest take the place of the incarnation's twenty-six characters.
+    return `h-${at.scope.slice(3, 35)}-${at.genesis.slice(7, 33)}-${hold}-${opening}-${attempt}`;
   }
   #record(kind: string, key: number): RecordState | null { return this.#given.state.record(OWNER, kind, [key]); }
   #records(kind: string, member: string, value: FieldValue): readonly RecordState[] { return this.#given.state.records(OWNER, kind, { member, value }); }
@@ -172,7 +173,7 @@ export class WorkspaceHost implements Outside {
   async send(request: EffectRequest): Promise<EffectAnswer | null> {
     try {
       if (!this.accepts(request.owner, request.kind) || !same(request.scope, this.#given.scope()?.at)
-        || request.origin.hash !== entryHash(request.origin.entry) || !same(request.origin.entry.at, request.scope)
+        || !isEntryBodyOf(request.origin.entry, { at: request.scope, seq: request.origin.entry.seq, hash: request.origin.hash })
         || request.operation !== `${request.origin.entry.seq}:${request.operation.split(":")[1]}`
         || !request.origin.entry.effects.some(effect => effect.effect === "operation" && effect.owner === OWNER && effect.kind === request.kind && `${request.origin.entry.seq}:${effect.k}` === request.operation)) return null;
       if (request.kind === "mint" || request.kind === "revoke") {
@@ -277,7 +278,8 @@ export class WorkspaceHost implements Outside {
         if (!isFactRef(report) || !opening || opening.hash !== item.opened) return null;
         const use = opening.entry.uses.find(use => same(use.fact, report));
         const retained = use ? this.#given.retained("entry", use.content) : null;
-        const entry = retained && use ? proofEntry({ fact: report, bytes: retained.bytes }, report, PROOF_BYTE_BOUNDS.body, use.content) : null;
+        // A local retained use: this scope's sealed opening names the report by fact and content digest.
+        const entry = retained && use ? bodyAndDigestProofEntry({ fact: report, bytes: retained.bytes }, report, PROOF_BYTE_BOUNDS.body, use.content) : null;
         if (!entry) return null;
         const commits = entry.effects.filter(effect => effect.effect === "value" && effect.item === report.seq && effect.slot === "commit");
         if (commits.length !== 1 || commits[0]?.effect !== "value" || !isObjectId(commits[0].value)) return null;

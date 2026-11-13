@@ -653,7 +653,7 @@ no-item final fact-mismatch unauthorized guard-failed capability-refused
 slot-full type-full entry-too-large send-unresolved unknown-message
 unsupported-definition bad-input dependency-unavailable busy clock-behind
 scope-provisional guard-incomplete authority-unavailable unavailable
-rate-limited idempotency-mismatch not-found wrong-incarnation forbidden
+rate-limited idempotency-mismatch not-found wrong-genesis forbidden
 history-unavailable too-large sessions-unavailable bad-request replayed behind
 ```
 

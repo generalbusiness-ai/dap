@@ -6,10 +6,12 @@
  * that every judge is given.
  */
 
-import { archivedPosition } from "./floor.ts";
+import type { CheckedSequence } from "@generalbusiness/dap-bytes";
+import { resolveGenesisValue } from "./genesis-values.ts";
+import { readJudgmentFacts, verifiedCopy } from "./operand.ts";
 import type { Archived, SizeProof } from "@generalbusiness/dap-contract";
-import type { ActType, Bounds, Digest, Entry, FactRef, FactUse, FieldRecord, FieldType, FieldValue, Prepared, Request, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
-import { canonicalBytes, digestBytes, entryHash, isDigest, isIntent } from "@generalbusiness/dap-bytes";
+import type { ActType, Bounds, Digest, Entry, FactRef, FactUse, FieldRecord, FieldType, FieldValue, Prepared, Request, ScopeKind, ScopeRef, Sealed, SequenceRef } from "@generalbusiness/dap-contract";
+import { canonicalBytes, digestBytes, isDigest, isIntent, isEntryOf } from "@generalbusiness/dap-bytes";
 import type { Capabilities } from "./capability.ts";
 import type { Fetched, RuleInput } from "./guards.ts";
 import { markOf, type PlatformRules } from "./marks.ts";
@@ -25,10 +27,26 @@ import { byteOrder, isFactRef, isObject, isValue, own, same } from "./values.ts"
  */
 export interface Own {
   (seq: number): Sealed | null;
+  /** Actual held local genesis admission; no structural-reference fallback. */
+  sequence(): CheckedSequence | null;
   retained?(use: import("@generalbusiness/dap-contract").FactUse): Entry | null;
   positions?(before: number): Iterable<number>;
   sizeProofs?(): readonly SizeProof[];
   archived?(seq: number): Archived | null;
+}
+
+/** Actual adjacent local retained row; producer metadata is not hashed. */
+export interface OwnRetainedRow {
+  readonly kind: "entry";
+  readonly digest: Digest;
+  readonly bytes: string;
+  readonly under?: string;
+}
+/** A real raw-row port, required only by the retained-use constructor. */
+export interface RetainedOwn extends Own {
+  retainedRow(content: Digest): OwnRetainedRow | null;
+  /** Ruling 4f697a7a: the retained first entry of a foreign sequence, by the scope's association from (scope, genesis). One read. */
+  retainedBirth(at: SequenceRef): OwnRetainedRow | null;
 }
 
 /**
@@ -58,7 +76,7 @@ import type { Counts } from "./binding.ts";
 export interface Reading {
   clock: Clock;                         // the one reading of this commit (section 5.3); see `clockOf`
   bounds: Bounds;
-  facts: readonly Fetched[];            // fetched before the turn; each entry's bytes already checked against its hash
+  facts: readonly Fetched[];            // body and genesis association checked before the turn; names/authority remain separate
   prepared: readonly Prepared[];        // the rule results of preparation (section 5.2, step 5)
   asked?: RuleInput[] | undefined;      // set by `prepareRules` only
   own?: Own | undefined;                // this scope's own history. Without it an input that names a local fact is not judged
@@ -99,7 +117,7 @@ export function readFields(types: ActType["fields"], given: Readonly<Record<stri
 }
 
 /** Section 6.2: a fact whose `at` is this scope and incarnation is a local fact. It is not fetched and is not in `uses`. */
-export const isLocalFact = (fact: FactRef, at: Pick<ScopeRef, "scope" | "inc"> | null | undefined): boolean => !!at && fact.at.scope === at.scope && fact.at.inc === at.inc;
+export const isLocalFact = (fact: FactRef, at: { scope: ScopeRef["scope"]; genesis: ScopeRef["genesis"] | null } | null | undefined): boolean => !!at && fact.at.scope === at.scope && fact.at.genesis === at.genesis;
 
 /**
  * Every foreign fact the fields name, once each, in the byte order of the
@@ -108,7 +126,7 @@ export const isLocalFact = (fact: FactRef, at: Pick<ScopeRef, "scope" | "inc"> |
  * that judges the input, or null before it has a genesis: a fact that names
  * it is a local fact, and is read from its own history.
  */
-export function factsNamed(types: ActType["fields"], fields: Readonly<Record<string, FieldValue>>, at: Pick<ScopeRef, "scope" | "inc"> | null): FactRef[] {
+export function factsNamed(types: ActType["fields"], fields: Readonly<Record<string, FieldValue>>, at: Pick<ScopeRef, "scope" | "genesis"> | null): FactRef[] {
   const named = new Map<Digest, FactRef>();
   for (const name of Object.keys(fields).sort(byteOrder)) {
     const declared = own(types, name);
@@ -153,13 +171,13 @@ export type Facts =
   | { result: "unavailable" };
 
 /** The scope that judges an input, its own history, and the texts that came with the input: what tells a local fact from a foreign one, and checks it. */
-export interface Local { at: ScopeRef; own?: Own | undefined; texts?: Texts | undefined }
+export interface Local { at: ScopeRef | import("@generalbusiness/dap-contract").GenesisSelfRef; own?: Own | undefined; texts?: Texts | undefined }
 
 /** What a use records of a foreign entry: the entry by fact, and the digest of its canonical bytes (section 9.2). */
-export const useOf = (fact: FactRef, entry: Entry): FactUse => ({ fact, content: digestBytes(canonicalBytes(entry)) });
+export const useOf = (fact: FactRef, entry: Entry, kind: ScopeKind): FactUse => ({ fact, content: digestBytes(canonicalBytes(entry)), kind });
 
 /** True when `entry` is the entry that `fact` names. */
-export const isEntryOf = (entry: Entry, fact: FactRef): boolean => entry.seq === fact.seq && same(entry.at, fact.at) && entryHash(entry) === fact.hash;
+export { isEntryOf, isEntryBodyOf } from "@generalbusiness/dap-bytes";
 
 /**
  * What the fields name: local items, which must exist; foreign facts, which
@@ -186,44 +204,9 @@ export const isEntryOf = (entry: Entry, fact: FactRef): boolean => entry.seq ===
  * then hold that fact once.
  */
 export function readFacts(view: StateView, types: ActType["fields"], fields: Readonly<Record<string, FieldValue>>, available: readonly Fetched[], local: Local): Facts {
-  const facts = new Map<Digest, Fetched>();
-  const uses: FactUse[] = [];
-  for (const name of Object.keys(fields).sort(byteOrder)) {
-    // A field with no declared type, as a handler's message has, names no item and no fact here.
-    const declared = own(types, name);
-    if (!declared) continue;
-    for (const [type, value] of leaves(declared, fields[name]!)) {
-      if (type.type === "item" && view.item(value as number)?.type !== type.of) return { result: "no-item", detail: `${name} names no ${type.of}`, uses };
-      if (type.type === "text" && type.detached) {
-        if (!local.texts) return { result: "unavailable" };
-        const size = local.texts(value as Digest);
-        if (size === undefined) return { result: "bad-field", detail: `${name} names a text that did not come with the input, or whose bytes its digest does not name`, uses };
-        if (size !== null && size > type.max) return { result: "bad-field", detail: `${name} names a text of ${size} bytes; at most ${type.max}`, uses };
-        if (size === null && local.texts.redactedOver?.(value as Digest, type.max)) return { result: "bad-field", detail: `${name}'s refusal depends on its unavailable original text size`, uses };
-      }
-      if (type.type !== "fact") continue;
-      const ref = value as FactRef;
-      if (isLocalFact(ref, local.at)) {
-        if (archivedPosition(view, ref.seq)) return { result: "archived", detail: `${name} names archived entry ${ref.seq}`, uses };
-        if (!local.own) return { result: "unavailable" };
-        if (ref.at.kind !== local.at.kind || local.own(ref.seq)?.hash !== ref.hash) return { result: "fact-mismatch", detail: `${name} names no entry of this scope: entry ${ref.seq} has another hash, or does not exist`, uses };
-        continue;
-      }
-      const fetched = available.find((f) => f.fact.hash === ref.hash);
-      // Section 5.2, step 1: a foreign entry that was not fetched, or is not the entry the reference names, is a dependency that is not available.
-      if (!fetched || !isEntryOf(fetched.entry, ref)) return { result: "unavailable" };
-      if (facts.has(ref.hash)) continue;
-      facts.set(ref.hash, fetched);
-      uses.push(useOf(ref, fetched.entry));
-    }
-  }
-  // Each local fact as its `seq`: every one was checked above. Every other value as it is. Only a declared field of type fact holds one, or a list or a record with one.
-  const inNormalForm = (type: FieldType | undefined, value: FieldValue): FieldValue => {
-    if (type?.type === "list") return (value as readonly FieldValue[]).map((v) => inNormalForm(type.of, v));
-    if (type?.type === "record") return Object.fromEntries(Object.entries(value as FieldRecord).map(([name, member]) => [name, inNormalForm(own(type.of, name), member)]));
-    return type?.type === "fact" && isLocalFact(value as FactRef, local.at) ? (value as FactRef).seq : value;
-  };
-  return { result: "read", fields: Object.fromEntries(Object.entries(fields).map(([name, value]) => [name, inNormalForm(own(types, name), value)])), facts, uses };
+  if (available.some(value => !isEntryOf(value.entry, value.fact, value.sequence))) return { result: "unavailable" };
+  const read = readJudgmentFacts(view, types, fields, available.map(verifiedCopy), local);
+  return read.result === "read" ? { ...read, facts: new Map([...read.facts].map(([hash, copy]) => [hash, copy.value])) } : read;
 }
 
 // ---------------------------------------------------------------- the fields of a message (sections 6.4 and 7.3)
@@ -236,7 +219,9 @@ const isSelf = (v: unknown): boolean => isObject(v) && Object.keys(v).length ===
  * type is a fact or a list of them. A record that holds a member named `self` is a record, and a field with no declared type reads none.
  */
 function unmarked(value: unknown, from: FactRef, type: FieldType | undefined): unknown {
+  value = resolveGenesisValue(type, value, from);
   if (type?.type === "list" && Array.isArray(value)) return value.map((v) => unmarked(v, from, type.of));
+  if (type?.type === "record" && isObject(value)) return Object.fromEntries(Object.entries(value).map(([name, member]) => [name, unmarked(member, from, own(type.of, name))]));
   return type?.type === "fact" && isSelf(value) ? from : value;
 }
 

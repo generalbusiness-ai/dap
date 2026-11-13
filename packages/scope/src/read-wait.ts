@@ -33,8 +33,8 @@ export class ReadWait {
         if (!active()) return { ok: false, reason: "unavailable" };
         if (!read.ok) return read;
         const current = read.value;
-        if (minimum.at.scope !== current.at.scope || minimum.at.kind !== current.at.kind) return { ok: false, reason: "unavailable" };
-        if (minimum.at.inc !== current.at.inc) return { ok: false, reason: "wrong-incarnation" };
+        if (minimum.at.scope !== current.at.scope) return { ok: false, reason: "unavailable" };
+        if (minimum.at.genesis !== current.at.genesis) return { ok: false, reason: "wrong-genesis" };
         // A seal during asynchronous chain preparation needs another fresh
         // preparation before its position can authorize the final read.
         if (arrivedDuringCheck) {

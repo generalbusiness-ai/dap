@@ -1,7 +1,7 @@
 /** Derived native admission metadata only. No history-body fallback,
  * archive inventory, privacy certificate or export permission. */
 import type { Digest, Entry, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isRecord, isScopeRef, isSeed, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, isDigest, isRecord, isScopeRef, isSeed, parseStrict, same, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import type { Sql, SqlValue } from "./sqlite.ts";
 
 export const ARCHIVE_PIN_KEY = "archive-pin-1";
@@ -39,12 +39,12 @@ export interface ArchivePin {
   readonly seed: Seed;
   readonly genesis: Digest;
 }
-const sameScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.inc === b.inc && a.kind === b.kind;
 const bytesWithin = (n: unknown, max: number): n is number => typeof n === "number" && Number.isSafeInteger(n) && n > 0 && n <= max;
 function pinOf(value: unknown): ArchivePin | null {
   if (!isRecord(value) || Object.keys(value).sort().join(",") !== "at,format,genesis,seed" || value["format"] !== "artroom-archive-pin-1" || !isScopeRef(value["at"]) || !isSeed(value["seed"]) || !isDigest(value["genesis"])) return null;
   const at = value["at"], seed = value["seed"];
-  if (at.kind !== seed.kind || at.scope !== scopeIdOf(seed)) return null;
+  // The full reference names the seed's scope and the genesis digest that the pin records.
+  if (at.scope !== scopeIdOf(seed) || at.genesis !== value["genesis"]) return null;
   return { format: "artroom-archive-pin-1", at, seed, genesis: value["genesis"] };
 }
 
@@ -53,7 +53,7 @@ function pinOf(value: unknown): ArchivePin | null {
 export function archivePinBytes(entry: Entry, hash: Digest): string | null {
   if (entry.input.type !== "genesis" || entry.seq !== 0 || entry.prev !== null) return null;
   try {
-    const pin = pinOf({ format: "artroom-archive-pin-1", at: entry.at, seed: entry.input.seed, genesis: hash });
+    const pin = pinOf({ format: "artroom-archive-pin-1", at: { scope: scopeIdOf(entry.input.seed), genesis: hash }, seed: entry.input.seed, genesis: hash });
     if (!pin) return null;
     const bytes = canonicalize(pin);
     return utf8(bytes).length <= ARCHIVE_PIN_BYTES ? bytes : null;
@@ -83,9 +83,9 @@ function readPin(sql: Pick<Sql, "exec">, expected: ScopeRef, genesis: boolean): 
       return canonicalize(value) === text ? value : undefined;
     };
     const pin = pinOf(read(ARCHIVE_PIN_KEY, pinSize["bytes"]!));
-    if (!pin || !sameScope(pin.at, expected)) return null;
+    if (!pin || !same(pin.at, expected)) return null;
     const scope = read("scope", scopeSize["bytes"]!);
-    if (!isRecord(scope) || Object.keys(scope).sort().join(",") !== "at,creator,genesis,head,held,status,time" || !isScopeRef(scope["at"]) || !sameScope(scope["at"], expected) || !isRecord(scope["genesis"]) || scope["genesis"]["hash"] !== pin.genesis) return null;
+    if (!isRecord(scope) || Object.keys(scope).sort().join(",") !== "at,creator,genesis,head,held,kind,status,time" || !isScopeRef(scope["at"]) || !same(scope["at"], expected) || scope["kind"] !== pin.seed.kind || !isRecord(scope["genesis"]) || scope["genesis"]["hash"] !== pin.genesis) return null;
     if (!genesis) return pin;
     const rows = sql.exec("SELECT hash FROM entry WHERE seq = 0 AND typeof(hash) = 'text' AND octet_length(hash) = 71 LIMIT 1").toArray();
     return rows.length === 1 && rows[0]!["hash"] === pin.genesis ? pin : null;

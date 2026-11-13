@@ -1,6 +1,6 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { DEVICE_COMMAND, type DeclaredDefinition, type Intent, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, type DeclaredDefinition, type Intent, type ScopeKind, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { CAPABILITY_CODE, valueDigest } from "@generalbusiness/dap-derive";
 import { FAILED_CLAIM_COHORT, FILE_PUBLICATION_COHORT, FIRST_ACTIONS_OF, TRUSTED_APPLICATION_COHORT, firstExtents, platform } from "@generalbusiness/dap-platform";
@@ -35,13 +35,14 @@ test("publication policy reserves control aliases and unchanged requested paths 
 });
 
 test("publication policy takes only the canonical bounded extent bytes of the exact authenticated Rules reference", () => {
-  const of = { scope: "sc_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", kind: "rules", inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa" } as ScopeRef;
+  const of = { scope: "sc_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", genesis: `sha256:${"a".repeat(64)}` } as ScopeRef;
   const bytes = canonicalize(extents);
   for (const domain of ["artroom-rules-extents-1", "artroom-rules-extents-2", "artroom-rules-extents-3"]) {
     const digest = valueDigest(domain, extents);
     const reply = { answer: { subject: "rules", of, head: { seq: 1, hash: digest }, revision: 1, content: { asked: "rules", extents: digest } }, values: [{ domain, bytes }] };
     expect(publicationExtents(reply, of)).toEqual(extents);
-    expect(publicationExtents(reply, { ...of, inc: "in_bbbbbbbbbbbbbbbbbbbbbbbbbb" })).toBeNull();
+    expect(publicationExtents(reply, { ...of, genesis: `sha256:${"b".repeat(64)}` } as ScopeRef)).toBeNull();
+    expect(publicationExtents(reply, { scope: of.scope, pending: true })).toEqual(extents);
     expect(publicationExtents({ ...reply, values: [] }, of)).toBeNull();
     expect(publicationExtents({ ...reply, values: [{ domain, bytes: " " + bytes }] }, of)).toBeNull();
     expect(publicationExtents({ ...reply, values: [{ domain, bytes: "[" }] }, of)).toBeNull();
@@ -90,7 +91,7 @@ test.each([
     expect(await R.stub.submit(found, [])).toMatchObject({ answer: "accepted" });
     await pause();
     const first = (await D.entries())[0]!;
-    const sibling = (kind: ScopeRef["kind"]) => {
+    const sibling = (kind: ScopeKind) => {
       const send = first.sends.find(row => "definition" in row.to && row.to.kind === kind);
       if (!send || !("definition" in send.to)) throw Error("The Native Directory must create each sibling");
       return life.platform(scopeIdOf(send.to));

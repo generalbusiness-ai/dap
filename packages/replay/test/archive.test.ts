@@ -1,9 +1,9 @@
 // Judged in-memory fixture authority and owner/host replies remain stand-ins.
 // This witnesses the portable adapter; local Git parsing has separate tests.
 import { expect, test, vi } from "vitest";
-import { PROPOSED_BOUNDS, type Digest, type FactRef, type PlatformDefinition, type Request, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isSeed, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
-import { clockOf, judgeGenesis, judgeOutcome } from "@generalbusiness/dap-derive";
+import { PROPOSED_BOUNDS, type Digest, type FactRef, type PlatformDefinition, type Request, type ScopeId, type ScopeKind } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, entryHash, isEntry, isSeed, newGenesisNonce, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { clockOf, isObject, judgeGenesis, judgeOutcome, type Rules } from "@generalbusiness/dap-derive";
 import { keys, Ledger, T0 } from "@generalbusiness/dap-derive/testing";
 import { platform as nativePlatform, repositoryName } from "@generalbusiness/dap-platform";
 import { installing, registerSeed } from "../../platform/test/support-creation.ts";
@@ -12,6 +12,7 @@ import { served } from "./world.ts";
 import { ARCHIVE_HEAD_TRUST, ARCHIVE_SOURCE_TRUST, archiveSource, verifyArchive, type ArchiveData, type ArchiveReadPort, type ArchiveSourceOptions } from "../src/archive.ts";
 import { MemorySource, type MemoryScope } from "../src/source.ts";
 import { TRUSTS, verify } from "../src/verify.ts";
+import { render } from "../src/report.ts";
 import { declaredGenesisFixture, observingDeliveryFixture, outcomeSnapshotFixture, outcomeValueFixture, type ArchiveFixture } from "./archive-fixtures.ts";
 
 function port(scopes: readonly MemoryScope[]): ArchiveReadPort {
@@ -58,7 +59,7 @@ test("checks receipt scope, incarnation, position and hash after the entire pref
     [fact, "archived"],
     [{ ...fact, seq: fixture.options.head!.seq + 1 }, "behind"],
     [{ ...fact, hash: `sha256:${"0".repeat(64)}` }, "mismatch"],
-    [{ ...fact, at: { ...fact.at, inc: declaredGenesisFixture().scopes[0]!.scope.inc } }, "mismatch"],
+    [{ ...fact, at: { ...fact.at, genesis: declaredGenesisFixture().scopes[0]!.scope.genesis } }, "mismatch"],
     [{ ...fact, at: { ...fact.at, scope: declaredGenesisFixture().options.scope } }, "mismatch"],
   ] as const) {
     const got = await verifyArchive(source(fixture), { ...options, receipt: { fact: asked } });
@@ -138,7 +139,7 @@ test("exact caller anchors classify reviewed private Register copies without adm
     const install = installing(keys.paul, "keys", [keys.rita.key]);
     const seed = registerSeed(install, { definition: pin });
     R.seal(written(judgeGenesis(R.state, registerDefinition,
-      { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(74)), seed, creation: install },
+      { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(74)), seed, creation: install },
       { clock: clockOf(R.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: registerRules })));
     const found = R.act(keys.rita, "found", { expected: { register: R.item(0).revision },
       fields: { branch: "main", founderHandle: "@rita", recoveryKey: keys.sam.key } }, { platform: registerRules, grants: [] });
@@ -150,45 +151,129 @@ test("exact caller anchors classify reviewed private Register copies without adm
       { type: "outcome", operation: `${claim.seq}:0`, attempt: 1, result: "confirmed", evidence: { basis: "own-answer",
         body: { name: repositoryName(R.item(claim.seq).values["seed"] as Digest, 1), id: "TEST-private-register-repo" } } },
       { clock: clockOf(R.state, T0), bounds: PROPOSED_BOUNDS, platform: registerRules, own: R.own })));
+    const sequence = admitSequenceGenesis(canonicalize(R.entries[0]!.entry), R.at, PROPOSED_BOUNDS.entryBytes);
+    if (!sequence) throw Error("the actual Register genesis must admit its association");
     const creation = R.last.sends[0]!;
     if (!isSeed(creation.to)) return expect.fail("The native Register must emit an exact Directory seed");
     const directoryNative = nativePlatform(creation.to.definition)!;
     const directoryDefinition = checkedPlatformData(directoryNative.data), D = new Ledger(directoryDefinition, "platform:directory");
     D.seal(written(judgeGenesis(D.state, directoryDefinition,
-      { name: scopeIdOf(creation.to), inc: newIncarnation(new Uint8Array(16).fill(75)), to: creation.to, from: R.fact(R.head.seq), n: creation.n, message: creation.message as Request },
+      { name: scopeIdOf(creation.to), nonce: newGenesisNonce(new Uint8Array(16).fill(75)), to: creation.to, from: R.fact(R.head.seq), n: creation.n, message: creation.message as Request },
       { clock: clockOf(D.state, T0), bounds: PROPOSED_BOUNDS, prepared: [], own: D.own,
-        facts: [{ fact: claim, entry: R.entries[claim.seq]!.entry, under: R.under }],
-        source: { entry: R.last, under: R.under }, platform: { named: creation.to.definition as PlatformDefinition, rules: directoryNative.rules } })));
+        facts: [{ fact: claim, entry: R.entries[claim.seq]!.entry, sequence, under: R.under }],
+        source: { entry: R.last, sequence, under: R.under }, platform: { named: creation.to.definition as PlatformDefinition, rules: directoryNative.rules } })));
     const archived = served(D, [R, D]);
-    // Stored clone copies deliberately carry no caller-supplied alias. The
-    // adapter may derive it from this basis only for the exact anchored fact.
+    // Stored clone copies carry no caller kind. The actual receiving entry,
+    // exact anchor and finite exporter alias remain separate inputs.
     const retained = archived.retained.map(input => { const { under: _under, ...rest } = input; return rest; });
     const anchors = [...new Map([...D.last.uses.map(use => use.fact), R.fact(R.head.seq)].map(fact => [canonicalize(fact), fact])).values()];
     const base = port([{ ...archived, retained }]);
-    const offline = (basis: PlatformDefinition = pin, kind: ScopeRef["kind"] = "register",
-      privateReads: { scope: ScopeId; result: string }[] = []) => archiveSource({ open: async (scope, work) => {
+    const offline = (basis: PlatformDefinition = pin,
+      privateReads: { scope: ScopeId; result: string }[] = [], includeRow = true) => archiveSource({ open: async (scope, work) => {
       const read = await base.open(scope, work);
       if (scope === R.at.scope && !read.ok) privateReads.push({ scope, result: read.result });
-      return read.ok ? { ...read, archive: { ...read.archive, foreignSources: [{ at: { ...R.at, kind }, pin: basis }] } } : read;
+      return read.ok ? { ...read, archive: { ...read.archive, foreignSources: includeRow ? [{ at: R.at, pin: basis }] : [] } } : read;
     } });
     const options = { mode: "replay" as const, scope: D.at.scope, head: D.head, platform: nativePlatform, grants: "proven" as const,
       anchors: anchors.map(fact => ({ scope: fact.at.scope, seq: fact.seq, hash: fact.hash })) };
     const privateReads: { scope: ScopeId; result: string }[] = [];
-    const verified = await verifyArchive(offline(pin, "register", privateReads), options);
+    const verified = await verifyArchive(offline(pin, privateReads), options);
     const diagnostic = { pin, kind: verified.kind, ...(verified.kind === "verification"
       ? { result: verified.verification.report.result, why: verified.verification.why } : { result: verified.result, reason: verified.reason }) };
     expect(verified, JSON.stringify(diagnostic)).toMatchObject({ kind: "verification",
       verification: { report: { result: "consistent", anchors } } });
+    if (verified.kind === "verification") expect(render(verified.verification.report)).toContain(TRUSTS.recordedKinds);
     expect(privateReads, JSON.stringify({ pin, privateReads })).toEqual([]);
     expect(await verifyArchive(offline(), { ...options, anchors: [] })).toMatchObject({ kind: "verification",
       verification: { report: { result: "missing-dependency", dependencies: { missing: expect.any(Array) } } } });
-    // Caller anchors can still prove this replay without a descriptive alias.
-    // An unknown pin or wrong kind must not take the private-name shortcut:
-    // it must try the exact unavailable private history and receive not-found.
-    for (const [basis, kind] of [["platform:register@21", "register"], [pin, "membership"]] as const) {
+    const missing: { scope: ScopeId; result: string }[] = [];
+    expect(await verifyArchive(offline(pin, missing, false), options)).toMatchObject({ kind: "verification", verification: { report: { result: "incomplete" } } });
+    expect(missing).toEqual([]);
+    // An actual retained name cannot substitute for this adapter's missing
+    // alias row, nor can caller options replace its empty session map.
+    const namedBase = port([archived]), namedReads: ScopeId[] = [];
+    const missingAlias = archiveSource({ open: async (scope, work) => {
+      if (scope === R.at.scope) namedReads.push(scope);
+      const read = await namedBase.open(scope, work);
+      return read.ok ? { ...read, archive: { ...read.archive, foreignSources: [] } } : read;
+    } });
+    expect(archived.retained.some(input => input.kind === "entry" && input.under === R.under)).toBe(true);
+    expect(await verifyArchive(missingAlias, { ...options, archiveSourceRows: new Map([[D.at.scope, [{ at: R.at, pin }]]]) })).toMatchObject({
+      kind: "verification", verification: { report: { result: "incomplete" } },
+    });
+    expect(namedReads).toEqual([]);
+    // Missing/unknown aliases do not try a private open. A catalog kind
+    // disagreement is a mismatch with the actual receiving entry's word.
+    for (const basis of ["platform:register@21", "platform:membership@8"] as const) {
       const refused: { scope: ScopeId; result: string }[] = [];
-      await verifyArchive(offline(basis, kind, refused), options);
-      expect(refused).toEqual([{ scope: R.at.scope, result: "not-found" }]);
+      const bad = await verifyArchive(offline(basis, refused), options);
+      expect(bad.kind === "verification" && bad.verification.report.result === "consistent").toBe(false);
+      if (basis === "platform:membership@8") expect(bad).toMatchObject({ kind: "verification", verification: { report: { result: "mismatch" } } });
+      expect(refused).toEqual([]);
+    }
+    // The rejected kind now belongs to actual canonical receiving bytes,
+    // not a caller-supplied classification beside the anchor.
+    if (D.last.seq !== 0 || D.last.input.type !== "genesis" || !D.last.input.source) throw Error("this Directory fixture has exactly its created genesis");
+    for (const kind of ["membership", "directory"] as const satisfies readonly ScopeKind[]) {
+      const entry = { ...D.last, input: { ...D.last.input, sourceKind: kind }, uses: D.last.uses.map(use => ({ ...use, kind })) };
+      if (!isEntry(entry)) throw Error("the changed word remains a closed receiving entry");
+      const bytes = canonicalize(entry), hash = entryHash(entry), refused: ScopeId[] = [];
+      const changed = port([{ ...archived, scope: { ...D.at, genesis: hash }, entries: [{ seq: 0, hash, bytes }], retained }]);
+      const conflicting = archiveSource({ open: async (scope, work) => {
+        if (scope === R.at.scope) refused.push(scope);
+        const read = await changed.open(scope, work);
+        return read.ok ? { ...read, archive: { ...read.archive, foreignSources: [{ at: R.at, pin }] } } : read;
+      } });
+      const result = await verifyArchive(conflicting, { ...options, head: { seq: 0, hash } });
+      expect(result).toMatchObject({ kind: "verification", verification: { report: { result: "mismatch" } } });
+      // The retained Register birth proves its kind before the catalog alias check.
+      if (result.kind === "verification") expect(result.verification.why).toContain("contradicts its verified genesis");
+      expect(refused).toEqual([]);
+    }
+    if (pin === "platform:register@19") {
+      // Supplied-code fixture: delegate the real source rule, then append
+      // the same unused outer member to both create messages. The lane
+      // variant changes only the returned seed kind. No Native admission
+      // or runtime version equivalence is asserted for this supplied code.
+      const original = native.rules["create-directory"];
+      if (!original || original.place !== "send") throw Error("the existing Register has its send rule");
+      for (const kind of ["directory", "lane"] as const) {
+        const rules: Rules = { ...native.rules, "create-directory": { ...original, run: (given: Parameters<typeof original.run>[0]) => {
+          const sent = original.run(given);
+          if (!sent || !isSeed(sent.to) || !isObject(sent.message.body)) throw Error("the source rule must return its actual create");
+          return { ...sent, to: { ...sent.to, kind }, message: { ...sent.message,
+            body: { ...sent.message.body, directory: given.resolved.at } } };
+        } } };
+        const P = new Ledger(registerDefinition, "platform:register"), supplied = { named: pin, rules };
+        P.seal(written(judgeGenesis(P.state, registerDefinition,
+          { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(76)), seed, creation: install },
+          { clock: clockOf(P.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: supplied })));
+        expect(P.act(keys.rita, "found", { expected: { register: P.item(0).revision },
+          fields: { branch: "main", founderHandle: "@rita", recoveryKey: keys.sam.key } }, { platform: supplied, grants: [] }).result).toBe("write");
+        const claim = P.fact(P.head.seq);
+        P.seal(written(judgeOutcome(P.state, registerDefinition,
+          { type: "outcome", operation: `${claim.seq}:0`, attempt: 1, result: "confirmed", evidence: { basis: "own-answer",
+            body: { name: repositoryName(P.item(claim.seq).values["seed"] as Digest, 1), id: "TEST-extra-directory-member" } } },
+          { clock: clockOf(P.state, T0), bounds: PROPOSED_BOUNDS, platform: supplied, own: P.own })));
+        const token = admitSequenceGenesis(canonicalize(P.entries[0]!.entry), P.at, PROPOSED_BOUNDS.entryBytes), sent = P.last.sends[0]!;
+        if (!token || !isSeed(sent.to) || sent.message.class !== "request") throw Error("the fixture source must have its original admitted Register birth and create request");
+        const C = new Ledger(directoryDefinition, "platform:directory");
+        C.seal(written(judgeGenesis(C.state, directoryDefinition,
+          { name: scopeIdOf(sent.to), nonce: newGenesisNonce(new Uint8Array(16).fill(77)), to: sent.to, from: P.fact(P.head.seq), n: sent.n, message: sent.message },
+          { clock: clockOf(C.state, T0), bounds: PROPOSED_BOUNDS, prepared: [], own: C.own,
+            facts: [{ fact: claim, entry: P.entries[claim.seq]!.entry, sequence: token, under: P.under }],
+            source: { entry: P.last, sequence: token, under: P.under }, platform: { named: sent.to.definition as PlatformDefinition, rules: directoryNative.rules } })));
+        expect(C.last.input).toMatchObject({ type: "genesis", source: P.fact(P.head.seq), message: sent.message, seed: sent.to });
+        const result = await verify(new MemorySource([served(P, [P, C]), served(C, [P, C])]), {
+          mode: "replay", scope: C.at.scope, head: C.head, grants: "proven",
+          platform: named => named === pin ? { ...native, rules } : nativePlatform(named),
+        });
+        expect(token.kind).toBe("register");
+        if (kind === "lane") {
+          expect(result.report.result).toBe("mismatch");
+          expect(result.why).toBe("the sequence's verified genesis contradicts its fixed kind place");
+        } else expect([result.report.result, result.why]).toEqual(["consistent", null]);
+      }
     }
   }
 });

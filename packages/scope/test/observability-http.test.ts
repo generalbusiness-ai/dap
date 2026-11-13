@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { signIntent } from "@generalbusiness/dap-bytes";
+import { RETIRED_ROOM_READER_COMMIT } from "@generalbusiness/dap-bytes";
 import { grantOf } from "@generalbusiness/dap-derive/testing";
 import { api, route } from "../src/worker.ts";
 import { measuredRequest, operationContext, measured } from "../src/operational.ts";
@@ -66,6 +67,29 @@ test("missing execution metadata fails coverage and concurrent RPC work cannot b
   expect(points.filter(p => p.blobs[0] === "route")).toEqual([]);
   const lost = points.filter(p => p.blobs[0] === "metric-dropped");
   expect(lost.some(p => (p.doubles[1]! & 2) !== 0 && p.doubles[4]! > 0)).toBe(true);
+
+  // Retired RPC protocol stand-ins expose unwrap order, not Native storage.
+  let unwraps = 0;
+  const rawStop: object = Object.freeze(Object.create({
+    get value(): never { unwraps++; return expect.fail("A raw retired stop has no observed value"); },
+    get turn(): never { unwraps++; return expect.fail("A retired stop has no turn metadata"); },
+  }, { stop: { value: "retired", enumerable: true } }));
+  const innerStop = { value: rawStop, get turn(): never { unwraps++; return expect.fail("An observed retired value has no turn metadata"); } };
+  for (const reply of [rawStop, innerStop]) {
+    const retired = { idFromName: () => name, get: () => ({ summary: async () => rawStop, observed: async () => reply }) };
+    expect(await api(retired).summary(name, null)).toEqual({ ok: false, reason: "unavailable" });
+    const context = operationContext(settings, name, "summary", { request: null, trace: null });
+    expect(await measured(context, () => api(retired).summary(name, null))).toEqual({ ok: false, reason: "unavailable" });
+    expect(context.turn).toEqual({ entered: false, known: true });
+    const response = await route(new Request(`https://scope.test/v1/scopes/${name}`), retired, settings);
+    expect([response.status, response.headers.get("cache-control")]).toEqual([410, "no-store"]);
+    expect(await response.json()).toEqual({
+      error: "room-retired",
+      message: `This room retired at the identifier cutover. Commit ${RETIRED_ROOM_READER_COMMIT} reads its journal.`,
+      reader: RETIRED_ROOM_READER_COMMIT,
+    });
+  }
+  expect(unwraps).toBe(0);
 });
 
 // Invariant: malformed or ambiguous correlation selectors never reach a

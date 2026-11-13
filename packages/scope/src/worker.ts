@@ -1,3 +1,5 @@
+import { isRoomRetiredStop, roomRetiredResponse, type RoomRetiredStop } from "./room-retired.ts";
+import { scopeWiring, scopeNamespace } from "./internal/room-hooks.ts";
 import { answersVersionQuestion } from "@generalbusiness/dap-platform";
 import { mcpRoute, type McpEnv } from "./worker-mcp.ts";
 import { readMinimumParameter } from "@generalbusiness/dap-bytes";
@@ -68,12 +70,12 @@ import { DurableObject, RpcTarget, WorkerEntrypoint } from "cloudflare:workers";
 import { type HostedMcpSettings } from "@generalbusiness/dap-mcp";
 
 import { PROPOSED_BOUNDS, ITEM_QUERY_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
-import type { FactRef, Entry, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, ScopeKind, Seed, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, entryHash, isEntry, same, parseStrict, readItemQueryReply, utf8, definitionDigest, intentDigest, isPlatformDefinition, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/dap-bytes";
+import type { FactRef, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, ScopeKind, Seed, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
+import { b64url, readItemQueryReply, utf8, definitionDigest, intentDigest, isPlatformDefinition, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { isObject, type Item } from "@generalbusiness/dap-derive";
 import { creationKind, type Created } from "./core.ts";
 import { repositorySessionMembership, fixedMembership, repositoryAuthority } from "./authority.ts";
-import { membershipIn, namespace, sessionReferencesIn, type Binding } from "./namespace.ts";
+import { admitSourced, membershipIn, namespace, sessionReferencesIn, type Binding } from "./namespace.ts";
 import { ScopeObject, type OutsideGiven, type Wiring } from "./object.ts";
 import type { Incident } from "./operator.ts";
 import type { OriginalBytes, OriginalEnded, OriginalKept, OriginalPage } from "./originals.ts";
@@ -83,7 +85,7 @@ import type { OutboxItem, Sealed } from "./store.ts";
 import type { ReadCredential } from "./destination-host.ts";
 import { gitHubOutside, type GitHubBindings } from "./github-wiring.ts";
 import type { DemoCreationBindings } from "./demo-creation.ts";
-import { within } from "./turn.ts";
+import { sourceReadRemaining, within } from "./turn.ts";
 import { ARTIFACTS_HOST, artifactsOutside, artifactsWorkspaceOutside, artifactsReadiness, type ArtifactsBindings } from "./artifacts-wiring.ts";
 import type { WorkspaceSources } from "./workspace-lineage.ts";
 import { recordedHost } from "./host-wiring.ts";
@@ -101,7 +103,7 @@ import { measuredRequest, OBSERVED_METHODS, operational, operationPlace, unknown
 import { readPlatformCreationPolicy, injectedPlatformCreationPolicy, permitsNewPlatformScope } from "./creation-versions.ts";
 import { parentlessCreationAdmission, type CreationAdmission } from "./creation-admission.ts";
 import { readRegisterScope } from "./register-setting.ts";
-import { indexedScopes, scopeIndex, ScopeIndexRows, type ScopeIndexEnvironment, type ScopeRegistration } from "./scope-index.ts";
+import { indexedScopes, scopeIndex, ScopeIndexRows, SCOPE_INDEX_NAME, type ScopeIndexEnvironment, type ScopeRegistration } from "./scope-index.ts";
 import { ScopeIndexCensus, scopeIndexCensusRoute } from "./scope-index-census.ts";
 import { admitCreationAddress, admitServing, boundedParentlessIntent, boundedServingIntent, ServingAdmission, type CreationAddressReservation, type ServingEnvironment, type ServingRequest } from "./serving-admission.ts";
 import { SiteTokenReuse, type SiteTokenRequest } from "./site/token-reuse.ts";
@@ -118,31 +120,47 @@ export interface Env extends GitHubBindings, DemoCreationBindings, ArtifactsBind
 
 /** Fixed internal owner; HTTP exposes only its authenticated census page. */
 export class ScopeIndex extends DurableObject<Env> {
-  readonly #rows = new ScopeIndexRows(this.ctx.storage.sql);
-  readonly #serving = new ServingAdmission(this.env);
-  readonly #census = new ScopeIndexCensus({
-    sql: this.ctx.storage.sql,
-    register: () => { const register = readRegisterScope(this.env); return register.kind === "pinned" ? register.scope : null; },
-    mode: () => this.env.SCOPE_INDEX_MODE,
-    proof: async (fact, maxBytes, milliseconds) => {
-      const target = this.env.SCOPES.get(this.env.SCOPES.idFromName(fact.at.scope)) as unknown as {
-        proofSource(fact: FactRef, maxBytes: number, milliseconds: number): Promise<import("./proof-bytes.ts").ProofBody | null>;
-      };
-      return target.proofSource(fact, maxBytes, milliseconds);
-    },
-    now: () => Date.now(),
-  });
-  readonly #siteTokens = new SiteTokenReuse({ exec: (query, ...args) => this.ctx.storage.sql.exec(query, ...args), transaction: run => this.ctx.storage.transactionSync(run) }, () => {
-    // Decode current provider readiness afresh for every custody check.
-    const configuration = this.env.ARTIFACTS_CONFIG;
-    const namespace = this.env.ARTIFACTS_NAMESPACE;
-    const binding = this.env.ARTIFACTS;
-    return artifactsReadiness({
-      ...(configuration === undefined ? {} : { ARTIFACTS_CONFIG: configuration }),
-      ...(namespace === undefined ? {} : { ARTIFACTS_NAMESPACE: namespace }),
-      ARTIFACTS: binding,
+  readonly #active: boolean;
+  readonly #rows!: ScopeIndexRows;
+  readonly #serving!: ServingAdmission;
+  readonly #census!: ScopeIndexCensus;
+  readonly #siteTokens!: SiteTokenReuse;
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    let active = false;
+    try {
+      const selected = env.SCOPE_INDEX?.idFromName(SCOPE_INDEX_NAME);
+      active = selected !== undefined && selected !== null && String(selected) === String(ctx.id);
+    } catch { /* A missing fixed owner admits no helper or store work. */ }
+    this.#active = active;
+    if (!active) return;
+    this.#rows = new ScopeIndexRows(this.ctx.storage.sql);
+    this.#serving = new ServingAdmission(env);
+    this.#census = new ScopeIndexCensus({
+      sql: this.ctx.storage.sql,
+      register: () => { const register = readRegisterScope(env); return register.kind === "pinned" ? register.scope : null; },
+      mode: () => env.SCOPE_INDEX_MODE,
+      proof: async (fact, maxBytes, milliseconds) => {
+        const target = env.SCOPES.get(env.SCOPES.idFromName(fact.at.scope)) as unknown as {
+          proofSource(fact: FactRef, maxBytes: number, milliseconds: number): Promise<import("./proof-bytes.ts").ProofBody | null>;
+        };
+        const result = await target.proofSource(fact, maxBytes, milliseconds);
+        return isRoomRetiredStop(result) ? null : result;
+      },
+      now: () => Date.now(),
     });
-  }, () => Date.now(), () => this.#scheduleSiteTokens(), () => ({ REGISTER_SCOPE: this.env.REGISTER_SCOPE, INSTALLED_REGISTER_SCOPES: this.env.INSTALLED_REGISTER_SCOPES }));
+    this.#siteTokens = new SiteTokenReuse({ exec: (query, ...args) => this.ctx.storage.sql.exec(query, ...args), transaction: run => this.ctx.storage.transactionSync(run) }, () => {
+      // Decode current provider readiness afresh for every custody check.
+      const configuration = env.ARTIFACTS_CONFIG;
+      const namespace = env.ARTIFACTS_NAMESPACE;
+      const binding = env.ARTIFACTS;
+      return artifactsReadiness({
+        ...(configuration === undefined ? {} : { ARTIFACTS_CONFIG: configuration }),
+        ...(namespace === undefined ? {} : { ARTIFACTS_NAMESPACE: namespace }),
+        ARTIFACTS: binding,
+      });
+    }, () => Date.now(), () => this.#scheduleSiteTokens(), () => ({ REGISTER_SCOPE: env.REGISTER_SCOPE, INSTALLED_REGISTER_SCOPES: env.INSTALLED_REGISTER_SCOPES }));
+  }
   #siteAlarm: Promise<void> | null = null;
   #siteAlarmRevision = 0;
   async #scheduleSiteTokens(): Promise<void> {
@@ -162,15 +180,15 @@ export class ScopeIndex extends DurableObject<Env> {
     })();
     try { await this.#siteAlarm; } finally { this.#siteAlarm = null; }
   }
-  async acquireSiteRead(request: SiteTokenRequest) { return this.#siteTokens.acquire(request); }
-  override async alarm() { this.#siteTokens.maintain(Date.now()); await this.#scheduleSiteTokens(); }
+  async acquireSiteRead(request: SiteTokenRequest): ReturnType<SiteTokenReuse["acquire"]> { if (!this.#active) return { ok: false, reason: "unavailable" }; return this.#siteTokens.acquire(request); }
+  override async alarm() { if (!this.#active) return; this.#siteTokens.maintain(Date.now()); await this.#scheduleSiteTokens(); }
 
-  has(scope: string, kind?: ScopeKind) { return this.#rows.has(scope, kind); }
-  register(proof: ScopeRegistration) { return this.#rows.register(proof); }
-  list(after: string, limit: number, reader: unknown) { return this.#census.list(after, limit, reader); }
+  has(scope: string, kind?: ScopeKind) { if (!this.#active) return false; return this.#rows.has(scope, kind); }
+  register(proof: ScopeRegistration) { if (!this.#active) return false; return this.#rows.register(proof); }
+  list(after: string, limit: number, reader: unknown): ReturnType<ScopeIndexCensus["list"]> { if (!this.#active) return Promise.resolve({ ok: false, reason: "unavailable" }); return this.#census.list(after, limit, reader); }
   /** Separate synchronous memory-only action; has() remains SQL-read-only. */
-  admitServing(request: ServingRequest, address: string | null) { return this.#serving.admit(request, address, Date.now()); }
-  creationAddress(address: string) { return this.#serving.creationAddress(address, Date.now()); }
+  admitServing(request: ServingRequest, address: string | null): ReturnType<ServingAdmission["admit"]> { if (!this.#active) return "unavailable"; return this.#serving.admit(request, address, Date.now()); }
+  creationAddress(address: string): ReturnType<ServingAdmission["creationAddress"]> { if (!this.#active) return { decision: "unavailable", overflow: null }; return this.#serving.creationAddress(address, Date.now()); }
 }
 
 /** A scope's surface as a caller over RPC has it. */
@@ -234,12 +252,26 @@ export interface Api extends ScopeApi {
  * scope ID names nothing. `address`: the caller's address, for the serving
  * limits of creation, found, joins and signed reads, or null when absent.
  */
+const RETIRED_HTTP = Symbol("retired HTTP room");
+const ROOM_RPC_METHODS = new Set([
+  "reservationSnapshot", "stageSnapshot", "create", "submit", "prepare", "settle", "summary", "items", "history", "entry",
+  "outbox", "outboxItem", "log", "retained", "queryItems", "applicationProjection", "session", "stream", "release",
+  "incidents", "waiting", "credential", "requests", "keepOriginal", "listOriginals", "readOriginal", "endOriginal",
+]);
+function retiredRoomAnswer(method: string): unknown {
+  if (["create", "submit", "prepare"].includes(method)) return { answer: "unavailable", reason: "unavailable" };
+  if (["reservationSnapshot", "stageSnapshot"].includes(method)) return null;
+  if (["session", "keepOriginal", "listOriginals", "readOriginal", "endOriginal"].includes(method)) return { ok: false, reason: "sessions-unavailable" };
+  if (method === "release") throw new Error("Room release is unavailable.");
+  if (ROOM_RPC_METHODS.has(method)) return { ok: false, reason: "unavailable" };
+  throw new Error("Unknown retired room operation.");
+}
 export function api(binding: Binding, address: string | null = null, creationAdmission: CreationAdmission & ServingEnvironment = {}): Api {
-  return scopedApi(binding, address, creationAdmission);
+  return roomApi(binding, address, creationAdmission, retiredRoomAnswer);
 }
 /** Only the HTTP creation route carries its completed address reservation.
  * No request body or public API argument can supply this internal receipt. */
-function scopedApi(binding: Binding, address: string | null, creationAdmission: CreationAdmission & ServingEnvironment, reserved?: CreationAddressReservation): Api {
+function roomApi(binding: Binding, address: string | null, creationAdmission: CreationAdmission & ServingEnvironment, retired: (method: string) => unknown, reserved?: CreationAddressReservation): Api {
   const creationPolicy = injectedPlatformCreationPolicy(creationAdmission);
   const readGate = async (reader: unknown): Promise<{ ok: false; reason: "rate-limited" | "unavailable" | "forbidden" } | null> => {
     if (!presentsSignedRead(reader)) return null;
@@ -251,22 +283,38 @@ function scopedApi(binding: Binding, address: string | null, creationAdmission: 
   const at = (scope: string): Remote | null => {
     if (!isScopeId(scope)) return null;
     const remote = binding.get(binding.idFromName(scope)) as Remote, context = operational();
-    if (!context) return remote;
-    context.invocation.metrics.scope(scope);
+    if (context) context.invocation.metrics.scope(scope);
+    // This adapter preserves ordinary results. Only the exact closed wire stop
+    // enters its method-specific nonjudgment or HTTP retirement mapping.
     return new Proxy(remote, { get(target, key) {
-      if (typeof key !== "string" || !(OBSERVED_METHODS as readonly string[]).includes(key)) return Reflect.get(target, key);
+      if (typeof key !== "string" || !ROOM_RPC_METHODS.has(key)) return Reflect.get(target, key);
       return async (...args: unknown[]) => {
-        const httpPublic = context.httpPublic && context.place === operationPlace(key as ObservedMethod) && ["create", "submit", "prepare"].includes(key);
-        if (typeof target.observed !== "function") {
-          if (httpPublic) unknownTurnMark(context);
-          return Reflect.apply(Reflect.get(target, key) as (...args: unknown[]) => unknown, target, args);
-        }
-        try {
-          const reply = await target.observed(key as ObservedMethod, args, context.identity, httpPublic);
-          if (typeof reply?.turn === "boolean") context.turn.entered ||= reply.turn;
-          else if (httpPublic) unknownTurnMark(context);
-          return reply.value;
-        } catch (error) { if (httpPublic) unknownTurnMark(context); throw error; }
+        let result: unknown;
+        if (context && (OBSERVED_METHODS as readonly string[]).includes(key)) {
+          const httpPublic = context.httpPublic && context.place === operationPlace(key as ObservedMethod) && ["create", "submit", "prepare"].includes(key);
+          if (typeof target.observed !== "function") {
+            if (httpPublic) unknownTurnMark(context);
+            result = await Reflect.apply(Reflect.get(target, key) as (...args: unknown[]) => unknown, target, args);
+          } else {
+            let roomRetired = false;
+            try {
+              const reply: { value: unknown; turn: boolean } | RoomRetiredStop = await target.observed(key as ObservedMethod, args, context.identity, httpPublic);
+              if (isRoomRetiredStop(reply)) roomRetired = true;
+              else {
+                result = reply.value;
+                roomRetired = isRoomRetiredStop(result);
+                if (!roomRetired) {
+                  if (typeof reply?.turn === "boolean") context.turn.entered ||= reply.turn;
+                  else if (httpPublic) unknownTurnMark(context);
+                }
+              }
+            } catch (error) { if (httpPublic) unknownTurnMark(context); throw error; }
+            // Invoke this mapping outside the original RPC/shape-error catch.
+            // A retired room supplies no operational turn to unwrap.
+            if (roomRetired) return retired(key);
+          }
+        } else result = await Reflect.apply(Reflect.get(target, key) as (...args: unknown[]) => unknown, target, args);
+        return isRoomRetiredStop(result) ? retired(key) : result;
       };
     } });
   };
@@ -386,7 +434,7 @@ const READ_STATUS: Record<ReadRefusal, number> = {
   behind: 503,
   "no-repository": 404,
   archived: 410,
-  "not-found": 404, "wrong-incarnation": 409, forbidden: 403, "scope-provisional": 409, "unsupported-definition": 501, "history-unavailable": 503, "too-large": 413, unavailable: 503,
+  "not-found": 404, "wrong-genesis": 409, forbidden: 403, "scope-provisional": 409, "unsupported-definition": 501, "history-unavailable": 503, "too-large": 413, unavailable: 503,
   "sessions-unavailable": 503, "clock-behind": 503,
 };
 const SESSION_STATUS: Record<SessionRefusal, number> = { "sessions-unavailable": 503, "bad-request": 400, "not-found": 404, misaddressed: 422, "clock-behind": 503, expired: 422, unauthorized: 403, replayed: 409, "rate-limited": 429 };
@@ -450,7 +498,7 @@ function queryResponse(result: NativeItemQuery): Response {
 }
 const PROJECTION_STATUS: Record<ApplicationProjectionRefusal, number> = {
   "invalid-query": 400, forbidden: 403, unavailable: 503, incomplete: 409, stale: 409, "too-large": 413,
-  "query-not-ready": 409, "clock-behind": 503, "sessions-unavailable": 503, "wrong-scope": 409, "wrong-incarnation": 409, behind: 503,
+  "query-not-ready": 409, "clock-behind": 503, "sessions-unavailable": 503, "wrong-scope": 409, "wrong-genesis": 409, behind: 503,
 };
 function projectionResponse(result: NativeApplicationProjection): Response {
   return new Response(result.ok ? result.serialized : JSON.stringify(result), { status: result.ok ? 200 : PROJECTION_STATUS[result.reason],
@@ -462,7 +510,10 @@ function projectionResponse(result: NativeApplicationProjection): Response {
  * fetch or its explicit sandbox service call. Other callers leave it null; headers
  * are not promoted into trusted identities here. */
 export async function route(request: Request, binding: Binding, env: MetricEnvironment & CreationAdmission & ServingEnvironment = {}, address: string | null = null, ctx?: Pick<ExecutionContext, "waitUntil">): Promise<Response> {
-  return measuredRequest(request, env, () => routedRequest(request, binding, env, address, ctx));
+  return measuredRequest(request, env, async () => {
+    try { return await routedRequest(request, binding, env, address, ctx); }
+    catch (error) { if (error === RETIRED_HTTP) return roomRetiredResponse(); throw error; }
+  });
 }
 async function routedRequest(request: Request, binding: Binding, env: CreationAdmission & ServingEnvironment, address: string | null, ctx?: Pick<ExecutionContext, "waitUntil">): Promise<Response> {
   if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
@@ -470,7 +521,13 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
   // Section 5.3: a credential in a URL is refused before anything is routed, and is not used. That does not undo the exposure.
   if (credentialInUrl(url)) return json(400, { error: "credential-in-url" });
   if (url.pathname === "/v1/scope-index/census") return scopeIndexCensusRoute(request, env, address);
-  const scopes = api(binding, address, env);
+  const retired = (method: string): unknown => {
+    // A stream close can run after this request returns; keep its existing
+    // failed-close channel rather than an uncaught HTTP-only sentinel.
+    if (method === "release") return retiredRoomAnswer(method);
+    throw RETIRED_HTTP;
+  };
+  const scopes = roomApi(binding, address, env, retired);
   let parts: string[];
   try {
     parts = url.pathname.split("/").slice(1).map(decodeURIComponent);
@@ -491,7 +548,8 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
     if (!wire.ok) return projectionResponse(wire);
     if (typeof reader !== "string" || reader.length > APPLICATION_PROJECTION_WIRE_BOUNDS.sessionChars || reader.startsWith("Signed ")) return projectionResponse({ ok: false, reason: "forbidden" });
     const object = binding.get(binding.idFromName(scope!)) as Remote;
-    return projectionResponse(await object.applicationProjection(wire.encoded, reader, wire.atLeast));
+    const result = await object.applicationProjection(wire.encoded, reader, wire.atLeast);
+    return isRoomRetiredStop(result) ? roomRetiredResponse() : projectionResponse(result);
   }
   if (what === "query-items") {
     const wire = itemQueryWire(request, scope ?? "");
@@ -504,7 +562,8 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
       if (decision !== "admitted") return queryResponse({ ok: false, reason: decision === "invalid" ? "forbidden" : decision });
     }
     const object = binding.get(binding.idFromName(scope!)) as Remote;
-    return queryResponse(await object.queryItems(wire.encoded, reader));
+    const result = await object.queryItems(wire.encoded, reader);
+    return isRoomRetiredStop(result) ? roomRetiredResponse() : queryResponse(result);
   }
   if (what === "originals" && scope !== undefined) {
     if (request.method === "POST" && which === undefined) {
@@ -537,7 +596,7 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
     const beside = { ...("texts" in given ? { texts: given["texts"] } : {}), ...("presented" in given ? { presented: given["presented"] } : {}), ...("values" in given ? { values: given["values"] } : {}) } as Beside;
     // HTTP already reserved its address before body(); null prevents a
     // second charge while the same fixed owner verifies and counts the key.
-    if (scope === undefined) return answered(await scopedApi(binding, address, env, creationAddress).create(given["creation"] as SignedIntent, given["definition"] as DeclaredDefinition, (given["definitions"] ?? []) as DeclaredDefinition[], beside), 201);
+    if (scope === undefined) return answered(await roomApi(binding, address, env, retired, creationAddress).create(given["creation"] as SignedIntent, given["definition"] as DeclaredDefinition, (given["definitions"] ?? []) as DeclaredDefinition[], beside), 201);
     if (what === "reservation-snapshot") {
       // The hint selects a proof format; only the signed job/native owner authorizes it.
       const snapshot = given["stage"] === true
@@ -611,7 +670,7 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
   const announcement = applicationAnnouncementOutside(given);
   let workspaceLate: Parameters<NonNullable<Outside["late"]>>[0] | null = null;
   const workspace = (): Outside => {
-    if (given.scope()?.at.kind !== "lane" || !given.definition?.()?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2)) return NO_OUTSIDE;
+    if (given.scope()?.kind !== "lane" || !given.definition?.()?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2)) return NO_OUTSIDE;
     const outside = wiring("artifacts-workspace", [env.REGISTER_SCOPE, env.INSTALLED_REGISTER_SCOPES, env.ARTIFACTS_CONFIG, env.ARTIFACTS_NAMESPACE, env.ARTIFACTS], () => artifactsWorkspaceOutside(given, sql, env, workspaceSources, fetch));
     if (workspaceLate) outside.late?.(workspaceLate);
     return outside;
@@ -661,7 +720,10 @@ export function sessionWiring(sessions: () => Sessions | null, binding?: Binding
   return {
     readers: (given) => sessionReaders({
       sessions, clock: given.clock, scope: given.scope, membership: (scope) => fixedMembership(given, scope),
-      ...(binding ? { membershipPreparation: repositorySessionMembership(given, (directory, reader) => within(() => (binding.get(binding.idFromName(directory.scope)) as Remote).summary(reader), fetchSeconds)) } : {}),
+      ...(binding ? { membershipPreparation: repositorySessionMembership(given, (directory, reader) => within(async () => {
+        const result = await (binding.get(binding.idFromName(directory.scope)) as Remote).summary(reader);
+        return isRoomRetiredStop(result) ? { ok: false, reason: "unavailable" } as const : result;
+      }, fetchSeconds)) } : {}),
     }), sessions, ...(binding ? { sessionReferenceSource: sessionReferencesIn(binding), applicationDeclarationSource: applicationDeclarationsIn(binding) } : {}),
   };
 }
@@ -684,53 +746,71 @@ export function sessionWiring(sessions: () => Sessions | null, binding?: Binding
  * at every use: no session is issued, none is accepted, and no reader may
  * read (authority note, section 5.5).
  */
-export function snapshotReaderOf(binding: Binding): import("./destination-host.ts").SnapshotReader {
+export function snapshotReaderOf(binding: Binding, context: import("./ports.ts").SourceReadContext): import("./destination-host.ts").SnapshotReader {
+  const maxBytes = context.maxBytes, milliseconds = context.milliseconds;
   return {
     rules: async (rules) => {
       const peer = binding.get(binding.idFromName(rules.scope)) as { observe(ask: unknown): Promise<unknown> };
       // Keep the authenticated retained policy beside its digest-naming answer.
-      return peer.observe({ of: rules, asked: "rules" });
+      const result = await peer.observe({ of: rules, asked: "rules" });
+      return isRoomRetiredStop(result) ? null : result;
     },
     sourceState: async (fact) => {
       const peer = binding.get(binding.idFromName(fact.at.scope)) as { workSourceState(fact: FactRef): Promise<string | null> };
-      return peer.workSourceState(fact);
+      const result = await peer.workSourceState(fact);
+      return isRoomRetiredStop(result) ? null : result;
     },
     source: async (fact) => {
-      const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number): Promise<{ bytes: string | null; under: string } | null> };
-      const read = await peer.source(fact.seq);
-      if (!read?.bytes || utf8(read.bytes).length > PROPOSED_BOUNDS.entryBytes) return null;
-      const entry = parseStrict(read.bytes) as unknown as Entry;
-      if (!isEntry(entry) || !same(entry.at, fact.at) || entry.seq !== fact.seq || entryHash(entry) !== fact.hash) return null;
-      return { entry, hash: fact.hash };
+      const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number, origin: boolean, context: import("./ports.ts").SourceReadContext): Promise<unknown> };
+      const remaining = sourceReadRemaining({ maxBytes, milliseconds });
+      if (!remaining) return null;
+      const allowance = remaining();
+      if (allowance === null) return null;
+      const read = await peer.source(fact.seq, false, { maxBytes, milliseconds: allowance });
+      if (remaining() === null) return null;
+      // The answer's birth admits the full reference; one entry allowance funds body, birth and label.
+      const admitted = isRoomRetiredStop(read) ? null : admitSourced(read, fact, maxBytes);
+      if (!admitted) return null;
+      return remaining() === null ? null : { entry: admitted.entry, hash: fact.hash, sequence: admitted.sequence };
     },
     job: async (fact) => {
-      const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number): Promise<{ bytes: string | null; under: string } | null>; summary(reader: unknown): Promise<unknown>; jobState(fact: FactRef): Promise<{ state: string; decidedBy: FactRef | null } | null> };
-      const read = await peer.source(fact.seq);
-      if (!read?.bytes) return null;
-      const entry = parseStrict(read.bytes) as unknown as Entry;
+      const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number, origin: boolean, context: import("./ports.ts").SourceReadContext): Promise<unknown>; summary(reader: unknown): Promise<unknown>; jobState(fact: FactRef): Promise<{ state: string; decidedBy: FactRef | null } | null> };
+      const remaining = sourceReadRemaining({ maxBytes, milliseconds });
+      if (!remaining) return null;
+      const allowance = remaining();
+      if (allowance === null) return null;
+      const read = await peer.source(fact.seq, false, { maxBytes, milliseconds: allowance });
+      if (remaining() === null) return null;
+      const admitted = isRoomRetiredStop(read) ? null : admitSourced(read, fact, maxBytes);
+      if (!admitted) return null;
       const standing = await peer.jobState(fact);
-      return { entry, under: read.under, state: standing?.state ?? "absent", decidedBy: standing?.decidedBy ?? null };
+      if (isRoomRetiredStop(standing)) return null;
+      return remaining() === null ? null : { entry: admitted.entry, under: admitted.under, sequence: admitted.sequence, state: standing?.state ?? "absent", decidedBy: standing?.decidedBy ?? null };
     },
-    key: async (membership, key) => (binding.get(binding.idFromName(membership)) as { observe(ask: unknown): Promise<unknown> }).observe({ of: { scope: membership, kind: "membership" }, key }),
+    key: async (membership, key) => {
+      // The caller's full reference, or its first-read form; nothing is made up from a string here.
+      const result = await (binding.get(binding.idFromName(membership.scope)) as { observe(ask: unknown): Promise<unknown> }).observe({ of: membership, key });
+      return isRoomRetiredStop(result) ? null : result;
+    },
   };
 }
 
 export class DeployedScope<E extends Env = Env> extends ScopeObject<E> {
   /** The one scope namespace. */
-  protected scopes(): Binding { return indexedScopes(this.env.SCOPES, this.env); }
-  protected override wiring(_name: string | undefined): Wiring {
+  protected [scopeNamespace](): Binding { return indexedScopes(this.env.SCOPES, this.env); }
+  protected override [scopeWiring](_name: string | undefined): Wiring {
     return {
       platformCreationPolicy: readPlatformCreationPolicy({ PLATFORM_CREATION_PINS: this.env.PLATFORM_CREATION_PINS }),
       registerGenesis: async proof => scopeIndex(this.env)?.register(proof) ?? false,
-      ports: namespace(this.scopes()),
+      ports: namespace(this[scopeNamespace]()),
       applicationTrust: () => this.env.APPLICATION_TRUST,
-      authority: (given) => repositoryAuthority({ ...given, reader: membershipIn(this.scopes()) }),
+      authority: (given) => repositoryAuthority({ ...given, reader: membershipIn(this[scopeNamespace]()) }),
       // Wired whether or not a host is configured now: `outsideOf` reads the settings at each call, and with neither it sends nothing.
       outside: (given: OutsideGiven) => {
-        const scopes = this.scopes(), proofs = namespace(scopes);
-        return outsideOf(given, this.ctx.storage.sql, this.env, undefined, snapshotReaderOf(scopes), { births: proofs.birthNames, proofs: proofs.proofs });
+        const scopes = this[scopeNamespace](), proofs = namespace(scopes);
+        return outsideOf(given, this.ctx.storage.sql, this.env, undefined, given.bounds ? snapshotReaderOf(scopes, { maxBytes: given.bounds.entryBytes, milliseconds: Math.floor(given.bounds.fetchSeconds * 1000) }) : undefined, { births: proofs.birthNames, proofs: proofs.proofs });
       },
-      ...sessionWiring(() => sessionsOf(this.env.SESSION_SECRET, this.env.DEPLOYMENT), this.scopes()),
+      ...sessionWiring(() => sessionsOf(this.env.SESSION_SECRET, this.env.DEPLOYMENT), this[scopeNamespace]()),
     };
   }
 }

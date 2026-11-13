@@ -127,7 +127,7 @@ test("T4, a handover: the same accepted commitment gets a new performer only whe
   if (!rules) return expect.fail("The native hold rules are required.");
   const origin = { at: { at: G.at, seq: sealed.entry.seq, hash: sealed.hash }, input: "outcome" as const };
   const expected = outcomeSnapshotDependencies(origin, input, () => rules);
-  const native = localRetainedPlan(G.valid, sealed.entry, sealed.hash, rules, PROPOSED_BOUNDS);
+  const native = localRetainedPlan(G.valid, sealed.entry, origin.at, rules, PROPOSED_BOUNDS);
   const projection = await runInDurableObject(G.object, (_instance, stored) => {
     const row = stored.storage.sql.exec<{ size: number; bytes: string }>("SELECT size, bytes FROM entry WHERE seq = ?", sealed.entry.seq).one();
     const cells: unknown[] = [], budget = new ArchiveBudget(), sql = { exec(query: string, ...args: SqlValue[]) {
@@ -197,6 +197,6 @@ test("T4, a handover: the same accepted commitment gets a new performer only whe
   expect(projection.invalid).toEqual({ dependencies: [], ancestrySnapshot: null });
   expect(projection.cells).not.toContain(projection.opaque);
   const scalarNames = new Set(["object", "text", "null", "array", "row", "own-check", "input", "own-root", "selected-report", "live", "retiring", "retired", "true", "absent", "invalid",
-    COMMIT, "0".repeat(40), expected.record!.snapshot.digest, terms.at.scope, terms.at.inc, terms.at.kind, terms.hash]);
+    COMMIT, "0".repeat(40), expected.record!.snapshot.digest, terms.at.scope, terms.at.genesis, terms.hash]);
   expect(projection.cells.every(c => c === null || typeof c === "number" || typeof c === "string" && scalarNames.has(c))).toBe(true);
 });

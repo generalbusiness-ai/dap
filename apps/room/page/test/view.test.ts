@@ -1,6 +1,6 @@
 import { commonsScreen } from "../src/commons.ts";
 import type { CommonsView, CommonsNote } from "@generalbusiness/dap-client";
-import { canonicalize, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { afterEach, expect, test, vi } from "vitest";
 import type { Answer } from "@generalbusiness/dap-contract";
 import { Unreadable, type ChangeView, type NeedsYouView, type Room } from "../src/data.ts";
@@ -192,10 +192,10 @@ test("verified invalid-path source exposes the editor mount independently of pre
 // The receipt is retained in full; unknown observation and refusal never gain an acknowledgement.
 test("dap acknowledgement requires an accepted receipt and a known observation", () => {
   vi.stubGlobal("document", document);
-  const receipt = { fact: { at: { scope: "sc_exact", inc: "in_exact", kind: "lane" as const }, seq: 91, hash: "sha256:exact" }, definition: "sha256:definition", intent: "sha256:intent", effects: [], sends: [], epoch: 0 } as const;
-  const acted: Parameters<typeof answerLine>[0] = { digest: "sha256:scripted" as never, service: "https://fake.test", directory: "sc_directory", membership: { scope: "sc_membership", inc: "in_exact", kind: "membership" }, key: "key_exact", kind: "comment", scope: "sc_exact", on: 7, before: { seq: 90, hash: "sha256:before" }, after: { seq: 91, hash: "sha256:exact" }, observation: null, answer: { answer: "accepted", receipt } };
+  const receipt = { fact: { at: { scope: "sc_exact", genesis: textDigest("TEST genesis 39") }, seq: 91, hash: "sha256:exact" }, definition: "sha256:definition", intent: "sha256:intent", effects: [], sends: [], epoch: 0 } as const;
+  const acted: Parameters<typeof answerLine>[0] = { digest: "sha256:scripted" as never, service: "https://fake.test", directory: "sc_directory", membership: { scope: "sc_membership", genesis: textDigest("TEST genesis 40") }, key: "key_exact", kind: "comment", scope: "sc_exact", on: 7, before: { seq: 90, hash: "sha256:before" }, after: { seq: 91, hash: "sha256:exact" }, observation: null, answer: { answer: "accepted", receipt } };
   const accepted = answerLine(acted) as unknown as Element;
-  for (const fact of ["sc_exact:91", "in_exact", "sha256:exact"]) expect(accepted.textContent).toContain(fact);
+  for (const fact of ["sc_exact:91", textDigest("TEST genesis 39"), "sha256:exact"]) expect(accepted.textContent).toContain(fact);
   expect(accepted.all("p").at(-1)?.textContent).toBe("dap.");
   for (const changed of [
     { ...acted, observation: "The view could not be read." },
@@ -228,8 +228,8 @@ test("an empty change list explains the first recorded source once in its list c
 // reader have separate owners; no binary document or hosted proof is claimed.
 test("Commons renders source lines and the member's marks without attributing them to the agent, and keeps content literal", () => {
   vi.stubGlobal("document", document);
-  const scope = { scope: scopeIdOf({ v: 1, kind: "commons", definition: "platform:commons@1", creator: null, cause: textDigest("SCRIPTED Commons UI"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(14)), kind: "commons" as const };
-  const membership = { ...scope, kind: "membership" as const }, documentDigest = textDigest("<script>carrier</script>");
+  const scope = { scope: scopeIdOf({ v: 1, kind: "commons", definition: "platform:commons@1", creator: null, cause: textDigest("SCRIPTED Commons UI"), ordinal: 0 }), genesis: textDigest("TEST genesis 41") };
+  const membership = scope, documentDigest = textDigest("<script>carrier</script>");
   const fact = (seq: number) => ({ at: scope, seq, hash: textDigest(`SCRIPTED note ${seq}`) });
   const note = (seq: number, body: string, person = "@agent"): CommonsNote => ({ fact: fact(seq), author: { membership, member: person as `@${string}` }, key: "key_" + "A".repeat(43) as CommonsNote["key"], time: "2030-01-01T00:00:00Z", textDigest: textDigest(body), text: body, media: "application/json", about: [{ document: documentDigest, fragment: "line=2,3" }] });
   const rows = Array.from({ length: 14 }, (_, n) => note(n + 2, JSON.stringify({ charge: n + 1, amount: n + 20 })));
@@ -249,7 +249,7 @@ test("Commons renders source lines and the member's marks without attributing th
 
 test("Commons prototype-named columns leave other rows missing and retain the note form slot", () => {
   vi.stubGlobal("document", document);
-  const scope = { scope: scopeIdOf({ v: 1, kind: "commons", definition: "platform:commons@1", creator: null, cause: textDigest("SCRIPTED prototype columns"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(15)), kind: "commons" as const };
+  const scope = { scope: scopeIdOf({ v: 1, kind: "commons", definition: "platform:commons@1", creator: null, cause: textDigest("SCRIPTED prototype columns"), ordinal: 0 }), genesis: textDigest("TEST genesis 42") };
   const notes: CommonsNote[] = ['{"toString":"literal","constructor":7}', '{"charge":25}'].map((text, n) => ({
     fact: { at: scope, seq: n + 1, hash: textDigest(`SCRIPTED prototype note ${n + 1}`) },
     author: null, key: "key_" + "A".repeat(43) as CommonsNote["key"], time: "2030-01-01T00:00:00Z",
@@ -307,7 +307,7 @@ test("Needs you shows each row with its lane and its link, says what it left out
   expect(whole.all("a").map(link => link.getAttribute("href")), "EACH ROW OPENS ITS OWN LANE").toEqual(["#/issue/sc_one", "#/change/sc_two"]);
   expect(whole.textContent, "A WHOLE LIST says nothing about what it left out").not.toContain("leaves out");
 
-  const ref = { scope: "sc_two", kind: "lane", inc: "in_a" };
+  const ref = { scope: "sc_two", genesis: textDigest("TEST genesis 43") };
   const cut = list({ omittedLanes: 2, next: ref as never });
   expect(cut.textContent, "A CUT LIST says how many lanes it left out").toContain("This list leaves out 2 lanes. Read the lanes that follow");
   const nextHref = cut.all("a").at(-1)!.getAttribute("href")!;

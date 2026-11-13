@@ -1,7 +1,7 @@
 /** TEST host configuration/files only; Register births, index owner, SQL,
  * signatures, membership and routed reads use the actual Native code. */
 import { env } from "cloudflare:workers";
-import { b64url, entryHash } from "@generalbusiness/dap-bytes";
+import { b64url } from "@generalbusiness/dap-bytes";
 import { invitationIssueFields, invitationRedemptionFields, secretSigner, signedReader, signerSessionRequest, requestSession, type Fetch } from "@generalbusiness/dap-client";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { route } from "../../src/worker.ts";
@@ -51,12 +51,15 @@ export async function scopeCensusFixture(options: { members?: boolean; registerO
     }, get(selected: DurableObjectId) {
       if (selected.toString() !== id.toString()) throw Error("TEST unexpected census owner"); return stub;
     } };
+    // The fixed index object is active only when its own env names it as SCOPE_INDEX_NAME.
+    (settings as Record<string, unknown>)["SCOPE_INDEX"] = binding;
     const environment = { ...settings, SCOPE_INDEX: binding };
     const nodes = [first.R, first.D, ...first.children, other.R, other.D, ...other.children];
     const rows: ScopeRegistration[] = [];
     for (const node of nodes) {
       const at = await life.wait(() => node.at()), genesis = (await life.wait(() => node.entries()))[0]!;
-      const row = { at, genesis: entryHash(genesis) };
+      if (genesis.input.type !== "genesis") throw Error("TEST native census genesis required");
+      const row: ScopeRegistration = { at, kind: genesis.input.seed.kind };
       if (!await index.register(row)) throw Error("TEST native census registration failed");
       rows.push(row);
     }
@@ -90,7 +93,8 @@ export async function scopeCensusFixture(options: { members?: boolean; registerO
       await dispatchFixture([...nodes, ownerInbox, inbox], life.wait);
       for (const node of [ownerInbox, inbox]) {
         const at = await life.wait(() => node.at()), genesis = (await life.wait(() => node.entries()))[0]!;
-        const row = { at, genesis: entryHash(genesis) };
+        if (genesis.input.type !== "genesis") throw Error("TEST inbox genesis required");
+        const row: ScopeRegistration = { at, kind: genesis.input.seed.kind };
         if (!await index.register(row)) throw Error("TEST inbox registration failed");
         rows.push(row); nodes.push(node);
       }
@@ -106,7 +110,7 @@ export async function scopeCensusFixture(options: { members?: boolean; registerO
     };
     return { life, ...first, other, register, root, membership, rows, nodes, id, stub, index, settings, environment,
       service, fetch, request, reading, operator, member, memberSession,
-      config: { v: 1 as const, service, key: "TEST-census-operator", register, repository: {
+      config: { v: 2 as const, service, key: "TEST-census-operator", register, repository: {
         directory: root, membership, rules: (await life.wait(() => first.children[1]!.at())).scope,
         destination: (await life.wait(() => first.children[2]!.at())).scope,
       } },

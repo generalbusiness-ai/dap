@@ -5,7 +5,7 @@
  */
 
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import type { DeclaredDefinition, DeliveryCause, Digest, DomainTag, Entry, FactRef, Incarnation, Intent, Message, ScopeId, Seed, SignedIntent } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, DeliveryCause, Digest, DomainTag, Entry, FactRef, GenesisInput, GenesisNonce, Incarnation, Intent, SequenceRef, Message, ScopeId, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalBytes, utf8 } from "./canonical.ts";
 import { base32, unbase32 } from "./encode.ts";
 import { digestOfHash, sha256 } from "./hash.ts";
@@ -50,6 +50,23 @@ export function scopeIdOf(seed: Seed): ScopeId {
   return `sc_${base32(sha256(domainBytes(DOMAINS.seed, seed)))}`;
 }
 
+/** The unpadded lowercase base32 encoding of exactly 16 random bytes. */
+export function newGenesisNonce(bytes: Uint8Array): GenesisNonce {
+  if (bytes.length !== 16) throw new Error("a genesis nonce is made from 16 random bytes");
+  return base32(bytes);
+}
+
+export function isGenesisNonce(value: unknown): value is GenesisNonce {
+  if (typeof value !== "string" || value.length !== 26) return false;
+  const bytes = unbase32(value);
+  return bytes?.length === 16 && base32(bytes) === value;
+}
+
+/** The complete genesis input, including its recorded sourceKind, precedes every child seed and the finished entry. */
+export function genesisInputDigest(input: GenesisInput): Digest {
+  return digest(DOMAINS.input, input);
+}
+
 /** `in_` + 26 base32 characters. The caller supplies 16 random bytes, in the transaction that writes the first entry (section 2.2). */
 export function newIncarnation(randomBytes16: Uint8Array): Incarnation {
   if (randomBytes16.length !== 16) throw new Error("an incarnation is made from 16 random bytes");
@@ -61,9 +78,19 @@ export function entryHash(entry: Entry): Digest {
   return digest(DOMAINS.entry, entry);
 }
 
-/** A view of a sealed entry. It travels beside the entry and is never part of that entry's bytes (section 3, point 5). */
-export function factRefOf(entry: Entry): FactRef {
-  return { at: entry.at, seq: entry.seq, hash: entryHash(entry) };
+/** A view of a sealed entry beside its verified sequence context. A later
+ * entry carries no address, so its caller must supply that context. */
+export function factRefOf(entry: Entry, at: SequenceRef): FactRef {
+  return sealedFactRef(entry, entryHash(entry), at);
+}
+
+/** Reuse the hash already produced by the sealing transaction or checked read.
+ * This constructor does not verify an arbitrary supplied hash or birth proof. */
+export function sealedFactRef(entry: Entry, hash: Digest, at: SequenceRef): FactRef {
+  if (entry.input.type === "genesis") {
+    if (entry.seq !== 0 || entry.prev !== null || scopeIdOf(entry.input.seed) !== at.scope || hash !== at.genesis) throw new Error("the genesis does not bind this sequence");
+  } else if (!("genesis" in entry) || entry.genesis !== at.genesis) throw new Error("the entry names another sequence");
+  return { at: { scope: at.scope, genesis: at.genesis }, seq: entry.seq, hash };
 }
 
 export function messageDigest(message: Message): Digest {

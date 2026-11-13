@@ -12,7 +12,7 @@
  * the contract names, has every member that variant requires, each of its
  * kind, and has no other member. A member the contract types as an
  * identifier or a fixed form is read by that form's one guard: a digest, a
- * scope ID, an incarnation, a scope kind, a key ID, a member ID, an
+ * scope ID, a genesis digest or nonce, a scope kind, a key ID, a member ID, an
  * operation ID, an outbox ID, a definition's name, a timestamp, a signature,
  * and a position or count as a safe integer that is not negative. A member
  * the contract types as text (a name an application chose, an idempotency
@@ -31,11 +31,11 @@
  */
 
 import type {
-  Attempt, BehindRead, Dispatched, OutboxItem, Effect, Entry, Evidence, FactRef, FactUse, FieldValue, Grant, Head, Input, Intent, Item, LogPage, MemberRef, Message, ObservationUse, Party, Prepared, Read, ReadRefusal, Receipt, RefusalReason,
-  RetainedInput, ScopeRef, Sealed, Seed, Send, SignedIntent, Status, Summary,
+  Attempt, BehindRead, Dispatched, OutboxItem, Effect, Entry, Evidence, FactRef, FactUse, FieldValue, GenesisEffect, GenesisFieldValue, GenesisSelfRef, Grant, Head, Input, Intent, Item, LogPage, MemberRef, Message, ObservationUse, Party, Prepared, Read, ReadRefusal, Receipt, RefusalReason,
+  RetainedInput, ScopeRef, SequenceRef, Sealed, Seed, Send, SignedIntent, Status, Summary,
 } from "@generalbusiness/dap-contract";
 import { MAX_DEPTH, wellFormed } from "./canonical.ts";
-import { isIncarnation, isScopeId } from "./domains.ts";
+import { isGenesisNonce, isScopeId } from "./domains.ts";
 import { isDigest } from "./hash.ts";
 import { isOutboxId, isKeyId, isMemberId, isOperationId, isPlatformDefinition, isScopeKind, isSignature, timeMs } from "./ids.ts";
 
@@ -79,24 +79,28 @@ export const REFUSAL_REASONS: Record<RefusalReason, true> = {
 export const READ_REFUSALS: Record<ReadRefusal, true> = {
   behind: true,
   archived: true,
-  "not-found": true, "wrong-incarnation": true, forbidden: true, "scope-provisional": true, "unsupported-definition": true, "history-unavailable": true, "too-large": true, unavailable: true,
+  "not-found": true, "wrong-genesis": true, forbidden: true, "scope-provisional": true, "unsupported-definition": true, "history-unavailable": true, "too-large": true, unavailable: true,
   "sessions-unavailable": true, "clock-behind": true, "rate-limited": true, "no-repository": true,
 };
 const STATUS: Record<Status, true> = { provisional: true, active: true, refused: true };
-const ATTEMPTED: Record<Attempt["answer"], true> = { none: true, "wrong-incarnation": true, "not-found": true, retry: true };
+const ATTEMPTED: Record<Attempt["answer"], true> = { none: true, "wrong-genesis": true, "not-found": true, retry: true };
 const DISPATCHED: Record<Dispatched["answer"], true> = { ...ATTEMPTED, acknowledged: true };
 const CLASS: Record<Message["class"], true> = { request: true, result: true, control: true, advisory: true };
 const DECISION: Record<Extract<Input, { decision: unknown; type: "delivery" }>["decision"], true> = { applied: true, refused: true, superseded: true };
 const CLAUSE: Record<NonNullable<OutboxItem["result"]>["clause"], true> = { applied: true, refused: true, superseded: true, conflict: true };
 const FINDING: Record<NonNullable<OutboxItem["diagnosis"]>["finding"], true> = { undelivered: true, "delivery-unavailable": true };
-const RETAINED: Record<RetainedInput["kind"], true> = { definition: true, entry: true, rule: true, text: true, snapshot: true, value: true };
+const RETAINED: Record<RetainedInput["kind"], true> = { definition: true, entry: true, rule: true, text: true, snapshot: true, value: true, birth: true };
 /** Why a delivery was refused: a code the contract names and, where one exists, the name the failed guard declares. */
 const reason = recordShape({ code: among(REFUSAL_REASONS) }, { name: wellFormedText });
 
 // ---------------------------------------------------------------- references, the seed and the intent (sections 2.1 and 3)
 
-const scopeRef = recordShape({ scope: isScopeId, inc: isIncarnation, kind: isScopeKind });
-export const isScopeRef = (v: unknown): v is ScopeRef => scopeRef(v);
+const scopeRef = recordShape({ scope: isScopeId, genesis: isDigest });
+export const isSequenceRef = (v: unknown): v is SequenceRef => scopeRef(v);
+/** Temporary erased source spelling; the guard accepts only the new shape. */
+export const isScopeRef = (v: unknown): v is ScopeRef => isSequenceRef(v);
+const genesisSelfRef = recordShape({ scope: isScopeId, genesis: is(null) });
+export const isGenesisSelfRef = (v: unknown): v is GenesisSelfRef => genesisSelfRef(v);
 const head = recordShape({ seq: isLocalId, hash: isDigest });
 export const isHead = (v: unknown): v is Head => head(v);
 const factRef = recordShape({ at: scopeRef, seq: isLocalId, hash: isDigest });
@@ -105,7 +109,7 @@ const memberRef = recordShape({ membership: scopeRef, member: isMemberId });
 export const isMemberRef = (v: unknown): v is MemberRef => memberRef(v);
 /** A definition as a scope names it: the digest of a declaration, or a platform definition. */
 export const isDefinitionName: Check = (v) => isDigest(v) || isPlatformDefinition(v);
-const seed = recordShape({ v: is(1), kind: isScopeKind, definition: isDefinitionName, creator: orNull(scopeRef), cause: isDigest, ordinal: isLocalId });
+const seed = recordShape({ v: is(1), kind: isScopeKind, definition: isDefinitionName, creator: orNull((v) => scopeRef(v) || genesisSelfRef(v)), cause: isDigest, ordinal: isLocalId });
 export const isSeed = (v: unknown): v is Seed => seed(v);
 
 /**
@@ -120,6 +124,10 @@ const scalar: Check = (v) => wellFormedText(v) || (typeof v === "number" && Numb
 const one = (v: unknown, depth: number): boolean => scalar(v) || (isRecord(v) && depth <= MAX_DEPTH && Object.values(v).every((m) => anyOf(m, depth + 1)));
 const anyOf = (v: unknown, depth: number): boolean => one(v, depth) || (Array.isArray(v) && depth <= MAX_DEPTH && v.every((m) => one(m, depth + 1)));
 export const isFieldValue = (v: unknown): v is FieldValue => anyOf(v, 1);
+const genesisMember = recordShape({ membership: (v) => scopeRef(v) || genesisSelfRef(v), member: isMemberId });
+const genesisOne = (v: unknown, depth: number): boolean => scalar(v) || genesisSelfRef(v) || genesisMember(v) || (isRecord(v) && depth <= MAX_DEPTH && Object.values(v).every((member) => genesisAny(member, depth + 1)));
+const genesisAny = (v: unknown, depth: number): boolean => genesisOne(v, depth) || (Array.isArray(v) && depth <= MAX_DEPTH && v.every((member) => genesisOne(member, depth + 1)));
+export const isGenesisFieldValue = (v: unknown): v is GenesisFieldValue => genesisAny(v, 1);
 const party: Check = (v) => v === null || memberRef(v) || listOf(memberRef)(v);
 export const isParty = (v: unknown): v is Party => party(v);
 /** A record by chosen names, each value passing `check`. */
@@ -146,7 +154,7 @@ const message = variant("class", {
 });
 export const isMessage = (v: unknown): v is Message => message(v);
 const attempt = recordShape({ at: isTime, answer: among(ATTEMPTED) });
-const factUse = recordShape({ fact: factRef, content: isDigest });
+const factUse = recordShape({ fact: factRef, content: isDigest, kind: isScopeKind });
 export const isFactUse = (v: unknown): v is FactUse => factUse(v);
 const prepared = recordShape({ rule: wellFormedText, input: isDigest, result: flag });
 export const isPrepared = (v: unknown): v is Prepared => prepared(v);
@@ -180,6 +188,15 @@ const effect = variant("effect", {
   attention: recordShape({ effect: any, item: isLocalId, members: listOf(memberRef), reason: wellFormedText }),
 } satisfies Record<Effect["effect"], Check>);
 export const isEffect = (v: unknown): v is Effect => effect(v);
+const genesisEffect = variant("effect", {
+  ref: recordShape({ effect: any, item: isLocalId, slot: wellFormedText, to: orNull(isGenesisFieldValue) }),
+  value: recordShape({ effect: any, item: isLocalId, slot: wellFormedText, value: orNull(isGenesisFieldValue) }),
+  party: recordShape({ effect: any, item: isLocalId, slot: wellFormedText, member: orNull(genesisMember) }),
+  list: recordShape({ effect: any, item: isLocalId, slot: wellFormedText, change: among({ add: true, remove: true }), member: genesisMember }),
+  relation: recordShape({ effect: any, owner: (v) => scopeRef(v) || genesisSelfRef(v), item: isLocalId, name: wellFormedText, state: wellFormedText, revision: isLocalId }),
+});
+/** Shape only. Judgment binds each encoded self to its actual genesis origin. */
+export const isGenesisEffect = (v: unknown): v is GenesisEffect => effect(v) || genesisEffect(v);
 
 /**
  * The evidence of an outcome (sections 4.1 and 4.3, item 4): a basis the
@@ -247,7 +264,7 @@ const observed: Check = (v) => Array.isArray(v) && v.length > 0 && v.every(obser
  * A delivery records what its message's class requires beside it: a request its decision, a result the clause that ran, a control
  * or an advisory nothing more. Of the four, only a delivery of a result may hold `observed` (section 4.1).
  */
-const delivered = { type: any, from: factRef, n: isLocalId, message };
+const delivered = { type: any, from: factRef, sourceKind: isScopeKind, n: isLocalId, message };
 const deliveryOf: Record<Message["class"], Check> = {
   request: (v) => recordShape({ ...delivered, decision: among(DECISION) }, { reason, late: recordShape({ reason: (v) => wellFormedText(v) && v !== "" }) })(v)
     && isRecord(v) && (!Object.hasOwn(v, "late") || v["decision"] === "applied"),
@@ -257,9 +274,9 @@ const deliveryOf: Record<Message["class"], Check> = {
 };
 const input = variant("type", {
   floor: recordShape({ type: any, floor: isLocalId, receipt: recordShape({ commit: (v) => typeof v === "string" && /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(v), through: recordShape({ seq: isLocalId, hash: isDigest }) }), keep: listOf(isLocalId) }),
-  genesis: recordShape({
-    type: any, seed, inc: isIncarnation, kind: (v) => wellFormedText(v) && v !== "", "founding": orNull(signedIntent), source: orNull(factRef), n: orNull(isLocalId), message: orNull(request), decision: among({ applied: true, refused: true }),
-  }),
+  genesis: (v) => recordShape({
+    type: any, seed, nonce: isGenesisNonce, kind: (v) => wellFormedText(v) && v !== "", "founding": orNull(signedIntent), source: orNull(factRef), sourceKind: orNull(isScopeKind), n: orNull(isLocalId), message: orNull(request), decision: among({ applied: true, refused: true }),
+  })(v) && isRecord(v) && (v["source"] === null) === (v["sourceKind"] === null),
   // Section 4.1: an act, an outcome and a delivery of a result may hold `observed`, and no other input may.
   act: recordShape({ type: any, signed: signedIntent, authority: listOf(grant), presented: named(factRef) }, { observed }),
   delivery: (v) => {
@@ -279,10 +296,10 @@ const input = variant("type", {
 } satisfies Record<Input["type"], Check>);
 export const isInput = (v: unknown): v is Input => input(v);
 
-const entry = recordShape({
-  v: is(1), at: scopeRef, seq: isLocalId, prev: orNull(isDigest), time: isTime, clamped: flag, epoch: is(0),
-  input, uses: listOf(factUse), prepared: listOf(prepared), effects: listOf(effect), sends: listOf(send),
-});
+const entryBody = { v: is(1), time: isTime, clamped: flag, epoch: is(0), input, uses: listOf(factUse), prepared: listOf(prepared), sends: listOf(send) };
+const genesisEntry = recordShape({ ...entryBody, seq: is(0), prev: is(null), effects: listOf(isGenesisEffect) });
+const sequenceEntry = recordShape({ ...entryBody, genesis: isDigest, seq: (v) => isLocalId(v) && v > 0, prev: isDigest, effects: listOf(effect) });
+const entry: Check = (v) => isRecord(v) && isRecord(v["input"]) && (v["input"]["type"] === "genesis" ? genesisEntry(v) : sequenceEntry(v));
 export const isEntry = (v: unknown): v is Entry => entry(v);
 
 // ---------------------------------------------------------------- views and reads (sections 4.1, 4.2 and 9.1)

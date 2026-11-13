@@ -13,7 +13,7 @@ const { secretSigner } = await load("@generalbusiness/dap-client");
 const { McpService, identityId } = await load("@generalbusiness/dap-mcp");
 const { StandIn, SERVICE } = await load(new URL("../../../packages/mcp/test/support/standin.ts", import.meta.url).href);
 const { durableCustody, flushFile } = await load(new URL("../custody.ts", import.meta.url).href);
-const { inputOf, requestNote, runWitness, WitnessRefusal } = await load(new URL("../witness.ts", import.meta.url).href);
+const { inputOf, requestNote, roomGenesisCreated, runWitness, WitnessRefusal } = await load(new URL("../witness.ts", import.meta.url).href);
 const { FIXTURE_DIGEST } = await load(new URL("../documents.ts", import.meta.url).href);
 const NOW = Date.parse("2099-01-01T00:00:00Z");
 
@@ -124,4 +124,15 @@ test("W1 forbids automatic redirects and rejects a redirected reply before body 
   assert.equal(requests, 1);
   assert.equal(bodyReads, 0);
   assert.equal(homesRead, 0);
+});
+
+test("W1 room genesis check resolves a creator named by the genesis self reference", () => {
+  const { room } = witnessInput(), D = room.directory;
+  // The Directory creates the room's scopes in its own genesis, so each seed names it by the self reference.
+  const inGenesis = { seed: { creator: { scope: D.scope, genesis: null } }, source: { at: D, seq: 0, hash: D.genesis } };
+  for (const kind of ["membership", "rules", "destination", "commons"]) assert.equal(roomGenesisCreated(kind, inGenesis, room), true);
+  assert.equal(roomGenesisCreated("membership", { ...inGenesis, source: { at: D, seq: 1, hash: D.genesis } }, room), false);
+  assert.equal(roomGenesisCreated("membership", { seed: { creator: D }, source: { at: D, seq: 3, hash: textDigest("TEST later fact") } }, room), true);
+  assert.equal(roomGenesisCreated("directory", { seed: { creator: room.register }, source: { at: room.register, seq: 4, hash: textDigest("TEST register fact") } }, room), true);
+  assert.equal(roomGenesisCreated("register", { seed: { creator: null }, source: null }, room), true);
 });

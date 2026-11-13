@@ -5,15 +5,17 @@ import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { ownerReservations, reserved, validateDefinition } from "@generalbusiness/dap-derive";
-import { b64url, canonicalize, definitionDigest, isSeed, scopeIdOf, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
+import { admitSequenceGenesis, b64url, canonicalize, definitionDigest, isSeed, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { DEVICE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_APPLICATION_COHORT as AC, platform } from "@generalbusiness/dap-platform";
+import { packApplication2, readApplicationPackage2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
 import { secretSigner, applicationScreenPath, invitationIssueFields, readApplicationInvitation, readApplicationScreenAddress, readApplicationScreenContext } from "@generalbusiness/dap-client";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { net } from "../src/testing.ts";
 import { SqliteStore } from "../src/sqlite.ts";
-import { deviceApplicationPacket, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationWorkerBindings } from "./fixtures-native.ts";
+import { fixedSigner, deviceApplicationPacket, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationWorkerBindings } from "./fixtures-native.ts";
 import { devicePackageFixture as deviceCommandFixture } from "../../derive/test/fixtures-device-command.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { rita, routed } from "./repository.ts";
@@ -39,6 +41,36 @@ test.each([["device", C, undefined, false], ["device/archive bound", AC, "journa
     const mcp = new McpService(port), args = { uri: f.uri, release: packet.ids.release, roles: ["admin"], values: {}, owner, idempotencyKey: "TEST-device-native-install" };
     const missing = await life.wait(() => mcp.call("install_application", { ...args, owner: { membership, member: "@missing" }, idempotencyKey: "TEST-device-owner-missing" }));
     expect(missing.structuredContent).toMatchObject({ answer: "refused", reason: "guard-failed", name: "device-owner-not-active" });
+    // A correctly signed TEST package reaches the actual native proof rule.
+    // Its one redundant effect subject changes no declared behavior. The
+    // host-side canonical guard is deliberately not used as a substitute.
+    expect(validateDefinition(deviceCommandFixture, PROPOSED_BOUNDS, RULE_PROFILES, { canonical: true }).ok).toBe(true);
+    const redundant = structuredClone(deviceCommandFixture);
+    Object.assign(redundant.acts["commission"]!.effects[0]!, { of: "on" });
+    expect(validateDefinition(redundant, PROPOSED_BOUNDS, RULE_PROFILES).ok).toBe(true);
+    expect(validateDefinition(redundant, PROPOSED_BOUNDS, RULE_PROFILES, { canonical: true }).ok).toBe(false);
+    const redundantId = definitionDigest(redundant), declaration = canonicalize(redundant);
+    expect(packet.package.semantic.definitions).toHaveLength(1);
+    const { creates: _creates, ...semantic } = packet.package.semantic;
+    const { semantic: _semantic, ...presentation } = packet.package.presentation;
+    const hostile = await packApplication2({ name: packet.package.release.manifest.name, version: packet.package.release.manifest.version,
+      semantic: { ...semantic, entry: redundantId, definitions: [{ id: redundantId, bytes: declaration }],
+        projections: Object.fromEntries(Object.entries(semantic.projections).map(([name, projection]) => [name, readApplicationProjection({ ...projection, definition: redundantId })])) },
+      presentation,
+    }, fixedSigner(81));
+    expect(readApplicationPackage2(hostile.bytes, hostile.ids.release).ids).toEqual(hostile.ids);
+    expect(hostile.ids.release).not.toBe(packet.ids.release);
+    expect(hostile.package.semantic.projections["root"]!.definition).toBe(redundantId);
+    const beforeCanonicalRefusal = await life.wait(() => A.entries());
+    const rejected = await life.wait(() => A.intent(rita, "install-application", { fields: {
+      uri: f.uri, release: hostile.ids.release, semantic: hostile.ids.semantic, roles: ["admin"], values: "{}", owner,
+      definitionText0: textDigest(declaration),
+    } }));
+    expect(await life.wait(() => A.stub.submit(rejected, [], { texts: [declaration],
+      values: [canonicalize(hostile.package.semantic), canonicalize(hostile.package.release)] })))
+      .toMatchObject({ answer: "refused", reason: "bad-field", name: "invalid-application-package" });
+    expect(await life.wait(() => A.entries())).toEqual(beforeCanonicalRefusal);
+
     const installed = await life.wait(() => mcp.call("install_application", args));
     expect(installed.isError, JSON.stringify(installed.structuredContent)).toBe(false);
     expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
@@ -54,8 +86,9 @@ test.each([["device", C, undefined, false], ["device/archive bound", AC, "journa
     // the fixture's entry ceiling applies from this child's construction.
     life.setHold(envelope => isSeed(envelope.to) && envelope.to.kind === "lane");
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
+    const directoryAt = await life.wait(() => D.at());
     const birth = (await life.wait(() => D.sealed())).flatMap(sealed => sealed.entry.sends.map(send => ({ send,
-      from: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash } }))).find(({ send }) => isSeed(send.to) && send.to.kind === "lane");
+      from: { at: directoryAt, seq: sealed.entry.seq, hash: sealed.hash } }))).find(({ send }) => isSeed(send.to) && send.to.kind === "lane");
     const creation = birth?.send;
     expect(creation).toBeDefined(); if (!birth || !creation || !isSeed(creation.to)) throw Error("Native Directory did not create the device scope.");
     expect(creation.message).toMatchObject({ body: { creationContext: { v: 2, delegate: true, deviceCommand: { capability: DEVICE_COMMAND, owner, bounds: { kinds: ["heater"], owners: 1 }, root: id, definitions: [id] } } } });
@@ -109,10 +142,14 @@ test.each([["device", C, undefined, false], ["device/archive bound", AC, "journa
     const command = await life.wait(async () => app.did(rita, "command", { on: device, expected: await app.expected({ on: device }), fields: { target: "on", level: 80 } }));
     const commandFact = (await life.wait(() => app.sealed())).find(sealed => sealed.entry.seq === command);
     if (!commandFact) throw Error("Exact command fact required.");
-    const facts = (await Promise.all([R, D, M, A, G, app].map(node => life.wait(() => node.sealed())))).flatMap(entries => entries.map(sealed => ({
-      fact: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash }, entry: sealed.entry,
-      under: sealed.entry.at.kind === "lane" ? deviceCommandFixture.name : `platform:${sealed.entry.at.kind}`,
-    })));
+    const facts = (await Promise.all([R, D, M, A, G, app].map(async node => ({ at: await node.at(), sealed: await life.wait(() => node.sealed()) })))).flatMap(({ at, sealed: entries }) => {
+      const sequence = admitSequenceGenesis(canonicalize(entries[0]!.entry), at, PROPOSED_BOUNDS.entryBytes);
+      if (!sequence) throw Error("Admitted genesis entry required.");
+      return entries.map(sealed => ({
+        fact: { at, seq: sealed.entry.seq, hash: sealed.hash }, entry: sealed.entry, bytes: canonicalize(sealed.entry), sequence,
+        under: sequence.kind === "lane" ? deviceCommandFixture.name : `platform:${sequence.kind}`,
+      }));
+    });
     const origin = platform(C.destination)!.applicationPublicationOrigin!;
     expect(origin({ at: scope, seq: command, hash: commandFact.hash }, directory, await life.wait(() => G.at()), facts)).toBe(true);
     expect(platform("platform:destination@8")!.applicationPublicationOrigin!({ at: scope, seq: command, hash: commandFact.hash }, directory, await life.wait(() => G.at()), facts)).toBe(false);

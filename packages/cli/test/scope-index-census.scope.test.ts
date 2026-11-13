@@ -4,7 +4,7 @@
  * TEST fixtures. Census signatures use the host clock; existing scope reads
  * use the Native fixture clock. No hosted or unregistered-object census runs. */
 import { expect, test } from "vitest";
-import type { ScopeRef } from "@generalbusiness/dap-contract";
+import type { ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { scopeCensusFixture } from "../../scope/test/support/scope-census-fixture.ts";
 import { observeSessionReads, sessionSettings, type SessionReadChoice } from "../../scope/test/session-settings.ts";
@@ -65,8 +65,8 @@ test("Native CLI census lists the registered fleet for versions while ordinary i
       expect(versions.code, versions.lines.join("\n")).toBe(0);
       const observed = JSON.parse(versions.lines[0]!) as { ready: boolean; listed: number; rows: { at: ScopeRef; result: string; definition?: string }[] };
       expect(observed.ready).toBe(true); expect(observed.listed).toBe(f.rows.length);
-      const pins: Partial<Record<ScopeRef["kind"], string>> = ARCHIVE_DEVICE_APPLICATION_COHORT;
-      expect(observed.rows).toEqual(f.rows.map(row => ({ at: row.at, result: "verified", definition: pins[row.at.kind] })));
+      const pins: Partial<Record<ScopeKind, string>> = ARCHIVE_DEVICE_APPLICATION_COHORT;
+      expect(observed.rows).toEqual(f.rows.map(row => ({ at: row.at, result: "verified", definition: pins[row.kind] })));
       const entryReads = calls.filter(call => call.path.endsWith("/entries/0"));
       expect(new Set(entryReads.map(call => call.path))).toEqual(new Set(f.rows.map(row => `/v1/scopes/${row.at.scope}/entries/0`)));
       expect(entryReads.every(call => call.authority === "Signed")).toBe(true);

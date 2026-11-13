@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
 import type { OutboxItem, Read, Summary } from "@generalbusiness/dap-contract";
 import type { OperationalApi, Transport } from "@generalbusiness/dap-client";
-import { newIncarnation, textDigest } from "@generalbusiness/dap-bytes";
+import { textDigest } from "@generalbusiness/dap-bytes";
 import { statusReport, STATUS_PAGES } from "../src/status-report.ts";
 import { Stop } from "../src/command-support.ts";
-const at = { scope: `sc_${"a".repeat(52)}` as const, kind: "membership" as const, inc: newIncarnation(new Uint8Array(16).fill(1)) };
+const at = { scope: `sc_${"a".repeat(52)}` as const, genesis: textDigest("TEST genesis 1") };
 const head = { seq: 9, hash: textDigest("head") }, time = "2099-01-01T00:00:00Z";
 const summary: Read<Summary> = { ok: true, at: head, complete: true, value: { scope: at, definition: "platform:membership@2", status: "active", time, items: [], counts: [["member", "active", 2]] } };
 const outboxId: OutboxItem = { outboxId: "7.0", to: at, class: "request", held: false, attempts: [], acknowledged: null, result: null, diagnosis: null };
@@ -59,7 +59,7 @@ test("status stops at the page bound, rejects nonprogress and head drift and nev
 // Mode is an exact new-pin observation, not an inference from absent old data.
 test("status reports an unpublished destination and actual zero waiting counts without guessing the mode of old pins", async () => {
   const f = fixture();
-  const destination = { ...at, kind: "destination" as const };
+  const destination = { ...at, genesis: textDigest("TEST destination genesis") };
   const value: Summary = { ...(summary.ok ? summary.value : expect.fail("SCRIPTED summary must be readable")), scope: destination, definition: "platform:destination@16", items: [{ id: 0, type: "branch", state: "unpublished", revision: 0, opened: null, parties: {}, refs: {}, attributed: [], values: { repository: null, head: null, token: null } }] };
   f.http.summary = async () => ({ ok: true, at: head, complete: true, value });
   f.http.outbox = async () => page([]);

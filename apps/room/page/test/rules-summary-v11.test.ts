@@ -1,13 +1,13 @@
 import { expect, test } from "vitest";
-import type { Item, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, isRecord, keyIdOfSecret, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import type { Item, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, digestBytes, isRecord, keyIdOfSecret, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { Session } from "@generalbusiness/dap-client";
 import { RULES_PATTERNS, rulesPolicyProposalV11 } from "@generalbusiness/dap-platform";
 import { rulesSummaryV11 } from "../src/rules-summary-v11.ts";
 import { act, type Room } from "../src/data.ts";
 
 const digest = digestBytes(new Uint8Array([1]));
-const ref = (kind: ScopeRef["kind"], ordinal: number): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: digest, creator: null, cause: digest, ordinal }), inc: newIncarnation(new Uint8Array(16).fill(ordinal)), kind });
+const ref = (kind: ScopeKind, ordinal: number): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: digest, creator: null, cause: digest, ordinal }), genesis: textDigest("TEST genesis " + kind) });
 const Q = ref("rules", 1), M = ref("membership", 2), G = ref("destination", 3), D = ref("directory", 4);
 const item = (values: unknown): Item => ({ id: 0, type: "rules", state: "current", revision: 2, opened: digest, values: JSON.parse(canonicalize(values)), refs: { published: 1 }, parties: {}, attributed: [] });
 

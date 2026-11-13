@@ -4,7 +4,7 @@ import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Intent, PlatformDefinition, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { grantOf } from "@generalbusiness/dap-derive/testing";
 import { standingData } from "../../derive/test/fixtures-standing.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_PIN_KEY, ARCHIVE_SCOPE_METADATA_BYTES, archivePinReadBytes, readArchivePin } from "../src/archive-pin.ts";
@@ -78,7 +78,7 @@ test("missing historical, malformed, forged definition/seed/incarnation/hash and
     const pin = JSON.parse(encoded);
     const invalid = [
       null, "not JSON", canonicalize({ ...pin, extra: true }), canonicalize({ ...pin, format: "unknown" }),
-      canonicalize({ ...pin, at: { ...pin.at, inc: newIncarnation(new Uint8Array(16).fill(31)) } }),
+      canonicalize({ ...pin, at: { ...pin.at, genesis: `sha256:${"1f".repeat(32)}` as const } }),
       canonicalize({ ...pin, seed: { ...pin.seed, definition: "platform:task@2" } }),
       canonicalize({ ...pin, seed: { ...pin.seed, ordinal: 1 } }),
       canonicalize({ ...pin, genesis: "sha256:" + "f".repeat(64) }),
@@ -95,7 +95,7 @@ test("missing historical, malformed, forged definition/seed/incarnation/hash and
       finally { await put(f.name, key, restore); }
     }
     for (const changed of [
-      { ...JSON.parse(scopeBytes), at: { ...scope, inc: newIncarnation(new Uint8Array(16).fill(33)) } },
+      { ...JSON.parse(scopeBytes), at: { ...scope, genesis: `sha256:${"21".repeat(32)}` as const } },
       { ...JSON.parse(scopeBytes), genesis: { ...JSON.parse(scopeBytes).genesis, hash: "sha256:" + "d".repeat(64) } },
       { ...JSON.parse(scopeBytes), extra: "unsupported metadata" },
     ]) {
@@ -105,7 +105,7 @@ test("missing historical, malformed, forged definition/seed/incarnation/hash and
     }
     const unsupported = await read(f.name, scope, true);
     expect(unsupported.pin).toBeNull(); expect(unsupported.queries).toHaveLength(1);
-    const wrong = await read(f.name, { ...scope, inc: newIncarnation(new Uint8Array(16).fill(32)) });
+    const wrong = await read(f.name, { ...scope, genesis: `sha256:${"20".repeat(32)}` as const });
     expect(wrong.pin).toBeNull(); expect(wrong.queries.some(query => /FROM entry/.test(query))).toBe(false);
     await runInDurableObject(objectOf(f.name), (_instance, state) => state.storage.sql.exec("UPDATE entry SET hash = ? WHERE seq = 0", "sha256:" + "e".repeat(64)).toArray());
     try { expect((await read(f.name, scope)).pin).toBeNull(); }

@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
-import { keyIdOfSecret, newIncarnation, timeOf } from "@generalbusiness/dap-bytes";
+import { keyIdOfSecret, timeOf, textDigest } from "@generalbusiness/dap-bytes";
 import type { ScopeRef, SessionClaims } from "@generalbusiness/dap-contract";
 import { requestSession, sessionRequest, type Fetch, TransportError } from "../src/index.ts";
 
 const NOW = Date.parse("2099-01-01T00:00:00Z"), SEED = new Uint8Array(32).fill(19);
-const M: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "membership" };
+const M: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: textDigest("TEST genesis 1") };
 const claims: SessionClaims = { v: 1, deployment: "TEST", membership: M, member: "@member", key: keyIdOfSecret(SEED), reads: ["summary"], ends: timeOf(NOW + 600_000) };
 const ask = (fetch: Fetch, seconds?: number) => requestSession("https://scope.test", M.scope, sessionRequest(M, SEED, timeOf(NOW + 60_000), "TEST-operation"), { fetch, ...(seconds === undefined ? {} : { seconds }) });
 
@@ -19,8 +19,8 @@ test("session request preserves exact claims and server lifetime without exposin
   const extra = await ask(async () => Response.json({ ok: true, token: "TEST-session-credential", session: { ...claims,
     private: "TEST-session-credential", membership: { ...M, private: "TEST-session-credential" } } }));
   expect(JSON.stringify(extra)).not.toContain("TEST-session-credential");
-  for (const session of [{ ...claims, membership: { ...M, inc: newIncarnation(new Uint8Array(16).fill(2)) } },
-    { ...claims, membership: { ...M, kind: "register" } }, { ...claims, key: keyIdOfSecret(new Uint8Array(32).fill(20)) }])
+  for (const session of [{ ...claims, membership: { ...M, genesis: textDigest("TEST genesis 2") } },
+    { ...claims, key: keyIdOfSecret(new Uint8Array(32).fill(20)) }])
     await expect(ask(async () => Response.json({ ok: true, token: "TEST-session-credential", session }))).rejects.toThrow(/another repository or key/);
 });
 

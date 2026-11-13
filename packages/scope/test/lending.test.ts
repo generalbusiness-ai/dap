@@ -312,7 +312,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
       "The library could not be read.", "The library could not be read: unavailable.",
       "The library could not be read: forbidden.", "The library could not be read: sessions-unavailable.",
       "The library could not be read: clock-behind.", "The library could not be read: too-large.",
-      "The library could not be read: wrong-incarnation.",
+      "The library could not be read: wrong-genesis.",
       "The projection is behind the list.", "A newer read replaced this one.",
       ...["sessions-unavailable", "bad-request", "not-found", "misaddressed", "clock-behind", "expired", "unauthorized", "replayed", "rate-limited"]
         .map(reason => `The room refused a read session: ${reason}.`),
@@ -329,7 +329,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     const retainedDonation = JSON.parse(hers.kept()!) as Kept;
     const retainedFields = retainedDonation.envelope.signed.intent.fields;
     expect(retainedFields["page"]).toMatch(/^shelf\/[0-9a-f]{16}\.md$/);
-    expect(retainedFields["content"]).toContain(`lending scope ${scopeOfLending.scope}, incarnation ${scopeOfLending.inc}`);
+    expect(retainedFields["content"]).toContain(`lending scope ${scopeOfLending.scope}, genesis ${scopeOfLending.genesis}`);
     expect(retainedFields["content"]).not.toMatch(/entry [0-9]+, hash/);
     const originalEntries = (await L.entries()).filter(entry => entry.input.type === "act" && canonicalize(entry.input.signed) === canonicalize(retainedDonation.envelope.signed));
     expect(originalEntries).toHaveLength(1);

@@ -20,6 +20,8 @@ import { declarationOf } from "./program/declaration.ts";
 
 export type RetainedKey =
   | { readonly kind: "definition" | "entry" | "rule" | "snapshot"; readonly digest: Digest }
+  /** A `birth` key names a foreign sequence by its genesis entry hash, not its bytes by a content digest (ruling ae48dd39). */
+  | { readonly kind: "birth"; readonly digest: Digest }
   | { readonly kind: "value"; readonly domain: string; readonly digest: Digest };
 export interface DependencyOrigin { readonly at: FactRef; readonly input: Input["type"] }
 export type DependencyPurpose = "replay-required" | "archive-closure";
@@ -28,6 +30,7 @@ const REQUIRED = {
   declaration: { inputs: ALL, kinds: ["definition"] },
   "birth-definition": { inputs: ["genesis"], kinds: ["definition"] },
   "foreign-use": { inputs: ALL, kinds: ["entry"] },
+  "foreign-birth": { inputs: ALL, kinds: ["birth"] },
   "rule-input": { inputs: ALL, kinds: ["rule"] },
   "act-value": { inputs: ["act"], kinds: ["definition", "value"] },
   "outcome-snapshot": { inputs: ["outcome"], kinds: ["snapshot"] },
@@ -72,7 +75,7 @@ export function checkedRetainedKey(key: RetainedKey): RetainedKey {
   const fields = Object.keys(key);
   if (key.kind === "value") {
     if (fields.length !== 3 || !fields.includes("kind") || !fields.includes("domain") || !fields.includes("digest") || typeof key.domain !== "string" || key.domain.length === 0 || key.domain === DOMAINS.definition) return unsupported();
-  } else if (!["definition", "entry", "rule", "snapshot"].includes(key.kind) || fields.length !== 2 || !fields.includes("kind") || !fields.includes("digest")) return unsupported();
+  } else if (!["definition", "entry", "rule", "snapshot", "birth"].includes(key.kind) || fields.length !== 2 || !fields.includes("kind") || !fields.includes("digest")) return unsupported();
   return key;
 }
 
@@ -117,6 +120,7 @@ export function observedValueDependencies(definition: ValidDefinition, origin: D
 }
 
 export function detachedTextDependencies(definition: ValidDefinition, origin: DependencyOrigin, input: Input, under?: string) {
+  // A retained delivery supplies its own sourceKind; no remote kind lookup.
   return inputTexts(definition, input, under).map(digest => textDependency(origin, digest));
 }
 
@@ -149,6 +153,15 @@ export function declarationValueDomains(definition: ValidDefinition): readonly s
   return [...new Set([...Object.values(declarationOf(definition).acts).flatMap(act => valuePlaces(act.fields).map(place => place.domain)), ...retainsOf(definition)])];
 }
 
+/** Each foreign sequence that the entry uses at a later entry, once, in use
+ * order. The scope keeps that sequence's first entry as its `birth` row
+ * (ruling 4f697a7a); an entry records no use of the birth itself. */
+export function laterForeignGeneses(entry: Pick<Entry, "uses">, fact: FactRef): readonly Digest[] {
+  const seen = new Set<Digest>();
+  for (const use of entry.uses) if (use.fact.seq > 0 && use.fact.at.genesis !== fact.at.genesis) seen.add(use.fact.at.genesis);
+  return [...seen];
+}
+
 export interface PlannedRetainedDependency { readonly dependency: RetainedDependency; readonly max: number }
 /** A definition value still uses the native definition ceiling even when
  * its declared value place permits a larger retained reply. */
@@ -162,12 +175,14 @@ export interface LocalRetainedPlan {
 /** Composition for local inventory, using the same selectors as replay's
  * actual reads above. This does not prove judgments, foreign histories,
  * current authority, owner evidence or the ancestry walk. */
-export function localRetainedPlan(definition: ValidDefinition, entry: Entry, hash: Digest, rules: OperationRules | null, bounds: Bounds, deliveryUnder?: string): LocalRetainedPlan {
-  const input = entry.input, origin: DependencyOrigin = { at: { at: entry.at, seq: entry.seq, hash }, input: input.type };
+export function localRetainedPlan(definition: ValidDefinition, entry: Entry, fact: FactRef, rules: OperationRules | null, bounds: Bounds, deliveryUnder?: string): LocalRetainedPlan {
+  if (fact.seq !== entry.seq) throw new Error("A retained plan names the fact of its own entry.");
+  const input = entry.input, origin: DependencyOrigin = { at: { at: fact.at, seq: fact.seq, hash: fact.hash }, input: input.type };
   originOf(origin);
   const dependencies: PlannedRetainedDependency[] = [];
   const add = (dependency: RetainedDependency, max: number) => dependencies.push({ dependency, max });
   for (const use of entry.uses) add(requiredDependency(origin, "foreign-use", { kind: "entry", digest: use.content }), RETAINED_INPUT_BYTES);
+  for (const genesis of laterForeignGeneses(entry, fact)) add(requiredDependency(origin, "foreign-birth", { kind: "birth", digest: genesis }), RETAINED_INPUT_BYTES);
   dependencies.push(...preparedRuleDependencies(definition, origin, entry.prepared));
   for (const text of detachedTextDependencies(definition, origin, input, deliveryUnder)) add(text, 0);
   if (input.type === "act") for (const { dependency, place } of actValueDependencies(definition, origin, input.signed.intent.kind, input.signed.intent.fields)) add(dependency, place.max);

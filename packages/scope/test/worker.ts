@@ -1,3 +1,4 @@
+import { scopeWiring, scopeMetricEnvironment, scopeNamespace } from "../src/internal/room-hooks.ts";
 /**
  * The Worker the workerd tests run. `TestScope` is the scope's object class
  * with the test ports, bounds and read bounds that the test set for its
@@ -39,7 +40,7 @@ import { scopeIdOf } from "@generalbusiness/dap-bytes";
 import { readApplicationScreenHost } from "@generalbusiness/dap-client/application";
 import { ScopeObject, type Outside, type OutsideGiven, type Wiring } from "../src/index.ts";
 import { sessionsOf, type LimitConfig } from "../src/index.ts";
-import { codeLost, controls, net, netPorts, testPorts } from "../src/testing.ts";
+import { codeLost, controls, net, netPorts, scriptedSource, testPorts } from "../src/testing.ts";
 import { signedDiagnosticFor } from "./signed-read-diagnostic.ts";
 import { sessionFields, testSessionBypass } from "./session-settings.ts";
 import { startupTest, startupScopes, StartupReadTrace } from "./support/serving-startup.ts";
@@ -48,6 +49,9 @@ import type { Binding } from "../src/namespace.ts";
 import { indexedScopes } from "../src/scope-index.ts";
 export { StartupServingIndex } from "./support/serving-startup.ts";
 import scopeWorker, { api, ApplicationScreenService, DeployedScope, McpAgent, McpRegistry, ScopeIndex as DeployedScopeIndex, route, sessionWiring, type Env, type McpEnv } from "../src/worker.ts";
+import { RETIRED_STORE_STOP, type RetiredStoreStop } from "@generalbusiness/dap-mcp";
+import type { SequenceRef } from "@generalbusiness/dap-contract";
+import { registryAnswers, registryScopes, registryNow, registryPorts, registryEvict, hostedRegistryOwnsMembership, agentScopes, agentPorts, agentRetainClient, agentEvict, agentDurable, agentCustodyOf, agentHeld, agentControlUsed, agentAnswers, hostedAgentStart } from "../src/internal/hosted-hooks.ts";
 /** Test-only binding surface. Authority and serving behavior stay in api().
  * Raw fixture namespaces override scopes(); the default keeps indexed lookup. */
 class TestApiEntry<E extends Env = Env> extends WorkerEntrypoint<E> implements ScopeApi {
@@ -84,7 +88,8 @@ export class ScopeIndex extends DeployedScopeIndex {
 /** Separate actual fixed-object namespace for small-limit boundary witnesses.
  * Heavy existing fixtures explicitly retain their high finite test policy. */
 export class ServingTestIndex extends ScopeIndex {
-  constructor(ctx: DurableObjectState, env: Env) { super(ctx, { ...env,
+  // The fixed index object is active only in the namespace that its env names as SCOPE_INDEX.
+  constructor(ctx: DurableObjectState, env: Env) { super(ctx, { ...env, SCOPE_INDEX: (env as Env & { SERVING_INDEX: DurableObjectNamespace }).SERVING_INDEX,
     SERVING_CREATION_KEY_PER_HOUR: "2", SERVING_CREATION_ADDRESS_PER_HOUR: "3",
     SERVING_READ_KEY_PER_MINUTE: "2", SERVING_READ_ADDRESS_PER_MINUTE: "3" }); }
 }
@@ -100,12 +105,53 @@ import { readPlatformCreationPolicy } from "../src/creation-versions.ts";
 // Historical-catalog compatibility scaffolding for existing native fixtures.
 // Production-default/invalid-policy witnesses use CreationVersionScope instead.
 const historicalCreationPolicy = readPlatformCreationPolicy({ PLATFORM_CREATION_PINS: JSON.stringify(Object.keys(VERSIONS)) });
-/** Env-only override: all wiring, clock, authority and genesis code is deployed code. */
+/** Env-only policy override. The optional trace below forwards actual SQL and transactions. */
 export const creationVersionSettings = new Map<string, unknown>();
+interface CreationFormatStart {
+  catalogReads: number;
+  wordReads: number;
+  formatWrites: number;
+  atFailure: { schema: number; word: number } | null;
+  tablesAfterFailure: number | null;
+}
+/** Name-scoped TEST storage observer and one setup fault. No returned row or transaction is replaced. */
+export const creationFormatStorage = new Map<string, { failAfterWord: boolean; starts: CreationFormatStart[] }>();
 export class CreationVersionScope extends DeployedScope {
   constructor(ctx: DurableObjectState, env: Env) {
-    const name = ctx.id.name ?? "";
-    super(ctx, { ...env, ...(creationVersionSettings.has(name) ? { PLATFORM_CREATION_PINS: creationVersionSettings.get(name) } : {}) });
+    const name = ctx.id.name ?? "", trace = creationFormatStorage.get(name);
+    const start: CreationFormatStart = { catalogReads: 0, wordReads: 0, formatWrites: 0, atFailure: null, tablesAfterFailure: null };
+    const exec = ctx.storage.sql.exec.bind(ctx.storage.sql);
+    if (trace) {
+      if (trace.starts.length >= 4) throw new Error("TEST format start observation exceeded four starts");
+      trace.starts.push(start);
+      const sql = new Proxy(ctx.storage.sql, { get(target, property) {
+        if (property === "exec") return (query: string, ...bindings: unknown[]) => {
+          if (query.includes(" AS any_table") && query.includes(" AS format_table")) start.catalogReads++;
+          if (query.includes("END AS word FROM room_record_format LIMIT 2")) start.wordReads++;
+          if (query.startsWith("CREATE TABLE room_record_format") || query.startsWith("INSERT INTO room_record_format")) start.formatWrites++;
+          const cursor = Reflect.apply(target.exec, target, [query, ...bindings]);
+          if (trace.failAfterWord && query === "INSERT INTO room_record_format (id, v) VALUES (1, 2)") {
+            start.atFailure = {
+              schema: Number(exec("SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='entry') AS present").one()["present"]),
+              word: Number(exec("SELECT v FROM room_record_format WHERE id=1").one()["v"]),
+            };
+            throw new Error("TEST fresh schema and format word rollback");
+          }
+          return cursor;
+        };
+        const value = Reflect.get(target, property, target);
+        return typeof value === "function" ? value.bind(target) : value;
+      } });
+      // The DurableObjectBase constructor takes only the real state, so the
+      // observer shadows the one `sql` property of the real storage object.
+      Object.defineProperty(ctx.storage, "sql", { value: sql, configurable: true });
+    }
+    try {
+      super(ctx, { ...env, ...(creationVersionSettings.has(name) ? { PLATFORM_CREATION_PINS: creationVersionSettings.get(name) } : {}) });
+    } catch (error) {
+      if (trace && start.atFailure) start.tablesAfterFailure = Number(exec("SELECT count(*) AS n FROM sqlite_master WHERE type='table'").one()["n"]);
+      throw error;
+    }
   }
 }
 import type { MetricEnvironment } from "../src/operational.ts";
@@ -130,8 +176,8 @@ export const roomArchiveConstructions = new Map<string, number>();
 export const scopeRegistrationWiring = new Map<string, NonNullable<Wiring["registerGenesis"]>>();
 
 export class TestScope extends ScopeObject {
-  protected override metricEnvironment(): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super.metricEnvironment(); }
-  protected override wiring(name: string | undefined): Wiring {
+  protected override [scopeMetricEnvironment](): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super[scopeMetricEnvironment](); }
+  protected override [scopeWiring](name: string | undefined): Wiring {
     const c = controls(name ?? "");
     const fixtureArchive = fixtureArchiveWiring.get(name ?? "");
     const registerGenesis = scopeRegistrationWiring.get(name ?? "");
@@ -144,10 +190,10 @@ export class MetricControlScope extends TestScope {}
 type NetEnv = Env & { NET: DurableObjectNamespace };
 
 export class NetScope extends DeployedScope<NetEnv> {
-  protected override metricEnvironment(): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super.metricEnvironment(); }
-  protected override scopes() { return this.env.NET; }
-  protected override wiring(name: string | undefined): Wiring {
-    const deployed = super.wiring(name);
+  protected override [scopeMetricEnvironment](): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super[scopeMetricEnvironment](); }
+  protected override [scopeNamespace]() { return this.env.NET; }
+  protected override [scopeWiring](name: string | undefined): Wiring {
+    const deployed = super[scopeWiring](name);
     const ports = { ...deployed.ports, ...netPorts(net, deployed.ports!.transport!, deployed.ports!.resolver) };
     // The definitions port is the deployed one, whose platform definitions are the platform package's, until a test takes their code away.
     return { platformCreationPolicy: historicalCreationPolicy, ...(deployed.registerGenesis ? { registerGenesis: deployed.registerGenesis } : {}), bounds: net.sized.get(name ?? "") ?? net.bounds, ports: { ...ports, definitions: codeLost(deployed.ports!.definitions!, () => !net.platformCode) } };
@@ -192,7 +238,7 @@ export const TEST_DEPLOYMENT = "artroom-scope-test";
 type PlatformEnv = Env & { PLATFORM: DurableObjectNamespace };
 
 export class PlatformScope extends DeployedScope<PlatformEnv> {
-  protected override metricEnvironment(): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super.metricEnvironment(); }
+  protected override [scopeMetricEnvironment](): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super[scopeMetricEnvironment](); }
   override submit(...args: Parameters<DeployedScope<PlatformEnv>["submit"]>): ReturnType<DeployedScope<PlatformEnv>["submit"]> {
     hostedTest.nativeSubmit?.(this.ctx.id.name ?? "", args[0]);
     return super.submit(...args);
@@ -258,12 +304,12 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
     throw new Error("Native fixture scheduled callbacks exceeded 64 batches");
   }
 
-  protected override scopes() { return this.env.PLATFORM; }
-  protected override wiring(name: string | undefined): Wiring {
-    const deployed = super.wiring(name);
+  protected override [scopeNamespace]() { return this.env.PLATFORM; }
+  protected override [scopeWiring](name: string | undefined): Wiring {
+    const deployed = super[scopeWiring](name);
     const { resolver, definitions, transport } = deployed.ports as Required<NonNullable<Wiring["ports"]>>;
     // With a test secret the session configuration is the test's. With none it is the deployed one, from this Worker's bindings.
-    const session = sessionWiring(() => (platformNet.secret === null ? deployed.sessions!() : sessionsOf(platformNet.secret, TEST_DEPLOYMENT)), this.scopes());
+    const session = sessionWiring(() => (platformNet.secret === null ? deployed.sessions!() : sessionsOf(platformNet.secret, TEST_DEPLOYMENT)), this[scopeNamespace]());
     const outside = platformOutside.get(name ?? "");
     const ports = wired.get(name ?? "")?.();
     const { outside: _deployed, ...rest } = deployed;
@@ -296,7 +342,7 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
         // A send waits at `platformNet.pause` first, while its dispatcher's pass stays in flight.
         transport: { send: async (envelope) => { if (net.hold?.(envelope)) return null; await platformNet.pause?.(envelope); return transport!.send(envelope); } },
         // A scripted peer: an entry that a test wrote by hand, for a lane that sends a notice. Every other entry is read from the real object.
-        resolver: { read: (fact, seconds, origin) => { const peer = net.peers.get(fact.hash); return peer ? Promise.resolve(peer) : resolver.read(fact, seconds, origin); } },
+        resolver: { read: (fact, context, origin) => { const peer = net.peers.get(fact.hash); return peer ? Promise.resolve(scriptedSource(fact, peer, context)) : resolver.read(fact, context, origin); } },
         definitions: { read: (named, holder) => definitions.read(named, holder), platform: (named) => (platformNet.without === null ? platform(named) : lacking(named, platformNet.without)) },
         // The ports that one test wired for this name: the STAND-IN host of `outside.ts`, for a register, whose one outside effect is
         // the creation of a repository at the Git host. With none wired the outside port is the production one, which sends nothing.
@@ -423,11 +469,14 @@ export function hostedRegistries(registries: DurableObjectNamespace): DurableObj
 export class ScriptedReset extends Error { constructor(fence: string) { super(`scripted reset at ${fence}`); } }
 type HostedEnv = McpEnv & { PLATFORM: DurableObjectNamespace };
 export class PlatformMcpRegistry extends McpRegistry<HostedEnv> {
-  protected override scopes() { return this.env.PLATFORM; }
-  protected override now(): number { return hostedTest.now?.() ?? Date.now(); }
-  protected override ports() { return { ...(hostedTest.controlBudget ? { controlBudget: hostedTest.controlBudget } : {}), fault: (fence: string) => { if (hostedTest.faultAt === fence) { hostedTest.faultAt = null; this.evict(); throw new ScriptedReset(fence); } } }; }
-  reset(): void { this.evict(); }
-  heldAnswers(): { op: string; answer: boolean }[] { return this.answers(); }
+  constructor(ctx: DurableObjectState, env: HostedEnv) {
+    super(ctx, { ...env, REGISTRIES: hostedRegistries(env.REGISTRIES) });
+  }
+  protected override [registryScopes]() { return this.env.PLATFORM; }
+  protected override [registryNow](): number { return hostedTest.now?.() ?? Date.now(); }
+  protected override [registryPorts]() { return { ...(hostedTest.controlBudget ? { controlBudget: hostedTest.controlBudget } : {}), fault: (fence: string) => { if (hostedTest.faultAt === fence) { hostedTest.faultAt = null; this[registryEvict](); throw new ScriptedReset(fence); } } }; }
+  reset(membership: SequenceRef): void | RetiredStoreStop { if (!this[hostedRegistryOwnsMembership](membership)) return RETIRED_STORE_STOP; this[registryEvict](); }
+  heldAnswers(membership: SequenceRef): { op: string; answer: boolean }[] | RetiredStoreStop { if (!this[hostedRegistryOwnsMembership](membership)) return RETIRED_STORE_STOP; return this[registryAnswers](); }
 }
 export class PlatformMcpAgent extends McpAgent<HostedEnv> {
   readonly #productionHostedFetch: boolean;
@@ -440,17 +489,18 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
     this.#productionHostedFetch = creationTest.productionHostedFetch;
     this.#startup = index !== null;
   }
-  protected override scopes() { return this.#startup ? this.#startupBinding ??= startupScopes(this.env.PLATFORM, this.startupReads) : this.env.PLATFORM; }
-  protected override async retainClient(client: Parameters<McpAgent["grant"]>[2]["client"]): Promise<number> {
-    const expires = await super.retainClient(client), held = hostedTest.clientRetention;
+  protected override [agentScopes]() { return this.#startup ? this.#startupBinding ??= startupScopes(this.env.PLATFORM, this.startupReads) : this.env.PLATFORM; }
+  protected override async [agentRetainClient](client: Parameters<McpAgent["grant"]>[2]["client"]): Promise<number> {
+    const expires = await super[agentRetainClient](client), held = hostedTest.clientRetention;
     if (held) { held.entered(); await held.waiting; }
     return expires;
   }
   /** The harness's instance reset: what an eviction leaves. */
-  reset(): void { this.evict(); }
+  reset(): void | RetiredStoreStop { const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable."); this[agentEvict](); }
   /** Test only: wrap one actual removal callback, preserving its work before holding its completion. */
-  holdRemoval(): void {
-    const http = this.held()?.inside().http;
+  holdRemoval(): void | RetiredStoreStop {
+    const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable.");
+    const http = this[agentHeld]()?.inside().http;
     if (!http || typeof http.port.remove !== "function" || hostedTest.removalReply === null) throw Error("No owned HTTP session-removal callback to hold");
     const remove = http.port.remove;
     http.port.remove = async id => {
@@ -461,21 +511,21 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
     };
   }
   /** Fire the service's watch once, as 30 seconds passing would. */
-  async tick(): Promise<boolean> { const service = this.held()?.inside().service; if (!service) return false; await service.check(); return true; }
-  heldAnswers(): { control: { op: string; answer: boolean }[]; agent: boolean } { return this.answers(); }
-  used(): number { return this.controlUsed(); }
-  durableFacts(): ReturnType<HostedAgent["durable"]> { return this.durable(); }
+  async tick(): Promise<boolean | RetiredStoreStop> { const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable."); const service = this[agentHeld]()?.inside().service; if (!service) return false; await service.check(); return true; }
+  heldAnswers(): { control: { op: string; answer: boolean }[]; agent: boolean } | RetiredStoreStop { const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable."); return this[agentAnswers](); }
+  used(): number | RetiredStoreStop { const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable."); return this[agentControlUsed](); }
+  durableFacts(): ReturnType<HostedAgent["durable"]> | RetiredStoreStop { const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable."); return this[agentDurable](); }
   /** The custody record under an idempotency key: its intent digest, attempt and outcomes. */
-  custodyRecord(key: string): ReturnType<HostedAgent["custodyOf"]> { return this.custodyOf(key); }
+  custodyRecord(key: string): ReturnType<HostedAgent["custodyOf"]> | RetiredStoreStop { const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable."); return this[agentCustodyOf](key); }
   /** The open streams and sessions this instance holds. */
-  counts(): { streams: number; sessions: number } { const http = this.held()?.inside().http; return { streams: http?.streams ?? 0, sessions: http?.sessions.size ?? 0 }; }
-  protected override ports() {
-    const scopes = this.env.PLATFORM, roleStanding = roleStandingThrough(this.scopes());
+  counts(): { streams: number; sessions: number } | RetiredStoreStop { const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable."); const http = this[agentHeld]()?.inside().http; return { streams: http?.streams ?? 0, sessions: http?.sessions.size ?? 0 }; }
+  protected override [agentPorts]() {
+    const scopes = this.env.PLATFORM, roleStanding = roleStandingThrough(this[agentScopes]());
     return {
       ...(hostedTest.metrics ? { metrics: hostedTest.metrics } : {}),
       ...(hostedTest.controlBudget ? { controlBudget: hostedTest.controlBudget } : {}),
       ...(hostedTest.custodyBounds ? { custodyBounds: { ...hostedTest.custodyBounds, fail: (point: "keep" | "dispatch" | "result" | "segment") => { if (hostedTest.failWrite === point) { hostedTest.failWrite = null; throw new Error("SQLITE_FULL: scripted"); } } } } : {}),
-      fault: (fence: string) => { if (hostedTest.faultAt === fence) { hostedTest.faultAt = null; this.evict(); throw new ScriptedReset(fence); } },
+      fault: (fence: string) => { if (hostedTest.faultAt === fence) { hostedTest.faultAt = null; this[agentEvict](); throw new ScriptedReset(fence); } },
       sessionFault: () => { if (hostedTest.failSession) { hostedTest.failSession = false; throw new Error("SQLITE_FULL: scripted session write"); } },
       configHold: () => hostedTest.configHold ?? undefined,
       roleStanding: hostedRolePort(async asked => {

@@ -58,8 +58,8 @@ test("owned Site presence retains explicit scoped report positions beyond one hu
     expect(row).toMatchObject({ state: "present", revision: 3, fields: { member: f.member, room: roomB.item, reportedAt: moved.receipt.fact.seq } });
     const entry = session.site.developmentReads().entry(null, Number(row.fields["reportedAt"]));
     if (!entry.ok) throw Error(`Native known report position ${entry.reason}.`);
-    expect({ at: entry.value.entry.at, seq: entry.value.entry.seq, hash: entry.value.hash }).toEqual(moved.receipt.fact);
-    expect(entry.value.entry.at).toEqual(durable.scope);
+    expect({ at: durable.scope, seq: entry.value.entry.seq, hash: entry.value.hash }).toEqual(moved.receipt.fact);
+    expect("genesis" in entry.value.entry ? entry.value.entry.genesis : null).toEqual(durable.scope.genesis);
     expect(session.site.developmentReads().entry(null, durable.at.seq + 1).ok).toBe(false);
     const activity = await f.source.port.projection({ ...query, projection: "presence-activity" });
     if (!activity.ok) throw Error(`Native activity read ${activity.reason}.`);

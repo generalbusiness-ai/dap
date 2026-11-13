@@ -314,7 +314,11 @@ export interface PreparationStatus {
  * left out of nothing: the function throws, because the index names it.
  */
 export function preparationStatus(view: StateView, history: Own, intent: Digest): PreparationStatus[] {
-  return view.preparations(intent).map(({ capability, step, seq }) => {
+  const preparations = view.preparations(intent);
+  if (preparations.length === 0) return [];
+  const at = view.scope()?.at;
+  if (!at) throw new Error("the preparation entries are indexed and this scope has no address");
+  return preparations.map(({ capability, step, seq }) => {
     const sealed = history(seq);
     if (!sealed) throw new Error(`the preparation entry ${seq} is indexed and cannot be read`);
     const { entry, hash } = sealed;
@@ -326,6 +330,6 @@ export function preparationStatus(view: StateView, history: Own, intent: Digest)
       const record = effect.effect === "record" ? view.record(effect.capability, effect.kind, effect.key) : null;
       return record ? [{ kind: record.kind, key: record.key, state: record.state }] : [];
     });
-    return { entry: { at: entry.at, seq, hash }, capability, step, operations, records };
+    return { entry: { at, seq, hash }, capability, step, operations, records };
   });
 }

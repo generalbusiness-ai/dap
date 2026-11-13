@@ -75,8 +75,8 @@ test("a confirmed native host-none room stays unarmed across reads and eviction;
       const sql = state.storage.sql;
       const count = (query: string): number => sql.exec<{ n: number }>(query).one().n;
       const meta = (key: string): string | null => sql.exec<{ v: string }>("SELECT v FROM meta WHERE k=?", key).toArray()[0]?.v ?? null;
-      const scope = sql.exec<{ scope: string; inc: string; kind: string; status: string; head: number; hash: string; held: number }>(`SELECT
-        json_extract(v,'$.at.scope') AS scope,json_extract(v,'$.at.inc') AS inc,json_extract(v,'$.at.kind') AS kind,
+      const scope = sql.exec<{ scope: string; genesis: string; kind: string; status: string; head: number; hash: string; held: number }>(`SELECT
+        json_extract(v,'$.at.scope') AS scope,json_extract(v,'$.at.genesis') AS genesis,json_extract(v,'$.kind') AS kind,
         json_extract(v,'$.status') AS status,json_extract(v,'$.head.seq') AS head,json_extract(v,'$.head.hash') AS hash,
         json_array_length(v,'$.held') AS held FROM meta WHERE k='scope'`).one();
       const genesis = sql.exec<{ decision: string; seed: string; controls: number }>(`SELECT json_extract(bytes,'$.input.decision') AS decision,
@@ -104,7 +104,7 @@ test("a confirmed native host-none room stays unarmed across reads and eviction;
         }
       }
       return {
-        scope: node.name, inc: scope.inc, kind: seed.kind, pin: seed.definition, headHash: scope.hash,
+        scope: node.name, genesisHash: scope.genesis, kind: seed.kind, pin: seed.definition, headHash: scope.hash,
         status: scope.status, head: scope.head, heldGenesis: scope.held, genesis: genesis.decision,
         creator: seed.creator?.scope ?? null, controls: genesis.controls, outbox, timers,
         operations: count("SELECT count(*) AS n FROM operation WHERE opened+unknown+unopened>0"),

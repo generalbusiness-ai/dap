@@ -118,7 +118,7 @@ test("invalid target and stale context/base send nothing new; an invalid old pro
         const bytes = reply.body ? await takeBytes(reply.body, 256 * 1024, AbortSignal.timeout(30_000)) : null;
         if (!(bytes instanceof Uint8Array)) return reply;
         const read = JSON.parse(new TextDecoder().decode(bytes));
-        if (read.ok) read.value.scope.inc = d.config.repository!.membership.inc;
+        if (read.ok) read.value.scope.genesis = d.config.repository!.membership.genesis;
         return new Response(JSON.stringify(read));
       }
       return reply;

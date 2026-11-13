@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FloorInput, type JournalFloor } from "@generalbusiness/dap-contract";
 import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { checkpointOf, countedEntries, judgeAct, judgeCheckpoint, judgeFloor, MemoryState, type Own, type StateSnapshot } from "@generalbusiness/dap-derive";
-import { created, keys, notesDefinition, t, variant } from "@generalbusiness/dap-derive/testing";
+import { created, fixtureSequence, keys, notesDefinition, t, variant } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, verify, type HistorySource } from "../src/index.ts";
 import { floorOwn } from "../src/floor.ts";
 import { View } from "../src/view.ts";
@@ -19,12 +19,12 @@ function fixture() {
   history.now = t(1200);
   const input: FloorInput = { type: "floor", floor: 50, receipt: { commit: "a".repeat(40), through: { ...history.head } }, keep: [] };
   const before = structuredClone(history.state.all());
-  const floor = judgeFloor(history.state, definition, input, { ...history.context(), own: floorOwn(history.state, history.entries) });
+  const floor = judgeFloor(history.state, definition, input, { ...history.context(), own: floorOwn(history.state, history.entries, fixtureSequence(history)) });
   if (floor.result !== "write") throw new Error(JSON.stringify(floor));
   const floorEntry = history.seal(floor.draft);
   const after = structuredClone(history.state.all());
   const proof = history.intent(keys.rita, "prove", { on: 0, expected: { on: history.item(0).revision }, fields: { proof: history.fact(1) } });
-  const refused = judgeAct(history.state, definition, proof, { ...history.context(), own: floorOwn(history.state, history.entries) });
+  const refused = judgeAct(history.state, definition, proof, { ...history.context(), own: floorOwn(history.state, history.entries, fixtureSequence(history)) });
   const afterRefusalHead = { ...history.head };
   for (let n = 0; n < 20; n++) history.did(keys.rita, "pulse", { on: 0, expected: { on: history.item(0).revision } });
   const checkpoint = judgeCheckpoint(history.state, definition, checkpointOf(history.state), history.context());
@@ -65,21 +65,23 @@ test("floor commit absence and a different archive head stop at the floor entry"
 });
 
 test("observation views and captured own readers retain their historical floor and sparse proof visibility", () => {
-  const f = fixture(), view = new View();
+  const f = fixture(), view = new View(), sequence = fixtureSequence(f.history);
   let captured: ReturnType<typeof floorOwn> | null = null;
   const snapshots = new Map<number, StateSnapshot>();
   for (const sealed of f.history.entries) {
-    const own = floorOwn(view, f.history.entries);
+    const own = floorOwn(view, f.history.entries, sequence);
     view.fold(f.definition, sealed.entry, sealed.hash, { own, bounds: PROPOSED_BOUNDS });
-    if (sealed.entry.seq === f.floorEntry.seq) captured = floorOwn(view, f.history.entries);
+    if (sealed.entry.seq === f.floorEntry.seq) captured = floorOwn(view, f.history.entries, sequence);
     if ([f.floorEntry.seq - 1, f.floorEntry.seq, f.history.head.seq].includes(sealed.entry.seq)) snapshots.set(sealed.entry.seq, structuredClone(view.all()));
   }
   for (const seq of [f.floorEntry.seq, f.history.head.seq, f.floorEntry.seq - 1, f.floorEntry.seq]) expect(view.at(seq).state.all()).toEqual(snapshots.get(seq));
   const state = new MemoryState(); state.setScope(f.history.state.scope()!);
   const first: JournalFloor = { floor: 50, receipt: f.input.receipt, kept: [0, 7], sizeProofs: [{ digest: f.history.entries[0]!.hash, seq: 3, bound: 40 }] };
   state.putFloor(first);
-  const own = floorOwn(state, f.history.entries);
+  const own = floorOwn(state, f.history.entries, sequence);
   state.putFloor({ ...first, floor: 100, kept: [0] });
+  expect(own.sequence!()).toBe(sequence);
+  expect(captured!.sequence!()).toBe(sequence);
   expect(own(7)).toEqual(f.history.entries[7]);
   expect(own(8)).toBeNull();
   expect([...own.positions!(53)]).toEqual([0, 7, 50, 51, 52]);
@@ -104,7 +106,7 @@ test("two floors charge migrated Unicode accepted keys once and preserve complet
     const before = history.state.all();
     const input: FloorInput = { type: "floor", floor, receipt: { commit, through: { ...history.head } }, keep: [] };
     receipts.set(commit, input.receipt.through);
-    const judged = judgeFloor(history.state, definition, input, { ...history.context(), own: floorOwn(history.state, history.entries) });
+    const judged = judgeFloor(history.state, definition, input, { ...history.context(), own: floorOwn(history.state, history.entries, fixtureSequence(history)) });
     if (judged.result !== "write") throw new Error(JSON.stringify(judged));
     history.seal(judged.draft);
     const after = history.state.all();

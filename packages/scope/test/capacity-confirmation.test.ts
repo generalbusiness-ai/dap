@@ -14,7 +14,7 @@ import type { ProofBody } from "../src/proof-bytes.ts";
 import { controls } from "../src/testing.ts";
 import { fixtureRoute as route } from "./support/serving-route.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
+import { Lane, START, at, foreignOf, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
 const bounds = { ...PROPOSED_BOUNDS, entryBytes: 4096 };
 const source = () => httpSource("https://scope.test", { reader, fetch: async (url, init) => {
@@ -58,8 +58,7 @@ async function history(whole: boolean, ceiling?: number) {
       resolver: { read: async fact => {
         const definition = nodes.get(fact.at.scope);
         if (!definition) return null;
-        const read = await stubOf(fact.at.scope).entry(reader, fact.seq);
-        return read.ok && read.value.hash === fact.hash ? { entry: read.value.entry, under: definition.declared.name } : null;
+        return foreignOf(fact, definition.declared.name);
       } },
     }));
   };
@@ -92,7 +91,7 @@ async function confirmationFrom(child: ScopeId, parent: Lane) {
   const genesis = await stubOf(child).entry(reader, 0);
   if (!genesis.ok) throw new Error("child genesis is unreadable");
   const sent = genesis.value.entry.sends.find(send => send.message.class === "result")!;
-  const result = await peer(parent.name).deliver({ to: sent.to, from: { at: genesis.value.entry.at, seq: 0, hash: genesis.value.hash }, n: sent.n, message: sent.message });
+  const result = await peer(parent.name).deliver({ to: sent.to, from: { at: { scope: child, genesis: genesis.value.hash }, seq: 0, hash: genesis.value.hash }, n: sent.n, message: sent.message });
   expect(result).toMatchObject({ answer: "recorded" });
   if (result.answer !== "recorded") throw new Error("parent did not record the creation result");
   const read = await parent.stub.entry(reader, result.fact.seq);

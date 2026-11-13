@@ -7,8 +7,8 @@
  */
 
 import { nativeMark, nativeOutcomes } from "./program/native.ts";
-import type { ActType, Advisory, AlsoMark, AlsoRule, Bounds, Digest, Effect, EffectForm, Entry, FactRef, FactUse, FieldType, FieldValue, Input, PlatformReceive, Reason, ReceiveType, RefusalReason, Request, ResultClauses, ScopeRef, SendForm, SendMark, Settles, UnavailableReason } from "@generalbusiness/dap-contract";
-import { entryHash } from "@generalbusiness/dap-bytes";
+import type { ActType, Advisory, AlsoMark, AlsoRule, Bounds, Digest, Effect, EffectForm, Entry, FactRef, FactUse, FieldType, FieldValue, Input, PlatformReceive, Reason, ReceiveType, RefusalReason, Request, ResultClauses, ScopeRef, ScopeKind, SendForm, SendMark, Settles, UnavailableReason } from "@generalbusiness/dap-contract";
+import { entryHash, isScopeKind } from "@generalbusiness/dap-bytes";
 import { handlerBranch } from "./handler-branch.ts";
 import { executeBody, type Ran } from "./program/body.ts";
 import { declarationOf } from "./program/declaration.ts";
@@ -16,9 +16,10 @@ export type { Ran } from "./program/body.ts";
 export { overMax } from "./program/finalize.ts";
 import type { Signer } from "./attribution.ts";
 import { boundTo, decisionCounts, selectedByIndex, selectorOf } from "./binding.ts";
-import { creationFields, factsNamed, isEntryOf, isLocalFact, messageFields, presentedTypes, readFacts, readFields, textsNamed, updateOf, type Reading, type Update } from "./fields.ts";
+import { creationFields, factsNamed, isEntryOf, isLocalFact, messageFields, presentedTypes, readFields, textsNamed, updateOf, type Reading, type Update } from "./fields.ts";
 import { signerOf } from "./fold.ts";
 import { slotOf, type Fetched, type Judging } from "./guards.ts";
+import { assumedSource, copyFact, judgmentFacts, matchesCopy, readJudgmentFacts, verifiedCopy, type JudgmentCopy } from "./operand.ts";
 import { RuleFault, atHand, atHandByRows, placesOf, fieldOutsideType, selectedBy, type AtHand, type Giving, type JudgedInput } from "./marks.ts";
 import { listedBy, rowsOfClause, settle, waits, type Needed, type Settled, type Settling } from "./observes.ts";
 import { sendOrigin } from "./program/send-origin.ts";
@@ -27,6 +28,7 @@ import { settlementForm, settlementMatches } from "./program/settlement.ts";
 import type { Item, OwnRequest, ScopeState, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { isFactRef, isLocalId, isObject, own, same } from "./values.ts";
+import { sequenceEffects } from "./effects.ts";
 
 // ---------------------------------------------------------------- messages and handlers (sections 6.4 and 7.4)
 
@@ -47,7 +49,8 @@ import { isFactRef, isLocalId, isObject, own, same } from "./values.ts";
  * of it. The validator allows one handler for a class, a name and a kind,
  * so no other handler receives it either.
  */
-export function bound(definition: ValidDefinition, message: Request | Advisory, from: FactRef, under?: string): { kind: string; handler: ReceiveType | null; fields: Record<string, FieldValue> | null } | null {
+export function bound(definition: ValidDefinition, message: Request | Advisory, from: FactRef, sourceKind: ScopeKind, under?: string): { kind: string; handler: ReceiveType | null; fields: Record<string, FieldValue> | null } | null {
+  if (!isScopeKind(sourceKind)) throw new RuleFault("handler selection requires the recorded or checked sender kind");
   const body = message.body;
   let kind: string;
   if (message.class === "advisory") kind = message.type;
@@ -57,7 +60,7 @@ export function bound(definition: ValidDefinition, message: Request | Advisory, 
     kind = named;
   } else return null;
   const cls = message.class === "advisory" ? "advisory" : message.type;
-  const matched = Object.values(declarationOf(definition).receives).find((h) => h.class === cls && h.message === kind && h.from.kind === from.at.kind) ?? null;
+  const matched = Object.values(declarationOf(definition).receives).find((h) => h.class === cls && h.message === kind && h.from.kind === sourceKind) ?? null;
   const handler = matched && (under === undefined || matched.from.under === undefined || matched.from.under === under) ? matched : null;
   // The mark `self` is read by the type that the handler declares for the field.
   const types = handler?.fields ?? {};
@@ -120,7 +123,7 @@ export function checkedTextBounds(definition: ValidDefinition, input: Entry["inp
     return given ? detachedBounds(fields, given) : new Map();
   }
   if (input.type === "delivery" && "decision" in input && input.message.class === "request" && (input.decision === "applied" || input.decision === "superseded" && input.message.type === "tell")) {
-    const received = bound(definition, input.message, input.from);
+    const received = bound(definition, input.message, input.from, input.sourceKind);
     if (received?.handler && received.fields) return detachedBounds(received.handler.fields, received.fields);
   }
   return new Map();
@@ -133,9 +136,9 @@ function priorDetachedBounds(definition: ValidDefinition, context: Reading, at: 
     for (const proof of context.own.sizeProofs?.() ?? []) if (proof.seq < before) limits.set(proof.digest, Math.min(limits.get(proof.digest) ?? Infinity, proof.bound));
     const positions = context.own.positions?.(before) ?? (function* () { for (let seq = 0; seq < before; seq++) yield seq; })();
     for (const seq of positions) {
-      const entry = context.own(seq)?.entry;
-      if (!entry || entry.seq !== seq || !same(entry.at, at)) continue;
-      for (const [digest, max] of checkedTextBounds(definition, entry.input)) limits.set(digest, Math.min(limits.get(digest) ?? Infinity, max));
+      const kept = context.own(seq), sequence = context.own.sequence();
+      if (!kept || !sequence || !isEntryOf(kept.entry, { at, seq, hash: kept.hash }, sequence)) continue;
+      for (const [digest, max] of checkedTextBounds(definition, kept.entry.input)) limits.set(digest, Math.min(limits.get(digest) ?? Infinity, max));
     }
   }
   return limits;
@@ -154,16 +157,16 @@ export function decisionBinding(view: StateView, definition: ValidDefinition, en
   if (input.type !== "delivery" || input.message.class !== "request" || input.message.type !== "tell" || !("decision" in input)) return null;
   const scope = view.scope();
   const source = context.facts.find((fact) => same(fact.fact, input.from));
-  const matched = bound(definition, input.message, input.from, source?.under);
+  const matched = bound(definition, input.message, input.from, input.sourceKind, source?.under);
   if (!scope || !matched?.handler || !matched.fields || !(matched.handler as unknown as PlatformReceive).bound) return null;
-  if (!source || !isEntryOf(source.entry, input.from)) throw new RuleFault("a decision binding has no retained source entry");
+  if (!source || !isEntryOf(source.entry, input.from, source.sequence) || source.sequence.kind !== input.sourceKind) throw new RuleFault("a decision binding has no matching retained source entry");
   const unknownSizes = new Set<Digest>();
   const texts = context.texts ? (digest: Digest) => {
     const size = context.texts!(digest);
     if (size === null) unknownSizes.add(digest);
     return size;
   } : undefined;
-  const ready = prepareHandler(view, definition, { ...context, texts }, scope, matched.handler, matched.kind, matched.fields, { source, update: null }, { type: "delivery", from: input.from, n: input.n, message: input.message });
+  const ready = prepareHandler(view, definition, { ...context, texts }, scope, matched.handler, matched.kind, matched.fields, { source, update: null }, { type: "delivery", from: input.from, sourceKind: input.sourceKind, n: input.n, message: input.message });
   if (ready.result === "unavailable") throw new RuleFault(`a decision binding cannot reconstruct its field and subject checks: ${ready.reason}`);
   // Owner disposition 4157eaa2: first exhaust structural checks under the
   // ordinary redaction assumptions. An early failure or no remaining
@@ -188,9 +191,9 @@ export function decisionBinding(view: StateView, definition: ValidDefinition, en
  * `under`: the name of the definition that the sender pins, which the
  * receiver read with the source entry.
  */
-export function messageFacts(view: StateView, definition: ValidDefinition, message: Request | Advisory, from: FactRef, bounds: Bounds, under: string): FactRef[] {
+export function messageFacts(view: StateView, definition: ValidDefinition, message: Request | Advisory, from: FactRef, sourceKind: ScopeKind, bounds: Bounds, under: string): FactRef[] {
   const scope = view.scope();
-  const b = scope && bound(definition, message, from, under);
+  const b = scope && bound(definition, message, from, sourceKind, under);
   if (!scope || !b?.handler || !b.fields) return [];
   const read = messageRead(view, scope.at, b.handler, b.fields, bounds);
   return read.ok ? factsNamed(b.handler.fields, read.fields, scope.at).filter((f) => f.hash !== from.hash) : [];
@@ -210,12 +213,13 @@ export function inputTexts(definition: ValidDefinition, input: Input, under?: st
   const { acts, genesis } = declarationOf(definition);
   if (input.type === "act") return textsNamed(own(acts, input.signed.intent.kind)?.fields ?? {}, input.signed.intent.fields);
   if (input.type === "genesis") return textsNamed(own(acts, genesis)!.fields, input["founding"] ? input["founding"].intent.fields : input.source ? creationFields(input.message, input.source, own(acts, genesis)!.fields) : null);
-  return input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory") ? messageTexts(definition, input.message, input.from, under) : [];
+  if (input.type !== "delivery" || input.message.class !== "request" && input.message.class !== "advisory") return [];
+  return messageTexts(definition, input.message, input.from, input.sourceKind, under);
 }
 
 /** The digest of each detached text that the declared fields of a delivered message name. None when no handler receives the message. `under`: as for `bound`. */
-export function messageTexts(definition: ValidDefinition, message: Request | Advisory, from: FactRef, under: string | undefined): Digest[] {
-  const b = bound(definition, message, from, under);
+export function messageTexts(definition: ValidDefinition, message: Request | Advisory, from: FactRef, sourceKind: ScopeKind, under: string | undefined): Digest[] {
+  const b = bound(definition, message, from, sourceKind, under);
   return b?.handler ? textsNamed(b.handler.fields, b.fields) : [];
 }
 
@@ -299,7 +303,7 @@ export function alsoItems(view: StateView, definition: ValidDefinition, also: Re
 }
 
 /** The judge's rule input before body execution: no subjects at check 7, then the subjects bound at check 8. */
-export const giving = (view: StateView, definition: ValidDefinition, context: Reading, scope: Pick<ScopeState, "at" | "creator">, self: number, judged: JudgedInput, ran: { clock: boolean }, fields: Readonly<Record<string, FieldValue>>, facts: ReadonlyMap<Digest, Fetched>, source?: Fetched): Giving =>
+export const giving = (view: StateView, definition: ValidDefinition, context: Reading, scope: Judging["scope"], self: number, judged: JudgedInput, ran: { clock: boolean }, fields: Readonly<Record<string, FieldValue>>, facts: ReadonlyMap<Digest, JudgmentCopy>, source?: JudgmentCopy): Giving =>
   ({ view, definition, clock: context.clock, bounds: context.bounds, scope, self, fields, subjects: new Map(), signer: null, facts, own: context.own, source, platform: context.platform, judged, ran });
 
 export interface ItemSettlement { item: number; form: Extract<Settles, { of: unknown }> }
@@ -325,9 +329,9 @@ export function itemSettlementBinding(view: StateView, definition: ValidDefiniti
     const read = readFields(act.fields, input.signed.intent.fields, context.bounds);
     if (!read.ok) throw new RuleFault("an item settlement cannot reconstruct its act fields");
     const local = { at: scope.at, own: context.own, texts: context.texts };
-    const named = readFacts(view, act.fields, read.fields, context.facts, local);
+    const named = readJudgmentFacts(view, act.fields, read.fields, judgmentFacts(context), local);
     const presents = presentedTypes(act.presents), shown = readFields(presents, input.presented, context.bounds);
-    const extra = shown.ok ? readFacts(view, presents, shown.fields, context.facts, local) : null;
+    const extra = shown.ok ? readJudgmentFacts(view, presents, shown.fields, judgmentFacts(context), local) : null;
     if (named.result !== "read" || extra?.result !== "read") throw new RuleFault("an item settlement cannot reconstruct its act facts");
     const facts = new Map([...named.facts, ...extra.facts]);
     const fields = named.fields, places = placesOf(act.fields, fields);
@@ -342,14 +346,14 @@ export function itemSettlementBinding(view: StateView, definition: ValidDefiniti
   if (input.type !== "delivery" || (input.message.class !== "request" && input.message.class !== "advisory")) return null;
   if ("decision" in input && input.decision !== "applied") return null;
   const source = context.facts.find(fact => same(fact.fact, input.from));
-  const matched = bound(definition, input.message, input.from, source?.under);
+  const matched = bound(definition, input.message, input.from, input.sourceKind, source?.under);
   const plan = matched?.handler ? handlerBody(definition, matched.handler)?.settlement : null;
   if (!matched?.handler || !matched.fields || !plan || plan.op === "copy") return null;
+  if (!source || !isEntryOf(source.entry, input.from, source.sequence) || source.sequence.kind !== input.sourceKind) throw new RuleFault("an item settlement has no matching retained source entry");
   const form = settlementForm(plan);
-  if (!source || !isEntryOf(source.entry, input.from)) throw new RuleFault("an item settlement has no retained source entry");
   const ready = prepareHandler(view, definition, context, scope, matched.handler, matched.kind, matched.fields,
     { source, update: input.message.class === "request" ? updateOf(input.message, input.from) : null },
-    { type: "delivery", from: input.from, n: input.n, message: input.message });
+    { type: "delivery", from: input.from, sourceKind: input.sourceKind, n: input.n, message: input.message });
   if (ready.result !== "ready") throw new RuleFault("an item settlement cannot reconstruct its handler subjects");
   const item = ready.j.subjects.get(form.of);
   return item ? { item: item.id, form } : null;
@@ -393,12 +397,15 @@ function prepareHandler(view: StateView, definition: ValidDefinition, context: R
   // The source entry is one of the foreign entries this entry uses.
   if (factsNamed(handler.fields, read.fields, scope.at).length >= bounds.usesPerEntry) return refused("bad-field", `more than ${bounds.usesPerEntry} foreign entries`);
   // Section 6.2: a fact that names this scope is a local fact. A foreign one was fetched before the turn, or the delivery is not decided.
-  const named = readFacts(view, handler.fields, read.fields, sent ? [...context.facts, sent.source] : context.facts, { at: scope.at, own: context.own, texts: context.texts });
+  const source = sent ? verifiedCopy(sent.source) : assumedSource(context);
+  if (source && !matchesCopy(source, copyFact(source))) return { result: "unavailable", reason: "dependency-unavailable" };
+  const update = sent?.update ?? (source && judged?.type === "delivery" && judged.message.class === "request" && judged.message.type === "relate" ? updateOf(judged.message, copyFact(source)) : null);
+  const named = readJudgmentFacts(view, handler.fields, read.fields, source ? [...judgmentFacts(context), source] : judgmentFacts(context), { at: scope.at, own: context.own, texts: context.texts });
   if (named.result === "unavailable") return { result: "unavailable", reason: "dependency-unavailable" };
   if (named.result !== "read") return refused(named.result, named.detail, named.uses);
   const { fields, facts, uses } = named;
   // Platform data: what a rule of this row is given before the row's forms are derived (section 6.1). A handler has no check 9.
-  const g = judged ? giving(view, definition, context, scope, scope.head.seq + 1, judged, clocked, fields, facts, sent?.source) : null;
+  const g = judged ? giving(view, definition, context, scope, scope.head.seq + 1, judged, clocked, fields, facts, source ?? undefined) : null;
   // Section 4.2, check 7: a field whose type is a mark is checked by the mark's rule.
   const outside = g && fieldOutsideType(g, handler.fields);
   if (outside) return refused("bad-field", `${outside} is not a value of its type`, uses);
@@ -422,7 +429,7 @@ function prepareHandler(view: StateView, definition: ValidDefinition, context: R
     view, definition, bounds, clock: context.clock, scope, self: scope.head.seq + 1, kind, fields, fieldTypes: handler.fields, subjects, signer: null,
     facts, prepared: context.prepared, used: [], asked: context.asked, own: context.own, snapshot: context.snapshot, capabilities: context.capabilities, platform: context.platform, judged, ran: clocked,
     // Section 6.5: `sender` is the envelope's source scope, `source` reads the source entry, and `update` the update, whose revision is the `seq` of the owner's entry.
-    sender: sent?.source.fact.at, source: sent?.source, update: sent?.update ? { state: sent.update.state, item: sent.update.item, revision: sent.source.fact.seq } : undefined,
+    sender: source ? copyFact(source).at : undefined, source: source ?? undefined, update: update && source ? { state: update.state, item: update.item, revision: copyFact(source).seq } : undefined,
   };
   // Section 17.2a: whether the delivery is bound is derived here, after the names are bound and before any guard of the handler,
   // on the state before the entry. It decides nothing of the request.
@@ -501,7 +508,7 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
     // The facts that were presented beside the origin's intent, which a clause may read as the act's guards did.
     if (input.type === "act") [frame.presents, frame.presented] = [act.presents, input.presented];
   } else if (input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory")) {
-    const b = bound(definition, input.message, input.from);
+    const b = bound(definition, input.message, input.from, input.sourceKind);
     if (!b?.handler || !b.fields) throw new Error(`entry ${origin.seq} sent a request and ran no handler`);
     const handler = handlerBranch(definition, b.handler, "decision" in input ? input.late : undefined);
     if (!handler) throw new RuleFault(`entry ${origin.seq} names no declared late branch`);
@@ -546,8 +553,8 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
   // A local fact that the origin's fields name was checked when the origin was judged. It is put in normal form again here.
   // A detached text that the origin's fields name was checked when the origin was judged, and is not asked for again.
   const local = { at: scope.at, own: context.own, texts: () => null };
-  const facts = readFacts(view, frame.fieldTypes, frame.fields, context.facts, local);
-  const presented = readFacts(view, presentedTypes(frame.presents), frame.presented ?? {}, context.facts, local);
+  const facts = readJudgmentFacts(view, frame.fieldTypes, frame.fields, judgmentFacts(context), local);
+  const presented = readJudgmentFacts(view, presentedTypes(frame.presents), frame.presented ?? {}, judgmentFacts(context), local);
   if (facts.result !== "read" || presented.result !== "read") return { result: "unavailable", reason: "dependency-unavailable" };
   // Section 6.6: a clause's subjects are those of the entry that made the send, as that entry resolved them, and they are read as
   // they are now. A name that the origin left unbound stays unbound. The validator lets a clause name no subject that was
@@ -567,7 +574,7 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
     presented: presented.fields, capabilities: context.capabilities, platform: context.platform, judged, ran: { clock: false }, beside,
     // The clause of an outcome's send has no field that names a fact. Its rule may give the fact of the entry that answered, which
     // is at hand as the verified source entry of the result, and which the entry that records the result retains.
-    ...(frame.sent && answered?.source ? { source: answered.source } : {}),
+    ...(frame.sent && (answered?.source || assumedSource(context)) ? { source: answered?.source ? verifiedCopy(answered.source) : assumedSource(context)! } : {}),
   };
   // Section 16.1, "In the commit": for a clause the list is derived before any rule of the entry runs. A source reads what a clause
   // reads: the state as it is now, the fields and the facts of the entry that sent the request, and the result. A member of another
@@ -588,5 +595,5 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
   if (ran.result === "unavailable") return ran;
   // Section 6.3: `max` bounds the live items of a type, whatever opens the item. In platform data a rule of the clause may open
   // one. Past the bound the clause's effects cannot apply now, and it changes nothing, as above.
-  return { result: "ran", effects: ran.result === "ran" ? ran.effects : [], uses: [...facts.uses, ...presented.uses.filter((use) => !facts.facts.has(use.fact.hash))], judgesTime: ran.result === "ran" ? ran.judgesTime : (structure !== null && bodyJudgesClock(structure)) || j.ran?.clock === true, ...(settled ? { rows: settled } : {}) };
+  return { result: "ran", effects: ran.result === "ran" ? sequenceEffects(ran.effects) : [], uses: [...facts.uses, ...presented.uses.filter((use) => !facts.facts.has(use.fact.hash))], judgesTime: ran.result === "ran" ? ran.judgesTime : (structure !== null && bodyJudgesClock(structure)) || j.ran?.clock === true, ...(settled ? { rows: settled } : {}) };
 }

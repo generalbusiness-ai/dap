@@ -75,7 +75,7 @@ test("native W1 retains 23 bill notes from a person and controlled agent with ex
       const read = await life.wait(() => handle.entry(original.receipt.fact.seq));
       if (!read.ok) return expect.fail(`Accepted native note ${step} must remain readable.`);
       expect(read.value.hash).toBe(entryHash(read.value.entry));
-      expect(factRefOf(read.value.entry)).toEqual(original.receipt.fact);
+      expect(factRefOf(read.value.entry, scope)).toEqual(original.receipt.fact);
       const input = read.value.entry.input;
       if (input.type !== "act") return expect.fail("The note must be an actual signed native act.");
       expect(input.signed).toEqual(original.signed); expect(verifySignedIntent(input.signed)).toBe(true);

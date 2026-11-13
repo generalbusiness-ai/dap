@@ -700,9 +700,10 @@ failure behavior, health visibility and the other readers.
         "packages/scope/src/scope-index.ts",
         "packages/scope/src/serving-admission.ts",
         "packages/scope/src/site/host.ts",
-        "packages/scope/src/scope-index-census.ts"
+        "packages/scope/src/scope-index-census.ts",
+        "packages/scope/src/worker.ts"
       ],
-      "parser": "scopeIndex addresses the fixed applied-genesis-v1 owner; indexedScopes requires it before protected target lookup. The Artifacts Site reader addresses that same fixed owner for shared read-token custody. Census addresses only that fixed owner and authenticates its pinned Register install signer.",
+      "parser": "scopeIndex addresses the fixed applied-genesis-v1 owner; indexedScopes requires it before protected target lookup. The Artifacts Site reader addresses that same fixed owner for shared read-token custody. Census addresses only that fixed owner and authenticates its pinned Register install signer. The ScopeIndex object compares its own ID with that fixed owner's ID and does no helper or store work under any other ID.",
       "missing": "Indexed existing-target requests refuse. Artifacts Site reads cannot acquire a read token and return unavailable. Census returns absent without a manifest.",
       "invalid": "Runtime call failure refuses lookup; binding shape is not parsed as text.",
       "health": "No direct index-mode/backfill field."

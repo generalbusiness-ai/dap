@@ -18,7 +18,7 @@ test("Grow's displayed alert refuses lost standing and stale revisions before cu
     const end = input.steps.findIndex(step => step.act?.kind === "open-incident" && step.expect?.answer === "accepted");
     expect(end).toBeGreaterThan(0); input.steps = input.steps.slice(0, end + 1);
     session = await openOwnedGrowScenario(packet, input);
-    expect(session.site.at.kind).toBe("lane"); expect(session.scope.at.kind).toBe("lane");
+    expect(session.site.state.scope()!.kind).toBe("lane"); expect(session.scope.state.scope()!.kind).toBe("lane");
     const f = growOperator(packet, session), alert = session.scope.state.item(137)!, heater = session.scope.state.item(10)!;
     const open = async (view: string) => {
       const opening = await f.service.call(viewToolName("alert-record", true), { view, scope: session!.scope.at, items: { alert: alert.id } });

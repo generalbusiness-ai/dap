@@ -15,7 +15,7 @@ import { EXPIRY_MARGIN_MS, invitationRedemptionFields } from "@generalbusiness/d
  * knows no application: it reads definitions as data.
  */
 
-import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Item, PlatformDefinition, Read, Receipt, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
+import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Item, PlatformDefinition, Read, Receipt, RetainedInput, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { TransportError, ScopeHandle, actBodyText, originalsAt, loadCommons, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
@@ -25,7 +25,7 @@ import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob 
 import { SendStop, applicationInstallation, applicationRoom, installApplication, type InstallHandle, type InstallRefusal, type InstallRoom, type InstallRoomConfig, type PackageBytes, type RoomRefusal } from "@generalbusiness/dap-client/install";
 import { actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, TERMINAL, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity, type Sent } from "@generalbusiness/dap-client";
-import { effectiveFields, expectedOf, finalStates, viaLeft } from "@generalbusiness/dap-client";
+import { StoreFormatError, effectiveFields, expectedOf, finalStates, viaLeft } from "@generalbusiness/dap-client";
 import { describeAct } from "./describe.ts";
 import { grantAction, onOf, type ActLike, type DefinitionLike } from "@generalbusiness/dap-client";
 import { AT_INPUT, schemaOf } from "./input-schema.ts";
@@ -222,7 +222,7 @@ const DIFF_OUTPUT = { type: "object", properties: { base: { type: "string" }, in
 const READ = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 const WRITE = { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false };
 const scopeArg = { type: ["string", "integer"], description: "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number." };
-const scopeRefArg = { type: "object", properties: { scope: { type: "string", pattern: "^sc_[a-z2-7]{51}[aq]$" }, inc: { type: "string", pattern: "^in_[a-z2-7]{25}[aeimquy4]$" }, kind: { enum: ["register", "directory", "membership", "rules", "destination", "inbox", "task", "lane", "commons"] } }, required: ["scope", "inc", "kind"], additionalProperties: false };
+const scopeRefArg = { type: "object", properties: { scope: { type: "string", pattern: "^sc_[a-z2-7]{51}[aq]$" }, genesis: { type: "string", pattern: "^sha256:[0-9a-f]{64}$" } }, required: ["scope", "genesis"], additionalProperties: false };
 const memberRefArg = { type: "object", properties: { membership: scopeRefArg, member: { type: "string", pattern: "^@.", minLength: 2 } }, required: ["membership", "member"], additionalProperties: false };
 const keyArg = { type: "string", minLength: 1, maxLength: 128, description: "Your key for this one meaning, 1 to 128 bytes. Keep it." };
 
@@ -511,6 +511,8 @@ export class McpService {
 
   async #failure(error: unknown, given: Args): Promise<Failure> {
     if (error instanceof Stop) return error.result;
+    if (error instanceof StoreFormatError) return failed({ error: error.code, sentence: error.message,
+      next: error.reason === "retired" ? "Choose a fresh store directory for new work." : "Keep the store's original requests unchanged and try again." });
     if (error instanceof CustodyError) {
       const result = failed({ error: "custody", state: error.why.held, key: String(given["idempotencyKey"] ?? ""), scope: String(given["target"] ?? given["scope"] ?? ""), ...("keys" in error.why ? { keys: error.why.keys } : {}), ...("recorded" in error.why ? { recorded: error.why.recorded } : {}), ...("bytes" in error.why ? { bytes: error.why.bytes } : {}), ...("reason" in error.why && error.why.reason === "budget" ? { reason: "budget" } : {}), ...("stale" in error.why && error.why.stale ? { stale: error.why.stale } : {}), ...("answer" in error.why ? { answer: error.why.answer } : {}), ...("step" in error.why && error.why.step ? { step: error.why.step } : {}) });
       // An unkept outcome and an unreadable record already say what the server knows of the send.
@@ -818,7 +820,7 @@ export class McpService {
     const said = answered(kept.answer, asked, guards);
     if (kept.answer.answer === "accepted" && !kept.retained) {
       // An accepted act on a membership can change whether it gives this key a session: ask again on the next read.
-      if (summary.scope.kind === "membership") this.#reads.forget(summary.scope.scope);
+      if (isPlatformDefinition(summary.definition) && platform(summary.definition)?.data.name === "platform:membership") this.#reads.forget(summary.scope.scope);
       void this.check();
     }
     const result = ok(projectAnswer({ answer: kept.answer }, { scope, kind, tool, retained: kept.retained, said, phase: kept.record.phase }));
@@ -987,8 +989,8 @@ export class McpService {
         { scope: scopeArg, cursor: { type: "string" } }, ["scope"], READ, (a) => this.#record(a)),
       tool("sends", "A page of a scope's sends with their attempts and results; or, with outboxId (seq.n, as a receipt lists it), the status of that one send.",
         { scope: scopeArg, outboxId: { type: "string" }, cursor: { type: "string" } }, ["scope"], READ, (a) => this.#sends(a)),
-      tool("text", "A retained input by scope, kind and digest: a definition, a foreign entry, a rule's input, a detached text, a snapshot, or a value in its byte domain; paged by bytes with offset.",
-        { scope: scopeArg, kind: { enum: ["definition", "entry", "rule", "text", "snapshot", "value"] }, digest: { type: "string" }, domain: { type: "string" }, offset: { type: "integer", minimum: 0 } }, ["scope", "kind", "digest"], READ, (a) => this.#text(a)),
+      tool("text", "A retained input by scope, kind and digest: a definition, a foreign entry, a rule's input, a detached text, a snapshot, a value in its byte domain, or a birth: the first entry of a foreign sequence, by that sequence's genesis entry hash in place of a content digest; paged by bytes with offset.",
+        { scope: scopeArg, kind: { enum: ["definition", "entry", "rule", "text", "snapshot", "value", "birth"] }, digest: { type: "string" }, domain: { type: "string" }, offset: { type: "integer", minimum: 0 } }, ["scope", "kind", "digest"], READ, (a) => this.#text(a)),
       tool("wait", "Waits at most 60 seconds until one of: a scope's head reaches seq; an item reaches one of states; the scopes an entry created (entry) and the scopes their genesis created exist and are active; a send (outboxId) has a result. Returns what it saw and whether it timed out. Never writes.",
         { scope: scopeArg, seq: { type: "integer", minimum: 0 }, item: { type: "integer", minimum: 0 }, type: { type: "string", description: "the item's type; with item, a final item is found among the retained ones" }, states: { type: "array", items: { type: "string" } }, entry: { type: "integer", minimum: 0 }, outboxId: { type: "string" }, seconds: { type: "integer", minimum: 1, maximum: WAIT_MOST_SECONDS } }, ["scope"], READ, (a) => this.#wait(a)),
       tool("settle", "What is known about the envelope under idempotencyKey on target (or the creation of definition): the act's phase and kept outcome, the scope's settlement for an act that is not final, and each preparation step apart. Signs nothing and sends no act.",
@@ -1049,7 +1051,7 @@ export class McpService {
     const snapshot = await this.#current();
     const { scope, membership } = await this.#scope(snapshot, args["scope"] ?? "commons");
     const { summary } = await this.#summary(scope, membership);
-    if (summary.scope.kind !== "commons" || !answersVersionQuestion(summary.definition, "mcpCommonsReadDefinition")) return failed({ error: "target", what: "the target is not Commons@1" });
+    if (!answersVersionQuestion(summary.definition, "mcpCommonsReadDefinition")) return failed({ error: "target", what: "the target is not Commons@1" });
     const cursor = fromCursor<{ c?: string; i: number; h: string }>(args["cursor"]);
     if (cursor && (!Number.isSafeInteger(cursor.i) || cursor.i < 0 || typeof cursor.h !== "string" || (cursor.c !== undefined && typeof cursor.c !== "string"))) return failed({ error: "shape", field: "cursor", what: "is not a Commons continuation", declared: "the cursor returned by commons" });
     const view = await this.#reads.read(membership, async (transport, reader) => {
@@ -1187,7 +1189,7 @@ export class McpService {
   async #text(args: Args): Promise<CallResult> {
     const s = await this.#current();
     const { scope, membership } = await this.#scope(s, args["scope"]);
-    const kind = String(args["kind"]) as "definition" | "entry" | "rule" | "text" | "snapshot" | "value";
+    const kind = String(args["kind"]) as RetainedInput["kind"];
     const digest = String(args["digest"]) as Digest;
     const domain = typeof args["domain"] === "string" ? args["domain"] : undefined;
     const read = await this.#reads.read(membership, (t, r) => t.retained(scope, r, kind, digest, domain));
@@ -1343,7 +1345,7 @@ export class McpService {
       if (read.ok) return read.value.scope;
       return stopCall({ error: "read", scope: given, reason: read.reason });
     }
-    return stopCall({ error: "shape", field: "membership", what: "is not a membership scope", declared: "a scope ID or { scope, inc, kind }" });
+    return stopCall({ error: "shape", field: "membership", what: "is not a membership scope", declared: "a scope ID or { scope, genesis }" });
   }
 
   async #create(args: Args, dispatch?: DispatchContext): Promise<CallResult> {
@@ -1396,7 +1398,7 @@ export class McpService {
       this.#invalidate();
     }
     const said = kept.answer.answer === "accepted"
-      ? { sentence: `Created ${kept.answer.receipt.fact.at.kind} ${kept.answer.receipt.fact.at.scope} under ${data.name}; it is recorded in your configuration's standalone scopes.`, next: "Call wait with the scope and entry 0 to see what its genesis created; tools/list now lists its acts." }
+      ? { sentence: `Created ${kind} ${kept.answer.receipt.fact.at.scope} under ${data.name}; it is recorded in your configuration's standalone scopes.`, next: "Call wait with the scope and entry 0 to see what its genesis created; tools/list now lists its acts." }
       : answered(kept.answer, { scope: "the creation", kind }, null);
     return ok(projectAnswer({ answer: kept.answer }, { scope: kept.answer.answer === "accepted" ? kept.answer.receipt.fact.at.scope : "the creation", kind, tool: "create", retained: kept.retained, said, phase: kept.record.phase }));
   }
@@ -1435,7 +1437,7 @@ export class McpService {
     const read = await this.#reads.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).queryItems({ v: 1, scope: room.rules, type: "installation", states: ["active"], ids: [item], limit: 1, cursor: null }));
     if (!read.ok || !read.complete || read.next !== undefined) return null;
     const row = read.value.items[0];
-    if (!row || row.id !== item || row.type !== "installation" || row.state !== "active" || !isScopeRef(row.refs["scope"]) || row.refs["scope"].kind !== "lane"
+    if (!row || row.id !== item || row.type !== "installation" || row.state !== "active" || !isScopeRef(row.refs["scope"])
       || canonicalize(row.refs["membership"] ?? null) !== canonicalize(room.membership) || canonicalize(row.refs["destination"] ?? null) !== canonicalize(room.destination) || !isDigest(row.values["definition"])
       || !isDigest(row.values["release"]) || !isDigest(row.values["semantic"]) || !isDigest(row.values["presentation"])) return null;
     return { directory: room.directory, rules: room.rules, membership: room.membership, destination: room.destination, scope: row.refs["scope"], item,
@@ -1620,7 +1622,7 @@ export class McpService {
       // The search reads a few entries a poll and goes on from where it stopped, with no limit on how far; once it finds the entry,
       // it starts there.
       const cause = intentDigest(entry.input.signed.intent);
-      const key = canonicalize(["created", this.#service, entry.at, seq, read.value.hash]);
+      const key = canonicalize(["created", this.#service, scope, seq, read.value.hash]);
       let next = this.#searches.get(key) ?? seq + 1;
       for (let n = 0; n < SEARCH_ENTRIES && seeds.length === 0; n++, next++) {
         const at = next;
@@ -1648,7 +1650,7 @@ export class McpService {
     }
     waiting(children.map((c) => c.scope));
     if (!children.every((c) => c.status === "active")) return null;
-    await this.#remember(entry, children);
+    await this.#remember(scope, entry, children);
     return { created: children.map(({ ref: _ref, ...c }) => c) };
   }
 
@@ -1656,7 +1658,7 @@ export class McpService {
    * A room the caller's own claim created, or the caller's own inbox, is recorded in the configuration, as `dap create` and
    * `join` record them, so the next list holds the room's scopes. Only an entry the caller's key signed is followed.
    */
-  async #remember(entry: Entry, children: readonly { ref: ScopeRef | null; kind: string }[]): Promise<void> {
+  async #remember(scope: ScopeId, entry: Entry, children: readonly { ref: ScopeRef | null; kind: string }[]): Promise<void> {
     const set = this.#port.config.setRepository;
     if (!set || entry.input.type !== "act" || entry.input.signed.intent.actor !== this.#port.signer.key) return;
     const of = (kind: string) => children.find((c) => c.kind === kind)?.ref ?? null;
@@ -1666,7 +1668,7 @@ export class McpService {
       await set({ directory, membership, rules: rules.scope, destination: destination.scope });
       this.#reads.forget(membership.scope);
       this.#invalidate();
-    } else if (config.repository && inbox && !config.repository.inbox && entry.at.scope === config.repository.membership.scope) {
+    } else if (config.repository && inbox && !config.repository.inbox && scope === config.repository.membership.scope) {
       await set({ ...config.repository, inbox: inbox.scope });
       this.#invalidate();
     }
@@ -1690,11 +1692,11 @@ export class McpService {
       const { summary, at } = await this.#summary(scope, membership);
       const branches = summary.items.filter(item => item.type === "branch");
       const branch = branches.length === 1 ? branches[0]! : null;
-      if (at.complete && summary.status === "active" && summary.scope.kind === "destination" && summary.scope.scope === scope
+      if (at.complete && summary.status === "active" && summary.scope.scope === scope
         && answersVersionQuestion(summary.definition, "mcpVerifyEmptyDestination") && branch?.state === "unpublished"
         && branch.values["repository"] == null && branch.values["head"] == null && typeof branch.values["name"] === "string"
         && isScopeId(branch.values["membership"]) && isScopeId(branch.values["rules"])
-        && isScopeRef(branch.refs["directory"]) && branch.refs["directory"].kind === "directory") return { ok: false, result: failed({ error: "credential", destination: scope, why: "no-repository" }) };
+        && isScopeRef(branch.refs["directory"])) return { ok: false, result: failed({ error: "credential", destination: scope, why: "no-repository" }) };
     }
     const opening = await this.#reads.read(membership, (t, r) => t.entry(scope, r, seq));
     if (!opening.ok) return { ok: false, result: failed({ error: "credential", destination: scope, why: `entry ${seq}: ${opening.reason}` }) };
@@ -1702,7 +1704,7 @@ export class McpService {
     if (input.type !== "act" || input.signed.intent.kind !== "read-token" || input.signed.intent.actor !== this.#port.signer.key) return { ok: false, result: failed({ error: "credential", destination: scope, why: `entry ${seq} is no read-token act your key signed` }) };
     // The mint's outcome: searched a few entries a call, going on from where the last call stopped, with no limit on how far.
     const operation = `${seq}:0`;
-    const key = canonicalize(["credential", this.#service, opening.value.entry.at, seq, opening.value.hash]);
+    const key = canonicalize(["credential", this.#service, scope, seq, opening.value.hash]);
     let handle: string | null = null;
     let ended: string | null = null;
     let next = this.#searches.get(key) ?? seq + 1;

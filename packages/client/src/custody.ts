@@ -61,6 +61,7 @@
 
 import type { Answer, Beside, DeclaredDefinition, Digest, KeyId, PlatformDefinition, Receipt, ScopeRef, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, intentDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { StoreFormatError } from "./store-format-error.ts";
 
 export const UNRESOLVED_MOST = 256;
 export const OUTCOMES_INLINE = 64;
@@ -168,7 +169,7 @@ export interface CustodyStore {
 export const identityId = (identity: Identity): string => digestBytes(utf8(canonicalize(identity))).slice(7);
 export const meaningOf = (asked: unknown): Digest => digestBytes(utf8(canonicalize(asked)));
 export const stepId = (s: { intent: Digest; resource: ScopeRef; capability: string; step: string }): string =>
-  digestBytes(utf8(canonicalize([s.intent, s.resource.scope, s.resource.inc, s.capability, s.step]))).slice(7);
+  digestBytes(utf8(canonicalize([s.intent, s.resource.scope, s.resource.genesis, s.capability, s.step]))).slice(7);
 
 /** Why custody sent nothing. */
 export type HeldBack =
@@ -234,7 +235,7 @@ export class Custody {
   }
 
   async #read(id: string): Promise<CustodyRecord | null> {
-    try { return await this.store.read(id); } catch { throw new CustodyError({ held: "unreadable" }); }
+    try { return await this.store.read(id); } catch (error) { if (error instanceof StoreFormatError) throw error; throw new CustodyError({ held: "unreadable" }); }
   }
 
   /**
@@ -248,6 +249,7 @@ export class Custody {
       record.updated = this.now();
       await this.#write(id, record, false, from);
     } catch (error) {
+      if (error instanceof StoreFormatError) throw error;
       if (error instanceof CustodyError && error.why.held === "too-large") throw error;
       throw new CustodyError({ held: "unkept", answer });
     }
@@ -257,7 +259,7 @@ export class Custody {
     if (envelopeBytes(record) > RECORD_BYTES) throw new CustodyError({ held: "too-large" });
     // A store may refuse a write by its own account (`full`: the hosted store's budget, before anything is dispatched); any
     // other failure is a storage failure, which settles nothing.
-    try { await this.store.write(id, record, dispatch ? { dispatch: true } : {}); } catch (error) { throw error instanceof CustodyError ? error : new CustodyError({ held: "unreadable" }); }
+    try { await this.store.write(id, record, dispatch ? { dispatch: true } : {}); } catch (error) { throw error instanceof StoreFormatError || error instanceof CustodyError ? error : new CustodyError({ held: "unreadable" }); }
     try { this.metrics?.transition(from, record.phase); } catch { /* observations never own a write */ }
   }
 
@@ -483,6 +485,7 @@ export class Custody {
         await this.#write(id, fresh, false, previous);
         try { this.metrics?.stepTransition("sent", entry.phase); } catch { /* observations never own a write */ }
       } catch (error) {
+        if (error instanceof StoreFormatError) throw error;
         if (error instanceof CustodyError && error.why.held === "too-large") throw error;
         throw new CustodyError({ held: "unkept", answer: answer === null ? "lost" : answer.answer, step: { resource: resource.scope, capability, step } });
       }

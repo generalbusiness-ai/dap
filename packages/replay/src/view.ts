@@ -93,11 +93,11 @@ export class View extends MemoryState {
     const count = this.count(type, state);
     this.#keep("count", [type, state], (to) => to.addCount(type, state, count));
   }
-  override putRelation(...given: Put<"putRelation">) { super.putRelation(...given); const [r] = given; this.#keep("relation", [r.owner.scope, r.owner.inc, r.name, r.item], (state) => state.putRelation(...given)); }
+  override putRelation(...given: Put<"putRelation">) { super.putRelation(...given); const [r] = given; this.#keep("relation", [r.owner.scope, r.owner.genesis, r.name, r.item], (state) => state.putRelation(...given)); }
   override putAccepted(...given: Put<"putAccepted">) { super.putAccepted(...given); this.#keep("accepted", [given[0] as KeyId, given[1]], (state) => state.putAccepted(...given)); }
   override putRequest(...given: Put<"putRequest">) { super.putRequest(...given); this.#keep("request", [given[0].seq, given[0].n], (state) => state.putRequest(...given)); }
-  override putDecided(...given: Put<"putDecided">) { super.putDecided(...given); const [from, n] = given; this.#keep("decided", [from.at.scope, from.at.inc, from.seq, n], (state) => state.putDecided(...given)); }
-  override putSourceOrder(...given: Put<"putSourceOrder">) { super.putSourceOrder(...given); const [order] = given; this.#keep("source-order", [order.from.scope, order.from.inc, order.handler], state => state.putSourceOrder(...given)); }
+  override putDecided(...given: Put<"putDecided">) { super.putDecided(...given); const [from, n] = given; this.#keep("decided", [from.at.scope, from.at.genesis, from.seq, n], (state) => state.putDecided(...given)); }
+  override putSourceOrder(...given: Put<"putSourceOrder">) { super.putSourceOrder(...given); const [order] = given; this.#keep("source-order", [order.from.scope, order.from.genesis, order.handler], state => state.putSourceOrder(...given)); }
   override putCreation(...given: Put<"putCreation">) { super.putCreation(...given); this.#keep("creation", [given[0]], (state) => state.putCreation(...given)); }
   override putOperation(...given: Put<"putOperation">) { super.putOperation(...given); this.#keep("operation", [given[0].id], (state) => state.putOperation(...given)); }
   override putTexts(...given: Put<"putTexts">) { super.putTexts(...given); this.#keep("texts", [given[0], given[1]], (state) => state.putTexts(...given)); }
@@ -105,5 +105,5 @@ export class View extends MemoryState {
   override putRecord(...given: Put<"putRecord">) { super.putRecord(...given); const [r] = given; this.#keep("record", [r.capability, r.kind, canonicalize(r.key)], (state) => state.putRecord(...given)); }
   override putHolder(...given: Put<"putHolder">) { super.putHolder(...given); this.#keep("holder", [given[0]], (state) => state.putHolder(...given)); }
   override putAccount(...given: Put<"putAccount">) { super.putAccount(...given); const [a] = given; this.#keep("account", [a.seq, a.n], (state) => state.putAccount(...given)); }
-  override putObserved(...given: Put<"putObserved">) { super.putObserved(...given); const [h] = given; this.#keep("observed", [h.of.scope, h.of.inc, h.subject], (state) => state.putObserved(...given)); }
+  override putObserved(...given: Put<"putObserved">) { super.putObserved(...given); const [h] = given; this.#keep("observed", [h.of.scope, h.of.genesis, h.subject], (state) => state.putObserved(...given)); }
 }

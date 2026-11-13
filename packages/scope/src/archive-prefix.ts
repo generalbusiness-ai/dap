@@ -2,7 +2,7 @@
  * privacy inventory or permission to select/export payload bodies. */
 import { natural } from "@generalbusiness/dap-bytes";
 import { DOMAINS, type Bounds, type Digest, type Head, type PlatformDefinition, type ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, domainBytes, isDigest, isFactRef, isHead, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, domainBytes, isDigest, isFactRef, isHead, isRecord, isScopeRef, parseStrict, resolveGenesisSelf, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_NATIVE_DATA, admitArchivePin, type ArchiveExportRefusal } from "@generalbusiness/dap-git/archive-policy";
 import { JOURNAL_V2_LAST_POSITION } from "@generalbusiness/dap-git/journal";
 import { platform } from "@generalbusiness/dap-platform";
@@ -55,7 +55,10 @@ export function readArchiveScopeFrame(sql: Pick<Sql, "exec">, expected: ScopeRef
   const frames = frameSql.exec("SELECT v FROM meta WHERE k = 'scope' AND typeof(v) = 'text' AND octet_length(v) = ? LIMIT 1", size).toArray(), frameBytes = frames[0]?.["v"];
   if (frames.length !== 1 || typeof frameBytes !== "string" || frameBytes.length > size || utf8(frameBytes).length !== size) return stopArchivePrefix("unavailable");
   const frame: unknown = parseStrict(frameBytes);
-  if (!isRecord(frame) || Object.keys(frame).sort().join(",") !== "at,creator,genesis,head,held,status,time" || canonicalize(frame) !== frameBytes || !isScopeRef(frame["at"]) || canonicalize(frame["at"]) !== canonicalize(expected) || frame["creator"] !== null && !isScopeRef(frame["creator"]) || canonicalize(frame["creator"]) !== canonicalize(pin.seed.creator) || !isHead(frame["head"]) || !natural(frame["head"].seq) || typeof frame["time"] !== "string" || timeMs(frame["time"]) === null || !["active", "provisional", "refused"].includes(frame["status"] as string)) return stopArchivePrefix("unavailable");
+  // A seed in its creator's genesis names that creator by scope alone; the frame's genesis source supplies its genesis.
+  const source = isRecord(frame) && isRecord(frame["genesis"]) && isFactRef(frame["genesis"]["source"]) ? frame["genesis"]["source"] : null;
+  const creator = pin.seed.creator === null ? null : source ? resolveGenesisSelf(pin.seed.creator, source) : pin.seed.creator;
+  if (!isRecord(frame) || Object.keys(frame).sort().join(",") !== "at,creator,genesis,head,held,kind,status,time" || frame["kind"] !== pin.seed.kind || canonicalize(frame) !== frameBytes || !isScopeRef(frame["at"]) || canonicalize(frame["at"]) !== canonicalize(expected) || frame["creator"] !== null && !isScopeRef(frame["creator"]) || canonicalize(frame["creator"]) !== canonicalize(creator) || !isHead(frame["head"]) || !natural(frame["head"].seq) || typeof frame["time"] !== "string" || timeMs(frame["time"]) === null || !["active", "provisional", "refused"].includes(frame["status"] as string)) return stopArchivePrefix("unavailable");
   const genesis = frame["genesis"], held = frame["held"];
   if (!isRecord(genesis) || Object.keys(genesis).sort().join(",") !== "hash,n,source" || genesis["hash"] !== pin.genesis || genesis["source"] !== null && !isFactRef(genesis["source"]) || (genesis["source"] === null ? genesis["n"] !== null : !natural(genesis["n"])) || !Array.isArray(held) || held.length > bounds.sendsPerEntry || held.some((n, i) => !natural(n) || n >= bounds.sendsPerEntry || i > 0 && n <= held[i - 1])) return stopArchivePrefix("unavailable");
   budget.check();

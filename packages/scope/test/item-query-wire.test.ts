@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 import type { ItemQuery } from "@generalbusiness/dap-contract";
-import { b64url, encodeItemQuery, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, encodeItemQuery, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { admittedRequestUrl, decodeItemQueryWire, itemQueryWire } from "../src/item-query-wire.ts";
 
-const scope = { scope: scopeIdOf({ v: 1, kind: "lane", creator: null, definition: textDigest("SCRIPTED query wire definition"), cause: textDigest("SCRIPTED cause"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(4)), kind: "lane" as const };
+const scope = { scope: scopeIdOf({ v: 1, kind: "lane", creator: null, definition: textDigest("SCRIPTED query wire definition"), cause: textDigest("SCRIPTED cause"), ordinal: 0 }), genesis: `sha256:${"04".repeat(32)}` as const };
 const query: ItemQuery = { v: 1, scope, type: "task", states: ["open"], ids: null, limit: 100, cursor: null };
 const encoded = b64url(utf8(encodeItemQuery(query)!));
 const base = `https://scopes.test/v1/scopes/${scope.scope}/query-items`;

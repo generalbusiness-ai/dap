@@ -1,11 +1,12 @@
 /** Pure wire/ownership tests. Binding and job DTOs are stand-ins, not native admission proof. */
 import { expect, test } from "vitest";
-import { canonicalize, entryHash, isEntry, isRecord, newIncarnation, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isEntry, isRecord, textDigest, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, rulesPolicyProposalV13, type EvidenceBatchRecordV17, type EvidenceBinding } from "@generalbusiness/dap-platform";
 import { verifyOwnedCheckoutSnapshot } from "@generalbusiness/dap-git";
 import { decodeAsk, encodeAsk, encodeJob } from "../src/container-records.ts";
 import { configurationDigest, originOf, signResult } from "../src/index.ts";
-import { digest, newKey, T0, world } from "./support.ts";
+import { digest, lane, newKey, T0, world } from "./support.ts";
+import { isAt } from "../src/job.ts";
 import { stageOverlay, stageService } from "./support/stage-service.ts";
 import { boundStageFixture } from "./support/stage-service.ts";
 import { stageOriginOf } from "../src/stage-origin.ts";
@@ -13,7 +14,7 @@ import { stageOriginOf } from "../src/stage-origin.ts";
 test("successor signatures bind the full actual job and semantic binding while legacy fields stay unchanged", async () => {
   const w = world(), read = originOf(w.notice, { entry: w.job, manifest: w.manifest, pinned: digest("a"), activated: { name: "change", state: "active" } });
   if ("not" in read) return expect.fail("The explicit stand-in job must be readable");
-  const signer = newKey(), membership = { ...w.fact.at, kind: "membership" as const }, rules = { ...w.fact.at, kind: "rules" as const };
+  const signer = newKey(), membership = { ...w.fact.at }, rules = { ...w.fact.at };
   const evidence: EvidenceBinding = { v: 1, source: "room", stage: "work", checker: { membership, member: "@checker" },
     roomService: { checker: { membership, member: "@checker" }, key: signer.signer.key }, policyGeneration: { rules, seq: 1 }, serviceGeneration: { rules, seq: 1 },
     auditOf: null, subject: { kind: "work", source: w.fact } };
@@ -85,13 +86,13 @@ test("successor admission reads bounded canonical record text with nullable sema
 });
 
 test.each(["landing", "published"] as const)("%s origin proves the applied bound fence and actual funded batch, with no slot-opening fallback", stage => {
-  const fixture = boundStageFixture(stage), differentKey = newKey().signer.key, differentIncarnation = newIncarnation(new Uint8Array(16).fill(7));
-  expect(differentIncarnation).not.toBe(fixture.snapshot.destination.inc);
+  const fixture = boundStageFixture(stage), differentKey = newKey().signer.key, differentGenesis = textDigest("TEST different genesis");
+  expect(differentGenesis).not.toBe(fixture.snapshot.destination.genesis);
   const origin = (snapshot: typeof fixture.snapshot) => stageOriginOf(fixture.notice,
     { entry: snapshot.job, pinned: fixture.definitions.change, activated: { name: "change", state: "active" } }, snapshot, fixture.key.signer.key, fixture.definitions);
   expect(origin(fixture.snapshot)).toHaveProperty("job");
   const source = (snapshot: typeof fixture.snapshot, seq: number) => {
-    const found = snapshot.sources.find(source => source.entry.seq === seq && source.entry.at.kind === "destination");
+    const found = snapshot.sources.find(source => source.entry.seq === seq && isAt(source, snapshot.destination));
     if (!found) throw Error("The scripted source must be present");
     return found;
   };
@@ -127,7 +128,7 @@ test.each(["landing", "published"] as const)("%s origin proves the applied bound
     const row = snapshot.admission.entry.effects.find(effect => effect.effect === "value" && effect.slot === "record");
     if (row?.effect !== "value" || typeof row.value !== "string") throw Error("The scripted admission record must be present");
     const record = JSON.parse(row.value);
-    record.sourceFacts = snapshot.sources.map(source => ({ at: source.entry.at, seq: source.entry.seq, hash: source.hash }));
+    record.sourceFacts = snapshot.sources.map(source => ({ at: "genesis" in source.entry ? (source.entry.genesis === lane.genesis ? lane : { ...snapshot.destination, genesis: source.entry.genesis }) : snapshot.destination, seq: source.entry.seq, hash: source.hash }));
     row.value = canonicalize(record); snapshot.admission.hash = entryHash(snapshot.admission.entry);
   };
   const cases: readonly [string, (snapshot: typeof fixture.snapshot) => void][] = [
@@ -138,7 +139,7 @@ test.each(["landing", "published"] as const)("%s origin proves the applied bound
     ["wrong operation kind", snapshot => { const row = source(snapshot, 9).entry.effects.find(effect => effect.effect === "operation"); if (row?.effect === "operation") row.kind = "evidence-result"; }],
     ["wrong attempt opening", snapshot => { const row = source(snapshot, 9).entry.effects.find(effect => effect.effect === "attempt"); if (row?.effect === "attempt") row.attempt = 2; }],
     ["missing batch birth", snapshot => { snapshot.sources = snapshot.sources.filter(source => source.entry.seq !== 6); }],
-    ["foreign batch incarnation", snapshot => { source(snapshot, 6).entry.at = { ...snapshot.destination, inc: differentIncarnation }; }],
+    ["foreign batch genesis", snapshot => { const entry = source(snapshot, 6).entry; if ("genesis" in entry) entry.genesis = differentGenesis; }],
     ["unapplied batch birth", snapshot => { const input = source(snapshot, 6).entry.input; if (input.type === "delivery" && "decision" in input) input.decision = "refused"; }],
     ["wrong batch birth message", snapshot => { const input = source(snapshot, 6).entry.input;
       if (input.type !== "delivery" || input.message.class !== "request" || !isRecord(input.message.body)) throw Error("The scripted birth request is required");
@@ -157,8 +158,8 @@ test.each(["landing", "published"] as const)("%s origin proves the applied bound
     ["oversized batch text", snapshot => { batchEffect(snapshot).value = " ".repeat(196_609); }],
     ["unrelated batch capture", snapshot => changeBatch(snapshot, batch => { batch.capture.hash = digest("e"); }, 6)],
     ["wrong frozen policy generation", snapshot => { for (const seq of [6, 9]) changeBatch(snapshot, batch => { batch.policy.revision = 2; batch.policy.head.seq = 2; }, seq); }],
-    ["wrong full Rules incarnation", snapshot => { for (const seq of [6, 9]) changeBatch(snapshot, batch => {
-      const rules = { ...batch.policy.rules, inc: differentIncarnation };
+    ["wrong full Rules genesis", snapshot => { for (const seq of [6, 9]) changeBatch(snapshot, batch => {
+      const rules = { ...batch.policy.rules, genesis: differentGenesis };
       batch.policy.rules = rules; batch.policy.serviceGeneration.rules = rules;
     }, seq); }],
     ["wrong frozen service generation", snapshot => { for (const seq of [6, 9]) changeBatch(snapshot, batch => { batch.policy.serviceGeneration.seq = 0; }, seq); }],

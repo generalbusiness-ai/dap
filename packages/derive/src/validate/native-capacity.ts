@@ -27,7 +27,7 @@ export function nativeLicense(d: Defining, path: string, args: Record<string, un
   const sender = isObject(from) && from["sender"] === true && (ctx.handler !== null || ctx.clause);
   const cannotBind = isObject(from) && from["none"] === true || read?.type !== null && read?.type !== undefined && ["int", "text", "bool", "time", "digest", "commit", "item", "list"].includes(read.type.type);
   const source = sender ? ctx.senderKind ?? "*" : isObject(from) && Object.hasOwn(from, "const")
-    ? isScopeRef(from["const"]) ? from["const"].kind : null
+    ? isScopeRef(from["const"]) ? "*" : null
     : read?.type?.type === "scope" ? read.type.kind : cannotBind ? null : "*";
   const k = args["k"], counter = reads.get("k")?.type;
   const min = isObject(k) && Object.hasOwn(k, "const") ? k["const"] : counter?.type === "int" ? counter.min : null;

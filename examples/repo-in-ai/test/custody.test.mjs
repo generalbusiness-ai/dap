@@ -8,7 +8,7 @@ import { tsImport } from "tsx/esm/api";
 // Load the actual TypeScript owners through the checkout's locked loader;
 // the Node gate needs no process-wide loader or replacement implementation.
 const load = source => tsImport(source, import.meta.url);
-const { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, timeOf } = await load("@generalbusiness/dap-bytes");
+const { canonicalize, intentDigest, scopeIdOf, textDigest, timeOf } = await load("@generalbusiness/dap-bytes");
 const { secretSigner, signedIntent } = await load("@generalbusiness/dap-client");
 const { Custody, CustodyError, identityId, meaningOf } = await load(new URL("../../../packages/client/src/custody.ts", import.meta.url).href);
 const { durableRequestStore, flushPrivateFile } = await load(new URL("../custody.ts", import.meta.url).href);
@@ -21,7 +21,7 @@ const NOW = Date.parse("2099-01-01T00:00:00Z");
 const signer = secretSigner(new Uint8Array(32).fill(7));
 const target = {
   scope: scopeIdOf({ v: 1, kind: "inbox", definition: "platform:inbox@1", creator: null, cause: textDigest("TEST custody boundary"), ordinal: 0 }),
-  kind: "inbox", inc: newIncarnation(new Uint8Array(16).fill(1)),
+  genesis: textDigest("TEST custody genesis"),
 };
 const identity = key => ({ service: "https://custody.test", membership: null, signer: signer.key, target, key });
 const binding = { definition: "platform:inbox", kind: "comment", declaration: null, pinned: "platform:inbox@1" };

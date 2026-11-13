@@ -11,9 +11,9 @@ const exact = (value: unknown, keys: readonly string[]): value is Record<string,
 const text = (value: unknown, max: number): value is string => typeof value === "string" && value.length <= max && wellFormed(value) && utf8(value).length <= max;
 const objectId = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{40}$/.test(value) && !/^0+$/.test(value);
 const owned = <T>(value: T): T => parseStrict(canonicalize(value)) as T;
-const scopeValue = (value: unknown): value is ScopeRef => exact(value, ["scope", "inc", "kind"]) && isScopeRef(value);
+const scopeValue = (value: unknown): value is ScopeRef => exact(value, ["scope", "genesis"]) && isScopeRef(value);
 const factValue = (value: unknown): value is FactRef => exact(value, ["at", "seq", "hash"]) && scopeValue(value["at"]) && isFactRef(value);
-const generation = (value: unknown): value is ScopedRulesPosition => exact(value, ["rules", "seq"]) && scopeValue(value["rules"]) && value["rules"].kind === "rules" && evidencePositionV17(value["seq"]) && value["seq"] <= 1000000000;
+const generation = (value: unknown): value is ScopedRulesPosition => exact(value, ["rules", "seq"]) && scopeValue(value["rules"]) && evidencePositionV17(value["seq"]) && value["seq"] <= 1000000000;
 
 export interface EvidenceHoldKeyV17 { generation: ScopedRulesPosition; extent: string; name: string; configuration: Digest; source: CheckSource; stage: "published" }
 export function readEvidenceHoldKeyV17(value: unknown): EvidenceHoldKeyV17 | null {
@@ -43,8 +43,8 @@ export interface EvidenceFailureV17 {
   result: FactRef | null;
 }
 export function readEvidenceFailureV17(value: unknown): EvidenceFailureV17 | null {
-  if (!exact(value, ["job", "publication", "commit", "order", "decidedAt", "kind", "reason", "result"]) || !factValue(value["job"]) || value["job"].at.kind !== "lane"
-    || !factValue(value["publication"]) || value["publication"].at.kind !== "destination" || !objectId(value["commit"]) || !order(value["order"])
+  if (!exact(value, ["job", "publication", "commit", "order", "decidedAt", "kind", "reason", "result"]) || !factValue(value["job"])
+    || !factValue(value["publication"]) || !objectId(value["commit"]) || !order(value["order"])
     || value["order"].publication !== value["publication"].seq || !evidencePositionV17(value["decidedAt"]) || value["decidedAt"] < value["order"].job
     || !["failed", "error", "timeout", "unknown", "observation-unavailable"].includes(String(value["kind"])) || !text(value["reason"], 1024) || value["reason"] === ""
     || !(value["result"] === null || factValue(value["result"]) && same(value["result"].at, value["job"].at))) return null;
@@ -61,7 +61,7 @@ export type EvidenceReleaseV17 = EvidencePassReleaseV17 | EvidenceOverrideReleas
 function release(value: unknown): EvidenceReleaseV17 | null {
   if (!isRecord(value) || !evidencePositionV17(value["decidedAt"]) || !order(value["through"]) || value["decidedAt"] < value["through"].job) return null;
   if (value["kind"] === "pass") return exact(value, ["kind", "decidedAt", "through", "job", "publication", "result"])
-    && factValue(value["job"]) && factValue(value["publication"]) && value["publication"].at.kind === "destination" && value["publication"].seq === value["through"].publication
+    && factValue(value["job"]) && factValue(value["publication"]) && value["publication"].seq === value["through"].publication
     && factValue(value["result"]) && same(value["job"].at, value["result"].at) ? owned(value as unknown as EvidencePassReleaseV17) : null;
   if (value["kind"] === "override") return exact(value, ["kind", "decidedAt", "through", "reason"]) && text(value["reason"], 1024) && value["reason"] !== ""
     ? owned(value as unknown as EvidenceOverrideReleaseV17) : null;
@@ -137,8 +137,8 @@ export type EvidenceHoldPendingChangeV17 = { ok: true; pending: readonly Evidenc
 const samePosition = (left: FactRef, right: FactRef): boolean => same(left.at, right.at) && left.seq === right.seq;
 const pendingInvalid = (): EvidenceHoldPendingChangeV17 => ({ ok: false, reason: "evidence-invalid" });
 const pendingConflict = (): EvidenceHoldPendingChangeV17 => ({ ok: false, reason: "hold-pending-conflict" });
-const publicationValue = (value: unknown): value is FactRef => factValue(value) && value.at.kind === "destination";
-const jobValue = (value: unknown): value is FactRef => factValue(value) && value.at.kind === "lane";
+const publicationValue = (value: unknown): value is FactRef => factValue(value);
+const jobValue = (value: unknown): value is FactRef => factValue(value);
 export function readEvidenceHoldPendingV17(value: unknown): readonly EvidenceHoldPendingV17[] | null {
   try {
     if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length > EVIDENCE_HOLD_PENDING_V17
@@ -240,7 +240,7 @@ export type EvidenceTriagersV17 = Pick<HoldersObservation, "of" | "action" | "ho
 export type EvidenceTriagerReadV17 = { ok: true; triagers: readonly MemberRef[] } | { ok: false; reason: "triagers-unavailable" | "triagers-empty" | "triagers-over-bound" };
 /** The owner verifies the actual fresh holders observation. Here completeness and bounded ownership are checked. */
 export function evidenceTriagersV17(value: EvidenceTriagersV17 | null): EvidenceTriagerReadV17 {
-  if (!value || !scopeValue(value.of) || value.of.kind !== "membership" || value.action !== "issue.triage" || !Array.isArray(value.holders) || !evidencePositionV17(value.count)) return { ok: false, reason: "triagers-unavailable" };
+  if (!value || !scopeValue(value.of) || value.action !== "issue.triage" || !Array.isArray(value.holders) || !evidencePositionV17(value.count)) return { ok: false, reason: "triagers-unavailable" };
   if (value.count > EVIDENCE_LIMITS_V17.triagers || value.holders.length > EVIDENCE_LIMITS_V17.triagers) return { ok: false, reason: "triagers-over-bound" };
   const holders = value.holders.map(holder => ({ membership: value.of, member: holder }));
   if (holders.length !== value.count || holders.some(holder => !isMemberRef(holder) || !text(holder.member, 256))
@@ -256,13 +256,13 @@ export interface EvidenceIncidentV17 {
   creation: EvidenceCreationV17 | null; child: ScopeRef | null; reason: string | null;
 }
 export function readEvidenceIncidentV17(value: unknown): EvidenceIncidentV17 | null {
-  if (!exact(value, ["job", "cause", "state", "creation", "child", "reason"]) || !factValue(value["job"]) || value["job"].at.kind !== "lane"
+  if (!exact(value, ["job", "cause", "state", "creation", "child", "reason"]) || !factValue(value["job"])
     || !["reserved", "ready", "pending", "created", "refused", "conflict"].includes(String(value["state"]))
-    || !(value["reason"] === null || text(value["reason"], 1024)) || !(value["child"] === null || scopeValue(value["child"]) && value["child"].kind === "lane")) return null;
+    || !(value["reason"] === null || text(value["reason"], 1024)) || !(value["child"] === null || scopeValue(value["child"]))) return null;
   const cause = value["cause"] === null ? null : readEvidenceFailureV17(value["cause"]);
   if (value["cause"] !== null && (!cause || !same(cause.job, value["job"]))) return null;
   const creation = value["creation"];
-  if (creation !== null && (!exact(creation, ["at", "seq", "n"]) || !scopeValue(creation["at"]) || creation["at"].kind !== "lane" || !evidencePositionV17(creation["seq"]) || !evidencePositionV17(creation["n"]))) return null;
+  if (creation !== null && (!exact(creation, ["at", "seq", "n"]) || !scopeValue(creation["at"]) || !evidencePositionV17(creation["seq"]) || !evidencePositionV17(creation["n"]))) return null;
   if (value["state"] === "reserved" && (cause !== null || creation !== null || value["child"] !== null)
     || value["state"] !== "reserved" && cause === null || value["state"] === "ready" && creation !== null
     || ["pending", "created", "refused", "conflict"].includes(String(value["state"])) && creation === null
@@ -270,7 +270,7 @@ export function readEvidenceIncidentV17(value: unknown): EvidenceIncidentV17 | n
   return owned({ ...value, cause } as unknown as EvidenceIncidentV17);
 }
 export function reserveEvidenceIncidentV17(job: FactRef): EvidenceIncidentV17 | null {
-  return factValue(job) && job.at.kind === "lane" ? { job: owned(job), cause: null, state: "reserved", creation: null, child: null, reason: null } : null;
+  return factValue(job) ? { job: owned(job), cause: null, state: "reserved", creation: null, child: null, reason: null } : null;
 }
 export type EvidenceIncidentChangeV17 = { ok: true; incident: EvidenceIncidentV17 } | { ok: false; reason: "evidence-invalid" | "incident-conflict" | "incident-not-ready" };
 /** A native admitted failure decision supplies a truthful cause. Unknown check state alone is not this authority. */

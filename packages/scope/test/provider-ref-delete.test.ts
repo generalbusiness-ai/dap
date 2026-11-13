@@ -8,7 +8,7 @@ import { GitHubProvider, type DestinationRefDeletion } from "../src/github-host.
 const ref = "refs/artroom/reservations/r1";
 const old = "1".repeat(40);
 const other = "2".repeat(40);
-const binding = { scope: { scope: "sc_scripted", inc: "in_scripted", kind: "destination" }, mint: "1:0", attempt: 1, write: "2:0", writeAttempt: 1, ref } as const;
+const binding = { scope: { scope: "sc_scripted", genesis: `sha256:${"5c".repeat(32)}` }, mint: "1:0", attempt: 1, write: "2:0", writeAttempt: 1, ref } as const;
 const pkt = (text: string) => `${(utf8(text).length + 4).toString(16).padStart(4, "0")}${text}`;
 const advertisement = (service: string, target: string | null) => new Response(
   `${pkt(`# service=${service}\n`)}0000${target === null

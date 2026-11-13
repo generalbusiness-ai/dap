@@ -30,7 +30,7 @@ export async function prepareProject(options) {
     stage = 'plan';
     const context = await contextForCelldSmoke({ base: origin, home, fetch: () => { throw Error('HTTP is disabled during preparation'); } });
     const config = await context.store.config();
-    if (config?.v !== 1 || config.service !== origin || config.plan?.service !== origin
+    if (config?.v !== 2 || config.service !== origin || config.plan?.service !== origin
       || !await celldAnswersVersionQuestion(config.plan.definition, "celldPreparedNoHostRegister") || typeof config.plan.register !== 'string'
       || !/^sc_[a-z2-7]{52}$/.test(config.plan.register)
       || config.plan.founding?.intent?.fields?.host !== 'none' || config.plan.founding.intent.fields.namespace !== '') throw Error();

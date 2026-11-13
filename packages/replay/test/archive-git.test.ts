@@ -51,7 +51,7 @@ test.each(["sha1", "sha256"] as const)("verifies all four judged cutoffs from a 
     expect(got.read.scopes).toBe(fixture.scopes.length);
   }
   const fixture = fixtures[0]!, scope = fixture.scopes[0]!, genesis = JSON.parse(scope.entries[0]!.bytes);
-  expect(genesis.input.kind).toBe("start"); expect(genesis.at.kind).toBe("directory");
+  expect(genesis.input.kind).toBe("start"); expect(genesis.input.seed.kind).toBe("directory");
   const built = await selectedGenesis(scope, format);
   expect(built.ok).toBe(true); if (built.ok) expect(built.archive.selection.through).toEqual(fixture.options.head);
   // Run the actual Node entry without a loader; new source imports must be erasable.

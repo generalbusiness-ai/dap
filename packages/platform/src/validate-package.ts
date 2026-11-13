@@ -25,7 +25,7 @@ export function validatePackage(bytes: Uint8Array, bounds: Bounds, profiles: Rea
   }
   const semantic = packet.package.semantic, definitions: ValidDefinition[] = [], findings: PackageValidationFinding[] = [];
   for (const part of semantic.definitions) {
-    const native = validateDefinition(parseStrict(part.bytes), bounds, profiles);
+    const native = validateDefinition(parseStrict(part.bytes), bounds, profiles, { canonical: true });
     if (native.ok) definitions.push(native.definition);
     else findings.push(...native.problems.map(problem => ({ definition: part.id, row: problem.path, check: "native-definition", reason: problem.code, severity: "refusal" as const, message: problem.message })));
   }

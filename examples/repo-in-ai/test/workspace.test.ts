@@ -1,6 +1,6 @@
 import { afterAll, expect, test, vi } from "vitest";
 import { basename } from "node:path";
-import { newIncarnation, same, scopeIdOf, textDigest, timeOf } from "@generalbusiness/dap-bytes";
+import { same, scopeIdOf, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import type { ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import type { Session } from "../session.ts";
 import { pushSeed, retrieveWorkspaceCredential } from "../workspace.ts";
@@ -15,7 +15,7 @@ import { bare, cleanup, commitText, put, setRef } from "../../../packages/git/te
 vi.mock("../../../packages/cli/src/command-support.ts", () => ({ requiredReadsOf: () => ({ session: async () => ({ reader: () => "Session SCRIPTED-workspace" }) }) }));
 afterAll(cleanup);
 const NOW = Date.parse("2030-01-01T00:00:00Z"), TOKEN = "SCRIPTED-private-workspace-token";
-const ref = (kind: "membership" | "directory" | "lane"): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: "platform:membership@8", creator: null, cause: textDigest("SCRIPTED workspace " + kind), ordinal: 0 }), kind, inc: newIncarnation(new Uint8Array(16).fill(9)) });
+const ref = (kind: "membership" | "directory" | "lane"): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: "platform:membership@8", creator: null, cause: textDigest("SCRIPTED workspace " + kind), ordinal: 0 }), genesis: textDigest("SCRIPTED workspace genesis " + kind) });
 
 async function sessionFixture(reply: () => Response) {
   const store = memoryStore(), membership = ref("membership"), directory = ref("directory"), lane = ref("lane");
@@ -23,7 +23,7 @@ async function sessionFixture(reply: () => Response) {
   const keep = store.keepPrivate;
   store.keepPrivate = async (name, bytes) => { await keep(name, bytes); writes.push(JSON.parse(new TextDecoder().decode(bytes))); };
   await store.keep("owner", new Uint8Array(32).fill(31));
-  await store.save({ v: 1, key: "owner", service: "https://scopes.test", handle: "@owner", repository: { membership, directory, rules: directory.scope, destination: directory.scope } });
+  await store.save({ v: 2, key: "owner", service: "https://scopes.test", handle: "@owner", repository: { membership, directory, rules: directory.scope, destination: directory.scope } });
   let gets = 0;
   const unused = async (): Promise<never> => { throw Error("UNUSED SESSION METHOD"); };
   const session: Session = {

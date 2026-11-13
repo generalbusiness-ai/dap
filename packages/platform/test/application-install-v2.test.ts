@@ -6,10 +6,10 @@ import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import { expect, test } from "vitest";
 import { canonicalize, definitionDigest, keyIdOfSecret, sign, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { packApplication } from "../src/application-codec/application.ts";
-import { packApplication2, readApplicationProjection } from "../src/application-codec/application-v2.ts";
-import { Ledger, T0, arriving, creation, grantOf, keys, membership, sent } from "@generalbusiness/dap-derive/testing";
+import { packApplication2, readApplicationPackage2, readApplicationProjection } from "../src/application-codec/application-v2.ts";
+import { Ledger, T0, arriving, creation, grantOf, keys, membership, sent, fixtureSequence } from "@generalbusiness/dap-derive/testing";
 import { clockOf, judgeDelivery, judgeGenesis, validateDefinition } from "@generalbusiness/dap-derive";
-import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { APPLICATION_RELEASE_VALUE2, APPLICATION_SEMANTIC_VALUE2, DECLARED_APPLICATION_RULES } from "../src/application-install-v2.ts";
@@ -21,8 +21,8 @@ import { declaredApplicationPublicationOrigin, installedApplicationPublicationOr
 import { applicationAnnouncement } from "../src/application-install-creation.ts";
 import { applicationProjectionDeclaration } from "../src/application-projection-reader.ts";
 
-async function fixture(requireArchive = false) {
-  const id = definitionDigest(countingCommitments), declaration = canonicalize(countingCommitments);
+async function fixture(requireArchive = false, definition: DeclaredDefinition = countingCommitments) {
+  const id = definitionDigest(definition), declaration = canonicalize(definition);
   const input = { name: "test.declared-install", version: "1", semantic: {
     ...emptyPackageComposition(), v: 2 as const, entry: id, definitions: [{ id, bytes: declaration }],
     host: { execution: "recorded-do" as const, profiles: ["restricted@1"], ...(requireArchive ? { requires: ["archive"] as const } : {}) }, capabilities: [], roles: { member: ["counting.fulfill"],
@@ -47,6 +47,20 @@ async function fixture(requireArchive = false) {
 }
 test("new native pin retains exact v2 proof and projection while Rules5 refuses the new wire", async () => {
   const { input, signer, packet, legacy, fields, values, texts } = await fixture();
+  expect(validateDefinition(countingCommitments, PROPOSED_BOUNDS, RULE_PROFILES, { canonical: true }).ok).toBe(true);
+  const redundant = structuredClone(countingCommitments);
+  Object.assign(redundant.acts[redundant.genesis]!.effects[0]!, { of: "on" });
+  expect(validateDefinition(redundant, PROPOSED_BOUNDS, RULE_PROFILES).ok).toBe(true);
+  expect(validateDefinition(redundant, PROPOSED_BOUNDS, RULE_PROFILES, { canonical: true }).ok).toBe(false);
+  const hostile = await fixture(false, redundant), rejected = new Rulebook(true, membership.scope, DECLARED_APPLICATION_RULES);
+  expect(readApplicationPackage2(hostile.packet.bytes, hostile.packet.ids.release).ids).toEqual(hostile.packet.ids);
+  expect(hostile.packet.package.semantic.projections["board"]!.definition).toBe(definitionDigest(redundant));
+  expect(hostile.packet.ids.release).not.toBe(packet.ids.release);
+  const unchanged = rejected.state.snapshot();
+  expect(rejected.act(keys.rita, "install-application", { fields: hostile.fields }, { values: hostile.values, texts: hostile.texts }))
+    .toMatchObject({ result: "refused", reason: "bad-field", name: "invalid-application-package" });
+  expect(rejected.state.snapshot()).toEqual(unchanged);
+
   const next = new Rulebook(true, membership.scope, DECLARED_APPLICATION_RULES), old = new Rulebook(true, membership.scope, APPLICATION_INSTALL_RULES);
   expect(old.act(keys.rita, "install-application", { fields }, { values, texts }).result).not.toBe("write");
   expect(next.act(keys.rita, "install-application", { fields }, { values, texts: () => undefined }).result).not.toBe("write");
@@ -113,7 +127,7 @@ test.each([
   expect(checked.ok).toBe(true); if (!checked.ok) return;
   const app = new Ledger(checked.definition, countingCommitments.name), { asked, source } = creation(D, D.head.seq, create.n, 40);
   const nodes = [R, D, M, A, G, app];
-  const facts = () => nodes.flatMap(node => node.entries.map(({ entry }, seq) => ({ fact: node.fact(seq), entry, under: node.under })));
+  const facts = () => nodes.flatMap(node => node.entries.map(({ entry }, seq) => ({ fact: node.fact(seq), entry, under: node.under, bytes: canonicalize(entry), sequence: fixtureSequence(node) })));
   const born = judgeGenesis(app.state, app.definition, asked, { clock: clockOf(app.state, T0), bounds: app.bounds, facts: facts(), prepared: [], source });
   expect(born.result, JSON.stringify(born)).toBe("write"); if (born.result !== "write") return;
   expect(born.draft.input).toMatchObject({ type: "genesis", decision: "applied" }); app.seal(born.draft);

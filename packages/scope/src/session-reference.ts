@@ -14,7 +14,7 @@ export interface SessionReferenceRequest { v: 1; to: ScopeRef; reader: string; m
 export interface SessionReference { v: 1; directory: ScopeRef; definition: PlatformDefinition; membership: ScopeRef; rules: ScopeRef | null }
 export interface SessionReferenceSource { read(directory: ScopeRef, request: string): Promise<unknown> }
 const only = (value: object, names: string) => Object.keys(value).sort().join() === names;
-const reference = (value: ScopeRef): ScopeRef => ({ scope: value.scope, inc: value.inc, kind: value.kind });
+const reference = (value: ScopeRef): ScopeRef => ({ scope: value.scope, genesis: value.genesis });
 const parsed = (raw: unknown, limit: number): unknown => {
   if (typeof raw !== "string" || raw.length > limit || utf8(raw).length > limit) return null;
   try { const value: unknown = parseStrict(raw); return canonicalize(value) === raw ? value : null; } catch { return null; }
@@ -22,14 +22,14 @@ const parsed = (raw: unknown, limit: number): unknown => {
 /** Native sender preflights fields before serialization. Numeric inputs can
  * only reduce the receiver's fixed hard caps, never increase them. */
 export function encodeSessionReference(request: SessionReferenceRequest): string | null {
-  if (request.v !== 1 || !isScopeRef(request.to) || request.to.kind !== "directory" || typeof request.reader !== "string" || request.reader.length > 4104 || !wellFormed(request.reader)
+  if (request.v !== 1 || !isScopeRef(request.to) || typeof request.reader !== "string" || request.reader.length > 4104 || !wellFormed(request.reader)
     || !Number.isSafeInteger(request.maxBytes) || request.maxBytes < 1 || !Number.isSafeInteger(request.milliseconds) || request.milliseconds < 1) return null;
   const bytes = canonicalize({ v: 1, to: reference(request.to), reader: request.reader, maxBytes: Math.min(request.maxBytes, SESSION_REFERENCE_BOUNDS.reply), milliseconds: Math.min(request.milliseconds, SESSION_REFERENCE_BOUNDS.milliseconds) });
   return bytes.length <= SESSION_REFERENCE_BOUNDS.request && utf8(bytes).length <= SESSION_REFERENCE_BOUNDS.request ? bytes : null;
 }
 export function sessionReferenceRequest(raw: unknown): SessionReferenceRequest | null {
   const value = parsed(raw, SESSION_REFERENCE_BOUNDS.request);
-  return isObject(value) && only(value, "maxBytes,milliseconds,reader,to,v") && value["v"] === 1 && isScopeRef(value["to"]) && value["to"].kind === "directory"
+  return isObject(value) && only(value, "maxBytes,milliseconds,reader,to,v") && value["v"] === 1 && isScopeRef(value["to"])
     && typeof value["reader"] === "string" && value["reader"].length <= 4104 && typeof value["maxBytes"] === "number" && Number.isSafeInteger(value["maxBytes"]) && value["maxBytes"] > 0
     && typeof value["milliseconds"] === "number" && Number.isSafeInteger(value["milliseconds"]) && value["milliseconds"] > 0
     ? value as unknown as SessionReferenceRequest : null;
@@ -37,13 +37,13 @@ export function sessionReferenceRequest(raw: unknown): SessionReferenceRequest |
 export function sessionReferenceReply(raw: unknown): SessionReference | null {
   const value = parsed(raw, SESSION_REFERENCE_BOUNDS.reply);
   return isObject(value) && only(value, "definition,directory,membership,rules,v") && value["v"] === 1
-    && isScopeRef(value["directory"]) && value["directory"].kind === "directory" && isScopeRef(value["membership"]) && value["membership"].kind === "membership"
-    && (value["rules"] === null || (isScopeRef(value["rules"]) && value["rules"].kind === "rules"))
+    && isScopeRef(value["directory"]) && isScopeRef(value["membership"]) && (value["rules"] === null || isScopeRef(value["rules"]))
     && isPlatformDefinition(value["definition"]) && SIBLINGS_OF[value["definition"]] !== undefined && platform(value["definition"]) !== null
     ? value as unknown as SessionReference : null;
 }
 
-/** A receiver has no peer port: authentication can never recursively discover one. */
+/** A receiver has no peer port: authentication can never recursively discover one. A reference names no kind: the receiver
+ * answers only as a Directory, by its own folded kind, and each returned reference comes from its recorded position. */
 export class SessionReferences {
   constructor(readonly preparation: ReadPreparation, readonly sessions: () => Sessions | null, readonly clock: Clock, readonly now: () => number = () => Date.now()) {}
   read(raw: unknown): string | null {
@@ -59,7 +59,7 @@ export class SessionReferences {
       const authentic = authenticateSession(this.sessions, request.reader);
       if (!("claims" in authentic) || !authentic.claims.reads.includes("summary") || !active()) return null;
       const frame = this.preparation.capture(new PreparationBudget(PREPARATION_BOUNDS, active));
-      if (!frame || !active() || !same(frame.scope.at, request.to) || frame.scope.status !== "active" || !isPlatformDefinition(frame.pinned.named) || !SIBLINGS_OF[frame.pinned.named]) return null;
+      if (!frame || !active() || !same(frame.scope.at, request.to) || frame.scope.kind !== "directory" || frame.scope.status !== "active" || !isPlatformDefinition(frame.pinned.named) || !SIBLINGS_OF[frame.pinned.named]) return null;
       const page = frame.view.page("repository", ["open"], null, 1);
       // The lookahead is a cardinality proof, never a truncated inventory.
       if (page.items.length !== 1 || page.more) return null;
@@ -72,10 +72,10 @@ export class SessionReferences {
         };
       } }) as StateView;
       const membership = platform(frame.pinned.named)?.membership?.(view);
-      if (!isScopeRef(membership) || membership.kind !== "membership" || !same(membership, authentic.claims.membership)
+      if (!isScopeRef(membership) || !same(membership, authentic.claims.membership)
         || sessionClock(this, frame.scope, authentic.claims) !== null || !active()) return null;
       const heldRules = page.items[0]!.refs["rules"];
-      const rules = isScopeRef(heldRules) && heldRules.kind === "rules" ? reference(heldRules) : null;
+      const rules = isScopeRef(heldRules) ? reference(heldRules) : null;
       const witness: SessionReference = { v: 1, directory: reference(frame.scope.at), definition: frame.pinned.named, membership: reference(membership), rules };
       if (!frame.current() || !active()) return null;
       // No storage or support phase follows the last fresh authority check.

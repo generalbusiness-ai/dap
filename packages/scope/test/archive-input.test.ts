@@ -1,7 +1,9 @@
 /** Native journal/retention rows and real SQLite. Selection descriptors in
  * these focused port tests are test-authored, not export policy admission. */
 import { expect, test } from "vitest";
-import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
+import { FixtureArchiveSourcePins } from "../src/archive-source-pins.ts";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { archiveInput } from "../src/archive-input.ts";
 import type { ArchiveInputSelection } from "../src/archive-input.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
@@ -17,6 +19,20 @@ const difference = (after: ArchiveCost, before: ArchiveCost): ArchiveCost => Obj
 test("reads only immutable selection keys from native SQLite", async () => {
   const lane = await create(), sealed = (await lane.sealed())[0]!, bytes = canonicalize(sealed.entry), declaration = canonicalize(definition.declared);
   const selected: ArchiveInputSelection = { entries: [{ seq: 0, hash: sealed.hash, bytes: utf8(bytes).length }], objects: [{ key: { kind: "definition", digest: definition.digest }, bytes: utf8(declaration).length }] };
+  const sources = new FixtureArchiveSourcePins([{ at: lane.at, birth: { bytes, hash: sealed.hash }, declaration }], PROPOSED_BOUNDS, new ArchiveBudget());
+  const copied: ArchiveInputSelection = { entries: [], objects: [{ key: { kind: "entry", digest: digestBytes(utf8(bytes)) }, bytes: utf8(bytes).length,
+    foreign: { fact: { at: lane.at, seq: 0, hash: sealed.hash }, pin: definition.digest } }],
+    foreignSources: [{ at: lane.at, pin: definition.digest }] };
+  const noSql = { exec() { return expect.fail("source basis validation performs no SQL"); }, transaction<T>(action: () => T) { return action(); } };
+  const copiedInput = archiveInput(noSql, copied, new ArchiveBudget(), sources);
+  expect(copiedInput.sourceSequences).toHaveLength(1);
+  expect(copiedInput.sourceSequences[0]!.at).toEqual(lane.at);
+  expect(copiedInput.sourceSequences[0]!.kind).toBe("directory");
+  expect(Object.isFrozen(copiedInput.sourceSequences)).toBe(true);
+  const extraKind = { at: lane.at, kind: "membership", pin: definition.digest };
+  expect(() => archiveInput(noSql, { ...copied, foreignSources: [extraKind] }, new ArchiveBudget(), sources)).toThrow(expect.objectContaining({ reason: "unavailable" }));
+  expect(() => archiveInput(noSql, { ...copied, foreignSources: [{ at: lane.at, pin: digestBytes(utf8("TEST wrong source pin")) }] }, new ArchiveBudget(), sources)).toThrow("archive-foreign-source-mismatch");
+  expect(() => archiveInput(noSql, { ...copied, foreignSources: [{ at: { ...lane.at, genesis: digestBytes(utf8("TEST wrong source genesis")) }, pin: definition.digest }] }, new ArchiveBudget(), sources)).toThrow("archive-foreign-source-unavailable");
   await lane.submit(lane.remark("later native entry"));
   await lane.restart();
   const read = await lane.inside(async state => {

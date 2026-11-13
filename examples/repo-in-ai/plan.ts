@@ -26,7 +26,7 @@ export function readPlan(path: string): SetupPlan {
   if (!info.isFile() || info.isSymbolicLink() || info.size > 16_384) throw new Error("Use a regular setup input file under 16 KiB.");
   const value = parseStrict(readFileSync(path, "utf8"));
   if (!closed(value, ["v", "service", "providerOrigin", "deploymentVersion", "register", "namespace", "name", "home", "handles"]) || value["v"] !== 1
-    || typeof value["service"] !== "string" || typeof value["providerOrigin"] !== "string" || !isScopeRef(value["register"]) || value["register"].kind !== "register"
+    || typeof value["service"] !== "string" || typeof value["providerOrigin"] !== "string" || !isScopeRef(value["register"])
     || typeof value["deploymentVersion"] !== "string" || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value["deploymentVersion"])
     || value["namespace"] !== "dap-demo" || !label(value["name"]) || typeof value["home"] !== "string"
     || !isAbsolute(value["home"]) || resolve(value["home"]) !== value["home"]

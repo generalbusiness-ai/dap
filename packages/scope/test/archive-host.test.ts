@@ -21,7 +21,7 @@ import { ArchiveRows } from "../src/archive-row.ts";
 import { create, at as nativeTime } from "./fixtures-native.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 
-const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "destination" };
+const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
 class RecordingSendBudget extends ArchiveBudget {
   readonly charges: Partial<ArchiveCost>[] = [];
   override spend(cost: Partial<ArchiveCost>): void { super.spend(cost); this.charges.push({ ...cost }); }
@@ -212,7 +212,7 @@ test.each(["github", "artifacts"] as const)("%s archive credential cannot escape
   const attempts: ArchiveSend[] = [
     { ...request, ref: "refs/heads/main" }, { ...request, ref: `${request.ref}/child` },
     { ...request, at: other, ref: journalRef(other.scope) },
-    { ...request, at: { ...at, inc: `in_${"b".repeat(25)}a` } },
+    { ...request, at: { ...at, genesis: `sha256:${"b".repeat(63)}a` } },
     { ...request, repository: { ...request.repository, id: "72" } },
     { ...request, credential: { ...request.credential } },
   ];
@@ -426,15 +426,15 @@ test.for(["github", "artifacts"] as const)("%s incremental send validates exact 
   const forecast = forecastArchiveTransfer({ ...shape, incremental: true });
   expect(await f.provider.sendArchive(request)).toEqual({ send: "accepted" }); expect(f.posts).toHaveLength(1);
   // Actual adapter pins for the reviewed shared v2 layout; unit prices stay unchanged.
-  expect(shape).toEqual({ objects: 27, bytes: 3789, maximum: 65536 });
-  expect(budget.charges[0]).toEqual({ metadata: 3456, inputWork: 15156 });
-  expect(budget.charges.at(-1)).toEqual({ inputWork: 30312 });
-  expect(budget.admitted()).toEqual({ entries: 0, attempts: 25, nodes: 10, calls: 50, metadata: 22774, inputWork: 89628 });
+  expect(shape).toEqual({ objects: 27, bytes: 3903, maximum: 65536 });
+  expect(budget.charges[0]).toEqual({ metadata: 3456, inputWork: 15612 });
+  expect(budget.charges.at(-1)).toEqual({ inputWork: 31224 });
+  expect(budget.admitted()).toEqual({ entries: 0, attempts: 25, nodes: 10, calls: 50, metadata: 22936, inputWork: 92046 });
   // Future transfer includes one outgoing driver copy in addition to the
   // adapter's copy/pack. Append validation remains priced separately.
-  expect(forecast).toEqual({ ok: true, cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 6912, inputWork: 60624 } });
+  expect(forecast).toEqual({ ok: true, cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 6912, inputWork: 62448 } });
   expect(forecastArchiveTransfer({ ...shape, incremental: false })).toEqual({ ok: true,
-    cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 3456, inputWork: 15156 } });
+    cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 3456, inputWork: 15612 } });
   expect(forecastArchiveTransfer({ ...shape, incremental: true, maximum: shape.bytes - 1 })).toEqual({ ok: false, reason: "limit" });
   expect(forecastArchiveTransfer({ ...shape, incremental: true, objects: 8193 })).toEqual({ ok: false, reason: "limit" });
   (context.task.meta as Record<string, unknown>)["archiveTransferCost"] = {

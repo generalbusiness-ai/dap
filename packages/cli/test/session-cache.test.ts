@@ -1,18 +1,18 @@
 import { expect, test } from "vitest";
 import type { ScopeRef, SignedSessionRequest } from "@generalbusiness/dap-contract";
-import { base32, canonicalize, keyIdOfSecret, newIncarnation, readMinimumParameter, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { base32, canonicalize, keyIdOfSecret, readMinimumParameter, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { encodeApplicationProjectionQuery } from "@generalbusiness/dap-platform/application-v2";
 import { ScopeHandle, secretSigner, type Fetch } from "@generalbusiness/dap-client";
 import { handleOf, managedReadsOf, readerOf, requiredReadsOf, requiredSessionOf, run, sessionOf, Stop } from "../src/command-support.ts";
 import { memoryStore, type Config } from "../src/store.ts";
 
 const START = Date.parse("2099-01-01T00:00:00Z"), SECRET = new Uint8Array(32).fill(17);
-const M: ScopeRef = { scope: `sc_${"a".repeat(52)}`, kind: "membership", inc: newIncarnation(new Uint8Array(16).fill(1)) };
+const M: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: textDigest("TEST genesis 1") };
 const TARGET: ScopeRef = { ...M, scope: `sc_${base32(new Uint8Array(32).fill(1))}` };
 const HEAD = { seq: 0, hash: textDigest("TEST cache head") };
 async function fixture() {
   const store = memoryStore(); await store.keep("device", SECRET);
-  const config: Config = { v: 1, service: "https://session.test", key: "device", repository: { directory: { ...M, kind: "directory" }, membership: M, rules: TARGET.scope, destination: TARGET.scope } };
+  const config: Config = { v: 2, service: "https://session.test", key: "device", repository: { directory: { ...M, genesis: textDigest("TEST directory genesis") }, membership: M, rules: TARGET.scope, destination: TARGET.scope } };
   await store.save(config);
   const state = { now: START, issued: 0, probes: 0, reads: 0, mutations: 0, denyTarget: false, denyAll: false,
     refused: null as null | { reason: "unauthorized" | "sessions-unavailable" | "rate-limited"; retry?: string },
@@ -74,7 +74,7 @@ test("CLI managed session reads carry all five minimum positions instead of retu
   expect(await handle.items("note", "4", minimum)).toEqual(behind);
   expect(await handle.history("3", minimum)).toEqual(behind);
   expect(await handle.entry(8, minimum)).toEqual(behind);
-  const query = { v: 1 as const, scope: TARGET, directory: { ...M, kind: "directory" as const }, install: 1, projection: "board", items: {} };
+  const query = { v: 1 as const, scope: TARGET, directory: { ...M, genesis: textDigest("TEST directory genesis") }, install: 1, projection: "board", items: {} };
   expect(await handle.applicationProjection(query, minimum)).toEqual(behind);
   expect(calls).toHaveLength(5);
   expect(calls.map(url => readMinimumParameter(url.searchParams.get("atLeast")))).toEqual(Array(5).fill(minimum));
@@ -89,7 +89,7 @@ test("cache identity includes exact service, signing key and membership incarnat
   await sessionOf(f.context(), { ...f.config, service: "https://other.test" });
   await f.store.keep("other", new Uint8Array(32).fill(18));
   await sessionOf(f.context(), { ...f.config, key: "other" });
-  await sessionOf(f.context(), { ...f.config, repository: { ...f.config.repository!, membership: { ...M, inc: newIncarnation(new Uint8Array(16).fill(2)) } } });
+  await sessionOf(f.context(), { ...f.config, repository: { ...f.config.repository!, membership: { ...M, genesis: textDigest("TEST genesis 2") } } });
   expect(f.state.issued).toBe(4);
   await f.store.sessionCache!.replace(utf8("not a cache record"));
   f.state.refused = { reason: "unauthorized" };

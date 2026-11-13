@@ -3,16 +3,24 @@
 import { expect, test } from "vitest";
 import type { Entry, MemberRef, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
 import { canonicalBytes, entryHash, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { created } from "@generalbusiness/dap-derive/testing";
 import { openCommands, readCommandJournal } from "./command-journal.ts";
-const scope: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "lane", creator: null, cause: `sha256:${"2".repeat(64)}`, ordinal: 0, definition: `sha256:${"1".repeat(64)}` }), inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa", kind: "lane" };
-const owner: MemberRef = { membership: { ...scope, kind: "membership" }, member: "@sensors" };
+// Entry 0 is a real fixture genesis: a reference binds its genesis hash, so
+// the scripted later entries sit in the sequence that this genesis names.
+const born = created().entries[0]!;
+if (born.entry.input.type !== "genesis") throw Error("The fixture needs genesis bytes.");
+const scope: ScopeRef = { scope: scopeIdOf(born.entry.input.seed), genesis: born.hash };
+// A stand-in Membership reference: its own scope ID and genesis hash.
+const membership: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "membership", creator: null, cause: `sha256:${"2".repeat(64)}`, ordinal: 0, definition: `sha256:${"1".repeat(64)}` }), genesis: `sha256:${"4".repeat(64)}` };
+const owner: MemberRef = { membership, member: "@sensors" };
 function history(extra = 0): Sealed[] {
   const result: Sealed[] = [];
   const append = (effects: unknown[]) => {
     const seq = result.length;
+    if (seq === 0) { result.push(structuredClone(born)); return; }
     // The fixture deliberately scripts both the entries and effects. It is
     // hashed as a public read would be; no judge, membership or grant runs.
-    const entry: Entry = JSON.parse(JSON.stringify({ v: 1, at: scope, seq, prev: result.at(-1)?.hash ?? null, time: "2026-10-19T12:00:00Z", clamped: false, epoch: 0,
+    const entry: Entry = JSON.parse(JSON.stringify({ v: 1, genesis: scope.genesis, seq, prev: result.at(-1)?.hash ?? null, time: "2026-10-19T12:00:00Z", clamped: false, epoch: 0,
       input: { type: "timed", item: 0, rule: "TEST-scripted", due: "2026-10-19T12:00:00Z" }, uses: [], prepared: [], effects, sends: [] }));
     result.push({ entry, hash: entryHash(entry) });
   };
@@ -60,7 +68,8 @@ test("complete public coverage keeps an old pending command until its own closur
   // The retained prefix leaves room for the tick's other replies, then the
   // following invocation resumes at the first entry not acknowledged.
   const large = history(400);
-  for (const sealed of large) {
+  // The genesis keeps its bytes: its hash is the sequence's address.
+  for (const sealed of large.slice(1)) {
     sealed.entry.prev = sealed.entry.seq === 0 ? null : large[sealed.entry.seq - 1]!.hash;
     sealed.entry.effects = [...sealed.entry.effects, { effect: "value", item: 0, slot: "TEST-padding", value: "x".repeat(7000) }];
     sealed.hash = entryHash(sealed.entry);

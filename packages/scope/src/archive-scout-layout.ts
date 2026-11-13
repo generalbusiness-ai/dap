@@ -60,6 +60,13 @@ export class ArchiveScoutLayout {
     }
   }
   get objects(): number { return this.#objects.size; }
+  /** Selected `entry` and `birth` objects through a head. A birth object can
+   * share its seq 0 copy with a direct use, so this can exceed the copies. */
+  copyObjects(through: Head): number {
+    const row = this.#rows.get(through.seq);
+    if (!row || row.hash !== through.hash) return stop("mismatch");
+    return row.copies;
+  }
   #recordSize(key: RetainedKey | { readonly kind: "text"; readonly digest: Digest }, bytes: number | null, first: number): string {
     this.budget.spend({ metadata: 1024, inputWork: 2048 });
     const name = archiveRetainedKeyName(key), previous = this.#sizes.get(name);
@@ -79,7 +86,7 @@ export class ArchiveScoutLayout {
     if (pass !== null && pass > this.first) return stop("mismatch");
     const counts = { ...this.#counts };
     counts.objects++; counts.keyBytes += utf8(name).length;
-    if (key.kind === "entry") counts.copies++;
+    if (key.kind === "entry" || key.kind === "birth") counts.copies++;
     // Full object descriptor except consumers. The path's ASCII escaped
     // domain spelling bounds both key strings; 512 covers fact/pin/pass.
     counts.objectJSONBytes += 512 + path.length * 2;

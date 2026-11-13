@@ -5,7 +5,7 @@
  * are never read here. */
 import { natural } from "@generalbusiness/dap-bytes";
 import { DOMAINS, RETAINED_INPUT_BYTES, type Digest } from "@generalbusiness/dap-contract";
-import { canonicalize, domainRetainedJSON, entryHash, isDigest, isEntry, isFactRef, isPlatformDefinition, rawRetainedJSON, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, domainRetainedJSON, isDigest, isEntry, isEntryBodyOf, isFactRef, isPlatformDefinition, rawRetainedJSON, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { checkedRetainedKey, type ProbeDependency, type RetainedKey } from "@generalbusiness/dap-derive";
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 import { ArchivePrefixStopped } from "./archive-prefix.ts";
@@ -58,9 +58,18 @@ export function archiveRetainedHandoffCost(keys: number): Partial<ArchiveCost> {
   return { metadata: 128 + keys * 256, inputWork: 256 + keys * 512 };
 }
 
+/** The native row that holds a key's bytes. A birth reads its copy's `entry` row. */
+function rowOf(key: RetainedKey, copy: Readonly<ArchiveRetainedCopy> | undefined): [string, Digest] {
+  if (key.kind === "value") return [key.domain, key.digest];
+  if (key.kind === "birth") return ["entry", copy!.content];
+  return [key.kind, key.digest];
+}
+
 export class ArchiveRetainedReader {
   readonly #cache = new Map<string, string>();
   readonly #copies = new Map<Digest, Readonly<ArchiveRetainedCopy>>();
+  /** Genesis entry hash to the content digest of that sequence's seq 0 copy. */
+  readonly #births = new Map<Digest, Digest>();
   /** The owning pass supplies descriptors only after every local/foreign
    * policy class is admitted, or from its exact immutable marked selection. */
   constructor(readonly sql: Pick<Sql, "exec">, readonly budget: ArchiveBudget, copies: readonly Readonly<ArchiveRetainedCopy>[] = [], readonly expectedSizes?: ReadonlyMap<string, number | null>) {
@@ -78,6 +87,7 @@ export class ArchiveRetainedReader {
     }
     if (this.#copies.size === ARCHIVE_BOUNDS.attempts) this.budget.stop("limit");
     this.#copies.set(copy.content, Object.freeze({ ...copy, fact: Object.freeze({ ...copy.fact, at: Object.freeze({ ...copy.fact.at }) }) }));
+    if (copy.fact.seq === 0 && copy.fact.hash === copy.fact.at.genesis) this.#births.set(copy.fact.hash, copy.content);
   }
   /** Add only an already classified descriptor inside the owner's native
    * metadata frame. This does not grant privacy or body-read admission.
@@ -102,18 +112,21 @@ export class ArchiveRetainedReader {
     checkedRetainedKey(key);
     this.budget.spend({ attempts: 1, inputWork: REQUEST_WORK });
     if (this.expectedSizes) archiveRetainedExpectedSize(key, this.expectedSizes, this.budget);
-    const copy = key.kind === "entry" ? this.#copies.get(key.digest) : undefined;
-    if (key.kind === "entry" && !copy) throw new ArchivePrefixStopped("unsupported-foreign-copy");
+    // A birth key names the genesis entry hash; its bytes are the classified
+    // seq 0 copy of that sequence, kept as an `entry` row (ruling ae48dd39).
+    const content = key.kind === "birth" ? this.#births.get(key.digest) : key.kind === "entry" ? key.digest : undefined;
+    const copy = content === undefined ? undefined : this.#copies.get(content);
+    if ((key.kind === "entry" || key.kind === "birth") && !copy) throw new ArchivePrefixStopped("unsupported-foreign-copy");
     // Runtime check as well as the closed TypeScript key; never fall through
     // an unknown future kind into the ordinary retained_input table.
-    if (!["definition", "entry", "rule", "snapshot", "value"].includes(key.kind)) throw new ArchivePrefixStopped("unavailable");
+    if (!["definition", "entry", "rule", "snapshot", "value", "birth"].includes(key.kind)) throw new ArchivePrefixStopped("unavailable");
     if (key.kind === "value" && (!nativeDomains.has(key.domain) || key.domain === DOMAINS.definition)) throw new ArchivePrefixStopped("unsupported-custom-domain");
     if (!natural(max) || max === 0 || max > RETAINED_INPUT_BYTES) return this.budget.stop("limit");
     return copy;
   }
   #size(key: RetainedKey, max: number, copy: Readonly<ArchiveRetainedCopy> | undefined): number | null {
     const value = key.kind === "value", where = value ? "domain = ? AND digest = ?" : "kind = ? AND digest = ?", table = value ? "retained_value" : "retained_input";
-    const rows = this.budget.native(this.sql, () => ({ metadata: SIZE_METADATA, inputWork: 0 })).exec(`SELECT octet_length(bytes) AS size, typeof(bytes) AS type FROM ${table} WHERE ${where} LIMIT 1`, key.kind === "value" ? key.domain : key.kind, key.digest).toArray();
+    const rows = this.budget.native(this.sql, () => ({ metadata: SIZE_METADATA, inputWork: 0 })).exec(`SELECT octet_length(bytes) AS size, typeof(bytes) AS type FROM ${table} WHERE ${where} LIMIT 1`, ...rowOf(key, copy)).toArray();
     const row = rows[0], bytes = rows.length === 1 && row?.["type"] === "text" && natural(row["size"])
       && row["size"] > 0 && row["size"] <= RETAINED_INPUT_BYTES ? row["size"] : null;
     if (this.expectedSizes && this.expectedSizes.get(archiveRetainedKeyName(key)) !== bytes) throw new ArchivePrefixStopped("mismatch");
@@ -136,7 +149,7 @@ export class ArchiveRetainedReader {
     let size: number;
     if (bytes === undefined) {
       const value = key.kind === "value", where = value ? "domain = ? AND digest = ?" : "kind = ? AND digest = ?", table = value ? "retained_value" : "retained_input";
-      const bindings = [key.kind === "value" ? key.domain : key.kind, key.digest];
+      const bindings = rowOf(key, copy);
       const measured = this.#size(key, max, copy);
       if (measured === null) return null;
       size = measured;
@@ -152,12 +165,13 @@ export class ArchiveRetainedReader {
       size = utf8(bytes).length;
     }
     if (bytes.length > max || utf8(bytes).length !== size || size > max) return null;
-    const parsed = key.kind === "rule" || key.kind === "entry" ? rawRetainedJSON(key.digest, bytes)
+    const parsed = key.kind === "birth" ? rawRetainedJSON(copy!.content, bytes)
+      : key.kind === "rule" || key.kind === "entry" ? rawRetainedJSON(key.digest, bytes)
       : domainRetainedJSON(key.kind === "value" ? key.domain : key.kind === "definition" ? DOMAINS.definition : DOMAINS.snapshot, key.digest, bytes, { canonical: true, max });
     this.budget.check();
     if (parsed === undefined || canonicalize(parsed) !== bytes) return null;
-    if (copy && (!isEntry(parsed) || parsed.seq !== copy.fact.seq || canonicalize(parsed.at) !== canonicalize(copy.fact.at)
-      || entryHash(parsed) !== copy.fact.hash || size !== copy.bytes || parsed.input.type === "genesis" && parsed.input.seed.definition !== copy.pin)) return null;
+    if (copy && (!isEntry(parsed) || !isEntryBodyOf(parsed, copy.fact)
+      || parsed.input.type === "genesis" && scopeIdOf(parsed.input.seed) !== copy.fact.at.scope || size !== copy.bytes || parsed.input.type === "genesis" && parsed.input.seed.definition !== copy.pin)) return null;
     this.budget.check();
     this.#cache.set(cacheKey, bytes);
     return { bytes, value: parsed };

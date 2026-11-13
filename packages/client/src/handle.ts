@@ -19,7 +19,7 @@ import type {
   SignedIntent, Summary, ItemQuery, ItemQueryRead, ApplicationProjectionQuery, ApplicationProjectionRead,
 } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, utf8, readMinimum, isReceipt, definitionDigest, entryHash, encodeItemQueryParameter, readItemQueryParameter, itemQueryReadFor, within, LATE, isDigest, parseStrict, textDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, utf8, readMinimum, isReceipt, definitionDigest, entryHash, encodeItemQueryParameter, readItemQueryParameter, itemQueryReadFor, within, LATE, isDigest, parseStrict, textDigest, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { encodeApplicationProjectionQuery, readApplicationProjectionQuery, readApplicationProjectionReplyText } from "@generalbusiness/dap-platform/application-v2";
 
 /** How a handle reaches a scope service: the contract's `ScopeApi`. `http.ts` and `binding.ts` each make one. */
@@ -32,9 +32,9 @@ export class TransportError extends Error {
 
 /**
  * The entry a receipt names, checked against the whole fact reference: scope,
- * incarnation, kind, position and hash. `wrong-incarnation`: the entry at
- * that position is of another incarnation of the scope than the receipt
- * names. `reference-mismatch`: it is of another scope or kind, or at another
+ * genesis, position and hash. `wrong-genesis`: the entry at
+ * that position is of another genesis of the scope than the receipt
+ * names. `reference-mismatch`: it is of another scope, or at another
  * position. `hash-mismatch`: its bytes do not hash to the receipt's fact. In
  * each case the receipt is not of this history.
  */
@@ -178,7 +178,11 @@ export class ScopeHandle {
       if (digestBytes(utf8(`${DOMAINS.entry}\n${row.bytes}`)) !== row.hash) throw new TransportError(`log entry ${row.seq} does not hash to its hash`);
       let entry: Entry;
       try { entry = parseStrict(row.bytes) as Entry; } catch { throw new TransportError(`log entry ${row.seq} is not canonical`); }
-      if (entry.seq !== row.seq || !entry.at || !sameRef(entry.at, own.scope)) throw new TransportError(`log entry ${row.seq} is not this scope's entry at that seq`);
+      // A genesis names its scope by its seed and its hash; every later entry names the genesis it follows.
+      const input: unknown = (entry as { input?: unknown }).input;
+      const born = typeof input === "object" && input !== null && (input as { type?: unknown }).type === "genesis" ? entry.input as Extract<Entry["input"], { type: "genesis" }> : null;
+      const ours = born ? scopeIdOf(born.seed) === own.scope.scope && row.hash === own.scope.genesis : "genesis" in entry && entry.genesis === own.scope.genesis;
+      if (entry.seq !== row.seq || !ours) throw new TransportError(`log entry ${row.seq} is not this scope's entry at that seq`);
       if (row.seq <= previous || row.seq > reply.at.seq) throw new TransportError("the log page's seqs do not rise from the cursor to the head");
       if (row.seq !== previous + 1) gap = true;
       previous = row.seq;
@@ -229,8 +233,9 @@ export class ScopeHandle {
     }
     if (!read.ok) return read.reason === "behind" ? read : read.reason === "archived" ? { ok: false, reason: "archived", archived: read.archived } : { ok: false, reason: read.reason };
     const entry = read.value.entry;
-    if (entry.at?.scope !== at.scope || entry.at.kind !== at.kind || entry.seq !== seq) return { ok: false, reason: "reference-mismatch" };
-    if (entry.at.inc !== at.inc) return { ok: false, reason: "wrong-incarnation" };
+    const born = entry.input.type === "genesis" ? entry.input : null;
+    if (entry.seq !== seq || born && scopeIdOf(born.seed) !== at.scope) return { ok: false, reason: "reference-mismatch" };
+    if ((born ? hash : "genesis" in entry ? entry.genesis : null) !== at.genesis) return { ok: false, reason: "wrong-genesis" };
     let matched: Digest | null = null;
     try {
       matched = entryHash(entry);

@@ -45,7 +45,7 @@ import { actBodyText, deviceKeyInvitationOf, encodeDeviceKeyInvitation, invitati
  */
 
 import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Head, Item, KeyId, MemberRef, ScopeId, ScopeRef, Summary, Read, SignedIntent, Receipt, OutboxId } from "@generalbusiness/dap-contract";
-import { LATE, b64url, byteOrder, canonicalize, definitionDigest, entryHash, intentDigest, isFactRef, isMemberRef, isScopeId, isSeed, scopeIdOf, isScopeRef as fullScopeRef, takeBytes, textDigest, timeMs, timeOf, verifySignedIntent, type Expiry } from "@generalbusiness/dap-bytes";
+import { LATE, b64url, byteOrder, canonicalize, definitionDigest, intentDigest, isEntryBodyOf, isFactRef, isMemberRef, isScopeId, isSeed, scopeIdOf, isScopeRef as fullScopeRef, takeBytes, textDigest, timeMs, timeOf, verifySignedIntent, type Expiry } from "@generalbusiness/dap-bytes";
 import {
   ScopeHandle, activeDirectory, collectItemQuery, partitionIndexes, completeSummary, declaredHandle, httpTransport, openHttpHeadStream, requestSession, secretSigner, signerSessionRequest, shapeDeclaredAct, signedIntent, signedReads, type Fetch, type Session as ReadSession, type Signer, type Signing, type Transport,
 } from "@generalbusiness/dap-client";
@@ -83,7 +83,8 @@ export interface Place { directory: ScopeId; membership: ScopeRef }
 export interface Room {
   session: Session;
   directory: ScopeId;
-  directoryIndex: { scope: ScopeRef; definition: Summary["definition"] } | null;
+  /** `partitions`: the full references of the partition indexes that the last directory read returned. */
+  directoryIndex: { scope: ScopeRef; definition: Summary["definition"]; partitions?: readonly ScopeRef[] } | null;
   membership: ScopeRef;
   rules: ScopeId;
   destination: ScopeId;
@@ -124,7 +125,7 @@ export const handleOf = (room: Pick<Room, "session" | "reader">, scope: ScopeId)
 
 /** Each service, membership and key under which this page load held a read session. Memory only: closing or leaving a room forgets nothing, and only a new page load does. */
 const heldSessions = new Set<string>();
-const heldContext = (session: Session, membership: ScopeRef, key: string): string => JSON.stringify([session.service.replace(/\/+$/, ""), membership.scope, membership.inc, key]);
+const heldContext = (session: Session, membership: ScopeRef, key: string): string => JSON.stringify([session.service.replace(/\/+$/, ""), membership.scope, membership.genesis, key]);
 /**
  * Since this page loaded, it held a read session under this service, membership
  * and key, and it holds none now. It cannot keep a copy, and it must not send as
@@ -277,7 +278,7 @@ const scopeOf = (ref: FieldValue | null | undefined): ScopeId | null => (ref && 
 // ---------------------------------------------------------------- the room
 
 const hasScopeRefFields = (v: unknown): v is ScopeRef =>
-  typeof v === "object" && v !== null && typeof (v as ScopeRef).scope === "string" && typeof (v as ScopeRef).inc === "string" && typeof (v as ScopeRef).kind === "string";
+  typeof v === "object" && v !== null && typeof (v as ScopeRef).scope === "string" && typeof (v as ScopeRef).genesis === "string";
 
 /**
  * The room that a text names: an invitation link from `artroom invite`, or
@@ -285,14 +286,23 @@ const hasScopeRefFields = (v: unknown): v is ScopeRef =>
  * the directory and membership. Null when the text is neither. The link's
  * secret is not kept here: `joinRoom` reads it from the link.
  */
+/**
+ * Whether a pasted `config.json` has the old format, `v: 1`. Its rooms
+ * retired at the identifier cutover (ruling e46dd964 item 5), so the page
+ * imports nothing from it.
+ */
+export function isRetiredConfig(typed: string): boolean {
+  try { const parsed: unknown = JSON.parse(typed.trim()); return record(parsed) && parsed["v"] === 1; } catch { return false; }
+}
+
 export function placeOf(typed: string): Place | null {
   const trimmed = typed.trim();
   try {
     const parsed = (trimmed.startsWith(LINK) ? linkOf(trimmed) : JSON.parse(trimmed)) as { repository?: { directory?: unknown; membership?: unknown }; directory?: unknown; membership?: unknown } | null;
     const repository = parsed?.repository ?? parsed;
     // Encoding only: a syntactically valid Place proves no birth or authority.
-    if (!fullScopeRef(repository?.directory) || repository.directory.kind !== "directory"
-      || !fullScopeRef(repository?.membership) || repository.membership.kind !== "membership") return null;
+    if (!fullScopeRef(repository?.directory)
+      || !fullScopeRef(repository?.membership)) return null;
     return { directory: repository.directory.scope, membership: repository.membership };
   } catch {
     return null;
@@ -304,8 +314,8 @@ export function placeOf(typed: string): Place | null {
 function admittedInvitation(link: NonNullable<ReturnType<typeof linkOf>>): boolean {
   const membership = isInvitationMembership(link.definition) ? platform(link.definition) : null;
   return typeof link.handle === "string" && link.invitation > 0
-    && fullScopeRef(link.repository?.directory) && link.repository.directory.kind === "directory"
-    && fullScopeRef(link.repository?.membership) && link.repository.membership.kind === "membership"
+    && fullScopeRef(link.repository?.directory)
+    && fullScopeRef(link.repository?.membership)
     && isScopeId(link.repository?.rules) && isScopeId(link.repository?.destination)
     && membership?.data.name === "platform:membership" && membership.data.acts["join"] !== undefined;
 }
@@ -314,7 +324,7 @@ function admittedInvitation(link: NonNullable<ReturnType<typeof linkOf>>): boole
  * of whichever room the Page currently selects. Another invitation does not
  * settle an unknown enrollment under that same identity. */
 export function enrollmentAssociation(session: Session, membership: ScopeRef): string {
-  if (!fullScopeRef(membership) || membership.kind !== "membership") throw new Unreadable("Enrollment requires a complete membership reference.");
+  if (!fullScopeRef(membership)) throw new Unreadable("Enrollment requires a complete membership reference.");
   return canonicalize([session.service.replace(/\/+$/, ""), membership, sessionKey(session)]);
 }
 
@@ -404,11 +414,11 @@ export async function openRoom(session: Session, place: Place): Promise<Room> {
   const rules = scopeOf(repository?.refs["rules"]);
   const destination = scopeOf(repository?.refs["destination"]);
   if (!repository || !hasScopeRefFields(M) || !rules || !destination) throw new Unreadable(`The directory ${place.directory} names no membership, rules scope and destination yet.`);
-  if (M.scope !== place.membership.scope || M.inc !== place.membership.inc) throw new Unreadable(`The directory ${place.directory} names another membership scope than ${place.membership.scope}.`);
+  if (M.scope !== place.membership.scope || M.genesis !== place.membership.genesis) throw new Unreadable(`The directory ${place.directory} names another membership scope than ${place.membership.scope}.`);
   room.rules = rules;
   room.destination = destination;
   const commons = repository.refs["commons"];
-  if (fullScopeRef(commons) && commons.kind === "commons") room.commons = commons;
+  if (fullScopeRef(commons)) room.commons = commons;
   else if (commons !== undefined && commons !== null) throw new Unreadable("The directory has an invalid Commons reference.");
   const recordedRepository = repository.values["repository"];
   if (answersVersionQuestion(summary.definition, "pageUnpublishedDirectory") && summary.status === "active" && repository.state === "open" && recordedRepository == null) room.publication = "unpublished";
@@ -456,6 +466,8 @@ async function directoryLanes(room: Room): Promise<readonly Item[]> {
   if (answersVersionQuestion(index.definition, "pagePartitionRootDirectory")) {
     const coverage = await partitionIndexes({ summary: scope => handleOf(room, scope).summary(), query: (scope, query) => handleOf(room, scope).queryItems(query) }, index.scope, room.membership);
     if (!coverage.complete) throw new Unreadable(`Directory indexes incomplete (${coverage.reason ?? "unavailable"}); partitions read: ${coverage.indexes.length}.`);
+    // Keep the partition references that this read returned, so a row to a partition locks the directory (ruling 10 (b)).
+    room.directoryIndex = { ...index, partitions: coverage.indexes.map(part => part.ref) };
     return coverage.indexes.flatMap(part => [...part.lanes]);
   }
   const declared = platform(index.definition)?.data.items["lane"];
@@ -520,8 +532,8 @@ async function issueTimes(handle: ScopeHandle, summary: Summary, at: Head): Prom
     if (!first.ok || !last.ok || !first.complete || !last.complete || first.next !== undefined || last.next !== undefined) return unavailable;
     const genesis = first.value.entry, latest = last.value.entry;
     if (genesis.seq !== 0 || genesis.prev !== null || latest.seq !== at.seq
-      || canonicalize(genesis.at) !== canonicalize(summary.scope) || canonicalize(latest.at) !== canonicalize(summary.scope)
-      || entryHash(genesis) !== first.value.hash || entryHash(latest) !== last.value.hash || last.value.hash !== at.hash
+      || !isEntryBodyOf(genesis, { at: summary.scope, seq: 0, hash: first.value.hash }) || !isEntryBodyOf(latest, { at: summary.scope, seq: at.seq, hash: last.value.hash })
+      || last.value.hash !== at.hash
       || timeMs(genesis.time) === null || timeMs(latest.time) === null) return unavailable;
     const final = await summaryOf(handle);
     if (canonicalize(final.summary.scope) !== canonicalize(summary.scope) || canonicalize(final.at) !== canonicalize(at)) return unavailable;
@@ -534,7 +546,7 @@ async function factOf(handle: ScopeHandle, ref: ScopeRef, value: unknown): Promi
   const seq = typeof value === "number" ? value : isFactRef(value) && canonicalize(value.at) === canonicalize(ref) ? value.seq : null;
   if (seq === null) return null;
   const read = await handle.entry(seq);
-  if (!read.ok || !read.complete || read.next !== undefined || read.value.entry.seq !== seq || canonicalize(read.value.entry.at) !== canonicalize(ref) || entryHash(read.value.entry) !== read.value.hash) return null;
+  if (!read.ok || !read.complete || read.next !== undefined || read.value.entry.seq !== seq || !isEntryBodyOf(read.value.entry, { at: ref, seq, hash: read.value.hash })) return null;
   const fact: FactRef = { at: ref, seq, hash: read.value.hash };
   return isFactRef(value) && canonicalize(value) !== canonicalize(fact) ? null : fact;
 }
@@ -580,7 +592,7 @@ async function decidedQuestions(handle: ScopeHandle, ref: ScopeRef, asks: readon
   return Promise.all(asks.map(async (ask, index) => {
     const seq = decidedEntry(ask), question = shownText(ask.values["question"]), comment = typeof ask.values["decisionComment"] === "string" ? shownText(ask.values["decisionComment"]) : null;
     const read = seq === null || index >= details ? null : await handle.entry(seq).catch(() => null);
-    const entry = read?.ok && read.complete && read.value.entry.seq === seq && canonicalize(read.value.entry.at) === canonicalize(ref) && entryHash(read.value.entry) === read.value.hash ? read.value.entry : null;
+    const entry = read?.ok && read.complete && read.value.entry.seq === seq && isEntryBodyOf(read.value.entry, { at: ref, seq, hash: read.value.hash }) ? read.value.entry : null;
     const input = entry?.input;
     return { ask: ask.id, line: decidedLine(question, seq), question, body: bodies && index < details ? await textOf(handle, ask.values["body"]).catch(() => null) : null,
       by: input?.type === "act" ? keyHolder(members, input.signed.intent.actor)?.member ?? "a key that is no longer active" : null, at: entry?.time ?? null, comment };
@@ -739,7 +751,7 @@ export interface ChangeView {
 async function reviewPolicyOf(room: Room, change: ScopeRef, proposal: Item, held: Item | undefined, manifest: number): Promise<NonNullable<ChangeView["reviewPolicy"]> | null> {
   try {
     const source = held?.refs["source"], named = proposal.refs["rulesScope"];
-    if (!held || !isFactRef(source) || !fullScopeRef(named) || source.at.scope !== room.rules || source.at.kind !== "rules"
+    if (!held || !isFactRef(source) || !fullScopeRef(named) || source.at.scope !== room.rules
       || canonicalize(source.at) !== canonicalize(named) || held.values["revision"] !== source.seq) return null;
     const handle = handleOf(room, source.at.scope);
     const { summary, at } = await summaryOf(handle);
@@ -752,8 +764,7 @@ async function reviewPolicyOf(room: Room, change: ScopeRef, proposal: Item, held
     const read = await handle.entry(source.seq);
     if (!read.ok || !read.complete || read.next !== undefined) return null;
     const entry = read.value.entry;
-    if (entry.seq !== source.seq || canonicalize(entry.at) !== canonicalize(source.at)
-      || entryHash(entry) !== source.hash || read.value.hash !== source.hash) return null;
+    if (!isEntryBodyOf(entry, source) || read.value.hash !== source.hash) return null;
     const sends = entry.sends.filter(send => canonicalize(send.to) === canonicalize(change) && send.message.class === "request"
       && send.message.type === "relate" && record(send.message.body) && send.message.body["name"] === "rules");
     if (sends.length !== 1) return null;
@@ -822,7 +833,7 @@ async function manifestContent(handle: ScopeHandle, scope: Summary["scope"], man
     const read = await handle.entry(manifest.id);
     if (!read.ok || !read.complete || read.next !== undefined) return null;
     const { entry, hash } = read.value;
-    if (entry.seq !== manifest.id || canonicalize(entry.at) !== canonicalize(scope) || entryHash(entry) !== hash || hash !== manifest.opened) return null;
+    if (!isEntryBodyOf(entry, { at: scope, seq: manifest.id, hash }) || hash !== manifest.opened) return null;
     if (!entry.effects.some((effect) => effect.effect === "open" && effect.type === "manifest" && effect.item === manifest.id)) return null;
     const input = entry.input;
     if (input.type !== "act" || input.signed.intent.kind !== "propose-file" || !verifySignedIntent(input.signed) || canonicalize(input.signed.intent.to) !== canonicalize(scope)) return null;
@@ -854,7 +865,7 @@ async function manifestListFile(handle: ScopeHandle, scope: ScopeRef, manifest: 
     const source = await handle.entry(fact.seq);
     if (!opening.ok || !opening.complete || opening.next !== undefined || !source.ok || !source.complete || source.next !== undefined) return null;
     const m = opening.value, s = source.value;
-    if (m.entry.seq !== manifest.id || canonicalize(m.entry.at) !== canonicalize(scope) || entryHash(m.entry) !== m.hash || m.hash !== manifest.opened || s.entry.seq !== fact.seq || canonicalize(s.entry.at) !== canonicalize(fact.at) || entryHash(s.entry) !== s.hash || s.hash !== fact.hash) return null;
+    if (!isEntryBodyOf(m.entry, { at: scope, seq: manifest.id, hash: m.hash }) || m.hash !== manifest.opened || !isEntryBodyOf(s.entry, fact) || s.hash !== fact.hash) return null;
     const mi = m.entry.input, si = s.entry.input;
     if (mi.type !== "act" || si.type !== "act" || mi.signed.intent.kind !== "propose-manifest" || si.signed.intent.kind !== "propose-file" || !verifySignedIntent(mi.signed) || !verifySignedIntent(si.signed) || canonicalize(mi.signed.intent.to) !== canonicalize(scope) || canonicalize(si.signed.intent.to) !== canonicalize(scope)) return null;
     if (!m.entry.effects.some((effect) => effect.effect === "open" && effect.type === "manifest" && effect.item === manifest.id) || !s.entry.effects.some((effect) => effect.effect === "open" && effect.type === "source" && effect.item === fact.seq)) return null;
@@ -1034,8 +1045,8 @@ export async function roomInitialization(room: Room): Promise<RoomInitialization
     const directory = await summaryOf(handleOf(room, room.directory));
     const repository = directory.summary.items.find(item => item.type === "repository");
     const named = repository?.refs["rules"];
-    if (directory.summary.status !== "active" || directory.summary.scope.scope !== room.directory || directory.summary.scope.kind !== "directory"
-      || !fullScopeRef(named) || named.kind !== "rules" || named.scope !== room.rules
+    if (directory.summary.status !== "active" || directory.summary.scope.scope !== room.directory
+      || !fullScopeRef(named) || named.scope !== room.rules
       || canonicalize(repository?.refs["membership"]) !== canonicalize(room.membership)) return unavailable;
     const handle = handleOf(room, room.rules), { summary, at } = await summaryOf(handle);
     if (summary.status !== "active" || canonicalize(summary.scope) !== canonicalize(named)
@@ -1096,7 +1107,7 @@ export async function loadRules(room: Room): Promise<RulesView> {
   const rules = summary.items.find((item) => item.type === "rules");
   if (!rules) throw new Unreadable(`${room.rules} holds no rules.`);
   if (isCertifiedRules(summary.definition)) {
-    if (summary.status !== "active" || summary.scope.kind !== "rules" || summary.scope.scope !== room.rules
+    if (summary.status !== "active" || summary.scope.scope !== room.rules
       || summary.items.filter(item => item.type === "rules").length !== 1) throw new Unreadable("The complete certified rules could not be read.");
     const read = rulesSummaryV11(rules, room.destination);
     if (!read) throw new Unreadable("The certified rules summary is inconsistent or unavailable.");
@@ -1252,7 +1263,7 @@ export async function issueCreation(room: Room, result: Acted, current: () => bo
     if (!current()) return unavailable;
     if (!source.ok || !source.complete || source.next !== undefined) return unavailable;
     const entry = source.value.entry;
-    if (entry.seq !== receipt.fact.seq || canonicalize(entry.at) !== canonicalize(receipt.fact.at) || entryHash(entry) !== receipt.fact.hash || source.value.hash !== receipt.fact.hash
+    if (!isEntryBodyOf(entry, receipt.fact) || source.value.hash !== receipt.fact.hash
       || entry.input.type !== "act" || entry.input.signed.intent.kind !== "open-issue" || !verifySignedIntent(entry.input.signed)
       || canonicalize(entry.input.signed.intent.to) !== canonicalize(receipt.fact.at) || entry.input.signed.intent.actor !== room.key || intentDigest(entry.input.signed.intent) !== receipt.intent) return unavailable;
     const creates = entry.sends.filter(send => send.message.class === "request" && send.message.type === "create" && isSeed(send.to));
@@ -1288,7 +1299,7 @@ export async function issueCreation(room: Room, result: Acted, current: () => bo
       return unavailable;
     };
     if (child === undefined || child === null) return await pending(false);
-    if (!fullScopeRef(child) || child.kind !== "lane" || child.scope !== scopeIdOf(seed)) return unavailable;
+    if (!fullScopeRef(child) || child.scope !== scopeIdOf(seed)) return unavailable;
     if (!current()) return unavailable;
     const read = await summaryOf(handleOf(room, child.scope));
     if (!current()) return unavailable;
@@ -1359,7 +1370,7 @@ function notKept(reason: string): string {
  * person relies on the copy. A page that opened on signed reads keeps no copy,
  * and it sends as it always did.
  */
-export async function keepOriginal(room: Pick<Room, "session" | "directory" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside): Promise<void> {
+export async function keepOriginal(room: Pick<Room, "session" | "directory" | "directoryIndex" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside): Promise<void> {
   if (sessionLost(room)) throw new CopyNotKept(`This page could not renew its session with the room${room.unsessioned && room.unsessioned !== "no-reply" ? ` (${room.unsessioned})` : ""}, so it cannot keep a copy of this request. This press sent nothing. When your connection returns, open this view again and check your open requests before you send it again.`);
   const copies = copiesOf(room);
   if (!copies) return;
@@ -1367,7 +1378,7 @@ export async function keepOriginal(room: Pick<Room, "session" | "directory" | "m
   try { listed = await copies.list(); }
   catch { throw new CopyNotKept(openRequestsUnread(null)); }
   if (!listed.ok) throw new CopyNotKept(openRequestsUnread(listed.reason));
-  const stop = signed.intent.to && pressStop(room.key, listed.rows, rowsLastRead(actAssociation(room, room.membership.scope)) ?? [], signed.intent.to, nowOf(room.session));
+  const stop = signed.intent.to && pressStop(room, listed.rows, rowsLastRead(actAssociation(room, room.membership.scope)) ?? [], signed.intent.to, nowOf(room.session));
   if (stop) throw new CopyNotKept(OPEN_REQUEST_STOPS[stop]);
   let kept: Awaited<ReturnType<NonNullable<typeof copies>["keep"]>>;
   try { kept = await copies.keep(actBodyText(signed, beside)); }
@@ -1383,7 +1394,7 @@ export async function keepOriginal(room: Pick<Room, "session" | "directory" | "m
  * with no row. Anything that stops it after the keep ends the row, because a
  * row reads "You sent" and a press past the margin sends its bytes.
  */
-export async function keepToSend(room: Pick<Room, "session" | "directory" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside, before?: () => void, after?: (digest: Digest) => void): Promise<void> {
+export async function keepToSend(room: Pick<Room, "session" | "directory" | "directoryIndex" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside, before?: () => void, after?: (digest: Digest) => void): Promise<void> {
   const digest = intentDigest(signed.intent);
   before?.();
   await keepOriginal(room, signed, beside);

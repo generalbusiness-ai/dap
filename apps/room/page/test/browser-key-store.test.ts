@@ -3,7 +3,7 @@
 import { expect, test } from "vitest";
 import { b64url, keyIdOfSecret, verify } from "@generalbusiness/dap-bytes";
 import type { BrowserPrivateSlots } from "@generalbusiness/dap-client";
-import { legacySettingsKey, pageKeyStore } from "../src/browser-key-store.ts";
+import { pageKeyStore } from "../src/browser-key-store.ts";
 
 function fixture() {
   const seed = new Uint8Array(32).fill(7), encoded = b64url(seed), key = keyIdOfSecret(seed);
@@ -48,14 +48,6 @@ test("an aborted commit retains the original seed and retry preserves identity",
   await expect(f.store.migrate(f.adapter())).rejects.toThrow("transaction aborted");
   expect(f.legacy()).not.toBeNull(); expect(f.rows.size).toBe(0);
   f.fail(false); expect((await f.store.migrate(f.adapter())).key).toBe(f.key);
-});
-
-test("settings migration removes only the selected secret after commit and preserves public settings", async () => {
-  const f = fixture(), values = new Map([["settings", JSON.stringify({ secret: f.adapter().seed, place: { directory: "same room" } })], ["unrelated", "untouched"]]);
-  const storage = { getItem: (name: string) => values.get(name) ?? null, setItem: (name: string, value: string) => { values.set(name, value); } };
-  await f.store.migrate(legacySettingsKey(storage, "settings"));
-  expect(JSON.parse(values.get("settings")!)).toEqual({ place: { directory: "same room" }, publicKey: f.key });
-  expect(values.get("unrelated")).toBe("untouched");
 });
 
 test("a crash after durable commit retries the stored key without replacing it", async () => {

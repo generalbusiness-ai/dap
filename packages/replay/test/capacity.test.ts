@@ -2,7 +2,7 @@ import { capacityLargeText, capacityLargeTextAgain, capacityWhole, capacityTwoSp
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, entryHash, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { created, keys, notesDefinition, on, variant } from "@generalbusiness/dap-derive/testing";
+import { created, keys, notesDefinition, on, variant, fixtureSequence } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, render, verify } from "../src/index.ts";
 import { served } from "./world.ts";
 
@@ -57,7 +57,7 @@ test("an anchored foreign entry still has to fit the opt-in receiver's retained-
   copy.input.signed = signIntent({ ...copy.input.signed.intent, fields: { body: textDigest(body), title: "x".repeat(PROPOSED_BOUNDS.entryBytes) } }, keys.rita.secret);
   const bytes = canonicalize(copy), hash = entryHash(copy), fact = { at: sender.at, seq: copy.seq, hash };
   expect(utf8(bytes).length).toBeGreaterThan(PROPOSED_BOUNDS.entryBytes);
-  expect(receiver.act(keys.rita, "vouch", { ...on(receiver, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: copy, under: "notes" }] }).result).toBe("write");
+  expect(receiver.act(keys.rita, "vouch", { ...on(receiver, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: copy, sequence: fixtureSequence(sender), under: "notes" }] }).result).toBe("write");
   const source = new MemorySource([{ scope: receiver.at, entries: receiver.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained: [
     { kind: "definition", digest: definition.digest, bytes: canonicalize(definition.declared) },
     { kind: "entry", digest: digestBytes(utf8(bytes)), bytes, under: "notes" },

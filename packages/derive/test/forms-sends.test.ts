@@ -70,7 +70,7 @@ const published = (P: Scope, X: Scope, outcome = "published") => arrive(P, X, { 
 function answer(P: Scope, from: Scope, seq: number, n: number, outcome: "applied" | "refused") {
   const request = { from: P.fact(seq), n };
   const result: Result = { class: "result", of: request, outcome };
-  return arrive(P, from, result, { type: "delivery", ...request, message: P.entries[seq]!.entry.sends.find((s) => s.n === n)!.message as Request, decision: outcome }).result;
+  return arrive(P, from, result, { type: "delivery", sourceKind: "lane", ...request, message: P.entries[seq]!.entry.sends.find((s) => s.n === n)!.message as Request, decision: outcome }).result;
 }
 const told = (s: Scope) => s.last.effects.filter((e) => e.effect === "attention");
 

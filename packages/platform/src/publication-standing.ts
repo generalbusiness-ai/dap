@@ -62,7 +62,7 @@ export function publicationStandingKeys(context: PublicationStandingContext, pub
       if (!cache.has(seq)) {
         if (cache.size >= 65) return null;
         const got = context.own(seq);
-        cache.set(seq, got && got.entry.seq === seq && sameCanonicalStanding(got.entry.at, context.at) && entryHash(got.entry) === got.hash ? got : null);
+        cache.set(seq, got && got.entry.seq === seq && entryHash(got.entry) === got.hash ? got : null);
       }
       return cache.get(seq) ?? null;
     };

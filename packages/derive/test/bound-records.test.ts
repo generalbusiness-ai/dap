@@ -5,7 +5,7 @@ import { boundRecordData, boundRecordDefinition, PIN_BOUNDS } from "./fixtures-e
 
 test.each([false, true])("a bound decision quotes actual first-key producers, not its generic effect ceiling (native key %s)", firstKey => {
   const definition = boundRecordDefinition(firstKey);
-  expect(definition.reserving!.holders["job"]!.amount).toEqual({ entries: 1, items: 0, records: firstKey ? 1 : 0, bytes: 2 * PIN_BOUNDS.entryBytes, requests: 0 });
+  expect(definition.reserving!.holders["job"]!.amount).toEqual({ entries: 1, items: 0, records: firstKey ? 1 : 0, bytes: 3 * PIN_BOUNDS.entryBytes, requests: 0 }); // Ruling a4a587c9: each foreign copy adds one birth of entryBytes.
   // Preserve the existing private projection and raw declaration bytes
   // for older scopes. Only the opt-in's record admission changes.
   const legacy = boundRecordDefinition(firstKey, false);

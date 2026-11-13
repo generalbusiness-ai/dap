@@ -63,7 +63,7 @@ for (const boundary of ["heldBeforeSend", "heldRead", "heldAnswer"] as const) {
       await room.pause(room.nodes);
       expect(room.providerCalls).toHaveLength(boundary === "heldBeforeSend" ? 0 : 1);
       expect(room.control.answers).toHaveLength(1);
-      const entries = await hardeningEntries(room.G);
+      const entries = await hardeningEntries(room.G), gAt = await room.G.at();
       const outcome = entries.find(entry => entry.input.type === "outcome" && entry.input.operation === `${request.seq}:0`);
       if (!outcome || outcome.input.type !== "outcome") return expect.fail("The actual interrupted native outcome is required");
       expect(outcome.input.kind).toBe(RULES_CERTIFICATE_KIND);
@@ -77,13 +77,13 @@ for (const boundary of ["heldBeforeSend", "heldRead", "heldAnswer"] as const) {
       expect(Object.keys(named).sort()).toEqual(["answer", "interveningFact", "request"]);
       expect(utf8(canonicalize(named)).length).toBeLessThanOrEqual(1024);
       expect(named.interveningFact.seq).toBeGreaterThanOrEqual(second);
-      expect(named.interveningFact).toEqual(factRefOf(entries[named.interveningFact.seq]!));
+      expect(named.interveningFact).toEqual(factRefOf(entries[named.interveningFact.seq]!, gAt));
       expect((await room.G.item(0)).values["rulesCertificateDeclined"]).toEqual(named);
       if (boundary === "heldAnswer") {
         expect(outcome.input.result).toBe("confirmed");
         expect(outcome.input.evidence).toEqual(heldAnswer!.evidence);
         expect(canonicalize(outcome.input.evidence)).toBe(canonicalize(heldAnswer!.evidence));
-        expect(named.interveningFact).toEqual(factRefOf(entries[outcome.seq - 1]!));
+        expect(named.interveningFact).toEqual(factRefOf(entries[outcome.seq - 1]!, gAt));
         const replayed = await verify(httpSource("https://scopes.test", { fetch: routed, reader }), { mode: "replay", scope: room.G.name, platform, grants: "proven", anchors: [], capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, head: (await room.G.summary()).at });
         expect([replayed.report.result, replayed.why ?? null]).toEqual(["consistent", null]);
       } else {

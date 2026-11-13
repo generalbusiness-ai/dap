@@ -16,9 +16,13 @@ import { answersVersionQuestion, isOf } from "@generalbusiness/dap-platform";
  * with none when the setting says reads are public.
  */
 import { hostRegisterScopes } from "../installed-registers.ts";
+import { isRoomRetiredStop, type RoomRetiredStop } from "../room-retired.ts";
 import { isRecord } from "@generalbusiness/dap-bytes";
 import type { Entry, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, isScopeId, isScopeRef, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize, isScopeId, isScopeRef, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
+
+/** siteRoom answers only a genesis within this bound. */
+const SITE_ROOM_BYTES = 1024 * 1024;
 
 import { READ_BOUNDS, type GitSource } from "@generalbusiness/dap-git";
 import { githubRepository, type GitHubAccount } from "@generalbusiness/dap-git/github";
@@ -34,6 +38,9 @@ import type { Publication, PublishedCommitSelection, SitePublicationPeer } from 
 
 export const GITHUB_HOST = "github.com";
 
+/** A reached retired room is neither a missing room nor an absent publication. */
+export class SiteRoomRetired extends Error { constructor() { super("Room retired"); this.name = "SiteRoomRetired"; } }
+
 /** A room as its directory's genesis records it. */
 export interface Room {
   /** The register that created the directory. */
@@ -46,13 +53,18 @@ export interface UnpublishedRoom { register: ScopeId; repository: null; branch: 
 
 /** Read the room's confirmed destination and its publication, never provider refs. */
 export async function publicationOf(scopes: Binding, directory: string, room: Room): Promise<Publication | null> {
-  const directoryObject = scopes.get(scopes.idFromName(directory)) as SitePublicationPeer & { siteRoom(): Promise<Sourced | null> };
+  const directoryObject = scopes.get(scopes.idFromName(directory)) as SitePublicationPeer & { siteRoom(): Promise<Sourced | null | RoomRetiredStop> };
   const source = await directoryObject.siteRoom();
-  if (!source || source.at.scope !== directory || source.at.kind !== "directory") return null;
+  if (isRoomRetiredStop(source)) throw new SiteRoomRetired();
+  // The Directory's own genesis bytes, admitted under the returned full reference, state its kind.
+  if (!source || source.at.scope !== directory || source.bytes === null || admitSequenceGenesis(source.bytes, source.at, SITE_ROOM_BYTES)?.kind !== "directory") return null;
   const destination = await directoryObject.siteDestination();
-  if (!destination || destination.kind !== "destination") return null;
+  if (isRoomRetiredStop(destination)) throw new SiteRoomRetired();
+  // The Directory records this reference in its repository's destination slot. A reference names no kind.
+  if (!destination) return null;
   const object = scopes.get(scopes.idFromName(destination.scope)) as SitePublicationPeer;
   const publication = await object.sitePublication(source.at, room.repository);
+  if (isRoomRetiredStop(publication)) throw new SiteRoomRetired();
   if (!publication || canonicalize(publication.at) !== canonicalize(destination)) return null;
   return publication;
 }
@@ -60,13 +72,16 @@ export async function publicationOf(scopes: Binding, directory: string, room: Ro
 /** Validate the complete native identity at the internal immutable selector boundary. */
 export async function publishedCommitOf(scopes: Binding, directory: string, room: Room, commit: string): Promise<PublishedCommitSelection> {
   const absent = { ok: false, reason: "not-published" } as const;
-  const directoryObject = scopes.get(scopes.idFromName(directory)) as SitePublicationPeer & { siteRoom(): Promise<Sourced | null> };
+  const directoryObject = scopes.get(scopes.idFromName(directory)) as SitePublicationPeer & { siteRoom(): Promise<Sourced | null | RoomRetiredStop> };
   const source = await directoryObject.siteRoom();
-  if (!source || source.at.scope !== directory || source.at.kind !== "directory") return absent;
+  if (isRoomRetiredStop(source)) throw new SiteRoomRetired();
+  if (!source || source.at.scope !== directory || source.bytes === null || admitSequenceGenesis(source.bytes, source.at, SITE_ROOM_BYTES)?.kind !== "directory") return absent;
   const destination = await directoryObject.siteDestination();
-  if (!destination || destination.kind !== "destination") return absent;
+  if (isRoomRetiredStop(destination)) throw new SiteRoomRetired();
+  if (!destination) return absent;
   const object = scopes.get(scopes.idFromName(destination.scope)) as SitePublicationPeer;
   const selected = await object.sitePublishedCommit(source.at, room.repository, commit);
+  if (isRoomRetiredStop(selected)) throw new SiteRoomRetired();
   if (!selected.ok) return selected;
   const proof = selected.proof;
   return canonicalize(proof.at) === canonicalize(destination) && canonicalize(proof.directory) === canonicalize(source.at)
@@ -130,19 +145,19 @@ const recordOrNull = (value: unknown): Record<string, unknown> | null => isRecor
  */
 export async function roomOf(scopes: Binding, directory: string): Promise<Room | UnpublishedRoom | null> {
   if (!isScopeId(directory)) return null;
-  const object = scopes.get(scopes.idFromName(directory)) as { siteRoom(): Promise<Sourced | null> };
+  const object = scopes.get(scopes.idFromName(directory)) as { siteRoom(): Promise<Sourced | null | RoomRetiredStop> };
   const sourced = await object.siteRoom();
-  if (!sourced || sourced.at.kind !== "directory" || sourced.at.scope !== directory || sourced.bytes === null) return null;
+  if (isRoomRetiredStop(sourced)) throw new SiteRoomRetired();
+  if (!sourced || sourced.at.scope !== directory || sourced.bytes === null || admitSequenceGenesis(sourced.bytes, sourced.at, SITE_ROOM_BYTES)?.kind !== "directory") return null;
   const entry = parseStrict(sourced.bytes) as unknown as Entry;
   const input = entry.input;
-  if (input.type !== "genesis" || input.decision !== "applied" || !isOf(input.seed.definition, "platform:directory") || input.seed.creator?.kind !== "register") return null;
+  if (input.type !== "genesis" || input.decision !== "applied" || !isOf(input.seed.definition, "platform:directory") || !input.seed.creator || input.sourceKind !== "register") return null;
   const fields = recordOrNull(recordOrNull(input.message?.body)?.["fields"]);
   const repository = recordOrNull(fields?.["repository"]);
   const branch = fields?.["branch"];
   if ((answersVersionQuestion(input.seed.definition, "scopeSiteRepositoryOptionalDirectory")) && fields && !Object.hasOwn(fields, "repository")
     && typeof branch === "string" && input.seed.kind === "directory" && scopeIdOf(input.seed) === directory
-    && isScopeRef(entry.at) && canonicalize(entry.at) === canonicalize(sourced.at) && input.inc === sourced.at.inc
-    && isScopeRef(input.seed.creator) && input.seed.creator.kind === "register") return { register: input.seed.creator.scope, repository: null, branch };
+    && isScopeRef(input.seed.creator)) return { register: input.seed.creator.scope, repository: null, branch };
   if (!repository || typeof branch !== "string") return null;
   const { host, namespace, name, id } = repository;
   if (Object.keys(repository).length !== 4 || typeof host !== "string" || typeof namespace !== "string" || typeof name !== "string" || typeof id !== "string") return null;

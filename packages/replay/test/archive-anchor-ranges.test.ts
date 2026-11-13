@@ -4,9 +4,9 @@ import { replayAnchorRemarks } from "../../derive/test/definition-corpus/replay-
  * are explicit stand-ins; no Native factory, source read or host runs. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type FactRef, type Seed, type Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, intentDigest, newGenesisNonce, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, grantFrom, judgeGenesis, validateDefinition } from "@generalbusiness/dap-derive";
-import { keys, Ledger, membership, on, t } from "@generalbusiness/dap-derive/testing";
+import { keys, Ledger, membership, on, t, fixtureSequence } from "@generalbusiness/dap-derive/testing";
 import { buildJournalPass, type JournalAnchorPublication, type JournalObject } from "@generalbusiness/dap-git/journal";
 import { readJournalArchiveV2 } from "@generalbusiness/dap-git/journal-reader";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
@@ -18,8 +18,9 @@ import { proofOf, STANDING } from "./staging.ts";
 const NAMED = "platform:task@1";
 const signer: FactRef = { at: membership, ...STANDING };
 const registerSeed: Seed = { v: 1, kind: "register", definition: "platform:register@17", creator: null, cause: STANDING.hash, ordinal: 0 };
-const extra: FactRef = { at: { scope: scopeIdOf(registerSeed), inc: newIncarnation(new Uint8Array(16).fill(42)), kind: "register" }, seq: 7, hash: STANDING.hash };
+const extra: FactRef = { at: { scope: scopeIdOf(registerSeed), genesis: STANDING.hash }, seq: 7, hash: STANDING.hash };
 const ordered = (facts: readonly FactRef[]) => [...facts].sort((a, b) => a.at.scope < b.at.scope ? -1 : a.at.scope > b.at.scope ? 1 : a.seq - b.seq);
+type TestPublication = JournalAnchorPublication;
 
 function freshGrant(n: number, at: Timestamp) {
   const proof = proofOf(keys.rita, ["remark"], n, at).fresh!;
@@ -33,7 +34,7 @@ function remarks(count: number, identity = "TEST anchor publication") {
   const founding = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {},
     fields: { source: "TEST remarks" }, idempotencyKey: identity, notAfter: t(60) }, keys.rita.secret);
   const seed: Seed = { v: 1, kind: "directory", definition: NAMED, creator: null, cause: intentDigest(founding.intent), ordinal: 0 };
-  const born = judgeGenesis(ledger.state, checked.definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(41)), seed, creation: founding },
+  const born = judgeGenesis(ledger.state, checked.definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(41)), seed, creation: founding },
     { clock: clockOf(ledger.state, ledger.now), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: { named: NAMED, rules } });
   if (born.result !== "write") throw Error(JSON.stringify(born));
   ledger.seal(born.draft);
@@ -59,7 +60,7 @@ async function journal(fixture: ReturnType<typeof remarks>, dependencies: readon
   const open = (scope: typeof ledger.at.scope, work: ArchiveReadWork) => readJournalArchiveV2({ format: async () => "sha1", resolve: async () => current,
     object: (id, limit) => source.object(id, limit) }, scope, work);
   return {
-    async append(from: number, through: number, publication?: JournalAnchorPublication) {
+    async append(from: number, through: number, publication?: TestPublication) {
       const budget = new ArchiveBudget({}, () => 0), entries = ledger.entries.slice(from, through + 1);
       const retained = new Map<string, string>(), copies: ArchiveSelectedObject[] = [];
       for (const { entry } of entries) for (const use of entry.uses) {
@@ -71,6 +72,12 @@ async function journal(fixture: ReturnType<typeof remarks>, dependencies: readon
         const key = { kind: "entry" as const, digest: use.content };
         copies.push({ key, bytes: utf8(bytes).length, pass: from, foreign: { fact: use.fact, pin: NAMED },
           consumers: [{ mode: "required", origin: { at: ledger.fact(entry.seq), input: entry.input.type }, consumer: "foreign-use", purpose: "replay-required", key }] });
+        // Ruling ae48dd39: a later use also needs its sequence's first entry.
+        if (use.fact.seq === 0 || copies.some(copy => copy.key.kind === "birth" && copy.key.digest === use.fact.at.genesis)) continue;
+        const genesis = canonicalize(owner.ledger.entries[0]!.entry), birth = { kind: "birth" as const, digest: use.fact.at.genesis };
+        retained.set(birth.digest, genesis);
+        copies.push({ key: birth, bytes: utf8(genesis).length, pass: from, foreign: { fact: { at: use.fact.at, seq: 0, hash: use.fact.at.genesis }, pin: NAMED },
+          consumers: [{ mode: "required", origin: { at: ledger.fact(entry.seq), input: entry.input.type }, consumer: "foreign-birth", purpose: "replay-required", key: birth }] });
       }
       budget.spend({ entries: entries.length, attempts: copies.length });
       const built = await buildJournalPass({ format: "sha1", budget,
@@ -79,14 +86,18 @@ async function journal(fixture: ReturnType<typeof remarks>, dependencies: readon
           through: { seq: through, hash: ledger.fact(through).hash }, after: from ? { seq: from - 1, hash: ledger.fact(from - 1).hash } : null,
           entries: entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: utf8(canonicalize(entry)).length })),
           objects: copies, omittedTexts: [], ancestryUnwalked: [], replay: "unchecked", retention: "observed-local", cost: budget.admitted(),
-          ...(copies.length ? { foreignSources: dependencies.map(dependency => ({ at: dependency.ledger.at, pin: NAMED })) } : {}) }),
+          ...(copies.length ? { foreignSources: dependencies.map(dependency => {
+            const birth = dependency.ledger.entries[0]!.entry.input;
+            if (birth.type !== "genesis") throw Error("the fixture has its real genesis");
+            return { at: dependency.ledger.at, pin: NAMED };
+          }) } : {}) }),
         input: { entry: async (seq, limit) => {
           const bytes = canonicalize(ledger.entries[seq]!.entry); return utf8(bytes).length <= limit ? bytes : null;
         }, retained: async (key, limit) => { const bytes = retained.get(key.digest); return bytes !== undefined && utf8(bytes).length <= limit ? bytes : null; } },
         ...(publication ? { publication: () => publication } : {}) });
       expect(built.ok ? "accepted" : built).toBe("accepted");
       if (!built.ok) throw Error(JSON.stringify(built));
-      expect(built.archive.manifest.retained.filter(row => row.kind === "entry")).toHaveLength(copies.length);
+      expect(built.archive.manifest.retained.filter(row => row.kind === "entry")).toHaveLength(copies.filter(copy => copy.key.kind === "entry").length);
       for (const object of built.archive.objects) objects.set(object.id, object);
       current = built.archive.commit; return built.archive;
     },
@@ -153,12 +164,12 @@ test("nested public proofs use their own published ranges and name their own unu
     const dependency = remarks(1, "TEST dependency"), target = remarks(0, "TEST target");
     const fact = dependency.ledger.fact(1), entry = dependency.ledger.entries[1]!.entry;
     target.ledger.now = t(2);
-    target.ledger.remember([{ fact, entry, under: "platform:task" }]);
+    target.ledger.remember([{ fact, entry, sequence: fixtureSequence(dependency.ledger), under: "platform:task" }]);
     const vouched = target.ledger.act(keys.rita, "vouch", on(target.ledger, 0), { membership,
       grants: [{ grant: freshGrant(1, target.ledger.now), current: true }], platform: { named: NAMED, rules: target.rules },
-      presented: { proof: fact }, facts: [{ fact, entry, under: "platform:task" }] });
+      presented: { proof: fact }, facts: [{ fact, entry, sequence: fixtureSequence(dependency.ledger), under: "platform:task" }] });
     expect(vouched.result).toBe("write");
-    expect(target.ledger.last.uses).toEqual([{ fact, content: digestBytes(utf8(canonicalize(entry))) }]);
+    expect(target.ledger.last.uses).toEqual([{ fact, kind: "directory", content: digestBytes(utf8(canonicalize(entry))) }]);
     const prior = await journal(dependency), own = await journal(target, [dependency]);
     const parent = await prior.append(0, 1, { anchors: needs });
     await own.append(0, 1, { anchors: [signer] });

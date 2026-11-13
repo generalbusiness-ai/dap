@@ -14,7 +14,7 @@ async function agentLine(f: AskingRoom, secret = f.unaSecret, handle = "@una") {
   const store = memoryStore(), requests: string[] = [];
   const { inbox: _inbox, ...repository } = f.rita.config.repository!;
   await store.keep("agent", secret);
-  await store.save({ v: 1, service: f.rita.config.service, key: "agent", repository, handle } as Config);
+  await store.save({ v: 2, service: f.rita.config.service, key: "agent", repository, handle } as Config);
   const fetch: Fetch = async (url, init) => {
     requests.push(`${init?.method ?? "GET"} ${new URL(url).pathname}`);
     if (!STREAM.test(new URL(url).pathname)) return f.room.fetch(url, init);

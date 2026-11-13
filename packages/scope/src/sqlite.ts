@@ -15,7 +15,7 @@
 
 import { ACCEPTED_KEY_OVERHEAD_BYTES } from "@generalbusiness/dap-contract";
 import type { JournalFloor } from "@generalbusiness/dap-contract";
-import type { CapabilityName, Digest, Entry, FactRef, FieldValue, Head, Held, Incarnation, KeyId, OperationId, ScopeId, ScopeKind, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import type { CapabilityName, Digest, Entry, FactRef, FieldValue, Head, Held, KeyId, OperationId, ScopeId, ScopeKind, ScopeRef, SequenceRef, Timestamp } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { RETAINED_BYTE_DOMAINS, canonicalize, isDigest, isHead, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
 import { AmountError, NOTHING, naturalAmount, isObject, MemoryState, byteOrder, fixedRowsOf, heldPositions, operationId, operationStanding, pendingOf, slotOf, timeMs } from "@generalbusiness/dap-derive";
@@ -52,7 +52,7 @@ export interface Sql {
  *   `outbox_due` indexes the sends that are still to be dispatched.
  * - `source_order`: the highest applied source pair for each tell dispatch.
  * - `inbox`: each incoming delivery this scope recorded, by source scope,
- *   incarnation, entry and ordinal.
+ *   genesis, entry and ordinal.
  * - `folded`: folded records that are not items: relationship copies, held
  *   creations, the highest head of each observed subject, and for each slot that holds a detached text the digests it
  *   has held.
@@ -75,6 +75,13 @@ export interface Sql {
  *   read whether the index holds every item of the type. It is derived
  *   state, and `all` reads none of it.
  * - `retained_input`: section 9.2; see `Retained`.
+ * - `retained_birth`: ruling 4f697a7a. For each foreign sequence whose later
+ *   entry the scope retains, the content digest of that sequence's first
+ *   entry, whose bytes are a `retained_input` row of the kind `entry`.
+ *   One row for each (genesis, scope). The key leads with the genesis, so
+ *   the `birth` read by genesis digest alone (ruling ae48dd39) is one key
+ *   lookup. `pass` is the journal pass that first wrote the row's `birth`
+ *   path, as for `retained_input`; an archive receipt sets it once.
  * - `retained_value`: the retained inputs of the kind `value` (sections 6.2
  *   and 9.2, revision 19). A value is kept under its byte domain and its
  *   digest there, so it has a table of its own: one domain and one digest
@@ -104,8 +111,8 @@ CREATE TABLE IF NOT EXISTS outbox (seq INTEGER NOT NULL, n INTEGER NOT NULL, tar
   attempts TEXT NOT NULL DEFAULT '[]', next INTEGER NOT NULL, ack TEXT, request TEXT, result TEXT, diagnosis TEXT, hash TEXT, PRIMARY KEY (seq, n)) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS outbox_due ON outbox (next, seq, n) WHERE held = 0 AND ack IS NULL AND result IS NULL AND diagnosis IS NULL;
 CREATE INDEX IF NOT EXISTS outbox_open ON outbox (seq, n) WHERE request IS NOT NULL AND result IS NULL;
-CREATE TABLE IF NOT EXISTS inbox (scope TEXT NOT NULL, inc TEXT NOT NULL, seq INTEGER NOT NULL, n INTEGER NOT NULL, hash TEXT NOT NULL, by INTEGER NOT NULL, deciding_hash TEXT, decision TEXT, PRIMARY KEY (scope, inc, seq, n)) WITHOUT ROWID;
-CREATE TABLE IF NOT EXISTS source_order (scope TEXT NOT NULL, inc TEXT NOT NULL, handler TEXT NOT NULL, seq INTEGER NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (scope, inc, handler)) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS inbox (scope TEXT NOT NULL, genesis TEXT NOT NULL, seq INTEGER NOT NULL, n INTEGER NOT NULL, hash TEXT NOT NULL, by INTEGER NOT NULL, deciding_hash TEXT, decision TEXT, PRIMARY KEY (scope, genesis, seq, n)) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS source_order (scope TEXT NOT NULL, genesis TEXT NOT NULL, handler TEXT NOT NULL, seq INTEGER NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (scope, genesis, handler)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS folded (kind TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (kind, key)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS operation (seq INTEGER NOT NULL, k INTEGER NOT NULL, value TEXT NOT NULL, opened INTEGER NOT NULL, unknown INTEGER NOT NULL, unopened INTEGER NOT NULL, PRIMARY KEY (seq, k)) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS operation_open ON operation (seq, k) WHERE opened + unknown + unopened > 0;
@@ -116,6 +123,7 @@ CREATE TABLE IF NOT EXISTS record (capability TEXT NOT NULL, kind TEXT NOT NULL,
 CREATE INDEX IF NOT EXISTS record_by_state ON record (capability, kind, state);
 CREATE TABLE IF NOT EXISTS prepared (intent TEXT NOT NULL, capability TEXT NOT NULL, step TEXT NOT NULL, seq INTEGER NOT NULL, PRIMARY KEY (intent, capability, step)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS retained_input (kind TEXT NOT NULL, digest TEXT NOT NULL, bytes TEXT NOT NULL, under TEXT, pass INTEGER, PRIMARY KEY (kind, digest)) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS retained_birth (genesis TEXT NOT NULL, scope TEXT NOT NULL, digest TEXT NOT NULL, pass INTEGER, PRIMARY KEY (genesis, scope)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS retained_value (domain TEXT NOT NULL, digest TEXT NOT NULL, bytes TEXT NOT NULL, pass INTEGER, PRIMARY KEY (domain, digest)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS item_key (type TEXT NOT NULL, slot TEXT NOT NULL, key TEXT NOT NULL, id INTEGER NOT NULL, PRIMARY KEY (type, slot, key, id)) WITHOUT ROWID;
 `;
@@ -346,7 +354,7 @@ export class SqliteStore implements Store {
     return row?.["hash"] as Digest ?? null;
   }
   decidedReceipt(from: FactRef, n: number): { seq: number; hash: Digest; decision: string } | null {
-    const row = this.#one("SELECT by,deciding_hash,decision FROM inbox WHERE scope=? AND inc=? AND seq=? AND n=?", from.at.scope, from.at.inc, from.seq, n);
+    const row = this.#one("SELECT by,deciding_hash,decision FROM inbox WHERE scope=? AND genesis=? AND seq=? AND n=?", from.at.scope, from.at.genesis, from.seq, n);
     return row && typeof row["deciding_hash"] === "string" && typeof row["decision"] === "string" ? { seq: row["by"] as number, hash: row["deciding_hash"] as Digest, decision: row["decision"] } : null;
   }
   /** Derive logical key counts from the stored rows; final states and transport ACKs do not erase keys. */
@@ -417,11 +425,11 @@ export class SqliteStore implements Store {
     return { items: matched.slice(0, limit), more: matched.length > limit };
   }
 
-  relation(owner: ScopeRef, name: string, item: number): Relation | null { return this.#folded("relation", canonicalize([owner.scope, owner.inc, name, item])); }
+  relation(owner: ScopeRef, name: string, item: number): Relation | null { return this.#folded("relation", canonicalize([owner.scope, owner.genesis, name, item])); }
   /** Counted from the copies themselves. A `relate` handler bounds how many its scope keeps, so the rows read are bounded by the definition. */
   copies(name: string, kind: ScopeKind, states?: readonly string[]): number {
     const among = states ? ` AND json_extract(value, '$.state') IN (${states.map(() => "?").join(", ")})` : "";
-    return this.#one(`SELECT COUNT(*) AS n FROM folded WHERE kind = 'relation' AND json_extract(value, '$.name') = ? AND json_extract(value, '$.owner.kind') = ?${among}`, name, kind, ...(states ?? []))!["n"] as number;
+    return this.#one(`SELECT COUNT(*) AS n FROM folded WHERE kind = 'relation' AND json_extract(value, '$.name') = ? AND json_extract(value, '$.ownerKind') = ?${among}`, name, kind, ...(states ?? []))!["n"] as number;
   }
   accepted(actor: KeyId, idempotencyKey: string): Accepted | null {
     const row = this.#one("SELECT seq,intent FROM entry WHERE actor=? AND idem=? UNION ALL SELECT seq,intent FROM accepted_key WHERE actor=? AND idem=? LIMIT 1", actor, idempotencyKey, actor, idempotencyKey);
@@ -435,21 +443,21 @@ export class SqliteStore implements Store {
     return this.#all(`${REQUEST_ROWS} WHERE o.request IS NOT NULL AND o.result IS NULL AND (o.diagnosis IS NULL OR json_extract(o.diagnosis, '$.finding') <> 'undelivered') ORDER BY o.seq, o.n`).map(requestOf);
   }
   decided(from: ScopeRef, seq: number, n: number): Decided | null {
-    const row = this.#one("SELECT hash, by FROM inbox WHERE scope = ? AND inc = ? AND seq = ? AND n = ?", from.scope, from.inc, seq, n);
-    return row && { from: { scope: from.scope, inc: from.inc }, seq, hash: row["hash"] as Digest, n, by: row["by"] as number };
+    const row = this.#one("SELECT hash, by FROM inbox WHERE scope = ? AND genesis = ? AND seq = ? AND n = ?", from.scope, from.genesis, seq, n);
+    return row && { from: { scope: from.scope, genesis: from.genesis }, seq, hash: row["hash"] as Digest, n, by: row["by"] as number };
   }
   creation(seed: Digest): HeldCreation | null { return this.#folded("creation", seed); }
   sourceOrder(from: ScopeRef, handler: string): SourceOrder | null {
-    const row = this.#one("SELECT seq, n FROM source_order WHERE scope = ? AND inc = ? AND handler = ?", from.scope, from.inc, handler);
-    return row && { from: { scope: from.scope, inc: from.inc }, handler, seq: row["seq"] as number, n: row["n"] as number };
+    const row = this.#one("SELECT seq, n FROM source_order WHERE scope = ? AND genesis = ? AND handler = ?", from.scope, from.genesis, handler);
+    return row && { from: { scope: from.scope, genesis: from.genesis }, handler, seq: row["seq"] as number, n: row["n"] as number };
   }
   operation(id: OperationId): Operation | null {
     const [seq, k] = partsOf(id);
     return orNull<Operation>(this.#one("SELECT value FROM operation WHERE seq = ? AND k = ?", seq, k)?.["value"]);
   }
-  observed(of: Pick<ScopeRef, "scope" | "inc">, subject: string): number | null { return this.#folded<ObservedHead>("observed", canonicalize([of.scope, of.inc, subject]))?.seq ?? null; }
-  incarnations(scope: ScopeId): readonly Incarnation[] {
-    const matched = this.#all("SELECT DISTINCT json_extract(value, '$.of.inc') AS inc FROM folded WHERE kind = 'observed' AND json_extract(value, '$.of.scope') = ?", scope).map((row) => row["inc"] as Incarnation);
+  observed(of: SequenceRef, subject: string): number | null { return this.#folded<ObservedHead>("observed", canonicalize([of.scope, of.genesis, subject]))?.seq ?? null; }
+  geneses(scope: ScopeId): readonly Digest[] {
+    const matched = this.#all("SELECT DISTINCT json_extract(value, '$.of.genesis') AS genesis FROM folded WHERE kind = 'observed' AND json_extract(value, '$.of.scope') = ?", scope).map((row) => row["genesis"] as Digest);
     return matched.sort(byteOrder);
   }
   texts(item: number, slot: string): readonly Digest[] { return this.#folded<[number, string, Digest[]]>("texts", canonicalize([item, slot]))?.[2] ?? []; }
@@ -555,12 +563,12 @@ export class SqliteStore implements Store {
     for (const row of this.#all("SELECT intent, capability, step, seq FROM prepared")) memory.putPrepared({ intent: row["intent"] as Digest, capability: row["capability"] as CapabilityName, step: row["step"] as string, seq: row["seq"] as number });
     for (const row of this.#all("SELECT seq,actor,idem,intent FROM entry WHERE actor IS NOT NULL UNION ALL SELECT seq,actor,idem,intent FROM accepted_key")) memory.putAccepted(row["actor"] as KeyId, row["idem"] as string, { seq: row["seq"] as number, intent: row["intent"] as Digest });
     for (const row of this.#all(`${REQUEST_ROWS} WHERE o.request IS NOT NULL`)) memory.putRequest(requestOf(row));
-    for (const row of this.#all("SELECT scope, inc, seq, n, hash, by FROM inbox")) {
-      // The record keeps the source's scope and incarnation; its kind is not part of the key and is not read.
-      const at = { scope: row["scope"], inc: row["inc"], kind: "lane" } as ScopeRef;
+    for (const row of this.#all("SELECT scope, genesis, seq, n, hash, by FROM inbox")) {
+      // The record keeps the source's full reference: its scope and genesis.
+      const at = { scope: row["scope"], genesis: row["genesis"] } as ScopeRef;
       memory.putDecided({ at, seq: row["seq"] as number, hash: row["hash"] as Digest }, row["n"] as number, row["by"] as number);
     }
-    for (const row of this.#all("SELECT scope, inc, handler, seq, n FROM source_order")) memory.putSourceOrder({ from: { scope: row["scope"] as ScopeId, inc: row["inc"] as Incarnation }, handler: row["handler"] as string, seq: row["seq"] as number, n: row["n"] as number });
+    for (const row of this.#all("SELECT scope, genesis, handler, seq, n FROM source_order")) memory.putSourceOrder({ from: { scope: row["scope"] as ScopeId, genesis: row["genesis"] as Digest }, handler: row["handler"] as string, seq: row["seq"] as number, n: row["n"] as number });
     return memory.all();
   }
 
@@ -584,7 +592,7 @@ export class SqliteStore implements Store {
   addCount(type: string, state: string, by: number): void {
     this.#run("INSERT INTO item_count (type, state, n) VALUES (?, ?, ?) ON CONFLICT (type, state) DO UPDATE SET n = n + excluded.n", type, state, by);
   }
-  putRelation(r: Relation): void { this.#fold("relation", canonicalize([r.owner.scope, r.owner.inc, r.name, r.item]), r); }
+  putRelation(r: Relation): void { this.#fold("relation", canonicalize([r.owner.scope, r.owner.genesis, r.name, r.item]), r); }
   putAccepted(actor: KeyId, idempotencyKey: string, accepted: Accepted): void {
     this.#run("UPDATE entry SET actor = ?, idem = ?, intent = ? WHERE seq = ?", actor, idempotencyKey, accepted.intent, accepted.seq);
   }
@@ -597,13 +605,13 @@ export class SqliteStore implements Store {
     else this.#fold("capacity-request", key, r.reservation);
   }
   putDecided(from: FactRef, n: number, by: number): void {
-    this.#run("INSERT INTO inbox (scope, inc, seq, n, hash, by) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (scope, inc, seq, n) DO UPDATE SET hash = excluded.hash, by = excluded.by", from.at.scope, from.at.inc, from.seq, n, from.hash, by);
+    this.#run("INSERT INTO inbox (scope, genesis, seq, n, hash, by) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (scope, genesis, seq, n) DO UPDATE SET hash = excluded.hash, by = excluded.by", from.at.scope, from.at.genesis, from.seq, n, from.hash, by);
   }
   putCreation(seed: Digest, held: HeldCreation): void { this.#fold("creation", seed, held); }
   putSourceOrder(order: SourceOrder): void {
-    this.#run("INSERT INTO source_order (scope, inc, handler, seq, n) VALUES (?, ?, ?, ?, ?) ON CONFLICT (scope, inc, handler) DO UPDATE SET seq = excluded.seq, n = excluded.n", order.from.scope, order.from.inc, order.handler, order.seq, order.n);
+    this.#run("INSERT INTO source_order (scope, genesis, handler, seq, n) VALUES (?, ?, ?, ?, ?) ON CONFLICT (scope, genesis, handler) DO UPDATE SET seq = excluded.seq, n = excluded.n", order.from.scope, order.from.genesis, order.handler, order.seq, order.n);
   }
-  putObserved(head: ObservedHead): void { this.#fold("observed", canonicalize([head.of.scope, head.of.inc, head.subject]), { of: { scope: head.of.scope, inc: head.of.inc }, subject: head.subject, seq: head.seq }); }
+  putObserved(head: ObservedHead): void { this.#fold("observed", canonicalize([head.of.scope, head.of.genesis, head.subject]), { of: { scope: head.of.scope, genesis: head.of.genesis }, subject: head.subject, seq: head.seq }); }
   putIndexed(type: string, slot: string, key: string, item: number): void {
     this.#run("INSERT INTO item_key (type, slot, key, id) VALUES (?, ?, ?, ?)", type, slot, key, item);
     this.#fold("keyed", canonicalize([type, slot]), (this.#folded<number>("keyed", canonicalize([type, slot])) ?? 0) + 1);
@@ -662,6 +670,7 @@ export class SqliteStore implements Store {
     }
   }
   retain(input: Retained): void {
+    if (input.kind === "birth") throw new Error("a birth row is retained only with its association, by retainBirth");
     if (input.kind === "value") {
       if (typeof input.domain !== "string" || input.domain === "") throw new Error("a retained value states its byte domain");
       this.#run("INSERT INTO retained_value (domain, digest, bytes) VALUES (?, ?, ?) ON CONFLICT (domain, digest) DO NOTHING", input.domain, input.digest, input.bytes);
@@ -670,13 +679,32 @@ export class SqliteStore implements Store {
     this.#run("INSERT INTO retained_input (kind, digest, bytes, under) VALUES (?, ?, ?, ?) ON CONFLICT (kind, digest) DO NOTHING", input.kind, input.digest, input.bytes, input.under ?? null);
   }
 
+  retainBirth(at: SequenceRef, input: Retained & { kind: "entry" }): void {
+    this.retain(input);
+    this.#run("INSERT INTO retained_birth (genesis, scope, digest) VALUES (?, ?, ?) ON CONFLICT (genesis, scope) DO NOTHING", at.genesis, at.scope, input.digest);
+  }
+  retainedBirth(at: SequenceRef): Retained | null {
+    const row = this.#one("SELECT i.digest AS digest, i.bytes AS bytes, i.under AS under FROM retained_birth b JOIN retained_input i ON i.kind = 'entry' AND i.digest = b.digest WHERE b.scope = ? AND b.genesis = ?", at.scope, at.genesis);
+    return row && { kind: "entry", digest: row["digest"] as Digest, bytes: row["bytes"] as string, ...(row["under"] === null ? {} : { under: row["under"] as string }) };
+  }
+
   forget(kind: Retained["kind"], digest: Digest): void { this.#run("DELETE FROM retained_input WHERE kind = ? AND digest = ?", kind, digest); }
 
   stored(seq: number): Stored | null { return this.storedFrom(seq, 1).find((s) => s.seq === seq) ?? null; }
   storedFrom(seq: number, limit: number): Stored[] {
     return this.#all("SELECT seq, hash, bytes, size FROM entry WHERE seq >= ? ORDER BY seq LIMIT ?", seq, limit).map((row) => ({ seq: row["seq"] as number, hash: row["hash"] as Digest, bytes: row["bytes"] as string, size: row["size"] as number }));
   }
+  /** Ruling ae48dd39: a `birth` read names the genesis digest alone. A genesis digest names one sequence, so more than one
+   * association reads as none. */
+  #birth(genesis: Digest, select: string): Record<string, unknown> | null {
+    const rows = this.#all(`SELECT ${select} FROM retained_birth b JOIN retained_input i ON i.kind = 'entry' AND i.digest = b.digest WHERE b.genesis = ? LIMIT 2`, genesis);
+    return rows.length === 1 ? rows[0]! : null;
+  }
   retained(kind: Retained["kind"], digest: Digest, domain?: string): Retained | null {
+    if (kind === "birth") {
+      const row = this.#birth(digest, "i.bytes AS bytes, i.under AS under");
+      return row && { kind, digest, bytes: row["bytes"] as string, ...(row["under"] === null ? {} : { under: row["under"] as string }) };
+    }
     if (kind === "value") {
       const value = domain === undefined ? null : this.#one("SELECT bytes FROM retained_value WHERE domain = ? AND digest = ?", domain, digest);
       return value && { kind, digest, bytes: value["bytes"] as string, domain: domain! };
@@ -685,6 +713,7 @@ export class SqliteStore implements Store {
     return row && { kind, digest, bytes: row["bytes"] as string, ...(row["under"] === null ? {} : { under: row["under"] as string }) };
   }
   retainedSize(kind: Retained["kind"], digest: Digest, domain?: string): number | null {
+    if (kind === "birth") return (this.#birth(digest, "length(CAST(i.bytes AS BLOB)) AS size")?.["size"] as number | undefined) ?? null;
     const row = kind === "value"
       ? (domain === undefined ? null : this.#one("SELECT length(CAST(bytes AS BLOB)) AS size FROM retained_value WHERE domain = ? AND digest = ?", domain, digest))
       : this.#one("SELECT length(CAST(bytes AS BLOB)) AS size FROM retained_input WHERE kind = ? AND digest = ?", kind, digest);

@@ -1,9 +1,10 @@
+import { net as sourceNet } from "../../../../packages/scope/src/testing.ts";
 import { env } from "cloudflare:workers";
 import { namespace } from "../../../../packages/scope/src/namespace.ts";
 import { ReceiverReads } from "../../../../packages/scope/src/receiver-reads.ts";
 import { expect, test } from "vitest";
 import { firstExtents, PARTITION_COHORT as P, platform } from "@generalbusiness/dap-platform";
-import { canonicalize, factRefOf, intentDigest, newIncarnation, isMemberRef } from "@generalbusiness/dap-bytes";
+import { canonicalize, factRefOf, intentDigest, isMemberRef, textDigest } from "@generalbusiness/dap-bytes";
 import { CAPABILITY_CODE } from "@generalbusiness/dap-scope";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { DIGESTS, change, issue } from "../src/index.ts";
@@ -65,7 +66,7 @@ test.each([false, true])("canonical foreign-hold manifest stays refused before a
   await I.effects();
   const checked = [...(await I.entries())].reverse().find(entry => entry.input.type === "outcome" && entry.input.owner === "hold@1" && entry.input.kind === "check");
   if (!checked) return expect.fail("actual issue wrote no capability check");
-  const admitted = await C.submit({ ...signed, beside: { ...signed.beside, presented: { pin: factRefOf(checked) } } });
+  const admitted = await C.submit({ ...signed, beside: { ...signed.beside, presented: { pin: factRefOf(checked, I.at) } } });
   expect(admitted, canonicalize(admitted)).toMatchObject({ answer: "refused", reason: "required-unset" });
   expect((await C.state()).count("manifest", "current")).toBe(0);
 }, 60_000);
@@ -91,7 +92,7 @@ test.each([true, false])("activated experimental change pin consumer keeps recei
       await I.effects();
       const checked = [...await I.entries()].reverse().find(entry => entry.input.type === "outcome" && entry.input.owner === "hold@1" && entry.input.kind === "check");
       if (!checked) return expect.fail("actual issue has no native check");
-      const pin = factRefOf(checked);
+      const pin = factRefOf(checked, I.at);
       const admitted = await C.submit({ ...signed, beside: { ...signed.beside, presented: { pin } } });
       expect(admitted, canonicalize(admitted)).toMatchObject({ answer: "accepted" });
       if (admitted.answer !== "accepted") return expect.fail("experimental manifest was refused");
@@ -110,12 +111,12 @@ test.each([true, false])("activated experimental change pin consumer keeps recei
       expect((await C.item(admitted.receipt.fact.seq)).parties["authors"]).toEqual(expected);
       return { signed, checked, pin, fact: admitted.receipt.fact };
     };
-    net.hold = envelope => envelope.from.at.scope === C.name && envelope.to.kind === "lane";
+    net.hold = envelope => envelope.from.at.scope === C.name && ("kind" in envelope.to ? envelope.to.kind === "lane" : envelope.to.scope === I.name);
     const first = await submitManifest(oid("c"));
     const readers = namespace(env.PLATFORM), own = await ReceiverReads.open(readers, I.at);
     expect(own?.mode).toBe(partitioned ? "partition-v1" : "legacy");
-    expect(await readers.resolver.read(first.fact, 10)).toMatchObject({ under: "declared:change" });
-    if (!partitioned) expect(await own!.read(first.fact, 10)).toMatchObject({ under: "declared:change" });
+    expect(await readers.resolver.read(first.fact, { maxBytes: (sourceNet.sized.get(first.fact.at.scope) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 10_000 }, false)).toMatchObject({ under: "declared:change" });
+    if (!partitioned) expect(await own!.read(first.fact, { maxBytes: (sourceNet.sized.get(first.fact.at.scope) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 10_000 }, false)).toMatchObject({ under: "declared:change" });
     const key = [C.at, intentDigest(first.signed.signed.intent)] as const;
     const record = async () => (await I.state()).record("hold@1", "pin", key);
     expect(await record()).toMatchObject({ state: "provisional", values: { commit: oid("c"), admitted: null } });
@@ -123,8 +124,8 @@ test.each([true, false])("activated experimental change pin consumer keeps recei
     if (!send) return expect.fail("actual experimental manifest emitted no pin-confirm");
     const envelope = await C.envelope(first.fact.seq, send.n);
     await new Platform(I.name).restart();
-    const wrongInc = { ...envelope, from: { ...envelope.from, at: { ...envelope.from.at, inc: newIncarnation(new Uint8Array(16).fill(240)) } } };
-    expect(await I.stub.deliver(wrongInc)).toMatchObject(partitioned ? { answer: "retry", reason: "dependency-unavailable" } : { answer: "source-unverified" });
+    const wrongGenesis = { ...envelope, from: { ...envelope.from, at: { ...envelope.from.at, genesis: textDigest("TEST other genesis") } } };
+    expect(await I.stub.deliver(wrongGenesis)).toMatchObject(partitioned ? { answer: "retry", reason: "dependency-unavailable" } : { answer: "source-unverified" });
     expect((await record())?.state).toBe("provisional");
     // A current manifest did not emit this premature unpin. Its valid
     // sender identity cannot replace the exact immutable send permission.
@@ -154,7 +155,7 @@ test.each([true, false])("activated experimental change pin consumer keeps recei
     await new Platform(I.name).restart();
     expect((await record())?.state).toBe("held");
     net.hold = null; net.clock.now = soon(PROPOSED_BOUNDS.dispatchRetryMaxSeconds + 1); await r.settle();
-    net.hold = envelope => envelope.from.at.scope === C.name && envelope.to.kind === "lane";
+    net.hold = envelope => envelope.from.at.scope === C.name && ("kind" in envelope.to ? envelope.to.kind === "lane" : envelope.to.scope === I.name);
     const second = await submitManifest(oid("d"), first.fact.seq);
     const superseding = await C.entry(second.fact.seq), unpin = superseding.sends.find(send => send.message.class === "request" && send.message.type === "tell" && (send.message.body as { message?: string }).message === "unpin");
     if (!unpin) return expect.fail("actual superseding manifest emitted no unpin");

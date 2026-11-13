@@ -119,7 +119,7 @@ function checkedLocal(action: LocalReviewAction, card: Card): void {
   const capture = action.capture;
   if (action.purpose !== "mark-reviewed" || "kind" in action || "args" in action || "parameters" in action || "parameterInput" in action
     || !capture || !Array.isArray(capture.heads) || capture.heads.length < 1 || capture.heads.length > 8 || capture.heads.length !== card.projection.length
-    || !isScopeRef(capture.directory) || capture.directory.kind !== "directory" || !isMemberRef(capture.viewer) || !isKeyId(capture.key)
+    || !isScopeRef(capture.directory) || !isMemberRef(capture.viewer) || !isKeyId(capture.key)
     || typeof capture.service !== "string" || utf8(capture.service).length > 2048 || !Array.isArray(capture.ranges)) throw new ViewError("unavailable", "The local review capture is malformed.");
   let service: URL;
   try { service = new URL(capture.service); } catch { throw new ViewError("unavailable", "The local review service is malformed."); }

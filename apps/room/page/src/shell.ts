@@ -31,8 +31,8 @@ export function routeOf(hash: string): Route {
 }
 
 /** Membership incarnation and device key are part of a room's reading context. */
-export function roomContext(origin: string, place: { directory: string; membership: { scope: string; inc: string; kind: string } }, key: string): string {
-  return JSON.stringify([origin, place.directory, place.membership.scope, place.membership.inc, place.membership.kind, key]);
+export function roomContext(origin: string, place: { directory: string; membership: { scope: string; genesis: string } }, key: string): string {
+  return JSON.stringify([origin, place.directory, place.membership.scope, place.membership.genesis, key]);
 }
 
 /** Share pending reads and reuse completed rooms only while their identity remains usable. */

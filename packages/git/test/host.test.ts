@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { Effect, Entry, Input, OperationId, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Effect, OperationId, ScopeRef, SequenceEntry } from "@generalbusiness/dap-contract";
 import { TokenDriver, type TokenAnswer, type TokenRequest } from "../src/host.ts";
 import { TokenHost, Vault, secret } from "./support/tokens.ts";
 
@@ -11,9 +11,9 @@ import { TokenHost, Vault, secret } from "./support/tokens.ts";
  * function of a sealed entry and a host's reply, and nothing about a scope
  * or a host. `scope/test/tokens.test.ts` runs the driver behind a real scope.
  */
-const at = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" } as ScopeRef;
+const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
 const hash = `sha256:${"0".repeat(64)}` as const;
-const sealed = (input: unknown, effects: Effect[]) => ({ entry: { v: 1, at, seq: 7, prev: hash, time: "2099-01-01T00:00:00Z", clamped: false, epoch: 0, input: input as Input, uses: [], prepared: [], effects, sends: [] } satisfies Entry, hash });
+const sealed = (input: unknown, effects: Effect[]) => ({ entry: { v: 1, genesis: at.genesis, seq: 7, prev: hash, time: "2099-01-01T00:00:00Z", clamped: false, epoch: 0, input: input as SequenceEntry["input"], uses: [], prepared: [], effects, sends: [] } satisfies SequenceEntry, hash });
 const token = (state: string, values: Record<string, unknown>, key = 1): Effect => ({ effect: "record", capability: "hold@1", kind: "token", key: [key], state, values });
 const staging = { purpose: "staging", root: 1, operation: "7:0", attempt: 1 };
 const request = (kind: string, operation: string, effects: Effect[], attempt = 1): TokenRequest => ({ scope: at, operation: operation as OperationId, attempt, owner: "hold@1", kind, origin: sealed({ type: "preparation" }, effects) });
@@ -71,7 +71,7 @@ describe("the token ledger's driver (authority note, sections 5.3, 5.4 and 5.7).
     ]);
     const plain = host.tokens.get("tok-1")!.plaintext;
     expect(JSON.stringify([first, second])).not.toContain(plain);
-    const sealedBy = (operation: string, effects: Effect[]) => { const o = outcome(operation, "confirmed", effects); return { ...o, entry: { ...o.entry, input: { ...o.entry.input, owner: "git-read@1" } as Input } }; };
+    const sealedBy = (operation: string, effects: Effect[]) => { const o = outcome(operation, "confirmed", effects); return { ...o, entry: { ...o.entry, input: { ...o.entry.input, owner: "git-read@1" } as SequenceEntry["input"] } }; };
     // `live`: handed to the gateway's side, which is the runner's gateway. The runner is given nothing.
     driver.judged(of("7:0"), sealedBy("7:0", [read("live", { mint: "7:0", id: "tok-1", ends: host.ends, revocation: null })]));
     // `revoking`, because the job was decided before the answer came, or the token would outlive the deadline: dropped.
@@ -186,7 +186,7 @@ test("hold@2 late mint keeps its originating owner and cannot hand custody throu
   next.driver.judged(of("7:1"), wrong);
   expect(next.vault.held).toEqual([]);
   expect(await next.driver.answered(lost.ask, lost.reply)).toBe("offered");
-  next.driver.judged(of("7:1"), { ...wrong, entry: { ...wrong.entry, input: { ...wrong.entry.input, owner: "hold@2" } as Input } });
+  next.driver.judged(of("7:1"), { ...wrong, entry: { ...wrong.entry, input: { ...wrong.entry.input, owner: "hold@2" } as SequenceEntry["input"] } });
   expect(next.vault.held).toMatchObject([{ owner: "hold@2", token: 1, id: "tok-1", state: "live" }]);
   expect(JSON.stringify(next.late)).not.toContain(first.host.tokens.get("tok-1")!.plaintext);
 });

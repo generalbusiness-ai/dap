@@ -31,7 +31,7 @@ const readAnswer = <T>(guard: (v: unknown) => v is T) => {
 const ACT_REFUSED: Record<RefusalReason, true> = REFUSAL_REASONS;
 /** Why a creation is refused (`Created`). */
 const CREATION_REFUSED: Record<RefusalReason | DeliveryRefusal | "unsupported-definition", true> = { ...REFUSAL_REASONS, "source-unverified": true, "unsupported-definition": true };
-const UNAVAILABLE: Record<UnavailableReason, true> = { "dependency-unavailable": true, busy: true, "clock-behind": true, "scope-provisional": true, "guard-incomplete": true, "authority-unavailable": true, unavailable: true, "rate-limited": true };
+const UNAVAILABLE: Record<UnavailableReason, true> = { "dependency-unavailable": true, "source-response-too-large": true, busy: true, "clock-behind": true, "scope-provisional": true, "guard-incomplete": true, "authority-unavailable": true, unavailable: true, "rate-limited": true };
 const CREATION_UNAVAILABLE: Record<CreationUnavailableReason, true> = { ...UNAVAILABLE, misconfigured: true, "host-unavailable": true };
 const MISMATCH: Record<MismatchReason, true> = { "idempotency-mismatch": true };
 
@@ -45,7 +45,7 @@ function isSettlement(value: unknown): value is Settlement {
   if (!isRecord(value) || !Object.hasOwn(value, "claim")) return false;
   const { claim, ...read } = value;
   if (!ordinary(read) || !read.ok || read.complete !== true || read.next !== undefined
-    || !answersVersionQuestion(read.value.definition, "clientSettlementClaimProjectionRegister") || read.value.fact.at.kind !== "register" || read.at.seq < read.value.fact.seq
+    || !answersVersionQuestion(read.value.definition, "clientSettlementClaimProjectionRegister") || read.at.seq < read.value.fact.seq
     || !isRecord(claim) || !only(claim, "fact", "state") || !isFactRef(claim["fact"])
     || !["pending", "failed", "active"].includes(claim["state"] as string)) return false;
   return canonicalize(claim["fact"]) === canonicalize(read.value.fact);

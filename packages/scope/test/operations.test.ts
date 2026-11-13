@@ -1,3 +1,4 @@
+import { scopeWiring } from "../src/internal/room-hooks.ts";
 import { operationStagedChange } from "./definition-corpus-data.ts";
 import { describe, expect, test } from "vitest";
 import { abortAllDurableObjects } from "cloudflare:test";
@@ -162,7 +163,7 @@ describe("outside operations at a real scope (scope contract, section 4.3; autho
     let factory: ScopeObject;
     let factoryStore: SqliteStore;
     class FactoryScope extends ScopeObject {
-      protected override wiring(): Wiring {
+      protected override [scopeWiring](): Wiring {
         return {
           ports: { ...testPorts(s.c), outside: out, owners }, bounds: s.c.bounds,
           outside: (given) => {
@@ -523,7 +524,7 @@ describe("outside operations at a real scope (scope contract, section 4.3; autho
   });
 
   test("a snapshot that comes with an answer is stored only as its canonical bytes: the same pairs in another order, or with other spacing, have the same digest and are no answer. A plain function, and no scope", () => {
-    const lane = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}` } as never;
+    const lane = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` } as never;
     const pairs = [1, 2].map((root) => ({ ref: stagedRefName(lane, "c".repeat(40), root), target: "c".repeat(40) }));
     const snapshot = snapshotInput(pairs)!;
     const answer = (bytes: string) => ({ result: "confirmed", evidence: { basis: "own-answer", body: { read: true } }, retain: [{ ...snapshot, bytes }] });
