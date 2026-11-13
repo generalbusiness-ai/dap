@@ -32,6 +32,7 @@ const sumCharges = (charges: readonly Partial<ArchiveCost>[]): ArchiveCost => {
 };
 import { archiveDefinition as base, archivePolicies as policies, archiveRepository as repository, archiveSql as sqlOf } from "./support/archive.ts";
 import { createNativeArchiveLane, archiveAuthorityBasis, archiveAuthorityPolicies } from "./support/archive-native-authority.ts";
+import { ownReplayContext } from "./support/own-replay-context.ts";
 
 async function first(lane: Lane, format: JournalFormat) {
   const through = await lane.head();
@@ -307,7 +308,7 @@ test("v2 native inventory and restart read only the marked new interval and keep
     const planned = await planAdaptiveArchivePass(sql, { at: fallbackLane.at, through: fallbackThrough, after: null,
       bounds: PROPOSED_BOUNDS, policies: archiveAuthorityPolicies(fallbackLane), fixtureSources: pins,
       format: "sha1", parent: null, markedAt: fallbackLane.c.clock.now, row,
-      replayContext: archiveOwnReplayContext(sql, fallbackLane.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()),
+      replayContext: ownReplayContext(sql, fallbackLane.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()),
       parentHeld: new Map(), parentUsed: new Set(), maximum: 8 * 1024 * 1024 }, budget);
     expect(budget.charges).toContainEqual({ metadata: 32 * 1024, inputWork: 256 * 1024 });
     expect(planned.ok, JSON.stringify(planned)).toBe(true);

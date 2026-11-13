@@ -39,6 +39,7 @@ import { FixtureArchiveSourcePins } from "../src/archive-source-pins.ts";
 import { inventoryArchive, type ArchivePolicyRegistry, type ReviewedArchivePolicy } from "../src/archive-inventory.ts";
 import { at, definition, create, reader, rita } from "./support.ts";
 import { wired } from "./outside.ts";
+import { ownReplayContext } from "./support/own-replay-context.ts";
 const variants = new Set<Input["type"]>(["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"]);
 const receiver = variant(definition.declared, archiveReceiverChange());
 const policy = (def: typeof definition, entryTypes = variants): ReviewedArchivePolicy => ({ review: "TEST reviewed inline classes; no production certificate",
@@ -277,7 +278,7 @@ test("native foreign recording pays scout work and fences fresh metadata after a
   expect(result.metadataOnly).toBe(true); expect(result.frozen).toBe(true);
   expect(result.forbidden).toEqual([]); expect(result.scouted.nodes).toBe(1); expect(result.final.nodes).toBe(2);
   expect(result.final.inputWork).toBeGreaterThan(result.scouted.inputWork);
-  const first = result.scans[0]!, second = result.scans[1]!;
+  const first = result.scans[0]!;
   for (const variant of ["size", "effects"] as const) {
     const changed = await f.consumer.inside(state => {
       const all = result.scans.flatMap(row => row.requests.filter(request => request.kind === "cold"));
@@ -549,7 +550,7 @@ test("published replay closure adds only admitted public-copy producers and rebu
   const plan = (replayScopes = targetScopes) => f.consumer.inside(state => planPublishedArchivePass(archiveSql(state), {
     at: f.consumer.at, through, after: null, bounds: PROPOSED_BOUNDS, policies: f.policies,
     format: "sha1", parent: null, markedAt: at(0), fixtureSources: f.sources, replayScopes,
-    replayContext: archiveOwnReplayContext(archiveSql(state), f.consumer.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()),
+    replayContext: ownReplayContext(archiveSql(state), f.consumer.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()),
   }, new ArchiveBudget()));
   const conflicting = { ...f.producer.at, genesis: digestBytes(new Uint8Array(16).fill(73)) };
   expect(conflicting.genesis).not.toBe(f.producer.at.genesis);

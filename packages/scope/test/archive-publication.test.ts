@@ -36,6 +36,7 @@ import { createNativeArchiveLane, archiveAuthorityBasis, archiveAuthorityPolicie
 import { fixtureArchiveWiring } from "./worker.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import type {} from "./support/maintained-applications.ts";
+import { ownReplayContext } from "./support/own-replay-context.ts";
 
 // An old receipt cannot authorize deletion. Only a real new writer's
 // whole-held-prefix publication earns coverage and enables the floor.
@@ -326,7 +327,7 @@ test("Native published Mark rebuilds its exact bytes after a later turn and evic
     const sql = archiveSql(state), budget = new ArchiveBudget();
     const result = await planPublishedArchivePass(sql, { at: lane.at, through, after: null, bounds: lane.c.bounds,
       policies: archiveAuthorityPolicies(lane), fixtureSources: archiveAuthorityBasis(lane)!.pins, format: "sha1", parent: null, markedAt: lane.c.clock.now,
-      replayContext: archiveOwnReplayContext(sql, lane.at, lane.c.bounds.entryBytes, new ArchiveBudget()) }, budget);
+      replayContext: ownReplayContext(sql, lane.at, lane.c.bounds.entryBytes, new ArchiveBudget()) }, budget);
     if (!result.ok) throw Error(canonicalize(result));
     expect(result.archive.cost).toEqual(budget.admitted());
     expect(result.archive.manifest.anchors).toEqual(archiveAuthorityAnchors(lane));

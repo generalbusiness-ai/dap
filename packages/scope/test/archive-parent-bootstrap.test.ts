@@ -14,13 +14,13 @@ import { ArchiveFrontiers } from "../src/archive-frontier-store.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { writeArchivePublication } from "../src/archive-publication.ts";
 import { planRootArchivePass, type ArchiveFixedFinish } from "../src/archive-build.ts";
-import { archiveOwnReplayContext } from "../src/archive-publication.ts";
 import { ArtifactsProvider } from "../src/artifacts-host.ts";
 import { ArchiveArtifactsPeer } from "./support/archive-artifacts.ts";
 import { archiveAuthorityAnchors, archiveAuthorityBasis, archiveAuthorityPolicies, nativeArchiveFixture } from "./support/archive-native-authority.ts";
 import { archiveDefinition, archivePolicies, archiveSql } from "./support/archive.ts";
 import type { TestScope } from "./worker.ts";
 import { rita, type Lane } from "./fixtures-native.ts";
+import { ownReplayContext } from "./support/own-replay-context.ts";
 
 // The real Artifacts adapter requires the repository id to equal its name.
 const repository = { host: "artifacts", namespace: "bootstrap-fixture", name: "bootstrap", id: "bootstrap" };
@@ -507,7 +507,7 @@ test.for([0, 1] as const)("unpublished v2 cutoff %i migrates exactly next after 
         // Production takes the replay context from its target read; this
         // stand-in admits the lane's own genesis outside the pass budget.
         return { pins: archiveAuthorityBasis(lane)!.pins,
-          replayContext: archiveOwnReplayContext(archiveSql(state), lane.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()),
+          replayContext: ownReplayContext(archiveSql(state), lane.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()),
           prepare: async (seq, actualBudget) => {
           expect(actualBudget).toBe(budget); order.push(`prepare:${seq}`);
         } };

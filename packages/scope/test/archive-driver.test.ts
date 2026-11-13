@@ -19,7 +19,6 @@ import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import { archiveHostGate as gate } from "./support/archive-provider.ts";
 import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
 import { ArchiveDriver } from "../src/archive-driver.ts";
-import { archiveOwnReplayContext } from "../src/archive-publication.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { planArchive, type ArchiveFixedFinish } from "../src/archive-build.ts";
 import { at, rita, una, type Lane } from "./fixtures-native.ts";
@@ -29,6 +28,7 @@ import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } fro
 import { fixtureArchiveWiring, fixtureArchiveRestart } from "./worker.ts";
 import type { TestScope } from "./worker.ts";
 import type { readArchiveCapacityObservation } from "../src/archive-capacity-observation.ts";
+import { ownReplayContext } from "./support/own-replay-context.ts";
 
 // Observe the existing production diagnostic; no scheduling or budget hook.
 function passDiagnostics() {
@@ -469,7 +469,7 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
         // Production takes the replay context from its target read; this
         // stand-in admits the lane's own genesis outside the pass budget.
         return { pins: archiveAuthorityBasis(lane)!.pins,
-          replayContext: archiveOwnReplayContext(archiveSql(state), lane.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()),
+          replayContext: ownReplayContext(archiveSql(state), lane.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()),
           prepare: async (seq, sameBudget) => {
           expect(sameBudget).toBe(actualBudget); sourceOrder.push(`prepare:${seq}`);
           if (hardWithdraw) throw new ArchivePrefixStopped("foreign-source-unavailable");

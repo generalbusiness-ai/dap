@@ -48,7 +48,6 @@ import { Scope, type Checkpointed } from "../src/core.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { archiveReplayAnchors } from "../src/archive-anchors.ts";
 import { planArchive, planArchivePass, planPublishedArchivePass, type ArchiveFixedFinish } from "../src/archive-build.ts";
-import { archiveOwnReplayContext } from "../src/archive-publication.ts";
 import { ARCHIVE_SOURCE_PINS, FixtureArchiveSourcePins, type FixtureArchiveSourceBirth } from "../src/archive-source-pins.ts";
 import type { ReviewedArchivePolicy } from "../src/archive-inventory.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
@@ -70,6 +69,7 @@ import { fixedSigner } from "./fixtures-core.ts";
 import retainedGrowRoom from "./support/retained-archive-grow-room.json.txt?raw";
 import retainedGrowSite from "./support/retained-archive-grow-site.json.txt?raw";
 import { withSequence } from "../src/testing.ts";
+import { ownReplayContext } from "./support/own-replay-context.ts";
 /** The address of a history's scope: its scope ID and the hash of its genesis entry. */
 const historyAt = (scope: ScopeId, history: readonly Sealed[]): ScopeRef => ({ scope, genesis: history[0]!.hash });
 
@@ -738,7 +738,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
           const made = await planPublishedArchivePass(sql, { at, through, after: prior, bounds: PROPOSED_BOUNDS,
             policies, format: "sha1", parent: parent === null ? null : { id: parent, source: archivePeer.source },
             markedAt: timeOf(life.now()), fixtureSources, replayScopes,
-            replayContext: archiveOwnReplayContext(sql, at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()) }, budget);
+            replayContext: ownReplayContext(sql, at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()) }, budget);
           if (!made.ok) return { ok: false as const, result: made, cost: budget.admitted() };
           expect(made.archive.manifest.anchors).toEqual(JSON.parse(made.mark.anchorPublication!).anchors);
           // TEST remote accepts genuine writer objects; no actual provider.
