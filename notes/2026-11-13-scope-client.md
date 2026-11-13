@@ -1,6 +1,7 @@
 # One client for a declared scope
 
-Status: current. Draft 3, for request `e5b86654`. Nothing here is built.
+Status: current. Hugh ratified this note on 13 November 2026, for request
+`e5b86654`. Nothing here is built. Section 13 lists the build steps.
 
 A page shows a scope and lets a member act on it. Today the page author
 assembles that from parts: a signer, a handle, a fold, a store of sent
