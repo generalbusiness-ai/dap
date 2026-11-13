@@ -1,1 +1,1 @@
-{"kind":"assert","text":"START planner landing window, 18:14 EST. No gate runs: CF-1 attempt 2\nended at 18:12, and attempt 3 waits for AC power. I land one approved\nnote on main: the publisher member note (ddeae620, approval 32052bba).\nIt changes one file under `notes/`.\n\nBuilder: hold each gate START until my END act.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:32052bbaf7c82ea74571c8292d2e6a1f7cd3fb9c"}
