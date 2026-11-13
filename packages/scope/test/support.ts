@@ -61,8 +61,14 @@ export const stubOf = (name: string, namespace?: DurableObjectNamespace): Remote
 export type RawRemote = { [K in keyof Surface]: (...args: Parameters<Surface[K]>) => Promise<Awaited<ReturnType<Surface[K]>>> };
 /** The stub unwrapped: a test that expects a retired stop reads it here. */
 export const rawStubOf = (name: string, namespace?: DurableObjectNamespace): RawRemote => objectOf(name, namespace) as unknown as RawRemote;
+/** An object's methods, each answered in a promise with a retired stop excluded. */
+export type Live<T> = { [K in keyof T]: T[K] extends (...args: infer A) => infer R ? (...args: A) => Promise<Exclude<Awaited<R>, RoomRetiredStop>> : T[K] };
+/** Each method of a test scope, local or a stub, with a retired stop thrown as a test failure. */
+export function live<T extends object>(object: T): Live<T> {
+  return current(object) as unknown as Live<T>;
+}
 /** Each method of the stub, with a retired stop thrown as a test failure. */
-function current(stub: DurableObjectStub): Remote {
+function current(stub: object): Remote {
   return new Proxy(stub, { get(target, key) {
     const method: unknown = Reflect.get(target, key);
     if (typeof method !== "function") return method;

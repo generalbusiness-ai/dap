@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import type { Entry, FactRef, ScopeRef, Seed } from "@generalbusiness/dap-contract";
+import type { Entry, FactRef, FactUse, GenesisEntry, ScopeKind, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, intentDigest, newGenesisNonce, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { useOf } from "@generalbusiness/dap-derive";
 import { GenesisProofs, GENESIS_PROOF_BOUNDS as B, type ProofTimer } from "../src/genesis-proof.ts";
@@ -28,9 +28,23 @@ const addressOf = (entry: Entry): ScopeRef => {
   if (!at) throw new Error("this later entry has no recorded address");
   return at;
 };
+/** The kind of the sequence of each later entry, read from its genesis. */
+const kinds = new WeakMap<Entry, ScopeKind>();
+const kindOfEntry = (entry: Entry): ScopeKind => {
+  if (entry.seq === 0 && entry.input.type === "genesis") return entry.input.seed.kind;
+  const kind = kinds.get(entry);
+  if (!kind) throw new Error("this later entry has no recorded sequence kind");
+  return kind;
+};
 /** `entry` at the address of `of`: a later entry of the same sequence. */
-const beside = (entry: Entry, of: Entry): Entry => { addresses.set(entry, addressOf(of)); return entry; };
+const beside = (entry: Entry, of: Entry): Entry => { addresses.set(entry, addressOf(of)); kinds.set(entry, kindOfEntry(of)); return entry; };
 const refOf = (entry: Entry): FactRef => factRefOf(entry, addressOf(entry));
+const use = (entry: Entry): FactUse => useOf(refOf(entry), entry, kindOfEntry(entry));
+/** A genesis entry, or a test failure. */
+const genesisOf = (entry: Entry): GenesisEntry => {
+  if ("genesis" in entry || entry.input.type !== "genesis") throw new Error("a genesis entry is required");
+  return entry as GenesisEntry;
+};
 
 /** Explicitly synthetic genesis chain, canonical/hash-linked on actual SQLite.
  * The signed root act is native; no native judgment/replay is claimed for
@@ -41,7 +55,8 @@ function chain(sample: Entry, act: Entry, count: number): Entry[] {
   const entries: Entry[] = [act]; let previous = act;
   for (let n = 1; n <= count; n++) {
     const seed: Seed = { ...sample.input.seed, creator: addressOf(previous), cause: previous.input.type === "genesis" ? seedDigest(previous.input.seed) : intentDigest(act.input.signed.intent), ordinal: n };
-    const genesis: Entry = { ...sample, time: at(n), input: { ...sample.input, seed, "founding": null, source: refOf(previous), sourceKind: sample.input.seed.kind, decision: "applied" }, uses: [useOf(refOf(previous), previous)] };
+    const born = genesisOf(sample);
+    const genesis: Entry = { ...born, time: at(n), input: { ...born.input, seed, "founding": null, source: refOf(previous), sourceKind: born.input.seed.kind, decision: "applied" }, uses: [use(previous)] };
     entries.push(genesis); previous = genesis;
   }
   return entries;
@@ -131,7 +146,7 @@ test("exact genesis chain shares rootOf semantics at four steps and separates co
       const result = await proof.root(), beforeCache = scriptedSource.calls.length;
       const cached = await proof.root();
       expect(cached).toEqual(result); expect(scriptedSource.calls.length).toBe(beforeCache);
-      const old = await rootOf(start, async use => { const value = scriptedSource.map.get(canonicalize(use.fact)); return value ? JSON.parse(value.bytes) as Entry : null; });
+      const old = await rootOf({ entry: start, scope: addressOf(start).scope }, async use => { const value = scriptedSource.map.get(canonicalize(use.fact)); return value ? JSON.parse(value.bytes) as Entry : null; });
       const unsupported = await new GenesisProofs(new ProofBytes(sqlOf(state)), null, new Timer()).root();
       return { result, old, unsupported, calls: scriptedSource.calls };
     });
@@ -154,7 +169,7 @@ test("unknown dependency is retried, full content/fact conflict is refused and a
     const broken = { ...start, uses: [{ ...start.uses[0]!, content: `sha256:${"0".repeat(64)}` as const }] };
     install(state, broken);
     const conflict = await proof.root(); await microtasks();
-    const changed: Entry = { ...start, input: { ...start.input as Extract<Entry["input"], { type: "genesis" }>, nonce: newGenesisNonce(new Uint8Array(16).fill(0xaa)) } };
+    const changed: Entry = { ...genesisOf(start), input: { ...genesisOf(start).input, nonce: newGenesisNonce(new Uint8Array(16).fill(0xaa)) } };
     install(state, changed);
     const next = await proof.root();
     return { unknown, recovered: recovered.kind, conflict, next: next.kind, calls: fixture.calls.length };
@@ -192,11 +207,11 @@ test("body capacity counts the genesis and repeated uses spend work even when th
       const creations = chain(JSON.parse(store.stored(0)!.bytes), act, 1), start = creations[1]!;
       const unsigned = (seq: number): Entry => beside({ ...act, seq, input: { type: "checkpoint", through: 0, state: act.prev! } }, act);
       const source = unsigned(10), extras = Array.from({ length: mode === "extra-body" ? 14 : 13 }, (_, n) => unsigned(n + 20));
-      const uses = [useOf(refOf(source), source), ...extras.map(entry => useOf(refOf(entry), entry)), useOf(refOf(act), act)];
-      if (mode === "repeated-uses") uses.splice(1, 0, ...Array.from({ length: B.attempts }, () => useOf(refOf(source), source)));
-      if (mode === "conflicting-uses") uses.splice(1, 0, { fact: refOf(source), content: `sha256:${"0".repeat(64)}` });
-      if (mode === "uses-search") uses.unshift(...Array.from({ length: B.visits }, () => useOf(refOf(extras[0]!), extras[0]!)));
-      const genesis: Entry = { ...start, input: { ...start.input as Extract<Entry["input"], { type: "genesis" }>, source: refOf(source) }, uses };
+      const uses = [use(source), ...extras.map(entry => use(entry)), use(act)];
+      if (mode === "repeated-uses") uses.splice(1, 0, ...Array.from({ length: B.attempts }, () => use(source)));
+      if (mode === "conflicting-uses") uses.splice(1, 0, { fact: refOf(source), content: `sha256:${"0".repeat(64)}`, kind: kindOfEntry(source) });
+      if (mode === "uses-search") uses.unshift(...Array.from({ length: B.visits }, () => use(extras[0]!)));
+      const genesis: Entry = { ...genesisOf(start), input: { ...genesisOf(start).input, source: refOf(source) }, uses };
       install(state, genesis); const fixture = scripted([act, source, ...extras]);
       const result = await new GenesisProofs(new ProofBytes(sqlOf(state)), fixture.source, new Timer()).root();
       return { result: result.kind, calls: fixture.calls.length };

@@ -4,14 +4,14 @@ import { scopePublisher as publisher, publisherContainerData } from "./definitio
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import type { DeclaredDefinition, FactRef, Intent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, FactRef, Intent, ScopeKind, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, factRefOf, intentDigest, isSeed, scopeIdOf, signIntent, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { applicationPublicationOrigin, archiveDevicePublicationOrigin, FAILED_CLAIM_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, FILE_PUBLICATION_COHORT, fileReceiptRef, platform } from "@generalbusiness/dap-platform";
 import { Reader } from "@generalbusiness/dap-git";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { SqliteStore } from "../src/index.ts";
 import type { EffectAnswer, EffectRequest, LateAnswers } from "../src/operations.ts";
-import { namespace } from "../src/namespace.ts";
+import { admittedOrigin, namespace } from "../src/namespace.ts";
 import { site } from "../src/site/route.ts";
 import { ownHost } from "./hosts.ts";
 import { soon } from "./net.ts";
@@ -93,7 +93,7 @@ test("a native application publishes once after missing proof, keeps later sourc
     expect(await R.stub.submit(matched, [])).toMatchObject({ answer: "accepted" });
     await pause([R, D]);
     const initial = (await D.entries())[0]!;
-    const sibling = (kind: ScopeRef["kind"]) => {
+    const sibling = (kind: ScopeKind) => {
       const send = initial.sends.find(row => "definition" in row.to && row.to.kind === kind);
       if (!send || !("definition" in send.to)) throw new Error("the actual Directory creates each sibling");
       return life.platform(scopeIdOf(send.to));
@@ -167,8 +167,9 @@ test("a native application publishes once after missing proof, keeps later sourc
     expect((await state(a.G)).items.filter(item => item.type === "file-publication")).toHaveLength(0);
     proofAvailable = true;
     const firstCause = (await a.C.fact(first));
-    const proof = await life.wait(() => actual.read(firstCause, 30, true));
-    expect(proof && "entry" in proof ? applicationPublicationOrigin(firstCause, (await a.D.at()), (await a.G.at()), proof.origin ?? []) : null).toBe(true);
+    const maxBytes = (sourceNet.sized.get(a.C.name) ?? PROPOSED_BOUNDS).entryBytes;
+    const proof = await life.wait(() => actual.read(firstCause, { maxBytes, milliseconds: 30_000 }, true));
+    expect(proof && "entry" in proof ? applicationPublicationOrigin(firstCause, (await a.D.at()), (await a.G.at()), admittedOrigin(proof.origin ?? [], maxBytes)) : null).toBe(true);
     life.advance(2000);
     await pause(rooms);
     let written = (await state(a.G)).items.filter(item => item.type === "file-publication");
@@ -389,7 +390,7 @@ test.each([
     expect(await R.stub.submit(found, [])).toMatchObject({ answer: "accepted" });
     await pause([R, D]);
     const initial = (await D.entries())[0]!;
-    const sibling = (kind: ScopeRef["kind"]) => {
+    const sibling = (kind: ScopeKind) => {
       const send = initial.sends.find(row => "definition" in row.to && row.to.kind === kind);
       if (!send || !("definition" in send.to)) throw Error("The real Directory creates each sibling");
       return life.platform(scopeIdOf(send.to));
@@ -454,11 +455,12 @@ test.each([
     const first = await report("# First device reading\n");
     await pause(nodes);
     const firstCause = (await C.fact(first));
-    const proof = await life.wait(() => namespace(env.PLATFORM).resolver.read(firstCause, { maxBytes: (sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 30_000 }, true));
+    const maxBytes = (sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).entryBytes;
+    const proof = await life.wait(() => namespace(env.PLATFORM).resolver.read(firstCause, { maxBytes, milliseconds: 30_000 }, true));
     const publicationOrigin = platform(cohort.destination)?.applicationPublicationOrigin;
-    expect(proof && "entry" in proof ? publicationOrigin?.(firstCause, directory, await G.at(), proof.origin ?? []) : null).toBe(true);
+    expect(proof && "entry" in proof ? publicationOrigin?.(firstCause, directory, await G.at(), admittedOrigin(proof.origin ?? [], maxBytes)) : null).toBe(true);
     if (cohort.destination !== ARCHIVE_DEVICE_PUBLICATION_COHORT.destination)
-      expect(proof && "entry" in proof ? archiveDevicePublicationOrigin(firstCause, directory, await G.at(), proof.origin ?? []) : null).toBe(false);
+      expect(proof && "entry" in proof ? archiveDevicePublicationOrigin(firstCause, directory, await G.at(), admittedOrigin(proof.origin ?? [], maxBytes)) : null).toBe(false);
     expect((await state()).items.find(item => item.type === "file-publication" && item.values["sourceSeq"] === first)).toMatchObject({ state: "published" });
     const receiptReader = new Reader({
       object: async objectId => { const object = host.stand.objects.get(objectId); return object ? { type: object.type, size: object.data.length, data: object.data } : null; },

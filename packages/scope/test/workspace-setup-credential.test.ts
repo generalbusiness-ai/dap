@@ -16,7 +16,7 @@ import type { NativeBirth } from "../src/native-birth.ts";
 import { production } from "../src/ports.ts";
 import { controls, testPorts } from "../src/testing.ts";
 import { workspaceRepository, type WorkspaceSources } from "../src/workspace-lineage.ts";
-import { reader, START } from "./fixtures-native.ts";
+import { live, reader, START, type Live } from "./fixtures-native.ts";
 import { staged } from "./hosted.ts";
 import { workspaceAncestors } from "./support/workspace-ancestors.ts";
 
@@ -27,7 +27,7 @@ import { workspaceAncestors } from "./support/workspace-ancestors.ts";
 const OWNER = "hold@2", SERVICE = "service.invalid", NAMESPACE = "setup-custody";
 const COMMIT = "1".repeat(40), LIMIT = 96;
 type Mode = "created" | "refused" | "late";
-type Surface = Pick<ScopeObject, "deliver" | "submit" | "effect" | "operation">;
+type Surface = Live<Pick<ScopeObject, "deliver" | "submit" | "effect" | "operation">>;
 const pending = <T>() => {
   let resolve!: (value: T) => void;
   const promise = new Promise<T>(done => { resolve = done; });
@@ -106,12 +106,12 @@ async function fixture(mode: Mode, retainedRoot = false) {
       c.clock.now = timeOf(timeMs(c.clock.now)! + milliseconds);
     },
   };
-  const surface: Surface = {
+  const surface: Surface = live({
     deliver: envelope => inside(() => factory!.deliver(envelope)),
     submit: (signed, grants, beside, address) => inside(() => factory!.submit(signed, grants, beside, address)),
     effect: () => inside(() => factory!.effect()),
     operation: (reader, operation) => inside(() => factory!.operation(reader, operation)),
-  };
+  } satisfies Pick<ScopeObject, "deliver" | "submit" | "effect" | "operation">);
   const refused = Object.assign(new Error("SCRIPTED provider refusal"), { code: "INVALID_INPUT", numericCode: 10000 });
   const lateFork = pending<unknown>(), lateRevoke = pending<boolean>();
   const calls = { forks: [] as string[], revokes: [] as string[], deletes: [] as string[] };

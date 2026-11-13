@@ -371,16 +371,16 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       return archiveHostItem(sql, archiveGiven(store), new Scope(where.scope, store, ports, PROPOSED_BOUNDS).pinned(), config, ask);
     }));
     const productionTarget = archiveTarget({ births: namespace(env.PLATFORM).births,
-      query: (where, query, archiving, directory) => { hostQueries.push(where.kind); return hostRead(where, { query, archiving, directory }); },
+      query: (where, query, archiving, directory) => { hostQueries.push(where.scope === D.name ? "directory" : where.scope === G.name ? "destination" : where.scope); return hostRead(where, { query, archiving, directory }); },
     });
     if (kind === "Grow") {
-      const first = (await life.wait(() => childScope.sealed()))[0]!.entry;
+      const first = (await life.wait(() => childScope.sealed()))[0]!.entry, firstAt = await life.wait(() => childScope.at());
       if (first.input.type !== "genesis") return expect.fail("Actual Grow child genesis is required");
-      expect(await productionTarget.discover(first.at, first.input.seed, new ArchiveBudget())).toBeNull();
+      expect(await productionTarget.discover(firstAt, first.input.seed, new ArchiveBudget())).toBeNull();
       expect(hostQueries).toEqual(["directory"]); // no destination item query without binding
       hostQueries.length = 0;
       if (productionScenario) {
-        expect(await productionTarget.resolveRoom(first.at, first.input.seed, new ArchiveBudget())).toBeNull();
+        expect(await productionTarget.resolveRoom(firstAt, first.input.seed, new ArchiveBudget())).toBeNull();
         expect(hostQueries).toEqual(["directory"]);
         hostQueries.length = 0;
       }
@@ -516,11 +516,11 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       histories.push({ scope, read });
     }
     const declarations = new Map([[rootId, root], [childId, child]]), policies = new Map<Digest | PlatformDefinition, ReviewedArchivePolicy>(productionScenario ? growArchivePolicies(new TextDecoder().decode(packet.bytes)) : [[rootId, reviewed(rootId, root)], [childId, reviewed(childId, child)]]);
-    const childBirth = histories[1]!.read.value[0]!.entry;
+    const childBirth = histories[1]!.read.value[0]!.entry, childAt = await life.wait(() => histories[1]!.scope.at());
     if (childBirth.input.type !== "genesis") throw Error("Actual installed child birth is required.");
     const childSeed = childBirth.input.seed;
     const discoveryBudget = new ArchiveBudget();
-    const discovery = kind === "Grow" ? await productionTarget.discover(childBirth.at, childSeed, discoveryBudget) : null;
+    const discovery = kind === "Grow" ? await productionTarget.discover(childAt, childSeed, discoveryBudget) : null;
     if (kind === "Grow") {
       expect(hostQueries).toEqual(["directory", "destination"]);
       expect(discovery?.repository).toEqual((await life.wait(() => D.item(0))).values["repository"]);
@@ -535,27 +535,27 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       // The same production gate admits no other item or pinned register.
       // No public reader, test inspector or session is passed to this port.
       const repositoryQuery = encodeItemQueryParameter({ v: 1, scope: directory, type: "repository", states: ["open"], ids: null, limit: 1, cursor: null })!;
-      const ask = { query: repositoryQuery, archiving: childBirth.at, directory };
+      const ask = { query: repositoryQuery, archiving: childAt, directory };
       expect(await hostRead(directory, ask, { ...hostConfig, registerScope: D.name })).toEqual({ ok: false, reason: "forbidden" });
       const otherItem = encodeItemQueryParameter({ v: 1, scope: directory, type: "application", states: [], ids: null, limit: 1, cursor: null })!;
       expect(await hostRead(directory, { ...ask, query: otherItem })).toEqual({ ok: false, reason: "forbidden" });
-      expect(await productionTarget.discover({ ...childBirth.at, scope: D.name }, childSeed, new ArchiveBudget())).toBeNull();
+      expect(await productionTarget.discover({ ...childAt, scope: D.name }, childSeed, new ArchiveBudget())).toBeNull();
       expect(hostQueries).toEqual(["directory", "destination"]); // substitution refused before either query
       const wrongRegister = archiveTarget({ births: namespace(env.PLATFORM).births,
         query: (where, query, archiving, directory) => hostRead(where, { query, archiving, directory }, { ...hostConfig, registerScope: D.name }),
       });
-      expect(await wrongRegister.discover(childBirth.at, childSeed, new ArchiveBudget())).toBeNull();
+      expect(await wrongRegister.discover(childAt, childSeed, new ArchiveBudget())).toBeNull();
       if (productionScenario) {
-        expect(await wrongRegister.resolveRoom(childBirth.at, childSeed, new ArchiveBudget())).toBeNull();
-        expect(await productionTarget.resolveRoom({ ...childBirth.at, scope: D.name }, childSeed, new ArchiveBudget())).toBeNull();
-        expect(await productionTarget.resolveRoom(childBirth.at, { ...childSeed, definition: rootId }, new ArchiveBudget())).toBeNull();
+        expect(await wrongRegister.resolveRoom(childAt, childSeed, new ArchiveBudget())).toBeNull();
+        expect(await productionTarget.resolveRoom({ ...childAt, scope: D.name }, childSeed, new ArchiveBudget())).toBeNull();
+        expect(await productionTarget.resolveRoom(childAt, { ...childSeed, definition: rootId }, new ArchiveBudget())).toBeNull();
       }
       const wrongScopeQuery = encodeItemQueryParameter({ v: 1, scope: await life.wait(() => G.at()), type: "repository", states: ["open"], ids: null, limit: 1, cursor: null })!;
       const wrongQueryScope = archiveTarget({ births: namespace(env.PLATFORM).births,
         query: (where, _query, archiving, directory) => hostRead(where, { query: wrongScopeQuery, archiving, directory }),
       });
-      expect(await wrongQueryScope.discover(childBirth.at, childSeed, new ArchiveBudget())).toBeNull();
-      if (productionScenario) expect(await wrongQueryScope.resolveRoom(childBirth.at, childSeed, new ArchiveBudget())).toBeNull();
+      expect(await wrongQueryScope.discover(childAt, childSeed, new ArchiveBudget())).toBeNull();
+      if (productionScenario) expect(await wrongQueryScope.resolveRoom(childAt, childSeed, new ArchiveBudget())).toBeNull();
       const unrelated = await sessionRepository(life, C.register, "journal", platformHost), unrelatedDirectory = await life.wait(() => unrelated.D.at());
       const unrelatedQuery = encodeItemQueryParameter({ v: 1, scope: unrelatedDirectory, type: "repository", states: ["open"], ids: null, limit: 1, cursor: null })!;
       expect(await hostRead(unrelatedDirectory, { ...ask, query: unrelatedQuery, directory: unrelatedDirectory }, { ...hostConfig, directory: unrelated.D.name })).toEqual({ ok: false, reason: "forbidden" });
@@ -640,7 +640,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       }
       // Existing bounded native metadata port, before inventory. It is not
       // read authority or an archive policy; the separate TEST table owns policy.
-      const birth = readNativeBirth(await life.wait(() => namespace(env.PLATFORM).births.read(source, 10_000, 256 * 1024)), source, 256 * 1024);
+      const birth = readNativeBirth(await life.wait(() => namespace(env.PLATFORM).births.read(source, 10_000, 256 * 1024)), source, 256 * 1024, () => {})?.birth;
       if (!birth) throw Error("Actual native graph birth is required.");
       const pin = birth.named, declaration = isDigest(pin) ? declarations.get(pin) : undefined;
       births.push({ at: source, birth: { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, ...(declaration ? { declaration: canonicalize(declaration) } : {}) });
@@ -1062,7 +1062,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
               counts, delta: originalSupport, recordedDelta: { metadata: recorded.metadata - afterSupport.metadata,
                 inputWork: recorded.inputWork - afterSupport.inputWork } });
             const beforePrivacy = privacyBudget.admitted(), sourceRow = { kind: "local" as const, position };
-            const header = archiveEntryHeader(sql, sourceRow, privacyBudget);
+            const header = archiveEntryHeader(sql, sourceRow, privacyBudget, prefix.pin.at);
             archiveEntryPrivacy(sql, sourceRow, header, privacySupport, privacyBudget);
             const afterPrivacy = privacyBudget.admitted(), delta = Object.fromEntries(Object.keys(afterPrivacy).map(key => [key,
               afterPrivacy[key as keyof ArchiveCost] - beforePrivacy[key as keyof ArchiveCost]])) as ArchiveCost;
@@ -1131,7 +1131,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: repository.namespace, host: "service.invalid", maxBytes: 8 * 1024 * 1024, credentialIdentity: "adapter-attempt" }),
         GROW_ARCHIVE_CONFIG: canonicalize({ policy: "grow-room-archive-1", release: DEMO_RELEASE, directory: D.name, repositoryName: repository.name }),
       };
-      const defaultAsk = { query: encodeItemQueryParameter({ v: 1, scope: directory, type: "repository", states: ["open"], ids: null, limit: 1, cursor: null })!, archiving: childBirth.at, directory };
+      const defaultAsk = { query: encodeItemQueryParameter({ v: 1, scope: directory, type: "repository", states: ["open"], ids: null, limit: 1, cursor: null })!, archiving: childAt, directory };
       expect(await life.wait(() => (D.object as unknown as { archiveItem(ask: ArchiveHostItemAsk): Promise<unknown> }).archiveItem(defaultAsk))).toEqual({ ok: false, reason: "forbidden" });
       for (const scope of [D, G]) {
         archiveHostWiring.set(scope.name, hostConfig);
@@ -1332,7 +1332,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         // reply. This budget pays its own header JSON work before the delta;
         // it supplies no credit to any diagnostic export budget above.
         const componentBudget = new ArchiveBudget(), bytes = utf8(held).length;
-        const header = archiveEntryHeader(sql, { kind: "copy", content: copy.content, bytes }, componentBudget);
+        const header = archiveEntryHeader(sql, { kind: "copy", content: copy.content, bytes }, componentBudget, copy.source.at);
         const before = componentBudget.admitted();
         archiveMembershipCopy(sql, copy.content, bytes, header, C.directory, componentBudget);
         const after = componentBudget.admitted(), membershipCopyCost = Object.fromEntries(Object.keys(before).map(key =>
@@ -1510,7 +1510,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       });
       await life.wait(() => G.restart());
       const store = cliMemoryStore(); await store.keep("member", rita.secret);
-      await store.save({ v: 1, service: port.service, key: "member", repository: { directory, membership, rules: A.name, destination: G.name } });
+      await store.save({ v: 2, service: port.service, key: "member", repository: { directory, membership, rules: A.name, destination: G.name } });
       const clonedCommand = await life.wait(() => dapCommand({ store, fetch: routed, now: life.now,
         pause: async () => { await driveFixture([G], life.wait); },
         git: { run: (args, env) => life.wait(() => bridge.archiveRun(commandSession.id, args, env)), archiveRun: (args, env) => life.wait(() => bridge.archiveRun(commandSession.id, args, env)) },

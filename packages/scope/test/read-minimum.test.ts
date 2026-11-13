@@ -7,13 +7,13 @@ import { scopeWiring } from "../src/internal/room-hooks.ts";
 import { expect, test } from "vitest";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
-import { PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ItemQuery, type ReadMinimum } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type SequenceRef, type ApplicationProjectionQuery, type ItemQuery, type ReadMinimum } from "@generalbusiness/dap-contract";
 import { encodeItemQueryParameter, encodeReadMinimumParameter, isScopeRef, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import { ScopeObject, type Wiring } from "../src/object.ts";
 import { api, route, sessionWiring } from "../src/worker.ts";
 import { mintSession, readerOf } from "../src/sessions.ts";
 import { controls, netPorts, testPorts } from "../src/testing.ts";
-import { create, reader, sessionRoom, type Lane } from "./fixtures-native.ts";
+import { create, live, reader, sessionRoom, type Lane, type Live } from "./fixtures-native.ts";
 import { desk, net, settle, ticket } from "./net.ts";
 import { namespace } from "../src/namespace.ts";
 import { encodeApplicationProjectionQuery } from "@generalbusiness/dap-platform/application-v2";
@@ -39,14 +39,14 @@ class Timer {
   }
   advance(ms: number) { this.value += ms; for (const task of [...this.tasks]) if (task.at <= this.value) { this.tasks.delete(task); task.work(); } }
 }
-async function inside<T>(work: (object: ScopeObject, lane: Lane, timer: Timer, state: DurableObjectState) => Promise<T>): Promise<T> {
+async function inside<T>(work: (object: Live<ScopeObject>, lane: Lane, timer: Timer, state: DurableObjectState) => Promise<T>): Promise<T> {
   const lane = await create({ readWaitMilliseconds: 1000 });
   return lane.inside(async state => {
     const timer = new Timer();
     class WaitScope extends ScopeObject {
       protected override [scopeWiring](): Wiring { return { ports: testPorts(lane.c), bounds: lane.c.bounds, queryTimer: timer }; }
     }
-    return work(new WaitScope(state, {}), lane, timer, state);
+    return work(live(new WaitScope(state, {})), lane, timer, state);
   });
 }
 
@@ -88,7 +88,8 @@ test("native wait timeout reports the authorized current fact and leaves no time
     expect(await object.summary(reader)).toEqual(before);
     expect(await state.storage.getAlarm()).toBe(alarm);
     expect(await object.summary(reader, { at: { ...lane.at, genesis: `sha256:${"63".repeat(32)}` as const }, head: 99 })).toEqual({ ok: false, reason: "wrong-genesis" });
-    expect(await object.summary(reader, { at: { ...lane.at, kind: "lane" }, head: 99 })).toEqual({ ok: false, reason: "unavailable" });
+    // An address with a member beyond scope and genesis is not a sequence reference.
+    expect(await object.summary(reader, { at: { ...lane.at, kind: "lane" } as unknown as SequenceRef, head: 99 })).toEqual({ ok: false, reason: "unavailable" });
     expect(timer.started).toBe(1);
   });
 });

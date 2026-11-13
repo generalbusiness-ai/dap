@@ -20,6 +20,7 @@ import { applicationOwnedScopesPacket, applicationResolverFixture, applicationHt
 import { rita, routed, type Platform } from "./repository.ts";
 import { fixedSigner } from "./fixtures-core.ts";
 import { soon } from "./net.ts";
+import { isRoomRetiredStop } from "../src/room-retired.ts";
 
 // Explicit historical-family policy: lineage authority still comes from native proofs.
 const config = (register: string) => ({ PLATFORM_CREATION_PINS: JSON.stringify([...new Set([...Object.values(APPLICATION_COHORT), ...Object.values(ARCHIVE_DEVICE_APPLICATION_COHORT)])]), DEPLOYMENT: "TEST-lineage", ARTIFACTS_CONFIG: JSON.stringify({ registerScope: register, namespace: "lineage", host: "git.example", maxBytes: 1024, credentialIdentity: "adapter-attempt" }) });
@@ -245,7 +246,7 @@ test("the whole creation attempt admits exactly16 bodies before a genuine legacy
     for (let i = 0; i < declarations.length; i++) {
       expect(await life.wait(() => directoryPeer.creationDeclaration!(directory, definitionDigest(declarations[i]!), 1024 * 1024, 10_000))).toBe(values[i]);
     }
-    const directoryBirth = (await life.wait(() => D.entries()))[0]!, registerBirth = (await life.wait(() => R.entries()))[0]!;
+    const directoryBirth = (await life.wait(() => D.entries()))[0]!;
     if (directoryBirth.input.type !== "genesis" || !directoryBirth.input.source || directoryBirth.input.source.seq === 0 || source.seq === 0) throw Error("the fixture needs two actual non-genesis native creator sends");
     const births: { fact: string; bytes: string }[] = [], proofs: { fact: string; bytes: string }[] = [];
     const attempts: string[] = [], obtained: { digest: string; bytes: string }[] = [], missing: string[] = [];
@@ -253,12 +254,14 @@ test("the whole creation attempt admits exactly16 bodies before a genuine legacy
     const f = recorded([R, D, M, A, G], name, target => new Proxy(target, { get(peer, key) {
       if (key === "nativeBirth") return async (...args: Parameters<NonNullable<Peer["nativeBirth"]>>) => {
         const value = await peer.nativeBirth!(...args);
+        if (isRoomRetiredStop(value)) throw Error("the test peer answered a retired stop");
         if (value === null) missing.push(`birth:${args[0].scope}`);
         else births.push({ fact: canonicalize(value.proof.fact), bytes: value.proof.bytes });
         return value;
       };
       if (key === "proofSource") return async (...args: Parameters<NonNullable<Peer["proofSource"]>>) => {
         const value = await peer.proofSource!(...args);
+        if (isRoomRetiredStop(value)) throw Error("the test peer answered a retired stop");
         if (value === null) missing.push(`proof:${canonicalize(args[0])}`);
         else proofs.push({ fact: canonicalize(value.fact), bytes: value.bytes });
         return value;
@@ -266,6 +269,7 @@ test("the whole creation attempt admits exactly16 bodies before a genuine legacy
       if (key === "creationDeclaration") return async (...args: Parameters<NonNullable<Peer["creationDeclaration"]>>) => {
         attempts.push(args[1]);
         const value = await peer.creationDeclaration!(...args);
+        if (isRoomRetiredStop(value)) throw Error("the test peer answered a retired stop");
         if (value === null) missing.push(`declaration:${args[1]}`);
         else obtained.push({ digest: args[1], bytes: value });
         return value;

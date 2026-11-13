@@ -228,7 +228,7 @@ export async function nativeArchiveFixture() {
           expect(activations[0]!.entry.effects).toContainEqual({ effect: "activate" });
           const c = controls(child.name, START); c.clock = clock;
           // A genesis opens every item it names, so the resolver reads no earlier item.
-          made = new Lane(child.name, c, bornFact.at, receiptOf(born, under.digest, bornFact.at, resolvedEntryEffects({ item: () => undefined }, under, born.entry, bornFact.at)), signed);
+          made = new Lane(child.name, c, bornFact.at, receiptOf(born, under.digest, bornFact.at, resolvedEntryEffects({ item: () => null }, under, born.entry, bornFact.at)), signed);
         } else made = await create(bounds, reads, under, { opener, clock });
         const lane = new NativeArchiveLane(made, active, run, factory);
         lanes.push(lane);
