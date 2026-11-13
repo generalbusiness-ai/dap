@@ -5,7 +5,7 @@ import { secretSigner, type Fetch } from "@generalbusiness/dap-client";
 import { PARTITION_COHORT as C } from "@generalbusiness/dap-platform";
 import { command, memoryStore, type Context } from "../../../../packages/cli/src/index.ts";
 import { beginSessionFixture } from "../../../../packages/scope/test/session-settings.ts";
-import { Reads } from "../../../../packages/mcp/src/reads.ts";
+import { Reads } from "../../../../packages/client/src/reads.ts";
 import { Kept, readInventory } from "../../../../packages/mcp/src/inventory.ts";
 import { act, actsOn, issueCreation, openRoom, listLanes } from "../../page/src/data.ts";
 import { net } from "./support/graph.ts";

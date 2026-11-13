@@ -1,5 +1,5 @@
 import { ACT_OUTPUT, projectAnswer, type ActResult } from "./act-result.ts";
-import { mcpApplicationRoomCohort, answersVersionQuestion, FAILED_CLAIM_COHORT, SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, REPOSITORY_BINDING_COHORT, OWN_AGENT_COHORT, COMMONS_COHORT } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, platform } from "@generalbusiness/dap-platform";
 import { isRecord } from "@generalbusiness/dap-bytes";
 import { EXPIRY_MARGIN_MS, invitationRedemptionFields } from "@generalbusiness/dap-client";
 /**
@@ -17,11 +17,12 @@ import { EXPIRY_MARGIN_MS, invitationRedemptionFields } from "@generalbusiness/d
 
 import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Item, PlatformDefinition, Read, Receipt, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
-import { TransportError, ScopeHandle, ApplicationPackageError, actBodyText, originalsAt, commonsInstallCheck, loadCommons, readApplicationPackage, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
+import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
+import { TransportError, ScopeHandle, actBodyText, originalsAt, loadCommons, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
 
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
+import { SendStop, applicationInstallation, applicationRoom, installApplication, type InstallHandle, type InstallRefusal, type InstallRoom, type InstallRoomConfig, type PackageBytes, type RoomRefusal } from "@generalbusiness/dap-client/install";
 import { actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, TERMINAL, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity, type Sent } from "@generalbusiness/dap-client";
 import { effectiveFields, expectedOf, finalStates, viaLeft } from "@generalbusiness/dap-client";
@@ -31,7 +32,7 @@ import { AT_INPUT, schemaOf } from "./input-schema.ts";
 import { answered, archivedAnswer, clip, earlierSaid, finding, type Earlier, type Finding, type Said } from "./errors.ts";
 import { Kept, definitionOf, readInventory, readPartitionIndexes, standingIn, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
 import { KIB, bytesOf, cursorOf, fromCursor, pageBy, sliceText } from "./paging.ts";
-import { ReadSessions, Reads } from "./reads.ts";
+import { ReadSessions, Reads } from "@generalbusiness/dap-client";
 import { Recent } from "./recent.ts";
 import { Unshaped, capturedExpected, needsOn, shapeAt, shapeFields, shapePresented, valuePlaces } from "./shape.ts";
 import { WORDS, type Words } from "./words.ts";
@@ -201,6 +202,17 @@ export const failed = (f: Finding | (Said & { error: string })): Failure => {
 const configDigest = (config: McpConfig): Digest => digestBytes(utf8(canonicalize(config as never)));
 
 class Stop extends Error { constructor(readonly result: Failure) { super("stop"); } }
+
+/** The exact Git blob of a package, read by the public HTTPS reader, for the client's install request. */
+async function applicationPackageBytes(address: Parameters<typeof applicationGitHttpSource>[0], limit: number, send?: (request: Request) => Promise<Response>): Promise<PackageBytes> {
+  let source: ReturnType<typeof applicationGitHttpSource> | undefined;
+  try {
+    source = applicationGitHttpSource(address, { blobBytes: limit, ...(send ? { send } : {}) });
+    return { ok: true, bytes: await readApplicationGitBlob(address, source.source, limit) };
+  }
+  catch (error) { return { ok: false, reason: error instanceof ApplicationHttpError && error.reason === "unsupported-object-format" ? "unsupported-object-format" : "unavailable" }; }
+  finally { await source?.close(); }
+}
 const stopCall = (f: Finding): never => { throw new Stop(failed(f)); };
 
 export const VIEW_DIFF_POLLS = 8;
@@ -1395,25 +1407,26 @@ export class McpService {
    * room recorded in the configuration; the list is derived again on the next call.
    */
   /** The actual generic room and exact Rules sibling, never a caller alias. */
-  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof SEPARATE_RECOVERY_COHORT | typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof DEVICE_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_PUBLICATION_COHORT | typeof UNPUBLISHED_COHORT | typeof REPOSITORY_BINDING_COHORT | typeof OWN_AGENT_COHORT | typeof FAILED_CLAIM_COHORT | typeof COMMONS_COHORT }> {
+  async #applicationRoom(): Promise<InstallRoom> {
+    const room = await applicationRoom(await this.#configuredRoom(), this.#reads);
+    return "refused" in room ? this.#refusedRoom(room) : room;
+  }
 
-    const config = await this.#port.config.read(), repository = config.repository;
-    if (!repository || config.service !== this.#service) return stopCall({ error: "target", what: "configure a trusted-application room before installing" });
-    const { summary: directory } = await this.#summary(repository.directory.scope, repository.membership);
-    const row = directory.items.find(item => item.type === "repository" && item.state === "open"), rules = row?.refs["rules"], destination = row?.refs["destination"];
-    const cohort = mcpApplicationRoomCohort(directory.definition);
+  /** The room that the configuration records for this service, or null. */
+  async #configuredRoom(): Promise<InstallRoomConfig | null> {
+    const config = await this.#port.config.read();
+    return config.repository && config.service === this.#service ? config.repository : null;
+  }
 
-    if (!cohort || directory.status !== "active" || canonicalize(directory.scope) !== canonicalize(repository.directory)
-      || !row || canonicalize(row.refs["membership"]) !== canonicalize(repository.membership)
-      || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules
-      || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return stopCall({ error: "target", what: "the configured room does not match its exact generic native siblings" });
-    const { summary } = await this.#summary(rules.scope, repository.membership);
-    if (summary.status !== "active" || summary.definition !== cohort.rules || canonicalize(summary.scope) !== canonicalize(rules)) return stopCall({ error: "target", what: "the actual Rules sibling does not support native application installation" });
-    if (answersVersionQuestion(cohort.directory, "mcpCommonsRoomDirectory")) {
-      const { summary: membership } = await this.#summary(repository.membership.scope, repository.membership);
-      if (membership.status !== "active" || membership.definition !== COMMONS_COHORT.membership || canonicalize(membership.scope) !== canonicalize(repository.membership)) return stopCall({ error: "target", what: "the Commons room does not hold its exact Membership sibling" });
+  /** The words of a room refusal: each stops the call, as the room checks did before they moved to the client. */
+  #refusedRoom(refusal: RoomRefusal): never {
+    switch (refusal.refused) {
+      case "unconfigured": return stopCall({ error: "target", what: "configure a trusted-application room before installing" });
+      case "read": return stopCall({ error: "read", scope: refusal.scope, reason: refusal.reason });
+      case "room-siblings": return stopCall({ error: "target", what: "the configured room does not match its exact generic native siblings" });
+      case "rules-sibling": return stopCall({ error: "target", what: "the actual Rules sibling does not support native application installation" });
+      case "commons-membership": return stopCall({ error: "target", what: "the Commons room does not hold its exact Membership sibling" });
     }
-    return { directory: directory.scope, membership: repository.membership, rules, destination, cohort };
   }
 
   async #declaredInstallation(item: number): Promise<ApplicationInstallation | null> {
@@ -1430,85 +1443,68 @@ export class McpService {
   }
 
   async #installApplication(args: Args, dispatch?: DispatchContext): Promise<CallOutcome<ActResult>> {
-    const key = args["idempotencyKey"];
-    if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing or invalid", declared: "a key you choose and keep" });
-    const room = await this.#applicationRoom(), pin = room.cohort.rules;
-    const snapshot = await this.snapshot();
-    this.#admitTarget(snapshot, { scope: room.rules.scope, ref: room.rules, place: "rules", pinned: pin, definition: platform(pin)!.data as unknown as DefinitionLike, membership: room.membership.scope }, "install-application", "install_application");
-    let selected: ReturnType<typeof readApplicationInstallOptions> | ReturnType<typeof readDeviceApplicationInstallOptions>;
-    try {
-      const ordinary = { rules: room.rules, uri: args["uri"], release: args["release"], roles: args["roles"], values: args["values"] };
-      selected = answersVersionQuestion(room.cohort.rules, "mcpDeviceInstallOptionsRules") ? readDeviceApplicationInstallOptions({ ...ordinary, owner: args["owner"] }) : readApplicationInstallOptions(ordinary);
-      if (!answersVersionQuestion(room.cohort.rules, "mcpOwnerFieldRules") && args["owner"] !== undefined) throw Error("this cohort has no owner selection");
+    let snapshot: Snapshot | null = null, rules: ScopeId | null = null;
+    const installed = await installApplication(this.#installHandle(await this.#configuredRoom()), this.custody,
+      { uri: args["uri"], release: args["release"], roles: args["roles"], values: args["values"], owner: args["owner"], idempotencyKey: args["idempotencyKey"] }, {
+        reader: this.#reads,
+        admit: async target => {
+          snapshot = await this.snapshot(); rules = target.rules.scope;
+          try { this.#admitTarget(snapshot, { scope: target.rules.scope, ref: target.rules, place: "rules", pinned: target.pinned, definition: target.definition, membership: target.membership.scope }, "install-application", "install_application"); }
+          catch (error) { if (error instanceof Stop) return false; throw error; }
+          return true;
+        },
+        // A person's server keeps the original at membership, and a hosted call goes through its dispatch: both live in #sendAct.
+        send: async (identity, meaning, build, _deliver, options) => {
+          try { return await this.#sendAct(snapshot!, identity.membership, rules!, identity, meaning, build, { notAfter: options.notAfter, bytes: options.bytes ?? 0 }, dispatch); }
+          catch (error) { if (error instanceof Stop) throw new SendStop(error); throw error; }
+        },
+        packageBytes: (address, limit) => applicationPackageBytes(address, limit, this.#port.applicationFetch),
+      });
+    switch (installed.outcome) {
+      case "refused": return this.#refusedInstall(installed.refusal);
+      case "archived": return ok(projectAnswer({ archivedSettlement: installed.archivedSettlement }, { scope: installed.rules.scope, kind: "install-application", tool: "install_application" }));
+      case "answered": return ok({ ...projectAnswer({ answer: installed.answer }), retained: installed.retained, phase: installed.phase });
+      case "accepted":
+        this.#invalidate();
+        return ok({ ...projectAnswer({ answer: installed.answer }, { item: installed.item, retained: installed.retained, phase: installed.phase }), next: "Read application_installation with this item. Native acceptance records the request; installation may still be pending or refused." });
     }
-    catch { return failed({ error: "shape", field: "installation", what: "needs an immutable Git URI, expected release, explicit unique roles, bounded genesis values and a full existing owner for a device package", declared: "the install_application input" }); }
-    const address = readApplicationReleaseUri(selected.uri);
-    const trustForBuild = () => {
-      const allowed = applicationTrustForSource(address, selected.release, readApplicationTrust(this.#port.applicationTrust));
-      if (!allowed) throw new ApplicationPackageError("invalid");
-      return allowed;
-    };
-    try { trustForBuild(); }
-    catch { return failed({ error: "target", what: "the expected release and Git host are not in a valid APPLICATION_TRUST setting; this call fetched nothing" }); }
-    const identity: Identity = { service: this.#service, membership: room.membership, signer: this.#port.signer.key, target: room.rules, key: key as string };
-    const meaning = meaningOf(selected);
-    const build = async () => {
-      // Recheck after custody awaits; an earlier list or policy read is no authority.
-      const allowed = trustForBuild();
-      const source = applicationGitHttpSource(address, { blobBytes: 4 * 1024 * 1024, ...(this.#port.applicationFetch ? { send: this.#port.applicationFetch } : {}) });
-      try {
-        const bytes = await readApplicationGitBlob(address, source.source, 4 * 1024 * 1024);
-        const prepare = answersVersionQuestion(pin, "mcpSemanticInstallSignatureRules") ? signedApplicationInstall2 : signedApplicationInstall;
-        const packet = prepare === signedApplicationInstall2 || "owner" in selected
-          ? readPublishedApplicationPackage2(bytes, selected.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 })
-          : readApplicationPackage(bytes, selected.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
-        if (packet.package.release.manifest.publisher !== allowed.publisher) throw new ApplicationPackageError("invalid");
-        const { summary: directory } = await this.#summary(room.directory.scope, room.membership);
-        if (!commonsInstallCheck(directory, packet.package.semantic.host.requires).ok) return stopCall({ error: "commons-missing" });
-        const prepared = "owner" in selected
-          ? await signedDeviceApplicationInstall(this.#port.signer, bytes, readDeviceApplicationInstallOptions(selected), { idempotencyKey: key as string, now: this.#now() }, allowed.publisher)
-          : await prepare(this.#port.signer, bytes, selected, { idempotencyKey: key as string, now: this.#now() }, allowed.publisher);
-        return { binding: { definition: "platform:rules", kind: "install-application", declaration: declarationDigest(platform(pin)!.data as unknown as DefinitionLike, "install-application", pin), pinned: pin }, envelope: { signed: prepared.signed, beside: prepared.beside } };
-      } finally { await source.close(); }
-    };
-    let kept;
-    try {
-      kept = await this.#sendAct(snapshot, room.membership, room.rules.scope, identity, meaning, build, { notAfter: timeOf(this.#now() + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000), bytes: 768 * KIB }, dispatch);
-    } catch (error) {
-      if (error instanceof CustodyError || error instanceof Stop) throw error;
-      // Custody writes `sent` before it delivers, so a record past `prepared` means that a request under this key left. Package
-      // preparation runs only with no record, so a failure there leaves none.
-      const record = await this.custody.find(identity);
-      if (record && record.phase !== "prepared") return failed({ error: "transport", scope: room.rules.scope, submitted: true, stopped: true });
-      return failed({ error: "target", what: error instanceof ApplicationHttpError && error.reason === "unsupported-object-format" ? "the public HTTPS Git transport does not support SHA-256 repositories" : error instanceof ApplicationPackageError ? "package bytes do not match the expected signed release or install bounds" : "the exact Git package could not be prepared" });
+  }
+
+  #installHandle(repository: InstallRoomConfig | null): InstallHandle {
+    // The port's setting can change while custody awaits; the install rereads it inside the build.
+    const port = this.#port;
+    return { service: this.#service, signer: port.signer, now: () => this.#now(), repository, get applicationTrust() { return port.applicationTrust; } };
+  }
+
+  /** The present words of each install refusal. The room checks and the reads stop the call; the others are its result. */
+  #refusedInstall(refusal: InstallRefusal): Failure {
+    switch (refusal.refused) {
+      case "unconfigured": case "read": case "room-siblings": case "rules-sibling": case "commons-membership": return this.#refusedRoom(refusal);
+      case "key": return failed({ error: "shape", field: "idempotencyKey", what: "is missing or invalid", declared: "a key you choose and keep" });
+      case "unknown-tool": return stopCall({ error: "unknown-tool", name: "install_application" });
+      case "installation": return failed({ error: "shape", field: "installation", what: "needs an immutable Git URI, expected release, explicit unique roles, bounded genesis values and a full existing owner for a device package", declared: "the install_application input" });
+      case "trust": return failed({ error: "target", what: "the expected release and Git host are not in a valid APPLICATION_TRUST setting; this call fetched nothing" });
+      case "commons-missing": return stopCall({ error: "commons-missing" });
+      case "stopped": return failed({ error: "transport", scope: refusal.scope, submitted: true, stopped: true });
+      case "unprepared": return failed({ error: "target", what: refusal.why === "unsupported-object-format" ? "the public HTTPS Git transport does not support SHA-256 repositories" : refusal.why === "package" ? "package bytes do not match the expected signed release or install bounds" : "the exact Git package could not be prepared" });
+      case "lost": return failed({ error: "transport", scope: refusal.scope, submitted: true });
+      case "receipt": return failed({ error: "target", sent: "report", what: "the install acknowledgement does not match the retained native request" });
+      case "accepted-unread": return stopCall({ error: "transport", scope: refusal.scope, submitted: false, accepted: true });
+      case "entry-unread": return failed({ error: "target", sent: "read", what: "the read of the install receipt's native entry gave no entry" });
+      case "entry": return failed({ error: "target", sent: "report", what: "the install receipt's native entry does not hold the exact retained request" });
     }
-    if ("lost" in kept) return failed({ error: "transport", scope: room.rules.scope, submitted: true });
-    if ("archivedSettlement" in kept) return ok(projectAnswer({ archivedSettlement: kept.archivedSettlement }, { scope: room.rules.scope, kind: "install-application", tool: "install_application" }));
-    if (kept.answer.answer !== "accepted") return ok({ ...projectAnswer({ answer: kept.answer }), retained: kept.retained, phase: kept.record.phase });
-    const receipt = kept.answer.receipt;
-    if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return failed({ error: "target", sent: "report", what: "the install acknowledgement does not match the retained native request" });
-    const read = await this.#afterAccepted(room.rules.scope, () => this.#reads.read(room.membership, (t, r) => t.entry(room.rules.scope, r, receipt.fact.seq, { at: receipt.fact.at, head: { seq: receipt.fact.seq, hash: receipt.fact.hash } })));
-    if (!read.ok || !read.complete || read.next !== undefined) return failed({ error: "target", sent: "read", what: "the read of the install receipt's native entry gave no entry" });
-    if (read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
-      || canonicalize(read.value.entry.at) !== canonicalize(room.rules) || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
-      || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return failed({ error: "target", sent: "report", what: "the install receipt's native entry does not hold the exact retained request" });
-    this.#invalidate();
-    return ok({ ...projectAnswer({ answer: kept.answer }, { item: receipt.fact.seq, retained: kept.retained, phase: kept.record.phase }), next: "Read application_installation with this item. Native acceptance records the request; installation may still be pending or refused." });
   }
 
   async #applicationInstallation(args: Args) {
-    const item = args["item"];
-    if (typeof item !== "number" || !Number.isSafeInteger(item) || item < 0) return failed({ error: "shape", field: "item", what: "is not a native install item", declared: "a nonnegative integer" });
-    const room = await this.#applicationRoom();
-    const read = await this.#reads.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).queryItems({ v: 1, scope: room.rules, type: "installation", states: ["active", "pending", "refused"], ids: [item], limit: 1, cursor: null }));
-    if (!read.ok) return failed({ error: "target", what: `the bounded installation read refused: ${read.reason}` });
-    const row = read.value.items[0];
-    if (!read.complete || read.next !== undefined || !row || row.id !== item || row.type !== "installation") return failed({ error: "target", what: "that installation is unavailable in this exact room" });
-    const presentation = row.values["presentation"];
-    return ok({ rules: room.rules, at: read.at, item, state: row.state, phase: row.values["phase"], reason: row.values["reason"] ?? null,
-      uri: row.values["uri"], release: row.values["release"], semantic: row.values["semantic"], presentation,
-      scope: row.refs["scope"] ?? null,
-      screen: row.state === "active" && isDigest(presentation) ? this.#service + applicationScreenPath(room.directory.scope, item, presentation) : null });
+    const read = await applicationInstallation(this.#installHandle(await this.#configuredRoom()), args["item"], { reader: this.#reads });
+    if (read.outcome === "read") return ok(read.installation);
+    const refusal = read.refusal;
+    switch (refusal.refused) {
+      case "item": return failed({ error: "shape", field: "item", what: "is not a native install item", declared: "a nonnegative integer" });
+      case "installation-read": return failed({ error: "target", what: `the bounded installation read refused: ${refusal.reason}` });
+      case "installation-unavailable": return failed({ error: "target", what: "that installation is unavailable in this exact room" });
+      default: return this.#refusedRoom(refusal);
+    }
   }
 
   async #join(args: Args, dispatch?: DispatchContext): Promise<CallResult> {

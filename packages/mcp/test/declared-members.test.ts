@@ -7,7 +7,7 @@ import { projectionMemberFacts, projectionMembers } from "../src/views/members.t
 import type { MembershipDisplaySnapshot } from "../src/views/member-types.ts";
 import { memberText } from "../src/views/member-text.ts";
 import { readMembershipDisplay } from "../src/views/member-reads.ts";
-import type { Reads } from "../src/reads.ts";
+import type { Reads } from "@generalbusiness/dap-client";
 import { fixedSigner } from "./fixtures.ts";
 
 const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
