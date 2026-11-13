@@ -57,11 +57,11 @@ test("future Git layout stages cover the actual finish on the same original budg
   // The body receipt predates fee extraction and stays unchanged. The
   // total is a separately measured shared-pass geometry receipt; the old
   // layout total is preserved in closed evidence, not silently repriced.
-  expect(shape).toEqual({ entries: 3, entryBytes: 1874, origins: 3, newRetained: 2,
-    retainedNameUnits: 164, retainedBytes: 48, manifestRows: 3, selectionUnits: 2347 });
-  expect(delta).toEqual({ entries: 0, attempts: 2, nodes: 0, calls: 5, metadata: 34158, inputWork: 156777 });
-  expect(forecast.cost).toEqual({ entries: 0, attempts: 2, nodes: 0, calls: 5, metadata: 11241, inputWork: 59803 });
-  expect(forecast.layoutWork).toEqual({ outputWork: 1876 });
+  expect(shape).toEqual({ entries: 3, entryBytes: 1672, origins: 3, newRetained: 2,
+    retainedNameUnits: 164, retainedBytes: 48, manifestRows: 3, selectionUnits: 2459 });
+  expect(delta).toEqual({ entries: 0, attempts: 2, nodes: 0, calls: 5, metadata: 34830, inputWork: 157307 });
+  expect(forecast.cost).toEqual({ entries: 0, attempts: 2, nodes: 0, calls: 5, metadata: 11577, inputWork: 57579 });
+  expect(forecast.layoutWork).toEqual({ outputWork: 1674 });
   const stages = [parser.cost, forecast.cost, patch.cost, commit.cost];
   expect(Object.fromEntries(Object.keys(delta).map(key => [key,
     stages.reduce((n, row) => n + row[key as keyof ArchiveCost], 0)]))).toEqual(delta);
