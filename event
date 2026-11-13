@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8c8623a9b797ac75abdc7dc048dc407c4f8b1152","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-12-client-custody-nf3.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8d45f37ff64f20ae1779c4d739e75844a6516b02","text":"Merge retired a covered predecessor; the successor is at packages/client/package.json."}
