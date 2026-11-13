@@ -4,7 +4,7 @@ import { answersVersionQuestion, platform } from "@generalbusiness/dap-platform"
 import { natural, same } from "@generalbusiness/dap-bytes";
 
 import type { Bounds, Digest, FactRef, Input, PlatformDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isFactRef, platformName } from "@generalbusiness/dap-bytes";
+import { canonicalize, countedUses, entryUseLimit, isDigest, isFactRef, platformName } from "@generalbusiness/dap-bytes";
 
 import { forecastArchiveSourceLookup } from "./archive-source-cost.ts";
 import { derivable } from "@generalbusiness/dap-derive";
@@ -107,7 +107,8 @@ export class ArchiveForeignMetadata {
     const admitted = this.#policy(source), policy = admitted.policy;
     if (membershipCopySource(source.pin, this.consumer)) archiveMembershipCopy(this.sql, content, size, header, this.consumer, this.budget);
     if (!policy.entryTypes.has(header.input)) return stop("unsupported-archive-cohort");
-    if (header.uses > this.bounds.usesPerEntry) return stop("limit");
+    // Ruling 28295c20: an entry holds up to `usesPerEntry` counted uses and one birth use for each.
+    if (header.uses > entryUseLimit(this.bounds.usesPerEntry)) return stop("limit");
     if (header.seq === 0) {
       if (fact.hash !== source.genesis) return stop("foreign-source-mismatch");
       const rows = this.budget.native(this.sql, () => ({ metadata: ARCHIVE_FOREIGN_GENESIS_METADATA, inputWork: 0 })).exec(`SELECT ${text("$.input.seed.definition", 128)} AS pin, ${text("$.input.seed.kind", 16)} AS kind FROM retained_input WHERE kind = 'entry' AND digest = ? AND octet_length(bytes) = ? LIMIT 1`, content, size).toArray();
@@ -137,13 +138,16 @@ export class ArchiveForeignMetadata {
   scan(position: ArchivePosition, count: number): void {
     this.budget.check();
     if (this.observation?.record) this.#lastScan = null;
-    if (!natural(count) || count > this.bounds.usesPerEntry) return stop("limit");
+    if (!natural(count) || count > entryUseLimit(this.bounds.usesPerEntry)) return stop("limit");
     if (this.observation?.record) this.budget.spend({ metadata: 256, inputWork: 512 });
     const recorded: Readonly<ArchiveForeignRecordedRequest>[] | undefined = this.observation?.record ? [] : undefined;
     const rows = this.budget.native(this.sql, () => ({ metadata: archiveForeignUseMetadata(count), inputWork: 0 })).exec(`SELECT ${text("$.fact.at.scope", 71, "value")} AS scope, ${text("$.fact.at.genesis", 71, "value")} AS genesis, json_extract(value, '$.fact.seq') AS seq, ${text("$.fact.hash", 71, "value")} AS hash, ${text("$.content", 71, "value")} AS content FROM entry, json_each(entry.bytes, '$.uses') WHERE entry.seq = ? AND entry.hash = ? AND entry.size = ? AND octet_length(entry.bytes) = ? LIMIT ?`, position.seq, position.hash, position.bytes, position.bytes, count + 1).toArray();
     if (rows.length !== count) return stop("unavailable");
-    for (const row of rows) {
-      const fact = { at: { scope: row["scope"], genesis: row["genesis"] }, seq: row["seq"], hash: row["hash"] };
+    const facts = rows.map((row) => ({ at: { scope: row["scope"], genesis: row["genesis"] }, seq: row["seq"], hash: row["hash"] }));
+    // Ruling 28295c20: the birth uses do not count against `usesPerEntry`; the later uses do.
+    if (facts.every(isFactRef) && countedUses(facts) > this.bounds.usesPerEntry) return stop("limit");
+    for (const [index, row] of rows.entries()) {
+      const fact = facts[index]!;
       if (!isFactRef(fact) || !isDigest(row["content"])) return stop("foreign-source-unavailable");
       const request = this.#copy(fact, row["content"]);
       if (recorded && request) recorded.push(request);

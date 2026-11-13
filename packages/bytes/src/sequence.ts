@@ -79,3 +79,16 @@ export function birthUse(sequence: CheckedSequence): FactUse {
   const at = sequence.at;
   return { fact: { at: { scope: at.scope, genesis: at.genesis }, seq: 0, hash: at.genesis }, content: digestBytes(utf8(sequence.birth)), kind: sequence.kind };
 }
+
+/**
+ * The uses of one entry that count against `usesPerEntry` (ruling 28295c20): every use except a use of entry 0 of a sequence
+ * that the same entry also uses at a later entry. That entry-0 use is the birth the later use brings, and it does not count.
+ * A use of entry 0 with no later use of its sequence counts.
+ */
+export function countedUses(facts: readonly Pick<FactRef, "at" | "seq">[]): number {
+  const later = new Set(facts.filter((fact) => fact.seq !== 0).map((fact) => canonicalize(fact.at)));
+  return facts.filter((fact) => fact.seq !== 0 || !later.has(canonicalize(fact.at))).length;
+}
+
+/** The most uses one entry can hold: `usesPerEntry` counted uses, and at most one birth use for each (ruling 28295c20). */
+export const entryUseLimit = (usesPerEntry: number): number => 2 * usesPerEntry;

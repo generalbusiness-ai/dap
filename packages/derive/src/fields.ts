@@ -11,7 +11,7 @@ import { resolveGenesisValue } from "./genesis-values.ts";
 import { readJudgmentFacts, verifiedCopy } from "./operand.ts";
 import type { Archived, SizeProof } from "@generalbusiness/dap-contract";
 import type { ActType, Bounds, Digest, Entry, FactRef, FactUse, FieldRecord, FieldType, FieldValue, Prepared, Request, ScopeKind, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
-import { birthUse, canonicalBytes, digestBytes, isDigest, isIntent, isEntryOf } from "@generalbusiness/dap-bytes";
+import { birthUse, countedUses, canonicalBytes, digestBytes, isDigest, isIntent, isEntryOf } from "@generalbusiness/dap-bytes";
 import type { Capabilities } from "./capability.ts";
 import type { Fetched, RuleInput } from "./guards.ts";
 import { markOf, type PlatformRules } from "./marks.ts";
@@ -188,6 +188,16 @@ export function withBirthUses(uses: readonly FactUse[], sequences: readonly (Che
     if (sequence) result.push(birthUse(sequence));
   }
   return result;
+}
+
+/**
+ * Ruling 28295c20: the birth uses that `withBirthUses` added stay within their bound. Each belongs to a foreign sequence with a
+ * later use in the same entry, so the added births never exceed the later uses, and the later uses never exceed `usesPerEntry`.
+ * A birth does not count against `usesPerEntry`. False only when that invariant fails.
+ */
+export function birthsWithin(uses: readonly FactUse[], withBirths: readonly FactUse[], usesPerEntry: number): boolean {
+  const births = withBirths.length - uses.length, later = uses.filter((use) => use.fact.seq !== 0).length;
+  return births >= 0 && births <= later && countedUses(withBirths.map((use) => use.fact)) <= usesPerEntry;
 }
 
 /** True when `entry` is the entry that `fact` names. */

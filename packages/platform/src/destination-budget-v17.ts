@@ -116,7 +116,8 @@ function generations(value: unknown, bounds: Bounds): value is readonly Certifie
 
 const frame = (input: unknown, effects: readonly unknown[], sends: readonly unknown[]) => ({
   v: 1, genesis: HASH, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0,
-  input, uses: [USE, USE, USE, USE], prepared: [], effects, sends,
+  // Four uses, and one birth use for each (ruling 28295c20).
+  input, uses: [USE, USE, USE, USE, USE, USE, USE, USE], prepared: [], effects, sends,
 });
 const passes = { effect: 'value', item: MAX, slot: 'passes', value: null } as const;
 const requestResult = { n: MAX, to: SCOPE, message: { class: 'result', of: { from: FACT, n: MAX }, outcome: 'applied' } };
@@ -208,7 +209,8 @@ export function certifiedWrittenPlanBudgetV17(bounds: Bounds, captured: Evidence
     return { ...variant, observed,
       // Empty uses[] syntax is already present. No array proportional to a
       // caller-supplied bound is allocated merely to compute its exact size.
-      entryBytes: bytes(variant.entry) + uses * bytes(USE) + Math.max(0, uses - 1) + observed,
+      // `usesPerEntry` counted uses, and one birth use for each (ruling 28295c20).
+      entryBytes: bytes(variant.entry) + 2 * uses * bytes(USE) + Math.max(0, 2 * uses - 1) + observed,
       effects: variant.entry.effects.length,
     };
   });
@@ -247,7 +249,9 @@ export function certifiedBoundFenceBudgetV17(bounds: Bounds, batch: EvidenceBatc
       // JSON string can at most double its UTF8 bytes (quotes/backslashes),
       // plus the two surrounding quotes. This covers closed wrong-policy
       // bindings as well as eligible ones, before either is admitted.
-      const size = bytes(entry) - bytes(null) + bindingCarrierBytes + 5 * bytes(USE) + 4;
+      // Five counted uses, and one birth use for each (ruling 28295c20). A birth use names entry 0, so USE bounds it: ten uses
+      // and nine commas.
+      const size = bytes(entry) - bytes(null) + bindingCarrierBytes + 10 * bytes(USE) + 9;
       entryBytes = Math.max(entryBytes, size);
       if (size > bounds.entryBytes || bounds.usesPerEntry < 5 || effects.length > Math.min(16, bounds.derivedEffects)
         || bounds.sendsPerEntry < 1) admitted = false;

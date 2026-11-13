@@ -10,7 +10,7 @@ import type { Attempt, Digest, Entry, FactUse, ObservationUse } from "@generalbu
 import { declarationOf } from "./program/declaration.ts";
 import { nativeOutcomes } from "./program/native.ts";
 import { evidenceValues } from "./evidence-values.ts";
-import { useOf, withBirthUses, type Reading } from "./fields.ts";
+import { birthsWithin, useOf, withBirthUses, type Reading } from "./fields.ts";
 import type { Fetched } from "./guards.ts";
 import { copySequence, judgmentFacts } from "./operand.ts";
 import { runClause } from "./handlers.ts";
@@ -184,7 +184,11 @@ export function settleOutcome(view: StateView, definition: ValidDefinition, outc
   // none was read. So an outcome whose rules read none has the bytes it had.
   const input = retained.length > 0 ? { ...judged.draft.input, observed: retained } : judged.draft.input;
   // Section 17.2a, "Past a count": an outcome whose entry would draw past a count of a holder is not judged. It stays offered.
-  return withinCounts(view, definition, { result: "write", draft: { ...judged.draft, input, uses: withBirthUses(facts.map((fact) => useOf(fact.fact, fact.entry, fact.sequence.kind)), facts.map((fact) => fact.sequence)), judgesTime, values: [...kept, ...retainedOf(beside).values.filter((value) => !kept.some((read) => read.domain === value.domain && read.digest === value.digest))] } } satisfies Judgment);
+  // Ruling 28295c20: the births stay within the later uses, and do not count against `usesPerEntry`. An outcome is never refused,
+  // so a failed invariant leaves it not written.
+  const plain = facts.map((fact) => useOf(fact.fact, fact.entry, fact.sequence.kind)), uses = withBirthUses(plain, facts.map((fact) => fact.sequence));
+  if (!birthsWithin(plain, uses, context.bounds.usesPerEntry)) return { result: "unavailable", reason: "unavailable" };
+  return withinCounts(view, definition, { result: "write", draft: { ...judged.draft, input, uses, judgesTime, values: [...kept, ...retainedOf(beside).values.filter((value) => !kept.some((read) => read.domain === value.domain && read.digest === value.digest))] } } satisfies Judgment);
 }
 
 /**
