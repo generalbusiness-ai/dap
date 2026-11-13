@@ -15,7 +15,7 @@ const journey = publicationJourney(data, named, rules);
 const token = { token: "d1-scripted-token", ends: t(600) };
 const observed = (over: Partial<Observation> = {}) => [retained(keyObserved(keys.rita, T0, over), 1)];
 const observe = (over: Partial<Observation> = {}) => ({ observed: observed(over), observing: { membership: MEMBERSHIP } });
-const opened = (ledger: ReturnType<typeof journey.make>) => ledger.last.effects.filter(effect => effect.effect === "operation");
+const opened = (ledger: ReturnType<typeof journey.make>) => ledger.last.effects.flatMap(effect => effect.effect === "operation" ? [effect] : []);
 const openingId = (ledger: ReturnType<typeof journey.make>, kind: string): OperationId => `${ledger.head.seq}:${opened(ledger).find(effect => effect.kind === kind)!.k}`;
 
 test("D1 validates and runs under an explicit pin while new default founding uses @19", () => {
@@ -45,11 +45,11 @@ test("an inactive signer aborts, revokes this mint and opens one deciding read w
   expect(readFor(ledger.state, ledger.own, read)).toEqual(ledger.item(publication.id));
   expect(readFor(ledger.state, ledger.own, { ...read, for: 0 })).toBeNull();
   expect(readFor(ledger.state, ledger.own, { ...read, attempts: [{ attempt: 2, opened: ledger.head.seq, outcomes: [] }] })).toBeNull();
-  const changedOwn = (change: (entry: Entry) => void) => (seq: number) => {
+  const changedOwn = (change: (entry: Entry) => void) => Object.assign((seq: number) => {
     const got = ledger.own(seq); if (!got) return null;
     const entry = structuredClone(got.entry); if (seq === ledger.head.seq) change(entry);
     return { entry, hash: entryHash(entry) };
-  };
+  }, { sequence: ledger.own.sequence });
   // Tampered own-record fixtures; neither is a native admissible history.
   expect(readFor(ledger.state, changedOwn(entry => { if (entry.input.type === "outcome") entry.input.operation = push; }), read)).toBeNull();
   expect(readFor(ledger.state, changedOwn(entry => { if (entry.input.type === "outcome") entry.input.attempt = 2; }), read)).toBeNull();
@@ -191,7 +191,7 @@ test("first-head and reservation-delete mints ignore inactive D1 standing and ke
 
 test("unreadable native own reservation provenance leaves mint undecided before any fresh key can make it active", () => {
   const ledger = journey.make(), { mint } = journey.reserve(ledger), before = ledger.head;
-  expect(journey.offer(ledger, mint, token, { ...observe(), own: () => null }).result).not.toBe("write");
+  expect(journey.offer(ledger, mint, token, { ...observe(), own: Object.assign(() => null, { sequence: () => null }) }).result).not.toBe("write");
   expect(ledger.head).toEqual(before);
   expect(ledger.state.operation(mint)?.attempts[0]?.outcomes).toEqual([]);
 });
