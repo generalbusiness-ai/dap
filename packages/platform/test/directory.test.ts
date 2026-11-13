@@ -3,7 +3,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FieldValue, Grant, Input, MemberObservation, MemberRef, ObservationUse, RulesObservation, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, genesisInputDigest, newGenesisNonce, factRefOf, intentDigest, parseStrict, scopeIdOf, seedDigest, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { MemoryState, clockOf, derivable, judgeGenesis, runnable, valueDigest, type Item, type Judgment, type OutcomeRule, type PlatformRule, type RuleGiven } from "@generalbusiness/dap-derive";
-import { Ledger, T0, creation, desk, deskDefinition, t, ticket, ticketDefinition } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, creation, desk, fixtureSequence, deskDefinition, t, ticket, ticketDefinition } from "@generalbusiness/dap-derive/testing";
 import { DIRECTORY, directory, directoryMembership, directoryRules, membershipId, platform, repositoryName } from "../src/index.ts";
 import { rulesScopeRules, rulesScopeDefinition, Directory, directoryDefinition, creationRita as rita, creationSam as sam, scripted, creationUna as una, creationVic as vic } from "./fixtures-entry.ts";
 
@@ -98,8 +98,8 @@ describe("the rules of platform:directory@1, each as a plain function (authority
   /** What a rule of the `index` handler is given: the delivery of an advisory from that lane's entry, which is among what the entry read. */
   const indexed = (fields: Record<string, FieldValue>, seq = 6, time = t(5)): RuleGiven => {
     const source = scripted(lane, seq, d.entries[1]!.entry.input, [{ n: 0, to: d.at, message: { class: "advisory", type: "index", body: { fields } } }], "ticket", time);
-    const from = factRefOf(source.entry);
-    return { ...given(d, "none", fields), input: { type: "delivery", from, n: 0, message: source.entry.sends[0]!.message }, uses: [{ fact: from, entry: source.entry, under: "ticket" }] };
+    const from = factRefOf(source.entry, source.sequence.at);
+    return { ...given(d, "none", fields), input: { type: "delivery", from, sourceKind: "lane", n: 0, message: source.entry.sends[0]!.message }, uses: [{ fact: from, entry: source.entry, under: "ticket", sequence: source.sequence }] };
   };
   const run = (name: string, ...args: unknown[]): unknown => (directoryRules[name] as PlatformRule & { run: (...args: unknown[]) => unknown }).run(...args);
   const UNAVAILABLE = { holds: null, reason: "dependency-unavailable" };
@@ -209,9 +209,9 @@ test("a directory's genesis, by an outcome entry of its register, opens the repo
   const state = new MemoryState();
   const source = genesis.source && p.register.entries[genesis.source.seq];
   if (!genesis.source || genesis.n === null || !genesis.message || !source) throw new Error("the directory has its real register source");
-  const facts = p.last.uses.filter(use => use.fact.hash !== genesis.source!.hash).map(use => ({ fact: use.fact, entry: p.register.entries[use.fact.seq]!.entry, under: "platform:register" }));
+  const facts = p.last.uses.filter(use => use.fact.hash !== genesis.source!.hash).map(use => ({ fact: use.fact, entry: p.register.entries[use.fact.seq]!.entry, under: "platform:register", sequence: fixtureSequence(p.register) }));
   const changedNonce = newGenesisNonce(new Uint8Array(16).fill(99));
-  const other = judgeGenesis(state, directoryDefinition, { name: p.at.scope, nonce: changedNonce, to: genesis.seed, from: genesis.source, n: genesis.n, message: genesis.message }, { clock: clockOf(state, T0), bounds: PROPOSED_BOUNDS, facts, prepared: [], source: { entry: source.entry, under: "platform:register" }, platform: { named: DIRECTORY, rules: directoryRules } });
+  const other = judgeGenesis(state, directoryDefinition, { name: p.at.scope, nonce: changedNonce, to: genesis.seed, from: genesis.source, n: genesis.n, message: genesis.message }, { clock: clockOf(state, T0), bounds: PROPOSED_BOUNDS, facts, prepared: [], source: { entry: source.entry, under: "platform:register", sequence: fixtureSequence(p.register) }, platform: { named: DIRECTORY, rules: directoryRules } });
   expect(other.result).toBe("write");
   if (other.result !== "write") throw new Error("the same seed and another nonce must produce a genesis draft");
   expect(other.draft.input).toMatchObject({ type: "genesis", nonce: changedNonce });

@@ -1,11 +1,11 @@
 import { expect, test } from "vitest";
-import type { Entry } from "@generalbusiness/dap-contract";
+import type { SequenceEntry } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf } from "@generalbusiness/dap-bytes";
 import { judgeDelivery, type Operation, type RuleEffect } from "@generalbusiness/dap-derive";
 import { evidenceJobOpeningV17 } from "../src/destination-evidence-v17.ts";
 import { destinationV17 } from "../src/destination-v17.ts";
 import { newEvidenceIndexV17 } from "../src/evidence-index-v17.ts";
-import { arriving, d, forged, otherLane } from "@generalbusiness/dap-derive/testing";
+import { arriving, d, forged, later, otherLane } from "@generalbusiness/dap-derive/testing";
 import { evidenceOperationOpeningV17 } from "../src/evidence-opening-v17.ts";
 // The maintained reservation witness is not in dap-derive/testing's public
 // exports. Reuse that narrow test fixture, without importing kernel internals.
@@ -21,7 +21,7 @@ function selfOpening() {
   const id = scope.opened()[0]!;
   const operation = scope.state.operation(id);
   if (!operation) throw Error("The maintained fold did not retain the operation");
-  return { scope, returned, entry: scope.last, operation };
+  return { scope, returned, entry: later(scope.last), operation };
 }
 
 test("numeric self from the actual marked rule seals as self and folds back to the real holder position", () => {
@@ -50,10 +50,10 @@ test("only the exact sequence, ordinal, owner, kind, attempt ceiling and holder 
 
 test("numeric and absent holders preserve their own meanings; duplicate or malformed opening rows refuse", () => {
   const { entry, operation } = selfOpening();
-  const numeric: Entry = { ...entry, effects: entry.effects.map(effect => effect.effect === "operation" ? { ...effect, for: 0 } : effect) };
+  const numeric: SequenceEntry = { ...entry, effects: entry.effects.map(effect => effect.effect === "operation" ? { ...effect, for: 0 } : effect) };
   expect(evidenceOperationOpeningV17(numeric, { ...operation, for: 0 })).toBe(true);
   expect(evidenceOperationOpeningV17(numeric, operation)).toBe(false);
-  const noHolder: Entry = { ...entry, effects: entry.effects.map(effect => {
+  const noHolder: SequenceEntry = { ...entry, effects: entry.effects.map(effect => {
     if (effect.effect !== "operation") return effect;
     const rest = { ...effect }; delete rest.for; return rest;
   }) };
@@ -134,7 +134,7 @@ test("a funded bound delivery can open its counted operation but cannot open eve
   const holder = scope.last.seq, before = scope.head;
   const message = { class: "request", type: "tell", body: { message: "follow", fields: { job: holder } } } as const;
   const source = forged(otherLane, 999, { type: "checkpoint", through: 0, state: scope.entries[0]!.hash }, [{ n: 0, to: scope.at, message }]);
-  const arrival = { from: factRefOf(source.entry), n: 0, to: scope.at, message };
+  const arrival = { from: factRefOf(source.entry, source.sequence.at), n: 0, to: scope.at, message };
   const take = () => {
     const judged = judgeDelivery(scope.state, scope.definition, arrival, { ...arriving(scope, arrival, source), platform: scope.rules });
     // Ledger.seal supplies the actual retained source via foldOptions;
