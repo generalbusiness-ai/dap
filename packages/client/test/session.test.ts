@@ -20,7 +20,7 @@ test("session request preserves exact claims and server lifetime without exposin
     private: "TEST-session-credential", membership: { ...M, private: "TEST-session-credential" } } }));
   expect(JSON.stringify(extra)).not.toContain("TEST-session-credential");
   for (const session of [{ ...claims, membership: { ...M, genesis: textDigest("TEST genesis 2") } },
-    { ...claims, membership: { ...M, kind: "register" } }, { ...claims, key: keyIdOfSecret(new Uint8Array(32).fill(20)) }])
+    { ...claims, key: keyIdOfSecret(new Uint8Array(32).fill(20)) }])
     await expect(ask(async () => Response.json({ ok: true, token: "TEST-session-credential", session }))).rejects.toThrow(/another repository or key/);
 });
 

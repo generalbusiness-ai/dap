@@ -6,7 +6,7 @@ import { HeadStreamUnavailable, headLines, openHttpHeadStream } from "../src/hea
 import { observeScope, type CompleteSnapshot, type ObservationState } from "../src/observe.ts";
 const gate=<T=void>()=>{let resolve!:(value:T)=>void;const promise=new Promise<T>(r=>{resolve=r;});return{promise,resolve};};
 const scope={scope:`sc_${base32(new Uint8Array(32))}`,genesis:`sha256:${"0".repeat(64)}`} as ScopeRef;
-const membership={...scope,kind:"membership"} as ScopeRef;const key=keyIdOfSecret(new Uint8Array(32));const definition="sha256:"+"1".repeat(64) as `sha256:${string}`;
+const membership={...scope} as ScopeRef;const key=keyIdOfSecret(new Uint8Array(32));const definition="sha256:"+"1".repeat(64) as `sha256:${string}`;
 const context={origin:"https://scope.test",scope,membership,definition,member:"@member" as const,key,deployment:"test"};
 const head=(seq:number):Head=>({seq,hash:`sha256:${String(seq).padStart(64,"0")}`});
 const session=()=>new Session("private-token",{v:1,deployment:"test",membership,member:"@member",key,reads:["summary"],ends:timeOf(Date.now()+60_000)});

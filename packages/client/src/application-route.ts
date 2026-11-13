@@ -31,8 +31,10 @@ export function readApplicationScreenContext(value: unknown, address: Pick<Appli
     || typeof body["deployment"] !== "string" || !body["deployment"] || body["deployment"].length > 128 || !answersCatalogVocabularyQuestion(body["membershipDefinition"], "applicationScreenMembership")
 
     || body["item"] !== address.item || !isDigest(body["definition"])) return invalid();
+  const named = new Set<string>();
   for (const field of ["directory", "rules", "membership", "destination", "scope"]) {
-    const ref = body[field]; if (!isScopeRef(ref)) return invalid(); Object.freeze(ref);
+    // A reference names no kind: each field fixes its kind, so the five fields name five different scopes.
+    const ref = body[field]; if (!isScopeRef(ref) || named.has(ref.scope)) return invalid(); named.add(ref.scope); Object.freeze(ref);
   }
   const ids = body["ids"], directory = body["directory"];
   if (!isScopeRef(directory) || directory.scope !== address.directory || !isRecord(ids) || Object.keys(ids).sort().join() !== "presentation,release,semantic"

@@ -85,7 +85,7 @@ test("HTTP and binding follow one normal receipt read and use only one unavailab
     expect(await handle.followReceipt(receipt)).toEqual({ ok: false, reason: "hash-mismatch" });
     expect(calls.splice(0)).toEqual([{ at, head: fact.seq }]);
     const other = { ...at, genesis: `sha256:${"9".repeat(64)}` as const }, wrong = { ...exact, fact: { ...exact.fact, at: other } };
-    expect(await handle.followReceipt(wrong)).toEqual({ ok: false, reason: "reference-mismatch" });
+    expect(await handle.followReceipt(wrong)).toEqual({ ok: false, reason: "wrong-genesis" });
     expect(calls.splice(0)).toEqual([{ at: other, head: fact.seq }, undefined]);
     stale = true;
     expect(await handle.followReceipt(wrong)).toEqual({ ok: false, reason: "unavailable" });
@@ -98,7 +98,7 @@ test("a handle rejects stale successful HTTP and binding replies for every minim
   const summary = { scope: at, status: "active", definition: receipt.definition, time: entry.time, items: [], counts: [] };
   const read = (value: unknown) => ({ ok: true, at: head, value, complete: true });
   // Opaque fixed-query fixture. This case tests the minimum, not query decoding.
-  const projection = canonicalize({ ok: true, query: "sha256:060ec77d945819227dc577afd077967aef64e8405ac686555061ada9ae09987d", value: {
+  const projection = canonicalize({ ok: true, query: "sha256:3e868135e33bb7ca20522dbec625436919013cdae2d6f50de306177d99c3f502", value: {
     v: 1, scope: at, projection: receipt.definition, at: head, sources: { board: [] },
   } });
   const rpc = bindingTransport({ summary: async () => read(summary), items: async () => read([]),

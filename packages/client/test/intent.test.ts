@@ -129,7 +129,7 @@ test("each operation of the handle returns a reply only when it has every member
   expect(rows.every(([, , good, bad]) => good.length > 0 && bad.length > 0)).toBe(true);
 
   // Following a receipt reads the entry it names, so a reply that is no entry is no outcome of it either; a refusal the contract names is.
-  await expect(handle(binding(read({ entry: less(entry, "at"), hash: d }))).followReceipt(receipt as never)).rejects.toThrow(TransportError);
+  await expect(handle(binding(read({ entry: less(entry, "genesis"), hash: d }))).followReceipt(receipt as never)).rejects.toThrow(TransportError);
   expect(await handle(binding({ ok: false, reason: "forbidden" })).followReceipt(receipt as never)).toEqual({ ok: false, reason: "forbidden" });
   // An entry of the right shape and other bytes is the handle's own finding, not the transport's.
   expect(await handle(binding(read(sealed))).followReceipt(receipt as never)).toEqual({ ok: false, reason: "hash-mismatch" });

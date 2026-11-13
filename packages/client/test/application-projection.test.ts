@@ -89,7 +89,7 @@ test("declared item observations resolve aliases and merge identical subjects wi
     board: { item: "board", read: "many", states: ["open"], limit: 1, fields },
     selected: { item: "board", read: "item", states: ["open"], limit: 1, fields: { number: fields.number } },
   } });
-  const writer = { membership: { ...scope, kind: "membership" as const }, member: "@ada" as const };
+  const writer = { membership: { ...scope }, member: "@ada" as const };
   const data = { ...good.value, projection: applicationProjectionId(declaration), sources: {
     board: [{ id: 2, type: "board", state: "open", revision: 1, fields: { number: 4, writer, linked: null, seenTime: "2026-10-16T08:00:00Z", seenBy: writer } }],
     selected: [{ id: 2, type: "board", state: "open", revision: 1, fields: { number: 4 } }],

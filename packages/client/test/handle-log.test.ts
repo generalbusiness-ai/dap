@@ -6,14 +6,21 @@
 import { expect, test } from "vitest";
 import type { Head, LogPage, Read, ScopeRef } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, bindingTransport, secretSigner, signedReads, type ServiceBinding } from "../src/index.ts";
 
-const ref: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
-const other: ScopeRef = { ...ref, scope: `sc_${"b".repeat(51)}a` };
 const DEFINITION = "platform:task@1";
 const SESSION = "Session TEST-token";
-const row = (seq: number, at: ScopeRef = ref) => { const bytes = canonicalize({ v: 1, at, seq, text: `TEST entry ${seq}` } as never); return { seq, bytes, hash: digestBytes(utf8(`${DOMAINS.entry}\n${bytes}`)) }; };
+const hashOf = (bytes: string) => digestBytes(utf8(`${DOMAINS.entry}\n${bytes}`));
+// Entry 0 is a genesis: its seed names the scope and its hash is the genesis. Later entries name that genesis.
+const seed = { v: 1, kind: "lane", definition: DEFINITION, creator: null, cause: `sha256:${"c".repeat(64)}`, ordinal: 0 };
+const born = canonicalize({ v: 1, seq: 0, text: "TEST entry 0", input: { type: "genesis", seed } } as never);
+const ref: ScopeRef = { scope: scopeIdOf(seed as never), genesis: hashOf(born) as ScopeRef["genesis"] };
+const other: ScopeRef = { scope: `sc_${"b".repeat(51)}a`, genesis: `sha256:${"b".repeat(64)}` };
+const row = (seq: number, at: ScopeRef = ref) => {
+  const bytes = seq === 0 && at === ref ? born : canonicalize({ v: 1, genesis: at.genesis, seq, text: `TEST entry ${seq}` } as never);
+  return { seq, bytes, hash: hashOf(bytes) };
+};
 const head = (seq: number): Head => ({ seq, hash: row(seq).hash });
 const page = (seqs: number[], at: number, next?: string, value: Partial<LogPage> = {}): Read<LogPage> =>
   ({ ok: true, at: head(at), value: { scope: ref, definition: DEFINITION, entries: seqs.map(seq => row(seq)), ...value }, complete: next === undefined, ...(next === undefined ? {} : { next }) });
@@ -46,6 +53,9 @@ test("a page with a wrong hash, another scope's page or another definition's pag
   await expect(handleOf(page([0, 1], 9, "2", { scope: other })).handle.log()).rejects.toThrow(new TransportError("the log page is of another scope or definition"));
   await expect(handleOf(page([0, 1], 9, "2", { definition: "platform:task@2" })).handle.log()).rejects.toThrow(new TransportError("the log page is of another scope or definition"));
   await expect(handleOf(page([0, 1], 9, "2", { entries: [row(0), row(1, other)] })).handle.log()).rejects.toThrow(new TransportError("log entry 1 is not this scope's entry at that seq"));
+  // An entry with no input names neither a seed nor a genesis, so it is not this scope's entry.
+  const bare = canonicalize({ v: 1, seq: 1, text: "TEST entry 1" } as never);
+  await expect(handleOf(page([0, 1], 9, "2", { entries: [row(0), { seq: 1, bytes: bare, hash: hashOf(bare) }] })).handle.log()).rejects.toThrow(new TransportError("log entry 1 is not this scope's entry at that seq"));
   await expect(handleOf(page([0, 2, 1], 9, "3")).handle.log()).rejects.toThrow(new TransportError("the log page's seqs do not rise from the cursor to the head"));
 });
 

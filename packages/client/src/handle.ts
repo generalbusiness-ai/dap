@@ -179,7 +179,8 @@ export class ScopeHandle {
       let entry: Entry;
       try { entry = parseStrict(row.bytes) as Entry; } catch { throw new TransportError(`log entry ${row.seq} is not canonical`); }
       // A genesis names its scope by its seed and its hash; every later entry names the genesis it follows.
-      const born = entry.input.type === "genesis" ? entry.input : null;
+      const input: unknown = (entry as { input?: unknown }).input;
+      const born = typeof input === "object" && input !== null && (input as { type?: unknown }).type === "genesis" ? entry.input as Extract<Entry["input"], { type: "genesis" }> : null;
       const ours = born ? scopeIdOf(born.seed) === own.scope.scope && row.hash === own.scope.genesis : "genesis" in entry && entry.genesis === own.scope.genesis;
       if (entry.seq !== row.seq || !ours) throw new TransportError(`log entry ${row.seq} is not this scope's entry at that seq`);
       if (row.seq <= previous || row.seq > reply.at.seq) throw new TransportError("the log page's seqs do not rise from the cursor to the head");
