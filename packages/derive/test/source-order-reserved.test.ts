@@ -13,11 +13,11 @@ test("suppressing a reserved export decision settles its pin, fits the reserved 
     const definition = valid(validateDefinition(data, PIN_BOUNDS));
     const ledger = created(definition, { title: "A", opener: keys.rita.member }); ledger.bounds = PIN_BOUNDS;
     const second = ledger.did(keys.rita, "open-export", { fields: { title: "B", opener: keys.rita.member } }).seq;
-    const task = fixtureScope("task", 43);
+    const taskSequence = fixtureScope("task", 43), task = taskSequence.at;
     for (const exported of [0, second]) expect(ledger.act(keys.rita, "license", { on: exported, expected: { on: ledger.item(exported).revision }, fields: { peer: task, export: exported } }, { capabilities: owner })).toMatchObject({ result: "write" });
     for (const [seq, exported] of [[101, second], [100, 0]] as const) {
       const send = { n: 0, to: ledger.at, message: { class: "request" as const, type: "tell" as const, body: { message: "export-license", fields: { export: exported, k: 2 } } } };
-      const source = forged(task, seq, { type: "checkpoint", through: 0, state: definition.digest }, [send]);
+      const source = forged(taskSequence, seq, { type: "checkpoint", through: 0, state: definition.digest }, [send]);
       const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) }, context = { ...arriving(ledger, arrival, source), capabilities: owner, bounds: PIN_BOUNDS };
       const result = judgeDelivery(ledger.state, definition, arrival, context);
       expect(result).toMatchObject({ result: "write", draft: { settles: true, input: { decision: seq === 100 && order === "source" ? "superseded" : "applied" } } });

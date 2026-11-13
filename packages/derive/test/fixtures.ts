@@ -25,9 +25,7 @@ export { lane, small, notes, ticket, desk } from "./definition-corpus/fixture-da
 declare function structuredClone<T>(value: T): T;
 
 import { d, T0, membership, directory, member } from "./definition-corpus/fixture-identities.ts";
-import { rememberSequence, sequenceAt } from "./definition-corpus/fixture-sequences.ts";
-export { rememberSequence, sequenceAt } from "./definition-corpus/fixture-sequences.ts";
-export { d, T0, membership, directory, otherLane, member, fixtureScope } from "./definition-corpus/fixture-identities.ts";
+export { d, T0, membership, directory, otherLane, member, fixtureScope, membershipSequence, directorySequence, otherLaneSequence } from "./definition-corpus/fixture-identities.ts";
 /** `seconds` after T0. */
 export const t = (seconds: number): Timestamp => timeOf(timeMs(T0)! + seconds * 1000);
 
@@ -111,7 +109,6 @@ export class Ledger {
     const hash = entryHash(entry);
     applyEntry(this.state, this.definition, entry, hash, this.foldOptions);
     this.entries.push({ entry, hash });
-    if (entry.seq === 0) { const sequence = this.own.sequence(); if (sequence) rememberSequence(sequence); }
     return entry;
   }
   seal(draft: Draft, reading: Timestamp = this.now): Entry {
@@ -283,20 +280,23 @@ export function born(from: Ledger, seq: number, n = 0, mint = 20): { child: Ledg
 
 /**
  * An entry made by hand, as a source that some scope might return: it has a
- * hash, and nothing judged it. A later entry takes the sequence that a fixture
- * admitted at `at`. A genesis is admitted from its own bytes, and its address
- * is `source.sequence.at`: `at` gives only the scope ID.
+ * hash, and nothing judged it. A later entry names `of`, the sequence that a
+ * fixture admitted: a fixture scope (`fixtureScope`) or a fixture ledger
+ * (`fixtureSequence`). A genesis is admitted from its own bytes, and its
+ * address is `source.sequence.at`: `of` gives only the scope ID.
  */
-export function forged(at: ScopeRef, seq: number, input: Input, sends: readonly Send[], sequence?: CheckedSequence): Source {
+export function forged(of: CheckedSequence | ScopeRef, seq: number, input: Input, sends: readonly Send[]): Source {
   const body = { v: 1 as const, time: T0, clamped: false, epoch: 0 as const, uses: [], prepared: [], effects: [], sends };
+  const sequence = "at" in of ? of : null, scope = "at" in of ? of.at.scope : of.scope;
   if (input.type === "genesis") {
     if (seq !== 0) throw new Error("a scripted genesis has position zero");
     const entry: Entry = { ...body, seq: 0, prev: null, input };
-    const admitted = sequence ?? admitSequenceGenesis(canonicalize(entry), { scope: at.scope, genesis: entryHash(entry) }, PROPOSED_BOUNDS.entryBytes);
+    const admitted = sequence ?? admitSequenceGenesis(canonicalize(entry), { scope, genesis: entryHash(entry) }, PROPOSED_BOUNDS.entryBytes);
     if (!admitted) throw new Error("a scripted genesis must admit its own bytes");
-    return { entry, sequence: rememberSequence(admitted), under: "ticket" };
+    return { entry, sequence: admitted, under: "ticket" };
   }
-  return { entry: { ...body, genesis: at.genesis, seq, prev: d("0"), input }, sequence: sequence ?? sequenceAt(at), under: "ticket" };
+  if (!sequence) throw new Error("a later scripted entry names the sequence that a fixture admitted");
+  return { entry: { ...body, genesis: sequence.at.genesis, seq, prev: d("0"), input }, sequence, under: "ticket" };
 }
 
 /**
@@ -335,7 +335,7 @@ let made = 100;
  */
 export function arrive(to: Ledger, from: Ledger, message: Send["message"], input: Input = from.entries[1]!.entry.input, facts: readonly Fetched[] = []): Judgment {
   const send: Send = { n: 0, to: to.at, message };
-  const source = forged(from.at, ++made, input, [send], fixtureSequence(from));
+  const source = forged(fixtureSequence(from), ++made, input, [send]);
   const arrival = { ...send, from: factRefOf(source.entry, from.at) };
   const judgment = judgeDelivery(to.state, to.definition, arrival, arriving(to, arrival, source, facts));
   if (judgment.result === "write") to.seal(judgment.draft);

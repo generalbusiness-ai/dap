@@ -12,7 +12,7 @@ import { destinationV17 } from "../src/destination-v17.ts";
 
 // SCRIPTED entries and folded ports, using real canonical wire hashes.
 // These exercise dispatch correspondence, not Native admission or authority.
-const at = fixtureScope("destination", 15), rules = fixtureScope("rules", 16);
+const at = fixtureScope("destination", 15).at, rules = fixtureScope("rules", 16).at;
 const fact = (seq: number, scope = otherLane): FactRef => ({ at: scope, seq, hash: d("a") });
 function fixture(marked: number | null = null) {
   const proposed = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, labels: [], roomService: null, checks: [

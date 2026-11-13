@@ -41,7 +41,7 @@ export const weighed = (change: (data: any) => void = () => {}, platform = true)
 export const weigherWith = (change: (data: any) => void = () => {}): ValidDefinition => valid(weighed(change));
 
 /** A rules scope that the made-up scope records, and the made-up name of the definition that it pins. Neither is a scope or a definition of Artroom. */
-export const rulebook: ScopeRef = fixtureScope("rules", 9);
+export const rulebook: ScopeRef = fixtureScope("rules", 9).at;
 export const RULEBOOK = "platform:rules@2" as PlatformDefinition;
 
 /** What the data of the made-up rules definition states of the two members: `content` below says which. */

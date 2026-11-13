@@ -10,7 +10,7 @@ import { evidenceCapacityWireV17, readEvidenceCapacityAnchorV17, readEvidenceCap
 
 // SCRIPTED facts and pending state exercise the wire grammar only. They do
 // not establish Native admission, current signing authority or capacity.
-const rules = fixtureScope("rules", 18);
+const rules = fixtureScope("rules", 18).at;
 const fact = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
 function pending(): EvidenceJobRecordV17 {
   const binding: EvidenceBinding = { v: 1, source: "member", stage: "work", checker: keys.una.member,
@@ -54,7 +54,7 @@ test("ordinary Native selectors use an exact bounded publication index and canno
   const rules = evidenceDestinationRulesV17({}), publication = rules["evidence-publication-v17"], admitted = rules["evidence-admitted-job-v17"];
   if (publication?.place !== "also" || !("run" in publication) || admitted?.place !== "also" || !("run" in admitted)) throw Error("The ordinary Native selectors are absent");
   const operation = fact(8), calls: unknown[] = [];
-  const given = { resolved: { at: fixtureScope("destination", 17), fields: { operation } }, state: {
+  const given = { resolved: { at: fixtureScope("destination", 17).at, fields: { operation } }, state: {
     lookup: (...args: unknown[]) => { calls.push(args); return [12]; },
     item: () => ({ id: 12, type: "publication", refs: { operation } }),
   } } as unknown as RuleGiven;
@@ -62,6 +62,6 @@ test("ordinary Native selectors use an exact bounded publication index and canno
   expect(calls).toEqual([["publication", "operation", canonicalize(operation), 2]]);
   expect(() => publication.run({ ...given, state: { ...given.state, lookup: () => [12, 13] } }, "publication")).toThrow(RuleFault);
   expect(() => publication.run({ ...given, state: { ...given.state, item: () => ({ id: 12, type: "publication", refs: { operation: fact(9) } }) } } as unknown as RuleGiven, "publication")).toThrow(RuleFault);
-  expect(admitted.run({ resolved: { at: fixtureScope("destination", 17), fields: { admission: fact(12) } },
+  expect(admitted.run({ resolved: { at: fixtureScope("destination", 17).at, fields: { admission: fact(12) } },
     state: { item: () => { throw Error("A foreign admission must not be guessed by its position"); } } } as unknown as RuleGiven, "evidence-job")).toBeNull();
 });

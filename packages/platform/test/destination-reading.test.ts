@@ -23,7 +23,7 @@ const job = made(5, "request-check", { manifest: 2, name: "verify", configuratio
 const check = made(6, "check", { job: 5, tree: "c".repeat(40), configuration: d("d"), outcome: "passed" }, [{ effect: "state", item: 5, state: "passed" }]);
 const statement: Statement = { operation: factRefOf(merge, lane), manifest: factRefOf(manifest, lane), verdicts: [{ review: factRefOf(review, lane), reviewer: keys.una.member, verdict: "approve" }], jobs: [{ job: factRefOf(job, lane), name: "verify", state: "passed", decidedBy: factRefOf(check, lane) }], reports: [], links: [] };
 // The state is made by hand; its answer is the platform's actual projection of the stored checker MemberRef to a MemberId.
-const rulebook = fixtureScope("rules", 18);
+const rulebook = fixtureScope("rules", 18).at;
 const rulesState = { scope: () => ({ at: rulebook, kind: "rules", status: "active", head: { seq: 0, hash: d("a") } }), page: () => ({ items: [{ type: "rules", state: "current", refs: { published: null }, values: { approvals: 1, ownerMayReview: false, labels: [], singleControllerException: false, checks: [{ name: "verify", configuration: d("d"), checker: member, required: true }] } }], more: false }) } as unknown as Pick<StateView, "scope" | "page">;
 const rules: RulesObservation = { ...rulesAnswer(rulesState, { of: rulebook, asked: "rules" }, RULES_SCOPE)!, at: t(0) };
 const given = (entries: readonly Entry[]): Pick<RuleGiven, "uses" | "observed"> => ({ uses: entries.map((entry) => ({ fact: factRefOf(entry, lane), entry, under: "change", sequence: sequenceAt(lane) })), observed: (asked) => "key" in asked ? grant(asked.key === keys.una.key ? keys.una : keys.rita).fresh : null });

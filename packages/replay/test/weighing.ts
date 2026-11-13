@@ -22,7 +22,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactUse, Input, KeyId, MemberId, ObservationUse, OperationId, PlatformDefinition, RetainedInput, Seed, Send } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, factRefOf, intentDigest, newGenesisNonce, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, grantFrom, judgeDelivery, judgeGenesis, settleOutcome, valueDigest, type Fetched, type Observing, type RuleGiven } from "@generalbusiness/dap-derive";
-import { Ledger, T0, arriving, forged, keys, membership, otherLane, t, type Actor, type Context } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, arriving, forged, keys, membership, otherLane, otherLaneSequence, t, type Actor, type Context } from "@generalbusiness/dap-derive/testing";
 import { EXTENTS, RULEBOOK, WEIGHER, holdersSeen, keySeen, memberSeen, rulebook, rulesSeen, signers, stating, weigherRules, weigherWith } from "../../derive/test/fixtures-observes.ts";
 import type { Anchor, Coded, MemoryScope } from "../src/index.ts";
 
@@ -36,7 +36,7 @@ const written = <J extends { result: string }>(judgment: J): Extract<J, { result
 function decided(seq: number, who: Actor, check: string): Fetched {
   const signed = signIntent({ v: 1, to: otherLane, actor: who.key, kind: "decide", on: null, expected: {}, fields: { check }, idempotencyKey: `d${seq}`, notAfter: t(60) }, who.secret);
   const input: Input = { type: "act", signed, authority: [], presented: {} };
-  const source = forged(otherLane, seq, input, []);
+  const source = forged(otherLaneSequence, seq, input, []);
   return { fact: factRefOf(source.entry, otherLane), entry: source.entry, sequence: source.sequence, under: "lane" };
 }
 
@@ -109,7 +109,7 @@ export class Weighing extends Ledger {
     const sent = this.did(rita, "go", this.#desk());
     const request = { from: this.fact(sent.seq), n: 0 };
     const answer: Send = { n: 0, to: this.at, message: { class: "result", of: request, outcome: "applied" } };
-    const source = forged(otherLane, 9, { type: "delivery", from: request.from, sourceKind: this.state.scope()!.kind, n: 0, message: sent.sends[0]!.message as never, decision: "applied" }, [answer]);
+    const source = forged(otherLaneSequence, 9, { type: "delivery", from: request.from, sourceKind: this.state.scope()!.kind, n: 0, message: sent.sends[0]!.message as never, decision: "applied" }, [answer]);
     const peer = { fact: factRefOf(source.entry, otherLane), entry: source.entry, sequence: source.sequence, under: "lane" };
     this.#peer = peer;
     const arrival = { ...answer, from: peer.fact };

@@ -11,7 +11,7 @@ import { RULES } from "./support-destination.ts";
 
 // SCRIPTED policy views and source facts. These are pure account grammar
 // and slot controls, not Native funding/admission or certificate authority.
-const destination = fixtureScope("destination", 17);
+const destination = fixtureScope("destination", 17).at;
 const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
 const check = (name: string, extra: Partial<RulesCheckV13> = {}): RulesCheckV13 => ({ name, configuration: d("b"), required: true, checker: keys.una.member, ...extra });
 function view(checks: readonly RulesCheckV13[], extentChecks: readonly string[] = []): ReservationPolicyViewV17 {

@@ -11,7 +11,7 @@ import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
 // SCRIPTED Native-shaped records, opening and state ports with real canonical
 // digests. These exercise actual helper/rule callbacks, not Native admission,
 // membership/triager authority, an executed notice, or a recovery journey.
-const destination = fixtureScope("destination", 17), rules = fixtureScope("rules", 18);
+const destination = fixtureScope("destination", 17).at, rules = fixtureScope("rules", 18).at;
 const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
 function record(): EvidenceJobRecordV17 {
   const proposed = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, labels: [], roomService: null,

@@ -7,7 +7,7 @@ import { EVIDENCE_LEDGER_ITEM_V17, evidenceLedgerInitializationV17, evidenceLedg
 
 // SCRIPTED folded-state ports. These test singleton correspondence and the
 // actual initialization effects, not a Native certificate/fold/admission.
-const destination: ScopeRef = fixtureScope("destination", 17);
+const destination: ScopeRef = fixtureScope("destination", 17).at;
 const zero = { keys: 0, holds: 0, policyGenerations: 0, incidents: 0 };
 const used = { keys: 1, holds: 2, policyGenerations: 3, incidents: 4 };
 const item = (id: number, type: string, values: Item["values"] = {}, refs: Item["refs"] = {}, state = "ready"): Item => ({

@@ -16,7 +16,7 @@ import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
 import { requiredChecksV17 } from "../src/reservation-v17.ts";
 
 function fundingPreview(options: { checks?: number; stageFirst?: boolean; stage?: "landing" | "published"; firstBatch?: number; pushResult?: OutcomeGives } = {}) {
-  const born = destinationBirth(), destination = born.at, rules = fixtureScope("rules", 18);
+  const born = destinationBirth(), destination = born.at, rules = fixtureScope("rules", 18).at;
   const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
   const manifestEntry: SequenceEntry = { v: 1, genesis: otherLane.genesis, seq: 4, prev: d("0"), time: t(0), clamped: false, epoch: 0,
     input: { type: "act", signed: signIntent({ v: 1, to: otherLane, actor: keys.una.key, kind: "propose-file", on: null, expected: {},

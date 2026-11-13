@@ -35,7 +35,7 @@ describe("published hold coverage", () => {
 // The state below is an explicit SCRIPTED arithmetic port. Actual self-send,
 // certificate and holder authority are tested by the owning Native story.
 describe("exact pre-publication capacity identities", () => {
-  const destination = fixtureScope("destination", 17);
+  const destination = fixtureScope("destination", 17).at;
   const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
   function batch(seq: number, touched: readonly string[]): EvidenceBatchRecordV17 {
     const check = { name: "global", configuration: d("b"), required: true, checker: keys.una.member, stage: "published" as const, holds: true };

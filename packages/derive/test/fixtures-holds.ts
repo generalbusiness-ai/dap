@@ -24,7 +24,7 @@ import type { Entry, OperationId, PlatformData, PlatformDefinition, Request } fr
 import { entryHash, factRefOf } from "@generalbusiness/dap-bytes";
 import { PROFILES, applyEntry, clockOf, entryOf, fits, judgeDelivery, owed, settleOutcome, validateDefinition } from "../src/index.ts";
 import type { Draft, Operation, OutcomeGives, PlatformRule, PlatformRules, RuleEffect, RuleGiven, RuleRequest, ValidDefinition, Validation } from "../src/index.ts";
-import { Scope, arriving, changedDraft, forged, keys, otherLane, valid, type Over } from "./fixtures.ts";
+import { Scope, arriving, changedDraft, forged, keys, otherLane, otherLaneSequence, valid, type Over } from "./fixtures.ts";
 
 import { works, chain } from "./definition-corpus/holds-data.ts";
 export { works, chain } from "./definition-corpus/holds-data.ts";
@@ -112,7 +112,7 @@ export class Works extends Scope {
   /** A `start` from another lane, in an entry made by hand. A request that does not fit is not decided, and transport answers "retry". */
   start(): string {
     const send = { n: 0, to: this.at, message: { class: "request", type: "tell", body: { message: "start", fields: {} } } } as const;
-    const source = forged(otherLane, ++this.#made, { type: "checkpoint", through: 0, state: this.entries[0]!.hash }, [send]);
+    const source = forged(otherLaneSequence, ++this.#made, { type: "checkpoint", through: 0, state: this.entries[0]!.hash }, [send]);
     const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) };
     return this.commit(judgeDelivery(this.state, this.definition, arrival, { ...arriving(this, arrival, source), platform: this.rules }));
   }
@@ -129,7 +129,7 @@ export class Works extends Scope {
   answered(seq: number): string {
     const request = { from: this.fact(seq), n: 0 };
     const send = { n: 0, to: this.at, message: { class: "result", of: request, outcome: "applied" } } as const;
-    const source = forged(otherLane, ++this.#made, { type: "delivery", sourceKind: "lane", ...request, message: this.entries[seq]!.entry.sends[0]!.message as Request, decision: "applied" }, [send]);
+    const source = forged(otherLaneSequence, ++this.#made, { type: "delivery", sourceKind: "lane", ...request, message: this.entries[seq]!.entry.sends[0]!.message as Request, decision: "applied" }, [send]);
     const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) };
     return this.commit(judgeDelivery(this.state, this.definition, arrival, { ...arriving(this, arrival, source), platform: this.rules }));
   }

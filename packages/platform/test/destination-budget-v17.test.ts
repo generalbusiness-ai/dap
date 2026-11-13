@@ -12,7 +12,7 @@ import { CERTIFIED_PUBLICATION_TEXT_BYTES_V17, certifiedCaptureBudgetV17, certif
 
 // SCRIPTED policy observations and facts. These tests exercise byte and
 // wire correspondence, not Native certificates or publication authority.
-const destination = fixtureScope("destination", 17), rules = fixtureScope("rules", 18);
+const destination = fixtureScope("destination", 17).at, rules = fixtureScope("rules", 18).at;
 const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
 function record(label = "wire"): CertifiedPublicationStateV17 {
   const proposed = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, checks: [], labels: [label], roomService: null,

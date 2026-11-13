@@ -5,7 +5,7 @@ import { judgeDelivery, type Operation, type RuleEffect } from "@generalbusiness
 import { evidenceJobOpeningV17 } from "../src/destination-evidence-v17.ts";
 import { destinationV17 } from "../src/destination-v17.ts";
 import { newEvidenceIndexV17 } from "../src/evidence-index-v17.ts";
-import { arriving, d, forged, later, otherLane } from "@generalbusiness/dap-derive/testing";
+import { arriving, d, forged, later, otherLane, otherLaneSequence } from "@generalbusiness/dap-derive/testing";
 import { evidenceOperationOpeningV17 } from "../src/evidence-opening-v17.ts";
 // The maintained reservation witness is not in dap-derive/testing's public
 // exports. Reuse that narrow test fixture, without importing kernel internals.
@@ -133,7 +133,7 @@ test("a funded bound delivery can open its counted operation but cannot open eve
   expect(scope.start()).toBe("written");
   const holder = scope.last.seq, before = scope.head;
   const message = { class: "request", type: "tell", body: { message: "follow", fields: { job: holder } } } as const;
-  const source = forged(otherLane, 999, { type: "checkpoint", through: 0, state: scope.entries[0]!.hash }, [{ n: 0, to: scope.at, message }]);
+  const source = forged(otherLaneSequence, 999, { type: "checkpoint", through: 0, state: scope.entries[0]!.hash }, [{ n: 0, to: scope.at, message }]);
   const arrival = { from: factRefOf(source.entry, source.sequence.at), n: 0, to: scope.at, message };
   const take = () => {
     const judged = judgeDelivery(scope.state, scope.definition, arrival, { ...arriving(scope, arrival, source), platform: scope.rules });

@@ -19,7 +19,7 @@ test("only D21 open-pr declares its one child place, and its closure stays bound
   expect(Object.keys(old.fields).some(name => name.startsWith("dependency"))).toBe(false);
   expect(evidenceRulesDirectory.acts["open-issue"]).toBe(hardenedCertifiedRulesDirectory.acts["open-issue"]);
   const child = applicationChild(), childDigest = definitionDigest(child), root = applicationRoot(childDigest), rootDigest = definitionDigest(root);
-  const rules = fixtureScope("rules", 18);
+  const rules = fixtureScope("rules", 18).at;
   const observation: RulesObservation = { subject: "rules", of: rules, head: { seq: 4, hash: d("a") }, revision: 3,
     content: { asked: "definitions", active: [{ digest: rootDigest, name: root.name }] }, definition: "platform:rules@13", at: t(1) };
   const rule = evidenceRulesDirectoryRules["definition-active"];

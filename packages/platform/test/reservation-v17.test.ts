@@ -13,7 +13,7 @@ import { evidenceKeyEligibleV17, evidenceSourceV17, readRulesPolicyObservationV1
 // SCRIPTED. These are the real pure readers/guards, not Native authority,
 // a membership answer, a published policy, or an executed checker job.
 const fact = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
-const destination = fixtureScope("destination", 17);
+const destination = fixtureScope("destination", 17).at;
 const checker = { membership: MEMBERSHIP, member: keys.una.member.member };
 const mark: ServiceMark = { checker, key: keys.una.key }, rotated: ServiceMark = { checker, key: keys.vic.key };
 const memberCheck: RulesCheckV13 = { name: "member", configuration: d("b"), required: true, checker };

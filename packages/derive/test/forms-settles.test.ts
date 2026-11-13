@@ -5,7 +5,7 @@ import type { PlatformData, PlatformDefinition } from "@generalbusiness/dap-cont
 import { canonicalBytes, entryHash, factRefOf, parseStrictBytes } from "@generalbusiness/dap-bytes";
 import { AmountError, PROFILES, applyEntry, clockOf, entryOf, fits, itemAwaits, judgeDelivery, markerAmounts, markerReservations, owed, reserved, validateDefinition } from "../src/index.ts";
 import type { Draft, PlatformRules, RuleEffect, ValidDefinition } from "../src/index.ts";
-import { Scope, arriving, directory, fields, forged, keys, on, valid, type Over } from "./fixtures-entry.ts";
+import { Scope, arriving, directory, directorySequence, fields, forged, keys, on, valid, type Over } from "./fixtures-entry.ts";
 
 /**
  * Settlement by a mark, and pending marker work (scope contract, revision 22,
@@ -82,7 +82,7 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
     const deliver = (name: string, id: number, seq: number, advisory = false) => {
       const message = advisory ? { class: "advisory", type: "index", body: { fields: {} } } as const : { class: "request", type: "tell", body: { message: name, fields: { job: scope.fact(id) } } } as const;
       const send = { n: 0, to: scope.at, message };
-      const source = forged(directory, seq, { type: "checkpoint", through: 0, state: entryHash(scope.last) }, [send]);
+      const source = forged(directorySequence, seq, { type: "checkpoint", through: 0, state: entryHash(scope.last) }, [send]);
       const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) };
       const judged = judgeDelivery(scope.state, definition, arrival, arriving(scope, arrival, { ...source, under: "desk" }));
       expect(judged.result).toBe("write");
@@ -370,7 +370,7 @@ describe("18.54 cases 13 and 14: a rule of a form that declares settles", () => 
   /** A `flag` for that job, from the directory, in an entry made by hand that nothing judged. */
   const flag = (G: Full, id: number, platform: PlatformRules, seq: number) => {
     const send = { n: 0, to: G.at, message: { class: "request", type: "tell", body: { message: "flag", fields: { job: G.fact(id) } } } } as const;
-    const source = forged(directory, seq, { type: "checkpoint", through: 0, state: entryHash(G.last) }, [send]);
+    const source = forged(directorySequence, seq, { type: "checkpoint", through: 0, state: entryHash(G.last) }, [send]);
     const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) };
     return G.commit(judgeDelivery(G.state, G.definition, arrival, { ...arriving(G, arrival, { ...source, under: "desk" }), platform }));
   };

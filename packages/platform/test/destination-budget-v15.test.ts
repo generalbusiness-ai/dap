@@ -10,9 +10,9 @@ import { certifiedCaptureBudgetV15, certifiedPublicationBudgetV15, certifiedPubl
 
 // All facts, the rules observation and proof rows below are written by hand.
 // These witness byte admission and codec correspondence, not native authority.
-const destination: ScopeRef = fixtureScope("destination", 17);
-const membership: ScopeRef = fixtureScope("membership", 19);
-const rules: ScopeRef = fixtureScope("rules", 18);
+const destination: ScopeRef = fixtureScope("destination", 17).at;
+const membership: ScopeRef = fixtureScope("membership", 19).at;
+const rules: ScopeRef = fixtureScope("rules", 18).at;
 const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d('a') });
 function record(policy: RulesPolicyV11): CertifiedPublicationStateV15 {
   const proposed = rulesPolicyProposalV11(policy);

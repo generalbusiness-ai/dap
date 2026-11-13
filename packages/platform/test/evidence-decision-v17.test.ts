@@ -8,7 +8,7 @@ import { readEvidenceDecisionV17 } from "../src/evidence-decision-v17.ts";
 // hashes. These controls prove the pure decision reader; they do not prove
 // Native admission, membership authority, or execution of a checker job.
 const job: FactRef = { at: otherLane, seq: 10, hash: d("a") };
-const admission: FactRef = { at: fixtureScope("destination", 12), seq: 12, hash: d("b") };
+const admission: FactRef = { at: fixtureScope("destination", 12).at, seq: 12, hash: d("b") };
 const expected = { job, admission, bindingDigest: d("c"), tree: "a".repeat(40), configuration: d("d") };
 const seal = (entry: SequenceEntry): Sealed => ({ entry, hash: entryHash(entry) });
 function decision(kind: "passed" | "failed" | "error" = "passed", work = false): SequenceEntry {

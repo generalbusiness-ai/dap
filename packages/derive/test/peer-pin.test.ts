@@ -50,10 +50,10 @@ test("wrong-pin refusal consumes a native receiver reservation without licensing
   const declaration = peerNativePinData(d("a"));
   const definition = valid(validateDefinition(declaration, PIN_BOUNDS)), owner = holdCapability({ tokensPerHold: 2, rootRetentionSeconds: 600 });
   const ledger = created(definition, { title: "A", opener: keys.rita.member }); ledger.bounds = PIN_BOUNDS;
-  const task = fixtureScope("task", 41);
+  const taskSequence = fixtureScope("task", 41), task = taskSequence.at;
   expect(ledger.act(keys.rita, "license", { on: 0, expected: { on: ledger.item(0).revision }, fields: { peer: task } }, { capabilities: owner })).toMatchObject({ result: "write" });
   const send = { n: 0, to: ledger.at, message: { class: "request" as const, type: "tell" as const, body: { message: "export-license", fields: { export: 0, k: 2 } } } };
-  const source = { ...forged(task, 100, { type: "checkpoint", through: 0, state: definition.digest }, [send]), pin: d("b") };
+  const source = { ...forged(taskSequence, 100, { type: "checkpoint", through: 0, state: definition.digest }, [send]), pin: d("b") };
   const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) }, context = { ...arriving(ledger, arrival, source), capabilities: owner, bounds: PIN_BOUNDS };
   const result = judgeDelivery(ledger.state, definition, arrival, context);
   expect(result).toMatchObject({ result: "write", draft: { settles: true, input: { decision: "refused", reason: { code: "wrong-pin" } } } });

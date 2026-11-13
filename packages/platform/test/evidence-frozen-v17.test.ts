@@ -13,7 +13,7 @@ import { RULES } from "./support-destination.ts";
 // SCRIPTED facts and policy metadata. The maintained semantic readers build
 // valid batch values, not Native publication/capture or current authority.
 // The Native wrapper separately proves its actual holder/capture/operation.
-const destination = fixtureScope("destination", 17);
+const destination = fixtureScope("destination", 17).at;
 const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
 const mark: ServiceMark = { checker: keys.una.member, key: keys.una.key };
 function batch(revision = 10, service = 5, roomService: ServiceMark | null = mark): EvidenceBatchRecordV17 {

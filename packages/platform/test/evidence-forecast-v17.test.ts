@@ -16,7 +16,7 @@ import { RULES } from "./support-destination.ts";
 
 // SCRIPTED source facts, policy views, state and records. Forecast maxima
 // are not real facts or Native funding/capacity/execution evidence.
-const destination = fixtureScope("destination", 17);
+const destination = fixtureScope("destination", 17).at;
 const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
 function policy(stage: CheckStage, count = 1): ReservationPolicyViewV17 {
   const proposed = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, labels: [], roomService: null,

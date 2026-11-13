@@ -4,7 +4,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, MemberId, ObservationUse, OperationId, PlatformDefinition, Request, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, intentDigest, isEntry, newGenesisNonce, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { PROFILES, clockOf, judgeDelivery, settleOutcome, validateDefinition, valueDigest, type ActJudgment, type OutcomeRule, type PlatformRule, type PlatformRules, type RuleGiven } from "../src/index.ts";
-import { Scope, T0, arriving, d, forged, keys, membership, otherLane, small, t, type Actor, gate, gateRules, gateWith } from "./fixtures-entry.ts";
+import { Scope, T0, arriving, d, forged, keys, membership, otherLane, otherLaneSequence, small, t, type Actor, gate, gateRules, gateWith } from "./fixtures-entry.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Change = (d: any) => void;
@@ -405,7 +405,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
         const noting = (name: string): PlatformRule => ({ place: "effect", most: 0, run: () => { ran.push(name); return []; } });
         const request = { from: s.fact(asked), n };
         const send: Send = { n: 0, to: s.at, message: { class: "result", of: request, outcome: "applied" } };
-        const source = forged(otherLane, 40 + n, { type: "delivery", sourceKind: "lane", ...request, message: s.entries[asked]!.entry.sends[n]!.message as Request, decision: "applied" }, [send]);
+        const source = forged(otherLaneSequence, 40 + n, { type: "delivery", sourceKind: "lane", ...request, message: s.entries[asked]!.entry.sends[n]!.message as Request, decision: "applied" }, [send]);
         const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) };
         const judged = judgeDelivery(s.state, s.definition, arrival, { ...arriving(s, arrival, source), platform: gateRules({ "noted-w": noting("w"), "noted-a": noting("a"), "noted-b": noting("b") }) });
         return [judged.result, ...ran];
@@ -482,7 +482,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
     // The result of the tell comes back, from an entry made by hand, and the clause runs its rule. The result is recorded either way.
     const request = { from: s.fact(asked), n: 0 };
     const send: Send = { n: 0, to: s.at, message: { class: "result", of: request, outcome: "applied" } };
-    const source = forged(otherLane, 40, { type: "delivery", sourceKind: "lane", ...request, message: s.entries[asked]!.entry.sends[0]!.message as Request, decision: "applied" }, [send]);
+    const source = forged(otherLaneSequence, 40, { type: "delivery", sourceKind: "lane", ...request, message: s.entries[asked]!.entry.sends[0]!.message as Request, decision: "applied" }, [send]);
     const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) };
     const clause = (noted: (given: RuleGiven) => unknown) => {
       const judged = judgeDelivery(s.state, s.definition, arrival, { ...arriving(s, arrival, source), platform: gateRules({ noted: some(noted) }) });
@@ -606,7 +606,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
     const s = made();
     const operation = `${s.last.seq}:0` as OperationId;
     /** A foreign entry at hand for the outcome, MADE BY HAND. */
-    const foreign = forged(otherLane, 5, { type: "checkpoint", through: 4, state: d("5") }, []);
+    const foreign = forged(otherLaneSequence, 5, { type: "checkpoint", through: 4, state: d("5") }, []);
     const fetched = { fact: factRefOf(foreign.entry, foreign.sequence.at), entry: foreign.entry, under: foreign.under };
     const tell = { to: otherLane, message: { class: "request", type: "tell", body: { message: "hello", fields: {} } } } as const;
     /** The rule of the outcome reads the standing of one member, and each entry in `uses`. With either missing it has a fault. */
@@ -643,7 +643,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
     // The result of the request that the outcome sent: the rule of its `applied` clause reads the standing of the other member.
     const request = { from: s.fact(outcome), n: 0 };
     const answer: Send = { n: 0, to: s.at, message: { class: "result", of: request, outcome: "applied" } };
-    const source = forged(otherLane, 9, { type: "delivery", sourceKind: "lane", from: request.from, n: 0, message: tell.message, decision: "applied" }, [answer]);
+    const source = forged(otherLaneSequence, 9, { type: "delivery", sourceKind: "lane", from: request.from, n: 0, message: tell.message, decision: "applied" }, [answer]);
     const arrival = { ...answer, from: factRefOf(source.entry, source.sequence.at) };
     const noted = some((rule) => (rule.observed({ member: "@vic" }) ? [] : (() => { throw new Error("the standing is read for this clause, and it is not at hand"); })()));
     const record = (beside: object, at = s.now) => judgeDelivery(s.state, s.definition, arrival, { ...arriving(s, arrival, source), clock: clockOf(s.state, at), platform: owned({ noted }), ...beside });

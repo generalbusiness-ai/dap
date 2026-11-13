@@ -9,8 +9,8 @@ import { assessEvidenceV17, evidenceCapacityV17, evidenceKeyDigestV17, newEviden
 // Every fact and authority choice below is scripted. These are the actual pure
 // bounded records and decisions, not a Native admission or key observation.
 const fact = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
-const ruleScope = fixtureScope("rules", 18);
-const key: EvidenceKeyV17 = { room: fixtureScope("destination", 17), tree: "a".repeat(40), name: "verify", configuration: d("b"), source: "member", stage: "landing" };
+const ruleScope = fixtureScope("rules", 18).at;
+const key: EvidenceKeyV17 = { room: fixtureScope("destination", 17).at, tree: "a".repeat(40), name: "verify", configuration: d("b"), source: "member", stage: "landing" };
 const binding: EvidenceBinding = { v: 1, source: "member", stage: "landing", checker: keys.una.member,
   policyGeneration: { rules: ruleScope, seq: 1 }, roomService: null, serviceGeneration: { rules: ruleScope, seq: 0 }, auditOf: null,
   subject: { kind: "landing", publication: { ...fact(1), at: key.room }, manifest: fact(2) } };

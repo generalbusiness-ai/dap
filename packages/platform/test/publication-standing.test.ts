@@ -9,7 +9,7 @@ import { d, otherLane, sequenceAt, t, fixtureScope } from "@generalbusiness/dap-
 import { MEMBERSHIP, keyObserved, retained, destinationRita as rita } from "./fixtures-entry.ts";
 import { publicationStandingKeys, publicationStandingRecord, type PublicationStandingContext, type PublicationStandingRecord, type StandingCheck } from "../src/publication-standing.ts";
 
-const at = fixtureScope("destination", 17), from = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
+const at = fixtureScope("destination", 17).at, from = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
 const owner = "platform:destination@5" as const, item = 2;
 const copy = <T>(value: T): T => structuredClone(value);
 function fixture(count = 1) {

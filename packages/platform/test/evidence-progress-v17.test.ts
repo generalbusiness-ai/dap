@@ -11,7 +11,7 @@ import type { RulesCheckV13 } from "../src/rules-policy-v13.ts";
 // is exercised, without Native admission, key standing, signatures, or an
 // executed progress turn. Key bytes below identify distinct test subjects.
 type Required = Pick<RulesCheckV13, "name" | "audit">;
-const destination = fixtureScope("destination", 17), rules = fixtureScope("rules", 18);
+const destination = fixtureScope("destination", 17).at, rules = fixtureScope("rules", 18).at;
 const fact = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
 const key = (n: number): KeyId => keyIdOf(new Uint8Array(32).fill(n));
 function row(name: string, seq: number, signer: KeyId | null, state: EvidenceJobRecordV17["state"] = "passed"): EvidenceJobRecordV17 {

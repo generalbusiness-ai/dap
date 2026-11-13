@@ -4,7 +4,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, FieldValue, PlatformData, PlatformDefinition, Request, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, intentDigest, newGenesisNonce, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState, applyEntry, checkpointOf, clockOf, judgeCheckpoint, judgeDelivery, judgeGenesis, judgeFloor, decisionBinding, isUnprovenDecisionBinding, owed, ownersOf, stateDigest, validateDefinition } from "@generalbusiness/dap-derive";
-import { Ledger, T0, arriving, fixtureSequence, forged, keys, otherLane, t, valid } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, arriving, fixtureSequence, forged, keys, otherLane, otherLaneSequence, t, valid } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, verify } from "../src/index.ts";
 import type { Rules, StateView } from "@generalbusiness/dap-derive";
 import type { MemoryScope } from "../src/index.ts";
@@ -70,7 +70,7 @@ class Deciding extends Ledger {
   }
   delivery(message: string, fields: Record<string, FieldValue> = {}) {
     const request: Request = { class: "request", type: "tell", body: { message, fields } };
-    const source = forged(otherLane, this.foreign.length + 1, { type: "checkpoint", through: 0, state: this.definition.digest }, [{ n: 0, to: this.at, message: request }]);
+    const source = forged(otherLaneSequence, this.foreign.length + 1, { type: "checkpoint", through: 0, state: this.definition.digest }, [{ n: 0, to: this.at, message: request }]);
     this.foreign.push(source);
     const arrival = { to: this.at, from: factRefOf(source.entry, otherLane), n: 0, message: request };
     const judged = judgeDelivery(this.state, this.definition, arrival, { ...arriving(this, arrival, source), platform: { named: NAMED, rules: this.rules }, texts: this.sizes });

@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FactRef, type ScopeRef, type SequenceEntry } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isEntry, same, signIntent } from "@generalbusiness/dap-bytes";
 import { MemoryState, RuleFault, useOf, valueDigest, type Operation, type Own, type RuleGiven } from "@generalbusiness/dap-derive";
-import { d, fixtureScope, keys, otherLane, sequenceAt, t } from "@generalbusiness/dap-derive/testing";
+import { d, fixtureScope, keys, otherLane, otherLaneSequence, t } from "@generalbusiness/dap-derive/testing";
 import { readEvidenceBoundFenceV17 } from "../src/evidence-bound-fence-v17.ts";
 import { claimEvidenceBatchJobV17, evidenceBatchWireV17, readEvidenceBatchV17 } from "../src/evidence-batch-v17.ts";
 import { certifiedPublicationWireV17, type CertifiedPublicationStateV17 } from "../src/destination-budget-v17.ts";
@@ -21,7 +21,7 @@ function boundary(wrongPolicy = false, checkCount = 2) {
     if (!isEntry(entry)) throw Error("The scripted entry must have the maintained wire shape");
     return { entry, hash: entryHash(entry) };
   };
-  const born = destinationBirth(), destination = born.at, sequence = born.sequence, rules = fixtureScope("rules", 18);
+  const born = destinationBirth(), destination = born.at, sequence = born.sequence, rules = fixtureScope("rules", 18).at;
   const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
   const frame = (seq: number, input: SequenceEntry["input"], effects: SequenceEntry["effects"] = [], sends: SequenceEntry["sends"] = [], at: ScopeRef = destination): SequenceEntry =>
     ({ v: 1, genesis: at.genesis, seq, prev: d("0"), time: t(0), clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends });
@@ -96,7 +96,7 @@ function boundary(wrongPolicy = false, checkCount = 2) {
   const read = () => readEvidenceBoundFenceV17(state, own, admitted, PROPOSED_BOUNDS);
   const given: RuleGiven = { state, own, time: t(0), observed: () => null, value: () => undefined, placed: () => undefined,
     input: { type: "outcome", owner: admitted.owner, kind: admitted.kind, operation: admitted.id, attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { job: jobFact } } },
-    uses: [{ fact: jobFact, entry: job.entry, under: "change@4", sequence: sequenceAt(otherLane) }, { fact: manifest, entry: manifestEntry.entry, under: "change@4", sequence: sequenceAt(otherLane) }],
+    uses: [{ fact: jobFact, entry: job.entry, under: "change@4", sequence: otherLaneSequence }, { fact: manifest, entry: manifestEntry.entry, under: "change@4", sequence: otherLaneSequence }],
     resolved: { at: destination, self: 7, fields: {}, subjects: new Map(), signer: null, bounds: PROPOSED_BOUNDS } };
   const changeFence = (change: (entry: SequenceEntry) => SequenceEntry) => { const next = seal(change(fence.entry)); history.set(6, next); state.setScope({ ...state.scope()!, head: { seq: 6, hash: next.hash } }); };
   return { destination, state, own, history, read, given, fields, changeFence, fence, job, jobFact, admitted, binding, manifest, manifestEntry,
@@ -161,7 +161,7 @@ test("the actual binding field waits only for the exact unexpired source whose o
   // SCRIPTED source/state proof, with no committed fence or admitted record
   // for this delayed job. The real field predicate chooses whether to wait.
   const given: RuleGiven = { ...fixture.given, input: { type: "delivery", from: jobFact, sourceKind: "lane", n: 0, message },
-    uses: [{ fact: jobFact, entry: job, under: "change@4", sequence: sequenceAt(otherLane) }, { fact: fixture.manifest, entry: fixture.manifestEntry.entry, under: "change@4", sequence: sequenceAt(otherLane) }],
+    uses: [{ fact: jobFact, entry: job, under: "change@4", sequence: otherLaneSequence }, { fact: fixture.manifest, entry: fixture.manifestEntry.entry, under: "change@4", sequence: otherLaneSequence }],
     resolved: { ...fixture.given.resolved, fields: { ...raw, job: jobFact } } };
   const rule = destinationRulesV17["evidence-fence-binding-v17"];
   if (rule?.place !== "type") throw Error("The actual bound-fence field rule is required");

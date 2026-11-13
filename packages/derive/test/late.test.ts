@@ -143,10 +143,10 @@ test("a late refusal consumes a native receiver pin and exact repeat consumes no
   const data = lateNativePinData();
   const definition = valid(validateDefinition(data, PIN_BOUNDS)), owner = holdCapability({ tokensPerHold: 2, rootRetentionSeconds: 600 });
   const ledger = created(definition, { title: "A", opener: keys.rita.member }); ledger.bounds = PIN_BOUNDS;
-  const task = fixtureScope("task", 42);
+  const taskSequence = fixtureScope("task", 42), task = taskSequence.at;
   expect(ledger.act(keys.rita, "license", { on: 0, expected: { on: ledger.item(0).revision }, fields: { peer: task } }, { capabilities: owner })).toMatchObject({ result: "write" });
   const send = { n: 0, to: ledger.at, message: { class: "request" as const, type: "tell" as const, body: { message: "export-license", fields: { export: 0, k: 2 } } } };
-  const source = forged(task, 100, { type: "checkpoint", through: 0, state: definition.digest }, [send]);
+  const source = forged(taskSequence, 100, { type: "checkpoint", through: 0, state: definition.digest }, [send]);
   ledger.now = t(31);
   const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) }, context = { ...arriving(ledger, arrival, source), capabilities: owner, bounds: PIN_BOUNDS };
   const result = judgeDelivery(ledger.state, definition, arrival, context);

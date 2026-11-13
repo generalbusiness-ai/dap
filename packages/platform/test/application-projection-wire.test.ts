@@ -4,7 +4,7 @@ import { b64url, canonicalize, textDigest, utf8 } from "@generalbusiness/dap-byt
 import { directory } from "../../bytes/test/fixtures.ts";
 import { fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { applicationProjectionQueryDigest, encodeApplicationProjectionQuery, readApplicationProjectionQuery, readApplicationProjectionReply } from "../src/application-codec/application-projection-wire.ts";
-const scope = fixtureScope("lane", 20);
+const scope = fixtureScope("lane", 20).at;
 const query = (): ApplicationProjectionQuery => ({ v: 1, scope, directory, install: 2, projection: "room.alert", items: { alert: 7 } });
 const reply = (): ApplicationProjectionRead => ({ ok: true, query: applicationProjectionQueryDigest(query())!, value: {
   v: 1, projection: textDigest("PUBLIC TEST declared projection"), scope, at: { seq: 12, hash: textDigest("PUBLIC TEST head") },

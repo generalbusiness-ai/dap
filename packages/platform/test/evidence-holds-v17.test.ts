@@ -8,10 +8,10 @@ import { bindEvidenceHoldPendingV17, clearEvidenceHoldPendingV17, effectiveEvide
 
 // Scripted facts and eligibility choices exercise the actual pure order/state
 // decisions; no job, publication, holder observation, or creation runs here.
-const destination = fixtureScope("destination", 17), membership = fixtureScope("membership", 19);
+const destination = fixtureScope("destination", 17).at, membership = fixtureScope("membership", 19).at;
 const fact = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
 const publication = (seq: number): FactRef => ({ ...fact(seq), at: destination });
-const key: EvidenceHoldKeyV17 = { generation: { rules: fixtureScope("rules", 18), seq: 1 }, extent: "source", name: "published", configuration: d("b"), source: "room", stage: "published" };
+const key: EvidenceHoldKeyV17 = { generation: { rules: fixtureScope("rules", 18).at, seq: 1 }, extent: "source", name: "published", configuration: d("b"), source: "room", stage: "published" };
 const failure = (pub: number, job = pub + 1, kind: EvidenceFailureV17["kind"] = "failed"): EvidenceFailureV17 => ({ job: fact(job + 50), publication: publication(pub), commit: "a".repeat(40), order: { publication: pub, job }, decidedAt: job + 1, kind, reason: kind, result: kind === "failed" ? fact(job + 100) : null });
 const passed = (pub: number, job = pub + 1): EvidencePassReleaseV17 => ({ kind: "pass", decidedAt: job + 2, through: { publication: pub, job }, job: fact(job + 50), publication: publication(pub), result: fact(job + 100) });
 function failed(record: EvidenceHoldRecordV17, cause: EvidenceFailureV17): EvidenceHoldRecordV17 {

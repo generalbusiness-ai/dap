@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 import { coverageRow } from "./coverage-rows.ts";
 import { canonicalize, factRefOf, textDigest } from "@generalbusiness/dap-bytes";
 import { judgeDelivery } from "@generalbusiness/dap-derive";
-import { arriving, created, forged, keys, notesDefinition, on, otherLane, variant } from "@generalbusiness/dap-derive/testing";
+import { arriving, created, forged, keys, notesDefinition, on, otherLane, otherLaneSequence, variant } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, verify, type MemoryScope } from "../src/index.ts";
 
 test("an earlier successful field check rules out a later fabricated size refusal even after the text is erased", async () => {
@@ -11,7 +11,7 @@ test("an earlier successful field check rules out a later fabricated size refusa
   const scope = created(definition, {}, "earlier-field-proof"), body = "four", digest = textDigest(body);
   expect(scope.act(keys.rita, "write", { ...on(scope, 0), fields: { body: digest } }, { texts: () => 4 }).result).toBe("write");
   const send = { n: 0, to: scope.at, message: { class: "request", type: "tell", body: { message: "noted", fields: { body: digest } } } } as const;
-  const source = { ...forged(otherLane, 100, { type: "checkpoint", through: 0, state: definition.digest }, [send]), under: "notes" }, fact = factRefOf(source.entry, otherLane);
+  const source = { ...forged(otherLaneSequence, 100, { type: "checkpoint", through: 0, state: definition.digest }, [send]), under: "notes" }, fact = factRefOf(source.entry, otherLane);
   const arrival = { ...send, from: fact };
   // Deliberately untrue historical size: this makes a forged refusal,
   // not an input that any native scope admitted. The foreign send is an

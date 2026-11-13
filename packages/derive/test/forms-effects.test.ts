@@ -22,7 +22,7 @@ import { runClause } from "../src/handlers.ts";
 import { bodyStructure, namedBody } from "../src/program/structure.ts";
 import { executeBody } from "../src/program/body.ts";
 import { judgeGuardNodes } from "../src/program/guard-value.ts";
-import { later, otherLane, sequenceAt, t } from "./fixtures-entry.ts";
+import { later, otherLane, otherLaneSequence, t } from "./fixtures-entry.ts";
 
 const definition = valid(validateDefinition(cards, PROPOSED_BOUNDS));
 
@@ -159,7 +159,7 @@ const derived = (s: Scope, kind: string, forms: readonly EffectForm[], bound: Re
   const entry = { ...later(s.last), genesis: otherLane.genesis, input: { ...s.last.input, signed: s.intent(rita, "test-input", { to: otherLane, ...fields(more.given ?? {}) }) }, effects: [], sends: [] };
   const fact = factRefOf(entry, otherLane);
   const j: Judging = { ...judging(s, kind, bound, more), definition: checked, kind: "probe", fieldTypes: probe.fields,
-    fields: { ...more.given, "test-proof": fact }, facts: new Map([[fact.hash, verifiedCopy({ fact, entry, sequence: sequenceAt(otherLane), under: "test-effects-source" })]]) };
+    fields: { ...more.given, "test-proof": fact }, facts: new Map([[fact.hash, verifiedCopy({ fact, entry, sequence: otherLaneSequence, under: "test-effects-source" })]]) };
   return evaluateEffects(j, bodyStructure(checked, probe, "probe"), more.opens ?? null);
 };
 
