@@ -236,7 +236,7 @@ const namedOwners = {
     "packages/scope/src/core.ts:heldBy": "a66b415809db685c99cc8961ba592bd8bdcb8bda8f2f4ea1e73fe71c4b052fd1",
     "packages/scope/src/core.ts:told": "bc25d088d5c51694f6e3a813f11f2875144c7a3bdfaa8d124063dc1f65e2fe67",
     "packages/scope/src/core.ts:Observes": "9a0e37bc23db915ebdfd3ec4eef21172918f50fc3e19de840d2b03746efc3710",
-    "packages/scope/src/core.ts:Scope": "4822b619951cd9a3e1cd6af94333cb4531f349ac1268b48ff2d30bc77eac811e" // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
+    "packages/scope/src/core.ts:Scope": "96c3b819105aaaf8eaed8d33839b57a1120dcd8503f37c7f4d01022ca422ba79" // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
   }
 };
 
