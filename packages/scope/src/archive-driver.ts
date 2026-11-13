@@ -1,6 +1,6 @@
 /** One bounded asynchronous archive pass. No entry, operation or public RPC.
  * Configuration and reviewed policy belong to the trusted object owner. */
-import { canonicalize, digestBytes, isDigest, same, utf8 } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize, digestBytes, isDigest, same, utf8 } from "@generalbusiness/dap-bytes";
 import type { Bounds, Head, SequenceRef, Seed, Timestamp } from "@generalbusiness/dap-contract";
 import { isSequenceRef, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { captureJournalParentFrontier, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
@@ -89,6 +89,16 @@ export class ArchiveDriver {
   #running: Promise<ArchivePass> | null = null;
   #disabled = false;
   #fallback: Timestamp | null = null;
+  /** A fixture pass has no target to read its sequences. It classifies its
+   * own sequence from its own genesis bytes, the one root that needs no
+   * outside read. Copied sources come from the fixture pins. */
+  #ownReplayContext(at: SequenceRef, budget: ArchiveBudget): ArchiveReplayContext | undefined {
+    const max = this.#options.bounds.entryBytes;
+    const rows = budget.native(this.#options.sql, () => ({ metadata: 128, inputWork: max })).exec("SELECT bytes FROM entry WHERE seq = 0 AND typeof(bytes) = 'text' AND octet_length(bytes) <= ? LIMIT 1", max).toArray();
+    const bytes = rows[0]?.["bytes"];
+    const own = rows.length === 1 && typeof bytes === "string" ? admitSequenceGenesis(bytes, at, max) : null;
+    return own ? Object.freeze({ checked: Object.freeze([own]) }) : undefined;
+  }
   constructor(options: FixtureArchiveDriverOptions | RoomArchiveDriverOptions) {
     if (!("production" in options) && (options.policies.fixture !== "archive-policies" || options.target.fixture !== "archive-target" || options.provider.fixture !== "archive-provider")) throw new Error("archive fixture ports required");
     if ("production" in options && options.production !== "room-binding") throw new Error("archive room binding required");
@@ -324,6 +334,7 @@ export class ArchiveDriver {
         }
       }) : null;
       const sources = preparedSources?.pins ?? this.#options.fixtureSources;
+      const replayContext = preparedSources?.replayContext ?? (!("production" in this.#options) ? this.#ownReplayContext(at, budget) : undefined);
       let archive: JournalArchive | JournalPassArchive;
       let mark: ArchiveMark;
       let selectedParentObjects: readonly string[] | undefined;
@@ -333,7 +344,7 @@ export class ArchiveDriver {
         const rebuild = row.pending.layout === 2 ? rebuildArchivePass : rebuildArchive;
         // Stored refs describe the exact pending closure. Only this pass's
         // already-read target/source context can classify those roots.
-        const rebuilt = await rebuild(this.#options.sql, row, previous.parent, budget, sources, preparedSources?.replayContext);
+        const rebuilt = await rebuild(this.#options.sql, row, previous.parent, budget, sources, replayContext);
         if (!rebuilt.ok) { sourceFailure = rebuilt.sourceFailure ?? null; rows.stop(rebuilt.reason, "where" in rebuilt ? rebuilt.where ?? null : null, budget); return done({ state: "stopped", next: null, reason: rebuilt.reason }); }
         archive = rebuilt.archive;
         mark = row.pending;
@@ -347,7 +358,7 @@ export class ArchiveDriver {
         const common = { bounds: this.#options.bounds, policies: this.#options.policies.registry, parent: previous.parent,
           markedAt: this.#options.clock(), ...(sources ? { fixtureSources: sources } : {}),
           ...(preparedSources?.replayScopes ? { replayScopes: preparedSources.replayScopes } : {}),
-          ...(preparedSources?.replayContext ? { replayContext: preparedSources.replayContext } : {}) };
+          ...(replayContext ? { replayContext } : {}) };
         let planned: Awaited<ReturnType<typeof planPublishedArchiveConversion>>;
         if (row.confirmed && row.confirmed.layout !== 2) {
           captureStrategy = 4; captureThrough = through.seq; captureThroughHash = through.hash;
