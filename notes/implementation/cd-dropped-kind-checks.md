@@ -373,3 +373,44 @@ reference. The case now gives the installed scope a reference whose `genesis`
 is `null`. The summary shape refuses it, so the listing reports
 `malformed-summary`. A wrong genesis that is still a digest cannot be told
 from the right one in the listing, and the listing gets no new rule for it.
+
+## Birth uses (ruling a140a1c6, Q-B1)
+
+An entry that uses a later entry of a foreign sequence also records a use of
+that sequence's entry 0. `withBirthUses` in `packages/derive/src/fields.ts`
+appends one birth use for each such sequence, after the uses already listed,
+in the order in which the sequences first appear. The act, genesis, delivery,
+confirmation, diagnosis and outcome judgments call it. An outcome that copies
+its origin's uses copies the births with them.
+
+The birth comes from the read the judgment already made. `admitSequenceGenesis`
+now keeps the canonical genesis bytes in the `CheckedSequence` it returns, and
+`birthUse` in `packages/bytes/src/sequence.ts` makes the use from them. A copy
+with no checked sequence (an anchored replay copy, or a local retained body)
+gives no birth, and its later use stays a local statement. `used()` in
+`packages/scope/src/core.ts` retains the birth bytes under the producer name of
+the fact that brought them.
+
+The store keeps one copy for each content digest: `retained_input` has the
+primary key `(kind, digest)`, and the insert is `ON CONFLICT DO NOTHING`
+(`packages/scope/src/sqlite.ts`).
+
+### Caps with the added use
+
+One birth use is at most 362 bytes in an entry: 361 bytes of canonical JSON
+for kind `destination`, and one comma. The count of birth uses in one entry is
+at most the count of distinct foreign sequences that the entry uses at a later
+entry, and so at most the count of its other uses.
+
+| Cap | Charge site | Effect of the birth uses |
+|---|---|---|
+| `usesPerEntry` (128) | `derive/src/judge.ts:266` (act), `derive/src/handlers.ts:398`, `derive/src/settle.ts:177` | These count the uses before the births. With births, one entry can record up to 2 × 128 = 256 uses. HELD for the planner: how a birth counts. |
+| `usesPerEntry` (128) | `scope/src/archive-foreign.ts:110` and `:140` | An archive reader stops with `limit` at an entry with more than 128 uses. An entry with births past 128 uses cannot be archived. HELD with the row above. |
+| `entryBytes` (262144) | sealing in `scope/src/turn.ts` | Up to 128 × 362 = 46336 more bytes in one entry. An entry within 46336 bytes of the cap before the births can pass the cap. |
+| retained bytes of a scope | `derive/src/field-retention.ts:45`, `derive/src/validate/holds.ts:418` | The forecast is `min(facts, usesPerEntry) × entryBytes`. Each birth retains at most one genesis, at most `entryBytes`, once for each content digest in the scope. The forecast does not count births: it is low by at most `facts × entryBytes` for one entry. |
+| destination outcome entry bytes | `platform/src/destination-budget-v17.ts:252` | The forecast counts 5 uses. With births, up to 10 uses: 5 × 362 = 1810 bytes more than the forecast. |
+| evidence forecast uses | `platform/src/evidence-forecast-v17.ts:152` | The forecast counts `max(5, uses)`. Births can add as many uses again. |
+| observation subjects | `derive/src/validate/observes.ts:131` | A birth use is no observation. No change. |
+
+No cap is changed in this head. The numbers above come from reading the
+sources and from the size of one use; no run measured them.
