@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"notes/implementation/cd-dropped-kind-checks.md at exact 520841797adafbd9357f5e36352219cda4d165fa on builder/idr1-identifier-docs-20261113, under promise git:sha1…85b4c4b on request git:sha1…5314328","body":{"commit":"520841797adafbd9357f5e36352219cda4d165fa","path":"notes/implementation/cd-dropped-kind-checks.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4d9ea3f7b137e19f438baebe642c7bedf83eff11","text":"Republished at 520841797adafbd9357f5e36352219cda4d165fa; the successor stands at docs."}
