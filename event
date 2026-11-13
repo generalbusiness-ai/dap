@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:35224c2e3e7edd0f6927f5a89098d3e0dbd6f8da","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/fixtures-clock-cutover.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:35d61efc6698d1c9aef459f36174ce48b1009250","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/storage.ts."}
