@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c3e467b37266dcc21af9d8e1a838cca6cf56cb50","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/certified-rules-hardening-certificate.scope.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c46b79ced756ff5c12c3c66f3cb2907de5008d3f","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/partition-provenance.ts."}
