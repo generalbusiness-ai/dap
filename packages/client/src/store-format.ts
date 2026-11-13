@@ -34,11 +34,13 @@ function readWord(path: string, dir: string): boolean {
   if (uid === undefined) throw new StoreFormatError("unavailable");
   // A whole word has one link, or two while its initializer links it into place from its temporary name.
   // The initializer can remove that name during the scan, so a second look at the same file settles it.
-  if (info.nlink === 2 && !publishedLink(dir, info)) {
+  // One scan answers: a later scan can miss a name that the first one saw.
+  let published = false;
+  if (info.nlink === 2 && !(published = publishedLink(dir, info))) {
     const again = lstatSync(path);
     if (again.dev === info.dev && again.ino === info.ino && again.nlink === 1) info = again;
   }
-  const links = info.nlink === 1 || info.nlink === 2 && publishedLink(dir, info) ? info.nlink : 0;
+  const links = info.nlink === 1 || info.nlink === 2 && published ? info.nlink : 0;
   if (!info.isFile() || info.isSymbolicLink() || links === 0 || info.uid !== uid || (info.mode & 0o077) !== 0) retired();
   const fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
   try {
@@ -66,9 +68,10 @@ export function requireStoreFormat(dir: string): void {
     if (!info.isDirectory() || info.isSymbolicLink()) throw new StoreFormatError("unavailable");
     const path = join(dir, STORE_FORMAT_FILE);
     if (readWord(path, dir)) return;
-    // Only absence needs an emptiness check. Another initializer's temporary word is no record.
+    // Only absence needs an emptiness check. Another initializer's temporary word is no record, and neither is
+    // the word it links into place after the first look: the link below then meets EEXIST and reads that word.
     const entries = opendirSync(dir);
-    try { for (let entry = entries.readSync(); entry !== null; entry = entries.readSync()) if (!publishing(entry.name)) retired(); }
+    try { for (let entry = entries.readSync(); entry !== null; entry = entries.readSync()) if (!publishing(entry.name) && entry.name !== STORE_FORMAT_FILE) retired(); }
     finally { entries.closeSync(); }
     // Write the whole word under a temporary name, then link it into place, so that no reader sees a partial word.
     const temporary = join(dir, `${PUBLISHING}${randomUUID()}.tmp`);
