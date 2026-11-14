@@ -1,0 +1,251 @@
+{
+  "qualification": "Ruled post-gate checks at the single-comment checkpoint 54a1bcb5. Positive compiler, 34 plain files/339 tests and native turn 27 tests passed; fold fault distinguished. The intended type-control TS2322 exited 1, while the outer helper expected 2 and failed. Raw helper failure is retained; a separate offline audit verifies the diagnostic and exact source restoration without rerunning a test or compiler. The later audit power endpoint is not a reconstructed original endpoint.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-ie1-fg1-postgate",
+  "checkpoint": {
+    "commit": "54a1bcb5a115b018f3d269e72de6eb8354ea4833",
+    "tree": "0d07cc03822b2a566375d0d84aa9cffd6f627500"
+  },
+  "fileCount": 48,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 4394,
+      "sha256": "8eae951f3f2f5edd6d52e5f0b0edf2378457163a5ed66ad5dd3ed31b04690a12"
+    },
+    {
+      "path": "capture-helper.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "capture-helper.py",
+      "bytes": 5784,
+      "sha256": "960406cee9cc93859f0644e52e30614f367e1f1afca2c8f564279c310572b722"
+    },
+    {
+      "path": "changed-test-context.command.json",
+      "bytes": 278,
+      "sha256": "a8b44d4ab5438e1442210aaa320b46d54ef79627ee3d8a3e9bd8fd899a871029"
+    },
+    {
+      "path": "changed-test-context.result.json",
+      "bytes": 117,
+      "sha256": "497b6c7df3530cf75083cc0408a301b3ad23caff8ab51a326150fd2cb1a6f3a7"
+    },
+    {
+      "path": "changed-test-context.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "changed-test-context.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compatibility.command.json",
+      "bytes": 195,
+      "sha256": "f6543c15557e92f447e41ecd03dc95456e72207ec1a95551c82ca9b0a9a43e86"
+    },
+    {
+      "path": "compatibility.result.json",
+      "bytes": 111,
+      "sha256": "0577b9cbf4740010831c6223b4c031ad1de9d0a9f5b7200edf4d87322aca9323"
+    },
+    {
+      "path": "compatibility.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compatibility.stdout",
+      "bytes": 364,
+      "sha256": "fd2889ee920f6d28653e5623e83270036bfbc52376b41f6ca766b9521b42c9fc"
+    },
+    {
+      "path": "fold-control.command.json",
+      "bytes": 659,
+      "sha256": "4987d009794187614a5380d9a25589e2098ff10b437a5929a36ed95f8f44d035"
+    },
+    {
+      "path": "fold-control.result.json",
+      "bytes": 134,
+      "sha256": "e036b6f104fbd872c8a1ad6092405c373ea25634f310e64bb584ab02b8d7d84a"
+    },
+    {
+      "path": "fold-control.stderr",
+      "bytes": 1911,
+      "sha256": "038c7d628064c2c1f5da4533dcb1de35c8bb9abd88b2af9516ca537ec532254a"
+    },
+    {
+      "path": "fold-control.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "head.txt",
+      "bytes": 82,
+      "sha256": "cb3d800a5c2289f1d0abe3cfdaad52ceebc08f5b4e627b5f41089cdae2d3d252"
+    },
+    {
+      "path": "item-effect-compile-control.command.json",
+      "bytes": 278,
+      "sha256": "511cc21ed4b5dd08973643d39321862ab20396ad24c7b94a75ae586df6b07537"
+    },
+    {
+      "path": "item-effect-compile-control.result.json",
+      "bytes": 124,
+      "sha256": "2f0ec708effe4c6d9299a680d3240fb9ccae5cc3c8a0bec7a2f9dd1703ad27f9"
+    },
+    {
+      "path": "item-effect-compile-control.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "item-effect-compile-control.stdout",
+      "bytes": 862,
+      "sha256": "bd3dadfc1923c763b918c60ac47cf356ec09cf85d2794cea34fe75903d052e3e"
+    },
+    {
+      "path": "item-effect-control.before.ts",
+      "bytes": 5490,
+      "sha256": "c8ed33b876272170dbe3e5a2509386db6fef203eb95b7b9598b4c78b7f116f0d"
+    },
+    {
+      "path": "item-effect-control.mutant.ts",
+      "bytes": 5477,
+      "sha256": "02280caba5d1d99103986e7b6bce3b6b3e8763d7243285e998afc19dc9688421"
+    },
+    {
+      "path": "native-turn.command.json",
+      "bytes": 323,
+      "sha256": "4a98acd2cf45eb13ec7a017b40ae6385e0e710462572ee5f735aad59ce56a9fa"
+    },
+    {
+      "path": "native-turn.result.json",
+      "bytes": 116,
+      "sha256": "a07e1d82bda14570c585e5bb9bc5067330d73a432ca97c1af8ee7d15de43db8e"
+    },
+    {
+      "path": "native-turn.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "native-turn.stdout",
+      "bytes": 31003,
+      "sha256": "4affd1c598c0efd8be95015fc0fb2a889cbb80b9f5a8c39aab73f808cc3d529d"
+    },
+    {
+      "path": "native-turn.timing.jsonl",
+      "bytes": 16417,
+      "sha256": "99b0c893a74ef45fc69b605df8fb47353fae189467889976a444251b734b8d07"
+    },
+    {
+      "path": "plain-callers.command.json",
+      "bytes": 2009,
+      "sha256": "6aab5e4fa8ebb35479973bb19f2a94f10ceb08ddfe896b7357800b465376ef75"
+    },
+    {
+      "path": "plain-callers.result.json",
+      "bytes": 116,
+      "sha256": "688b951c906de711d984a44596683b8b0d1255786e02bf84ddddb41b27055611"
+    },
+    {
+      "path": "plain-callers.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "plain-callers.stdout",
+      "bytes": 80132,
+      "sha256": "e4909370a9d7dfbd1e8773d944000b7ba670a59b7c27be967fce79a0fe2c40bb"
+    },
+    {
+      "path": "plain-callers.timing.jsonl",
+      "bytes": 352242,
+      "sha256": "ca6f6ffbcafb85c0c5eb411d0921f9cb1e3a64444892c180dba32b0950f003c2"
+    },
+    {
+      "path": "pmset-batt-after-changed-test-context.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-batt-after-compatibility.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-batt-after-fold-control.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-batt-after-native-turn.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-batt-after-plain-callers.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-batt-audit-end.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-batt-start.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-custom-audit-end.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "pmset-mode-after-changed-test-context.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "pmset-mode-after-compatibility.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "pmset-mode-after-fold-control.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "pmset-mode-after-native-turn.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "pmset-mode-after-plain-callers.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "pmset-mode-start.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "postgate-audit.json",
+      "bytes": 1470,
+      "sha256": "8200be60c4663c47430b49618765352172c146ab2a774477c888ab42acb87c36"
+    },
+    {
+      "path": "power-during.jsonl",
+      "bytes": 3676,
+      "sha256": "4d5607cf39c8c09b6cbf5d9398c208b3d0c94bf0094c5e9ef9efc49f497f46b9"
+    }
+  ]
+}
