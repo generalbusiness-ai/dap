@@ -1,0 +1,18 @@
+{
+  "qualification": "SOURCE ONLY; no preflight, selector or executable has run. Root must review this plan and issue a fresh gate grant after sealed focused PASS/END.",
+  "root": "/Users/hughpyle/play/artroom/.builder-worktrees/cut-r-r2-preparation-20261114",
+  "head": "94a29a264254a6fd9367b44cd24e82d6afebaf35",
+  "tree": "d6fc30ee5a48ceb0e99f37f0f07df5351769ee58",
+  "main": "918ce5d73c215154d88005b74c2a97b58d61880a",
+  "frozen_inputs_sha256": "a7ba2f7b74f3f68da8b957ec8abaadce95b68605e9aba840c9a01722e4571c8d",
+  "lock_sha256": "f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54",
+  "focused_root": "/Users/hughpyle/play/artroom-evidence/2026-11-14-r2-grow-focused-attempt1",
+  "authority_path": "/private/tmp/artroom-r2-grow-gate-authority-20261114.json",
+  "durable_root": "/Users/hughpyle/play/artroom-evidence/2026-11-14-r2-grow-gate-attempt1",
+  "deadline_seconds": 14400,
+  "power_policy": "2adebce3: every actual pmset -g sample reads powermode 0; source is AC or Battery with charge at least 50%; source transitions are admitted. START and END state source, charge and mode.",
+  "sleep_window": "ARTROOM_INTERVAL_START_UTC pins actual gate START; bounded pmset -g log captures cover START through capture and remain for actual END reconciliation. Battery gate timeout restores an AC gate hold until planner rules; never alter deadlines.",
+  "commands": [{"name": "full-gate", "argv": ["npm", "run", "gate"], "deadline_seconds": 14400}],
+  "scale": "Record the maintained gate's actual scale-selection.json; do not execute its selector in advance or force include/skip.",
+  "source_correspondence": "Frozen input data retain the old vectors and update only head/tree and the two Git-proven changed source rows for 94a29a26. Tools, dependencies, bindings and aliases stay unchanged. Their focused commands/body are metadata only and are never launched by this supervisor. The actual refrozen formal focused plan hash is late-bound by root authority; its complete actual source/tool/binding vectors must equal these frozen rows."
+}

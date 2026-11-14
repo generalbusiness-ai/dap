@@ -1,0 +1,13 @@
+{
+  "qualification": "Schema for root's future real authority file, not an authority file or a grant. Runtime checks root's pinned decision; it does not decide workroom authorization.",
+  "path": "/private/tmp/artroom-r2-grow-gate-authority-20261114.json",
+  "required": ["focused_end", "root_gate_grant", "fresh_planner_poll", "head", "tree", "main", "development_pass_confirmed", "focused_plan_sha256", "focused_manifest_sha256", "focused_sums_sha256", "focused_interval_result_sha256"],
+  "canonical_event_pattern": "^git:sha1:[0-9a-f]{40}#git:sha1:[0-9a-f]{40}$",
+  "sha256_pattern": "^[0-9a-f]{64}$",
+  "head": "94a29a264254a6fd9367b44cd24e82d6afebaf35",
+  "tree": "d6fc30ee5a48ceb0e99f37f0f07df5351769ee58",
+  "main": "918ce5d73c215154d88005b74c2a97b58d61880a",
+  "development_pass_confirmed": true,
+  "actual_start_input": "ARTROOM_INTERVAL_START_UTC is actual gate START time in ISO-8601 UTC, supplied only at init and pinned there.",
+  "end_review": "Root checks actual focused END plus its post-END sleep-log supplement before granting gate START. Gate phase sleep capture likewise needs final actual-END reconciliation."
+}
