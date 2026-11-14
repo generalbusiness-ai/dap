@@ -69,9 +69,34 @@ scopes have no rule guards; declared scopes retain whole subjects with
 uncapped attribution; and the pending-work bound limits settlement count
 but gives no constant on settlement bytes or retained-byte overshoot.
 
-CDF-1 still owes the entire native raw-proof residency file,
-`apps/room/lanes/test/directory-partition-lanes.scope.test.ts`, on AC,
-its gate in the first slot after CF-1, and the Security conclusion. The wider cap holds the cutover deployment. RB-1 (request 0ce66e16)
+CDF-1 merged landed main `4cef11d2` in `82bb42da` without conflicts.
+The wider accounting, its tests and the faults note remain intact. CF-2
+item 1 rides as separate commit `7872d111`: the Membership 14 header and
+CF-1 note now say that revoking an own agent's key needs no
+`membership.own-agent` action, while removing that agent does. Executable
+`base-membership.ts` bytes after the header match main.
+
+The [AC residency manifest](evidence/2026-11-13-cdf1-residency-ac.manifest.json)
+records checkpoint `7872d111b9`, its tree and the complete four-case file.
+It passed once with no skipped case or runtime error. Actual escalated
+power readings stayed on AC with powermode 0 throughout 37 samples,
+taken every two seconds from 2026-11-14T04:39:27.092527+00:00 to 2026-11-14T04:40:41.983723+00:00. This
+is a functional file result, not a completion-time guarantee or a gate.
+
+CDF-1's stale dependency directory remains at
+`/private/tmp/artroom-cdf1-old-deps-tei_ms9d/node_modules`. An APFS clone
+of CF-1's verified real dependency directory replaces it. Both lock files
+and both verified stamps read
+`f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54`.
+The clone's relative workspace links resolve within CDF-1. No package
+installation, stamp fabrication or package-file change occurred. The
+manifest includes that correspondence record.
+
+| Check | Command | Exit | Output sha256 |
+|---|---|---|---|
+| Entire native residency file, 4 passed | `ARTROOM_TEST_PHASE=native node_modules/.bin/vitest run --config vitest.native.config.ts --project scope-stories apps/room/lanes/test/directory-partition-lanes.scope.test.ts --reporter=json --outputFile /Users/hughpyle/play/artroom-evidence/2026-11-13-cdf1-residency-ac/native-results.json` | 0 | `f8c8008ed77953c327b005be427977dc694a6e475f2a3041ab3f268e9f03007d` |
+
+CDF-1 still owes its gate and the Security conclusion. The wider cap holds the cutover deployment. RB-1 (request 0ce66e16)
 accepts audit 7f6f6834's finding: no constant bounds one rule row or one
 item because whole subjects include uncapped attribution. There is no
 finite overshoot product to report. RB-1 owns the design for those
