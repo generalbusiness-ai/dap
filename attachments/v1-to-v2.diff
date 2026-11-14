@@ -1,0 +1,34 @@
+--- /tmp/artroom-nf5-reproduction-supervisor-20261114.py	2026-11-14 07:43:53
++++ /tmp/artroom-nf5-reproduction-supervisor-20261114-v2.py	2026-11-14 07:46:21
+@@ -122,8 +122,30 @@
+     cleared = [key for key in env if key.startswith('ARTROOM_TEST_') or key in ['ARTROOM_SCALE_MODE','VITEST_MAX_WORKERS','NODE_OPTIONS','NODE_TEST_CONTEXT']]
+     for key in cleared: env.pop(key,None)
+     env.update({'TMPDIR':str(temporary),'NODE_COMPILE_CACHE':str(temporary/'node-compile-cache'),'npm_config_offline':'true','npm_config_yes':'false'})
+-    save('command.json',{'time':utc(),'cwd':str(ROOT),'argv':argv,'clearedEnvironmentKeys':cleared,'environmentOverrides':{key:env[key] for key in ['TMPDIR','NODE_COMPILE_CACHE','npm_config_offline','npm_config_yes']},'qualification':'One normal R1 whole owner; no compiler, collection or separate pack'})
++    save('command.json',{'time':utc(),'cwd':str(ROOT),'argv':argv,'clearedEnvironmentKeys':cleared,'environmentOverrides':{key:env[key] for key in ['TMPDIR','NODE_COMPILE_CACHE','npm_config_offline','npm_config_yes']},'qualification':'One required compatibility child, then one normal R1 whole owner; no compiler, collection or separate pack'})
+     (OUT/'processes-before.txt').write_text(command(['ps','-axo','pid=,ppid=,args=']))
++    compat_argv = [str(NODE),str(ROOT/'scripts/cloudflare-pool-compat.mjs')]
++    save('compat-command.json',{'time':utc(),'cwd':str(ROOT),'argv':compat_argv})
++    power('before-compat'); assert not power_bad.is_set()
++    compat_started = time.monotonic(); compat_usage = resource.getrusage(resource.RUSAGE_CHILDREN)
++    with (OUT/'compat-stdout.log').open('wb') as stdout,(OUT/'compat-stderr.log').open('wb') as stderr:
++        compat = subprocess.Popen(compat_argv,cwd=ROOT,env=env,stdout=stdout,stderr=stderr,start_new_session=True)
++        save('compat-process.json',{'time':utc(),'pid':compat.pid,'supervisorPid':os.getpid()})
++        print(json.dumps({'phase':'compat','pid':compat.pid,'supervisorPid':os.getpid(),'evidence':str(OUT)}),flush=True)
++        while compat.poll() is None:
++            if power_bad.is_set() or time.monotonic()-compat_started > 60:
++                os.killpg(compat.pid,signal.SIGTERM)
++                try: compat.wait(timeout=30)
++                except subprocess.TimeoutExpired: os.killpg(compat.pid,signal.SIGKILL); compat.wait()
++                raise RuntimeError('Power drift or bounded compatibility timeout; Vitest not started')
++            time.sleep(0.1)
++    compat_used = resource.getrusage(resource.RUSAGE_CHILDREN)
++    save('compat-result.json',{'time':utc(),'exitCode':compat.returncode,'signal':-compat.returncode if compat.returncode < 0 else None,'wallSeconds':time.monotonic()-compat_started,'userSeconds':compat_used.ru_utime-compat_usage.ru_utime,'systemSeconds':compat_used.ru_stime-compat_usage.ru_stime})
++    power('after-compat'); after_compat = snapshot('after-compat'); save('after-compat-inputs.json',after_compat)
++    fixed = ['head','tree','main','mainTree','tracked','bindings','dependencyViews','immutableInstalledBytes','tools','versions']
++    compat_equal = all(before[key] == after_compat[key] for key in fixed)
++    save('compat-fence-result.json',{'time':utc(),'exitCode':compat.returncode,'immutableFencesEqual':compat_equal,'powerStayedACMode0':not power_bad.is_set(),'vitestNotStarted':True})
++    assert compat.returncode == 0 and compat_equal and not power_bad.is_set(), 'Compatibility failed or changed frozen installed input; Vitest not started'
+     power('before-invocation'); assert not power_bad.is_set()
+     started = time.monotonic(); usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+     with (OUT/'stdout.log').open('wb') as stdout,(OUT/'stderr.log').open('wb') as stderr:
