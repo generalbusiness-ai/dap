@@ -136,6 +136,10 @@ and manifests change documents only.
 | Follow-up compatibility | `node scripts/cloudflare-pool-compat.mjs` | 0 | `2026-11-14-cut-a-fixture-followup/compatibility.result.json`: `a773c7caa0e9695e04cb2dbdc6a9a03f0a63da1739ed6d7beecfb783f6baa9c4` |
 | Whole repaired owner | `ARTROOM_TEST_PHASE=plain node node_modules/vitest/vitest.mjs run --config vitest.plain.config.ts --project repo-in-ai examples/repo-in-ai/test/hosted-loop.test.ts` | 0 | `2026-11-14-cut-a-fixture-followup/owning-file.stdout`: `dbde24e81683c7269a15b8e823421617fc54ae9417d84427cbe8661276e4f983` |
 | Exact unreached native stage | `ARTROOM_TEST_PHASE=native ARTROOM_SCALE_MODE=run node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts` | 0 | `2026-11-14-cut-a-fixture-followup/unreached-native.stdout`: `6801666ab91276dbf0e8d8f8eee17ee8966d711263174ed389bfa8fd54d47314` |
+| Notes | `node scripts/check-notes.mjs origin/main HEAD` | 0 | `2026-11-14-cut-a-doc-checks/notes.stdout`: `35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1` |
+| Links | `node scripts/check-doc-links.mjs` | 0 | `2026-11-14-cut-a-doc-checks/links.stdout`: `0b62886e12f396ee8cf60e4cfe3f4112ecc75879da8508427692a1367191bbc9` |
+| Messages | `node scripts/check-commit-messages.mjs origin/main HEAD` | 0 | `2026-11-14-cut-a-doc-checks/messages.stdout`: `2fe2fa15ac7bb6c4dbbe6ed404cb2d1a56d8c574b1f5ce311350bd0b24086f37` |
+| Whitespace after evidence | `git diff --check origin/main HEAD` | 0 | `2026-11-14-cut-a-doc-checks/whitespace.stdout`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
 
 The manifest also lists the exact command vectors, dependency provenance,
 power samples, process preflight, checkpoint and result ledgers, CLI JSON
@@ -154,6 +158,16 @@ Each directory holds `SHA256SUMS` and is read-only. The manifests list
 every cited output, command, checkpoint and power record. Counts come
 from the same-invocation ledgers; the separate audit compares those
 ledgers and runs no test.
+
+
+Cheap documentation and Git checks ran at
+`9b1a733ed5cd6c2e9dffb842016e7b095ddc8cc2`, tree
+`65300650861328a25497a537f2f1dc4609928bb8`: zero note warnings, 1,246
+links with zero broken, seven messages with zero flagged, and clean
+whitespace. Their ten-file record is
+[the documentation-check manifest](evidence/2026-11-14-cut-a-doc-checks.manifest.json),
+SHA-256 `d45c76ffdedb936471b82c22ae16df2ea70fa7f266682b04ef97367b188f47b0`.
+This final filing changes the note and that manifest only.
 
 ## Open limits
 
