@@ -1,0 +1,26 @@
+{
+  "qualification": "Root records the actual exec tool preflight failure; this is not a saved raw traceback. No Node command, test, formatter, power sampler or control started. The runner created its empty output directory, then input hashing failed on a wrong fixture path. The tool returned exit1 with FileNotFoundError. The conversation retains the actual traceback.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cut-r-r1-format-followup",
+  "checkpoint": {
+    "commit": "2d511a531d1b5f4e6244c930ae1fcf6ae10b08b2",
+    "tree": "592f520901f441f4912e105878dd1a0c94bbf940"
+  },
+  "fileCount": 3,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 162,
+      "sha256": "8a87faaee74f31b4e6eabaf0cf72a7bd06b533f00bd02d3a6d3edb547edbaa2a"
+    },
+    {
+      "path": "failure.json",
+      "bytes": 657,
+      "sha256": "f1db5247c1a1ccffbd0b9993558647a5ced240b5b15307e66f40e1ea86368292"
+    },
+    {
+      "path": "runner-source.py",
+      "bytes": 4681,
+      "sha256": "0baf159b814ead1f988a7ddabe7c03d41e059c94209a2404dde0cc57e0fe80d4"
+    }
+  ]
+}

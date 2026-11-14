@@ -12,6 +12,7 @@ import { lending } from "../../../../examples/lending/definition.ts";
 import { site } from "../../../../examples/grow/site.ts";
 import { room } from "../../../../examples/grow/room.ts";
 import { demoDefinitions } from "../../../../examples/grow/demo-definitions.ts";
+import { EARLIER_GROW_DEFINITIONS } from "../../../../examples/grow/earlier-release.ts";
 import { RULE_PROFILES } from "../../src/rule/index.ts";
 import type { DefinitionCorpusRow } from "./row.ts";
 
@@ -30,8 +31,8 @@ const pinnedFiles = [
   ["apps/room/lanes/definitions/change3.json", MANIFEST_DIGESTS.change], ["apps/room/lanes/definitions/change-demo3.json", MANIFEST_DIGESTS.demo],
 ] as const;
 const retainedGrowPins = [
-  ["Room", "sha256:b89e7f84740dfd8b24f78e8b52aff5aa8d4181750a7b5f385c1ef6f993846787"],
-  ["Site", "sha256:d2bc830e74caaabab32dbad17adae6812050fb4d36b67e97145d39c2a4cfe2ea"],
+  ["Room", EARLIER_GROW_DEFINITIONS[1]],
+  ["Site", EARLIER_GROW_DEFINITIONS[0]],
 ] as const;
 export const shippedDefinitions: readonly DefinitionCorpusRow[] = [
   // These owning callers deliberately omit profiles/options. Keep their
@@ -61,9 +62,9 @@ export const shippedDefinitions: readonly DefinitionCorpusRow[] = [
     origins: [`examples/grow/demo-definitions.ts#demoDefinitions().${part}`, "examples/grow/demo-definitions.test.ts#actual definition validator witness"],
     declaration: () => demoDefinitions()[part], bounds: PROPOSED_BOUNDS, profiles: RULE_PROFILES })),
   ...retainedGrowPins.map(([name, pin], index) => ({ name: `retained Grow demo packet/${name}`,
-    origins: [`examples/grow/demo/application.dap.json#semantic.definitions[${index}].bytes`],
+    origins: [`examples/grow/fixtures/earlier-application.dap.json#semantic.definitions[${index}].bytes`],
     declaration: (): unknown => {
-      const packet = JSON.parse(readFileSync(new URL("../../../../examples/grow/demo/application.dap.json", import.meta.url), "utf8"));
+      const packet = JSON.parse(readFileSync(new URL("../../../../examples/grow/fixtures/earlier-application.dap.json", import.meta.url), "utf8"));
       return JSON.parse(packet.semantic.definitions[index].bytes);
     }, bounds: PROPOSED_BOUNDS, profiles: RULE_PROFILES, expectedDigest: pin })),
 ];

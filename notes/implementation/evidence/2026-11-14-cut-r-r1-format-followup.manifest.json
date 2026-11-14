@@ -1,0 +1,136 @@
+{
+  "qualification": "R1 formatter follow-up only. The maintained control runs the one Node owner before and after removing the fixture exemption; the formatter checks tracked JSON once. No compiler, Native test, scale owner, full gate, build, install, main merge or deployment.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cut-r-r1-format-followup-attempt2",
+  "checkpoint": {
+    "commit": "2d511a531d1b5f4e6244c930ae1fcf6ae10b08b2",
+    "tree": "592f520901f441f4912e105878dd1a0c94bbf940"
+  },
+  "fileCount": 25,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 2160,
+      "sha256": "a5112a8da2b4a6f4fa066d83e53ef6a41b6529ed946cdd70cca9eeaeb0b09bd8"
+    },
+    {
+      "path": "checkpoint.json",
+      "bytes": 849,
+      "sha256": "b0f3bfd96803e5589785615a0c6a5de0545eb65e91bd851db531eff557e6c6a8"
+    },
+    {
+      "path": "control-after-battery.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "control-after-battery.stdout",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "control-after-custom.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "control-after-custom.stdout",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "control-before-battery.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "control-before-battery.stdout",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "control-before-custom.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "control-before-custom.stdout",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "control.stderr",
+      "bytes": 576,
+      "sha256": "09c7a101e6ca2123f7d5e01418aac352d82758a71ac20e147f4d7b2943071a45"
+    },
+    {
+      "path": "control.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "format-after-battery.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "format-after-battery.stdout",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "format-after-custom.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "format-after-custom.stdout",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "format-before-battery.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "format-before-battery.stdout",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "format-before-custom.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "format-before-custom.stdout",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "format.stderr",
+      "bytes": 29,
+      "sha256": "5e0a79e6f8ab0321efa3ef0bf0ef9af8569b48ec5504c88b4073c38186fad8c9"
+    },
+    {
+      "path": "format.stdout",
+      "bytes": 66,
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    },
+    {
+      "path": "node-version.txt",
+      "bytes": 9,
+      "sha256": "417336d0f30f0481a3e337b10abf4da8263d1a181c639c757a2a68401935bdb6"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1998,
+      "sha256": "f7f0378f34435d092f26955c480e8d017daff6df4dd56b1cdb368dde3b388c2d"
+    },
+    {
+      "path": "runner-source.py",
+      "bytes": 4689,
+      "sha256": "98f808a72355f47e8c272694c7b2dc8a8172d15afcb6e35e969e717f38b9fb03"
+    }
+  ]
+}
