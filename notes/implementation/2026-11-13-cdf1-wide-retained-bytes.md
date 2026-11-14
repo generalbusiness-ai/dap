@@ -64,8 +64,11 @@ is `baseline-native.json` in that manifest.
 | Offline reviewed result selection | Read original `native-results.json`; retain `passed` and `failed` statuses | 0 | `024fa0d05efaf1deb7f506a20170435452af2c157b9f58649f8652447300df16` |
 
 CDF-1 still owes the raw-proof residency check on AC and its gate after
-CF-1. The wider cap holds the cutover deployment. Audit act 7f6f6834 asks
-the planner how to state a finite rule-row overshoot: whole subjects
-include uncapped attribution, so a finite product needs another bound.
-Ruling 9753818f leaves a new per-row ceiling to separate kernel work.
-FL-1 owns the journal count limit and does not hold the cutover deployment.
+CF-1. The wider cap holds the cutover deployment. RB-1 (request 0ce66e16)
+accepts audit 7f6f6834's finding: no constant bounds one rule row or one
+item because whole subjects include uncapped attribution. There is no
+finite overshoot product to report. RB-1 owns the design for those
+ceilings and matching replay checks, after the client chain and H1. It
+requires a planner ruling before code and kernel review, and does not
+hold the cutover deployment. FL-1 owns the journal count limit and does
+not hold the cutover deployment.

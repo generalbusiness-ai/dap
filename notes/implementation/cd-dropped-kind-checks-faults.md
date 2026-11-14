@@ -193,13 +193,17 @@ floor that frees no retained bytes.
 
 ### The settlement exception needs a separate rule-row bound
 
-Ruling 9753818f leaves a new per-rule-row ceiling to kernel work. The
-three requested overshoot numbers need a defined finite input bound.
-`ruleInput` includes whole subjects (`derive/src/guards.ts:133-138`),
-including their attribution. `withMembers` in `derive/src/attribution.ts`
-sets no count limit on that history. Floors preserve the item while they
-can reclaim journal capacity. The default `entryBytes` and `usesPerEntry`
-therefore do not alone give a constant largest rule row. Audit act
-7f6f6834 asks the planner to resolve that scope before stating a largest
-row, a largest pending-settlement count and their product. No finite
-overshoot claim follows from the byte counter alone.
+RB-1 (request 0ce66e16) accepts audit 7f6f6834's finding: no constant
+bounds one rule row or one item. `ruleInput` includes whole subjects
+(`derive/src/guards.ts:133-138`), including their attribution.
+`withMembers` (`derive/src/attribution.ts:16-19`) appends each new author
+or principal without a count check. `partyMembers` bounds the present
+party list, not that history. Floors preserve the item while they can
+reclaim journal capacity. The default `entryBytes` and `usesPerEntry`
+therefore give no constant largest rule row or finite overshoot product.
+
+RB-1 owns the design for per-item and per-rule-row ceilings and matching
+replay checks. It starts after the client chain and H1, requires a planner
+ruling before code and a kernel review, and does not hold the cutover
+deployment. CDF-1's total stops each new act at `scopeBytes`. It claims no
+finite overshoot bound for exempt settlements.
