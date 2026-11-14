@@ -159,9 +159,11 @@ const NO_FACT: Digest = `sha256:${"0".repeat(64)}`;
  *
  * The scope decides authority, and the prediction does not:
  *
- * - A prediction with this grant never answers `unauthorized` for an act
- *   whose `grant` states an action. In platform data, a mark at `grant`
- *   that states no action runs its rule, and that rule can still refuse.
+ * - When the actor's key matches the signed intent and the scope matches
+ *   the judged scope's full reference, including genesis, the prediction never
+ *   answers `unauthorized` for an act whose `grant` states an action. In platform
+ *   data, a mark at `grant` that states no action runs its rule, and that rule
+ *   can still refuse.
  * - The grant holds no freshness proof, so it serves no row of `observes`.
  *   Under a definition that states such rows, a prediction can answer
  *   `authority-unavailable` where the scope writes.
