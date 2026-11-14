@@ -31,6 +31,15 @@ over one real file-store home. Their loopback service remains a stand-in
 that supplies scripted answers and proves no native scope judgment.
 The file now belongs to the gate's Node stage.
 
+Source review `55f2aa31` found that teardown signaled the children without
+awaiting their exit. Each child now creates its close promise at startup,
+so teardown also handles a child that has already closed. One cleanup
+hook awaits both closes before closing HTTP and removing the shared home.
+The existing pipe and early-exit diagnostics, three cases and expected
+answers stay unchanged. This source-only correction adds no timeout or
+sleep and claims no observed leak or hang. The whole Node owner and gate
+remain **UNRUN** for this follow-up.
+
 No production MCP transport, session, custody, or lifecycle source changes.
 
 ## Retire the unused demo creation path
