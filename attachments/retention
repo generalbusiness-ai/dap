@@ -1,0 +1,1 @@
+start.json; results.json; each command's .argv.json, .stdout.log, .stderr.log and .result.json retain actual commands, outputs, UTC start/end and monotonic walls. Compiler stdout/stderr are empty.
