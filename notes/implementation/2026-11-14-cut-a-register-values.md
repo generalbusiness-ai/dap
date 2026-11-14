@@ -38,10 +38,10 @@ bootstrap needs all three arguments. Existing-offer rotation keeps its
 metadata and requires the explicit deployment again. The Head A live
 values belong to the planner's later configuration head, not this change.
 
-## Focused evidence
+## Final evidence
 
 The frozen checkpoint is `eadd7c7424a94d9521d2697c176ca79139321502`, tree
-`f4676f63e836828f89ad0f96b6be8a0046fb391d`. This evidence commit adds only
+`f4676f63e836828f89ad0f96b6be8a0046fb391d`. Focused-evidence commit `56debcee52` added only
 this note and its [manifest](evidence/2026-11-14-cut-a.manifest.json).
 The manifest lists 28 files across two separately sealed directories under
 `/Users/hughpyle/play/artroom-evidence`. Both directories retain their own
@@ -86,6 +86,42 @@ The process preflight found no matching validation process. Commands ran
 sequentially. The source checkpoint remained unchanged throughout both
 attempts and after the control restored its file.
 
+The full gate ran once at `554187d425e46847f35146e11b45689e5338c70a`,
+tree `7f7e180f309750ec0235507aa80bb60ddcb610ae`, after merging reviewed
+main `694a8c7f`. It failed with actual exit 1. Static checks, typecheck,
+definition pins, kernel, Node and Counter passed. Plain tests reported
+4,540 passed, 76 failed and one skipped. All 76 failures belonged to
+`examples/repo-in-ai/test/hosted-loop.test.ts`; native was unreached.
+The first gate remains failed.
+
+The file used the operator example as its usable fixture. CUT-A had
+intentionally replaced the example's hosted register with placeholders,
+but the fixture filled only its version. Commit
+`d19e945336f8623a728691adae05a4f2d4e3697c`, tree
+`4327b264c78888fdf1bb05ca14aa27372a4eb9d2`, changes only that test file.
+It supplies a synthetic register, fills it in the owner-only HTTP witness,
+and checks that an operator must fill both register and version. It keeps
+all 204 original cases, with one title updated and no deadline change.
+The example remains unfilled. No production code, configuration,
+dependency, shared helper or imported source changes after the failed gate.
+No other source imports the test file.
+
+The follow-up uses the isolated-file rule in
+[File test evidence](../../docs/evidence-filing.md#follow-up-after-a-gate).
+The changed compiler and whole owning file pass, including all 204 cases.
+The exact unreached native stage passes 1,155 cases with two skipped;
+all six scale cases run because the original selection included them for
+`scripts/test.mjs`. No previously passed suite or whole gate reruns.
+The native command takes 1,318.08 seconds by `/usr/bin/time`; its case
+records retain each duration. The separate case-correspondence audit
+checks that no case was added or removed. This is a failed gate with a
+passing limited follow-up, for the reviewer's assessment.
+
+All 13 in-run samples of the failed gate and all 67 of the follow-up read
+actual AC Power and power mode 0. Both records retain endpoint readings.
+The repair checkpoint is clean after validation. The final evidence note
+and manifests change documents only.
+
 | Check | Command | Exit | Output and SHA256 |
 |---|---|---|---|
 | Attempt 1: CLI compiler | `node node_modules/typescript/bin/tsc -p packages/cli/tsconfig.test.json --incremental false` | 1 | `2026-11-14-cut-a-focused-attempt1/cli-compiler.stdout`: `75a715d6e0d9875bd9c16791f3ad80a8dfbbb83bf7236f4e80d981ddd9f566e3` |
@@ -93,19 +129,37 @@ attempts and after the control restored its file.
 | Selected Node files | `node --test --test-isolation=none --test-reporter=tap scripts/register-values.test.mjs scripts/deploy-smoke.test.mjs scripts/test.test.mjs` | 0 | `2026-11-14-cut-a-focused-attempt2/node-files.stdout`: `57ba8198c40c3cb06828f84e5800349a7118d90950f587f03a780d656a1b9ea6` |
 | Pool compatibility | `node scripts/cloudflare-pool-compat.mjs` | 0 | `2026-11-14-cut-a-focused-attempt2/pool-compat.stdout`: `d0615699e8ac329e0727516dbc6cf9a950fc9f0454704756838653c9872da8f2` |
 | CLI config witness | `node node_modules/vitest/vitest.mjs run test/demo-config.test.ts --reporter=verbose --reporter=json --outputFile.json=<evidence>/cli-tests.json (cwd packages/cli)` | 0 | `2026-11-14-cut-a-focused-attempt2/cli-config.stdout`: `26e23f35b5b2f849d6b248f9b75e15827387123989cee8ce93f5d6dc9131c0f5` |
-| Namespace control | `node scripts/control.mjs scripts/register-values.mjs <namespace guard> "if (false)" --expect "production parser disagreement" -- . scripts/register-values.test.mjs` | 0 | `2026-11-14-cut-a-focused-attempt2/namespace-control.stdout`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Namespace control | `node scripts/control.mjs scripts/register-values.mjs <namespace guard> "if (false)" --expect "production parser disagreement" -- . scripts/register-values.test.mjs` | 0 | `2026-11-14-cut-a-focused-attempt2/namespace-control.stderr`: `082243e2eeca3d04459e7eadcfd783ea3c9fe0acbace0efe5690d52a06d8b010` |
 | Whitespace | `git diff --check` | 0 | `2026-11-14-cut-a-focused-attempt2/whitespace.stderr`: `f5d04e3f394dbde846fb5bf863e4e5541e917ef60e9e5b8a7a746282662ee215` |
+| Full gate attempt 1 | `npm run gate` | 1, one plain file failed | `2026-11-14-cut-a-gate-attempt1/gate.stdout`: `4563d529db9e4310f7b9d1d7cbc47d7ce42d0866c8090efa0a50744dd008f856` |
+| Repair compiler | `node node_modules/typescript/bin/tsc -p examples/repo-in-ai/tsconfig.json --incremental false` | 0 | `2026-11-14-cut-a-fixture-followup/compiler.result.json`: `7fa323da33a7bc2fa085df7871a0ac2b86f8763da5cb9e49cd647fb86cf46852` |
+| Follow-up compatibility | `node scripts/cloudflare-pool-compat.mjs` | 0 | `2026-11-14-cut-a-fixture-followup/compatibility.result.json`: `a773c7caa0e9695e04cb2dbdc6a9a03f0a63da1739ed6d7beecfb783f6baa9c4` |
+| Whole repaired owner | `ARTROOM_TEST_PHASE=plain node node_modules/vitest/vitest.mjs run --config vitest.plain.config.ts --project repo-in-ai examples/repo-in-ai/test/hosted-loop.test.ts` | 0 | `2026-11-14-cut-a-fixture-followup/owning-file.stdout`: `dbde24e81683c7269a15b8e823421617fc54ae9417d84427cbe8661276e4f983` |
+| Exact unreached native stage | `ARTROOM_TEST_PHASE=native ARTROOM_SCALE_MODE=run node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts` | 0 | `2026-11-14-cut-a-fixture-followup/unreached-native.stdout`: `6801666ab91276dbf0e8d8f8eee17ee8966d711263174ed389bfa8fd54d47314` |
 
 The manifest also lists the exact command vectors, dependency provenance,
 power samples, process preflight, checkpoint and result ledgers, CLI JSON
 case report and both checksum files. Check counts come from Node TAP and
 the Vitest JSON reporter; no separate discovery run supplied them.
 
+
+The focused manifest above retains 28 files in its two directories.
+[The failed-gate manifest](evidence/2026-11-14-cut-a-gate.manifest.json)
+retains 43 files, SHA-256
+`61f4d89cf1a233f90413ebb5b3b5eaec1915b8e2455fdb82334ca6e490598675`.
+[The fixture-follow-up manifest](evidence/2026-11-14-cut-a-fixture-followup.manifest.json)
+retains 43 files, SHA-256
+`4c336ee01ed17d1eeb2c5d4d44e199908a7892b7f4b209db7b253f79f8ecb814`.
+Each directory holds `SHA256SUMS` and is read-only. The manifests list
+every cited output, command, checkpoint and power record. Counts come
+from the same-invocation ledgers; the separate audit compares those
+ledgers and runs no test.
+
 ## Open limits
 
-- CUT-A's full gate and checker review remain owed under request
-  `50137f0c`. This focused pass does not replace them. The root owns the
-  next full gate.
+- Checker review remains owed under request `50137f0c`. The original gate
+  remains failed; the reviewer must assess the isolated-file repair and
+  the separately completed unreached stage under the documented rule.
 - Head A must use the planner's values from cutover END `53d5a148` after
   CUT-A. No deployment or live-value application ran here. That END holds
   deployments of the three room Workers until Head A lands.
