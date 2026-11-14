@@ -8,7 +8,7 @@ import type { ActType, DeclaredDefinition, Guard, ReceiveType } from "@generalbu
 const act = (a: Partial<ActType> & Pick<ActType, "step" | "on" | "grant">): ActType =>
   ({ also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [], ...a });
 
-/** A member of a group: a tally that its acts count, and a peer it tells. Recorded unless `sequenced` is false. */
+/** A member of a group: a tally that its acts count, and a peer it tells. Sequenced unless `sequenced` is false. */
 export function sequencedBase(sequenced = true): DeclaredDefinition {
   return {
     format: "artroom-definition-1",
