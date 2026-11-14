@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b96263875cbac0d8522cf45468f78db17688f204","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-13-cdf1-wide-retained-bytes.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b9f29672022fb5f55106574ca3125315af05ab3a","text":"Merge retired a covered predecessor; the successor is at packages/contract/src/evidence.ts."}
