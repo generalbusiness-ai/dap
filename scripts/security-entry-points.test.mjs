@@ -368,8 +368,8 @@ const pendingArchiveSeals = {
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "packages/scope/src/object-archive.ts": namedOwners["packages/scope/src/object-archive.ts"],
-  "apps/room/worker.grow.ts": "59069aaa3e846f59f18375de9172d35e09fef8588b73611ad7f87d69797fada3",
-  "apps/room/archive-policy.ts": "d22a58a9531989db6c9c5ab388af23795cf0e0ef4d1d839b88b082cc88f66d21",
+  "apps/room/worker.grow.ts": "4e2d61ac46429f6bbbd91298fb507dc564cf63feac51291afec0e0ddf5aec6b8",
+  "apps/room/archive-policy.ts": "8d34ab56e0c8c4fcca85cfea67e95219559282685fcdd484f8a3fdfbf376b32c",
   "apps/room/archive.ts": "f48d094c318ffdd1012f5917ba7997477285e165555d05cacf18a8fd388e2d8f", // Valid source proof settles; source policy and identity checks unchanged.
   "packages/scope/src/archive-host-item.ts": "b5e7e65542613603b5ace32572067d6449f0101bf569f697889ffb82c4299b28",
   "packages/scope/src/archive-host.ts": "ad759aff6f090fab3401d2f75274af294269f7db488ae2d5c56954759cdf754a", // Migration collectors settle only checked POST byte receipts; decoder fees and authority fences unchanged.
