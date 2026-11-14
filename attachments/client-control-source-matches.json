@@ -1,0 +1,31 @@
+{
+  "qualification": "Source match plan only; no control executed. Planner0d609bf9 conditionally allows actual malformed exit2 offline qualification; no relabel/rerun.",
+  "head": "0012cdf93d4bc8d7b3a0212f5ec9c74cbaa33f87",
+  "controls": [
+    {
+      "source": "packages/client/src/browser-request.ts",
+      "sourceSha256": "2edad66b5c1d5818df5ef5f423d2f1fd74c55722cbb21c7ad2d3a6661ae61834",
+      "old": "const buildCurrent = async () => { current(); const built = await build(); current(); return built; };",
+      "new": "const buildCurrent = async () => { const built = await build(); current(); return built; };",
+      "exactMatches": 1,
+      "expect": "a context that ends while admission waits never invokes the signer or sends",
+      "package": "packages/client",
+      "wholeOwner": "test/browser-request.test.ts",
+      "sourceDeclaredCases": 8,
+      "status": "UNRUN"
+    },
+    {
+      "source": "packages/client/src/browser-custody.ts",
+      "sourceSha256": "d6086b7bea539055aef1fdf785661fbcd1d26121be1025f0e8cd1575422e94cc",
+      "old": "if (liveKey !== undefined) { got(store(RECORDS).get(id), found, fail); return; }",
+      "new": "if (liveKey !== undefined) { got(store(RECORDS).get(id), value => { try { found(value); } catch { done(null); } }, fail); return; }",
+      "exactMatches": 1,
+      "expect": "malformed existing rows stay unreadable in direct reads and capacity or target lists; no replacement is signed",
+      "package": "packages/client",
+      "wholeOwner": "test/browser-custody.test.ts",
+      "sourceDeclaredCases": 8,
+      "status": "UNRUN"
+    }
+  ],
+  "malformedRuling": "0d609bf9e69abfca9f465186d7fb7e8e5b6d2899"
+}
