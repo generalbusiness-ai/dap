@@ -1,0 +1,435 @@
+{
+  "qualification": "R2 one maintained full gate at94a29 passed, with separate actual-END no-Sleep supplement. Final terminal metadata is complete; callback/observation coverage remains partial where recorded, and skips are preserved. No new collection/owner run during filing. Nested manifests/checksums bind all32448original and7supplement files, including mutable caches and actual system-temp retained copy.",
+  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "checkpoint": {
+    "commit": "94a29a264254a6fd9367b44cd24e82d6afebaf35",
+    "tree": "d6fc30ee5a48ceb0e99f37f0f07df5351769ee58"
+  },
+  "histories": {
+    "G": "2026-11-14-r2-grow-gate-attempt1",
+    "GS": "2026-11-14-r2-grow-gate-post-END-sleep-supplement"
+  },
+  "file_count": 84,
+  "files": [
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/00-full-gate/command.json",
+      "bytes": 1578,
+      "sha256": "211ff4c4ed6f9a39261d09ef4fcb59f38cb6496d9dc8ce76cccbbeec80ce0054"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/00-full-gate/gate-candidates.jsonl",
+      "bytes": 139871,
+      "sha256": "fb508657c0145cdc23ad9c7c1399254d2b8e9bf9b2d9ffe8a565eb0b9027b9f5"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/00-full-gate/mutable-caches-after.json",
+      "bytes": 3057634,
+      "sha256": "0a906bd4340cfa56014c280fb1e81023742ddd69911fe2de39f26971d25f3309"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/00-full-gate/mutable-caches-before.json",
+      "bytes": 8007,
+      "sha256": "fd2da0cdef3738735c47a8ae8423c9e5dc3b1af87a693f3d1bcee105fb91a905"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/00-full-gate/owned-processes.jsonl",
+      "bytes": 853117,
+      "sha256": "ef5723e8bbf49b930f86c8c5c2b0dfead10ea1477787f119303f80a9ced9905f"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/00-full-gate/process.json",
+      "bytes": 121,
+      "sha256": "48e849028dd506ce372e492473db9f1ced37b82b7d12c750601f2f4c84e022a1"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/00-full-gate/result.json",
+      "bytes": 4869,
+      "sha256": "91efb752090433ceb6c9ba4079a2858e3ba5f609989b0bc95a55070536916d70"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/00-full-gate/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/00-full-gate/stdout.log",
+      "bytes": 7537,
+      "sha256": "147ff2effb1553e6edf6ba05d7ca16d5c7c944b083afca509bb7d433f88a3fa2"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/00-full-gate/time.txt",
+      "bytes": 37,
+      "sha256": "e9cc5712a4133731ae4264c6af7dc439630ccf2aa5c3d9bea85e61a7e0d75164"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/SHA256SUMS",
+      "bytes": 5108910,
+      "sha256": "697b24cfed0de195b5b907203a6b51fb00a124570dd55177acf57327033d670c"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/actual-scale-selection.json",
+      "bytes": 748,
+      "sha256": "b982656ded651be904f745163d7f5e97d4250bc0242dfd0b651590c65d3c87bc"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/authority.json",
+      "bytes": 961,
+      "sha256": "658598eda2b07050f99ca2e67138a5a2ceec9a01340937b36646a5a16b6e6858"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/focused-boundary.json",
+      "bytes": 19338,
+      "sha256": "74edecdfc81349b1097c88147210e3cf6496215f684b9b277de689eb4e224aed"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/guards.jsonl",
+      "bytes": 797,
+      "sha256": "40ca5bec95d4ea3f770ab97afe86c19635e0208ddf92b094db01b297a8a149d9"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/idle-before.txt",
+      "bytes": 82504,
+      "sha256": "03d4a32c1044c219de90554e011bea6cd3a93d70c0ea16ae3c38fc6e77440fb8"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/init-pins.json",
+      "bytes": 470,
+      "sha256": "d2557b86c59361c55341cdde7400054be56762ab35ae93da0f5b6d0feaab8f83"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/init.json",
+      "bytes": 2563,
+      "sha256": "46dd1aae843acb8b2d230d573966ad83cc836193059452aee8e38dee06bbc67b"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/interval-result.json",
+      "bytes": 319099,
+      "sha256": "de5fde1315518ebf819e447a2f2c3ff204866989868b25f1156854db40b4f7c8"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/interval-seal.py",
+      "bytes": 14673,
+      "sha256": "0b463fac45a8f83365af080d20e77a59319ef69debd075c17bf20463f6e19c37"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/interval.manifest.json",
+      "bytes": 7331070,
+      "sha256": "dd35ecff8134b351a343ebbf6831875735ff880f2fdb63d98e01e2c98a88eb30"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/citations.log",
+      "bytes": 1577776,
+      "sha256": "f7a84515eb46c490ccd55a11765108da42bf30fccb683b87c65864e26679b9ac"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/citations.time",
+      "bytes": 29,
+      "sha256": "52c0a6baedf4eff4c5fa4a21464b11b0546525166c652769f011b60da11ec74b"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/cite-test.log",
+      "bytes": 763,
+      "sha256": "6e7d3deb62e55ff45cf7daa1d582a90f0c4fa7043a19169b8352bd588f80823a"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/cite-test.time",
+      "bytes": 29,
+      "sha256": "d9918759d9ab2757144f827c20769d929f617fcc6c8127e4f493ee1dc947ff29"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/commit-messages.log",
+      "bytes": 38,
+      "sha256": "95c32481a87cffe3e850fb0dcfc0dce82a3c17e8368e227d0271bbb66298b322"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/commit-messages.time",
+      "bytes": 29,
+      "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/commit-test.log",
+      "bytes": 592,
+      "sha256": "a150dfebeebf5c50dc5ee9bc233cef58c861ceba87f696e178b2142719929391"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/commit-test.time",
+      "bytes": 29,
+      "sha256": "a9bd5d32e25f5142009c1fe8ccd1299eb3ed235919028c694bf8e2f235329317"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/def-pins.log",
+      "bytes": 678,
+      "sha256": "4548c45b891074da13334c61295e97ca80bdb783faf30a3130ab6d48675f9427"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/def-pins.time",
+      "bytes": 29,
+      "sha256": "cb64f9c870a5a9e9b7501f70be5929a55f1bb9e9b2b308e9c59cad09f032f211"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/doc-links.log",
+      "bytes": 36,
+      "sha256": "0b62886e12f396ee8cf60e4cfe3f4112ecc75879da8508427692a1367191bbc9"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/doc-links.time",
+      "bytes": 29,
+      "sha256": "f52206e212990f3da006017e7a3314f96cf4d8a4821d8a9cffedb1f8f69a4a95"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/format.log",
+      "bytes": 114,
+      "sha256": "6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/format.time",
+      "bytes": 29,
+      "sha256": "970db79e9674de8e3a82a7c6c71cd8281346c22ec4978560fa31e9215c33c184"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/helpers.log",
+      "bytes": 68,
+      "sha256": "631f4955db3e6fa3e5f86d36349022ea6cacd3a2b124af1a95a767c69b1e6159"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/helpers.time",
+      "bytes": 29,
+      "sha256": "8e36bc4677f2d52018988cdfce3f971405aa20b8822d1489309ec347130406e1"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/notes.time",
+      "bytes": 29,
+      "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/section-citations.json",
+      "bytes": 3955369,
+      "sha256": "9cdfdbab2542618b8b8ba76468005eadb75116431bc6c3cf33c62f6b1c564c36"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/test-evidence/counting-sources.json",
+      "bytes": 1124,
+      "sha256": "a0b6c0fcc106f3ad107da09625405a9f4122c09026b3dfc057c2c82991ac69aa"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/test-evidence/counting.jsonl",
+      "bytes": 148528,
+      "sha256": "fc90e1897b2f32f332041d16630d9140191a0ddb64b4bb8c5f8f57c34e68566d"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/test-evidence/native.jsonl",
+      "bytes": 1127175,
+      "sha256": "71fb235e9ffb9822e117cf046db41581723ec846b96ef901fc6b3c5ff27b4b1d"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/test-evidence/node.jsonl",
+      "bytes": 467379,
+      "sha256": "e3fb16c779909387ffab3074e2d698dea35d93f7813227e58164b11ad1de3751"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/test-evidence/plain.jsonl",
+      "bytes": 3984003,
+      "sha256": "e62f0d634574479792d444a40203f476e0547ed276f840cec862c677829337d5"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/test-evidence/scale-selection.json",
+      "bytes": 748,
+      "sha256": "b982656ded651be904f745163d7f5e97d4250bc0242dfd0b651590c65d3c87bc"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/test-evidence/stages.json",
+      "bytes": 1869,
+      "sha256": "b535ee4c8f4e931896fd2a8220febca59b465f8dd28aced704181b8e82a4599a"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/test.log",
+      "bytes": 11561887,
+      "sha256": "7d0acf683588a1a86003798145f6de4b0ceb9c4026b4382743d34669c1dfbf3a"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/test.time",
+      "bytes": 37,
+      "sha256": "d1d988bd11af2fad5748730294c9872229c7bce8e05fe81c93e82e3802313286"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/typecheck.log",
+      "bytes": 2247,
+      "sha256": "a9abf7e40e10fbda74447d08a5ea3b33733361ecd9ac199658065cfbc874936a"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/typecheck.time",
+      "bytes": 31,
+      "sha256": "053fbe08af54a1bcff26ac0b516d7ba4abb22d5c11232f46c8c3fe24aea70f86"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/maintained-gate/whitespace.time",
+      "bytes": 29,
+      "sha256": "f5d04e3f394dbde846fb5bf863e4e5541e917ef60e9e5b8a7a746282662ee215"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/mutable-caches-init.json",
+      "bytes": 7962,
+      "sha256": "6c2938242accfd7723345e54f00351a46ada73d92cafb2ddc246a4a62533585c"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/origin-copy.json",
+      "bytes": 4874,
+      "sha256": "0e7ea8c4fd86f1a89f4b6939d80cb819e32340f7d4f8943842c71c35baa48ba4"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/pmset-log-00-full-gate-terminal.result.json",
+      "bytes": 631,
+      "sha256": "3c5cfdd1d989b1cc258ca81f3db8c63a1363bae52726986f1e0b77badf1ec3f9"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/pmset-log-00-full-gate-terminal.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/pmset-log-00-full-gate-terminal.stdout.log",
+      "bytes": 3906923,
+      "sha256": "3e0b012c0512d714ab889b5607624a5e7da1bca4ca56d7b359839caf8b518b6d"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/pmset-log-init.result.json",
+      "bytes": 631,
+      "sha256": "b5fd1f14621f25bdb5a5d6b696c876239eb22d6790feac9d2a2be3e662279f86"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/pmset-log-init.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/pmset-log-init.stdout.log",
+      "bytes": 3908290,
+      "sha256": "20879366d6c7adabdc560b13886aecc3448b1a47f0e3f58bdd494ebd5e292bc4"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/power.jsonl",
+      "bytes": 134280,
+      "sha256": "a2ab08d31e77a197e5a43a68ebf16371072b614b4dc6b75ca9e6a4e007d23c61"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/reviewed-plan/RUNORDER.md",
+      "bytes": 8539,
+      "sha256": "62d76126225a79e2e6d52a5aaccef8e450d8e5691fcba021f48288fd462de948"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/reviewed-plan/authority-contract.json",
+      "bytes": 1134,
+      "sha256": "3004a0056f52eaab7b8130eba0284e36e73f2b29398411c1171177b5dde5ee31"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/reviewed-plan/commands.json",
+      "bytes": 296,
+      "sha256": "6cf7d4430d112b56a1185755b93908b2c21f435ad59341a03dad46bbfdc2d886"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/reviewed-plan/dependency-shape.json",
+      "bytes": 1129743,
+      "sha256": "36441e2de6bc6be04d10bb0cbcc069e05e4dd387739ae81c0c7c1ee6ed0ad2fd"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/reviewed-plan/frozen-inputs.json",
+      "bytes": 2554558,
+      "sha256": "a7ba2f7b74f3f68da8b957ec8abaadce95b68605e9aba840c9a01722e4571c8d"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/reviewed-plan/gate-plan.json",
+      "bytes": 2058,
+      "sha256": "cf75b5b534aa1d5fb0915bc3437aac2a0f205699a99565924086a88c3635207b"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/reviewed-plan/gate-supervisor.py",
+      "bytes": 35903,
+      "sha256": "d3482a84448132c6da0bdf794005aa70bbd6a87f80251ab4fc85bd51963b9aab"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/reviewed-plan/plan-files.json",
+      "bytes": 1069,
+      "sha256": "8893adcfa219a9cd9f9fe8272b6e9857e3b7cb63249469ef2a9eec39646ac257"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/seal-end-power-battery.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/seal-end-power-battery.stdout.log",
+      "bytes": 114,
+      "sha256": "bf1eabae551d0e00188e5e10eeb7a0c8a43f8bb589dfdf77b6fbd13101929f03"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/seal-end-power-custom.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/seal-end-power-custom.stdout.log",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/seal-end-power-settings.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/seal-end-power-settings.stdout.log",
+      "bytes": 469,
+      "sha256": "edd4a302703928d96ec002c39f326bfbb62372d25bcc41646852d59e5abf9d92"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-attempt1/supervisor.py",
+      "bytes": 35903,
+      "sha256": "d3482a84448132c6da0bdf794005aa70bbd6a87f80251ab4fc85bd51963b9aab"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-post-END-sleep-supplement/END-tool-result.json",
+      "bytes": 7113,
+      "sha256": "49d3a7a03a11112802a6ed8bc82052e87bb33fc13c097db4d2dbb7de787db9b3"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-post-END-sleep-supplement/SHA256SUMS",
+      "bytes": 527,
+      "sha256": "a65cd3297b82aafe58475343cb4bd08ab602d32b1a1c9b5e518e57be0dd29c90"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-post-END-sleep-supplement/pmset-g-log.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-post-END-sleep-supplement/pmset-g-log.stdout.log",
+      "bytes": 3906192,
+      "sha256": "7f5e2c0b214117114aa13db9a48e956059e2eeddf82c5ceb92fc41d54d39cbd1"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-post-END-sleep-supplement/post-END-result.json",
+      "bytes": 1338,
+      "sha256": "064c0396b9f9a519f514b4c1d172f15a6faab481acb16631b416bdf597186306"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-post-END-sleep-supplement/post-END-sleep.py",
+      "bytes": 7469,
+      "sha256": "5975781353e542d9b73ec1b36ae5932beea99295d4dcf9e04295fc6d4ac831de"
+    },
+    {
+      "path": "2026-11-14-r2-grow-gate-post-END-sleep-supplement/supplement.manifest.json",
+      "bytes": 1371,
+      "sha256": "dcf66ff0de8672e3fb3b325be7a371b367b6b8eb853d181e55c088c7e8838b9f"
+    }
+  ]
+}
