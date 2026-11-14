@@ -1,7 +1,7 @@
 /** Name the supplied judgment inputs without discovering or inventing any. */
 import type { Digest, KeyId, ScopeRef } from "@generalbusiness/dap-contract";
 import { textDigest } from "@generalbusiness/dap-bytes";
-import type { JudgeContext, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
+import type { JudgeContext, Owners, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import type { Context, Source, UnavailableContext } from "./act-types.ts";
 
 /** The caller inventories its evidence beside the actual checked payloads
@@ -10,6 +10,8 @@ export interface ExplorationContext extends JudgeContext {
   readonly actor: KeyId;
   readonly scope: ScopeRef;
   readonly evidence: readonly Digest[];
+  /** The same producer code the actual scope uses for pending reservations. */
+  readonly owners?: Owners | null;
 }
 
 export function actContext(definition: ValidDefinition, view: StateView, context: ExplorationContext,
