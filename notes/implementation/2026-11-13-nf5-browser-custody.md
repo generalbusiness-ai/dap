@@ -82,11 +82,15 @@ keeps the record, and the record is no longer unresolved.
 
 **Give up** cannot close the record. Custody has no transition for an
 unresolved record whose latest signing is dead and not found: `settle` closes
-an earlier signing on `not-found`, never the latest one. The page therefore
-keeps the keys that the person gave up in its own slot and leaves those records
-out of its pending request. Each such record stays unresolved in custody and
-counts toward the 256 unresolved records. The returned status of client note
-section 6 is the place for this case.
+an earlier signing on `not-found`, never the latest one. Such a record stays
+unresolved, and it counts toward the 256 unresolved records for good. A member
+who gives up 256 times fills the store, and `Custody` then refuses each new
+request with `full`, reason `count`.
+
+The page keeps the keys that the person gave up in its own slot and leaves
+those records out of its pending request. The slot stays until planner request
+`43de81ee` amends the client note to say how such a record ends. That request
+lands before C3 (ruling `cb6e8523`).
 
 ## Counter
 
@@ -137,24 +141,48 @@ that still applies. Counter loses the two cases that drove the retired
 dispatcher directly and the journal race. `browser-request.test.ts` and the
 custody lock now cover what those cases checked.
 
-## What the browser witness needs
+## The browser witness of the user path
 
-The witness of the user path runs in a real browser against a real room. It
-needs these steps:
+`apps/room/page/test/custody-witness.mjs` is the witness of request
+`c288c917`. It runs outside the gate, on the pattern of `two-devices.mjs`:
+playwright-core and wrangler stay outside the checkout, and the script serves
+the local Worker of `apps/room/celld`. The command line installs a register,
+creates the room and makes an invitation. The script bundles
+`custody-witness-page.ts` with esbuild and serves it at `/custody-witness/` on
+the Worker's origin, so the invitation's service is the page's origin. The page
+runs `browserJoining` with `browserCustodyStore` on real IndexedDB and Web
+Locks.
 
-1. Join with an invitation while the reply of the join is lost, for example
-   with the act route blocked after the request leaves.
-2. Reload the page. Check settles the join. The scope's journal holds one join
-   signed by the device key, and the custody record holds that same envelope.
-3. Repeat for one Counter act.
+1. The page joins. A route handler on `POST /acts` lets the request reach the
+   Worker and then drops the reply.
+2. The page reloads, and Check settles the join with a read.
+3. The script reads the custody record from the page's IndexedDB and the
+   membership's journal with the owner's session. It checks one record,
+   `accepted`, with one signing; one `POST`; one journal entry under the join's
+   key; and that entry's signed bytes equal to the envelope in custody.
 
-The witness reads the custody record from IndexedDB database
-`dap-counter-custody-1` or `dap-lending-custody-1`, and compares the envelope
-with the entry in the journal.
+The builder ran the witness one time on this machine, on battery power, from
+21:52 to 21:53 EST on 13 November 2026, at this head's parent `6839776002`
+plus the witness files. It reported no failures:
+
+| Step | Observed |
+|---|---|
+| First press, reply dropped | `unknown`; 1 record, `unknown`; 1 `POST` |
+| Check after the reload | `joined` |
+| After Check | 1 record, `accepted`, 1 signing; 1 `POST` in all; 1 journal entry under the key; the entry equals the envelope in custody; the slot's key is the record's key; the slot is empty |
+
+The witness does not cover the Counter act. The Counter scope exists only after
+a package install. A room that the current Worker creates installs no ordinary
+package (`docs/cli.md`, "Install an application package"). The install's host
+also fetches the package from a public HTTPS Git commit that the host operator
+lists, so a local branch cannot be installed. The Counter act needs a
+historical `declared-application` room with a listed release of this branch.
+
+The witness calls no export of the two `storage.browser.test.ts` files.
 
 ## Not in NF-5
 
-- The named MCP aliases of NF-3 stay. The NF-3 note says NF5 removes them, and
-  request `c288c917` does not name them.
+- The named MCP aliases of NF-3 stay. They leave in a separate head, NF-6
+  (ruling `cb6e8523`).
 - The `byTarget` read scans the live records. The live records are bounded by
   the 256 unresolved and the 64 terminal records, so the store has no index.
