@@ -93,8 +93,8 @@ The rule has two parts.
 1. A replica that mirrors the scope computes what the scope computes.
    It needs no list of the definitions that are safe.
 2. A replica never answers "nothing" for a thing that the scope holds
-   and the replica lacks. Its `Own` throws the fault `Unheld` for that
-   entry or copy, and it records each `Unheld` that it throws. The
+   and the replica lacks. Its `Own` throws the fault `UnheldEntry` for that
+   entry or copy, and it records each `UnheldEntry` that it throws. The
    readers of the table then cannot take the thing as absent.
 
 The throw alone does not reach the client. Three places in
@@ -111,7 +111,7 @@ The throw alone does not reach the client. Three places in
 
 So the record decides, and the return value does not. After each call
 of a judge or of the fold, the client reads the record of its `Own`.
-If the record holds an `Unheld`, a prediction reads `not-judged` and a
+If the record holds an `UnheldEntry`, a prediction reads `not-judged` and a
 fold stops the replica, whatever the call returned. The client then
 clears the record. The throw still ends the reader's work early.
 
@@ -154,7 +154,7 @@ Two more things are outside a snapshot: the retained copies of entries
 of other scopes, and the bytes of detached texts. The loader loads
 neither. Before the client folds an entry, it reads each copy that the
 entry's `uses` name. A copy that it cannot read stays unheld, and the
-rule of section 3 applies: `Own` throws `Unheld`.
+rule of section 3 applies: `Own` throws `UnheldEntry`.
 
 A row is one element of one member of `StateSnapshot`
 (`packages/derive/src/state.ts`). The loader names each member of
@@ -361,9 +361,9 @@ section 3 binds it now.
 1. The replica keeps each entry that it folds, while the scope holds
    that entry.
 2. The replica gives the fold and `judgeAct` one `Own` object over
-   those entries, for its life. `Own` throws `Unheld` for an entry or a
+   those entries, for its life. `Own` throws `UnheldEntry` for an entry or a
    copy that the scope holds and the replica lacks.
-   `Own` records each `Unheld` that it throws. After each call of a
+   `Own` records each `UnheldEntry` that it throws. After each call of a
    judge or of the fold, the client reads the record and then clears
    it. A record that is not empty makes the prediction `not-judged` or
    stops the replica, whatever the call returned.
@@ -399,9 +399,9 @@ family. It names no K item.
 - `loadState` uses `MemoryState` with its `put` methods, `indexItems`,
   `fixedRowsOf`, `putFixed` and `StateSnapshot`, which
   `packages/derive` exports today.
-- The replica's `Own` and its record of `Unheld` are an object of
+- The replica's `Own` and its record of `UnheldEntry` are an object of
   `packages/client`. The catch sites of `packages/derive` stay as they
-  are. A `derive` that throws `Unheld` on through each catch site would
+  are. A `derive` that throws `UnheldEntry` on through each catch site would
   change the kernel, and this note does not ask for it.
 - The read is a route of the service and a method of `ScopeHandle`. It
   is outside `ScopeApi`. Section 7.4 of the kernel page put the read
@@ -486,7 +486,7 @@ and retires no room.
 
 ## 15. Decisions
 
-1. A replica mirrors the scope. Its `Own` throws `Unheld` for a thing
+1. A replica mirrors the scope. Its `Own` throws `UnheldEntry` for a thing
    that the scope holds and the replica lacks, and records the throw.
    The client reads the record after each call, and the record decides.
    Planner.

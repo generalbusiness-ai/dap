@@ -556,6 +556,14 @@ entry does not import it, so a page that uses only the root entry keeps
 its size. `packages/derive` has no Node import. The first build step
 that adds the import measures the entry's bundle and states the bytes.
 
+C2 measured them. Minified, the `scope` entry is 360,833 bytes, and
+123,212 bytes with gzip. `packages/derive` is 294,706 bytes of it. The
+root entry already holds `packages/derive` through
+`@generalbusiness/dap-platform`, and is 1,082,096 bytes. A replica of
+20,000 entries held 92,738,360 bytes of heap in Node and 65,073,016
+bytes in headless Chrome
+([the C2 note](implementation/2026-11-13-c2-scope-replica.md)).
+
 An adapter for a UI framework holds four things: a Model field for the
 `ClientView`, one Message that carries a new view, one Subscription to
 the client, and the typed calls of section 8 as Commands. The client is
