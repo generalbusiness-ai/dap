@@ -4,9 +4,9 @@ import { floorReceiverChange, floorSenderChange } from "./definition-corpus-data
  * Declarations, authority, readers, clock and floor receipts are test
  * fixtures; a floor receipt is no evidence of archive custody.
  *
- * Rulings 1064d0de and 0c196f9a: `scopeBytes` bounds the retained births
- * and copies (`retained_input` rows of the kind `entry`) in every scope, not
- * only under the whole-scope opt-in. No floor frees them. */
+ * Rulings 1064d0de, 0c196f9a and 9753818f: `scopeBytes` bounds every
+ * retained row in every scope, not only under the whole-scope opt-in.
+ * No floor frees the retained births and copies. */
 import { env } from "cloudflare:workers";
 import { expect, onTestFinished, test } from "vitest";
 import { canonicalize } from "@generalbusiness/dap-bytes";
@@ -34,8 +34,9 @@ function remark(lane: Lane, lent: ReturnType<typeof foreign>, text: string) {
 }
 const retained = (lane: Lane) => lane.inside(state => {
   const store = new SqliteStore(archiveSql(state));
-  const scan = state.storage.sql.exec("SELECT COALESCE(SUM(octet_length(bytes)), 0) AS n, COUNT(*) AS rows FROM retained_input WHERE kind = 'entry'").one();
-  return { total: store.retainedEntryBytes(), scan: scan["n"] as number, rows: scan["rows"] as number, births: state.storage.sql.exec("SELECT COUNT(*) AS n FROM retained_birth").one()["n"] as number };
+  const scan = state.storage.sql.exec("SELECT COALESCE(SUM(octet_length(bytes)), 0) AS n FROM (SELECT bytes FROM retained_input UNION ALL SELECT bytes FROM retained_value)").one();
+  const rows = state.storage.sql.exec("SELECT COUNT(*) AS n FROM retained_input WHERE kind = 'entry'").one()["n"] as number;
+  return { total: store.retainedBytes(), scan: scan["n"] as number, rows, births: state.storage.sql.exec("SELECT COUNT(*) AS n FROM retained_birth").one()["n"] as number };
 });
 const internalFloor = (lane: Lane, floor: number) => lane.inside(async state => {
   const store = new SqliteStore(archiveSql(state));
@@ -111,7 +112,7 @@ test("Native scope made before the stored total counts its retained births at it
   expect(await remark(lane, foreign(6), "two")).toMatchObject({ answer: "accepted" });
   const held = await retained(lane);
   expect(held).toMatchObject({ total: held.scan, rows: 4, births: 2 });
-  await lane.inside(state => { state.storage.sql.exec("DELETE FROM meta WHERE k = 'retained-entry-bytes'"); });
+  await lane.inside(state => { state.storage.sql.exec("DELETE FROM meta WHERE k = 'retained-bytes'"); });
   await scopeBytes(lane, held.scan);
   const head = await lane.head();
   expect(await remark(lane, foreign(7), "three")).toEqual({ answer: "refused", reason: "scope-full", judgedAt: head, name: "scopeBytes" });

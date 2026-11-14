@@ -463,9 +463,9 @@ export class Turns {
     }
   }
 
-  /** `added`: the bytes of the retained births and copies that this entry added. */
+  /** `added`: the retained canonical bytes that this entry added. */
   #full(definition: ValidDefinition, input: Sealed["entry"]["input"], settles: boolean, pin: ResolvedPin, added: number): ScopeBoundName | null {
-    return this.#capacity(definition, input, settles, pin) ?? (this.#retainedFull(input, added) ? "scopeBytes" : null);
+    return this.#capacity(definition, input, settles, pin) ?? (this.#retainedFull(input, settles, added) ? "scopeBytes" : null);
   }
   #capacity(definition: ValidDefinition, input: Sealed["entry"]["input"], settles: boolean, pin: ResolvedPin): ScopeBoundName | null {
     if (definition.declared.capacity?.name !== "whole-scope") return fits(this.#store, definition, this.#bounds, input, settles, this.#owners(pin.pinned)) ? null : "scopeEntries";
@@ -478,19 +478,16 @@ export class Turns {
   }
 
   /**
-   * Ruling 1064d0de: `scopeBytes` bounds the retained births and copies in
-   * every scope, and no floor frees them. An entry that adds such bytes and
-   * leaves the total above the bound is not kept. The one exception
-   * (ruling 0c196f9a, item a) is a delivery that settles a pending request
-   * of this scope: a result, or the control that confirms this scope. The
-   * request reserved its room when the scope admitted it, as `reserved`
-   * counts it, so the delivery is kept and its bytes add to the total. A
-   * `conflict` result settles no pending request.
+   * Ruling 9753818f: every retained row counts toward `scopeBytes` in every
+   * scope. A floor frees none; a text redaction subtracts its bytes. Keep
+   * the exemptions aligned with `fits` in derive/src/reserve.ts:243.
+   * Admitted pending work reserved its settlement. Its bytes still count.
    */
-  #retainedFull(input: Sealed["entry"]["input"], added: number): boolean {
+  #retainedFull(input: Sealed["entry"]["input"], settles: boolean, added: number): boolean {
     if (added === 0) return false;
-    if (input.type === "delivery" && (input.message.class === "control" || ("clause" in input && input.clause !== "conflict"))) return false;
-    return this.#store.retainedEntryBytes() > this.#bounds.scopeBytes;
+    if (settles || input.type === "timed" || input.type === "diagnosis" || input.type === "outcome"
+      || (input.type === "delivery" && (input.message.class === "control" || ("clause" in input && input.clause !== "conflict")))) return false;
+    return this.#store.retainedBytes() > this.#bounds.scopeBytes;
   }
 
   /**

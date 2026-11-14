@@ -64,7 +64,7 @@ export interface Bounds {
 
   // Sections 9.2 and 17.1: logical scope budgets. R4 owes measured values; all defaults remain temporary.
   scopeEntries: number;            // entries at or above one scope's floor, plus its kept entries. An entry that admits pending work is refused `scope-full` unless every admitted task still has an entry to settle in
-  scopeBytes: number;              // every scope: the retained births and copies (`retained_input` rows of the kind `entry`), which no floor frees. Whole-scope opt-in: also the canonical entries and the other retained inputs, once per byte domain/digest. Without the opt-in the journal has its own bound: `scopeEntries` entries of at most `entryBytes`
+  scopeBytes: number;              // every scope: the canonical bytes of every retained row (`retained_input` and `retained_value`), once per key, which no floor frees. Whole-scope opt-in: also the canonical journal entries. Without the opt-in the journal has its own bound: `scopeEntries` entries of at most `entryBytes`
   scopeItems: number;              // first item keys, including retained final items; whole-scope opt-in only
   scopeRecords: number;            // capability records and relationship copies, including final states; whole-scope opt-in only
   scopeRequests: number;           // requests without a result or undelivered diagnosis; whole-scope opt-in only

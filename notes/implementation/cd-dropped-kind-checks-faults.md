@@ -90,9 +90,10 @@ later foreign entry. Replay runs the same `judgeTimed`
 refuses a timed entry that records uses. A timed draft cannot use an entry
 of another sequence. No source change follows from item 2.
 
-## Retained births have a byte cap in every scope
+## Retained canonical bytes have a cap in every scope
 
-CDF-1 item 3 (results 85fed53d, rulings 1064d0de item 3 and 0c196f9a).
+CDF-1 item 3 (results 85fed53d, rulings 1064d0de item 3, 0c196f9a and
+9753818f). Ruling 9753818f folds the wider CDF-2 total into this head.
 
 The fault at main `57e893c0`: a scope without the `whole-scope` opt-in had
 no byte cap on the births and copies that it retains (`retained_input` rows
@@ -105,39 +106,40 @@ scope's life no constant bounded the total.
 
 The fix, in `packages/scope`:
 
-- `SqliteStore` keeps the total size of those rows in one `meta` row,
-  `retained-entry-bytes`. `retain` adds the size of an `entry` row only
-  when its INSERT inserts the row. `forget` subtracts the size of an
-  `entry` row that it removes. Both run in the seal transaction, so a
-  refused input rolls the total back with its entry. No digest, fold or
+- `SqliteStore` keeps the total canonical size of every `retained_input`
+  and `retained_value` row in one `meta` row, `retained-bytes`. `retain`
+  adds a row's size only when its INSERT inserts that key. `forget`
+  subtracts a row's size when it removes that key. Both run in the seal
+  transaction, so a refused input rolls the total back with its entry. No digest, fold or
   replay reads the row.
-- The `SqliteStore` constructor fills the row with one scan when the row
-  is absent. A scope made before the fix gets its true total when its
-  store opens, before its first turn. The scan and the write are one SQL
+- The `SqliteStore` constructor fills the row with one sum over both
+  tables when the row is absent. A scope made before the fix gets its true
+  total when its store opens, before its first turn. The scan and the write are one SQL
   statement (`INSERT … SELECT … ON CONFLICT DO NOTHING`), so they commit
   together or not at all. So a read of an old store also writes this one
   row, the first time the store opens.
 - `#full` (`scope/src/turn.ts`) applies the stop after the existing checks.
-  An input that adds new `entry` bytes and leaves the total above
+  An input that adds new retained bytes and leaves the total above
   `scopeBytes` writes no entry. A create or genesis, an act and a
   preparation answer `refused` `scope-full` with the name `scopeBytes`. A
-  delivery answers `retry` `scope-full`, and the sender keeps the task. An
-  outcome answers `unavailable` `scope-full`.
-- A delivery that settles a pending request of this scope passes the stop:
-  a result other than `conflict`, or the control that confirms the scope.
-  The request reserved its room when the scope admitted it, as `reserved`
-  in `derive/src/reserve.ts` counts it. Its bytes add to the total. Each
-  definition bounds its pending requests, so the total stays bounded.
-- An input that adds no new `entry` bytes passes: a read, a floor, a
-  checkpoint, a timed turn, and an input that reuses retained sequences
-  only. No input frees the space.
-- A diagnosis entry is not exempt from the stop. Today a diagnosis
-  re-retains only rows that the scope already holds, so it adds no bytes.
-  A later change that lets a diagnosis retain new rows must revisit the
-  stop.
+  delivery answers `retry` `scope-full`, and the sender keeps the task.
+  The settlement exceptions below pass this byte stop. An opt-in scope's
+  existing checks can still leave an outcome `unavailable` `scope-full`.
+- The stop exempts the same inputs as `fits` in `derive/src/reserve.ts:243`:
+  a declared settlement, `timed`, `diagnosis`, `outcome`, a control
+  delivery, or a result delivery whose clause is not `conflict`. They
+  spend room reserved by admitted work. Their retained bytes still add to
+  the total. The opt-in checks still run before this stop.
+- An input that adds no retained row passes the byte stop. A redaction
+  subtracts its text's canonical bytes. A floor removes no retained row.
+- The `retained_birth` association rows hold fixed-size keys, not another
+  copy of their canonical payload. They stay outside this total. The total
+  measures retained canonical bytes, not physical database allocation.
+- No deployed store holds the earlier `retained-entry-bytes` name. This
+  head starts with `retained-bytes` and carries no old-name removal.
 
-The cap adds no export name, no reason code and no record form. `Store`
-gains `retainedEntryBytes()`, and its `retain` and `retainBirth` return
+The cap adds no top-level export, no reason code and no record form. `Store`
+gains `retainedBytes()`, and its `retain` and `retainBirth` return
 the bytes that they add.
 
 Witnesses, in `packages/scope/test/capacity-retained-births.test.ts`:
@@ -156,10 +158,11 @@ records its creation under `scopeBytes` 0. Its case now shows that a
 creation one byte over the cap gets `retry` `scope-full` and writes
 nothing, and that the confirmation passes the stop at the cap.
 
-## What bounds the other retained rows without the opt-in
+## Why the cap includes the other retained kinds
 
-Ruling 0c196f9a item b. The cap above counts only `entry` rows. For each
-other kind, in a scope without the opt-in:
+The read before ruling 9753818f found these limits in a scope without
+its capacity opt-in. Counting only `entry` rows left each kind outside the
+retained-byte cap. The wider total now includes every kind below.
 
 | Kind | Writer | Bound |
 |---|---|---|
@@ -169,8 +172,31 @@ other kind, in a scope without the opt-in:
 | `value` | An act, a delivery and an outcome retain the values that the draft names (`valuesOf`, `core.ts`), in `retained_value`. | Not bounded over a scope's life. Nothing removes a value row, and each entry can add new ones. |
 | `text` | An act or a delivery with detached text retains its canonical JSON string (`Received.retain`, `scope/src/core.ts`). | No retained-byte total bounds these rows. Each text fits its field's `max`, within `textBytes`. The stored JSON includes quoting and escapes. Only a redaction removes a text row. |
 
-CDF-2 (request b5750e6e, pre-code act ca7b18ce) covers these five kinds.
-The act corrects the earlier genesis-only claim for `definition` and adds
-`text`. CDF-1 changes none of their byte limits. The journal's entry count
-still limits new work, but a floor can reclaim journal capacity without
-removing these retained rows.
+Pre-code act ca7b18ce corrects the earlier genesis-only claim for
+`definition` and adds `text`. Ruling 9753818f folds CDF-2's accounting
+change into CDF-1. It changes no bound on an individual retained row.
+The journal's entry count still limits new work, but a floor can reclaim
+journal capacity without removing retained rows.
+
+The wider witnesses are `capacity-retained-rows.test.ts`: the member's
+rule-guard act at the cap writes nothing and answers `scope-full` with
+`scopeBytes`; a text redaction frees its canonical bytes; and an old-store
+fill sums both payload tables. The existing SQLite accounting witness in
+`turn.test.ts` also checks the stored total: a new `retained_value` row
+counts, repeated insertion does not, and rollback restores its bytes.
+The one shared-store Turns witness names each exempt input and compares
+the byte stop with `fits`, including conflict and ordinary inputs that
+must not pass.
+
+### The settlement exception needs a separate rule-row bound
+
+Ruling 9753818f leaves a new per-rule-row ceiling to kernel work. The
+three requested overshoot numbers need a defined finite input bound.
+`ruleInput` includes whole subjects (`derive/src/guards.ts:133-138`),
+including their attribution. `withMembers` in `derive/src/attribution.ts`
+sets no count limit on that history. Floors preserve the item while they
+can reclaim journal capacity. The default `entryBytes` and `usesPerEntry`
+therefore do not alone give a constant largest rule row. Audit act
+7f6f6834 asks the planner to resolve that scope before stating a largest
+row, a largest pending-settlement count and their product. No finite
+overshoot claim follows from the byte counter alone.
