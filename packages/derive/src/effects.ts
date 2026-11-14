@@ -79,8 +79,9 @@ export function held(j: Judging, type: FieldType, value: unknown): GenesisFieldV
   }
   if (type.type === "item") {
     if (j.references) {
-      const item = j.references.lookup(j.view, { at: "untyped" }, value, type);
-      return item?.type === type.of ? item.id : undefined;
+      const candidate = j.references.isReference(value) || isLocalId(value) ? value : isFactRef(value) && isLocalFact(value, j.scope.at) ? value.seq : null;
+      const item = candidate === null ? null : j.references.lookup(j.view, { at: "untyped" }, candidate, type);
+      return item?.type === type.of && (!isFactRef(value) || item.opened === value.hash) ? item.id : undefined;
     }
     const id = isLocalId(value) ? value : isFactRef(value) && isLocalFact(value, j.scope.at) && j.view.item(value.seq)?.opened === value.hash ? value.seq : null;
     return id !== null && j.view.item(id)?.type === type.of ? id : undefined;

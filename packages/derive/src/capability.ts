@@ -302,7 +302,8 @@ export function capabilityEffect(j: Judging, plan: CapabilityEffectPlan, item: I
   const base = given(j);
   const details = { from: j.references ? new Proxy(from, { get: (target, name) => typeof name === "string" && fromItems[name]
       ? j.references!.metadata(fromItems[name]!, "id") : Reflect.get(target, name) }) : from,
-    fromItems: j.references ? Object.fromEntries(Object.entries(fromItems).map(([name, item]) => [name, j.references!.opaqueItem(item, j.definition)])) : fromItems,
+    fromItems: j.references ? Object.fromEntries(Object.entries(fromItems).map(([name, item]) => [name,
+      j.references!.opaqueItem(item, j.definition, matched.version === DEVICE_COMMAND && plan.action === "open")])) : fromItems,
     kindContext: Object.freeze({ source: base.kindContext.source, declared: Object.freeze(declared) }) };
   // Body-only intent stays lazy: spreading its getter would read it even
   // when the capability's actual branch never needs the signed input.

@@ -198,3 +198,114 @@ test("body item duties use the actual pre-entry settlement target when the same 
   for (const [id, duties] of answer.itemDuties) expect(scope.state.itemDuties(id)).toEqual(duties);
   expect(scope.state.itemDuties(nextTarget).some(duty => duty.slot === "a")).toBe(true);
 });
+
+test("typed pending equality rejects numeric constants and copied working refs retain their actual provenance", () => {
+  const definition = variant(deskDefinition.declared, data => {
+    data.items.repo.refs.peer = { fixed: false, required: false, to: { type: "item", of: "issue" } };
+    data.items.repo.values.matched = { fixed: false, required: false, of: { type: "bool" } };
+    const fields: ActType["fields"] = { left: { type: "item", of: "issue", required: true }, right: { type: "item", of: "issue", required: true } };
+    data.acts.same = act({ step: "transition", on: "repo", fields, guards: [{ equals: { a: { field: "left" }, b: { field: "right" } } }] });
+    for (const n of [1, 2]) data.acts[`number-${n}`] = act({ step: "transition", on: "repo", fields,
+      guards: [{ equals: { a: { field: "left" }, b: { const: n } } }] });
+    data.acts.copy = act({ step: "transition", on: "repo", fields, effects: [
+      { ref: { slot: "peer", from: { field: "left" } } },
+      { value: { slot: "matched", from: { const: true } }, if: [{ equals: { a: { slot: "peer" }, b: { field: "left" } } }] },
+    ] });
+    data.acts.shape = act({ step: "transition", on: "repo", fields: {
+      list: { type: "list", of: { type: "item", of: "issue" }, max: 2, required: true },
+      record: { type: "record", of: { "0": { type: "item", of: "issue", required: true } }, required: true },
+    }, guards: [{ equals: { a: { field: "list" }, b: { field: "record" } } }] });
+  });
+  const scope = created(definition);
+  const first = scope.did(rita, "open-issue", { fields: { title: "TEST first" } }).seq;
+  const second = scope.did(rita, "open-issue", { fields: { title: "TEST second" } }).seq;
+  const left = scope.item(first), right = scope.item(second), firstToken = {}, secondToken = {};
+  let rightOrigin: "same" | "different" | "recorded" = "same";
+  // The scripted position port supplies hypothetical identities. The real
+  // fixture rows supply item content, not a native or committed alias claim.
+  const provenance: NonNullable<Parameters<typeof judgeActBody>[3]["provenance"]> = ({ origin, type, value }) => {
+    if (type?.type !== "item") return null;
+    if (origin.at === "field" && ["left", "right", "list", "record"].includes(String(origin.path[0]))) {
+      if (origin.path[0] === "right" && rightOrigin === "recorded") return { is: "recorded", id: second, item: right };
+      const other = origin.path[0] === "right" && rightOrigin !== "same";
+      return { is: "pending", token: other ? secondToken : firstToken, item: other ? right : left, alias: other ? second : first };
+    }
+    return typeof value === "number" ? { is: "recorded", id: value, item: scope.state.item(value) } : null;
+  };
+  const context = { ...scope.context(), actor: rita.key, provenance };
+  const body = (kind: string) => ({ kind, on: 0, expected: { on: scope.item(0).revision }, fields: { left: first, right: rightOrigin === "same" ? first : second } });
+  expect(judgeActBody(scope.state, definition, body("same"), context).result).toBe("write");
+  rightOrigin = "different";
+  expect(judgeActBody(scope.state, definition, body("same"), context)).toMatchObject({ result: "refused", reason: "guard-failed" });
+  rightOrigin = "recorded";
+  expect(judgeActBody(scope.state, definition, body("same"), context)).toMatchObject({ result: "refused", reason: "guard-failed" });
+  for (const n of [1, 2]) expect(judgeActBody(scope.state, definition, body(`number-${n}`), context))
+    .toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
+  const copied = judgeActBody(scope.state, definition, body("copy"), context);
+  expect(copied.result).toBe("write");
+  if (copied.result !== "write") return expect.fail("the typed copy must keep its Source");
+  expect(copied.outputRefs).toEqual([{ effect: 0, path: ["to"], token: firstToken }]);
+  expect(copied.draft.effects).toEqual([
+    { effect: "ref", item: 0, slot: "peer", to: first },
+    { effect: "value", item: 0, slot: "matched", value: true },
+  ]);
+  expect(judgeActBody(scope.state, definition, { ...body("shape"), fields: { list: [first], record: { "0": first } } }, context))
+    .toMatchObject({ result: "refused", reason: "guard-failed" });
+});
+
+test("logical after bases do not accept equal counters and opaque pending metadata stays lazy", () => {
+  const definition = valid(validateDefinition(deviceCommandFixture, PROPOSED_BOUNDS));
+  const scope = created(definition, {}, "TEST pending metadata");
+  const device = scope.did(rita, "commission", { fields: { kind: "fan" } }).seq;
+  const row = scope.item(device), token = {}, subject = {};
+  let numericBasis = false, read: "none" | "id" | "revision" | "opened" = "none";
+  const provenance: NonNullable<Parameters<typeof judgeActBody>[3]["provenance"]> = ({ origin }) => {
+    if (origin.at === "on" || (origin.at === "item" && origin.item === row)) return { is: "pending", token, item: row, alias: device };
+    if (origin.at === "expected") return numericBasis ? { is: "recorded-revision", value: row.revision, subject } : { is: "after", token, subject };
+    if (origin.at === "revision") return { is: "after", token, subject };
+    if (origin.at === "opened") return { is: "entry" };
+    return null;
+  };
+  const capabilities: Capabilities = {
+    implements: () => true,
+    guard: () => true,
+    effect(_capability, _effect, _args, given) { if (read !== "none") void given.fromItems?.["device"]?.[read]; return []; },
+  };
+  const body = { kind: "command", on: device, fields: { target: "on", level: 1 }, expected: { on: row.revision } };
+  const context = { ...scope.context(), actor: rita.key, capabilities, provenance };
+  expect(judgeActBody(scope.state, definition, body, context).result).toBe("write");
+  numericBasis = true;
+  expect(judgeActBody(scope.state, definition, body, context)).toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
+  numericBasis = false;
+  for (const member of ["id", "revision", "opened"] as const) {
+    read = member;
+    expect(judgeActBody(scope.state, definition, body, context)).toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
+  }
+});
+
+test("a source, a recorded number and an absent numeric target keep separate lookup meanings", () => {
+  const definition = variant(deskDefinition.declared, data => {
+    data.acts.lookup = act({ step: "transition", on: "repo", fields: { target: { type: "item", of: "issue", required: true } } });
+  });
+  const scope = created(definition), id = scope.did(rita, "open-issue", { fields: { title: "TEST lookup" } }).seq;
+  const row = scope.item(id), token = {};
+  let mode: "source" | "recorded" | "missing-pending" | "missing-clear" = "source";
+  const provenance: NonNullable<Parameters<typeof judgeActBody>[3]["provenance"]> = ({ origin, type, value }) => {
+    if (type?.type !== "item" || typeof value !== "number") return null;
+    if (origin.at === "field" && origin.path[0] === "target") {
+      if (mode === "source") return { is: "pending", token, item: row, alias: id };
+      if (mode === "missing-pending") return { is: "entry" };
+      return { is: "recorded", id: value, item: mode === "recorded" ? row : null };
+    }
+    return { is: "recorded", id: value, item: scope.state.item(value) };
+  };
+  const context = { ...scope.context(), actor: rita.key, provenance };
+  const body = () => ({ kind: "lookup", on: 0, expected: { on: scope.item(0).revision }, fields: { target: mode.startsWith("missing") ? 999 : id } });
+  expect(judgeActBody(scope.state, definition, body(), context).result).toBe("write");
+  mode = "recorded";
+  expect(judgeActBody(scope.state, definition, body(), context).result).toBe("write");
+  mode = "missing-pending";
+  expect(judgeActBody(scope.state, definition, body(), context)).toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
+  mode = "missing-clear";
+  expect(judgeActBody(scope.state, definition, body(), context)).toMatchObject({ result: "refused", reason: "no-item" });
+});

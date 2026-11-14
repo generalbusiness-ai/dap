@@ -289,14 +289,19 @@ export function alsoItems(view: StateView, definition: ValidDefinition, also: Re
       item = id === undefined ? null : typed(name, rule.item, id, references?.fieldOrigin([rule.by]) ?? { at: "untyped" });
     } else if ("via" in rule) {
       const from = rule.via.of === "on" ? on : resolve(rule.via.of.slice(5));
-      const id = from ? references ? references.slot(from, "refs", rule.via.slot, { type: "item", of: rule.item }) : slotOf(from, rule.via.slot) : null;
+      const declaration = from && own(declarationOf(definition).items, from.type);
+      const ref = declaration && own(declaration.refs, rule.via.slot), value = declaration && own(declaration.values, rule.via.slot);
+      const id = from ? references && ref ? references.slot(from, "refs", rule.via.slot, ref.to)
+        : references && value ? references.slot(from, "values", rule.via.slot, value.of) : slotOf(from, rule.via.slot) : null;
       item = id === null ? null : typed(name, rule.item, id, { at: "untyped" });
     } else {
       const all = ones(view, definition, rule.item, before);
       if (all.length > 1) refusal ??= `${name}: there is more than one ${rule.item}`;
       item = all.length === 1 ? all[0]! : null;
-      if (item && references) item = references.lookup(view, { at: "subject", name, binding: "one", item }, item.id, { type: "item", of: rule.item });
     }
+    if (item && references && !mark) item = references.lookup(view,
+      { at: "subject", name: `also.${name}`, binding: "by" in rule ? "by" : "via" in rule ? "via" : "one", item }, item.id,
+      { type: "item", of: rule.item });
     matched.set(name, item);
     return item;
   };

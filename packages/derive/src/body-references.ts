@@ -27,6 +27,7 @@ type EffectReference = { effect: object; path: Path; token: object };
 export class BodyReferences {
   readonly #atoms = new WeakMap<object, Identity>();
   readonly #working = new WeakMap<Item, Map<string, unknown>>();
+  readonly #base = new WeakMap<Item, Item>();
   readonly #emitted: EffectReference[] = [];
   readonly #opened = new WeakSet<Item>();
   readonly #entry = Object.freeze({});
@@ -38,7 +39,8 @@ export class BodyReferences {
   isReference(value: unknown): boolean { return this.#identity(value) !== undefined; }
   address(value: unknown): unknown {
     const identity = this.#identity(value);
-    return identity?.is === "pending" ? identity.alias : identity?.id ?? value;
+    if (identity?.is === "pending") return identity.alias;
+    return identity?.is === "recorded" ? identity.id : value;
   }
   #atom(identity: Identity): object {
     const atom = Object.freeze(Object.defineProperty(Object.create(null), Symbol.toPrimitive, { value: this.unavailable }));
@@ -79,25 +81,31 @@ export class BodyReferences {
     return this.value(this.fieldOrigin([name]), types[name] ?? null, fields[name] ?? null);
   }
   item(item: Item): unknown {
-    return this.value({ at: "item", item, currentOutput: this.#opened.has(item) }, { type: "item", of: item.type }, item.id);
+    return this.value({ at: "item", item: this.#base.get(item) ?? item, currentOutput: this.#opened.has(item) }, { type: "item", of: item.type }, item.id);
   }
   slot(item: Item, space: "refs" | "values", name: string, type: FieldType | null): unknown {
     const working = this.#working.get(item), key = JSON.stringify([space, name]);
     if (working?.has(key)) return working.get(key) === this.#entry ? this.unavailable() : working.get(key);
-    return this.value({ at: "slot", item, space, path: [name], state: working ? "working" : "inherited" }, type, item[space][name] ?? null);
+    const origin: ReferenceOrigin = this.#opened.has(item) ? { at: "untyped" }
+      : { at: "slot", item: this.#base.get(item) ?? item, space, path: [name], state: "inherited" };
+    return this.value(origin, type, item[space][name] ?? null);
   }
   opened(item: Item): void { this.#opened.add(item); this.#working.set(item, new Map()); }
   current(value: unknown): boolean { const identity = this.#identity(value); return !!identity?.item && this.#opened.has(identity.item); }
   entry(): unknown { return this.#entry; }
   forWrite(source: unknown, actual: unknown, type: FieldType): unknown {
-    const contains = (value: unknown): boolean => this.#identity(value) !== undefined
-      || (value !== null && typeof value === "object" && Object.values(value).some(contains));
-    return contains(source) ? source : this.value({ at: "untyped" }, type, actual);
+    if (this.#identity(source)) return source;
+    if (type.type === "list" && Array.isArray(actual)) return actual.map((member, n) => this.forWrite(Array.isArray(source) ? source[n] : undefined, member, type.of));
+    if (type.type === "record" && actual !== null && typeof actual === "object") return Object.fromEntries(
+      Object.entries(actual).map(([key, member]) => [key, type.of[key]
+        ? this.forWrite(source !== null && typeof source === "object" ? Reflect.get(source, key) : undefined, member, type.of[key]!) : member]));
+    return this.value({ at: "untyped" }, type, actual);
   }
   changed(before: Item, after: Item, space?: "refs" | "values", name?: string, value?: unknown): void {
     const working = new Map(this.#working.get(before));
     if (space !== undefined && name !== undefined) working.set(JSON.stringify([space, name]), value);
     this.#working.set(after, working);
+    this.#base.set(after, this.#base.get(before) ?? before);
     if (this.#opened.has(before)) this.#opened.add(after);
   }
   same(a: unknown, b: unknown, ordinary: (a: unknown, b: unknown) => boolean): boolean {
@@ -110,6 +118,7 @@ export class BodyReferences {
     const contains = (value: unknown): boolean => this.#identity(value) !== undefined
       || (value !== null && typeof value === "object" && Object.values(value).some(contains));
     if (!contains(a) && !contains(b)) return ordinary(a, b);
+    if (Array.isArray(a) !== Array.isArray(b)) return false;
     if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((v, n) => this.same(v, b[n], ordinary));
     if (a !== null && b !== null && typeof a === "object" && typeof b === "object") {
       const keys = Object.keys(a), others = Object.keys(b);
@@ -151,7 +160,7 @@ export class BodyReferences {
   metadata(item: Item, member: "id" | "revision" | "opened"): unknown {
     if (member === "id") return this.expose(this.item(item));
     if (member === "opened" && this.#opened.has(item)) return item.opened;
-    const data = this.classify({ origin: { at: member, item, currentOutput: this.#opened.has(item) }, type: null, value: item[member], use: "value" });
+    const data = this.classify({ origin: { at: member, item: this.#base.get(item) ?? item, currentOutput: this.#opened.has(item) }, type: null, value: item[member], use: "value" });
     if (data?.is === "entry" || data?.is === "after" || data?.is === "pending") return this.unavailable();
     return item[member];
   }
@@ -165,12 +174,14 @@ export class BodyReferences {
     }
     return new Proxy(copy, { get: (target, key, receiver) => this.opaque(Reflect.get(target, key, receiver)) });
   }
-  opaqueItem(item: Item, definition: ValidDefinition): Item {
+  opaqueItem(item: Item, definition: ValidDefinition, currentDeviceCommand = false): Item {
     const declaration = definition.declared.items[item.type];
     return new Proxy({ ...item }, { get: (target, key, receiver) => {
       if (key === "id" || key === "revision" || key === "opened") return this.metadata(item, key);
       if (key === "refs" || key === "values") return new Proxy({ ...target[key] }, { get: (slots, name) => {
         if (typeof name !== "string" || !Object.hasOwn(slots, name)) return Reflect.get(slots, name);
+        if (currentDeviceCommand && key === "refs" && name === "targetAt"
+          && this.#working.get(item)?.get(JSON.stringify(["refs", "targetAt"])) === this.#entry) return item.refs["targetAt"];
         const type = key === "refs" ? declaration?.refs[name]?.to : declaration?.values[name]?.of;
         return this.opaque(this.slot(item, key, name, type ?? null));
       } });

@@ -371,8 +371,10 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
   if (act.step === "open" || act.on === null) {
     if (intent.on !== null) return refused("bad-intent", "this act names no item in `on`");
   } else {
-    const item = intent.on === null ? null : frame.references
+    let item = intent.on === null ? null : frame.references
       ? frame.references.lookup(view, { at: "on" }, intent.on, { type: "item", of: act.on }) : view.item(intent.on);
+    if (item?.type !== act.on) return refused("no-item", `on names no ${act.on}`);
+    if (frame.references) item = frame.references.lookup(view, { at: "subject", name: "on", binding: "on", item }, item.id, { type: "item", of: act.on });
     if (item?.type !== act.on) return refused("no-item", `on names no ${act.on}`);
     subjects.set("on", item);
     if (act.step === "transition") expects.push("on");
