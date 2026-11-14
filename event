@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:118136ee4447898003c7af1b6033e45df0ceb1db","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-cut-r-r1-doc-checks.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:11d03bcdf41ca2b981bdfe4667de688cd5b215a2","text":"Merge retired a covered predecessor; the successor is at apps/room/worker.grow.ts."}
