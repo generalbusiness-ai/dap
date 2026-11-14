@@ -1,10 +1,9 @@
-/** Warn about new implementation-note and evidence paths without changing Git. */
+/** Warn about oversized changed implementation notes without changing Git. */
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const prefix = "notes/implementation/";
-const evidence = prefix + "evidence/";
 const maximumBytes = 40_960;
 const decoder = new TextDecoder("utf-8", { fatal: true });
 const git = (cwd, args) => execFileSync("git", ["--literal-pathspecs", ...args], { cwd, maxBuffer: 64 * 1024 * 1024 });
@@ -14,7 +13,7 @@ const commit = (cwd, ref) => {
 };
 
 /** Inspect the committed base-to-head file changes, never working-tree bytes.
- * Rename detection is off: a newly named evidence path is an addition.
+ * Rename detection is off: a newly named note is an addition.
  * An unchanged historical file and a deleted file produce no warning. */
 export function checkNotes({ cwd = process.cwd(), base, head = "HEAD" }) {
   const start = commit(cwd, base), tip = commit(cwd, head);
@@ -30,9 +29,6 @@ export function checkNotes({ cwd = process.cwd(), base, head = "HEAD" }) {
     const size = Number(decoder.decode(git(cwd, ["cat-file", "-s", `${tip}:${path}`])).trim());
     if (!Number.isSafeInteger(size) || size < 0) throw Error("Invalid Git object size.");
     if (size > maximumBytes) warnings.push({ rule: "large-note", path, bytes: size });
-    if (status === "A" && path.startsWith(evidence) && !path.endsWith(".manifest.json")) {
-      warnings.push({ rule: "non-manifest-evidence", path });
-    }
   }
   return { warnings };
 }
@@ -43,9 +39,7 @@ function main(args) {
   for (const warning of report.warnings) {
     // JSON quoting keeps a path containing a line break on one warning line.
     const path = JSON.stringify(warning.path);
-    console.log(warning.rule === "large-note"
-      ? `warning: notes: ${path} is ${warning.bytes} bytes (limit ${maximumBytes})`
-      : `warning: notes: new evidence path ${path} does not end in .manifest.json`);
+    console.log(`warning: notes: ${path} is ${warning.bytes} bytes (limit ${maximumBytes})`);
   }
   console.log(`notes: ${report.warnings.length} warnings`);
 }

@@ -1,7 +1,7 @@
 # File test evidence
 
 You send a head for review, and the reviewer checks its test evidence
-against a sealed record. Run the gate once, as
+against one retained gate log. Run the gate once, as
 [Test dap](testing.md#run-the-gate-once-before-a-review) says. Then follow
 the rules below to repair a failed gate, file the evidence, and review a
 head.
@@ -30,28 +30,39 @@ follow-up does not turn the failed gate into a pass.
 
 ## File the evidence
 
-1. Write raw run output to a new directory,
-   `~/play/artroom-evidence/<date>-<head-slug>/`, never under `/tmp` or
-   `/private/tmp`.
-2. Write a `SHA256SUMS` file at the top of the directory, then make the
-   directory read-only with `chmod -R a-w`.
-3. Commit one manifest at
-   `notes/implementation/evidence/<date>-<head-slug>.manifest.json`.
-4. Commit one implementation note under `notes/implementation/` whose
-   evidence table cites the manifest's files.
+1. File a START act with the head, tree, and current main.
+2. At that clean head, run `npm run gate` once. Write its output to one log
+   in a new directory under
+   `~/play/artroom-evidence/<date>-<head-slug>/`.
+3. File an END act with the exit code, wall time, each stage's count lines,
+   and the log's SHA-256.
+4. Commit one implementation note whose evidence table cites the log's
+   path and SHA-256. Keep each cited control's output in the same directory
+   and cite its path and SHA-256 too.
 
-[The implementation note and its evidence](#the-implementation-note-and-its-evidence)
-gives the exact rule.
+No power condition applies to a run. A head owes no formal focused
+interval, supervisor plan, source or tool hash inventory, cache copy,
+`SHA256SUMS` file, read-only seal, committed evidence manifest, sleep
+record, or sealed landing record. Report a timeout as a failure.
+
+Records that already exist stand. Historical notes, logs, and manifests
+retain their original source and result limits.
 
 ## Review a change
 
-Review the change, the invariants it touches and their witnesses. Probe
-with a few focused counterexamples of your own. Check the head's evidence
-manifest: every listed file exists at the directory with its size and
-digest, and every digest the note cites is in the manifest. A missing or
-changed file is a changes-requested gap. Cite the manifest's own sha256
-in the report. Run the gate once at the head under review, subject to
-the [limited follow-up exception](#follow-up-after-a-gate).
+Review the change, its invariants, and their witnesses. Probe with a few
+focused counterexamples. Check the retained gate log:
+
+1. The file exists at the cited path, and its SHA-256 equals the note's.
+2. Its first lines name the reviewed head and tree with zero changed files.
+3. Its last line says the gate passed.
+4. Each cited control has its output in the same directory, with the
+   SHA-256 that the note gives.
+
+A missing or changed file is a changes-requested gap. The
+[document-only follow-up rule](#follow-up-after-a-gate) still applies:
+when the final head adds only documents, the note identifies the gated and
+final trees and states that source and tests are unchanged.
 Do not rebuild a per-field or per-guard inventory.
 
 ## The implementation note and its evidence
@@ -67,97 +78,52 @@ Each landing head carries one implementation note under
 
 Say how each timing, count or reconstruction was taken.
 
-Raw run output stays out of the tree: gate logs, JSON reports, tail
-captures, mutation inventories and results, stdout and stderr. Write it
-to one new directory under the owner's home,
-`~/play/artroom-evidence/<date>-<head-slug>/`, with a `SHA256SUMS` file at
-its top. Make the directory read-only after the last write
-(`chmod -R a-w`) and keep it for at least 30 days after the landing. Do
-not use `/tmp` or `/private/tmp`, because a restart clears them. A
-directory is removed later only by a recorded act that names its
-manifest.
+Raw run output stays out of the tree. Keep the gate log and cited control
+outputs under `~/play/artroom-evidence/<date>-<head-slug>/` for at least
+30 days after landing. Do not use `/tmp` or `/private/tmp`, because a
+restart can clear them. Retain failed attempts separately. A later pass
+does not turn a failed run into a pass.
 
-The head commits one manifest at
-`notes/implementation/evidence/<date>-<head-slug>.manifest.json` and
-nothing else under that directory. The manifest holds:
+The note names the commit and tree that the gate tested. When the reviewed
+head differs, the follow-up rule above applies. Its evidence table gives
+each command, exit code, output path, and SHA-256. Count lines come from
+the actual terminal output. A concurrent sum of case durations is not a
+measured wall time.
 
-- a qualification line
-- the absolute directory path
-- the checkpoint commit and tree at which the evidence was taken
-- the file count
-- a `files` list with the path, bytes and sha256 of every file the note
-  cites
- The note's evidence table
-names the same checkpoint. Where the reviewed head differs from it, the
-follow-up rule above applies.
-
-A raw file that holds a secret, a token or an unredacted request body
-stays out of the directory as well, and the note names it as withheld. Other
-raw output, including room identifiers from hosted tails, may stay.
+A raw file that holds a secret, token, or unredacted request body stays out
+of the evidence directory too. The note names it as withheld. Other raw
+output, including room identifiers from hosted tails, may stay.
 
 Design packets commit their sources and at most three key images. Renders
-and screenshot series go in the directory and its manifest.
+and screenshot series stay outside the tree, with direct output citations.
 
-The rule applies to each new head. Notes, evidence files and manifests
-already in the tree stay as they are. The gate's `notes` step checks the committed base-to-head file
-changes. It warns on each added or changed file under
-`notes/implementation/` over 40,960 bytes, and on each added path under
-`notes/implementation/evidence/` whose name does not end in `.manifest.json`.
-A new name counts as an addition. Unchanged and deleted historical paths
-produce no warning. The check reads Git objects, not working-tree files.
-Warnings exit 0. Git, missing-base, and decoding errors exit 2. The check
-does not verify manifest contents or replace the reviewer's evidence check.
+The rule applies to each new head. Notes, evidence files, and manifests
+already in the tree stay as they are. The gate's `notes` step reads the
+committed base-to-head changes. It warns on each added or changed file
+under `notes/implementation/` over 40,960 bytes. New names count as
+additions. Unchanged and deleted historical paths produce no warning.
+The check reads Git objects, not working-tree files. Warnings exit 0.
+Git, missing-base, and decoding errors exit 2. The step neither requires a
+manifest extension nor replaces the reviewer's log check.
 
+## Run an optional focused plan
 
-## Run a reviewed focused plan
+No head owes a formal focused run. Run changed test files, their affected
+compiler contexts, and meaningful controls during development, as
+[Test dap](testing.md) describes.
 
-For a frozen candidate with an exact compiler closure and complete static
-case ledger, use `scripts/focused-check.mjs`. Its one invocation runs each
-declared compiler once, then one Vitest body. It does not collect the same
-tests in a separate discovery run or pause between successful phases.
+`scripts/focused-check.mjs` remains an optional tool for a frozen candidate
+with an exact compiler closure and a complete case ledger. One invocation
+runs the declared compilers, then one Vitest body. It does not collect the
+same tests in a separate discovery run.
 
 ```
-/usr/bin/time -p node scripts/focused-check.mjs reviewed-plan.json ~/play/artroom-evidence/<date>-<head-slug>
+/usr/bin/time -p node scripts/focused-check.mjs plan.json ~/play/artroom-evidence/<date>-<head-slug>
 ```
 
-The reviewed JSON plan names these inputs, as paths and hashes and never
-secrets:
-
-- the canonical checkout, head and tree
-- every tracked package, script and example input, the read-only
-  documentation fixtures and the root configuration
-- extra external inputs, including the actual pipeline file and body
-  config
-- the lock stamp, the current workspace bindings and the source export
-  aliases
-- the pinned Node, compiler and Vitest tool files
-- each unique compiler config and its working directory
-- the body config, its working directory, and the complete selection of
-  files, projects, pools and full titles
-
-A selected file must have unique full titles within its project. When that static ledger cannot
-identify every case, keep an explicit collection plan instead of guessing.
-The dependency namespace and its Vite state must be owned real directories.
-A symlink to shared `node_modules` or `@generalbusiness` is refused even when
-an individual workspace resolves to the right source.
-
-The driver checks those facts before any tool or application import, at
-each command boundary and after the terminal command. Any refusal, changed
-source, nonzero exit or signal stops the pipeline. Its same-run reporter
-checks complete file/project/pool identity before global setup, then records
-actual case states, errors, skips and unfinished or unrun obligations. It
-uses structured status fields, so a title that contains “failed” is only a title.
-The built-in JSON reporter provides a second count/file/status check in the
-same body invocation. Verbose output and complete raw reports stay in the
-new external evidence directory, and its manifest seals their hashes. Existing
-evidence is never overwritten, and the driver never installs dependencies,
-retries a command or changes an original test deadline.
-`result.json` records verification outcomes. The actual process exit
-decides. A sealing failure exits nonzero and retains partial artifacts
-and, when possible, a fresh sibling failure record without rewriting them.
-
-Time the outer command to include guards, parsing, artifact work and child
-CPU. The driver also retains each command's own wall, user and system time.
-Their sum is a sum of separate commands, not a measured pipeline duration.
-A focused pass protects only its selected boundaries. It does not replace
-the final gate, meaningful controls, manual acceptance or complete review.
+The tool validates the plan's source, dependency, command, and case inputs.
+Its same-run reporter checks actual case identities and results against
+the plan. Its output covers only that selection. The tool's internal
+records do not add a filing requirement or replace the gate, controls,
+manual acceptance, or review. It never installs dependencies, retries a
+command, or changes an original test deadline.
