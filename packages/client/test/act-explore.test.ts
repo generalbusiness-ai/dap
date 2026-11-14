@@ -8,6 +8,8 @@ import { ActRecords } from "../src/act-records.ts";
 import { lowerActBasis, lowerActNames, type ActSymbols } from "../src/act-symbols.ts";
 import { shapeFieldsOf } from "../src/declared.ts";
 import { copyActState } from "../src/act-state.ts";
+import { projectActItems } from "../src/act-items.ts";
+import { presentActRows } from "../src/act-rows.ts";
 import { fixedRowsOf, MemoryState, newItem, validateDefinition } from "@generalbusiness/dap-derive";
 import { clientNotes as notes } from "./definition-corpus-data.ts";
 
@@ -45,10 +47,11 @@ test("binding preserves written text and symbolic names while capturing only mis
   expect(lowerActBasis(notes.acts.write, subjects, lowered.on, lowered.fields, at, captured.act.expected, symbols)).toEqual({ on: 3 });
 });
 
-test("a private state copy rebuilds fixed equality and retains only recorded hash knowledge", () => {
+test("private state and public rows retain recorded knowledge without exposing pending item aliases", () => {
   const declaration = { ...notes, items: { note: { ...notes.items.note,
-    values: { ...notes.items.note.values, code: { fixed: true, required: false, default: 0, of: { type: "int", min: 0, max: 1 } } },
-  } } } as const satisfies DeclaredDefinition;
+    refs: { me: { fixed: false, required: false, to: { type: "item", of: "note" } } },
+    values: { ...notes.items.note.values, code: { fixed: true, required: false, default: 17, of: { type: "int", min: 0, max: 20 } } },
+  } }, acts: { ...notes.acts, add: { ...notes.acts.start, grant: "add", effects: [{ ref: { slot: "me", from: "self" } }] } } } as const satisfies DeclaredDefinition;
   const checked = validateDefinition(declaration, PROPOSED_BOUNDS);
   if (!checked.ok) throw new Error("the state-copy fixture definition is invalid");
   const definition = checked.definition;
@@ -66,13 +69,28 @@ test("a private state copy rebuilds fixed equality and retains only recorded has
   for (const fixed of fixedRowsOf(definition, item, at, seq => base.fixedHash(seq))) base.putFixed(fixed.row, fixed.dependencies);
   base.finishFixed(definition.digest, at, head);
   const copy = copyActState(base, definition);
-  expect(copy.view.fixedCount("note", "code", "0", ["kept"], "raw")).toBe(1);
-  expect(copy.view.fixedCount("note", "code", "0", ["kept"], "normalized")).toBe(1);
+  expect(copy.view.fixedCount("note", "code", "17", ["kept"], "raw")).toBe(1);
+  expect(copy.view.fixedCount("note", "code", "17", ["kept"], "normalized")).toBe(1);
   expect(copy.view.fixedReady(definition.digest, at, head)).toBe(true);
   expect([copy.view.fixedHash(3), copy.view.fixedHash(4)]).toEqual([head.hash, null]);
+  const source: Source = { key: "added-note", version: actVersion({ kind: "add", on: null, fields: {}, expected: {} }) };
+  const effects: readonly Effect[] = [{ effect: "open", item: 4, type: "note", state: "kept" }, { effect: "ref", item: 4, slot: "me", to: 4 }];
+  const projected = projectActItems(copy.view, definition, effects, null, source, [1], 17);
+  const nameOf = (id: number) => id === 17 ? { output: source } : id;
+  const publicView = presentActRows(declaration, [...copy.view.all().items, ...projected.items.values()], nameOf,
+    (id, revision) => ({ name: nameOf(id), seen: id === 17 ? { after: source } : revision, assumes: id === 17 ? [source] : [] }),
+    id => base.item(id));
+  const pending = publicView.row({ output: source });
+  if (!pending) throw new Error("the public pending note is absent");
+  expect([pending.ref.name, pending.ref.seen, pending.refs.me, pending.values.code, pending.recorded]).toEqual([
+    { output: source }, { after: source }, { output: source }, 17, null,
+  ]);
+  expect([Object.hasOwn(pending, "id"), Object.hasOwn(pending, "revision")]).toEqual([false, false]);
+  expect(publicView.row(3)?.recorded?.revision).toBe(1);
   copy.writer.putItem({ ...item, revision: 2 });
   expect([base.item(3)?.revision, copy.view.item(3)?.revision]).toEqual([1, 2]);
   expect(copy.view.scope()?.head).toEqual(head);
+  expect(publicView.row(3)?.ref.seen).toBe(1);
 });
 
 test("pending command records retain exact counts and guard only marked entry values", () => {

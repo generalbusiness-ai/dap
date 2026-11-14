@@ -73,18 +73,29 @@ export interface ActRef {
 }
 
 type ItemType<D extends DeclaredDefinition> = keyof D["items"] & string;
-type SlotValues<V> = { readonly [S in keyof V]: (V[S] extends { of: infer F } ? ValueOf<F> : FieldValue) | null };
-type RefValue<T> = T extends { type: "item" } ? ItemName
+type ProjectedValue<T> = T extends { type: "item" } ? ItemName
   : T extends { type: "fact" } ? number | FactRef | SymbolicEntry
+  : T extends { type: "list"; of: infer E } ? readonly ProjectedValue<E>[]
+  : T extends { type: "record"; of: infer M } ? ProjectedMembers<M>
   : ValueOf<T>;
-type SlotRefs<R> = { readonly [S in keyof R]: (R[S] extends { to: infer T } ? RefValue<T> : FieldValue | SymbolicEntry) | null };
+type ProjectedMembers<M> =
+  { readonly [N in keyof M as M[N] extends { required: true } ? N : never]: ProjectedValue<M[N]> }
+  & { readonly [N in keyof M as M[N] extends { required: true } ? never : N]?: ProjectedValue<M[N]> };
+type SlotValues<V> = { readonly [S in keyof V]: (V[S] extends { of: infer F } ? ProjectedValue<F> : FieldValue) | null };
+type SlotRefs<R> = { readonly [S in keyof R]: (R[S] extends { to: infer T } ? ProjectedValue<T> : FieldValue | SymbolicEntry) | null };
+type RecordedSlotValues<V> = { readonly [S in keyof V]: (V[S] extends { of: infer F } ? ValueOf<F> : FieldValue) | null };
+
+/** The recorded item retains its actual numeric identity and revision. */
+export type RecordedActRow<D extends DeclaredDefinition, T extends ItemType<D> = ItemType<D>> = {
+  [U in T]: Omit<Item, "type" | "values"> & { readonly type: U; readonly values: RecordedSlotValues<D["items"][U]["values"]> }
+}[T];
 
 /** Public names replace internal item aliases and speculative revisions. */
 export type ActRow<D extends DeclaredDefinition, T extends ItemType<D> = ItemType<D>> = {
   [U in T]: Omit<Item, "id" | "type" | "revision" | "refs" | "values"> & {
     readonly type: U;
     readonly ref: ActRef;
-    readonly recorded: ActRow<D, U> | null;
+    readonly recorded: RecordedActRow<D, U> | null;
     readonly refs: SlotRefs<D["items"][U]["refs"]>;
     readonly values: SlotValues<D["items"][U]["values"]>;
   }
