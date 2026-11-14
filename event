@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6fb28fa21837ecb1d6680efe9de63d38d65bafcf","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-cut-r-r1-format-followup.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:863f19f86c8b9d1b895a1d6c5e5aa70d89296a1e","text":"Merge retired a covered predecessor; the successor is at scripts/format-json.mjs."}
