@@ -142,6 +142,15 @@ export const members = (party: Party | undefined): readonly MemberRef[] => (part
  * fact. No clock and no other item.
  */
 export function ruleInput(j: Judging): unknown {
+  if (j.references) {
+    for (const name of Object.keys(j.fields)) j.references.expose(j.references.field(j.fieldTypes, j.fields, name));
+    for (const item of j.subjects.values()) {
+      for (const member of ["id", "revision", "opened"] as const) j.references.metadata(item, member);
+      const type = own(declarationOf(j.definition).items, item.type)!;
+      for (const [slot, ref] of Object.entries(type.refs)) j.references.expose(j.references.slot(item, "refs", slot, ref.to));
+      for (const [slot, value] of Object.entries(type.values)) j.references.expose(j.references.slot(item, "values", slot, value.of));
+    }
+  }
   return {
     kind: j.kind, fields: j.fields, signer: j.signer?.member ?? null,
     subjects: Object.fromEntries(j.subjects), facts: [...j.facts.values()].map(copyEntry),

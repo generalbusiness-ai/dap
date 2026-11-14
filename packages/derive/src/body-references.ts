@@ -1,6 +1,7 @@
 /** Position provenance for one unsigned body. Recorded judges never install it. */
 import type { FieldType } from "@generalbusiness/dap-contract";
 import type { Item, StateView } from "./state.ts";
+import type { ValidDefinition } from "./validate/index.ts";
 
 type Path = readonly (string | number)[];
 export type ReferenceOrigin =
@@ -28,6 +29,7 @@ export class BodyReferences {
   readonly #working = new WeakMap<Item, Map<string, unknown>>();
   readonly #emitted: EffectReference[] = [];
   readonly #opened = new WeakSet<Item>();
+  readonly #entry = Object.freeze({});
   constructor(readonly classify: Provenance, readonly unavailable: () => never, readonly supplied: Readonly<Record<string, unknown>>) {}
 
   #identity(value: unknown): Identity | undefined {
@@ -52,13 +54,14 @@ export class BodyReferences {
     return typeof value === "number" ? view.item(value) : null;
   }
   value(origin: ReferenceOrigin, type: FieldType | null, value: unknown): unknown {
+    if (value === null || value === undefined) return value;
     if (this.#identity(value)) return value;
     if (type?.type === "list" && Array.isArray(value)) return value.map((member, n) => this.value(this.#at(origin, n), type.of, member));
     if (type?.type === "record" && value !== null && typeof value === "object") return Object.fromEntries(
       Object.entries(value).map(([key, member]) => [key, this.value(this.#at(origin, key), type.of[key] ?? null, member)]));
     const found = this.classify({ origin, type, value, use: type?.type === "item" ? "typed-reference" : "value" });
     if (found?.is === "entry" || found?.is === "after") return this.unavailable();
-    return type?.type === "item" && (found?.is === "pending" || found?.is === "recorded") ? this.#atom(found) : value;
+    return type?.type === "item" && (found?.is === "pending" || (found?.is === "recorded" && found.item !== null)) ? this.#atom(found) : value;
   }
   #at(origin: ReferenceOrigin, member: string | number): ReferenceOrigin {
     const path = origin.at === "field" || origin.at === "slot" ? [...origin.path, member] : null;
@@ -80,10 +83,17 @@ export class BodyReferences {
   }
   slot(item: Item, space: "refs" | "values", name: string, type: FieldType | null): unknown {
     const working = this.#working.get(item), key = JSON.stringify([space, name]);
-    if (working?.has(key)) return working.get(key);
+    if (working?.has(key)) return working.get(key) === this.#entry ? this.unavailable() : working.get(key);
     return this.value({ at: "slot", item, space, path: [name], state: working ? "working" : "inherited" }, type, item[space][name] ?? null);
   }
-  opened(item: Item): void { this.#opened.add(item); }
+  opened(item: Item): void { this.#opened.add(item); this.#working.set(item, new Map()); }
+  current(value: unknown): boolean { const identity = this.#identity(value); return !!identity?.item && this.#opened.has(identity.item); }
+  entry(): unknown { return this.#entry; }
+  forWrite(source: unknown, actual: unknown, type: FieldType): unknown {
+    const contains = (value: unknown): boolean => this.#identity(value) !== undefined
+      || (value !== null && typeof value === "object" && Object.values(value).some(contains));
+    return contains(source) ? source : this.value({ at: "untyped" }, type, actual);
+  }
   changed(before: Item, after: Item, space?: "refs" | "values", name?: string, value?: unknown): void {
     const working = new Map(this.#working.get(before));
     if (space !== undefined && name !== undefined) working.set(JSON.stringify([space, name]), value);
@@ -108,6 +118,7 @@ export class BodyReferences {
     return ordinary(a, b);
   }
   expose(value: unknown): unknown {
+    if (value === this.#entry) return this.unavailable();
     const identity = this.#identity(value);
     if (identity?.is === "pending") return this.unavailable();
     if (identity) return identity.id;
@@ -115,15 +126,70 @@ export class BodyReferences {
     if (value !== null && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, member]) => [key, this.expose(member)]));
     return value;
   }
+  forType(value: unknown, type: FieldType): unknown {
+    const identity = this.#identity(value);
+    if (identity) {
+      if (identity.is === "pending" && type.type !== "item") return this.unavailable();
+      return this.address(value);
+    }
+    if (type.type === "list" && Array.isArray(value)) return value.map(member => this.forType(member, type.of));
+    if (type.type === "record" && value !== null && typeof value === "object") return Object.fromEntries(
+      Object.entries(value).map(([key, member]) => [key, type.of[key] ? this.forType(member, type.of[key]!) : this.expose(member)]));
+    return this.expose(value);
+  }
   basis(item: Item, name: string, expected: unknown, provided: boolean): boolean {
     const before = this.classify({ origin: { at: "expected", name, provided, subject: item }, type: null, value: expected, use: "basis" });
     const after = this.classify({ origin: { at: "revision", item, currentOutput: this.#opened.has(item) }, type: null, value: item.revision, use: "basis" });
     if (before?.is === "entry" || after?.is === "entry") return this.unavailable();
     if (before?.is === "after" || after?.is === "after") {
-      return before?.is === "after" && after?.is === "after" && before.token === after.token && before.subject === after.subject;
+      if (before?.is !== "after" || after?.is !== "after") return this.unavailable();
+      return before.token === after.token && before.subject === after.subject;
     }
     if (before?.is === "recorded-revision" && after?.is === "recorded-revision") return before.subject === after.subject && before.value === after.value;
     return expected === item.revision;
+  }
+  metadata(item: Item, member: "id" | "revision" | "opened"): unknown {
+    if (member === "id") return this.expose(this.item(item));
+    if (member === "opened" && this.#opened.has(item)) return item.opened;
+    const data = this.classify({ origin: { at: member, item, currentOutput: this.#opened.has(item) }, type: null, value: item[member], use: "value" });
+    if (data?.is === "entry" || data?.is === "after" || data?.is === "pending") return this.unavailable();
+    return item[member];
+  }
+  opaque<T>(value: T): T {
+    if (this.#identity(value) || value === this.#entry) return this.expose(value) as T;
+    if (value === null || typeof value !== "object") return value;
+    const copy = Array.isArray(value) ? [] : Object.create(Object.getPrototypeOf(value));
+    for (const key of Reflect.ownKeys(value)) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
+      Object.defineProperty(copy, key, { ...descriptor, configurable: Array.isArray(value) && key === "length" ? false : true });
+    }
+    return new Proxy(copy, { get: (target, key, receiver) => this.opaque(Reflect.get(target, key, receiver)) });
+  }
+  opaqueItem(item: Item, definition: ValidDefinition): Item {
+    const declaration = definition.declared.items[item.type];
+    return new Proxy({ ...item }, { get: (target, key, receiver) => {
+      if (key === "id" || key === "revision" || key === "opened") return this.metadata(item, key);
+      if (key === "refs" || key === "values") return new Proxy({ ...target[key] }, { get: (slots, name) => {
+        if (typeof name !== "string" || !Object.hasOwn(slots, name)) return Reflect.get(slots, name);
+        const type = key === "refs" ? declaration?.refs[name]?.to : declaration?.values[name]?.of;
+        return this.opaque(this.slot(item, key, name, type ?? null));
+      } });
+      return Reflect.get(target, key, receiver);
+    } });
+  }
+  opaqueView(view: StateView, definition: ValidDefinition): StateView {
+    return new Proxy(view, { get: (target, key) => {
+      if (key === "item") return (id: number) => {
+        const item = this.lookup(view, { at: "untyped" }, id, null);
+        return item ? this.opaqueItem(item, definition) : null;
+      };
+      if (key === "page") return (...args: Parameters<StateView["page"]>) => {
+        const page = target.page(...args);
+        return { ...page, items: page.items.map(item => this.opaqueItem(item, definition)) };
+      };
+      const value: unknown = Reflect.get(target, key);
+      return typeof value === "function" ? value.bind(target) : value;
+    } });
   }
   lower(value: unknown, type: FieldType | null, effect: object, path: Path): unknown {
     const identity = this.#identity(value);

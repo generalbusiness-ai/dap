@@ -4,18 +4,21 @@ import { isSequenceRef } from "@generalbusiness/dap-bytes";
 import type { Judging } from "./guards.ts";
 import { isLocalId, isObject, own } from "./values.ts";
 
-export function sendValue(j: Pick<Judging, "self" | "scope" | "view" | "own">, value: unknown, type: FieldType | null): { value: unknown; unresolved: string | null } {
+export function sendValue(j: Pick<Judging, "self" | "scope" | "view" | "own" | "references">, value: unknown, type: FieldType | null, explicitSelf = false): { value: unknown; unresolved: string | null } {
   let unresolved: string | null = null;
   const local = (id: unknown): SelfMark | FactRef | null => {
-    if (id === j.self) return { self: true };
-    const opened = isLocalId(id) ? j.view.item(id)?.opened : null;
+    if (j.references?.current(id) || (id === j.self && (!j.references || explicitSelf))) return { self: true };
+    id = j.references ? j.references.expose(id) : id;
+    const item = j.references ? j.references.lookup(j.view, { at: "untyped" }, id, null) : isLocalId(id) ? j.view.item(id) : null;
+    const opened = item ? j.references ? j.references.metadata(item, "opened") : item.opened : null;
     if (!opened) unresolved = `item ${String(id)}`;
     if (!isSequenceRef(j.scope.at)) { unresolved = `unsealed entry ${String(id)}`; return null; }
-    return opened ? { at: j.scope.at, seq: id as number, hash: opened } : null;
+    return opened ? { at: j.scope.at, seq: id as number, hash: item!.opened! } : null;
   };
   const fact = (v: unknown): unknown => {
+    v = j.references ? j.references.expose(v) : v;
     if (!isLocalId(v)) return v;
-    if (v === j.self) return { self: true } satisfies SelfMark;
+    if (v === j.self && (!j.references || explicitSelf)) return { self: true } satisfies SelfMark;
     const kept = j.own?.(v);
     if (!kept) unresolved = `entry ${v}`;
     if (!isSequenceRef(j.scope.at)) { unresolved = `unsealed entry ${v}`; return null; }
@@ -27,7 +30,7 @@ export function sendValue(j: Pick<Judging, "self" | "scope" | "view" | "own">, v
     if (of?.type === "fact") return fact(v);
     if (of?.type === "list" && Array.isArray(v)) return v.map(member => wire(member, of.of));
     if (of?.type === "record" && isObject(v)) return Object.fromEntries(Object.entries(v).map(([name, member]) => [name, wire(member, own(of.of, name) ?? null)]));
-    return v;
+    return j.references ? j.references.expose(v) : v;
   };
   return { value: wire(value, type), unresolved };
 }
