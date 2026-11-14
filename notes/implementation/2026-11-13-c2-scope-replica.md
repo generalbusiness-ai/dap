@@ -30,7 +30,9 @@ expects the entry. The entry exports `scopeReplica`, `Replica`, `judged`,
 - The replica validates the definition one time. It reads the journal
   with `ScopeHandle.log`, page by page from the genesis entry, and folds
   each entry with `applyEntry`. A notice of a later head starts a read.
-  `read(head)` starts a read for a head that an answer names.
+  `read(head)` starts a read for a head that an answer names. Each
+  `streaming` state starts a read when the replica lacks a known head
+  and no read runs (ruling `aa12ecdd`).
 - The state is `starting` until the replica holds the genesis entry. It
   is `current` when the feed streams and the replica holds the latest
   head that the feed or a caller named. It is `behind` in each other
@@ -130,12 +132,14 @@ power, powermode 0.
 
 ## Tests
 
-`packages/client/test/replica.test.ts` (24 cases with
+`packages/client/test/replica.test.ts` (25 cases with
 `scope-entry.test.ts`):
 
 - Each change of state: `starting` to `current`, `behind` before the feed
   streams, `current` to `behind` and back, `behind` until an answer's
   head, and `folding` to `current`.
+- A failed read to a known head retries when the observation reconnects,
+  and reaches `current` with no new entry and no caller read.
 - Each cause of `stopped`: `close`, `protocol`, `definition`,
   `forbidden`, `archived` and `fold`.
 - `close()` with a real `observeScope` under fake timers: no timer
@@ -156,12 +160,23 @@ the view equals the view computed again from that state. A prediction of
 (ruling `b1b1d492`). The run made 32,000 steps, 10,356 entries, 650
 predictions and 1,886 reloads in 18.9 s, on battery power.
 
-## Not settled
+## Limits
 
-- A `TransportError` from `ScopeHandle.log` keeps the replica `behind`.
-  The replica does not stop on it, though most such errors do not pass
-  with time.
-- `mismatch` reads `not-judged`. The replica's entry for the key tells C3
-  which intent holds it.
-- `refused-here` and `never` carry the guard's `name` when the judge
-  gives one. Section 9 of the client note does not show it.
+A `TransportError` from `ScopeHandle.log` keeps the replica `behind`
+without stopping it. Reconnection retries a missing known head. If the
+feed stays up and the scope has no new entry, the replica stays `behind`
+until a caller calls `read`. The replica holds no timer. C3 calls `read`
+on each member call (ruling `aa12ecdd`).
+
+`mismatch` reads `not-judged`. C3 closes the custody record from the
+replica's entry for the key before publishing that prediction. Its test
+keeps a request whose key holds another intent out of every published
+view with `predicted: { is: "not-judged" }` (ruling `aa12ecdd`).
+
+`refused-here` and `never` carry the guard's `name` when the judge gives
+one. Section 9 of the client note now names both fields.
+
+The reconnect repair changes no protected function of `observe.ts`.
+The Observation model covers obsolete callbacks and cancellation, and
+excludes reconnect behavior. Its source correspondence stays unchanged.
+The reconnect test, the 400-seed suite on AC, and the gate remain due.

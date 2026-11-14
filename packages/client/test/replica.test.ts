@@ -19,6 +19,7 @@ import * as entry from "../src/scope.ts";
 import { seamOf } from "../src/replica.ts";
 import { HeldEntries } from "../src/replica-own.ts";
 import { judgedOn } from "../src/replica-judged.ts";
+import { TransportError } from "../src/handle.ts";
 import { Feed, citing, citingDefinition, served } from "./replica-support.ts";
 
 const { rita, una } = keys;
@@ -101,6 +102,31 @@ describe("the states of the replica", () => {
     serving.refuse = null;
     await replica.read();
     expect(replica.view).toMatchObject({ state: { is: "current" }, head: s.head });
+  });
+
+  test("a reconnect retries a failed read to a known head and reaches current with no new entry", async () => {
+    const s = laneScope();
+    const { replica, feed, serving } = await started(s);
+    const before = s.head;
+    s.did(una, "remark", { on: 0, fields: { text: "answered" } });
+    serving.refuse = () => { throw new TransportError("reply lost"); };
+    await replica.read(s.head);
+    expect(replica.view).toMatchObject({ state: { is: "behind" }, head: before });
+    const reads = serving.reads.length;
+    const entries = s.entries.length;
+    feed.down();
+    serving.refuse = null;
+    const current = new Promise<void>((resolve) => {
+      const unsubscribe = replica.subscribe((view) => {
+        if (view.state.is === "current") { unsubscribe(); resolve(); }
+      });
+    });
+    feed.emit({ status: "streaming" });
+    await current;
+    expect(replica.view).toMatchObject({ state: { is: "current" }, head: s.head });
+    expect(serving.reads.slice(reads)).toEqual([before.seq + 1]);
+    expect(s.entries).toHaveLength(entries);
+    replica.close();
   });
 
   test("one fold failure: the replica folds again from the genesis entry, and is current", async () => {
