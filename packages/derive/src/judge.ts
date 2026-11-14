@@ -12,6 +12,7 @@
  */
 
 import { nativeMark } from "./program/native.ts";
+import { BodyReferences, type Provenance, type OutputReference } from "./body-references.ts";
 import type { Digest, Entry, FactRef, FactUse, Grant, Head, Input, Intent, KeyId, MismatchReason, ObservationUse, Prepared, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { intentDigest, isEffect, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
@@ -204,7 +205,8 @@ type BodyJudgment = Refused | Unjudged | { result: "due"; next: Due }
       signer: Signer | null; selfRefs: readonly number[]; recordRefs: readonly RecordSelfRef[] };
 type ExploredBodyJudgment = Exclude<BodyJudgment, { result: "write" }>
   | (Extract<BodyJudgment, { result: "write" }> & { drawn: Drawn; requestReservations: ReadonlyMap<number, Amount>;
-      itemDuties: ReadonlyMap<number, readonly ItemDuty[]>; itemSettlement: ItemSettlement | null });
+      itemDuties: ReadonlyMap<number, readonly ItemDuty[]>; itemSettlement: ItemSettlement | null;
+      outputRefs: readonly OutputReference[] });
 interface ActBodyFrame {
   actor: KeyId;
   signed?: SignedIntent;
@@ -215,11 +217,12 @@ interface ActBodyFrame {
   recordRefs?: EmittedRecordSelfRef[];
   unavailableEntry?: () => never;
   itemBookkeeping?: { itemDuties: Map<number, readonly ItemDuty[]>; itemSettlement: ItemSettlement | null };
+  references?: BodyReferences;
 }
 
 /** The same body as a recorded act, without signature, key or lifetime checks.
  * A reached need for its absent signed input leaves no partial consequences. */
-export function judgeActBody(view: StateView, definition: ValidDefinition, body: Pick<Intent, "kind" | "on" | "fields" | "expected">, context: JudgeContext & { actor: KeyId }): ExploredBodyJudgment {
+export function judgeActBody(view: StateView, definition: ValidDefinition, body: Pick<Intent, "kind" | "on" | "fields" | "expected">, context: JudgeContext & { actor: KeyId; provenance?: Provenance }): ExploredBodyJudgment {
   let missing: "intent" | "entry" | null = null;
   const selfRefs: number[] = [];
   const recordRefs: EmittedRecordSelfRef[] = [];
@@ -233,12 +236,13 @@ export function judgeActBody(view: StateView, definition: ValidDefinition, body:
     missing ??= "entry";
     throw new RuleFault("the body needs an unsupported entry symbol");
   };
+  const references = context.provenance ? new BodyReferences(context.provenance, unavailableEntry) : undefined;
   const answer = withinCounts(view, definition, unjudged(() => {
     const scope = view.scope();
     if (!scope) return { result: "unavailable", reason: "unavailable" } as const;
     const verified = verifiedContext(context, { body, actor: context.actor });
     return actBodyJudged(view, definition, body, verified, scope,
-      { actor: context.actor, plan: false, unavailableIntent, selfRefs, recordRefs, unavailableEntry, itemBookkeeping });
+      { actor: context.actor, plan: false, unavailableIntent, selfRefs, recordRefs, unavailableEntry, itemBookkeeping, references });
   }), body, counts => { drawn = counts; });
   if (missing) return { result: "unavailable", reason: "unavailable", lacks: [missing] };
   if (answer.result === "write") {
@@ -247,7 +251,7 @@ export function judgeActBody(view: StateView, definition: ValidDefinition, body:
     if (definition.declared.capacity?.name === "whole-scope") for (const send of answer.draft.sends) {
       if (send.message.class === "request") requestReservations.set(send.n, requestReservation(definition, { body, sends: answer.draft.sends }, send.n));
     }
-    return { ...answer, drawn, requestReservations, ...itemBookkeeping };
+    return { ...answer, drawn, requestReservations, ...itemBookkeeping, outputRefs: references?.output(answer.draft.effects) ?? [] };
   }
   return answer;
 }

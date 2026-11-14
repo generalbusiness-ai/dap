@@ -7,6 +7,7 @@
 
 import type { CheckedSequence } from "@generalbusiness/dap-bytes";
 import { declarationOf } from "./program/declaration.ts";
+import type { BodyReferences } from "./body-references.ts";
 import type { Bounds, Entry, FactRef, FieldType, FieldValue, Guard, MemberRef, Prepared, Reason, ScopeRef, GenesisSelfRef, ScopeKind, UnavailableReason, Digest, ScopeId, SequenceRef, PlatformDefinition, Sealed } from "@generalbusiness/dap-contract";
 import { canonicalBytes, digestBytes } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
@@ -105,6 +106,8 @@ export interface Judging {
   recordSelfRef?: ((effect: Extract<import("@generalbusiness/dap-contract").Effect, { effect: "record" }>, path: readonly (string | number)[]) => void) | undefined;
   /** A reached record write needs an entry symbol outside the admitted capability cohort. */
   unavailableEntry?: (() => never) | undefined;
+  /** Unsigned body only: actual position provenance, never inferred from a private numeric address. */
+  references?: BodyReferences | undefined;
   sender?: ScopeRef | undefined;                       // a handler and a result clause: the envelope's source scope, as verified
   source?: JudgmentCopy | undefined;                  // a handler: its matched source evidence
   update?: { state: string; item: FactRef; revision: number } | undefined;   // a `relate` handler: the update being applied
