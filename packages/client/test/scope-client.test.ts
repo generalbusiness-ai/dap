@@ -4,7 +4,11 @@ import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
 import { Custody, identityId, memoryStore } from "../src/custody.ts";
 import { signedIntent } from "../src/intent.ts";
 import { sendableAt } from "../src/originals.ts";
-import { intentMeaning } from "../src/replica.ts";
+import { intentMeaning, seamOf } from "../src/replica.ts";
+import { DeclaredHandle } from "../src/declared.ts";
+import { ScopeHandle } from "../src/handle.ts";
+import { bindingTransport, type ServiceBinding } from "../src/binding.ts";
+import { SESSION } from "./replica-support.ts";
 import { scopeClient, request, clientReplica, clientIdle, type DraftRead } from "../src/scope-client.ts";
 import { requestScene } from "./request-support.ts";
 
@@ -84,6 +88,58 @@ test("a failed journal read with the feed down cannot end a dead latest signing;
   expect((await custody.find(identity))!.outcomes.at(-1)).toMatchObject({ unsent: head });
   client.close();
   expect([s.feed.cancelled, s.timers.size]).toEqual([1, 0]);
+});
+
+// Invariant (570df0cf): the handle rejects a whole bad page before the replica can fold or reconcile any prefix.
+test("a page with a later wrong hash stops the replica without folding its prefix or closing custody", async () => {
+  const s = requestScene(), store = memoryStore();
+  let now = s.now();
+  s.clock.now = () => now;
+  const identity = { service: "https://requests.test", membership: s.actor.member.membership,
+    signer: s.signer.key, target: s.handle.at, key: "wrong-hash" };
+  const signed = await signedIntent(s.signer, { to: s.handle.at, kind: "remark", on: 0, fields: { text: "kept before the page" } },
+    { now, idempotencyKey: identity.key, lifetimeSeconds: 60 });
+  const custody = new Custody(store, () => timeOf(now));
+  await custody.keep(identity, intentMeaning(signed.intent), async () => ({
+    binding: { definition: s.handle.definition.name, kind: "remark", declaration: s.handle.digest, pinned: s.handle.digest },
+    envelope: { signed, beside: {} },
+  }), timeOf(now + 30_000));
+  const id = identityId(identity), raw = store.records.get(id), signs = s.signs(), copies = s.copies.length;
+  expect(s.scope.submit(signed).result).toBe("write");
+  const badAt = s.scope.head.seq, wrongHash = s.scope.entries[0]!.hash;
+  expect(badAt).toBeGreaterThan(0);
+  expect(s.scope.head.hash).not.toBe(wrongHash);
+  const binding = {
+    summary: async () => s.handle.scope.summary(),
+    log: async (_scope: string, _reader: unknown, cursor?: string) => {
+      const read = await s.handle.scope.log(cursor);
+      if (!read.ok) return read;
+      // Return the closed transport shape, then let the outer real handle check the one corrupted hash.
+      const { coverage: _coverage, ...page } = read;
+      return { ...page, value: { ...page.value, entries: page.value.entries.map(row => row.seq === badAt ? { ...row, hash: wrongHash } : row) } };
+    },
+  } as unknown as ServiceBinding;
+  const handle = new DeclaredHandle(new ScopeHandle(bindingTransport(binding), s.scope.at.scope, SESSION),
+    s.scope.at, s.handle.definition, s.handle.digest);
+  now = sendableAt(signed.intent.notAfter);
+  const { client } = clientAt({ ...s, handle }, store);
+  try {
+    await client.read(); await clientIdle(client);
+    // This finite assertion is the stop-control boundary, before any event wait or another read trigger.
+    expect(client.view.state).toEqual({ is: "stopped", cause: { by: "log" } });
+    const replica = clientReplica(client);
+    expect(client.view.head).toBeNull();
+    expect(seamOf(replica).held.size).toBe(0);
+    expect(replica.accepted(s.signer.key, identity.key)).toBeNull();
+    expect(s.feed.cancelled).toBe(1);
+    expect(store.records.get(id)).toBe(raw);
+    const kept = (await custody.find(identity))!;
+    expect(kept.phase).toBe("prepared");
+    expect(kept.signings.at(-1)!.closed).not.toBe(true);
+    expect(kept.outcomes).toEqual([]);
+    expect((await store.unresolved()).map(row => row.id)).toEqual([id]);
+    expect([s.signs(), s.copies.length]).toEqual([signs, copies]);
+  } finally { client.close(); }
 });
 
 // Invariant: signing belongs to a request call, and a folded entry settles custody before publishing its view.

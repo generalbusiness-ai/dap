@@ -587,6 +587,7 @@ interface RequestView<D> {
 }
 type Stopped =
   | { by: "close" }
+  | { by: "log" }               // the handle rejected a log page
   | { by: "protocol"; reason: RefusalReason }
   | { by: "definition" }        // digest or genesis check failed
   | { by: "forbidden" }         // the member has no read access
@@ -605,6 +606,13 @@ page that selects a new place by its key keeps its selection.
 replica is at the feed's head. `behind`: the feed is down, or an answer
 names a later head. `folding`: the client folds again from the genesis
 entry after one fold failure. `stopped` is final.
+
+A failed first network read leaves the replica `starting`: it still holds
+no genesis entry. The page cannot distinguish that failure from a slow
+start. After a head exists, a network failure leaves the replica `behind`
+and the next existing trigger reads again. A page that the handle rejects
+locally stops the replica with `{ by: "log" }`. The handle checks every
+row before returning a page; the replica adds no second row hash.
 
 The client folds from the genesis entry. A scope with an archive floor
 is outside its range and stops it. A kept replica and a start from a

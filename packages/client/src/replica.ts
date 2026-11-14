@@ -23,6 +23,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { REFUSAL_CLASSES, intentDigest } from "@generalbusiness/dap-bytes";
 import { MemoryState, applyEntry, validateDefinition, type ValidDefinition } from "@generalbusiness/dap-derive";
 import type { DeclaredHandle, ValueOf } from "./declared.ts";
+import { LogProtocolError } from "./handle.ts";
 import { meaningOf } from "./custody.ts";
 import type { Observation, ObservationState } from "./observe.ts";
 import { HeldEntries } from "./replica-own.ts";
@@ -33,6 +34,7 @@ import { judgedOn, type Judged, type Judging } from "./replica-judged.ts";
 /** Why the replica stopped. `stopped` is final. */
 export type Stopped =
   | { by: "close" }
+  | { by: "log" }                              // the handle rejected a log page
   | { by: "protocol"; reason: RefusalReason }  // a refusal of class `protocol`
   | { by: "definition" }                       // the digest or the genesis check failed
   | { by: "forbidden" }                        // the member reads less than the whole journal
@@ -124,7 +126,7 @@ export class Replica<D extends DeclaredDefinition> {
     const observation = options.observe((state) => this.#observed(state));
     if (this.#stopped) observation.cancel();
     else this.#observation = observation;
-    void this.read();
+    void this.read().catch(() => {});
   }
 
   get view(): ReplicaView<D> { return this.#view; }
@@ -204,7 +206,13 @@ export class Replica<D extends DeclaredDefinition> {
     for (;;) {
       let reply: Awaited<ReturnType<DeclaredHandle<D>["scope"]["log"]>>;
       try { reply = await this.#handle.scope.log(cursor); }
-      catch { if (!this.#stopped) { this.#fault = true; this.#publish(); } return false; }
+      catch (error) {
+        if (!this.#stopped) {
+          if (error instanceof LogProtocolError) this.#stop({ by: "log" });
+          else { this.#fault = true; this.#publish(); }
+        }
+        return false;
+      }
       if (this.#stopped) return false;
       if (!reply.ok) {
         if (reply.reason === "archived") this.#stop({ by: "archived" });
@@ -254,12 +262,12 @@ export class Replica<D extends DeclaredDefinition> {
       case "forbidden": this.#stop({ by: "forbidden" }); return;
       case "streaming":
         this.#feed = true;
-        if (!this.#reading && this.#target > (this.#held.head?.seq ?? -1)) void this.read();
+        if (!this.#reading && this.#target > (this.#held.head?.seq ?? -1)) void this.read().catch(() => {});
         break;
-      case "current": this.#feed = true; this.#target = Math.max(this.#target, state.snapshot.at.seq); void this.read(); break;
+      case "current": this.#feed = true; this.#target = Math.max(this.#target, state.snapshot.at.seq); void this.read().catch(() => {}); break;
       case "retained":
         if (state.reason === "subscription-ended") this.#feed = false;
-        else if (state.reason === "newer-notice") { this.#target = Math.max(this.#target, state.snapshot.at.seq); void this.read(); }
+        else if (state.reason === "newer-notice") { this.#target = Math.max(this.#target, state.snapshot.at.seq); void this.read().catch(() => {}); }
         break;
       case "connecting": case "refreshing": case "cancelled": break;
       default: this.#feed = false;
@@ -291,7 +299,9 @@ export class Replica<D extends DeclaredDefinition> {
     const state = this.#status(), head = this.#held.head;
     if (state.is === this.#view.state.is && head?.hash === this.#view.head?.hash) return;
     this.#view = this.#compute(state, head);
-    for (const listener of [...this.#listeners]) listener(this.#view);
+    for (const listener of [...this.#listeners]) {
+      try { listener(this.#view); } catch { /* A subscriber cannot break this read or the next subscriber. */ }
+    }
   }
 
   /** A view, with its index of rows: one list for each type, and one map by item. */

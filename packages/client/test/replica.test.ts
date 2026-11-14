@@ -16,6 +16,7 @@ import { settlesChanges } from "../../derive/test/definition-corpus/settles-vari
 import { observeScope } from "../src/index.ts";
 import { scopeReplica, judged, intentMeaning, UnheldEntry, type Replica, type ReplicaView } from "../src/scope.ts";
 import * as entry from "../src/scope.ts";
+import * as rootEntry from "../src/index.ts";
 import { seamOf } from "../src/replica.ts";
 import { HeldEntries } from "../src/replica-own.ts";
 import { judgedOn } from "../src/replica-judged.ts";
@@ -78,6 +79,54 @@ describe("the states of the replica", () => {
     const replica = scopeReplica(served(s, citing).handle, { observe: new Feed().observe });
     await replica.read();
     expect(replica.view).toMatchObject({ state: { is: "behind" }, head: s.head });
+  });
+
+  test("a throwing subscriber does not reject a read or block the next subscriber", async () => {
+    const s = laneScope(), { replica } = await started(s);
+    let calls = 0;
+    const seen: ReplicaView<typeof citing>[] = [];
+    const stopThrowing = replica.subscribe(() => { calls++; throw new Error("TEST subscriber fault"); });
+    const stopFollowing = replica.subscribe(view => { seen.push(view); });
+    try {
+      s.did(una, "remark", { on: 0, fields: { text: "after subscription" } });
+      await expect(replica.read(s.head)).resolves.toBe(true);
+      expect(calls).toBe(1);
+      expect(seen).toHaveLength(1);
+      expect(seen[0]).toMatchObject({ state: { is: "current" }, head: s.head });
+      expect(replica.view).toMatchObject({ state: { is: "current" }, head: s.head });
+      expect(seamOf(replica).held.size).toBe(s.entries.length);
+    } finally { stopThrowing(); stopFollowing(); replica.close(); }
+  });
+
+  test("a background network failure stays starting and recovers on the next feed trigger without an unhandled rejection", async () => {
+    const s = laneScope(), { handle, serving } = served(s, citing);
+    serving.refuse = () => { throw new TransportError("TEST lost first page"); };
+    const rejected: unknown[] = [], onRejected = (reason: unknown) => { rejected.push(reason); };
+    process.on("unhandledRejection", onRejected);
+    const feed = new Feed(), replica = scopeReplica(handle, { observe: feed.observe });
+    try {
+      // Let the discarded constructor read settle and Node report any unhandled rejection; no public read heals it.
+      await new Promise<void>(resolve => { setImmediate(resolve); });
+      expect(serving.reads).toEqual([0]);
+      expect(rejected).toEqual([]);
+      expect(replica.view).toMatchObject({ state: { is: "starting" }, head: null });
+      expect(feed.cancelled).toBe(0);
+      serving.refuse = null;
+      const current = new Promise<void>(resolve => {
+        const unsubscribe = replica.subscribe(view => {
+          if (view.state.is === "current") { unsubscribe(); resolve(); }
+        });
+      });
+      const count = s.entries.length;
+      feed.current(s);
+      await current;
+      await new Promise<void>(resolve => { setImmediate(resolve); });
+      expect(rejected).toEqual([]);
+      expect(serving.reads).toEqual([0, 0]);
+      expect(replica.view).toMatchObject({ state: { is: "current" }, head: s.head });
+      expect(seamOf(replica).held.size).toBe(count);
+      expect(s.entries).toHaveLength(count);
+    } finally { process.removeListener("unhandledRejection", onRejected); replica.close(); }
   });
 
   test("current to behind when the feed is down, and to current when it returns", async () => {
@@ -437,4 +486,6 @@ describe("the catch sites of Own: a replica that lacks a held entry reads not-ju
 test("the package entry exports no test seam", () => {
   expect(Object.keys(entry).sort()).toEqual(["Replica", "UnheldEntry", "intentMeaning", "judged", "requestStatus", "scopeClient", "scopeReplica"]);
   for (const internal of ["request", "clientReplica", "clientIdle", "ScopeClient"]) expect(entry).not.toHaveProperty(internal);
+  expect(entry).not.toHaveProperty("LogProtocolError");
+  expect(rootEntry).not.toHaveProperty("LogProtocolError");
 });
