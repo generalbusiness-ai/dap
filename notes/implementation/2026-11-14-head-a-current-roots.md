@@ -57,7 +57,7 @@ other variable values outside the script's permitted updates also stay
 unchanged. I set all three written files to filesystem mode 0644 before
 this checkpoint and its gate. Git records mode 100644.
 
-## Evidence at this checkpoint
+## Final evidence
 
 Script START is `46938035`. Lending ran from 08:41:45.600913 to
 08:41:47.558141 UTC, Grow from 08:41:47.588558 to 08:41:48.812447,
@@ -65,6 +65,8 @@ and Demo from 08:41:48.843911 to 08:41:50.052496. Monotonic command
 times were 1.957210, 1.223869, and 1.208568 seconds. These are observed
 durations, not deadlines. The script record was sealed at
 08:43:54.453969 UTC, before script END and gate START.
+Script END `54f29b9e` preceded root proof acknowledgement `67a9a668`,
+planner acknowledgement `75b4421b`, and gate START `ffd78f60`.
 
 The preflight and each command's endpoints read actual escalated AC
 Power and power mode 0. Preflight found no competing validation process.
@@ -75,19 +77,59 @@ All 15 relative workspace links resolve inside this worktree and name
 their expected packages. No link or marker was rewritten.
 
 The [current evidence manifest](evidence/2026-11-14-head-a-current-roots.manifest.json)
-lists all 46 sealed script and proof files under
+records all 46 sealed script and proof files under
 `/Users/hughpyle/play/artroom-evidence/2026-11-14-head-a-current-roots-script`.
 Its `SHA256SUMS` digest is
 `6347cdd1bd36aaff25387bc9d62114854d4881579d099e30657fd65955e6c92f`.
 The proof imports the real production reader and deployment JSONC
 parser; it calls no generator or remote service.
 
-| Check from main `0ad4aa91` | Command | Exit | Raw output and SHA256 |
+The corrected full gate ran once at clean, pushed checkpoint
+`259b5cb367b4efd3364b522be2ac80a4e3f10438`, tree
+`f965f8232a352cc9818ddbdb230b0f3bb9459643`. It began at
+08:48:10.998992 UTC and ended at 09:05:54.131991 UTC. The outer
+monotonic timer measured 1,063.110183 seconds; the test stage took
+1,035.4 seconds. Gate END is `abe5c2e4`.
+
+Node passed 178 cases, and Counting passed 56. Plain passed 4,616 cases
+with one skip across 401 files. Native passed 1,149 cases with two skips
+across 291 files. These counts come from complete terminal records,
+which report no unhandled errors. The optional live Native callback
+stream covers only 1,103 passes. Static, documentation, formatting,
+compiler, and definition-pin checks passed; notes reported zero warnings.
+
+The maintained selector recorded `include: false` and
+`reason: outside-scale-paths` against main and base `0ad4aa91`. Its
+changed-path list contains only the three configurations, this note,
+and its manifest; `matchedPaths` is empty. Scale therefore stayed out
+of this gate without a selection override. No install, worker override,
+timeout change, source edit, repair, or rerun occurred during the gate.
+
+All 54 gate power samples read actual escalated AC Power and power mode
+0. The before and after ledgers agree on head, tree, fixed main,
+dependency metadata, all 15 local links, clean status, and the three
+0644 configuration modes. The final diff from the gated checkpoint
+contains only this note and its evidence manifest under `notes/`.
+Source and tests remain unchanged.
+
+The gate's 269 raw files live in
+`/Users/hughpyle/play/artroom-evidence/2026-11-14-head-a-current-roots-gate`.
+Its `SHA256SUMS` digest is
+`191b6fc68553430a57380b57f72c32c8ba71d96b895015f7968530d2926d5a51`.
+All 315 current script and gate raw files match their sealed checksums
+and have no write bits. The tracked manifest lists 107 files directly;
+the sealed gate manifest and checksum cover every periodic power file.
+
+The scripts used main `0ad4aa91`; the gate used source `259b5cb3`.
+All raw paths below are relative to `/Users/hughpyle/play/artroom-evidence/`.
+
+| Check | Command | Exit | Raw output and SHA256 |
 |---|---|---:|---|
-| Lending current root | Full Lending command above | 0 | `lending.stdout`: `abac932900b8b8b534403c618678a7372f5034973c7a92ba04be263e69d6110e` |
-| Grow current root | Full Grow command above | 0 | `grow.stdout`: `067c823d6617e84e25b669998e119c63c70541b763015291b3a089172c2a0ca8` |
-| Demo current root and offer | Full Demo command above | 0 | `demo.stdout`: `af2a11bf09a104f15266bce351c27da7899cf7580ff42d6640351142f18e3702` |
-| Production reader, full retired-root union, exact END values, and preserved settings | `node /private/tmp/artroom-head-a-current-roots-proof-20261114.mjs` | 0 | `current-roots-proof.json`: `e7c3b76af0d71c03c6fc62658e3c33a086690c3fa977768672c0b782792f033b` |
+| Lending current root | Full Lending command above | 0 | `2026-11-14-head-a-current-roots-script/lending.stdout`: `abac932900b8b8b534403c618678a7372f5034973c7a92ba04be263e69d6110e` |
+| Grow current root | Full Grow command above | 0 | `2026-11-14-head-a-current-roots-script/grow.stdout`: `067c823d6617e84e25b669998e119c63c70541b763015291b3a089172c2a0ca8` |
+| Demo current root and offer | Full Demo command above | 0 | `2026-11-14-head-a-current-roots-script/demo.stdout`: `af2a11bf09a104f15266bce351c27da7899cf7580ff42d6640351142f18e3702` |
+| Production reader, full retired-root union, exact END values, and preserved settings | `node /private/tmp/artroom-head-a-current-roots-proof-20261114.mjs` | 0 | `2026-11-14-head-a-current-roots-script/current-roots-proof.json`: `e7c3b76af0d71c03c6fc62658e3c33a086690c3fa977768672c0b782792f033b` |
+| Corrected maintained full gate | `/usr/bin/time -p /opt/homebrew/bin/npm run gate` | 0 | `2026-11-14-head-a-current-roots-gate/gate.stdout`: `e0899a49a705879f4456c1da9bb15420dc748b96f70bb6fef5adbb7b6676ded0` |
 
 The earlier branch remains at
 `f8c71ba2a83297051681b3031c04fab36a4d33ed`. Its first full gate
@@ -99,11 +141,10 @@ coverage.
 
 ## Open limits
 
-Under `aa2d1b9e`, this configuration needs one fresh full gate before
-review. Root will acknowledge the clean script checkpoint and proof
-before gate START. Script END must precede gate START. The maintained
-scale selector compares this head with landed main `0ad4aa91`; its
-actual include or skip result governs the run without an override.
+The corrected gate meets `aa2d1b9e`'s new-gate requirement. The final
+review replaces rejected request `56c48bc9` on original implementation
+promise `9df71a88`. The separate helper-default change belongs to
+CUT-A2 request `cfdd7ffc`, after Head A and R1; it holds neither.
 
 Request `9d3bbe4c` leaves deployment to the planner after approval and
 landing. Nobody deploys Grow, Lending, or Demo while the hold remains.
