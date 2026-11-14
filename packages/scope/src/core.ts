@@ -613,7 +613,7 @@ export class Scope {
             this.#store.cover(valid.indexes);
             return {
               verdict: "write", draft: judged.draft, born: facts, retain: [...(bytes === null ? [] : [{ kind: "definition", digest: valid.digest, bytes } as const]), ...children.retain, ...used(judged.draft, facts), ...texts.retain(valid, judged.draft)],
-              sealed: (sealed, pin) => answer(sealed, pin), unfit: () => refused("bad-field"), full: (_head, bound) => ({ ...refused("scope-full"), ...(valid.declared.capacity ? { name: bound } : {}) }),
+              sealed: (sealed, pin) => answer(sealed, pin), unfit: () => refused("bad-field"), full: (_head, bound) => ({ ...refused("scope-full"), ...(valid.declared.capacity || bound === "scopeBytes" ? { name: bound } : {}) }),
             };
           case "repeat": {
             const kept = this.#store.stored(0)!;
@@ -772,7 +772,7 @@ export class Scope {
               // An entry over the size bound, or a grant that is not canonical values, is never written.
               unfit: (why) => ({ answer: "refused", reason: why === "size" ? "bad-field" : "unauthorized", judgedAt: head }),
               // Section 9.2: an act is refused when the pending work it would admit, with that already admitted, has no room to settle.
-              full: (_head, bound) => ({ answer: "refused", reason: "scope-full", judgedAt: head, ...(definition.declared.capacity ? { name: bound } : {}) }),
+              full: (_head, bound) => ({ answer: "refused", reason: "scope-full", judgedAt: head, ...(definition.declared.capacity || bound === "scopeBytes" ? { name: bound } : {}) }),
             };
           }
           case "due": return { verdict: "stop" };
@@ -868,7 +868,7 @@ export class Scope {
               },
               unfit: (why) => ({ answer: "refused", reason: why === "size" ? "bad-field" : "unauthorized", judgedAt: head }),
               // Section 17.3: a preparation is new work. It is admitted only with the room of what it reserves.
-              full: (_head, bound) => ({ answer: "refused", reason: "scope-full", judgedAt: head, ...(definition.declared.capacity ? { name: bound } : {}) }),
+              full: (_head, bound) => ({ answer: "refused", reason: "scope-full", judgedAt: head, ...(definition.declared.capacity || bound === "scopeBytes" ? { name: bound } : {}) }),
             };
           }
           case "due": return { verdict: "stop" };

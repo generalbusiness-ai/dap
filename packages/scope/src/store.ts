@@ -76,13 +76,16 @@ export interface Store extends StateWriter {
    * with `applyEntry`.
    */
   append(entry: Entry, hash: Digest, bytes: string, size: number): void;
-  retain(input: Retained): void;
+  /** Retain one input. Returns the bytes it adds to `retainedEntryBytes`: the size of a new `entry` row, else 0. */
+  retain(input: Retained): number;
   /** Ruling 4f697a7a: retain the first entry of a foreign sequence, an `entry` row under its content digest, and its association
-   * from (scope, genesis) to that row. A second call for the same sequence writes nothing. */
-  retainBirth(at: SequenceRef, input: Retained & { kind: "entry" }): void;
+   * from (scope, genesis) to that row. A second call for the same sequence writes nothing. Returns what `retain` returns. */
+  retainBirth(at: SequenceRef, input: Retained & { kind: "entry" }): number;
+  /** The total size of the retained `entry` rows, the births and copies, that `scopeBytes` bounds in every scope. One read. */
+  retainedEntryBytes(): number;
   /** The retained first entry of a foreign sequence, by its association, or null. One read. */
   retainedBirth(at: SequenceRef): Retained | null;
-  /** Remove the bytes of one retained input. Only a redaction does: the entry that holds the `redact` effect is the tombstone (section 6.6). */
+  /** Remove the bytes of one retained input. Only a redaction does: the entry that holds the `redact` effect is the tombstone (section 6.6). Removing an `entry` row subtracts its size from `retainedEntryBytes`. */
   forget(kind: Retained["kind"], digest: Digest): void;
 
   /** Archived accepted-key evidence; no journal payload is reconstructed. */

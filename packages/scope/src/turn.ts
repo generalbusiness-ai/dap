@@ -398,9 +398,9 @@ export class Turns {
       const judged = judgeTimed(this.#store, definition, selected, { clock, bounds: this.#bounds, capabilities: this.#ports.capabilities ?? undefined, platform: this.#resolvePin()?.pinned.platform ?? undefined });   // 6.3 and 6.4
       if (judged.result === "unavailable") return committed(judged.reason === "clock-behind" ? "clock-behind" : "unfit");
       if (judged.result === "dropped") return committed("dropped");
-      const { sealed, pin } = this.#seal(definition, judged.draft, clock, []);                 // 6.5
+      const { sealed, pin, added } = this.#seal(definition, judged.draft, clock, []);                 // 6.5
       if (definition.declared.capacity?.name === "whole-scope") {
-        const bound = this.#full(definition, sealed.entry.input, true, pin);
+        const bound = this.#full(definition, sealed.entry.input, true, pin, added);
         if (bound) { turn.full = bound; throw new Full(); }
       }
       turn.wrote = true;
@@ -445,12 +445,12 @@ export class Turns {
         // its digest. The opt-in producer ceiling must also constrain the
         // bytes retained by this writer; an evaluator budget alone does not.
         if (definition.ruleInputBytes !== undefined && rules.some((input) => utf8(input.bytes).length > definition.ruleInputBytes!)) throw new Unfit("size");
-        const { sealed, pin } = this.#seal(definition, verdict.draft, clock, [...verdict.retain, ...rules], verdict.facts, verdict.born ?? verdict.facts);   // 6.5
+        const { sealed, pin, added } = this.#seal(definition, verdict.draft, clock, [...verdict.retain, ...rules], verdict.facts, verdict.born ?? verdict.facts);   // 6.5
         // Count after folding, retaining inputs and redacting. Every opt-in
         // settlement spends its own reserved room inside the same transaction.
-        const bound = this.#full(definition, sealed.entry.input, verdict.draft.settles ?? false, pin);
+        const bound = this.#full(definition, sealed.entry.input, verdict.draft.settles ?? false, pin, added);
         if (bound) {
-          if (definition.declared.capacity) turn.full = bound;
+          if (definition.declared.capacity || bound === "scopeBytes") turn.full = bound;
           refuse(() => verdict.full(head ?? { seq: sealed.entry.seq, hash: sealed.hash }, bound));
           throw new Full();
         }
@@ -463,7 +463,11 @@ export class Turns {
     }
   }
 
-  #full(definition: ValidDefinition, input: Sealed["entry"]["input"], settles: boolean, pin: ResolvedPin): ScopeBoundName | null {
+  /** `added`: the bytes of the retained births and copies that this entry added. */
+  #full(definition: ValidDefinition, input: Sealed["entry"]["input"], settles: boolean, pin: ResolvedPin, added: number): ScopeBoundName | null {
+    return this.#capacity(definition, input, settles, pin) ?? (this.#retainedFull(input, added) ? "scopeBytes" : null);
+  }
+  #capacity(definition: ValidDefinition, input: Sealed["entry"]["input"], settles: boolean, pin: ResolvedPin): ScopeBoundName | null {
     if (definition.declared.capacity?.name !== "whole-scope") return fits(this.#store, definition, this.#bounds, input, settles, this.#owners(pin.pinned)) ? null : "scopeEntries";
     const used = { entries: countedEntries(this.#store), bytes: this.#store.logicalBytes(), ...this.#store.keyCounts() };
     // A floor must reclaim room even when the old journal was at capacity.
@@ -474,12 +478,28 @@ export class Turns {
   }
 
   /**
+   * Ruling 1064d0de: `scopeBytes` bounds the retained births and copies in
+   * every scope, and no floor frees them. An entry that adds such bytes and
+   * leaves the total above the bound is not kept. The one exception
+   * (ruling 0c196f9a, item a) is a delivery that settles a pending request
+   * of this scope: a result, or the control that confirms this scope. The
+   * request reserved its room when the scope admitted it, as `reserved`
+   * counts it, so the delivery is kept and its bytes add to the total. A
+   * `conflict` result settles no pending request.
+   */
+  #retainedFull(input: Sealed["entry"]["input"], added: number): boolean {
+    if (added === 0) return false;
+    if (input.type === "delivery" && (input.message.class === "control" || ("clause" in input && input.clause !== "conflict"))) return false;
+    return this.#store.retainedEntryBytes() > this.#bounds.scopeBytes;
+  }
+
+  /**
    * Step 6.5, inside the commit's transaction: the entry at this head and
    * this reading, its hash, its row, the rows of its sends, its retained
    * inputs, the fold, and the removal of each text the entry redacts.
    * `applyEntry` is the only code that changes folded state.
    */
-  #seal(definition: ValidDefinition, draft: Draft, clock: Reading, retain: readonly Retained[], facts?: readonly Fetched[], born: readonly Fetched[] = []): { sealed: Sealed; pin: ResolvedPin } {
+  #seal(definition: ValidDefinition, draft: Draft, clock: Reading, retain: readonly Retained[], facts?: readonly Fetched[], born: readonly Fetched[] = []): { sealed: Sealed; pin: ResolvedPin; added: number } {
     // The foreign-entry term uses this scope's entry ceiling. Constrain
     // accepted retained copies at the same boundary, including results;
     // a peer's independently configured ceiling is not that guarantee.
@@ -505,8 +525,9 @@ export class Turns {
       candidate = { sequence, bytes, hash };
     }
     this.#store.append(entry, hash, bytes, size);
-    for (const input of retain) this.#store.retain(input);
-    for (const { at, input } of births) this.#store.retainBirth(at, input);
+    let added = 0;
+    for (const input of retain) added += this.#store.retain(input);
+    for (const { at, input } of births) added += this.#store.retainBirth(at, input);
     // This is the old #platform read point. Resolve by value, not into the memo, until commit returns.
     const pin = this.#resolvePin(candidate);
     if (!pin) throw new PinUnavailable();
@@ -519,7 +540,7 @@ export class Turns {
     }));
     // Section 6.6: a redaction removes the bytes of each text it lists from the retained inputs, in the commit that seals its tombstone.
     for (const effect of entry.effects) if (effect.effect === "redact") for (const text of effect.texts) this.#store.forget("text", text);
-    return { sealed: { entry, hash }, pin };
+    return { sealed: { entry, hash }, pin, added };
   }
 
   /** The end of a turn. If it wrote, left work due, or was an alarm's, the alarm is set for what is due next. */
