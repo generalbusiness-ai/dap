@@ -1,9 +1,10 @@
 # One environment for the acts of a declared scope
 
-Status: current. Draft 4, for request `98f450a1`. Hugh asked for this
-note on 14 November 2026, and decided each item of section 17 on that
-day. The note waits for review and for his ratification. Nothing here
-is built. Section 13 lists the build steps.
+Status: current. Hugh asked for this note on 14 November 2026, decided
+each item of section 17 and ratified the note on that day. It landed as
+main `270dc8c7` for request `98f450a1`. Nothing here is built. Section
+13 lists the build steps and their requests. Section 18 lists the
+rulings of step E1 that changed sections 3, 5 and 8.
 
 A dap application has more than one interface. A member acts through a
 page, an agent acts through MCP tools, and an operator acts through the
@@ -122,8 +123,11 @@ authority gave it, with its symbolic names as written. A **step** is an
 authorization in execution, and a request of D12 is a step.
 
 A **source** names one version of one step of the same owner in the
-same scope. A **symbolic name** is an `{ output }`, an `{ after }` or an
-`{ entry }` (section 5.4) that a source's entry fills.
+same scope. The caller chooses the key. The version is the digest of
+the bound act as written: the SHA-256 of the canonical bytes of `kind`,
+`on`, `fields` and `expected`, with each symbolic name as written. A
+**symbolic name** is an `{ output }`, an `{ after }` or an `{ entry }`
+(section 5.4) that a source's entry fills.
 
 The **owner** of a step is the one actor key that signs for it. The
 **store** is the custody that every process with that key shares. An
@@ -220,6 +224,13 @@ observations at hand and the values beside the intent
 deadline can pass. So each exploration states its context, and two
 explorations are equal only under equal contexts.
 
+The contract covers the judge's answer. It does not cover the capacity
+of the scope. The turn checks the count, the bytes and the reservations
+with the bytes of the real entry, which no act holds. So the scope can
+refuse an admitted act with `scope-full` at the commit. A page reads
+capacity from the counts and the bounds that Observe gives (section
+5.5).
+
 ```ts
 interface Context {
 	scope: ScopeRef
@@ -251,6 +262,7 @@ review of it. Section 16 gives the reason for the export.
 ```ts
 type Exploration<D, K> =
 	| { is: "admitted"; act: Act<D, K>; context: Context; bound: readonly string[]
+	    source: Source
 	    effects: readonly Effect[]; sends: number; opens: ItemName | null
 	    judgesTime: boolean
 	    after: View<D> }
@@ -281,15 +293,32 @@ revision from the view, and `bound` lists each key that it added. The
 `act` of the result is then bound. An agent that constructs an act
 from an item's ID gets its basis in this way, and sees that it did.
 
+**The source of an explored act.** Explore takes a key beside the act
+and the context, and the key is required. Without a key, Explore could
+not name the item that an `open` makes. The key carries no authority,
+and Explore retains nothing. Explore computes the version from the
+bound act, so a caller cannot state the version first. The `source` of
+the result is that key and that version. `opens` and each symbolic
+name in the hypothetical view use it. The MCP tool `explore` takes the
+key argument of the act tool. A local instance gives the key of the
+draft or of the request. An agent or a page that submits with the same
+key gets the names that it explored.
+
 ### 5.4 Explore invents no input
 
-Explore answers `unavailable`, with what it lacks, in three cases:
+Explore answers `unavailable`, with what it lacks, in four cases:
 
 - No grant is at hand. The judge answers `authority-unavailable`
   today, and Explore passes that answer on.
 - A fact, an observation or a value is not at hand.
-- A guard or an effect reads the digest of the intent. That digest
-  covers the key and `notAfter`, which no act holds.
+- The judgment reads the signed intent. A guard or an effect can read
+  its digest, which covers the key and `notAfter`. A send that creates
+  a scope records that digest as its cause. A Native rule takes the
+  whole signed input. No act holds any of these. Of the acts of Grow,
+  Lending and Counter, one is `unavailable` for this reason:
+  `create-room` of the Grow site.
+- A hold workspace would write a derived record or an operation. Its
+  identifier comes from the entry.
 
 Three inputs come only from the commit, and Explore handles each in a
 stated way:
@@ -306,6 +335,12 @@ effects: `grep -c '"from": *"self"'` counts 22 and 2. Without the name,
 each of those acts is `unavailable`. The first version has no other
 symbolic value. General symbolic effects wait for an application that
 needs them.
+
+A command record of the capability `device-command` is keyed by the
+entry that opens it. Those positions take the same name,
+`{ entry: Source }`. The hypothetical view gives the exact count of
+records and the exact reservations after the act. So `set-fan`,
+`set-heater`, `set-vent` and `authorize` of the Grow room are judged.
 
 The rule of the third row is coarse by choice. A later act that only
 copies the slot could be judged, but that finer rule needs a record of
@@ -526,6 +561,11 @@ const a = acts.add({ fields: { title, text, color, x, y } })
 const b = acts.edit({ on: output(a), fields: { color: "sage" } })
 await env.submit([a, b])
 ```
+
+`output(a)` names a source, and a source has a key and a version.
+Explore computes the version of `a` when it binds `a` (section 5.3).
+Step E5 states how a composition gives each step its key and how
+`output(a)` takes the version that Explore computed.
 
 `explore(view, [a, b])` judges `a`, takes its `after`, and judges `b`
 there. A descriptor (section 10) gives the type of each output, so an
@@ -928,4 +968,22 @@ Hugh decided each item as this section states it, with the words
 7. **The third symbolic name, `{ entry }`: yes,** with the coarse rule
    of section 5.4.
 
-The note itself waits for review and for Hugh's ratification.
+Hugh ratified the note on 14 November 2026, after its review.
+
+## 18. Rulings of step E1
+
+The build of step E1 found five points that this note did not settle.
+The planner ruled on each on 14 November 2026, and the sections above
+hold the results.
+
+| Ruling | Point | Section |
+|---|---|---|
+| `fa103f71` | The caller gives the key, Explore computes the version, and the result states its source | 3, 5.3, 8.1 |
+| `ef1fc932` | A judgment that reads the signed intent is `unavailable`. The export is `judgeActBody` | 5.4 |
+| `04218678` | A command record of `device-command` takes the name `{ entry }` | 5.4 |
+| `18a41f8f` | A hold workspace that writes a derived record or an operation is `unavailable` | 5.4 |
+| `99506fe3` | Explore does not predict the capacity check of the turn | 5.1 |
+
+The requests of the build steps: E1 `d35ebede`, E2 `a102d847`, E3
+`17e075b3`, E4 `afe0a437`, E5 `b1c6aad6`, E6 `edc09d8b`, R `5b5b6896`
+and A `04e4438e`. Request `6b6def0a` holds the review after step E3.
