@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs";
 import { URL as NodeURL } from "node:url";
 import { expect, test } from "vitest";
-import { textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { utf8 } from "@generalbusiness/dap-bytes";
 import { snapshotCommit } from "@generalbusiness/dap-git";
 import { journalRef } from "@generalbusiness/dap-git/journal";
 import { admitArchivePin } from "@generalbusiness/dap-git/archive-policy";
