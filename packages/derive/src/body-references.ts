@@ -30,6 +30,7 @@ export class BodyReferences {
   readonly #base = new WeakMap<Item, Item>();
   readonly #emitted: EffectReference[] = [];
   readonly #opened = new WeakSet<Item>();
+  #currentLookupable = false;
   readonly #entry = Object.freeze({});
   readonly classify: Provenance;
   readonly unavailable: () => never;
@@ -59,8 +60,10 @@ export class BodyReferences {
     if (atom) return atom.item;
     const found = this.classify({ origin, type, value, use: "subject" });
     if (found?.is === "entry") return this.unavailable();
-    if (found?.is === "pending" || found?.is === "recorded") return found.item;
-    return typeof value === "number" ? view.item(value) : null;
+    if (found?.is === "pending") return found.item;
+    const item = found?.is === "recorded" ? found.item : typeof value === "number" ? view.item(value) : null;
+    if (typeof value === "number" && item === null && this.#currentLookupable) return this.unavailable();
+    return item;
   }
   value(origin: ReferenceOrigin, type: FieldType | null, value: unknown): unknown {
     if (value === null || value === undefined) return value;
@@ -97,7 +100,11 @@ export class BodyReferences {
       : { at: "slot", item: this.#base.get(item) ?? item, space, path: [name], state: "inherited" };
     return this.value(origin, type, item[space][name] ?? null);
   }
-  opened(item: Item): void { this.#opened.add(item); this.#working.set(item, new Map()); }
+  opened(item: Item): void {
+    this.#currentLookupable = true;
+    this.#opened.add(item);
+    this.#working.set(item, new Map());
+  }
   current(value: unknown): boolean { const identity = this.#identity(value); return !!identity?.item && this.#opened.has(identity.item); }
   entry(): unknown { return this.#entry; }
   forWrite(source: unknown, actual: unknown, type: FieldType): unknown {

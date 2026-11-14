@@ -266,8 +266,8 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
         if (j.bound) throw outside(mark, "an opening, in a delivery that is bound");
         if (opens !== null || byRule || !type || effect.item !== j.self || effect.state !== type.initial || j.definition.holdTypes.includes(effect.type)) throw outside(mark, "an opening that its entry cannot make");
         byRule = newItem(effect, type, null);
-        j.references?.opened(byRule);
         others.set(effect.item, byRule);
+        j.references?.opened(byRule);
         changed?.set(effect.item, byRule);
         effects.push(effect);
         continue;

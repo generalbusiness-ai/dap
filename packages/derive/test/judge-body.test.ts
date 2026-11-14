@@ -312,3 +312,36 @@ test("a source, a recorded number and an absent numeric target keep separate loo
   mode = "missing-clear";
   expect(judgeActBody(scope.state, definition, body(), context)).toMatchObject({ result: "refused", reason: "no-item" });
 });
+
+test("numeric absence changes only when the actual current opening becomes lookupable", () => {
+  const definition = variant(deviceCommandFixture, data => {
+    data.acts["phase-open"] = structuredClone(data.acts.commission);
+    data.acts["phase-open"].guards = [{ capability: { name: "device-command", guard: "allowed", with: { kind: { field: "kind" } } } }];
+    data.acts["phase-open"].effects.push({ capability: { name: "device-command", do: "open", with: { device: { slot: "kind" } } } });
+  });
+  const scope = created(definition, {}, "TEST actual opening phase");
+  const device = scope.did(rita, "commission", { fields: { kind: "fan" } }).seq;
+  const seen: unknown[] = [];
+  const provenance: NonNullable<Parameters<typeof judgeActBody>[3]["provenance"]> = ({ value }) =>
+    typeof value === "number" ? { is: "recorded", id: value, item: scope.state.item(value) } : null;
+  const capabilities: Capabilities = {
+    implements: () => true,
+    guard(_capability, _guard, _args, given) { seen.push(["guard", given.view.item(999)]); return true; },
+    effect(_capability, _effect, _args, given) {
+      seen.push(["known after", given.view.item(0)?.id]);
+      seen.push(["missing after", given.view.item(999)]);
+      return [];
+    },
+  };
+  const context = { ...scope.context(), actor: rita.key, capabilities, provenance };
+  const before = scope.state.snapshot();
+  expect(judgeActBody(scope.state, definition, { kind: "phase-open", on: null, fields: { kind: "heater" }, expected: {} }, context))
+    .toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
+  expect(seen).toEqual([["guard", null], ["known after", 0]]);
+  expect(scope.state.snapshot()).toBe(before);
+  seen.length = 0;
+  expect(judgeActBody(scope.state, definition,
+    { kind: "command", on: device, fields: { target: "on", level: 1 }, expected: { on: scope.item(device).revision } }, context).result).toBe("write");
+  expect(seen).toEqual([["guard", null], ["known after", 0], ["missing after", null]]);
+  expect(scope.state.snapshot()).toBe(before);
+});
