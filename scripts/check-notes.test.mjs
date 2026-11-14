@@ -37,19 +37,18 @@ test("changed implementation notes warn only above 40960 committed bytes without
   assert.equal(git("status", "--porcelain"), before); assert.equal(git("rev-parse", "HEAD"), head);
 }));
 
-// The evidence rule concerns new paths, not modified legacy output. A manifest
-// suffix is exact, and a filename with a newline still prints one warning line.
-test("new non-manifest evidence paths warn while manifests and modified historical paths stay allowed", () => fixture(({ cwd, git, put, commit, check }) => {
+// New filings need no committed manifest. Historical evidence stays unchanged
+// by this checker, and its filename extension supplies no new warning.
+test("new evidence paths need no manifest extension and historical paths stay allowed", () => fixture(({ cwd, git, put, commit, check }) => {
   put("notes/implementation/evidence/legacy.json", "old"); const base = commit();
   const path = "notes/implementation/evidence/run\noutput.json";
   put(path, "new"); put("notes/implementation/evidence/run.manifest.json", "{}");
   put("notes/implementation/evidence/legacy.json", "changed"); const head = commit();
   const tree = git("rev-parse", "HEAD^{tree}");
-  assert.deepEqual(checkNotes({ cwd, base, head }).warnings, [{ rule: "non-manifest-evidence", path }]);
+  assert.deepEqual(checkNotes({ cwd, base, head }).warnings, []);
   const result = check(base, head);
   assert.equal(result.status, 0); assert.equal(result.stderr, "");
-  assert.equal(result.stdout.split("\n").filter(line => line.startsWith("warning:")).length, 1);
-  assert.match(result.stdout, /run\\noutput\.json/);
+  assert.equal(result.stdout, "notes: 0 warnings\n");
   assert.equal(git("rev-parse", "HEAD^{tree}"), tree); assert.equal(git("status", "--porcelain"), "");
 }));
 

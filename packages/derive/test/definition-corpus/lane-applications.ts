@@ -30,7 +30,7 @@ export const laneApplicationDefinitions: readonly DefinitionCorpusRow[] = [
     declaration: () => structuredClone(declaration), bounds: PROPOSED_BOUNDS, expectedDigest })),
   { name: "lanes/fixture/office", origins: ["apps/room/lanes/test/support/graph.ts#officeDefinition"], declaration: () => structuredClone(officeDefinition), bounds: PROPOSED_BOUNDS },
   ...["cli-proposal-outcomes.test.ts", "manifest-tree.scope.test.ts"].map(file => ({ name: `lanes/custom-required/${file}`,
-    origins: [`apps/room/lanes/test/${file}#custom`], declaration: customRequiredChangeData, bounds: PROPOSED_BOUNDS })),
+    origins: [`apps/room/lanes/test/${file === "manifest-tree.scope.test.ts" ? "manifest-tree.scope.fixture.ts" : file}#custom`], declaration: customRequiredChangeData, bounds: PROPOSED_BOUNDS })),
   { name: "lanes/foreign-hold-change", origins: ["apps/room/lanes/test/support/foreign-hold-change.ts#experimentalForeignHoldChange", "apps/room/lanes/test/directory-partition-change.scope.test.ts#foreignChange"], declaration: () => structuredClone(experimentalForeignHoldChange), bounds: PROPOSED_BOUNDS },
   ...directoryOrigins.map(file => ({ name: `lanes/native-root/${file}`,
     origins: [`apps/room/lanes/test/${file}#validateDefinition`], declaration: () => structuredClone(platform(PARTITION_COHORT.directory)!.data),
