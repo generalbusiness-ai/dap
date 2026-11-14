@@ -30,7 +30,7 @@ test("isItemEffect accepts each of the six item effects and refuses each other e
     { effect: "index", from: { at: directory, seq: 1, hash: d("2") }, fields: {} },
     { effect: "attention", item: 1, members: [member], reason: "due" },
   ];
-  // Every kind of Effect appears once, so a new kind of Effect fails this count until the test names it.
+  // The current witness inventory includes all 15 kinds of Effect.
   expect(new Set([...items, ...others].map((effect) => effect.effect)).size).toBe(15);
   expect(items.map(isItemEffect)).toEqual(items.map(() => true));
   expect(others.map(isItemEffect)).toEqual(others.map(() => false));
