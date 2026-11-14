@@ -10,9 +10,7 @@ A definition on its own, like the tutorial's, runs in a room of the
 `application` cohort. You activate the definition in the room's rules and
 ask the room's directory to create the scope. A package, which bundles
 several definitions with their views, is built with `dap new`, `dap check`
-and `dap pack`. No room that a current Worker creates installs an
-ordinary package, one that requires no host capability. You can still
-check and preview a package on your computer, as
+and `dap pack`, and a room of the `base` cohort installs it, as
 [Check and preview a package](check-and-preview-a-package.md) shows.
 [Creation cohorts](cli.md#creation-cohorts) lists the room cohorts. This
 page takes the first path.

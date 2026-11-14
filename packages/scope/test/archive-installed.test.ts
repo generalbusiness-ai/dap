@@ -9,7 +9,7 @@ import { admitSequenceGenesis, b64url, canonicalize, definitionDigest, digestByt
 import { packApplication2, readApplicationPackage2, readPublishedApplicationPackage2, type ApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { inputTexts, outcomeValueDomains, ownersOf, validateDefinition, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
-import { ARCHIVE_REPLAY_CODE, FAILED_CLAIM_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
+import { ARCHIVE_REPLAY_CODE, BASE_COHORT, FAILED_CLAIM_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
 import { ScopeHandle, httpTransport, invitationIssueFields, invitationRedemptionFields, requestSession, secretSigner, sessionRequest } from "@generalbusiness/dap-client";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
@@ -176,7 +176,7 @@ function commandReportDiagnostic(value: unknown) {
 // Each offline follower immediately follows its own native producer. No
 // Native owner, private key or plaintext read token crosses this boundary.
 interface NativeCommandHandoff { producer: string; id: string; lines: readonly string[]; refs: readonly { ref: string; id: string }[] }
-for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation warm", "Grow activation evicted", "Grow publication", "Grow failed-claim", "Grow Room A shape"]) {
+for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation warm", "Grow activation evicted", "Grow publication", "Grow failed-claim", "Grow base", "Grow Room A shape"]) {
   const producerTitle = scenario === "Grow Room A shape"
     ? "installed old R17 Grow advances a published thirty-seven-pass history from sequence 146 with an exact remainder"
     : `installed ${scenario} scopes export genesis zero after a late native membership directory binding`;
@@ -196,7 +196,9 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
   })();
   const { packet, root, child, rootId, childId } = prepared;
   const signedChild = packet.package.semantic.definitions.find(part => part.id === childId)!.bytes;
-  const canonicalChildText = scenario === "Grow publication" || scenario === "Grow failed-claim"
+  // CF-1 (ruling 96676b22): the base family is the default and includes the archive binding.
+  const replayFamily = scenario === "Grow failed-claim" || scenario === "Grow base";
+  const canonicalChildText = scenario === "Grow publication" || replayFamily
     ? { digest: textDigest(signedChild), bytes: utf8(canonicalize(signedChild)).length }
     : null;
   if (scenario === "Grow") {
@@ -213,9 +215,9 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     expect([rootId, childId]).toEqual([definitionDigest(demo.site), definitionDigest(demo.room)]);
   }
   const trusted: GrowArchiveRelease = productionScenario ? { release: packet.ids.release, publisher: packet.package.release.manifest.publisher, entry: rootId } : RECORDED_GROW_RELEASE;
-  const C = scenario === "Grow failed-claim" ? FAILED_CLAIM_COHORT : scenario === "Grow publication" ? ARCHIVE_DEVICE_PUBLICATION_COHORT
+  const C = scenario === "Grow base" ? BASE_COHORT : scenario === "Grow failed-claim" ? FAILED_CLAIM_COHORT : scenario === "Grow publication" ? ARCHIVE_DEVICE_PUBLICATION_COHORT
     : kind === "fixture" ? ARCHIVE_DECLARED_APPLICATION_COHORT : ARCHIVE_DEVICE_APPLICATION_COHORT;
-  const replayPlatform = scenario === "Grow failed-claim" ? ARCHIVE_REPLAY_CODE.platform : platform;
+  const replayPlatform = replayFamily ? ARCHIVE_REPLAY_CODE.platform : platform;
   // Original byte-cost receipts use whole-second timestamps. Other native
   // witnesses may advance this shared clock by milliseconds. Advance it
   // monotonically before creating any scope; keep its identity and history.
@@ -675,7 +677,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       expect(admitted).toContainEqual({ fact: copy.source, content: copy.content });
       // A genuine public copy from either family must not authorize the other
       // family's distinct producer pin. Rules10 is shared and stays compatible.
-      if (scenario === "Grow failed-claim") {
+      if (replayFamily) {
         const otherProducer = ARCHIVE_DEVICE_APPLICATION_COHORT.directory;
         await life.wait(() => runInDurableObject(history.scope.object, (_instance, state) => {
           const metadata = new ArchiveForeignMetadata(archiveSql(state), fixtureSources, policies, PROPOSED_BOUNDS, new ArchiveBudget(), new Set(), otherProducer);
@@ -921,7 +923,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     if (kind === "Grow") {
       // Invariant: native domain permission belongs to its exact declared
       // place. A TEST owner table cannot relocate it or add another domain.
-      const pin = "platform:rules@10", original = policies.get(pin)!;
+      const pin = C.rules, original = policies.get(pin)!;
       const owner = original.support.owners.get(pin)!, history = allHistories.find(history => history.scope.name === A.name)!;
       const actual = owner.get("fetch-application");
       if (!actual) throw Error("The actual Rules fetch owner must be configured.");

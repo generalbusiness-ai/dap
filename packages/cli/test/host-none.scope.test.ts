@@ -205,7 +205,8 @@ test("host none creates a real local room, settles installed publication refusal
       fields: Record<string, FieldValue> = {}, target?: number, values: readonly string[] = []) => run(who,
       ["act", kind, "--on", node, ...(target === undefined ? [] : ["--target", String(target)]),
         ...Object.entries(fields).flatMap(([name, value]) => ["--set", name + "=" + typed(value)]), ...values.flatMap(path => ["--value", path])]);
-    ok(await run(admin, ["install", "--plan", SERVICE, "--host", "none"]));
+    // CF-1: host none defaults to the base family. This case witnesses the unpublished family's refusals, so it names it.
+    ok(await run(admin, ["install", "--plan", SERVICE, "--host", "none", "--cohort", "unpublished"]));
     const planned = (await admin.store.config())!.plan!;
     expect(planned.definition).toBe(C.register); register = planned.register;
     expect(planned.founding.intent.fields).toMatchObject({ host: "none", namespace: "" });

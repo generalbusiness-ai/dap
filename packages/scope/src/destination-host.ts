@@ -1,4 +1,4 @@
-import { answersVersionQuestion, isStandingDestination, publicationStandingRecord, certifiedPublicationState, certifiedPublicationStateV15, usesFilePublicationProtocol, usesStagedPublicationProtocol, DESTINATION_KINDS, destinationBranch, destinationMint, destinationRead, destinationReceipt, destinationRevokedMint, destinationSends, destinationStatement, destinationTarget, destinationWrite, editObjects, editTree, manifestCommit, editPath, fileOf, sourcesOf, manifestFiles, fileSound, firstHeadCommit, initialCommitOf, isOf, isRecordedJudgeEvidence, revokedToken, filePublicationCause, filePublicationCurrent, filePublicationCommit, type DestinationObject, type EditFile, type ObjectFormat, type RecordedJudgeEvidence, RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, rulesCertificateOpening, rulesCertificateBranchMatches, rulesPolicyProposalV11, rulesPolicyPatternsV11, RULES_TREE_PROOF, RULES_TREE_BOUNDS, verifyRulesTree, type RulesTreeBinding, rulesCertificateOpeningV15, rulesCertificateDeclineV15, rulesCertificateOpeningV17, rulesCertificateDeclineV17, RULES_POLICY_VALUE_V13, rulesPolicyProposalV13, destinationEvidencePending, destinationEvidenceResultPending, destinationEvidenceNoticePending, destinationEvidenceProgressPending, destinationPublishedChecksPending, destinationEvidenceFundingPending, destinationEvidenceAuditPending, destinationEvidencePlanPending, DESTINATION_CHANGED_SET, destinationRulesScope, isJudgeChanges } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, applicationPublicationPrefixes, isStandingDestination, publicationStandingRecord, certifiedPublicationState, certifiedPublicationStateV15, usesFilePublicationProtocol, usesStagedPublicationProtocol, DESTINATION_KINDS, destinationBranch, destinationMint, destinationRead, destinationReceipt, destinationRevokedMint, destinationSends, destinationStatement, destinationTarget, destinationWrite, editObjects, editTree, manifestCommit, editPath, fileOf, sourcesOf, manifestFiles, fileSound, firstHeadCommit, initialCommitOf, isOf, isRecordedJudgeEvidence, revokedToken, filePublicationCause, filePublicationCurrent, filePublicationCommit, type DestinationObject, type EditFile, type ObjectFormat, type RecordedJudgeEvidence, RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, rulesCertificateOpening, rulesCertificateBranchMatches, rulesPolicyProposalV11, rulesPolicyPatternsV11, RULES_TREE_PROOF, RULES_TREE_BOUNDS, verifyRulesTree, type RulesTreeBinding, rulesCertificateOpeningV15, rulesCertificateDeclineV15, rulesCertificateOpeningV17, rulesCertificateDeclineV17, RULES_POLICY_VALUE_V13, rulesPolicyProposalV13, destinationEvidencePending, destinationEvidenceResultPending, destinationEvidenceNoticePending, destinationEvidenceProgressPending, destinationPublishedChecksPending, destinationEvidenceFundingPending, destinationEvidenceAuditPending, destinationEvidencePlanPending, DESTINATION_CHANGED_SET, destinationRulesScope, isJudgeChanges } from "@generalbusiness/dap-platform";
 /** Destination outside effects. Provider calls happen outside the scope's commit;
  * platform rules alone judge their evidence. Plaintexts stay in private custody.
  *
@@ -9,7 +9,7 @@ import { answersVersionQuestion, isStandingDestination, publicationStandingRecor
  * the time of the entry that reserved it, and sends them with the base's closure.
  * Every provider sends them the same way. */
 import type { ReservationSnapshot, SignedIntent, Entry, FactRef, FactUse, FieldValue, KeyId, ObservedScope, OperationId, RetainedInput, ScopeId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, b64url, entryHash, isEntry, isEntryBodyOf, isOperationId, isFactRef, rawRetainedJSON, verifySignedIntent, parseStrict, timeMs, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
+import { canonicalize, b64url, isScopeRef, entryHash, isEntry, isEntryBodyOf, isOperationId, isFactRef, rawRetainedJSON, verifySignedIntent, parseStrict, timeMs, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { isEntryOf, valueDigest, type Item, type Operation, type Own } from "@generalbusiness/dap-derive";
 
 
@@ -660,7 +660,11 @@ export class DestinationHost implements Outside {
     };
     if (target?.type === "file-publication") {
       if (!objectId(old) || !objectId(expectedTree) || typeof target.values["path"] !== "string") return null;
-      const policy = await this.#publicationPolicy(repository, binding.ref, old, commit, expectedTree, objects, target.values["path"]);
+      const sender = target.refs["sender"];
+      const declared = answersVersionQuestion(this.#given.genesis()?.seed.definition, "scopePublicationPrefixesDestination");
+      const prefixes = declared ? isScopeRef(sender) ? applicationPublicationPrefixes(state, sender.scope) : null : undefined;
+      if (prefixes === null) return null;
+      const policy = await this.#publicationPolicy(repository, binding.ref, old, commit, expectedTree, objects, target.values["path"], prefixes);
       if (!policy) return null;
       if (policy.refusal) return { ...answer("refused", { send: "not-sent", seen: await this.#seen(repository, binding.ref) }), refusal: policy.refusal };
       // The authenticated policy read yields. Recheck this exact source and
@@ -681,7 +685,7 @@ export class DestinationHost implements Outside {
   }
 
   /** This host guard offers no policy evidence to a pinned judge. */
-  async #publicationPolicy(repository: DestinationRepository, ref: string, base: string, commit: string, tree: string, objects: readonly DestinationObject[], path: string): Promise<{ refusal: PublicationRefusal | null } | null> {
+  async #publicationPolicy(repository: DestinationRepository, ref: string, base: string, commit: string, tree: string, objects: readonly DestinationObject[], path: string, prefixes: readonly string[] | undefined): Promise<{ refusal: PublicationRefusal | null } | null> {
     const held = new Map(objects.map(object => [object.id, object]));
     const source: GitSource = {
       object: async id => { const object = held.get(id); return object ? { type: object.kind, size: object.body.length, data: new Uint8Array(object.body) } : null; },
@@ -693,7 +697,7 @@ export class DestinationHost implements Outside {
     if (!changes || changes.bytes.length > DESTINATION_CHANGED_SET.max) return null;
     const parsed: unknown = parseStrict(changes.bytes);
     if (!isJudgeChanges(parsed) || canonicalize(parsed) !== changes.bytes || valueDigest(DESTINATION_CHANGED_SET.domain, parsed) !== changes.digest) return null;
-    const fixed = publicationRefusal(path, parsed, []);
+    const fixed = publicationRefusal(path, parsed, [], prefixes);
     if (fixed) return { refusal: fixed };
     const rules = destinationRulesScope(this.#given.state), reader = this.#options.snapshotReader;
     if (!rules || !reader?.rules) return null;

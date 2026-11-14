@@ -2,6 +2,9 @@
 import { readFileSync } from "node:fs";
 import { isDeepStrictEqual } from "node:util";
 import { expect, test } from "vitest";
+import type { PlatformDefinition } from "@generalbusiness/dap-contract";
+import { BASE_COHORT, COMMONS_COHORT } from "@generalbusiness/dap-platform";
+import { permitsNewPlatformScope, readPlatformCreationPolicy } from "../../scope/src/creation-versions.ts";
 const read = (name: string) => JSON.parse(readFileSync(new URL(`../../../apps/room/${name}`, import.meta.url), "utf8").replace(/^\s*\/\/.*$/gm, ""));
 
 // Each deployed Worker owns its migration history, including its tag scheme.
@@ -45,10 +48,10 @@ test("dap-demo has private namespaces, enforced index and the Grow serving bound
   // Each checked-in Worker policy names its exact additional family. The
   // creation parser still unions these allowances with its newest default.
   const roomPolicies = [
-    ["wrangler.demo.jsonc", "dap-demo", "worker.ts", "enforce", ["platform:register@17", "platform:directory@16", "platform:membership@8", "platform:rules@10", "platform:destination@12", "platform:inbox@1"]],
+    ["wrangler.demo.jsonc", "dap-demo", "worker.ts", "enforce", ["platform:register@28", "platform:directory@27", "platform:membership@14", "platform:rules@15", "platform:destination@21", "platform:register@17", "platform:directory@16", "platform:membership@8", "platform:rules@10", "platform:destination@12", "platform:inbox@1"]],
     ["wrangler.commons.jsonc", "dap-commons", "worker.commons.ts", "enforce", ["platform:register@23", "platform:directory@22", "platform:membership@9", "platform:rules@14", "platform:destination@16", "platform:inbox@1", "platform:commons@1"]],
-    ["wrangler.grow.jsonc", "dap-grow", "worker.grow.ts", "enforce", ["platform:register@17", "platform:directory@16", "platform:membership@8", "platform:rules@10", "platform:destination@12", "platform:inbox@1"]],
-    ["wrangler.lending.jsonc", "dap-lending", "worker.ts", "enforce", ["platform:register@5", "platform:directory@5", "platform:membership@4", "platform:rules@3", "platform:destination@2", "platform:inbox@1"]],
+    ["wrangler.grow.jsonc", "dap-grow", "worker.grow.ts", "enforce", ["platform:register@28", "platform:directory@27", "platform:membership@14", "platform:rules@15", "platform:destination@21", "platform:register@17", "platform:directory@16", "platform:membership@8", "platform:rules@10", "platform:destination@12", "platform:inbox@1"]],
+    ["wrangler.lending.jsonc", "dap-lending", "worker.ts", "enforce", ["platform:register@28", "platform:directory@27", "platform:membership@14", "platform:rules@15", "platform:destination@21", "platform:register@5", "platform:directory@5", "platform:membership@4", "platform:rules@3", "platform:destination@2", "platform:inbox@1"]],
     ["wrangler.artroom-scope.jsonc", "artroom-scope", "worker.ts", "enforce", null],
     ["wrangler.jsonc", "dap-self-host", "worker.ts", "enforce", null],
   ] as const;
@@ -113,4 +116,14 @@ test("dap-commons declares its exact namespace and unplanned register configurat
   expect(commons).not.toHaveProperty("r2_buckets");
   for (const field of ["ALLOW_OPEN_CREATION", "SESSION_SECRET", "MCP_ENABLED", "MCP_TOOL_ADDITIONS"]) expect(commons.vars).not.toHaveProperty(field);
   for (const field of ["SERVING_CREATION_KEY_PER_HOUR", "SERVING_CREATION_ADDRESS_PER_HOUR", "SERVING_READ_KEY_PER_MINUTE", "SERVING_READ_ADDRESS_PER_MINUTE"]) expect(commons.vars[field]).toBe(grow.vars[field]);
+});
+
+// Ruling 96676b22, point 2: the commons file stays unchanged, and its policy admits base through the defaults.
+test("the commons Worker's creation policy admits the base family and keeps every Commons answer", () => {
+  const commons = read("wrangler.commons.jsonc"), policy = readPlatformCreationPolicy({ PLATFORM_CREATION_PINS: commons.vars.PLATFORM_CREATION_PINS });
+  expect(JSON.parse(commons.vars.PLATFORM_CREATION_PINS)).toEqual(Object.values(COMMONS_COHORT));
+  for (const pin of Object.values(BASE_COHORT)) expect(permitsNewPlatformScope(policy, pin), pin).toBe(true);
+  for (const pin of Object.values(COMMONS_COHORT)) expect(permitsNewPlatformScope(policy, pin), pin).toBe(true);
+  expect(JSON.parse(commons.vars.DEMO_START_CONFIG).definition).toBe(COMMONS_COHORT.register);
+  expect(permitsNewPlatformScope(policy, "platform:register@2" as PlatformDefinition)).toBe(false);
 });

@@ -12,6 +12,10 @@ export interface ArchivePrivacyInventory { readonly customDomains: boolean; read
  * pins admit export inventory, never credentials, authority or a root journal.
  * The caller derives the digest from its installed VERSION_DATA, not input. */
 export const ARCHIVE_NATIVE_DATA: Readonly<Record<string, Digest>> = Object.freeze({
+  // CF-1 base family (ruling 68356c6c, point 6): the declaration digests of native-declarations.generated.ts.
+  "platform:directory@27": "sha256:3bcc3fef39c145c2de415debf0d45b4d9873df689aae898209835487f1044a23",
+  "platform:destination@21": "sha256:6c6bb1a919e3eeef6d8c486a6fca6b7d8e690090b54f17225944ed8e3c69fe6d",
+  "platform:rules@15": "sha256:de1f83120e304f4970e3d81504a1c888d512bcf037e66774df4e324cd73eeb0c",
   "platform:directory@25": "sha256:7977d787622498ec5e4a52abb5ecb4ce9e25188a907683ea2ea28dd1062b8595",
   "platform:destination@19": "sha256:0cb5f11be6a55f4a49718ea297b6a26c4a533d9e9f436a542d8c4882dae17780",
   "platform:directory@16": "sha256:c8c40477f369a19213439eaa1a3263dad1ce16038e5df605b6f7322737380b55",
@@ -51,6 +55,16 @@ export const ARCHIVE_NATIVE_VALUE_PLACES = Object.freeze([
   // Destination19 keeps the same two public judge value places. Its read token has no caller duration.
   { pin: "platform:destination@19", data: ARCHIVE_NATIVE_DATA["platform:destination@19"]!, domain: "artroom-rules-extents-1", place: "outcomes.judge.observes.0.retains.0", max: 256 * 1024 },
   { pin: "platform:destination@19", data: ARCHIVE_NATIVE_DATA["platform:destination@19"]!, domain: "artroom-changed-set-1", place: "owners.platform:destination@19.judge", max: 256 * 1024 },
+  // CF-1: Rules 15 keeps the three public places of Rules 10, and Destination 21 the two judge places of Destination 19.
+  { pin: "platform:rules@15", data: ARCHIVE_NATIVE_DATA["platform:rules@15"]!, domain: "artroom-check-configuration-1", place: "acts.keep-configuration.fields.digest.value", max: 32 * 1024 },
+  { pin: "platform:rules@15", data: ARCHIVE_NATIVE_DATA["platform:rules@15"]!, domain: "dap-application-release-2", place: "acts.install-application.fields.release.value", max: 4096 },
+  { pin: "platform:rules@15", data: ARCHIVE_NATIVE_DATA["platform:rules@15"]!, domain: "dap-application-semantics-2", place: "acts.install-application.fields.semantic.value", max: 256 * 1024 },
+  { pin: "platform:destination@21", data: ARCHIVE_NATIVE_DATA["platform:destination@21"]!, domain: "artroom-rules-extents-1", place: "outcomes.judge.observes.0.retains.0", max: 256 * 1024 },
+  { pin: "platform:destination@21", data: ARCHIVE_NATIVE_DATA["platform:destination@21"]!, domain: "artroom-changed-set-1", place: "owners.platform:destination@21.judge", max: 256 * 1024 },
+  // Destination 21 also keeps the rules certificate act of Destination 14 (through Destination 20's lineage).
+  { pin: "platform:destination@21", data: ARCHIVE_NATIVE_DATA["platform:destination@21"]!, domain: "artroom-rules-policy-1", place: "acts.certify-rules-tree.fields.proposal.value", max: 256 * 1024 },
+  { pin: "platform:destination@21", data: ARCHIVE_NATIVE_DATA["platform:destination@21"]!, domain: "artroom-rules-policy-1", place: "owners.platform:destination@21.certify-rules-tree", max: 256 * 1024 },
+  { pin: "platform:destination@21", data: ARCHIVE_NATIVE_DATA["platform:destination@21"]!, domain: "artroom-rules-tree-1", place: "owners.platform:destination@21.certify-rules-tree", max: 256 * 1024 },
   // Q11/G14 exact public configuration places; no credential or authority exception.
   { pin: "platform:rules@11", data: ARCHIVE_NATIVE_DATA["platform:rules@11"]!, domain: "artroom-check-configuration-1", place: "acts.keep-configuration.fields.digest.value", max: 32768 },
   { pin: "platform:rules@11", data: ARCHIVE_NATIVE_DATA["platform:rules@11"]!, domain: "dap-application-release-2", place: "acts.install-application.fields.release.value", max: 4096 },
