@@ -5,6 +5,9 @@ import { expect, test } from "vitest";
 import type { PlatformDefinition } from "@generalbusiness/dap-contract";
 import { BASE_COHORT, COMMONS_COHORT } from "@generalbusiness/dap-platform";
 import { permitsNewPlatformScope, readPlatformCreationPolicy } from "../../scope/src/creation-versions.ts";
+import { readInstalledRegisters } from "../../scope/src/register-setting.ts";
+import { artifactsConfiguration } from "../../scope/src/artifacts-wiring.ts";
+import { demoCreationConfig } from "../../scope/src/demo-creation.ts";
 const read = (name: string) => JSON.parse(readFileSync(new URL(`../../../apps/room/${name}`, import.meta.url), "utf8").replace(/^\s*\/\/.*$/gm, ""));
 
 // Each deployed Worker owns its migration history, including its tag scheme.
@@ -66,14 +69,38 @@ test("dap-demo has private namespaces, enforced index and the Grow serving bound
   expect(demo.durable_objects.bindings.every((row: object) => !Object.hasOwn(row, "script_name"))).toBe(true);
   expect(demo.artifacts).toEqual([{ binding: "ARTIFACTS", namespace: "dap-demo", remote: true }]);
   expect(demo.vars.ARTIFACTS_NAMESPACE).toBe("dap-demo");
-  expect(JSON.parse(demo.vars.ARTIFACTS_CONFIG)).toEqual({ registerScope: "sc_zm56yco5zyx7n3kx7e5jcxz55q5wp7y2lcuy2ialj7r7mzzcarjq", namespace: "dap-demo", host: "6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net", maxBytes: 10485760, credentialIdentity: "adapter-attempt" });
-  expect(demo.vars.REGISTER_SCOPE).toBe("sc_zm56yco5zyx7n3kx7e5jcxz55q5wp7y2lcuy2ialj7r7mzzcarjq");
-  expect(JSON.parse(demo.vars.INSTALLED_REGISTER_SCOPES)).toEqual(["sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq", "sc_zm56yco5zyx7n3kx7e5jcxz55q5wp7y2lcuy2ialj7r7mzzcarjq"]);
-  // Ruling 19a509a5 (Q-D1): no start config, so the demo Worker serves no start offer until the planner names its new register.
-  expect(demo.vars).not.toHaveProperty("DEMO_START_CONFIG");
+  const artifacts = artifactsConfiguration(demo.vars.ARTIFACTS_CONFIG);
+  expect(artifacts).not.toBeNull();
+  expect(artifacts).toEqual({ registerScope: demo.vars.REGISTER_SCOPE, namespace: "dap-demo", host: "6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net", maxBytes: 10485760, credentialIdentity: "adapter-attempt" });
   for (const field of ["SERVING_CREATION_KEY_PER_HOUR", "SERVING_CREATION_ADDRESS_PER_HOUR", "SERVING_READ_KEY_PER_MINUTE", "SERVING_READ_ADDRESS_PER_MINUTE"]) expect(demo.vars[field]).toBe(grow.vars[field]);
   for (const field of ["ALLOW_OPEN_CREATION", "DEPLOYMENT", "SESSION_SECRET"]) expect(demo.vars).not.toHaveProperty(field);
 
+});
+
+// Each Worker owns its current identity. A register rotation must not require
+// copied IDs or a test change to enable its file-owned Start configuration.
+test("hosted register settings and optional Start metadata agree within each Worker", () => {
+  for (const name of ["demo", "grow", "lending"]) {
+    const config = read(`wrangler.${name}.jsonc`), vars = config.vars;
+    const roots = readInstalledRegisters(vars), artifacts = artifactsConfiguration(vars.ARTIFACTS_CONFIG);
+    expect(roots.kind, name).toBe("pinned");
+    expect(artifacts?.registerScope, name).toBe(vars.REGISTER_SCOPE);
+    expect(artifacts?.namespace, name).toBe(vars.ARTIFACTS_NAMESPACE ?? config.artifacts[0].namespace);
+    if (roots.kind === "pinned") {
+      expect(roots.scope, name).toBe(vars.REGISTER_SCOPE);
+      expect(roots.scopes, name).toContain(vars.REGISTER_SCOPE);
+      expect(new Set(roots.scopes).size, name).toBe(roots.scopes.length);
+    }
+    if (vars.DEMO_START_CONFIG !== undefined) {
+      const metadata = JSON.parse(vars.DEMO_START_CONFIG);
+      // Source cannot read the Worker's secret DEPLOYMENT binding. The helper
+      // checks it against the operator's explicit argument before writing.
+      const start = demoCreationConfig(vars.DEMO_START_CONFIG, metadata.deployment, vars);
+      expect(start, name).not.toBeNull();
+      expect(start?.current.register.scope, name).toBe(vars.REGISTER_SCOPE);
+      if (vars.DEPLOYMENT !== undefined) expect(start?.current.deployment, name).toBe(vars.DEPLOYMENT);
+    }
+  }
 });
 
 test("the self-host template has no project resources and the retired Worker retains its own deployment history", () => {

@@ -27,6 +27,7 @@ const AGENT_KEY = `key_${"a".repeat(43)}`, BEARER = `${"b".repeat(64)}.${"s".rep
 const ISSUE = `sc_${"i".repeat(52)}`, CHANGE = `sc_${"c".repeat(52)}`, DIRECTORY = `sc_${"d".repeat(52)}`;
 const HASH = `sha256:${"7".repeat(64)}`;
 const GENESIS = `sha256:${"9".repeat(64)}`, at = (scope: string) => ({ scope, genesis: GENESIS });
+const REGISTER = at(`sc_${"a".repeat(52)}`);
 const FACT = { at: at(ISSUE), seq: 3, hash: HASH };
 const ACT_TOOLS = [...LOOP_ACT_TOOLS, "change.link-own", "change.propose-file"];
 const DEFAULT_LIST = [...hostedDefaultTools(), ...ACT_TOOLS];
@@ -409,12 +410,14 @@ beforeEach(() => { temp = realpathSync(mkdtempSync(join(tmpdir(), "hosted-loop-"
 afterEach(() => { rmSync(temp, { recursive: true, force: true }); vi.restoreAllMocks(); });
 const example = () => JSON.parse(readFileSync(new URL("../hosted-loop/input.example.json", import.meta.url), "utf8")) as Record<string, unknown>;
 const inputOf = (value: unknown): string => { const path = join(temp, "input.json"); writeFileSync(path, JSON.stringify(value)); return path; };
-const usable = (home = join(temp, "home")) => ({ ...example(), deploymentVersion: VERSION, service: SERVICE, deployment: "the-worker", home });
+const usable = (home = join(temp, "home")) => ({ ...example(), register: REGISTER, deploymentVersion: VERSION, service: SERVICE, deployment: "the-worker", home });
 const planOf = (): LoopPlan => readLoopPlan(inputOf(usable()));
 
-test("the example holds a placeholder version, so it stops until someone supplies the reviewed version", () => {
+test("the example stops until someone supplies the reviewed version and register", () => {
   expect(() => readLoopPlan(inputOf(example()))).toThrow(/stopped: input/);
-  expect(readLoopPlan(inputOf({ ...example(), deploymentVersion: VERSION })).name).toBe("hosted-loop-scratch-1");
+  expect(() => readLoopPlan(inputOf({ ...example(), deploymentVersion: VERSION }))).toThrow(/stopped: input/);
+  expect(() => readLoopPlan(inputOf({ ...example(), register: REGISTER }))).toThrow(/stopped: input/);
+  expect(readLoopPlan(inputOf({ ...example(), register: REGISTER, deploymentVersion: VERSION })).name).toBe("hosted-loop-scratch-1");
 });
 test.each<[string, Record<string, unknown>, StopWord]>([
   ["the real room's name", { name: "repo-in-ai" }, "scratch-only"],
@@ -582,7 +585,7 @@ test("every agent line says that a script drove its session", async () => {
 });
 
 test("S1's owner still refuses plain HTTP unless its caller names a local Worker", async () => {
-  const register = example()["register"] as never, input = { register, handle: "@owner" };
+  const register = REGISTER as never, input = { register, handle: "@owner" };
   const answer = (home: string, service: string, options?: { loopback: boolean }) => initializeOwner(join(temp, home), { ...input, service }, "new", options).then(() => "accepted", (error: Error) => error.message);
   expect(await answer("s1", "http://127.0.0.1:8791")).toMatch(/owner-input-invalid/);
   expect(await answer("s1b", "http://example.invalid", { loopback: true })).toMatch(/owner-input-invalid/);

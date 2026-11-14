@@ -1,0 +1,151 @@
+{
+  "qualification": "Two separately sealed focused attempts at the same frozen source. Attempt 1 failed the first compiler because the shared dependency view lacked dap-define. Attempt 2 uses the verified APFS clone and passes the resumed plan. This evidence is not a gate, deployment or Head A live-values witness. Only the listed run directories belong to this manifest.",
+  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "checkpoint": {
+    "commit": "eadd7c7424a94d9521d2697c176ca79139321502",
+    "tree": "f4676f63e836828f89ad0f96b6be8a0046fb391d"
+  },
+  "fileCount": 28,
+  "files": [
+    {
+      "path": "2026-11-14-cut-a-focused-attempt1/SHA256SUMS",
+      "bytes": 571,
+      "sha256": "739be93116620f9831dfa41f2f2e0c11768ce9eab006e75d9f7f8f0f0fb7123d"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt1/checkpoint.json",
+      "bytes": 441,
+      "sha256": "651b82c3a253612941bb95179c740b74fb75c1311b78af99b1344137aeb6a422"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt1/cli-compiler.stderr",
+      "bytes": 29,
+      "sha256": "8e679a5595785cb9a8755524fdcc64b01790b1e0e98e62d124eecb59e37384ad"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt1/cli-compiler.stdout",
+      "bytes": 12410,
+      "sha256": "75a715d6e0d9875bd9c16791f3ad80a8dfbbb83bf7236f4e80d981ddd9f566e3"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt1/commands.json",
+      "bytes": 2019,
+      "sha256": "862a4bbd169195f0dea90379e39455597daa07a07d40fabd92b6e209e3e73065"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt1/power.jsonl",
+      "bytes": 933,
+      "sha256": "1a34022bd5491782bcb9bbbb00bfc0812425d67b64f95eba67e1459a7e9c3f49"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt1/processes.txt",
+      "bytes": 32,
+      "sha256": "2e9a00960f458dfeeaaecf83ba353e123326b94d3e383a8dc40b0a24c6158a10"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt1/results.json",
+      "bytes": 406,
+      "sha256": "f8fec69fbf65529eebd4735411264e83235f4488d3e20740a30a5d007d60da1f"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/SHA256SUMS",
+      "bytes": 1601,
+      "sha256": "12ffd4930506c445fcaf215df56d0ceb804519c1d79bea74878f29508d32c6a3"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/checkpoint.json",
+      "bytes": 491,
+      "sha256": "67b86d6f196ec1034668eb3ead3550d985eac59ef02e9b1e53e22624f79a05a8"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/cli-compiler.stderr",
+      "bytes": 29,
+      "sha256": "e8da59f3df1e472e58e41b3a2a8013a7291bc123bc5ab5b5b31ae658f06f5686"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/cli-compiler.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/cli-config.stderr",
+      "bytes": 29,
+      "sha256": "1595397d260b796963b1e76ee690187957c9311ad18db2c435c257aeb4018912"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/cli-config.stdout",
+      "bytes": 1154,
+      "sha256": "26e23f35b5b2f849d6b248f9b75e15827387123989cee8ce93f5d6dc9131c0f5"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/cli-tests.json",
+      "bytes": 2628,
+      "sha256": "f8002d0a2fddabaa1977ebd21a5e484720fd3498214618cbbef358d6834e48fa"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/commands.json",
+      "bytes": 2119,
+      "sha256": "34818f2b923b7afca070449f4022dddfcbddbdb1b9f73bb543961b61cffee2cc"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/dependency-provenance.json",
+      "bytes": 3718,
+      "sha256": "3d09406c2d7342c19fc1234ef56d13fa3532883939ac31fbe827abc2edf30505"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/namespace-control.stderr",
+      "bytes": 532,
+      "sha256": "082243e2eeca3d04459e7eadcfd783ea3c9fe0acbace0efe5690d52a06d8b010"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/namespace-control.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/node-files.stderr",
+      "bytes": 220,
+      "sha256": "84ebe74a97ee3a0c93c23ba7c0b78daed452281800f6569dee9b4252b13d783a"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/node-files.stdout",
+      "bytes": 5210,
+      "sha256": "57ba8198c40c3cb06828f84e5800349a7118d90950f587f03a780d656a1b9ea6"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/pool-compat.stderr",
+      "bytes": 29,
+      "sha256": "1f00c70a85b25c45237e698754bbdddf8fd5ead47ffa49dd985ec51b93d2688a"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/pool-compat.stdout",
+      "bytes": 371,
+      "sha256": "d0615699e8ac329e0727516dbc6cf9a950fc9f0454704756838653c9872da8f2"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/power.jsonl",
+      "bytes": 6531,
+      "sha256": "c8bc20ae04ba9b36df35a5117f9625740575c5afda7777990e9349089c4795b5"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/processes.txt",
+      "bytes": 32,
+      "sha256": "2e9a00960f458dfeeaaecf83ba353e123326b94d3e383a8dc40b0a24c6158a10"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/results.json",
+      "bytes": 914,
+      "sha256": "db4b4251f9b96126231aa21d025b6f0b748c3b706ca12e5d493717aaaac19aa4"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/whitespace.stderr",
+      "bytes": 29,
+      "sha256": "f5d04e3f394dbde846fb5bf863e4e5541e917ef60e9e5b8a7a746282662ee215"
+    },
+    {
+      "path": "2026-11-14-cut-a-focused-attempt2/whitespace.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

@@ -29,9 +29,11 @@ not install a tool into the checkout to probe it.
 
 Copy [input.example.json](input.example.json) outside the checkout. Replace
 `deploymentVersion` with the exact version in the reviewed dap-demo
-deployment receipt. Check the service, Artifacts origin and full register
-reference against that receipt. The template deliberately has no usable
-version. The script checks `/health` before running a phase.
+deployment receipt. Fill both `register.scope` and `register.genesis`
+from that receipt or its verified creation offer. Check the service and
+Artifacts origin against the same receipt. The template has no usable
+version or register reference. The script checks `/health` before each
+phase.
 
 Check `providerOrigin` against the receipt before the first phase. A wrong
 origin shows only after the workspace's one-time credential is spent, and

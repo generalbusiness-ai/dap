@@ -229,7 +229,7 @@ The file sets the index to `enforce`. A read of an unknown scope ID reaches no t
 
 [`apps/room/wrangler.grow.jsonc`](../../apps/room/wrangler.grow.jsonc) uses [worker.grow.ts](../../apps/room/worker.grow.ts). Its `DeployedScope` subclass keeps the generic scope wiring and adds the room archive policy. It does not create a separate archive credential or Artifacts namespace.
 
-Grow declares its own `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and `AGENTS`. It shares `artroom-demo`, `artroom-application-content`, and `artroom_metrics_v1` with `artroom-scope`. The file sets `DEPLOYMENT` to `dap-grow-v1`. The operator sets `SESSION_SECRET`. The file pins the register in `REGISTER_SCOPE` and in `ARTIFACTS_CONFIG`, both `sc_yatkl7kuktl2gauvjrt7b2zy7nr6nu55vkzorot2bm5n2umgpbnq`. The file omits `ARTIFACTS_NAMESPACE`, so the Worker uses the default `artroom-demo`.
+Grow declares its own `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and `AGENTS`. It shares `artroom-demo`, `artroom-application-content`, and `artroom_metrics_v1` with `artroom-scope`. The file sets `DEPLOYMENT` to `dap-grow-v1`. The operator sets `SESSION_SECRET`. `REGISTER_SCOPE` in the tracked file selects the current register and must match `ARTIFACTS_CONFIG.registerScope`. An optional `INSTALLED_REGISTER_SCOPES` list preserves the roots that the operator still serves. The file omits `ARTIFACTS_NAMESPACE`, so the Worker uses the default `artroom-demo`.
 
 `APPLICATION_TRUST` lists one application release, publisher and fetch host. `APPLICATION_SCREEN_HOSTS` holds the exact `grow.inguz.space` item 2 screen descriptor. Code applies these checks inside shared content storage. They do not show whether the installation, the DNS mapping or the archive is healthy. The MCP namespaces are declared. The file does not set the hosted opt-in variables.
 
@@ -243,11 +243,11 @@ The operator sets `SESSION_SECRET` and `DEPLOYMENT`. The file does not list bind
 
 ## dap-demo
 
-[`apps/room/wrangler.demo.jsonc`](../../apps/room/wrangler.demo.jsonc) uses the ordinary room entry with local `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and `AGENTS`. It sets the index to `enforce`. It pins the Start origin and Register 26 reference, selects Register 26 in `REGISTER_SCOPE` and `ARTIFACTS_CONFIG`, and lists both Register 17 and Register 26 in `INSTALLED_REGISTER_SCOPES`.
+[`apps/room/wrangler.demo.jsonc`](../../apps/room/wrangler.demo.jsonc) uses the ordinary room entry with local `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and `AGENTS`. It sets the index to `enforce`. The file's `REGISTER_SCOPE` selects the current register and must match `ARTIFACTS_CONFIG.registerScope`. `INSTALLED_REGISTER_SCOPES` names the roots the operator serves and must include the current register. These tracked settings supply the register values for configuration tests and deployment review.
 
 Its Artifacts namespace is `dap-demo`. It shares dataset `artroom_metrics_v1` with `artroom-scope` and `dap-grow`, but declares no application content bucket. `APPLICATION_TRUST` lists one release, publisher and host. Without the `APPLICATION_CONTENT` binding, the Worker stores and serves no package for that release. `APPLICATION_SCREEN_HOSTS` is empty. The file sets no MCP opt-in variable.
 
-The operator sets `SESSION_SECRET` and `DEPLOYMENT`. The `deployment` member of `DEMO_START_CONFIG` is a separate value. The file does not show that the live `DEPLOYMENT` binding matches it.
+The operator sets `SESSION_SECRET` and keeps `DEPLOYMENT` in a secret binding. When the planner configures Browser Start, `scripts/register-values.mjs` records its full register reference in `DEMO_START_CONFIG`. The script validates the offer against the explicit `--deployment` argument and never adds a tracked variable of that name. If the file already holds `DEPLOYMENT`, the argument must match it. Deployment review must still compare the argument with the deployed version and `/health`, and establish that the Worker carries the reviewed file. Without a valid Start setting, the Worker offers no browser room creation.
 
 ## dap-celld-local
 

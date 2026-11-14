@@ -311,6 +311,49 @@ Name that configuration commit in the deployment receipt. The operator
 alone changes the list. A request, readable scope, or index row cannot add
 a root. Existing single-register configurations need no new setting.
 
+Use the tracked file as the source of the hosted register settings. After
+you retain the planned register's scope ID and genesis digest, update one
+Worker with `demo`, `grow` or `lending` as the name:
+
+```sh
+node scripts/register-values.mjs grow \
+	--register "$REGISTER_SCOPE" --genesis "$REGISTER_GENESIS"
+```
+
+The script updates `REGISTER_SCOPE` and `ARTIFACTS_CONFIG.registerScope`
+together. It appends the new root once to `INSTALLED_REGISTER_SCOPES`,
+keeps the other roots, and refuses a list longer than 32. Add `--only` to
+replace the list with the new root alone when the earlier rooms no longer
+need service. The identifier cutover uses `--only` because the service
+does not read rooms of the retired roots.
+
+For an existing Browser Start setting, also supply `--deployment` with
+the deployed identity. The script updates the full register reference
+and validates the offer against that explicit argument. To configure
+Browser Start for `demo`, supply all three metadata arguments:
+
+```sh
+node scripts/register-values.mjs demo \
+	--register "$REGISTER_SCOPE" --genesis "$REGISTER_GENESIS" --only \
+	--start-origin "$START_ORIGIN" --deployment "$DEPLOYMENT" \
+	--definition "$REGISTER_DEFINITION"
+```
+
+Take the origin, deployment identity and definition from the reviewed
+deployment and register records. The script infers none of them.
+`--start-origin` and `--definition` require each other and `--deployment`.
+The script never adds a tracked `DEPLOYMENT` variable. If the file already
+has that variable, the argument must match it. On `dap-demo`, the operator
+keeps `DEPLOYMENT` in a secret binding. Verify its actual value from the
+deployed version and `/health` before supplying the argument.
+
+The script accepts only `demo`, `grow` and `lending`, validates the
+candidate with the production settings parsers, and writes no file on a
+validation failure. A successful call changes only that Worker's tracked
+configuration and prints its diff. Review and commit the diff before
+deployment. The script neither installs the register nor deploys the
+Worker.
+
 A `dap-grow` register switch also needs its archive bridge fixed first.
 The installed list does not update the single-root checks in
 [`archive-host-item.ts`](../packages/scope/src/archive-host-item.ts), supplied
@@ -339,7 +382,7 @@ is nonsecret JSON with exactly these fields:
 | `origin` | The Worker's canonical public origin. `dap-demo` uses `https://dap-demo.inguz.workers.dev`. |
 | `deployment` | The Worker's actual `DEPLOYMENT` value. |
 | `register` | The full reference of the installed register, `{ scope, genesis }`. A scope ID alone does not work. |
-| `definition` | `platform:register@26` for the new default, or retained `platform:register@17`. |
+| `definition` | `platform:register@28` for the default, or retained `platform:register@17` or `platform:register@26`. |
 
 The register must be open, and its recorded host must be `artifacts`. Its
 namespace must equal both `ARTIFACTS_CONFIG.namespace` and
@@ -356,7 +399,7 @@ genesis, or a setting of version 1 or 2 produces no offer. An offer
 grants no authority: the native namespace still judges the signed creation
 lineage.
 
-The client accepts only version 2 offers for Register 17 or Register 26.
+The client accepts only version 2 offers for Register 17, 26 or 28.
 The server makes no offer from setting version 1 or 2. Existing submitted
 operations keep their saved intent and readback path. A saved descriptor
 does not move to another register.

@@ -6,9 +6,9 @@ start the simulator and enable the room archive.
 The scope service is `https://dap-grow.inguz.workers.dev`, with deployment
 identity `dap-grow-v1`. Its public settings are committed in
 [`apps/room/wrangler.grow.jsonc`](../../apps/room/wrangler.grow.jsonc).
-It has its own Durable Objects and register
-`sc_yatkl7kuktl2gauvjrt7b2zy7nr6nu55vkzorot2bm5n2umgpbnq`, and shares
-the `artroom-demo` Artifacts namespace and application-content bucket.
+It has its own Durable Objects. `vars.REGISTER_SCOPE` in that file names
+its register. Grow shares the `artroom-demo` Artifacts namespace and
+application-content bucket with `artroom-scope`.
 `SESSION_SECRET` is set separately from stdin. For a reviewed maintenance
 deployment, run the pinned tool from a scratch directory:
 
