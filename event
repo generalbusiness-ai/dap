@@ -1,1 +1,1 @@
-{"kind":"assert","text":"START: CDF-1 and CF-2 landing window. I will ratify approval 210594dc and land exact candidate 9a1d85ebb7a89100d25d12c56c33a4ee85cf523a onto clean main 4cef11d2783efaa591fac197d9a2ba093004456e. No gate or validation owns the slot. The merge uses a subject under 72 characters, a blank line and a body. I will verify the pushed main and receipt before END. Plan 036 follows END; no gate starts before the planner's later END. No deployment."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:210594dcfbdbe0d5508dddc211291ba79bed73ce"}
