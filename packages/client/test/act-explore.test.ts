@@ -5,6 +5,8 @@ import { bindActBasis } from "../src/act-basis.ts";
 import { actVersion } from "../src/act-version.ts";
 import type { Act, Source } from "../src/act-types.ts";
 import { ActRecords } from "../src/act-records.ts";
+import { lowerActBasis, lowerActNames, type ActSymbols } from "../src/act-symbols.ts";
+import { shapeFieldsOf } from "../src/declared.ts";
 import { clientNotes as notes } from "./definition-corpus-data.ts";
 
 test("binding preserves written text and symbolic names while capturing only missing subject revisions", () => {
@@ -17,10 +19,18 @@ test("binding preserves written text and symbolic names while capturing only mis
   const act: Act<typeof notes, "write"> = { kind: "write", on: { output: prior }, fields: { body } };
   // An internal alias and detached-text digest serve judgment only. Neither
   // becomes the author's act or the source version that names it.
-  const lowered = { on: 17, fields: { body: textDigest(body) } };
+  const symbols: ActSymbols = {
+    item: name => typeof name === "number" ? name : name.output.key === prior.key && name.output.version === prior.version ? 17 : null,
+    revision: (source, id) => source.key === prior.key && source.version === prior.version && id === 17 ? 1 : null,
+  };
+  const names = lowerActNames(act, notes.acts.write.fields, symbols);
+  const shaped = shapeFieldsOf(notes.acts.write.fields, names.fields);
+  const lowered = { on: names.on, fields: shaped.fields };
+  expect([lowered, shaped.texts]).toEqual([{ on: 17, fields: { body: textDigest(body) } }, [body]]);
   const subjects = [{ id: 17, type: "note", refs: {}, revision: { after: prior } }];
   const bound = bindActBasis(notes, act, subjects, lowered, at);
   expect(bound).toEqual({ act: { ...act, expected: { on: { after: prior } } }, bound: ["on"] });
+  expect(lowerActBasis(notes.acts.write, subjects, lowered.on, lowered.fields, at, bound.act.expected, symbols)).toEqual({ on: 1 });
   expect(act.expected).toBeUndefined();
   const source: Source = { key: "write-note", version: actVersion(bound.act) };
   expect(source.version).not.toBe(actVersion({ ...lowered, kind: "write", expected: { on: 1 } }));
@@ -30,6 +40,7 @@ test("binding preserves written text and symbolic names while capturing only mis
   const captured = bindActBasis(notes, { ...act, expected: { on: 3 } }, subjects, lowered, at);
   expect(captured.act.expected).toEqual({ on: 3 });
   expect(captured.bound).toEqual([]);
+  expect(lowerActBasis(notes.acts.write, subjects, lowered.on, lowered.fields, at, captured.act.expected, symbols)).toEqual({ on: 3 });
 });
 
 test("pending command records retain exact counts and guard only marked entry values", () => {
