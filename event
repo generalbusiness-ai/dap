@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4d9f12a9426e597cec1aba96da6b1a880b48e380","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-13-pg1-prediction-grant.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4e1d1cd6d9e2e2ff2cf55b1509edc11101cc5121","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/validate/format-1.ts."}
