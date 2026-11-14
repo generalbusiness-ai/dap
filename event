@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:179887c2ced8a8a2aa5110b3b83b449eb0d7e680","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/hosted-retirement.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:17c117717acaffcd575427c0935752ace56b7c07","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-13-scope-client.md."}
