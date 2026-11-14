@@ -79,6 +79,27 @@ The harness's own deadlines are in
 
 ## Run the tests of what you changed
 
+Enable the tracked commit hooks once for this repository:
+
+```sh
+git config core.hooksPath .githooks
+```
+
+This setting is shared by its worktrees. The pre-commit hook runs
+`node scripts/format-json.mjs`. When formatting fails, it refuses the commit
+and prints `node scripts/format-json.mjs --write`. Run that command, review
+the repair, and stage it before committing. The hook never formats files
+for you. It also refuses unstaged differences in the formatter's selected
+JSON files, so the checked bytes match the staged bytes. It leaves partial
+staging intact and asks you to stage the formatted file. The commit-msg hook
+reads the actual UTF-8 message and reuses the
+subject and body rules in `scripts/check-commit-messages.mjs`.
+
+The pre-commit hook fails closed when the checkout has no local Prettier,
+including a notes-only worktree. Set up its committed dependencies with
+`npm ci` before committing; do not install a separate formatter or borrow
+an unmatched dependency view. Both checks still run in the gate.
+
 Run the tests of what you changed while you work, not the repository.
 
 ```
