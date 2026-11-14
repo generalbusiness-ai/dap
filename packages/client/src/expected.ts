@@ -5,7 +5,6 @@
 import type { FactRef, FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
 
 import { isFactRef, isRecord } from "@generalbusiness/dap-bytes";
-import type { Revision } from "./act-types.ts";
 type ExpectedField = Readonly<Record<string, unknown>> & { type?: string };
 
 interface ExpectedAct {
@@ -55,7 +54,7 @@ function subjectsOf<R, I extends Address>(act: ExpectedAct, items: readonly Boun
  * that a rule selects has no key: the scope resolves it. The scope checks
  * every revision again and refuses one that moved.
  */
-export function expectedOf<A extends ExpectedAct, R extends Revision = number, I extends Address = number>(act: A, items: readonly Bound<R, I>[], on: I | null, fields: Readonly<Record<string, FieldValue>>): Record<string, R> {
+export function expectedOf<A extends ExpectedAct, R = number, I extends Address = number>(act: A, items: readonly Bound<R, I>[], on: I | null, fields: Readonly<Record<string, FieldValue>>): Record<string, R> {
   const expected: Record<string, R> = {};
   if (act.step === "transition" && on !== null) {
     const at = items.find((item) => item.id === on)?.revision;
