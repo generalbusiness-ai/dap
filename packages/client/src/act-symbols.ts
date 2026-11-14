@@ -24,26 +24,30 @@ function outputOf(value: unknown): Source | null {
 
 /** Unknown fields and malformed values stay intact for the shared shape checker. */
 export function lowerActNames(act: { readonly on: ItemName | null; readonly fields: Readonly<Record<string, unknown>> },
-  fields: Readonly<Record<string, ShapeField>>, symbols: ActSymbols): { on: number | null; fields: Record<string, unknown> } {
-  const item = (value: ItemName): number => {
+  fields: Readonly<Record<string, ShapeField>>, symbols: ActSymbols,
+  reference?: (source: Source, position: "on" | readonly (string | number)[]) => void): { on: number | null; fields: Record<string, unknown> } {
+  const item = (value: ItemName, position: "on" | readonly (string | number)[]): number => {
     const found = symbols.item(value);
-    if (found !== null) return found;
+    if (found !== null) {
+      if (typeof value !== "number") reference?.(value.output, position);
+      return found;
+    }
     if (typeof value === "number") return value;
     throw new UnavailableActSource(value.output);
   };
-  const lower = (type: ShapeField | undefined, value: unknown): unknown => {
+  const lower = (type: ShapeField | undefined, value: unknown, path: readonly (string | number)[]): unknown => {
     if (type?.type === "item") {
-      if (typeof value === "number") return item(value);
+      if (typeof value === "number") return item(value, path);
       const source = outputOf(value);
-      return source === null ? value : item({ output: source });
+      return source === null ? value : item({ output: source }, path);
     }
-    if (type?.type === "list" && Array.isArray(value)) return value.map(member => lower(type.of, member));
+    if (type?.type === "list" && Array.isArray(value)) return value.map((member, index) => lower(type.of, member, [...path, index]));
     if (type?.type === "record" && isRecord(value)) return Object.fromEntries(Object.entries(value).map(([name, member]) =>
-      [name, lower(Object.hasOwn(type.of, name) ? type.of[name] : undefined, member)]));
+      [name, lower(Object.hasOwn(type.of, name) ? type.of[name] : undefined, member, [...path, name])]));
     return value;
   };
-  return { on: act.on === null ? null : item(act.on), fields: Object.fromEntries(Object.entries(act.fields).map(([name, value]) =>
-    [name, lower(Object.hasOwn(fields, name) ? fields[name] : undefined, value)])) };
+  return { on: act.on === null ? null : item(act.on, "on"), fields: Object.fromEntries(Object.entries(act.fields).map(([name, value]) =>
+    [name, lower(Object.hasOwn(fields, name) ? fields[name] : undefined, value, [name])])) };
 }
 
 /** Select subjects with the existing resolver, then resolve `after` for that exact item. */

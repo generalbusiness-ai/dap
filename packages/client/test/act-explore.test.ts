@@ -82,10 +82,13 @@ test("private state and public rows retain recorded knowledge without exposing p
   const source: Source = { key: "added-note", version: actVersion({ kind: "add", on: null, fields: {}, expected: {} }) };
   const effects: readonly Effect[] = [{ effect: "open", item: 4, type: "note", state: "kept" }, { effect: "ref", item: 4, slot: "me", to: 4 }];
   const projected = projectActItems(copy.view, definition, effects, null, source, [1], 17);
-  const nameOf = (id: number) => id === 17 ? { output: source } : id;
-  const publicView = presentActRows(declaration, [...copy.view.all().items, ...projected.items.values()], nameOf,
-    (id, revision) => ({ name: nameOf(id), seen: id === 17 ? { after: source } : revision, assumes: id === 17 ? [source] : [] }),
-    id => base.item(id));
+  const opened = projected.items.get(17);
+  if (!opened) throw new Error("the projected opening is absent");
+  const publicView = presentActRows(declaration, [...copy.view.all().items, ...projected.items.values()],
+    row => row === opened ? { name: { output: source }, seen: { after: source }, assumes: [source] }
+      : { name: row.id, seen: row.revision, assumes: [] },
+    row => row === opened ? null : base.item(row.id),
+    (row, space, path) => row === opened && space === "refs" && path.length === 1 && path[0] === "me" ? { output: source } : null);
   const pending = publicView.row({ output: source });
   if (!pending) throw new Error("the public pending note is absent");
   expect([pending.ref.name, pending.ref.seen, pending.refs.me, pending.values.code, pending.recorded]).toEqual([

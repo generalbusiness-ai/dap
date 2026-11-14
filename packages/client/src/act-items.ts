@@ -9,6 +9,8 @@ export interface ProjectedItems {
   readonly items: ReadonlyMap<number, Item>;
   readonly texts: ReadonlyMap<string, readonly Digest[]>;
   readonly entrySlots: ReadonlyMap<number, ReadonlySet<string>>;
+  /** Actual item consequences change revision; attribution alone does not. */
+  readonly revised: ReadonlySet<number>;
   /** The caller must account for non-item consequences separately. */
   readonly remaining: readonly Effect[];
 }
@@ -80,6 +82,7 @@ export function projectActItems(view: StateView, definition: ValidDefinition, ef
     const was = before.get(id);
     if (was) items.set(id, { ...item, revision: was.revision + 1 });
   }
+  const revised = new Set(items.keys());
   // A changed hold contributes attribution to its underlying item without
   // changing that item's revision, as the recorded fold does.
   for (const hold of [...items.values()]) {
@@ -91,5 +94,5 @@ export function projectActItems(view: StateView, definition: ValidDefinition, ef
     if (!before.has(target.id)) before.set(target.id, target);
     items.set(target.id, { ...target, attributed });
   }
-  return { before, items, texts, entrySlots, remaining };
+  return { before, items, texts, entrySlots, revised, remaining };
 }
