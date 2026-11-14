@@ -44,11 +44,13 @@ export function nativeGateway(configured:ActorIdentity,signer:Signer,options:{cu
   // The signer holds a browser key capability; no seed or token reaches a URL or view.
   const lifetime=new AbortController();let alive=true;
   const now=options.now??(()=>Date.now());
-  const transport=httpTransport(identity.origin,{fetch:options.fetch??((url,init)=>fetch(url,{...init,redirect:"error",signal:init?.signal?AbortSignal.any([init.signal,lifetime.signal]):lifetime.signal}))});
   let session:Session|null=null,view:CountingView|undefined,observer:Observation|undefined,pending:string|null=null,fresh=false,commandPrepared=false;
-  const handle=()=>new ScopeHandle(transport,identity.scope.scope,session?.reader()??null);
   const usable=()=>alive&&options.current();
   const current=()=>{if(!usable())throw new Error("This device context is no longer current.");};
+  // A receipt follow can issue another GET after its first read. Fence each dispatch, including provided gateway fetches.
+  const readFetch:Fetch=(url,init)=>{current();return options.fetch?options.fetch(url,init):fetch(url,{...init,redirect:"error",signal:init?.signal?AbortSignal.any([init.signal,lifetime.signal]):lifetime.signal});};
+  const transport=httpTransport(identity.origin,{fetch:readFetch});
+  const handle=()=>new ScopeHandle(transport,identity.scope.scope,session?.reader()??null);
   const trusted:TrustedActFetch|undefined=options.actFetch??(options.fetch?undefined:typeof globalThis.fetch==="function"?((url,init)=>fetch(url,{...init,signal:AbortSignal.any([init.signal,lifetime.signal])})):undefined);
   const actURL=`${identity.origin}/v1/scopes/${encodeURIComponent(identity.scope.scope)}/acts`;
   /** The one send of an exact envelope, through the trusted fetch. A response that does not answer this request is a lost reply. */
@@ -122,7 +124,7 @@ export function nativeGateway(configured:ActorIdentity,signer:Signer,options:{cu
   return{
     observe(emit){
       observer=observeScope<CountingRead>({context:{origin:identity.origin,deployment:identity.deployment,scope:identity.scope,definition:identity.definition,membership:identity.membership,member:identity.member.member,key:identity.publicKey},current:usable,
-        authenticate:async()=>options.lock.run(async()=>{current();const signed=await signerSessionRequest(identity.membership,signer,timeOf(Date.now()+60_000),b64url(crypto.getRandomValues(new Uint8Array(16))));current();const answer=await requestSession(identity.origin,identity.membership.scope,signed,options.fetch?{fetch:options.fetch}:{});current();if(answer.ok)session=answer.session;return answer.ok?{ok:true,session:answer.session}:answer;}),
+        authenticate:async()=>options.lock.run(async()=>{current();const signed=await signerSessionRequest(identity.membership,signer,timeOf(Date.now()+60_000),b64url(crypto.getRandomValues(new Uint8Array(16))));current();const answer=await requestSession(identity.origin,identity.membership.scope,signed,{fetch:readFetch});current();if(answer.ok)session=answer.session;return answer.ok?{ok:true,session:answer.session}:answer;}),
         snapshot:async next=>{session=next;if(!application)return{ok:false,reason:"unavailable"};return completeApplicationItems(await handle().applicationProjection({v:1,scope:identity.scope,directory:application.directory,install:application.item,projection:"state",items:{}}),counterStateProjection);},
         open:(next,signal)=>openHttpHeadStream(identity.origin,identity.scope,next,signal,options.headFetch?{fetch:options.headFetch}:{}),
         // Counter exposes projection readiness. A working stream alone does not change it.

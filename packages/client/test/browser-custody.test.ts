@@ -213,6 +213,16 @@ test("malformed existing rows stay unreadable in direct reads and capacity or ta
   }
   expect([builds, posts]).toEqual([0, 0]);
   records.set(key, original);
+  for (const position of [-1, "bad", null] as const) {
+    const orphanWho = identity(`orphan-${position}`), orphanId = identityId(orphanWho), orphanKey = originStorage.key(position === null ? orphanId : [orphanId, position]);
+    const outcome = { at: timeOf(T0), lost: true, attempt: 1, signing: 0 };
+    originStorage.raw("outcomes").set(orphanKey, outcome);
+    await expect(custody.find(orphanWho)).rejects.toMatchObject({ why: { held: "unreadable" } });
+    await expect(custody.send(orphanWho, meaningOf("orphan"), async () => { builds++; return build(orphanWho.key)(); }, async e => { posts++; return accepted(e.signed); }, { notAfter })).rejects.toMatchObject({ why: { held: "unreadable" } });
+    await expect(store.segment(orphanId, 0, [])).rejects.toMatchObject({ why: { held: "unreadable" } });
+    expect(originStorage.raw("outcomes").get(orphanKey)).toBe(outcome);
+  }
+  expect([builds, posts]).toEqual([0, 0]);
 });
 
 test("bounded position reads preserve history and a repeated append truncates its interrupted tail", async () => {

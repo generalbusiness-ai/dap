@@ -80,13 +80,21 @@ export function browserJoining(signer: Signer, options: JoiningOptions): Joining
     return intent.kind === "join" && intent.actor === signer.key && canonicalize(intent.to) === canonicalize(seat.membership) && isInvitationRedemptionFields(membershipDefinition, intent.fields);
   };
   const current = () => { if (!usable()) throw new Error("This join context is no longer current."); };
-  const transport = (origin: string, fetch?: Fetch) => httpTransport(origin, fetch ? { fetch } : {});
+  // ScopeHandle may make a diagnostic fallback read. Each actual request still needs this context's authority.
+  const contextFetch = (provided?: Fetch): Fetch => (url, init) => {
+    current();
+    const send = provided ?? (globalThis as { fetch?: Fetch }).fetch;
+    if (!send) throw new Error("This browser has no request transport.");
+    return send(url, init);
+  };
+  const readFetch = contextFetch(options.fetch), actFetch = contextFetch(options.actFetch ?? options.fetch);
+  const transport = (origin: string, fetch: Fetch) => httpTransport(origin, { fetch });
   const requests = (seat: Seat): BrowserRequests => {
     // A person who has not joined has no read session. Settlement by the exact signed request needs none.
-    const reads = new ScopeHandle(transport(seat.origin, options.fetch), seat.membership.scope, null);
+    const reads = new ScopeHandle(transport(seat.origin, readFetch), seat.membership.scope, null);
     return browserRequests(options.custody, { service: seat.origin, membership: null, signer: signer.key, target: seat.membership }, {
       current: usable,
-      post: (envelope) => new ScopeHandle(transport(seat.origin, options.actFetch ?? options.fetch), seat.membership.scope, null).submit(envelope.signed, [], envelope.beside),
+      post: (envelope) => new ScopeHandle(transport(seat.origin, actFetch), seat.membership.scope, null).submit(envelope.signed, [], envelope.beside),
       recorded: async (receipt: Receipt, envelope: Envelope) => {
         current();
         if (receipt.definition !== membershipDefinition || receipt.intent !== intentDigest(envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(seat.membership)) return false;
@@ -94,10 +102,10 @@ export function browserJoining(signer: Signer, options: JoiningOptions): Joining
         // and the room gives its key one; if the room gives none, the join is not verified.
         const asked = await signerSessionRequest(seat.membership, signer, timeOf(now() + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16))));
         current();
-        const session = await requestSession(seat.origin, seat.membership.scope, asked, options.fetch ? { fetch: options.fetch } : {});
+        const session = await requestSession(seat.origin, seat.membership.scope, asked, { fetch: readFetch });
         current();
         if (!session.ok || session.session.claims.member !== seat.handle) return false;
-        const followed = await new ScopeHandle(transport(seat.origin, options.fetch), seat.membership.scope, session.session.reader()).followReceipt(receipt);
+        const followed = await new ScopeHandle(transport(seat.origin, readFetch), seat.membership.scope, session.session.reader()).followReceipt(receipt);
         current();
         return followed.ok && followed.entry.input.type === "act" && canonicalize(followed.entry.input.signed) === canonicalize(envelope.signed);
       },

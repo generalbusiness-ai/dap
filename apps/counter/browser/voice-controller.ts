@@ -430,6 +430,8 @@ export function createVoiceController(options: {
         if (!readback || canonicalize(readback)!==canonicalize(marker)) throw new Error("Audio-start custody did not read back exactly.");
         if (!usable(turn) || generation !== audioGeneration) { blockAudio();emit("blocked","The retained audio start became uncertain before playback; do not replay it.");return; }
         emit("speaking", "Speaking the pledged number locally.", turn);
+        // A subscriber can dispose or invalidate synchronously while receiving the notice.
+        if (!validCallback() || !usable(turn)) { blockAudio(); return; }
         effectEntered=true;
         const stop = options.speech.play(String(turn.N), voiceId, {
           end() {

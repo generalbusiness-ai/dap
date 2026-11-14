@@ -77,15 +77,17 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
   let currentActions: readonly string[] | null = null;
   const usable = () => alive && options.current();
   const current = () => { if (!usable()) throw new Error("This device context is no longer current."); };
-  const transport = httpTransport(identity.origin, { fetch: options.fetch ?? ((url, init) =>
-    fetch(url, { ...init, redirect: "error", signal: init?.signal ? AbortSignal.any([init.signal, lifetime.signal]) : lifetime.signal })) });
+  const defaultFetch: Fetch = (url, init) => fetch(url, { ...init, redirect: "error", signal: init?.signal ? AbortSignal.any([init.signal, lifetime.signal]) : lifetime.signal });
+  // ScopeHandle's internal fallback must check the context at its own request dispatch too.
+  const readFetch: Fetch = (url, init) => { current(); return (options.fetch ?? defaultFetch)(url, init); };
+  const transport = httpTransport(identity.origin, { fetch: readFetch });
   const handle = () => new ScopeHandle(transport, identity.scope.scope, session?.reader() ?? null);
 
   /** A read session from the room's membership, signed by this device. Null with the refusal's reason when there is none. */
   const signIn = async (): Promise<string | null> => {
     current();
     const signed = await signerSessionRequest(identity.membership, signer, timeOf(now() + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16)))); current();
-    const answer = await requestSession(identity.origin, identity.membership.scope, signed, options.fetch ? { fetch: options.fetch } : {}); current();
+    const answer = await requestSession(identity.origin, identity.membership.scope, signed, { fetch: readFetch }); current();
     if (!answer.ok) return answer.reason;
     session = answer.session;
     return null;
@@ -103,8 +105,7 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
 
   const readState=async()=>application?completeApplicationProjection(await handle().applicationProjection({v:1,scope:identity.scope,directory:application.directory,install:application.item,projection:"state",items:{}}),lendingStateProjection):{ok:false as const,reason:"unavailable" as const};
 
-  const send = options.actFetch ?? options.fetch ?? ((url: string, init?: Parameters<Fetch>[1]) =>
-    fetch(url, { ...init, redirect: "error", signal: init?.signal ? AbortSignal.any([init.signal, lifetime.signal]) : lifetime.signal }));
+  const send: Fetch = (url, init) => { current(); return (options.actFetch ?? readFetch)(url, init); };
   const requests = browserRequests(options.custody, lendingTarget(identity), {
     current: usable,
     post: (envelope) => new ScopeHandle(httpTransport(identity.origin, { fetch: send as Fetch }), identity.scope.scope).submit(envelope.signed, [], envelope.beside),
@@ -150,7 +151,7 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
         authenticate: async () => options.lock.run(async () => {
           current();
           const signed = await signerSessionRequest(identity.membership, signer, timeOf(now() + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16)))); current();
-          const answer = await requestSession(identity.origin, identity.membership.scope, signed, options.fetch ? { fetch: options.fetch } : {}); current();
+          const answer = await requestSession(identity.origin, identity.membership.scope, signed, { fetch: readFetch }); current();
           if (answer.ok) session = answer.session;
           return answer.ok ? { ok: true, session: answer.session } : answer;
         }),

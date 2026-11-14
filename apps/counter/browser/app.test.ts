@@ -2,15 +2,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { ScopeKind } from "@generalbusiness/dap-contract";
-import { keyIdOfSecret, textDigest, timeOf } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, keyIdOfSecret, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
 import type { Summary } from "@generalbusiness/dap-contract";
-import { Custody, memoryStore, meaningOf, requestKey, secretSigner, signedIntent, type ObservationState } from "@generalbusiness/dap-client";
+import { Custody, generateBrowserDeviceKey, memoryStore, meaningOf, requestKey, secretSigner, signedIntent, type ApplicationScreenContext, type ObservationState } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION as COUNTING_DEFINITION } from "../commitments-pin.ts";
 import { mountCountingStage } from "./app.ts";
 import { browserSpeech } from "./speech.ts";
 import { stageView, type StagePresentation } from "./view.ts";
 import { nativeGateway, type StageGateway } from "./client.ts";
+import { counterEnrollment } from "./installed.ts";
 import type { CountingView } from "./model.ts";
 import type { ActorIdentity, AudioStart, PendingReport } from "./voice-controller.ts";
 class Element {
@@ -24,6 +25,61 @@ class Element {
   querySelector(){return null;}focus(){}remove(){}
 }
 const elements=(root:Element):Element[]=>[root,...root.children.flatMap(elements)];
+
+// Actual enrollment and WebCrypto, with gated slot/lock stand-ins. This is no browser durability or hosted Counter act proof.
+test("Installed enrollment cannot sign, save or remove a later slot after an awaited stage loses its context",async()=>{
+  const ref=(kind:ScopeKind)=>scriptedSequence({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`TEST enrollment ${kind}`),ordinal:0},"2026-01-01T00:00:00Z",7).at;
+  const context:ApplicationScreenContext={v:1,origin:"https://enrollment.test",deployment:"TEST installed lifecycle",directory:ref("directory"),rules:ref("rules"),membership:ref("membership"),destination:ref("destination"),scope:ref("lane"),item:1,definition:COUNTING_DEFINITION,membershipDefinition:"platform:membership@8",
+    ids:{release:textDigest("TEST release"),semantic:textDigest("TEST semantic"),presentation:textDigest("TEST presentation")}};
+  const invitation="artroom-invite:"+b64url(utf8(canonicalize({v:1,service:context.origin,repository:{directory:context.directory,membership:context.membership,rules:context.rules.scope,destination:context.destination.scope},invitation:1,secret:b64url(new Uint8Array(32).fill(63)),handle:"@enrolled",definition:context.membershipDefinition})));
+  const prefix=canonicalize(context.scope)+":",stored=await generateBrowserDeviceKey();
+  for(const stage of ["device-read","key-generation","key-save","forget-read","forget-seat"] as const){
+    const originalIDB=Object.getOwnPropertyDescriptor(globalThis,"indexedDB"),originalNavigator=Object.getOwnPropertyDescriptor(globalThis,"navigator");
+    const originalGenerate=Object.getOwnPropertyDescriptor(crypto.subtle,"generateKey"),originalSign=Object.getOwnPropertyDescriptor(crypto.subtle,"sign");
+    const generate=crypto.subtle.generateKey.bind(crypto.subtle),sign=crypto.subtle.sign.bind(crypto.subtle);
+    const records=new Map<string,unknown>([[prefix+"join",null],[prefix+"seat",{TEST:"retained seat"}]]);
+    if(stage!=="key-generation"&&stage!=="key-save")records.set(prefix+"device",stored);
+    let current=true,generations=0,signs=0,held=false,arrived!:()=>void,release!:()=>void;
+    const entered=new Promise<void>(resolve=>{arrived=resolve;}),gate=new Promise<void>(resolve=>{release=resolve;});
+    const saves:string[]=[],removals:string[]=[];
+    const hold=async()=>{held=true;arrived();await gate;};
+    type Handler=(()=>void)|null;
+    const database={objectStoreNames:{contains:()=>true},createObjectStore(){},transaction(){
+      let pending=0,finished=false,completionGate:Promise<void>|undefined;
+      const tx={oncomplete:null as Handler,onabort:null as Handler,onerror:null as Handler,abort(){finished=true;queueMicrotask(()=>tx.onabort?.());},objectStore(){return{
+        get(key:string){
+          const request={result:undefined as unknown,onsuccess:null as Handler,onerror:null as Handler};pending++;
+          queueMicrotask(()=>{void(async()=>{
+            if(!held&&(stage==="device-read"&&key===prefix+"device"||stage==="forget-read"&&key===prefix+"join"))await hold();
+            request.result=structuredClone(records.get(key));request.onsuccess?.();pending--;complete();
+          })();});
+          return request;
+        },
+        put(value:unknown,key:string){records.set(key,structuredClone(value));saves.push(key.slice(prefix.length));if(!held&&stage==="key-save"&&key===prefix+"device")completionGate=hold();return{};},
+        delete(key:string){records.delete(key);removals.push(key.slice(prefix.length));if(!held&&stage==="forget-seat"&&key===prefix+"seat")completionGate=hold();return{};},
+      };}};
+      const complete=()=>queueMicrotask(()=>{void(async()=>{if(finished||pending!==0)return;if(completionGate)await completionGate;if(finished||pending!==0)return;finished=true;tx.oncomplete?.();})();});
+      complete();return tx;
+    }};
+    try{
+      Object.defineProperty(globalThis,"indexedDB",{configurable:true,value:{open(){const request={result:database,onsuccess:null as Handler,onerror:null as Handler,onblocked:null as Handler,onupgradeneeded:null as Handler};queueMicrotask(()=>request.onsuccess?.());return request;}}});
+      Object.defineProperty(globalThis,"navigator",{configurable:true,value:{locks:{request:async(_name:string,work:()=>Promise<unknown>)=>work()}}});
+      Object.defineProperty(crypto.subtle,"generateKey",{configurable:true,value:async(algorithm:AlgorithmIdentifier,extractable:boolean,usages:KeyUsage[])=>{generations++;const pair=await generate(algorithm,extractable,usages);if(stage==="key-generation")await hold();return pair;}});
+      Object.defineProperty(crypto.subtle,"sign",{configurable:true,value:async(...args:Parameters<SubtleCrypto["sign"]>)=>{signs++;return sign(...args);}});
+      const enrollment=counterEnrollment(context,()=>current);
+      const work=stage.startsWith("forget")?enrollment.forget():stage==="device-read"?enrollment.restore():enrollment.perform("join",invitation);
+      const rejected=assert.rejects(work,/no longer current/);
+      await entered;current=false;release();await rejected;
+      assert.equal(signs,0,`${stage}: no later probe or request signing`);
+      assert.equal(generations,stage==="key-generation"||stage==="key-save"?1:0,`${stage}: no later key generation`);
+      assert.deepEqual(saves,stage==="key-save"?["device"]:[],`${stage}: only an already-started key save may finish`);
+      assert.deepEqual(removals,stage==="forget-seat"?["seat"]:[],`${stage}: no later slot removal`);
+      if(stage.startsWith("forget"))assert.ok(records.has(prefix+"device"),"the original key survives interrupted forget");
+    }finally{
+      for(const [target,name,descriptor] of [[globalThis,"indexedDB",originalIDB],[globalThis,"navigator",originalNavigator],[crypto.subtle,"generateKey",originalGenerate],[crypto.subtle,"sign",originalSign]] as const){if(descriptor)Object.defineProperty(target,name,descriptor);else Reflect.deleteProperty(target,name);}
+    }
+  }
+});
 // Browser speech inventory and utterances are stand-ins; no physical audio.
 test("Counter demo offers and plays only en-US voices, including after inventory changes",()=>{
   const oldSynth=globalThis.speechSynthesis,oldUtterance=globalThis.SpeechSynthesisUtterance;

@@ -161,18 +161,27 @@ export function browserCustodyStore(options: BrowserCustodyOptions): ClientCusto
       got(store.get(id), held => { if (!natural(held)) throw unavailable(); next(held, true); }, fail);
     }, fail);
   };
+  const emptyPositions = (store: Store, id: string, empty: () => void, fail: (error: Error) => void): void => {
+    if (!platform.IDBKeyRange) throw unavailable();
+    // Appending NUL is the immediate string successor. This prefix includes every second-key type, even malformed ones.
+    const prefix = platform.IDBKeyRange.bound([id], [id + "\u0000"], false, true);
+    got(store.getKey(id), plainKey => {
+      if (plainKey !== undefined) throw unavailable();
+      got(store.openCursor(prefix), cursor => { if (cursor) throw unavailable(); empty(); }, fail);
+    }, fail);
+  };
   const read = (id: string): Promise<StoredCustodyRecord | null> => transaction([RECORDS, ARCHIVE, LENGTHS, OUTCOMES], "readonly", (store, done, fail) => {
     const absent = (): void => {
       segmentLength(store(LENGTHS), id, (_length, exists) => {
         if (exists) throw unavailable();
-        got(store(OUTCOMES).openCursor(range(id, 0, Number.MAX_SAFE_INTEGER)), cursor => { if (cursor) throw unavailable(); done(null); }, fail);
+        emptyPositions(store(OUTCOMES), id, () => done(null), fail);
       }, fail);
     };
     const found = (value: unknown): void => {
       const record = rowOf(id, value).record;
       segmentLength(store(LENGTHS), id, (length, exists) => {
         if (length < record.count - record.outcomes.length) throw unavailable();
-        if (!exists) got(store(OUTCOMES).openCursor(range(id, 0, Number.MAX_SAFE_INTEGER)), cursor => { if (cursor) throw unavailable(); done(record); }, fail);
+        if (!exists) emptyPositions(store(OUTCOMES), id, () => done(record), fail);
         else done(record);
       }, fail);
     };
@@ -247,7 +256,7 @@ export function browserCustodyStore(options: BrowserCustodyOptions): ClientCusto
             store(LENGTHS).put(at + owned.length, id);
             done(undefined);
           };
-          if (!exists) got(store(OUTCOMES).openCursor(range(id, 0, Number.MAX_SAFE_INTEGER)), cursor => { if (cursor) throw unavailable(); append(); }, fail);
+          if (!exists) emptyPositions(store(OUTCOMES), id, append, fail);
           else append();
         }, fail);
       });
@@ -259,7 +268,7 @@ export function browserCustodyStore(options: BrowserCustodyOptions): ClientCusto
         segmentLength(store(LENGTHS), id, (length, exists) => {
           const end = Math.min(length, from + limit);
           if (!exists) {
-            got(store(OUTCOMES).openCursor(range(id, 0, Number.MAX_SAFE_INTEGER)), cursor => { if (cursor) throw unavailable(); done([]); }, fail);
+            emptyPositions(store(OUTCOMES), id, () => done([]), fail);
             return;
           }
           if (from >= end) { done([]); return; }

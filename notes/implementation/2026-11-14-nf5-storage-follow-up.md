@@ -115,8 +115,12 @@ An IndexedDB transaction already created ends by its own commit or abort.
 The browser checks put/readback bytes inside that same write transaction,
 then awaits completion. `IDBDatabase.close()` allows those transactions to
 finish and disallows new ones. No network promise holds the database open.
-The generic Custody readback after a write remains a separate read and
-rejects after retirement, even if that write committed.
+Generic Custody awaits the store write and adds no separate readback.
+After a committed preparation, send attempts its next sent-mark write;
+retirement rejects that new transaction before delivery. Source review
+`ae92803061013ff634f08e8d655802766c6369f9` corrected the earlier witness's
+impossible expectation of a generic post-write read. Production gains no
+read merely to satisfy that expectation.
 
 Custody enters its existing `exclusive` port immediately before invoking
 an act or capability-step delivery. The browser store checks retirement on
@@ -128,7 +132,7 @@ it does not treat a committed `sent` mark as proof that the POST left.
 | Held boundary | Stored result and existing recovery |
 |---|---|
 | After the sent mark, before delivery starts | Retirement refuses delivery. The exact sent envelope stays; Check uses the existing unresolved-record settlement path. |
-| Write committed, before generic readback | The read refuses; no delivery starts. A prepared or sent kept envelope remains. The existing prepared/unresolved recovery reads that exact original. |
+| Preparation committed, before the sent-mark write | The new sent write refuses; no delivery starts. Exact prepared bytes remain. The existing prepared-record recovery checks that original. |
 | Actual POST remains pending while versionchange occurs | Existing IDB transactions drain and upgrade can complete. The network does not block it. |
 | Actual POST replies after retirement | No outcome/segment/readback transaction starts. Custody reports its existing unkept storage result; the exact stored sent record has no new outcome. Check settles it after a fresh load. |
 | Retirement during a created result transaction | That transaction reports its real commit or abort. No later proof or slot-clear follows an expired context. |
@@ -236,20 +240,89 @@ a source change or unresolved failure.
 ## Verification scope and NF-7
 
 The Voice skill covers `start`, `ready`, `stopAudio` and `settle`.
-NF5's earlier head changed those functions. This storage follow-up leaves
-their source unchanged, but the old coverage pin does not cover the NF5
+NF5's earlier head changed those functions. The combined review repair
+also fences `start` after its synchronous speaking notice. The old coverage pin does not cover the NF5
 head. The correspondence still needs review: successful audio mark/readback
 before speech, restored marker/report fencing, generation before cancel,
 and verified accepted report before clear/archive. Storage failure,
 multi-tab behavior and speech-engine behavior remain outside that model's
 assumptions. Do not refresh the hash without the reserved model/source
 checks and meaningful source control. The restart witness moved since the
-old line citation; name its assertion correctly before running the control.
+old line citation. The negative arm now names the stable assertion
+`a retained audio start must block rearming after restart`, and the control
+metadata names the same message. Neither control nor model has run here.
 
 Observation covers `observe.ts`; Effects covers Scope operations and
 SQLite sent marking. Those protected sources do not change here. Their
 skills do not establish the new browser persistence or authority boundaries.
 No model or statechart ran for this source checkpoint.
+
+## Combined review repairs after the first checkpoint
+
+This source-only follow-up preserves baseline
+`3b69726315edc73f64095e0a7e889fdef17493da`. It addresses all four findings
+of `ae92803061013ff634f08e8d655802766c6369f9` and Voice ruling
+`3e23670676bd228f33a9cb790ba66d870aac70b0`. All compiler, Node, browser,
+control, model, formatter, build, generation and gate checks remain UNRUN.
+No main merge or dependency change took place.
+
+- The prepared-write witness counts the attempted next sent write, requires
+  its storage refusal, and proves zero delivery with exact prepared bytes.
+  The separate late accepted-reply case still requires exact sent bytes,
+  no outcome or segment, and the existing unkept answer. Its held-POST phase
+  now also requires another same-prefix exclusive admission to enter before
+  releasing the reply; a database upgrade alone did not prove the short
+  Web Lock interval.
+- Installed enrollment checks current context after its actual device-slot
+  read, key generation and save before the probe signer or next operation.
+  Forget checks after the join read and each removal. Restore and perform
+  also recheck before a later handoff. A grouped app owner uses real
+  WebCrypto and gated private-slot/lock stand-ins to prove no later signer,
+  key save or slot removal. This is a narrow enrollment lifecycle witness,
+  not native browser durability or a new local Counter act path.
+- Joining, Counter and Lending fence the actual context-owned fetch on each
+  proof, session and act dispatch. Generic Handle retains its legitimate
+  unavailable fallback and API. Join and Counter owner witnesses hold the
+  first entry read, then return unavailable: the current case permits the
+  second GET; an expired context permits no second GET, proof or pointer
+  clear and retains the unresolved original.
+- Empty-history checks use an identity-prefix cursor from `[id]` inclusive
+  to `[id + NUL]` exclusive. String ordering makes appended NUL the immediate
+  next first-field string, so negative, textual and nested ordinal keys
+  remain inside the probe. A same-id scalar key also refuses through
+  `getKey`. The probe stops at its first key and runs only where absent
+  metadata would otherwise authorize emptiness; valid page reads keep their
+  bounded numeric ranges. Real-IDB corruption witnesses retain invalid
+  orphan keys and require no absence, build or append with unchanged data.
+  This prefix argument follows the specification's
+  [string and array key comparison](https://w3c.github.io/IndexedDB/#compare-two-keys)
+  rules; the real-IDB assertions remain UNRUN.
+- A speaking subscriber may dispose or invalidate synchronously. `start`
+  now rechecks current ownership, generation, active turn and usability
+  after the notice before playback. The saved start remains. The new owner
+  `Disposal during the speaking notice retains the start without invoking playback`
+  requires zero play/sign/submit calls and a retained start that blocks Arm
+  after reload. This maps to interruption after SaveStart and before Speak;
+  Voice.tla, its config and view need no change.
+
+The accepted Voice plan keeps two later intervals: controls and targeted
+source owners at frozen commit C, then coverage-pin commit Q and the Voice
+check. The stable restart assertion above replaces the stale line number.
+The disposal and restored-accepted/unknown proof owners remain in interval C.
+Statechart tooling must use preserved scratch copies with the one cleanup
+line disabled; home skill files stay unchanged. Compare generated chart.mmd
+bytes to the tracked chart. Equal bytes retain the existing SVG; different
+bytes stop for a report, with no renderer fetch. None of that preparation
+or execution ran in this source repair.
+
+Planner ruling `119140cd017925f29bc66d3d65c6ba077b5430f1` also leaves an
+owning-slot obligation after NF5 merges main holding R1: use R1's single
+canonical pack path and reproduction witness, refresh changed Counter and
+Lending identifier files in this same NF5 head, and report in one line
+whether Grow identifiers changed. Before first signing, versions remain
+unchanged. No bundle, identifier calculation, reproduction or signing ran
+now. Counter/Lending signing waits for NF5 to land, and NF7 uses those new
+planner-signed packets rather than an older presentation.
 
 Planner ruling `657e4217f0273be1c746001a90ff2e082f05b80c` still governs
 NF7. No local Counter adapter or replacement hosted witness enters this

@@ -10,15 +10,17 @@ export function counterEnrollment(context: ApplicationScreenContext, current: ()
   if (context.definition !== COUNTING_COMMITMENTS_DEFINITION) throw Error("This presentation does not match the installed Counter definition.");
   const prefix = canonicalize(context.scope), slots = browserPrivateSlots({ database: "dap-counter-enrollment-2", store: "slots", lock: "dap-counter-enrollment" });
   const get = (name: string) => slots.load(prefix + ":" + name), put = (name: string, value: unknown) => slots.save(prefix + ":" + name, value);
+  const usable = () => { if (!current()) throw Error("This device context is no longer current."); };
   const device = (make: boolean) => slots.run(async (): Promise<Device | null> => {
-    if (!current()) throw Error("This device context is no longer current.");
+    usable();
     let value = await get("device");
-    if (value === null && make) { value = await generateBrowserDeviceKey(); await put("device", value); }
+    usable();
+    if (value === null && make) { value = await generateBrowserDeviceKey(); usable(); await put("device", value); usable(); }
     if (value === null) return null;
     if (!isRecord(value) || !isRecord(value["pair"])) throw Error("The original browser key is unavailable.");
     const held = value as unknown as Device, signer = storedWebCryptoSigner(held.publicKey, held.pair.privateKey);
     await signer.sign(crypto.getRandomValues(new Uint8Array(32)));
-    if (!current()) throw Error("This device context is no longer current.");
+    usable();
     return held;
   });
   const saved = (key: Device, seat: BrowserJoinSeat): SavedDevice => ({ name: seat.handle, binding: applicationDeviceIdentity(context, seat, key.publicKey), key: key.pair.privateKey });
@@ -36,20 +38,23 @@ export function counterEnrollment(context: ApplicationScreenContext, current: ()
   });
   return {
     forget: () => slots.run(async () => {
-      if (!current() || await get("join") !== null) throw Error("Check the original enrollment before forgetting this browser.");
-      await slots.remove(prefix + ":seat"); await slots.remove(prefix + ":device");
+      usable();const join = await get("join");usable();
+      if (join !== null) throw Error("Check the original enrollment before forgetting this browser.");
+      await slots.remove(prefix + ":seat");usable();await slots.remove(prefix + ":device");usable();
     }),
     async restore(): Promise<SavedDevice | null> {
-      const key = await device(false), seat = await get("seat") as BrowserJoinSeat | null;
+      const key = await device(false);usable();const seat = await get("seat") as BrowserJoinSeat | null;usable();
       return key && seat ? saved(key, seat) : null;
     },
     async perform(mode: "join" | "check" | "continue", text = ""): Promise<{ device?: SavedDevice; reason: string }> {
       const invitation = mode === "join" ? readApplicationInvitation(context, text) : null;
       if (invitation && !invitation.ok) return { reason: invitation.reason };
       const key = await device(mode === "join");
+      usable();
       if (!key) return { reason: "No original browser enrollment is kept." };
       const joining = api(key), result = mode === "join" && invitation?.ok ? await joining.join(invitation.link, invitation.seat)
         : mode === "continue" ? await joining.continueOriginal() : await joining.check();
+      usable();
       return result?.status === "joined" ? { device: saved(key, result.seat), reason: "This browser's membership is confirmed. Choose a voice, then Join count." }
         : { reason: result?.reason ?? "No original enrollment is kept. Paste an invitation to enroll this browser." };
     },

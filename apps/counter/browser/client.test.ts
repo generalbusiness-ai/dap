@@ -22,7 +22,7 @@ export function checkProposalTypes(view: CountingView, actor: ActorIdentity): vo
   proposal(view, actor, "activate", undefined, { participant: "first" });
 }
 
-async function fixture(joined=true) {
+async function fixture(joined=true, proof?:{current():boolean;entry():Promise<boolean>}) {
   const secret=new Uint8Array(32).fill(51),definition=COUNTING_COMMITMENTS_DEFINITION;
   const ref=(kind:ScopeKind):ScopeRef=>(scriptedSequence({v:1,kind,definition,creator:null,cause:textDigest(`FAKE gateway ${kind}`),ordinal:0},"2026-01-01T00:00:00Z",8).at);
   const scope=ref("lane"),membership=ref("membership"),member={membership,member:"@ada" as const};
@@ -52,12 +52,15 @@ async function fixture(joined=true) {
       if(reply==="lost")throw new Error("FAKE lost response");return Response.json({answer:"refused",reason:"guard-failed",judgedAt:head},{status:422});
     }
     if(path.endsWith("/settle")){settles++;return settleAccepted&&receipt?Response.json({ok:true,at:{seq:receipt.fact.seq,hash:receipt.fact.hash},complete:true,value:receipt}):Response.json({ok:false,reason:"not-found"});}
-    if(path.includes("/entries/"))return entry?Response.json({ok:true,at:{seq:entry.seq,hash:entryHash(entry)},complete:true,value:{entry,hash:entryHash(entry)}}):Response.json({ok:false,reason:"not-found"});
+    if(path.includes("/entries/")){
+      if(proof&&!await proof.entry())return Response.json({ok:false,reason:"unavailable"},{status:503});
+      return entry?Response.json({ok:true,at:{seq:entry.seq,hash:entryHash(entry)},complete:true,value:{entry,hash:entryHash(entry)}}):Response.json({ok:false,reason:"not-found"});
+    }
     throw Error(`The FAKE Counter service does not provide this read: ${path}`);
   };
   const stream:HeadStreamFetch=async(url,init)=>{assert.equal(init.redirect,"error");return{status:200,url,redirected:false,headers:new Headers({"content-type":"application/x-ndjson"}),body:new ReadableStream<Uint8Array>({start(c){c.enqueue(new TextEncoder().encode(JSON.stringify({at:head})+"\n"));}})};};
   const connect=async()=>{
-    const gateway=nativeGateway(identity,secretSigner(secret),{application:{scope,directory:ref("directory"),item:7,definition},current:()=>true,lock,voiceStore:{load:async()=>null,save:async()=>{throw new Error("unused fake voice");},clear:async()=>{}},custody:store,fetch:fake,headFetch:stream,
+    const gateway=nativeGateway(identity,secretSigner(secret),{application:{scope,directory:ref("directory"),item:7,definition},current:()=>proof?.current()??true,lock,voiceStore:{load:async()=>null,save:async()=>{throw new Error("unused fake voice");},clear:async()=>{}},custody:store,fetch:fake,headFetch:stream,
       actFetch:async(url,init)=>{assert.equal(init.redirect,"error");const response=await fake(url,{...init,signal:init.signal as never});return{status:metadata==="wrong-status"?200:response.status,body:response.body,headers:new Headers({"content-type":metadata==="wrong-media"?"text/html":"application/json"}),url:metadata==="wrong-url"?url+"/different":url,redirected:metadata==="redirected"};}});
     try{await new Promise<void>((resolve,reject)=>gateway.observe((state,view)=>{observations.push({status:state.status,view});if(state.status==="current")resolve();else if(["error","forbidden","unsupported","unavailable","expired"].includes(state.status))reject(new Error(`Fake gateway setup ${state.status}: ${"reason"in state?state.reason:""}`));}));}
     catch(error){gateway.dispose();throw error;}return gateway;
@@ -98,6 +101,24 @@ test("FAKE wrong-route first response stays unknown; later refusal/head cannot s
     f.acceptSettlement();assert.equal((await f.gateway.checkCommand())?.status,"recorded");assert.equal(f.record()?.phase,"accepted");
     assert.equal(f.gateway.pendingCommand(),null);assert.equal(f.counters().posts,1);
   }finally{f.gateway.dispose();}
+});
+
+test("FAKE a held receipt read cannot start its fallback GET after Counter loses the context",async()=>{
+  for(const expires of [false,true]){
+    let current=true,reads=0,entered!:()=>void,release!:()=>void;
+    const arrived=new Promise<void>(resolve=>{entered=resolve;}),held=new Promise<void>(resolve=>{release=resolve;});
+    const f=await fixture(true,{current:()=>current,entry:async()=>{reads++;if(reads===1){entered();await held;return false;}return true;}});
+    try{
+      f.lose();assert.equal((await f.gateway.command("start")).status,"unknown");
+      const original=f.retained();f.acceptSettlement();
+      const pending=f.gateway.checkCommand();
+      const outcome=expires?assert.rejects(pending,/no longer current/):pending.then(result=>assert.equal(result?.status,"recorded"));
+      await arrived;current=!expires;release();await outcome;
+      assert.equal(reads,expires?1:2);assert.equal(f.counters().posts,1);
+      assert.equal(f.record()?.phase,expires?"unknown":"accepted");
+      if(expires)assert.equal(f.retained(),original);
+    }finally{f.gateway.dispose();}
+  }
 });
 
 test("FAKE Check command leaves prepared custody unchanged; concurrent explicit Resume sends the kept bytes once; a sent command never resends",async()=>{

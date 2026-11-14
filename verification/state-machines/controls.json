@@ -27,6 +27,6 @@
     "source": "apps/counter/browser/voice-controller.ts",
     "old": "if (marker) {",
     "new": "if (false) {",
-    "assertion": "voice-controller.test.ts:445:"
+    "assertion": "a retained audio start must block rearming after restart"
   }
 }

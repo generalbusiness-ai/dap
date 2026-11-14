@@ -66,6 +66,32 @@ const gate = () => {
   return { wait, release };
 };
 
+// ScopeHandle's legitimate diagnostic fallback remains available only while the request context owns the read.
+test("a join proof starts its fallback GET only while the context remains current", async () => {
+  for (const expires of [false, true]) {
+    const f = await fixture(), entered = gate(), held = gate(), fetch = f.fetcher.call;
+    f.replies({ lose: false });
+    let entries = 0;
+    f.fetcher.call = async (url, init) => {
+      if (new URL(url).pathname.endsWith("/entries/1")) {
+        entries++;
+        if (entries === 1) {
+          entered.release(); await held.wait;
+          return { status: 503, body: new Response(JSON.stringify({ ok: false, reason: "unavailable" })).body };
+        }
+      }
+      return fetch(url, init);
+    };
+    const pending = f.api.join(f.link, f.seat);
+    const outcome = expires ? expect(pending).rejects.toThrow("no longer current") : expect(pending).resolves.toMatchObject({ status: "joined" });
+    await entered.wait;
+    const original = f.kept();
+    f.context.current = !expires; held.release(); await outcome;
+    expect([entries, f.posts.length, f.record()!.phase, f.kept(), f.calls.filter(call => call.startsWith("clear"))]).toEqual(
+      expires ? [1, 1, "unknown", original, []] : [2, 1, "accepted", null, ["clear joined"]]);
+  }
+});
+
 test("a kept browser join recovers by reads and checks its original receipt, member and exact recorded signature", async () => {
   for (const version of ["platform:membership@4", "platform:membership@6", "platform:membership@7", "platform:membership@8"] as const) {
     const f = await fixture(version);

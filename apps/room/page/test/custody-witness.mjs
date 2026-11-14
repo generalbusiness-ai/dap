@@ -297,7 +297,7 @@ try {
   await storageDeadline(actualPost);
   const whileHeld = await storageEvaluation(page, () => globalThis.witness.heldPost("retire-and-upgrade"));
   check("a held actual POST cannot hold the retired IDB connection or block upgrade", whileHeld,
-    { upgraded: true, phase: "sent", exactSent: true, count: 0, outcomes: 0, lengths: 0 });
+    { upgraded: true, admissionEntered: true, phase: "sent", exactSent: true, count: 0, outcomes: 0, lengths: 0 });
   releaseReply();
   const afterReply = await storageEvaluation(page, () => globalThis.witness.heldPost("finish"));
   check("a late POST result gives unkept and creates no outcome or segment", afterReply,

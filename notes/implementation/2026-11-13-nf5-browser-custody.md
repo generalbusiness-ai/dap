@@ -26,8 +26,8 @@ follow-up compiler, browser, control, model and gate checks remain UNRUN.
 | `observe` | `BroadcastChannel` named `<lock>` | Calls each listener after a write in this tab and after a write in another tab. |
 
 `write` checks its put's bytes within the write transaction and waits for
-completion. Custody also performs its generic separate readback, which
-refuses after retirement. A browser with no IndexedDB or no Web Locks keeps no record:
+completion. Generic Custody awaits that store write; it adds no separate
+readback. A browser with no IndexedDB or no Web Locks keeps no record:
 each call rejects, and `Custody` signs nothing. A browser with no
 `BroadcastChannel` signals the writes of its own tab only.
 

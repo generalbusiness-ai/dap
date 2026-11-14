@@ -438,13 +438,26 @@ test("Durable audio start is retained before speech and an interrupted restart c
   assert.equal(f.calls.length,1);assert.ok(f.custody.start);assert.equal(f.custody.saved,null);
   const original=structuredClone(f.custody.start);f.controller.dispose();
   const restored=fixture({},f.custody);await restored.controller.ready;restored.observe();
-  assert.equal(restored.controller.arm("fake"),false);await restored.controller.checkPending();
+  assert.equal(restored.controller.arm("fake"),false,"a retained audio start must block rearming after restart");await restored.controller.checkPending();
   assert.deepEqual(restored.custody.start,original);assert.deepEqual([restored.calls.length,restored.signed.length,restored.submitted.length],[0,0,0]);
   restored.audioObsolete();restored.observe(turn({serial:2}));await restored.controller.checkPending();
   assert.equal(restored.custody.start,null);assert.equal(restored.controller.state().armed,false);
   assert.equal(restored.controller.arm("fake"),true);await drain();assert.equal(restored.calls.length,1);
 });
 
+
+test("Disposal during the speaking notice retains the start without invoking playback",async()=>{
+  const f=fixture();await f.controller.ready;f.observe();
+  f.controller.subscribe(state=>{if(state.phase==="speaking")f.controller.dispose();});
+  assert.equal(f.controller.arm("fake"),true);await drain();
+  assert.equal(f.controller.state().phase,"disposed");
+  assert.ok(f.custody.start,"the committed audio start remains uncertain after disposal");
+  assert.deepEqual([f.calls.length,f.signed.length,f.submitted.length],[0,0,0]);
+  const original=structuredClone(f.custody.start),restored=fixture({},f.custody);
+  await restored.controller.ready;restored.observe();
+  assert.equal(restored.controller.arm("fake"),false,"a retained audio start must block rearming after restart");
+  assert.deepEqual(restored.custody.start,original);
+});
 
 test("Audio start failure and mismatched readback block sound; voice switch retains uncertainty; a slot saved during invalidation stays unsigned and checkable",async()=>{
   for(const failure of ["save","readback"] as const){const f=fixture();await f.controller.ready;f.observe();if(failure==="save")f.startSaveFails();else f.startReadbackFails();f.controller.arm("fake");await drain();assert.deepEqual([f.calls.length,f.signed.length,f.submitted.length],[0,0,0]);assert.equal(f.controller.state().phase,"blocked");}

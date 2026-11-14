@@ -216,6 +216,19 @@ export function custodyStoreWitness(seed: CustodyRecord, signer: Signer) {
       rejected(() => orphaned.custody.send(orphan.identity, meaningOf("orphan"), build("orphan"), async () => { sends++; throw new Lost(); }, { notAfter: deadline() })),
     ]);
     check("orphan outcome rows cannot become an empty missing-length history", denied.every(Boolean) && builds === oldBuilds && sends === oldSends && equal(await snapshot(orphaned.name), original));
+    // Include malformed ordinals of other key types, not only positions a normal writer produces.
+    for (const [index, position] of ([-1, "bad", ["nested"], null] as (IDBValidKey | null)[]).entries()) {
+      const malformed = make(`invalid-orphan-${index}`), key = `invalid-orphan-${index}`, who = identity(key), id = identityId(who);
+      await malformed.store.read(id);
+      await mutate(malformed.name, "outcomes", position === null ? id : [id, position], outcome);
+      const before = await snapshot(malformed.name), priorBuilds = builds, priorSends = sends;
+      const refused = await Promise.all([
+        rejected(() => malformed.custody.find(who)), rejected(() => malformed.store.segmented(id, 0, 1)),
+        rejected(() => malformed.store.segment(id, 0, [outcome])),
+        rejected(() => malformed.custody.send(who, meaningOf(key), build(key), async () => { sends++; throw new Lost(); }, { notAfter: deadline() })),
+      ]);
+      check(`malformed orphan key ${index} is retained without absence replacement or append`, refused.every(Boolean) && builds === priorBuilds && sends === priorSends && equal(await snapshot(malformed.name), before));
+    }
   }
 
   async function lifecycle() {
@@ -317,25 +330,25 @@ export function custodyStoreWitness(seed: CustodyRecord, signer: Signer) {
       await write(id, record, options);
       if (record.phase === "sent") exactSent = canonicalize(record);
     };
-    // The sent mark and any generic read-back have finished. Retire at the dispatch admission, before invoking deliver.
+    // The sent-mark transaction, including its own byte check, finished. Retire before invoking deliver.
     marked.store.exclusive = async <T>(work: () => Promise<T>): Promise<T> => { if (exactSent) marked.store.close(); return exclusive(work); };
     const answer = await marked.custody.send(identity(key), meaningOf(key), build(key), async () => { posts++; throw new Lost(); }, { notAfter: deadline() })
       .then(() => null, (error: unknown) => error instanceof CustodyError ? error.why : null);
     const state = await nativeState(marked.name, id);
-    check("retirement after sent readback prevents invoking the POST", answer?.held === "unreadable" && posts === 0 && state.text === exactSent && state.phase === "sent" && state.count === 0 && state.outcomes === 0 && state.lengths === 0);
+    check("retirement after the committed sent mark prevents invoking the POST", answer?.held === "unreadable" && posts === 0 && state.text === exactSent && state.phase === "sent" && state.count === 0 && state.outcomes === 0 && state.lengths === 0);
 
-    const kept = make("retired-before-generic-readback"), readbackKey = "retired-before-readback", readbackId = identityId(identity(readbackKey));
-    const keepWrite = kept.store.write.bind(kept.store), read = kept.store.read.bind(kept.store);
-    let committedText = "", postWriteReads = 0, forbiddenPosts = 0;
+    const kept = make("retired-before-sent-write"), preparedKey = "retired-before-sent-write", preparedId = identityId(identity(preparedKey));
+    const keepWrite = kept.store.write.bind(kept.store);
+    let committedText = "", nextWrites = 0, forbiddenPosts = 0;
     kept.store.write = async (id, record, options) => {
+      if (committedText) nextWrites++;
       await keepWrite(id, record, options);
       if (record.phase === "prepared") { committedText = canonicalize(record); kept.store.close(); }
     };
-    kept.store.read = async id => { if (committedText) postWriteReads++; return read(id); };
-    const unavailable = await kept.custody.send(identity(readbackKey), meaningOf(readbackKey), build(readbackKey), async () => { forbiddenPosts++; throw new Lost(); }, { notAfter: deadline() })
+    const unavailable = await kept.custody.send(identity(preparedKey), meaningOf(preparedKey), build(preparedKey), async () => { forbiddenPosts++; throw new Lost(); }, { notAfter: deadline() })
       .then(() => null, (error: unknown) => error instanceof CustodyError ? error.why : null);
-    const retained = await nativeState(kept.name, readbackId);
-    check("a retired generic readback refuses despite the real committed preparation", unavailable?.held === "unreadable" && postWriteReads > 0 && forbiddenPosts === 0
+    const retained = await nativeState(kept.name, preparedId);
+    check("retirement after committed preparation refuses the next sent write before delivery", unavailable?.held === "unreadable" && nextWrites === 1 && forbiddenPosts === 0
       && retained.text === committedText && retained.phase === "prepared" && retained.count === 0 && retained.outcomes === 0 && retained.lengths === 0);
   }
 
@@ -367,6 +380,8 @@ export function custodyStoreWitness(seed: CustodyRecord, signer: Signer) {
       }
       if (!network) throw new Error("Start the TEST held POST first");
       if (command === "retire-and-upgrade") {
+        let admissionEntered = false;
+        await network.store.exclusive(async () => { admissionEntered = true; });
         network.store.close();
         network.before = await nativeState(network.name, network.id);
         const opening = indexedDB.open(network.name, 3);
@@ -374,7 +389,7 @@ export function custodyStoreWitness(seed: CustodyRecord, signer: Signer) {
           opening.onsuccess = () => { opening.result.close(); resolve(true); };
           opening.onblocked = () => resolve(false); opening.onerror = () => reject(opening.error);
         });
-        return { upgraded, phase: network.before.phase, exactSent: network.before.text === network.exactSent(), count: network.before.count, outcomes: network.before.outcomes, lengths: network.before.lengths };
+        return { upgraded, admissionEntered, phase: network.before.phase, exactSent: network.before.text === network.exactSent(), count: network.before.count, outcomes: network.before.outcomes, lengths: network.before.lengths };
       }
       const answer = await network.result, after = await nativeState(network.name, network.id);
       return { storageAnswer: answer && answer.held === "unkept" ? { held: answer.held, answer: answer.answer } : null,
