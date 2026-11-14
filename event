@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1221145ad764d529e6ddb592840468ebe5069c22","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.grow.jsonc."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1e9ca855de9877eb277f43601dde36627e818f33","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/demo-config.test.ts."}
