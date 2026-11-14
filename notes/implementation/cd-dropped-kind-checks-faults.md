@@ -2,7 +2,8 @@
 
 This section moved here from
 [Kind checks dropped at the identifier cutover](cd-dropped-kind-checks.md)
-at main `57e893c0`, unchanged.
+at main `57e893c0`, unchanged. The CDF-1 results (request 27cb5f60) follow
+the table.
 
 Each fault below had a failing test before its fix. "Behaviour fault" means
 production code did the wrong thing. "Fixture shape" means a test built input
@@ -33,3 +34,132 @@ in the old shape. "Vector" means a measured number moved with the new bytes.
 | B21 | `examples/lending/browser/join.ts:54` `lendingScopes` | The filter kept a Directory reference only when it held `inc`. A cutover reference is `{ scope, genesis }`, so the filter dropped every lending scope, and `findLending` answered "This room has no lending library". Main 64112e45 has the same line; the inc-to-genesis rename missed it. | The filter uses `isScopeRef` from `@generalbusiness/dap-bytes` (`records.ts:101`). No `"inc" in` check remains in the tree. The native lane found the fault with `packages/scope/test/lending.test.ts` (project scope-lending), which failed at :457. |
 | B22 | `platform/src/commons-cohort-data.ts:58` `create-commons` | The rule built the Commons seed with `seedDigest(root)` as its cause. The cutover makes the cause of a genesis creation the digest of the whole genesis input (23e0c92d changed `directory.ts` `sibling` to `genesisInputDigest(input)`, but not this rule). The judge refused the create at `derive/src/sends.ts:208` with a `RuleFault`, the delivery answered retry, and the Commons was never born. The membership ID in the create's fields came from the same wrong cause. The line came from main (07f25df9, an ancestor of 64112e45), where `seedDigest` was the right cause. | The rule takes `genesisInputDigest(given.input)` as its cause, as `sibling` does, so the Commons seed and the membership ID in its fields both match the scopes that the genesis creates. `commons.test.ts` now expects the creator in the self form `{ scope, genesis: null }`, because a genesis cannot name its own genesis hash. Witnesses in native scope: commons, commons-bill, commons-install, application-publication and session-reference-native pass, 39/39. Platform passes 773/773. |
 | B23 | `scope/src/workspace-lineage.ts:100`, `platform/src/rules-certificate-v17.ts:67`, `rules-certificate-v15.ts:65`, `rules-certificate.ts:82` | A Directory creates its Rules and Destination in its own genesis. Under the cutover a genesis cannot name its own genesis hash, so each create writes the field `directory` in the self form `{ scope, genesis: null }`. These readers compared that field with the full reference `directory.fact.at`, and the comparison always failed: the workspace lineage was lost, and the guard `rules-certificate-request-v17` refused with `rules-certificate-unavailable`. All four files came from main (40230449, 624b5ce2, 691029e1 and c78ef1cb, each an ancestor of 64112e45). On main a genesis wrote its full reference, so the comparison held there. | Each reader resolves the field with `resolveGenesisSelf(field, directory.fact)` before it compares. `directory.fact` is the Directory's entry 0, so the self form resolves only against that genesis. The audit found no other site that reads a field written in a Directory's genesis: `evidence-incident-origin-v17.ts:121` reads an `open-pr` act's create, and `:161` a lane delivery's create. `publishing-provenance.ts:50` reads an `open` act's create, `:92` and `:98` a lane's create, `:159` an `establish-application` act's create, and `:203` a create from a Rules delivery. `partition-provenance.ts:147` reads an `open-partition` act's create or a `seal` delivery's create, `:203` a partition act's create, `:268`, `:269` and `:282` creates from lane or partition acts, and `:358` and `:462` an Inbox create, which holds no `directory` field. `partition-provenance.ts:162` and `:316` already resolve the self form. All of these sites stay unchanged. Witnesses in native scope, each file run alone: workspace-credential 3/3, workspace-setup-credential 4/4, workspace-lineage 8/9 (5/9 failed before), evidence-rules-real 7/8 (8/8 failed before). evidence-parent-spelling 0/1 now stops at "the genesis does not bind this sequence". That failure, the workspace-lineage forged-claim case (one read instead of four) and the evidence-rules-real TIME case have other causes, which the native scope lane owns. The workspace-lineage seal moves to `1813da13…`. |
+
+## Scope-typed fields: no read site trusts a slot's kind
+
+CDF-1 item 1 (results 85fed53d, ruling 1064d0de item 1). `fitsFieldType`
+(`packages/bytes/src/field-value.ts`) no longer compares the kind of a
+reference (ruling 429c1be7), so a typed slot can hold a reference of
+another kind. Main `57e893c0` has 45 declaration sites of scope-typed
+fields in `packages/platform/src`, not 36:
+`directory-partitions.ts:73` and `:81` each declare four slots through a
+map, and `destination.ts:2807` is a record member.
+
+Each slot gets its kind from its writer. Each writer is in one of six
+classes:
+
+| Class | Writer | Check |
+|---|---|---|
+| W1 | A `create` result `{ sender: true }` | `derive/src/delivery.ts:346` compares `judged.sourceKind` with `request.to.kind` (site a). |
+| W2 | `input.from.at` in a handler with `from: { kind }` | Dispatch checks the sender kind. |
+| W3 | A genesis field that the verified parent writes | The parent source check (site b). A partition also checks `partition-birth` (`directory-partitions.ts:166-172`). |
+| W4 | A delivery field that a sender checked at site a copies from its own W1 slot | Site a, at the sender. |
+| W5 | The `.at` of a fact | The fact check (site c). |
+| S | An act field that the signer chooses | None. |
+
+Every `tell` or `relate` target and every slot that a sender-equality guard
+reads is in W1 to W5. One slot is in class S: Directory `task.lane` and
+`open-task.lane` (`directory.ts:238` and `:307`), which `:316` writes from
+the act field. No code reads the `lane` of a task row, and the tree holds no
+definition for `platform:task@1`.
+
+Duty: a definition for `platform:task` checks the kind of the lane where it
+reads the lane. Until such a definition exists, nothing reads the slot.
+
+Four runtime reads of a kind remain: `archive-target.ts:142`
+(`target.sequence.kind === "destination"`), `authority.ts:476` and
+`host-wiring.ts:31` (`sourceKind === "directory"`), and
+`publishing-provenance.ts:150-154`, which reads the kind of the Directory
+genesis. The comment at `directory.ts:431` said that "the commit checked"
+the membership kind. CDF-1 changes it to name the create-result admission
+in `derive/src/delivery.ts`, which checks that kind now. No source change
+follows from item 1.
+
+## Timed turns use no foreign entry
+
+CDF-1 item 2 (results 85fed53d, ruling 1064d0de item 2). `#timed`
+(`scope/src/turn.ts`) calls `judgeTimed` and then `#seal` with no fetched
+facts, so a timed entry retains no birth. `judgeTimed`
+(`derive/src/judge.ts:417-441`) builds its judgment with empty facts,
+prepared and used lists. Its only subject is the local item, and the draft
+sets `uses: []`, `prepared: []` and `sends: []`. The timed input names no
+fact, and `withinCounts` (`derive/src/draws.ts:179-190`) adds no use.
+`bornOf` (`scope/src/core.ts:92-102`) keeps a birth only for a use of a
+later foreign entry. Replay runs the same `judgeTimed`
+(`replay/src/verify.ts:2487`), asks for births only for `entry.uses`, and
+refuses a timed entry that records uses. A timed draft cannot use an entry
+of another sequence. No source change follows from item 2.
+
+## Retained births have a byte cap in every scope
+
+CDF-1 item 3 (results 85fed53d, rulings 1064d0de item 3 and 0c196f9a).
+
+The fault at main `57e893c0`: a scope without the `whole-scope` opt-in had
+no byte cap on the births and copies that it retains (`retained_input` rows
+of the kind `entry`). One birth fits in `entryBytes` (262,144). An act
+holds at most `usesPerEntry` (128) uses, so one act can add 32 MiB, and a
+delivery adds its source too. `fits` counted entries only, so one live
+window of `scopeEntries` (100,000) entries allowed about 3.05 TiB of
+births. A floor resets the entry count and deletes no birth, so over a
+scope's life no constant bounded the total.
+
+The fix, in `packages/scope`:
+
+- `SqliteStore` keeps the total size of those rows in one `meta` row,
+  `retained-entry-bytes`. `retain` adds the size of an `entry` row only
+  when its INSERT inserts the row. `forget` subtracts the size of an
+  `entry` row that it removes. Both run in the seal transaction, so a
+  refused input rolls the total back with its entry. No digest, fold or
+  replay reads the row.
+- The `SqliteStore` constructor fills the row with one scan when the row
+  is absent. A scope made before the fix gets its true total when its
+  store opens, before its first turn.
+- `#full` (`scope/src/turn.ts`) applies the stop after the existing checks.
+  An input that adds new `entry` bytes and leaves the total above
+  `scopeBytes` writes no entry. A create or genesis, an act and a
+  preparation answer `refused` `scope-full` with the name `scopeBytes`. A
+  delivery answers `retry` `scope-full`, and the sender keeps the task. An
+  outcome answers `unavailable` `scope-full`.
+- A delivery that settles a pending request of this scope passes the stop:
+  a result other than `conflict`, or the control that confirms the scope.
+  The request reserved its room when the scope admitted it, as `reserved`
+  in `derive/src/reserve.ts` counts it. Its bytes add to the total. Each
+  definition bounds its pending requests, so the total stays bounded.
+- An input that adds no new `entry` bytes passes: a read, a floor, a
+  checkpoint, a timed turn, and an input that reuses retained sequences
+  only. No input frees the space.
+
+The cap adds no export name, no reason code and no record form. `Store`
+gains `retainedEntryBytes()`, and its `retain` and `retainBirth` return
+the bytes that they add.
+
+Witnesses, in `packages/scope/test/capacity-retained-births.test.ts`:
+
+- A scope without the opt-in and with a small `scopeBytes` keeps its
+  births across a floor, and its next new birth gets `scope-full` with
+  `scopeBytes`. The same file fails at `57e893c0`: each new birth there
+  is accepted.
+- A scope past the cap records the result of its pending request, adds
+  the bytes, and refuses a new birth.
+- A scope whose storage holds no total, as a scope made before the fix,
+  refuses a new birth at its first turn against the true total.
+
+`capacity-confirmation.test.ts` asserted that a scope without the opt-in
+records its creation under `scopeBytes` 0. Its case now shows that a
+creation one byte over the cap gets `retry` `scope-full` and writes
+nothing, and that the confirmation passes the stop at the cap.
+
+## What bounds the other retained rows without the opt-in
+
+Ruling 0c196f9a item b. The cap above counts only `entry` rows. For each
+other kind, in a scope without the opt-in:
+
+| Kind | Writer | Bound |
+|---|---|---|
+| `definition` | A genesis only: the scope's own declaration (`core.ts`, `delivery.ts`) and the declarations it names for its children (`scope/src/definitions.ts`, at most `namedDefinitions`). | Bounded. One genesis per scope, so at most 17 declarations of at most `definitionBytes` (262,144) each: 4.25 MiB. |
+| `rule` | Each entry that records a rule result retains that rule's input (`turn.ts`, `#judged`). | Not bounded. The input size check against `ruleInputBytes` runs only under the opt-in. Each entry can add new rows, and no floor removes one. |
+| `snapshot` | An outcome retains each snapshot that its evidence names (`operations.ts`). | Not bounded. The turn checks the snapshot's canonical form and no size. Each outcome can add new rows, and no floor removes one. |
+| `value` | An act, a delivery and an outcome retain the values that the draft names (`valuesOf`, `core.ts`), in `retained_value`. | Not bounded over a scope's life. Nothing removes a value row, and each entry can add new ones. |
+
+The kinds `rule`, `snapshot` and `value` are findings for a new request.
+CDF-1 changes none of them.
