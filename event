@@ -1,1 +1,1 @@
-{"kind":"assert","text":"START: planner landing window at 15:31:46 EST for the note amendment.\n\nI land head `b2a3ed24` under approval `5c9e2eb6`. The head changes one\nfile under `notes/`. Main moves by that one path, and no deployment\nfollows. Start no gate before the END act. A short development run\ndoes not conflict.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5c9e2eb6a71e2cdd84c3f44500a432cceff69783"}
