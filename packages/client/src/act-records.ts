@@ -12,7 +12,7 @@ function recordKey(capability: string, kind: string, key: readonly FieldValue[])
 }
 
 /** The body marks exact existing positions. This never searches for an equal number. */
-function replaceMarked<T extends object>(value: T, paths: readonly (readonly (string | number)[])[], replacement: unknown): T {
+export function replaceMarked<T extends object>(value: T, paths: readonly (readonly (string | number)[])[], replacement: unknown): T {
   const copy = structuredClone(value);
   for (const path of paths) {
     let parent: object = copy;

@@ -88,7 +88,7 @@ export class ActReferences {
   row(item: Item): { readonly name: ItemName; readonly seen: Revision } {
     const row = this.#rows.get(item);
     if (!row) throw new TypeError("a hypothetical row has no position provenance");
-    return row;
+    return { name: row.name, seen: row.seen };
   }
 
   marks(item: Item): readonly SlotMark[] {
