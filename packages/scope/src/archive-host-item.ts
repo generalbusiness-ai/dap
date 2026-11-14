@@ -14,7 +14,7 @@ import type { NativeItemQuery } from "./item-queries.ts";
 import type { Pinned } from "./core.ts";
 import type { Sql } from "./sqlite.ts";
 
-export interface ArchiveHostConfiguration { readonly registerScope: ScopeId; readonly host: string; readonly namespace: string; readonly directory: ScopeId }
+export interface ArchiveHostConfiguration { readonly registerScope: ScopeId | readonly ScopeId[]; readonly host: string; readonly namespace: string; readonly directory?: ScopeId }
 export interface ArchiveHostItemAsk { readonly query: string; readonly archiving: ScopeRef; readonly directory: ScopeRef }
 
 export function archiveHostItem(sql: Pick<Sql, "exec">, given: OutsideGiven, pinned: Pinned | null, config: ArchiveHostConfiguration | null, ask: ArchiveHostItemAsk): NativeItemQuery {
@@ -22,7 +22,9 @@ export function archiveHostItem(sql: Pick<Sql, "exec">, given: OutsideGiven, pin
   try {
     // A reference names no kind. The archive driver admits the archiving scope by its own birth's seed kind; this host
     // classifies the Directory by its own folded kind, or by its genesis's recorded source kind.
-    if (!config || !ask || !isScopeRef(ask.archiving) || !isScopeRef(ask.directory) || ask.directory.scope !== config.directory) return refused;
+    if (!config || !ask || !isScopeRef(ask.archiving) || !isScopeRef(ask.directory)
+      || config.directory !== undefined && ask.directory.scope !== config.directory) return refused;
+    const registers = typeof config.registerScope === "string" ? [config.registerScope] : config.registerScope;
     const query = typeof ask.query === "string" ? readItemQueryParameter(ask.query) : null;
     const scope = given.scope(), genesis = given.genesis();
     if (!query || !scope || !pinned || !same(query.scope, scope.at) || query.limit !== 1 || query.cursor !== null || query.ids !== null) return refused;
@@ -31,7 +33,7 @@ export function archiveHostItem(sql: Pick<Sql, "exec">, given: OutsideGiven, pin
       const row = given.state.page("repository", ["open"], null, 1).items[0];
       const claim = row?.refs["claim"], repository = row?.values["repository"] as Record<string, unknown> | undefined;
       if (row?.values["archive"] !== "journal" || !same(row.refs["register"], genesis?.seed.creator)
-        || genesis?.seed.creator?.scope !== config.registerScope || !isFactRef(claim) || claim.at.scope !== config.registerScope
+        || !genesis?.seed.creator || !registers.includes(genesis.seed.creator.scope) || !isFactRef(claim) || !registers.includes(claim.at.scope)
         || repository?.["host"] !== config.host || repository["namespace"] !== config.namespace) return refused;
       const use = given.own(0)?.entry.uses.find(use => same(use.fact, claim));
       const retained = use ? given.retained("entry", use.content) : null;

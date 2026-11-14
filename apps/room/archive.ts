@@ -1,7 +1,7 @@
-/** Grow's explicit host-owned archive wiring. No member or Worker secret. */
-import type { Bounds, Digest, SequenceRef } from "@generalbusiness/dap-contract";
-import { admitSequenceGenesis, canonicalize, isScopeId, isSequenceRef, parseStrict, readItemQueryParameter, readItemQueryReply, same, utf8 } from "@generalbusiness/dap-bytes";
-import { ARTIFACTS_HOST, ARTIFACTS_NAMESPACE, artifactsBinding, artifactsConfiguration, type ArtifactsBindings } from "../../packages/scope/src/artifacts-wiring.ts";
+/** One host-owned archive adapter for every room Worker. */
+import type { Bounds, Digest, SequenceRef, Seed } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, isDigest, isSequenceRef, readItemQueryParameter, readItemQueryReply, same, utf8 } from "@generalbusiness/dap-bytes";
+import { ARTIFACTS_HOST, artifactsReadiness, type ArtifactsBindings } from "../../packages/scope/src/artifacts-wiring.ts";
 import { ArtifactsProvider } from "../../packages/scope/src/artifacts-host.ts";
 import { archiveTarget } from "../../packages/scope/src/archive-target.ts";
 import { namespace, type Binding } from "../../packages/scope/src/namespace.ts";
@@ -14,53 +14,55 @@ import type { ArchiveBudget } from "../../packages/scope/src/archive-budget.ts";
 import type { ArchivePolicyRegistry } from "../../packages/scope/src/archive-inventory.ts";
 import type { OutsideGiven } from "../../packages/scope/src/given.ts";
 import type { RoomArchiveDriverOptions } from "../../packages/scope/src/archive-driver.ts";
-import { exact } from "../../packages/scope/src/host-wiring.ts";
+import { hostRegisterScopes } from "../../packages/scope/src/installed-registers.ts";
+import type { ApplicationBindings } from "../../packages/scope/src/applications/bindings.ts";
 import type { Sql } from "../../packages/scope/src/sqlite.ts";
 import { archiveSourceReferences } from "../../packages/scope/src/archive-source-window.ts";
 import { ArchivePrefixStopped } from "../../packages/scope/src/archive-prefix.ts";
 import { ArchiveStopped } from "../../packages/scope/src/archive-budget.ts";
 import type { ArchiveReplayContext } from "../../packages/scope/src/archive-publication.ts";
 
-export interface GrowArchiveEnvironment extends ArtifactsBindings { GROW_ARCHIVE_CONFIG?: string; ARCHIVE_RESTART_DIRECTIVE?: string }
-/** `release` is the release digest that the Worker trusts (ruling e4b72290). */
-export function growArchiveConfiguration(env: GrowArchiveEnvironment, release: Digest): (ArchiveHostConfiguration & { readonly repositoryName: string; readonly service: string; readonly maxBytes: number }) | null {
-  try {
-    const host = artifactsConfiguration(env.ARTIFACTS_CONFIG);
-    if (!host || host.namespace !== ARTIFACTS_NAMESPACE || typeof env.GROW_ARCHIVE_CONFIG !== "string" || env.GROW_ARCHIVE_CONFIG.length > 2048) return null;
-    const config = exact(parseStrict(env.GROW_ARCHIVE_CONFIG), ["policy", "release", "directory", "repositoryName"]);
-    if (!config || config["policy"] !== "grow-room-archive-1" || config["release"] !== release || !isScopeId(config["directory"])
-      || typeof config["repositoryName"] !== "string" || !/^[a-z2-7]{52}-1$/.test(config["repositoryName"])) return null;
-    return { registerScope: host.registerScope, namespace: host.namespace, host: ARTIFACTS_HOST, directory: config["directory"], repositoryName: config["repositoryName"], service: host.host, maxBytes: host.maxBytes };
-  } catch { return null; }
+export interface RoomArchiveEnvironment extends ArtifactsBindings, ApplicationBindings { ARCHIVE_RESTART_DIRECTIVE?: string }
+export type RoomArchiveConfiguration = ArchiveHostConfiguration & { readonly service: string; readonly maxBytes: number };
+/** One provider/root configuration; each Directory supplies its own binding. */
+export function roomArchiveConfiguration(env: RoomArchiveEnvironment): RoomArchiveConfiguration | null {
+  const ready = artifactsReadiness(env);
+  if (ready.state !== "wired") return null;
+  const roots = hostRegisterScopes(ready.config.registerScope, env);
+  return roots ? { registerScope: roots, namespace: ready.config.namespace, host: ARTIFACTS_HOST,
+    service: ready.config.host, maxBytes: ready.config.maxBytes } : null;
 }
 
 /** One target resolution prepares only the finite room graph's public birth
  * identities. Private Register/Membership bodies are never inventoried. Each
  * new pass repeats the reads/validation on its original archive allowance. */
-export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Binding, env: GrowArchiveEnvironment, release: Digest, policies: ArchivePolicyRegistry, bounds: Bounds, fetch?: (request: Request) => Promise<Response>): Omit<RoomArchiveDriverOptions, "sql" | "current" | "clock" | "bounds"> | null {
-  const config = growArchiveConfiguration(env, release), artifacts = artifactsBinding(env.ARTIFACTS);
-  if (!config || !artifacts) return null;
+export function roomArchiveDriver(given: OutsideGiven, sql: Sql, binding: Binding, env: RoomArchiveEnvironment, policies: ArchivePolicyRegistry, bounds: Bounds, fetch?: (request: Request) => Promise<Response>, policyOwner?: { prepare(at: SequenceRef, seed: Seed, budget: ArchiveBudget): Promise<{ readonly stop: string } | void>; current(): boolean; candidate(seq: number, budget: ArchiveBudget): Promise<void>; source(at: SequenceRef, seed: Seed, birth: { bytes: string; hash: Digest }, budget: ArchiveBudget): Promise<boolean> }): Omit<RoomArchiveDriverOptions, "sql" | "current" | "clock" | "bounds"> | null {
+  const config = roomArchiveConfiguration(env), ready = artifactsReadiness(env);
+  if (!config || ready.state !== "wired") return null;
+  const artifacts = ready.binding;
   const prepared = new WeakMap<ArchiveBudget, Map<string, FixtureArchiveSourceBirth>>();
   const publicScopes = new WeakMap<ArchiveBudget, Readonly<{ replayScopes: readonly SequenceRef[]; replayContext: ArchiveReplayContext }>>();
   const provider = new ArtifactsProvider({ binding: artifacts, host: config.host, namespace: config.namespace, service: config.service, maxBytes: Math.min(config.maxBytes, 8 * 1024 * 1024), ...(fetch ? { fetch } : {}),
     credentialHandle: async () => { throw new Error("Archive uses no destination ledger credential"); } }).archive(() => given.clock.read());
   return { production: "room-binding", policies: { registry: policies }, provider,
-    admit: (_at, seed) => !["register", "membership", "inbox"].includes(seed.kind) && policies.has(seed.definition),
+    ...(policyOwner ? { preparePolicies: (at, seed, budget) => policyOwner.prepare(at, seed, budget), policyCurrent: () => policyOwner.current() } : {}),
+    admit: (_at, seed) => !["register", "membership", "inbox"].includes(seed.kind) && (policies.has(seed.definition) || isDigest(seed.definition)),
     target: { resolve: async (at, seed, budget) => {
       const births = new Map<string, FixtureArchiveSourceBirth>();
       const nativeBirths = namespace(binding).births;
-      const capture = (where: SequenceRef, reply: Awaited<ReturnType<typeof nativeBirths.read>>) => {
+      const capture = async (where: SequenceRef, reply: Awaited<ReturnType<typeof nativeBirths.read>>) => {
         // archiveTarget's own admission of this same reply debits the archive budget. This copy charges nothing more.
         const admitted = readNativeBirth(reply, where, 256 * 1024, () => {});
         if (!admitted) return null;
-        const birth = admitted.birth, policy = policies.get(birth.named);
+        const birth = admitted.birth;
+        if (policyOwner && !policies.has(birth.named) && !await policyOwner.source(where, admitted.entry.input.seed, { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, budget)) return null;
+        const policy = policies.get(birth.named);
         if (!policy) return null;
         births.set(canonicalize(where), { at: where, birth: { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, ...(policy.declaration ? { declaration: policy.declaration } : {}) });
         return reply;
       };
       const target = archiveTarget({ births: { read: async (...args) => capture(args[0], await nativeBirths.read(...args)) },
         query: async (where, query, archiving, directory) => {
-          if (directory.scope !== config.directory) return { ok: false, reason: "forbidden" };
           const peer = binding.get(binding.idFromName(where.scope)) as unknown as { archiveItem(ask: ArchiveHostItemAsk): Promise<NativeItemQuery | RoomRetiredStop> };
           const answer = await peer.archiveItem({ query, archiving, directory });
           if (isRoomRetiredStop(answer)) return { ok: false, reason: "unavailable" };
@@ -77,7 +79,7 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
       // reading that unrelated birth on every application-journal pass.
       const discovered = await (seed.kind === "lane" ? target.discoverRoom(at, seed, budget) : target.discover(at, seed, budget));
       const repository = discovered?.repository;
-      if (!repository || repository.host !== config.host || repository.namespace !== config.namespace || repository.name !== config.repositoryName) return null;
+      if (!repository || repository.host !== config.host || repository.namespace !== config.namespace) return null;
       prepared.set(budget, births);
       publicScopes.set(budget, Object.freeze({ replayScopes: discovered!.publicScopes, replayContext: discovered!.replayContext }));
       return repository;
@@ -90,6 +92,7 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
         if (sameBudget !== budget) return budget.stop("unavailable");
         // End this synchronous native frame before any peer await. Only
         // copied source references cross it; the scout opens a fresh frame.
+        await policyOwner?.candidate(seq, budget);
         const candidate = sql.transaction(() => archiveSourceReferences(sql, seq, bounds, budget));
         const sources = candidate.sources;
         for (const where of sources) {
@@ -107,6 +110,12 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
             });
             // The debit settles the reservation at the actual size, before parsing.
             const birth = readNativeBirth(reply, where, 256 * 1024, size => budget.settle(reservation, size))?.birth ?? null;
+            if (birth && policyOwner && !policies.has(birth.named)) {
+              const checked = admitSequenceGenesis(birth.proof.bytes, where, bounds.entryBytes);
+              if (!checked) throw new ArchivePrefixStopped("foreign-source-mismatch");
+              const seed = readNativeBirth(reply, where, 256 * 1024, () => {})?.entry.input.seed;
+              if (!seed || !await policyOwner.source(where, seed, { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, budget)) throw new ArchivePrefixStopped("foreign-source-unavailable");
+            }
             const policy = birth ? policies.get(birth.named) : null;
             if (!birth || !policy) {
               // Bounded copies of already validated metadata only. No raw birth,
@@ -137,3 +146,10 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
     },
   };
 }
+
+/** Historical fixture call shape. It uses exactly the shared adapter and
+ * ignores obsolete Grow selectors; no production entry imports this alias. */
+export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Binding, env: RoomArchiveEnvironment, _release: Digest, policies: ArchivePolicyRegistry, bounds: Bounds, fetch?: (request: Request) => Promise<Response>) {
+  return roomArchiveDriver(given, sql, binding, env, policies, bounds, fetch);
+}
+export const growArchiveConfiguration = (env: RoomArchiveEnvironment, _release: Digest) => roomArchiveConfiguration(env);

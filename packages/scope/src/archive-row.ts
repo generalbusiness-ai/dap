@@ -19,6 +19,7 @@ export { ARCHIVE_ROW_BYTES } from "./archive-row-cost.ts";
 const KEY = "archive-row-1";
 const WAKE = "archive-wake-1";
 const RESTART = "archive-restart-1";
+const TERMINAL = "archive-terminal-1";
 interface ArchiveWake {
   readonly pending: boolean;
   readonly stopped: boolean;
@@ -315,6 +316,30 @@ export class ArchiveRows {
       const previous = this.#load(budget)?.row;
       if (!previous) return refuse("unavailable");
       return this.#save({ ...previous, next: null, stopped: { reason, where } }, budget);
+    });
+  }
+  /** A policy stop needs no repository, provider format or fabricated row.
+   * It preserves any existing confirmed receipt and prevents scheduling. */
+  terminal(budget = new ArchiveBudget()): string | null {
+    const rows = budget.native(this.#sql, () => ({ metadata: 512, inputWork: 4096 })).exec("SELECT v FROM meta WHERE k = ? AND typeof(v) = 'text' AND octet_length(v) <= 512 LIMIT 1", TERMINAL).toArray();
+    if (!rows.length) return null;
+    const bytes = rows[0]?.["v"];
+    if (typeof bytes !== "string") return refuse("unavailable");
+    const value: unknown = parseStrict(bytes);
+    if (!isRecord(value) || !fields(value, "at,reason,v") || value["v"] !== 1 || !same(value["at"], this.#at)
+      || typeof value["reason"] !== "string" || !/^[a-z][a-z0-9-]{0,127}$/.test(value["reason"]) || canonicalize(value) !== bytes) return refuse("unavailable");
+    return value["reason"];
+  }
+  halt(reason: string, budget = new ArchiveBudget()): void {
+    if (!/^[a-z][a-z0-9-]{0,127}$/.test(reason)) return refuse("unavailable");
+    this.#sql.transaction(() => {
+      const previous = this.#load(budget)?.row;
+      if (previous) this.#save({ ...previous, next: null, stopped: { reason, where: null } }, budget);
+      const value = canonicalize({ v: 1, at: this.#at, reason });
+      budget.spend({ calls: 2, metadata: value.length + 64, inputWork: value.length * 8 + 4096 });
+      this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO NOTHING", TERMINAL, value).toArray();
+      this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", WAKE, canonicalize({ pending: false, stopped: true, next: null })).toArray();
+      budget.check();
     });
   }
   #wake(budget: ArchiveBudget): ArchiveWake | null {

@@ -470,11 +470,13 @@ function shell(destination: Destination, room: Room | null, ...content: HTMLElem
   const directory = room.directory;
   const local = kept ? labelFor(kept.label, { directory, membership: room.membership }, kept.register)?.text : undefined;
   const name = room.publication === "unpublished" ? "No publication" : room.name;
+  const archiveNotice = (room.publication === "unpublished" || room.publicationHost === "none") ? "No archive: this room has no repository."
+    : room.publicationHost !== undefined && room.publicationHost !== "artifacts" ? "Archive unavailable for this repository provider." : null;
   const account = room.me.handle;
   const shellContext = JSON.stringify([location.origin, directory, room.membership, room.key]);
   const roomSwitch = () => name ? h("details", { class: "shell-disclosure room-disclosure" },
     h("summary", { class: "room-switch", title: directory, "aria-label": `Room: ${name}`, "data-focus-key": controlKey(shellContext, "room-connection") }, h("span", { class: "room-name" }, h("span", {}, name), local ? h("span", { class: "room-recorded-name", title: "Personal label in this browser" }, `Personal label: ${local}`) : null), h("span", { "aria-hidden": "true" }, "⌄")),
-    h("div", { class: "shell-disclosure-content" }, h("p", { title: directory }, name), h("a", { href: "#/join" }, "Join another room"))) : null;
+    h("div", { class: "shell-disclosure-content" }, h("p", { title: directory }, name), archiveNotice ? h("p", { class: "muted small" }, archiveNotice) : null, h("a", { href: "#/join" }, "Join another room"))) : null;
   const accountControl = () => h("details", { class: "shell-disclosure account-disclosure" },
     h("summary", { class: "account", "aria-label": `Account: ${account}`, "data-focus-key": controlKey(shellContext, "account-connection") }, h("span", { class: "avatar", "aria-hidden": "true" }, account.replace(/^@+/, "").slice(0, 1).toUpperCase()), h("span", { class: "account-label" }, account)),
     h("div", { class: "shell-disclosure-content" }, whoLine(room), h("a", { href: "#/devices" }, "Devices"), h("a", { href: "#/join" }, "Change connection")));

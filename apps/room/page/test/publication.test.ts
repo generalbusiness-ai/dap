@@ -37,7 +37,7 @@ test("Page publication mode needs the exact active unpublished directory; missin
   await expect(openRoom(session, place)).rejects.toThrow("no valid publication metadata");
   repository = { host: "github.com", namespace: "TEST", name: "Recorded room", id: "TEST-id" };
   const hosted = await openRoom(session, place);
-  expect([hosted.publication, hosted.name]).toEqual(["repository", "Recorded room"]);
+  expect([hosted.publication, hosted.name, hosted.publicationHost]).toEqual(["repository", "Recorded room", "github.com"]);
   expect(siteAddress(hosted, "a.txt")).toBe(`https://page.test/site/${directory.scope}/HEAD/a.txt`);
   expect(calls.some(path => path.startsWith("/site/") || path.includes("creation-offer"))).toBe(false);
 });

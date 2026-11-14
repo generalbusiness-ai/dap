@@ -94,6 +94,8 @@ export interface Room {
   name?: string;
   /** Missing publication is recognized only from the exact unpublished directory. */
   publication?: "repository" | "unpublished";
+  /** Provider from the validated recorded repository, not service inference. */
+  publicationHost?: string;
   key: KeyId;
   /** The caller's role and actions in membership, or null when the key is no active member's. */
   me: (Standing & { ref?: MemberRef }) | null;
@@ -422,7 +424,10 @@ export async function openRoom(session: Session, place: Place): Promise<Room> {
   else if (commons !== undefined && commons !== null) throw new Unreadable("The directory has an invalid Commons reference.");
   const recordedRepository = repository.values["repository"];
   if (answersVersionQuestion(summary.definition, "pageUnpublishedDirectory") && summary.status === "active" && repository.state === "open" && recordedRepository == null) room.publication = "unpublished";
-  else if (recordedRepository && typeof recordedRepository === "object" && !Array.isArray(recordedRepository) && ["host", "namespace", "name", "id"].every(field => field in recordedRepository && typeof (recordedRepository as Record<string, unknown>)[field] === "string")) room.publication = "repository";
+  else if (recordedRepository && typeof recordedRepository === "object" && !Array.isArray(recordedRepository) && ["host", "namespace", "name", "id"].every(field => field in recordedRepository && typeof (recordedRepository as Record<string, unknown>)[field] === "string")) {
+    room.publication = "repository";
+    room.publicationHost = (recordedRepository as Record<string, string>)["host"];
+  }
   else throw new Unreadable(`The directory ${place.directory} records no valid publication metadata.`);
   if (recordedRepository && typeof recordedRepository === "object" && !Array.isArray(recordedRepository) && "name" in recordedRepository && typeof recordedRepository["name"] === "string") room.name = recordedRepository["name"];
   await refreshStanding(room);

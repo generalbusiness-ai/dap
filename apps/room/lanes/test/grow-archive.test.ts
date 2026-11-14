@@ -24,8 +24,12 @@ test("Grow export requires its exact deployed signed release and never admits pr
   expect(() => growArchivePolicies(JSON.stringify(changed), RECORDED_GROW_RELEASE)).toThrow();
   const source = readFileSync(new NodeURL("../../wrangler.grow.jsonc", import.meta.url), "utf8");
   const config = JSON.parse(source.replace(/^\s*\/\/.*$/gm, ""));
-  expect(growArchiveConfiguration(config.vars, RECORDED_GROW_RELEASE.release)).toMatchObject({ directory: "sc_ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq", namespace: "artroom-demo" });
-  expect(growArchiveConfiguration({ ...config.vars, GROW_ARCHIVE_CONFIG: JSON.stringify({ ...JSON.parse(config.vars.GROW_ARCHIVE_CONFIG), secret: "not-admitted" }) }, RECORDED_GROW_RELEASE.release)).toBeNull();
+  expect(growArchiveConfiguration(config.vars, RECORDED_GROW_RELEASE.release)).toBeNull(); // binding absent
+  const environment = { ...config.vars, ARTIFACTS: { get: () => null, create: () => null, delete: () => null } };
+  expect(growArchiveConfiguration(environment, RECORDED_GROW_RELEASE.release)).toMatchObject({ namespace: "artroom-demo" });
+  expect(config.vars.GROW_ARCHIVE_CONFIG).toBeUndefined();
+  expect(config.rules).toBeUndefined();
+  expect(growArchiveConfiguration({ ...environment, INSTALLED_REGISTER_SCOPES: "[]" }, RECORDED_GROW_RELEASE.release)).toBeNull();
 });
 
 test("Artifacts archive mints one service-expiring pass token and the actual send guard rejects another ref and revoked reuse", async () => {

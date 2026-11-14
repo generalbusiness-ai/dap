@@ -11,6 +11,11 @@ export type ArchiveStopReason = "limit" | "timeout" | "unavailable";
 export class ArchiveStopped extends Error {
   constructor(readonly reason: ArchiveStopReason, readonly capacityRefusal: ArchiveCapacityCheck | null = null) { super(`archive-${reason}`); }
 }
+/** Trusted policy owner may stop before any repository has been selected.
+ * It crosses wait() intact; it neither resets nor exhausts the budget. */
+export class ArchivePolicyStopped extends ArchiveStopped {
+  constructor(readonly policyReason: "application-policy-revoked" | "application-policy-unavailable") { super("unavailable"); }
+}
 const zero = (): ArchiveCost => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
 export interface ArchiveCapacityCheck {
   readonly kind: "debit" | "lookahead-reserve" | "window-metadata" | "window-entry" | "finish-quote" | "migration-quote";

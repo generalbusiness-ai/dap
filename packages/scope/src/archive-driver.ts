@@ -4,7 +4,7 @@ import { canonicalize, digestBytes, isDigest, same, utf8 } from "@generalbusines
 import type { Bounds, Head, SequenceRef, Seed, Timestamp } from "@generalbusiness/dap-contract";
 import { isSequenceRef, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { captureJournalParentFrontier, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
-import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, type ArchiveCapacityRefusal } from "./archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, ArchivePolicyStopped, type ArchiveCapacityRefusal } from "./archive-budget.ts";
 import { archiveParent, copyArchiveObjects } from "./archive-parent.ts";
 import { ArchiveFrontiers, type ArchiveFrontierBase, type ArchiveFrontierPrepared } from "./archive-frontier-store.ts";
 import { archiveFrontierRowContextBound } from "./archive-frontier-cost.ts";
@@ -63,6 +63,10 @@ export interface RoomArchiveDriverOptions extends Omit<FixtureArchiveDriverOptio
   readonly target: ArchiveTarget;
   readonly provider: ArchiveProvider;
   readonly admit: (at: SequenceRef, seed: Seed) => boolean;
+  /** Paid per-pass installed policy preparation, before provider work. */
+  readonly preparePolicies?: (at: SequenceRef, seed: Seed, budget: ArchiveBudget) => Promise<{ readonly stop: string } | void>;
+  readonly policyCurrent?: () => boolean;
+
   /** Fresh bounded source identity preparation, charged to the same pass. */
   readonly sources?: (after: Head | null, through: Head, budget: ArchiveBudget, exact: boolean) => Promise<{ readonly pins: FixtureArchiveSourcePins; readonly replayScopes?: readonly SequenceRef[]; readonly replayContext?: ArchiveReplayContext; readonly prepare?: (seq: number, budget: ArchiveBudget) => Promise<void> }>;
 }
@@ -164,13 +168,15 @@ export class ArchiveDriver {
     const observed: { outcome?: ArchivePass } = {};
     const done = (value: ArchivePass): ArchivePass => { observed.outcome = value; return value; };
     let active = true, credential: ArchiveCredential | null = null, scheduled: Timestamp | null = null, deferred = false, attempted = false;
-    const allowed = (): boolean => { if (!active) return false; try { budget.check(); return true; } catch { return false; } };
+    const allowed = (): boolean => { if (!active || "production" in this.#options && this.#options.policyCurrent?.() === false) return false; try { budget.check(); return true; } catch { return false; } };
     try {
       const rows = this.#store();
       if (!rows || this.#options.policies.registry.size === 0) return done({ state: "disabled", next: null });
       budget.spend({ inputWork: 4 * (ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES) });
       const current = this.#options.current()!;
       const at = { ...current.at }, through = { ...current.head };
+      const terminal = rows.terminal(budget);
+      if (terminal) return done({ state: "stopped", next: null, reason: terminal });
       let row = rows.load(budget);
       phase = !row ? "absent" : row.stopped ? "stopped" : row.pending ? "pending" : row.confirmed ? "confirmed" : "target";
       confirmed = row?.confirmed?.through.seq ?? null; pending = row?.pending?.through.seq ?? null;
@@ -181,6 +187,14 @@ export class ArchiveDriver {
       const pin = readPin(budget.native(this.#options.sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }), archivePinReadBytes), at);
       budget.check();
       if (!pin) return done({ state: "retry", next: this.#later(0), reason: "unavailable" });
+      if ("production" in this.#options && this.#options.preparePolicies) {
+        const prepare = this.#options.preparePolicies;
+        const prepared = await budget.wait(() => prepare(at, pin.seed, budget));
+        if (prepared?.stop) {
+          rows.halt(prepared.stop, budget);
+          return done({ state: "stopped", next: null, reason: prepared.stop });
+        }
+      }
       if ("production" in this.#options && !this.#options.admit(at, pin.seed)) { this.#disabled = true; return done({ state: "disabled", next: null }); }
       const policy = this.#options.policies.registry.get(pin.seed.definition);
       if (!policy || !policy.review || policy.support.named !== pin.seed.definition) { this.#disabled = true; return done({ state: "disabled", next: null }); }
@@ -449,6 +463,10 @@ export class ArchiveDriver {
       if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return done({ state: "stopped", next: null, reason: "conflict" }); }
       return done({ state: "retry", next });
     } catch (error) {
+      if (error instanceof ArchivePolicyStopped) {
+        const rows = this.#store();
+        if (rows) { rows.halt(error.policyReason, budget); return done({ state: "stopped", next: null, reason: error.policyReason }); }
+      }
       if (error instanceof ArchivePrefixStopped) sourceFailure = error.sourceFailure ?? null;
       // Preserve a terminal planner debit if a subsequent row stop encounters
       // that same stopped budget; never borrow an exploratory refusal.
@@ -463,7 +481,7 @@ export class ArchiveDriver {
       if (credential) { try { budget.check(); await budget.wait(() => this.#options.provider.revokeArchive(credential!)); } catch { /* The short-lived credential may expire; it is never recorded. */ } }
       try {
         const reason = observed.outcome?.reason;
-        const known = ["limit", "timeout", "unavailable", "conflict", "mismatch", "parent", "missing-input", "rebuild-mismatch", "unsupported-archive-cohort", "foreign-source-unavailable"];
+        const known = ["application-policy-revoked", "application-policy-unavailable", "limit", "timeout", "unavailable", "conflict", "mismatch", "parent", "missing-input", "rebuild-mismatch", "unsupported-archive-cohort", "foreign-source-unavailable"];
         const position = (value: number | null) => value !== null && Number.isSafeInteger(value) && value >= 0 ? value : null;
         const cost = budget.admitted();
         const states = ["idle", "disabled", "retry", "stopped", "confirmed"];
