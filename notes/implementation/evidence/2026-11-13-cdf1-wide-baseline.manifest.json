@@ -1,0 +1,78 @@
+{
+  "qualification": "Four exact-baseline invariant controls, not a passing suite: baseline compiler exit 0, native child exit 1 with four expected assertion failures, original controller exit 2 from a reporting-filter bug, offline reviewed parser confirms four failures without rerun. Only the two hashed witness files overlay baseline production/config. Positive 9e716d4cf0 remains untouched.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-cdf1-wide-baseline",
+  "checkpoint_commit": "5339ccc50856cb179349e91c08d0098e6055cf6e",
+  "checkpoint_tree": "d9c6ccb6073a5681f26c93074f7d4063b45fc013",
+  "overlays": {
+    "packages/scope/test/capacity-retained-rows.test.ts": "a06d21e9c5baa6d55d25219ebbe4b07d27cfcb0138e07b1731280e20a3627d36",
+    "packages/scope/test/turn.test.ts": "7953617a9134f132f57927e72e2916ac54fa9bfabb6ef59e8962c7b50d29dc05"
+  },
+  "file_count": 13,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1047,
+      "sha256": "1e999f0dec878c4a7d3b09fb5a083b7b87828a9d2f9b2616ad3342f1c94fa4c5"
+    },
+    {
+      "path": "baseline-native.json",
+      "bytes": 949,
+      "sha256": "eb3008e804ede82f70f969a63640ce4488938228fc2ff184904670a6c98a9836"
+    },
+    {
+      "path": "baseline-native.log",
+      "bytes": 111,
+      "sha256": "5df4d9d746ebc7ee7c9cfdf989308b77624e031eafa6331722d86d0c15bf8678"
+    },
+    {
+      "path": "baseline-test-typecheck.json",
+      "bytes": 180,
+      "sha256": "2c0e40d6db1ab75817905e4d024638a26a103fe4d513b2740a875b55306d9613"
+    },
+    {
+      "path": "baseline-test-typecheck.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "control-summary-reviewed.json",
+      "bytes": 3032,
+      "sha256": "024fa0d05efaf1deb7f506a20170435452af2c157b9f58649f8652447300df16"
+    },
+    {
+      "path": "control-summary.json",
+      "bytes": 8540,
+      "sha256": "0c01cd78e4ddaa0f7e1c5e6fbd68f1b9a0457a2fbbdfe69f3ad723a6355c673f"
+    },
+    {
+      "path": "controller-original.json",
+      "bytes": 175,
+      "sha256": "5263508b25aab7546f31e03918c0703823154d9e96c50663b10934666004c885"
+    },
+    {
+      "path": "integrity-end.json",
+      "bytes": 601,
+      "sha256": "1e9d270f76880044c95b2006b8606efa08860dda7995cbd3a2c5879918a88716"
+    },
+    {
+      "path": "native-results.json",
+      "bytes": 15978,
+      "sha256": "4cd8029d694327fc6bfc8a18b796e8714c0877584cc335aa90821569cf0e06d7"
+    },
+    {
+      "path": "power-end.log",
+      "bytes": 818,
+      "sha256": "cb2efadca52969361743b66f923d6e194674762ca0f9d91649ea4976675575ee"
+    },
+    {
+      "path": "power-start.log",
+      "bytes": 818,
+      "sha256": "cb2efadca52969361743b66f923d6e194674762ca0f9d91649ea4976675575ee"
+    },
+    {
+      "path": "source.json",
+      "bytes": 643,
+      "sha256": "9db2b2b5219695f870722b75b2eb00b779533a2ee0c28c28b238d045dd86eb96"
+    }
+  ]
+}
