@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I will amend the note at one head and ask the checker for its review.","body":{"branch":"planner/act-environment-amend-20261114"}}
+{"kind":"artifact","text":"notes/2026-11-14-act-environment.md at exact 72be89cca731241dbb36430fb5b99aa151fb942c on planner/act-environment-amend-20261114, under promise git:sha1…8d0346e on request git:sha1…73c7d23\n\nThe amended note at head 72be89cc. One file changes: 65 lines added, 9 removed.","body":{"commit":"72be89cca731241dbb36430fb5b99aa151fb942c","path":"notes/2026-11-14-act-environment.md"}}
