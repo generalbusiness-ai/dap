@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8e370430744b871d9b6696dabcc21e192bdecb08","text":"Merge retired a covered predecessor; the successor is at packages/client/test/replica-generated.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8f1213746457fa0df2267d68b26972b081caea5a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-13-c2-scope-replica.md."}
