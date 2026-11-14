@@ -1,9 +1,10 @@
 import { expect, test } from "vitest";
-import type { ScopeRef } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, type Effect, type ScopeRef } from "@generalbusiness/dap-contract";
 import { textDigest } from "@generalbusiness/dap-bytes";
 import { bindActBasis } from "../src/act-basis.ts";
 import { actVersion } from "../src/act-version.ts";
 import type { Act, Source } from "../src/act-types.ts";
+import { ActRecords } from "../src/act-records.ts";
 import { clientNotes as notes } from "./definition-corpus-data.ts";
 
 test("binding preserves written text and symbolic names while capturing only missing subject revisions", () => {
@@ -29,4 +30,25 @@ test("binding preserves written text and symbolic names while capturing only mis
   const captured = bindActBasis(notes, { ...act, expected: { on: 3 } }, subjects, lowered, at);
   expect(captured.act.expected).toEqual({ on: 3 });
   expect(captured.bound).toEqual([]);
+});
+
+test("pending command records retain exact counts and guard only marked entry values", () => {
+  const source: Source = { key: "command", version: actVersion({ kind: "set-fan", on: 4, fields: {}, expected: { on: 1 } }) };
+  const effects: readonly Effect[] = [{ effect: "record", capability: DEVICE_COMMAND, kind: "command", key: [11], state: "open",
+    values: { targetAt: 11, device: 11 } }];
+  const refs = [{ effect: 0, path: ["key", 0] }, { effect: 0, path: ["values", "targetAt"] }];
+  const projected = new ActRecords([]).project(effects, refs, source, 17);
+  expect(projected.effects).toEqual([{ ...effects[0], key: [{ entry: source }], values: { targetAt: { entry: source }, device: 11 } }]);
+  const reader = projected.records.reader(() => { throw new Error("the command entry has not recorded"); });
+  expect([reader.recordCount(DEVICE_COMMAND, "command", "open"), reader.records(DEVICE_COMMAND, "command").length]).toEqual([1, 1]);
+  const command = reader.record(DEVICE_COMMAND, "command", [17]);
+  if (!command) throw new Error("the hypothetical command is absent");
+  expect([command.state, command.values["device"]]).toEqual(["open", 11]);
+  expect(() => command.key[0]).toThrow("the command entry has not recorded");
+  expect(() => command.values["targetAt"]).toThrow("the command entry has not recorded");
+  expect(() => command.seq).toThrow("the command entry has not recorded");
+  expect(reader.recordCount(DEVICE_COMMAND, "command", "open")).toBe(1);
+  const next = projected.records.project(effects, refs, { ...source, key: "next-command" }, 18);
+  expect(next.records.reader(() => { throw new Error("entry absent"); }).recordCount(DEVICE_COMMAND, "command", "open")).toBe(2);
+  expect(reader.recordCount(DEVICE_COMMAND, "command", "open")).toBe(1);
 });
