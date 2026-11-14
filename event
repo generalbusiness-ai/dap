@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:94a763dd56714e11f701078f3f1263bf78cb14f5","text":"Merge retired a covered predecessor; the successor is at notes/implementation/cd-dropped-kind-checks-faults.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9e58957244f87c705c71432911a2f3458c63958c","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/store.ts."}
