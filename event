@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f05c2775127aa58f8f8695fd62579c9f047a47fc","text":"Merge retired a covered predecessor; the successor is at scripts/scale-selection.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f11c73ee71dff2a20881951a5f1f2fc4a52fec21","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/directory-partition-lanes.scope.test.ts."}
