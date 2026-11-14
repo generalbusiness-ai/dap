@@ -307,7 +307,9 @@ function deathIn(outcomes: readonly StoredOutcome[]): CustodySigning["dead"] {
         const found = deathOf(answer as unknown as Answer);
         if (found) death = found;
       } else if (!["accepted", "archived", "unavailable", "mismatch"].includes(answer["answer"])) throw new CustodyError({ held: "unreadable" });
-    } else if (!(outcome["lost"] === true || isRecord(outcome["settled"]) || isRecord(outcome["archivedSettlement"]))) throw new CustodyError({ held: "unreadable" });
+    } else if (!(("lost" in outcome && outcome["lost"] === true)
+      || ("settled" in outcome && isRecord(outcome["settled"]))
+      || ("archivedSettlement" in outcome && isRecord(outcome["archivedSettlement"])))) throw new CustodyError({ held: "unreadable" });
   }
   return death;
 }
