@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a8e074db436c4f5bf6c6077e7b3b302546829a4d","text":"Merge retired a covered predecessor; the successor is at examples/repo-in-ai/runbook.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:baccbb70569bac46a31abde39b512a5ea8ae0d76","text":"Merge retired a covered predecessor; the successor is at scripts/register-values.mjs."}
