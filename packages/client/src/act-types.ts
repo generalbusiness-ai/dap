@@ -1,6 +1,7 @@
 /** Pure act values and the stated inputs of exploration. None authorizes a send. */
-import type { DeclaredDefinition, Digest, Effect, FactRef, FieldValue, Head, Item, KeyId, RefusalReason, ScopeRef, Timestamp, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { CapabilityName, DeclaredDefinition, Digest, Effect, FactRef, FieldValue, Head, Item, KeyId, RefusalReason, ScopeRef, Timestamp, UnavailableReason } from "@generalbusiness/dap-contract";
 import type { RefusalClass } from "@generalbusiness/dap-bytes";
+import type { Amount } from "@generalbusiness/dap-derive";
 import type { Kind, ValueOf } from "./declared.ts";
 
 /** One version of a step, within the same scope and owner. */
@@ -107,6 +108,9 @@ export interface ActView<D extends DeclaredDefinition> {
   readonly assumes: readonly Source[];
   rows<T extends ItemType<D>>(type: T): readonly ActRow<D, T>[];
   row(name: ItemName): ActRow<D> | null;
+  count(type: ItemType<D>, state: string): number;
+  recordCount(capability: CapabilityName, kind: string, state?: string): number;
+  readonly reservations: Amount;
 }
 
 type LocalEffect<E> = E extends { effect: "relation" } ? E
@@ -114,7 +118,7 @@ type LocalEffect<E> = E extends { effect: "relation" } ? E
   : E extends { item: number } ? Omit<E, "item"> & { readonly item: ItemName }
   : E;
 export type ActEffect = LocalEffect<Effect>;
-export type Lack = UnavailableReason | "intent" | "entry" | "source" | "due";
+export type Lack = UnavailableReason | "intent" | "entry" | "source" | "due" | "owners";
 
 export type Exploration<D extends DeclaredDefinition, K extends Kind<D>> =
   | IncompleteExploration<D, K>

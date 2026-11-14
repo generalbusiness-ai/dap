@@ -1,7 +1,7 @@
 /** Device-command records keep counts without claiming an unsealed entry value. */
 import { DEVICE_COMMAND, type Effect, type FieldValue } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
-import { byteOrder, type RecordState, type StateView } from "@generalbusiness/dap-derive";
+import { byteOrder, type RecordState, type StateView, type StateWriter } from "@generalbusiness/dap-derive";
 import type { Source } from "./act-types.ts";
 
 export interface RecordRef { readonly effect: number; readonly path: readonly (string | number)[] }
@@ -61,6 +61,11 @@ export class ActRecords {
   }
 
   get size(): number { return this.#rows.size; }
+
+  /** Populate only the caller-owned private projection writer. */
+  writeTo(writer: Pick<StateWriter, "putRecord">): void {
+    for (const row of this.#rows.values()) writer.putRecord(row);
+  }
 
   /** Raw rows stay private. Callers receive guards on the exact marked positions. */
   reader(missing: (source: Source) => never): Pick<StateView, "record" | "records" | "recordCount"> {
