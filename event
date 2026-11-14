@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6c0aa90d4baf2d4d75312d0365f2252d7e55e6cd","text":"Merge retired a covered predecessor; the successor is at packages/replay/test/archive-git-fixture.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6c3b0f46ad05d9be465686ff2f10ca9e85148174","text":"Merge retired a covered predecessor; the successor is at docs/testing.md."}
