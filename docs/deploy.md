@@ -316,7 +316,7 @@ you retain the planned register's scope ID and genesis digest, update one
 Worker with `demo`, `grow` or `lending` as the name:
 
 ```sh
-node scripts/register-values.mjs demo \
+node scripts/register-values.mjs grow \
 	--register "$REGISTER_SCOPE" --genesis "$REGISTER_GENESIS"
 ```
 
@@ -327,9 +327,10 @@ replace the list with the new root alone when the earlier rooms no longer
 need service. The identifier cutover uses `--only` because the service
 does not read rooms of the retired roots.
 
-For an existing Browser Start setting, the script updates the full
-register reference. To configure Browser Start for `demo`, also supply
-all three explicit arguments:
+For an existing Browser Start setting, also supply `--deployment` with
+the deployed identity. The script updates the full register reference
+and validates the offer against that explicit argument. To configure
+Browser Start for `demo`, supply all three metadata arguments:
 
 ```sh
 node scripts/register-values.mjs demo \
@@ -339,14 +340,19 @@ node scripts/register-values.mjs demo \
 ```
 
 Take the origin, deployment identity and definition from the reviewed
-deployment and register records. The script infers none of them. It
-tracks `DEPLOYMENT` beside the Start setting and refuses an argument that
-differs from an existing `DEPLOYMENT`. It accepts only `demo`, `grow` and
-`lending`, validates the candidate with the production settings parsers,
-and writes no file on a validation failure. A successful call changes
-only that Worker's tracked configuration and prints its diff. Review and
-commit the diff before deployment. The script neither installs the
-register nor deploys the Worker.
+deployment and register records. The script infers none of them.
+`--start-origin` and `--definition` require each other and `--deployment`.
+The script never adds a tracked `DEPLOYMENT` variable. If the file already
+has that variable, the argument must match it. On `dap-demo`, the operator
+keeps `DEPLOYMENT` in a secret binding. Verify its actual value from the
+deployed version and `/health` before supplying the argument.
+
+The script accepts only `demo`, `grow` and `lending`, validates the
+candidate with the production settings parsers, and writes no file on a
+validation failure. A successful call changes only that Worker's tracked
+configuration and prints its diff. Review and commit the diff before
+deployment. The script neither installs the register nor deploys the
+Worker.
 
 A `dap-grow` register switch also needs its archive bridge fixed first.
 The installed list does not update the single-root checks in

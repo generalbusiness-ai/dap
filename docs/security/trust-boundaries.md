@@ -247,7 +247,7 @@ The operator sets `SESSION_SECRET` and `DEPLOYMENT`. The file does not list bind
 
 Its Artifacts namespace is `dap-demo`. It shares dataset `artroom_metrics_v1` with `artroom-scope` and `dap-grow`, but declares no application content bucket. `APPLICATION_TRUST` lists one release, publisher and host. Without the `APPLICATION_CONTENT` binding, the Worker stores and serves no package for that release. `APPLICATION_SCREEN_HOSTS` is empty. The file sets no MCP opt-in variable.
 
-The operator sets `SESSION_SECRET`. When the planner configures Browser Start, `scripts/register-values.mjs` records its full register reference in `DEMO_START_CONFIG` and tracks `DEPLOYMENT` in the same file. The script requires the offer's deployment identity to match that setting. Deployment review must still establish that the live Worker carries the reviewed file. Without a valid Start setting, the Worker offers no browser room creation.
+The operator sets `SESSION_SECRET` and keeps `DEPLOYMENT` in a secret binding. When the planner configures Browser Start, `scripts/register-values.mjs` records its full register reference in `DEMO_START_CONFIG`. The script validates the offer against the explicit `--deployment` argument and never adds a tracked variable of that name. If the file already holds `DEPLOYMENT`, the argument must match it. Deployment review must still compare the argument with the deployed version and `/health`, and establish that the Worker carries the reviewed file. Without a valid Start setting, the Worker offers no browser room creation.
 
 ## dap-celld-local
 

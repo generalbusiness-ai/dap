@@ -41,7 +41,8 @@ test("one Worker rotation preserves all other tracked bytes and appends its root
   for (const name of ["demo", "grow", "lending"]) {
     const f = await fixture(t), original = await f.read(name);
     const roots = original.vars.INSTALLED_REGISTER_SCOPES ? JSON.parse(original.vars.INSTALLED_REGISTER_SCOPES) : [original.vars.REGISTER_SCOPE];
-    assert.equal(await f.invoke(args(name)), 0, f.output.join(""));
+    const deployment = original.vars.DEMO_START_CONFIG === undefined ? [] : ["--deployment", JSON.parse(original.vars.DEMO_START_CONFIG).deployment];
+    assert.equal(await f.invoke([...args(name), ...deployment]), 0, f.output.join(""));
     const updated = await f.read(name);
     assert.equal(updated.vars.REGISTER_SCOPE, register);
     assert.deepEqual(JSON.parse(updated.vars.INSTALLED_REGISTER_SCOPES), [...roots, register]);
@@ -57,7 +58,7 @@ test("one Worker rotation preserves all other tracked bytes and appends its root
     } else assert.equal(updated.vars.DEMO_START_CONFIG, undefined);
     // A second committed rotation to the same root cannot duplicate it.
     f.git(["add", "."]); f.git(["-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", "commit", "--quiet", "-m", "TEST first rotation"]);
-    assert.equal(await f.invoke(args(name)), 0);
+    assert.equal(await f.invoke([...args(name), ...deployment]), 0);
     assert.deepEqual(JSON.parse((await f.read(name)).vars.INSTALLED_REGISTER_SCOPES), [...roots, register]);
     assert.equal(f.git(["diff", "--name-only"]), "");
   }
@@ -65,7 +66,7 @@ test("one Worker rotation preserves all other tracked bytes and appends its root
 
 // Invariant: cutover --only removes retired roots without changing resources,
 // and explicit Start metadata binds both full reference and Worker deployment.
-test("demo bootstrap tracks its deployment and only the new full-reference offer", async t => {
+test("demo bootstrap validates explicit deployment without adding a tracked variable", async t => {
   const f = await fixture(t, (name, source) => {
     if (name !== "demo") return source;
     const config = parseConfig(source);
@@ -75,21 +76,31 @@ test("demo bootstrap tracks its deployment and only the new full-reference offer
   assert.equal(await f.invoke([...args(), "--only", ...start]), 0, f.output.join(""));
   const config = await f.read("demo"), policy = smokePolicy(config);
   assert.deepEqual(JSON.parse(config.vars.INSTALLED_REGISTER_SCOPES), [register]);
-  assert.equal(config.vars.DEPLOYMENT, "TEST-demo");
+  assert.equal(Object.hasOwn(config.vars, "DEPLOYMENT"), false);
   assert.deepEqual(policy.offer.register, { scope: register, genesis });
   assert.equal(policy.offer.definition, "platform:register@28");
-  assert.equal(policy.offer.deployment, config.vars.DEPLOYMENT);
+  assert.equal(policy.offer.deployment, "TEST-demo");
   f.git(["add", "."]); f.git(["-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", "commit", "--quiet", "-m", "TEST bootstrapped offer"]);
-  assert.equal(await f.invoke(["demo", "--register", next, "--genesis", genesis]), 0, f.output.join(""));
+  const committed = await f.snapshot();
+  assert.equal(await f.invoke(["demo", "--register", next, "--genesis", genesis]), 1);
+  assert.deepEqual(await f.snapshot(), committed);
+  assert.equal(await f.invoke(["demo", "--register", next, "--genesis", genesis, "--deployment", "TEST-wrong"]), 1);
+  assert.deepEqual(await f.snapshot(), committed);
+  assert.equal(await f.invoke(["demo", "--register", next, "--genesis", genesis, "--deployment", "TEST-demo"]), 0, f.output.join(""));
   const rotated = await f.read("demo");
   assert.deepEqual(smokePolicy(rotated).offer.register, { scope: next, genesis });
-  assert.equal(rotated.vars.DEPLOYMENT, "TEST-demo");
+  assert.equal(Object.hasOwn(rotated.vars, "DEPLOYMENT"), false);
   assert.deepEqual(JSON.parse(rotated.vars.INSTALLED_REGISTER_SCOPES), [register, next]);
 });
 
 // Invariant: malformed or ambiguous input never changes a tracked byte.
 test("invalid names, references, metadata and dirty target refuse before tracked writes", async t => {
-  const f = await fixture(t);
+  const f = await fixture(t, (name, source) => {
+    if (name !== "demo") return source;
+    const config = parseConfig(source);
+    delete config.vars.DEMO_START_CONFIG; delete config.vars.DEPLOYMENT;
+    return JSON.stringify(config, null, 2) + "\n";
+  });
   for (const argv of [
     args("artroom-scope"), args("sandbox"), args("unknown"), [...args(), "--only", "--only"],
     ["demo", "--register", "sc_invalid", "--genesis", genesis],

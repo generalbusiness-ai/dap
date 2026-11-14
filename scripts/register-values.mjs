@@ -35,9 +35,10 @@ function argumentsOf(argv) {
   }
   if (!["demo", "grow", "lending"].includes(name)) throw Error("Choose demo, grow or lending.");
   if (!values["--register"] || !values["--genesis"]) throw Error("Supply --register and --genesis.");
-  const bootstrap = ["--start-origin", "--deployment", "--definition"].filter(key => Object.hasOwn(values, key));
-  if (bootstrap.length !== 0 && (bootstrap.length !== 3 || name !== "demo")) throw Error("Demo Start needs all three explicit metadata arguments.");
+  const bootstrap = ["--start-origin", "--definition"].filter(key => Object.hasOwn(values, key));
+  if (bootstrap.length !== 0 && (bootstrap.length !== 2 || !values["--deployment"] || name !== "demo")) throw Error("Demo Start needs all three explicit metadata arguments.");
   return { name, register: values["--register"], genesis: values["--genesis"], only: values["--only"] === true,
+    deployment: values["--deployment"],
     ...(bootstrap.length ? { start: { origin: values["--start-origin"], deployment: values["--deployment"], definition: values["--definition"] } } : {}) };
 }
 
@@ -115,15 +116,17 @@ export async function registerValuesSource(source, options) {
   const scopes = options.only ? [options.register] : [...new Set([...installed.scopes, options.register])];
   const updates = { REGISTER_SCOPE: options.register, ARTIFACTS_CONFIG: JSON.stringify({ ...artifacts, registerScope: options.register }),
     INSTALLED_REGISTER_SCOPES: JSON.stringify(scopes) };
-  const existingStart = vars.DEMO_START_CONFIG === undefined ? null : native.demoCreationConfig(vars.DEMO_START_CONFIG, vars.DEPLOYMENT, vars);
+  if (options.deployment !== undefined && vars.DEPLOYMENT !== undefined && vars.DEPLOYMENT !== options.deployment) throw Error("Start deployment differs.");
+  if (vars.DEMO_START_CONFIG !== undefined && options.deployment === undefined) throw Error("Supply --deployment to validate the existing Start setting.");
+  if (options.deployment !== undefined && !options.start && vars.DEMO_START_CONFIG === undefined) throw Error("Deployment needs an existing Start setting or complete bootstrap metadata.");
+  const existingStart = vars.DEMO_START_CONFIG === undefined ? null : native.demoCreationConfig(vars.DEMO_START_CONFIG, options.deployment, vars);
   if (vars.DEMO_START_CONFIG !== undefined && !existingStart) throw Error("Existing Start metadata does not agree.");
   if (options.start) {
     let origin;
     try { origin = new URL(options.start.origin); } catch { throw Error("Invalid Start origin."); }
     if (origin.protocol !== "https:" || origin.origin !== options.start.origin || origin.username || origin.password
       || vars.PUBLIC_ORIGIN !== undefined && vars.PUBLIC_ORIGIN !== options.start.origin) throw Error("Start origin differs.");
-    if (options.name !== "demo" || vars.DEPLOYMENT !== undefined && vars.DEPLOYMENT !== options.start.deployment) throw Error("Start deployment differs.");
-    updates.DEPLOYMENT = options.start.deployment;
+    if (options.name !== "demo") throw Error("Start bootstrap requires demo.");
     updates.DEMO_START_CONFIG = JSON.stringify({ v: 3, ...options.start, register: { scope: options.register, genesis: options.genesis } });
   } else if (existingStart) {
     updates.DEMO_START_CONFIG = JSON.stringify({ ...JSON.parse(vars.DEMO_START_CONFIG), register: { scope: options.register, genesis: options.genesis } });
@@ -131,7 +134,7 @@ export async function registerValuesSource(source, options) {
   const candidate = replaceVars(source, updates), next = parseConfig(candidate), roots = native.readInstalledRegisters(next.vars);
   if (roots.kind !== "pinned" || roots.scope !== options.register) throw Error("Candidate register settings do not agree or exceed 32 roots.");
   if (next.vars.DEMO_START_CONFIG !== undefined) {
-    const start = native.demoCreationConfig(next.vars.DEMO_START_CONFIG, next.vars.DEPLOYMENT, next.vars);
+    const start = native.demoCreationConfig(next.vars.DEMO_START_CONFIG, options.deployment, next.vars);
     if (!start || start.current.register.genesis !== options.genesis || start.current.register.scope !== options.register) throw Error("Candidate Start metadata does not agree.");
   }
   smokePolicy(next);

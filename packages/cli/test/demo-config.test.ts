@@ -73,7 +73,7 @@ test("dap-demo has private namespaces, enforced index and the Grow serving bound
   expect(artifacts).not.toBeNull();
   expect(artifacts).toEqual({ registerScope: demo.vars.REGISTER_SCOPE, namespace: "dap-demo", host: "6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net", maxBytes: 10485760, credentialIdentity: "adapter-attempt" });
   for (const field of ["SERVING_CREATION_KEY_PER_HOUR", "SERVING_CREATION_ADDRESS_PER_HOUR", "SERVING_READ_KEY_PER_MINUTE", "SERVING_READ_ADDRESS_PER_MINUTE"]) expect(demo.vars[field]).toBe(grow.vars[field]);
-  for (const field of ["ALLOW_OPEN_CREATION", "SESSION_SECRET"]) expect(demo.vars).not.toHaveProperty(field);
+  for (const field of ["ALLOW_OPEN_CREATION", "DEPLOYMENT", "SESSION_SECRET"]) expect(demo.vars).not.toHaveProperty(field);
 
 });
 
@@ -92,10 +92,13 @@ test("hosted register settings and optional Start metadata agree within each Wor
       expect(new Set(roots.scopes).size, name).toBe(roots.scopes.length);
     }
     if (vars.DEMO_START_CONFIG !== undefined) {
-      const start = demoCreationConfig(vars.DEMO_START_CONFIG, vars.DEPLOYMENT, vars);
+      const metadata = JSON.parse(vars.DEMO_START_CONFIG);
+      // Source cannot read the Worker's secret DEPLOYMENT binding. The helper
+      // checks it against the operator's explicit argument before writing.
+      const start = demoCreationConfig(vars.DEMO_START_CONFIG, metadata.deployment, vars);
       expect(start, name).not.toBeNull();
       expect(start?.current.register.scope, name).toBe(vars.REGISTER_SCOPE);
-      expect(start?.current.deployment, name).toBe(vars.DEPLOYMENT);
+      if (vars.DEPLOYMENT !== undefined) expect(start?.current.deployment, name).toBe(vars.DEPLOYMENT);
     }
   }
 });

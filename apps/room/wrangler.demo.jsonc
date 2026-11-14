@@ -1,7 +1,8 @@
 // File-owned register settings agree with the dap-demo Artifacts namespace.
 // register-values.mjs updates the primary and installed roots together. An
-// optional Start setting records the full reference and actual DEPLOYMENT.
-// SESSION_SECRET stays private. DEPLOYMENT is public in /health.
+// optional Start setting records the full reference and deployment identity.
+// DEPLOYMENT remains an operator-set secret binding, checked explicitly when
+// updating Start. SESSION_SECRET stays private.
 // Planner preserves this Worker's private namespaces, enforced index and limits.
 {
   "name": "dap-demo",
