@@ -205,7 +205,7 @@ export function admitRetainedResultContext(context: DeliveryContext, actual: Del
 }
 
 /** Take owned snapshots before any rule can run or state view can change. */
-type ReplayAsked = RuntimeAsked;
+type ReplayAsked = Exclude<RuntimeAsked, { body: unknown }>;
 export function replayContext<C extends Reading & { source?: Source | null }>(context: C, assumed: ReplayAssumptions, asked: ReplayAsked): C | null {
   if (!assumed || !Array.isArray(assumed.facts) || context.source && assumed.source || !isEntry(assumed.recorded)) return null;
   const freeze = (value: unknown): void => {

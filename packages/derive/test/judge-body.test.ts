@@ -165,7 +165,7 @@ test("the keyless body draws on the same holder account and stops when its reque
   const scope = new Works(definition);
   expect(scope.start()).toBe("written");
   const job = scope.last.seq;
-  const body = () => ({ kind: "use", ...on(scope, job), fields: { peer: otherLane } });
+  const body = () => ({ kind: "use", on: job, expected: { on: scope.item(job).revision }, fields: { peer: otherLane } });
   const context = () => ({ ...scope.context(), platform: scope.rules, actor: rita.key });
   const allowed = judgeActBody(scope.state, definition, body(), context());
   expect(allowed.result).toBe("write");
