@@ -1,0 +1,14 @@
+{
+  "sealedAt": "2026-11-14T12:48:56.359355+00:00",
+  "retainUntil": "2026-12-14T12:48:56.359355+00:00",
+  "minimumRetentionDays": 30,
+  "evidenceDirectory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-reproduction-attempt1",
+  "manifestSha256": "2359201c508da86dc925376d7f292711cbf32412ab1216e826460cf338dd0472",
+  "sha256SumsSha256": "93ac0c340fbfc478bfa0f5a67cda8073e7c1ac72de3414b3e6244ba4ce3879cb",
+  "payloadFiles": 193,
+  "checksumRows": 194,
+  "verifiedReadOnlyFiles": 195,
+  "verifiedReadOnlyDirectories": 43,
+  "head": "0012cdf93d4bc8d7b3a0212f5ec9c74cbaa33f87",
+  "tree": "009a3609359a809013967225f0f5e470375d13d6"
+}
