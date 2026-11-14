@@ -24,9 +24,10 @@ Its grant holds these members:
 
 The doc comment states the limits of a prediction with this grant:
 
-- It never answers `unauthorized` for an act whose `grant` states an action.
-  A mark at `grant` that states no action runs its rule, and that rule can
-  still refuse.
+- When the actor's key matches the signed intent and the scope matches
+  the judged scope's full reference, including genesis, the prediction never
+  answers `unauthorized` for an act whose `grant` states an action. A mark at
+  `grant` that states no action runs its rule, and that rule can still refuse.
 - It serves no row of `observes`. Under a definition that states such rows,
   a prediction can answer `authority-unavailable` where the scope writes.
 - The judge checks the intent's `notAfter` against the caller's clock. A
@@ -40,7 +41,8 @@ be optional. A `fresh: null` grant type in `Presented` would widen
 request forbids a change to an entry. No judge rule, entry or wire form
 changes.
 
-No runtime path presents this grant. `packages/scope/src/authority.ts:341`
+No deployed entry path presents this grant. Trusted test adapters can
+present stand-in grants. `packages/scope/src/authority.ts:341`
 and `:397` present only the grant that `judgeGrant` answers `current`, and
 that grant is `grantFrom(use)`, which holds the proof. A replay with
 `grants: "proven"`, the default and the command's setting
@@ -69,18 +71,24 @@ fixture grant keeps its bytes, and no digest moves. Its callers in
 
 `packages/derive/test/prediction-grant.test.ts` holds three cases:
 
-1. A lane scope judges rita on a grant that an observation gives, so
-   `agrees` holds for it. For an `offer` and an `assign`, the prediction
-   with `predictionGrant` on the same state and signed bytes writes, with
-   the scope's effects and sends. Its sealed entry has the bytes of the
-   scope's entry in every member except `input.authority`. The scope's
-   entry records the proven grant, and the prediction records the
-   stand-in. A refused act gives the scope's reason.
+1. A memory `Scope` fixture presents a scripted current grant from an
+   observation, so `agrees` holds for it. For an `offer` and an `assign`,
+   the prediction with `predictionGrant` on the same state and signed bytes
+   writes, with the fixture's effects and sends. The test replaces the
+   prediction's `input.authority` with the fixture entry's proven grant,
+   then compares their canonical bytes. A refused act gives the fixture's
+   reason. This case does not establish identical entry hashes or admission
+   through a native runtime entry path.
 2. A reading 120 seconds after the scope's predicts `expired`, and the
    scope writes the same bytes.
 3. Under a definition whose act `own` states a row for the signer's own
    member, the scope writes on its grant's proof, and the prediction
    answers `authority-unavailable`.
+
+Existing grant and judge owners cover wrong keys and scope references
+with another genesis. This documentation follow-up adds no duplicate
+negative cases. Owning checks, the kernel boundary check and the gate
+remain **UNRUN** for this head.
 
 ## Kernel review
 
