@@ -1,0 +1,4 @@
+{
+  "qualification": "UNRUN. Exactly one maintained gate after focused PASS/END and root's separate START.",
+  "commands": [{"name": "full-gate", "cwd": "/Users/hughpyle/play/artroom/.builder-worktrees/cut-r-r2-preparation-20261114", "argv": ["npm", "run", "gate"], "deadline_seconds": 14400}]
+}

@@ -1,0 +1,11 @@
+{
+  "qualification": "Source-only gate preparation, unexecuted. Hashes bind scratch plan bytes, not a successful preflight or gate.",
+  "files": [
+    {"path": "RUNORDER.md", "bytes": 7436, "sha256": "a32893eba3d0e7795041f69ac57de2a4f40dca80c9596df0ba8a203dbecfc9ad"},
+    {"path": "commands.json", "bytes": 296, "sha256": "6cf7d4430d112b56a1185755b93908b2c21f435ad59341a03dad46bbfdc2d886"},
+    {"path": "gate-plan.json", "bytes": 1589, "sha256": "30e03701b51b632f77fc20cdf5202a7ebdfe4d2834a15321ab8f51dcef63fe83"},
+    {"path": "gate-supervisor.py", "bytes": 31294, "sha256": "7c156986f2092db4bbdc29a964c96b2f27082ffd9ef470ac3193977adacc1b13"},
+    {"path": "frozen-inputs.json", "bytes": 2554558, "sha256": "a7ba2f7b74f3f68da8b957ec8abaadce95b68605e9aba840c9a01722e4571c8d"},
+    {"path": "dependency-shape.json", "bytes": 1129743, "sha256": "36441e2de6bc6be04d10bb0cbcc069e05e4dd387739ae81c0c7c1ee6ed0ad2fd"}
+  ]
+}
