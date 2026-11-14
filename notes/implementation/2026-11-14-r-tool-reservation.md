@@ -50,8 +50,30 @@ Root granted source edits only while C2 owns execution. No compiler,
 tests, formatter, build, model or producer has run for these production
 edits. The typed declaration and story have changed; their generated
 JSON and pin still retain the earlier bytes until normal generation
-receives an execution grant. The old literal-only pin script cannot
-read the current typed authorship and must not generate these outputs.
+receives an execution grant.
+
+The existing Lending pin helper now imports `lendingSource`, calls the
+maintained typed compiler and shared canonical API, and awaits
+`lendingStory()`. It computes and formats all three complete outputs
+before writing any file. From the repository root, run:
+
+```sh
+node --import tsx examples/lending/scripts/pin.mjs
+```
+
+The output boundary is `examples/lending/definition.json`,
+`examples/lending/pin.ts` and
+`examples/lending/scenarios/application.json`. The pin keeps its existing
+header. The source closure includes Lending's definition and roles,
+story, package/view metadata and brand declarations, with the maintained
+define, bytes, contract and derive APIs. Story generation signs fixture
+intents using explicit public TEST actors and checks their real
+in-memory judgments and folds. It uses no release or operator signer
+and starts no Native scope, browser or network service.
+
+This helper repair remains unrun. The existing definition/pin owner and
+retained-story byte owner will validate its outputs after execution
+receives a grant; no separate test mirrors the generator.
 
 Lending remains at version `0.2.0`. The committed identifiers and
 signatures remain unchanged. After normal generation identifies the

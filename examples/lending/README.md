@@ -91,7 +91,7 @@ browser screen keeps its circulation controls.
 | `definition.ts` | The `lending` definition: a `library` item that holds the destination and many `thing` items; `publish` refreshes a thing's page without changing it. |
 | `definition.json` | Readable declaration source; canonicalize its parsed value before `--value`. |
 | `pin.ts` | The digest of those bytes, `LENDING_DEFINITION`. |
-| `scripts/pin.mjs` | Historical literal-only authoring helper. It cannot read the current typed definition; use the typed authorship path to regenerate the declaration and pin. |
+| `scripts/pin.mjs` | Compiles the typed definition and judges its story, then writes the declaration JSON, pin and retained scenario. |
 | `shelf.ts` | The shelf page of one thing as markdown, with members' text made literal; and every thing, live or gone, read from the journal. |
 | `browser/publication.ts` | Reads a published page and compares its visible text with the page the journal implies, at one observed commit. |
 | `test-support.ts` | The in-memory scope, rules and stand-in destination that `definition.test.ts` uses. |
@@ -107,6 +107,19 @@ browser screen keeps its circulation controls.
 | `demo-script.md` | The script for the recording. |
 | `definition.test.ts` | Plain-function tests: the bytes and the pin, the story of Nasruddin and the pot with the page each act sends, shelf paths, and the bounds. Grants are scripted. |
 | `shelf.test.ts` | Tests of the shelf page: members' text made literal, and things that are gone read from the journal. |
+
+From the repository root, regenerate those three files with:
+
+```sh
+node --import tsx examples/lending/scripts/pin.mjs
+```
+
+The helper writes only `definition.json`, `pin.ts` and
+`scenarios/application.json` in this directory. It compiles the complete
+typed definition and judges the story with its public TEST actors before
+writing any output. The story signs fixture intents with TEST keys; it
+uses no release or operator signer. The helper changes no application
+manifest, version, release identifiers or signatures.
 
 The scenario on real scopes is
 `packages/scope/test/lending.test.ts`. It installs the application-publication cohort
