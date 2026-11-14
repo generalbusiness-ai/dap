@@ -27,11 +27,29 @@ test("one prepaid terminal write matches its shared price and needs no remaining
   const id = `sha256:${"f".repeat(64)}`, largest = { v: 1, at: { scope: id, genesis: id }, reason: "r".repeat(128),
     proofReason: "malformed-or-unsupported", chainReason: "admission-limit", position: { seq: Number.MAX_SAFE_INTEGER, hash: id } };
   expect(utf8(canonicalize(largest)).length).toBeLessThanOrEqual(512);
-  await rows(lane, store => {
+  await lane.inside(state => {
+    const sql = archiveSql(state), writes: { query: string; bindings: readonly SqlValue[] }[] = [];
+    let capture = false;
+    const store = new ArchiveRows({ transaction: work => sql.transaction(work), exec: (query, ...bindings) => {
+      if (capture) writes.push({ query, bindings: [...bindings] });
+      return sql.exec(query, ...bindings);
+    } }, lane.at);
     const price = forecastArchiveTerminalWrite(512), budget = new ArchiveBudget(price), halt = store.prepareHalt(budget);
     expect(budget.admitted()).toEqual(price);
     expect(budget.canSpend({ calls: 1 })).toBe(false); expect(budget.canSpend({ inputWork: 1 })).toBe(false);
+    capture = true;
     halt("application-policy-unavailable", { chainReason: "admission-limit", position: head });
+    capture = false;
+    // Count the actual prepaid SQL only; later observation reads are outside
+    // this interval. An extra unpriced write must fail independently of the
+    // shared forecast used by both the ledger and the native writer.
+    expect(writes).toHaveLength(price.calls);
+    expect(writes.map(write => write.bindings[0])).toEqual(["archive-terminal-1", "archive-wake-1"]);
+    expect(writes.every(write => write.query.startsWith("INSERT INTO meta "))).toBe(true);
+    const bindingBytes = writes.reduce((sum, write) => sum + write.bindings.reduce<number>((bytes, value) => {
+      expect(typeof value).toBe("string"); return bytes + utf8(value as string).length;
+    }, 0), 0);
+    expect(bindingBytes).toBeLessThanOrEqual(price.metadata);
     expect(budget.admitted()).toEqual(price);
     expect(store.terminal()).toEqual({ reason: "application-policy-unavailable", chainReason: "admission-limit", position: head });
     expect(store.storedWake()).toEqual({ pending: false, stopped: true, next: null });

@@ -568,7 +568,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
                 };
               } });
             } };
-            let trust = canonicalize([{ release: packet.ids.release, publisher: packet.package.release.manifest.publisher }]);
+            let trust = canonicalize(f.trust);
             const peers = namespace(selected), preparation = new ReadPreparation(sql, {
               policy: () => "TEST joint immutable archive/admission chain",
               declared: bytes => core.validate(bytes), platform: named => core.platform(named),
@@ -582,7 +582,8 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
               expect(admitted?.current()).toBe("allowed");
               if (!archived || archived === "unpackaged") throw Error("The archive must prove the actual installed release");
               expect(archived.ids.release).toBe(packet.ids.release);
-              trust = canonicalize([{ release: textDigest("TEST unrelated trusted release"), publisher: packet.package.release.manifest.publisher }]);
+              trust = canonicalize(f.trust.map(row => ({ ...row,
+                release: row.release === packet.ids.release ? textDigest("TEST unrelated trusted release") : row.release })));
               expect(admitted?.current()).toBe("application-revoked");
             }
             expect(admissionCalls).toBeLessThanOrEqual(APPLICATION_ACT_ADMISSION_BOUNDS.rpcs);
