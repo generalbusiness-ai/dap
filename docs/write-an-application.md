@@ -516,7 +516,7 @@ one that can. [The dap command](cli.md) lists the current cohorts.
 
 Declare a genesis field named `destination`, with type `scope` and kind
 `destination`. Keep that reference in a fixed item slot. The directory
-supplies its own recorded destination, including its incarnation. Do not
+supplies its own recorded destination, including its genesis. Do not
 include `destination` in the caller's genesis `values`. The factory
 refuses it even when the definition declares no such field.
 

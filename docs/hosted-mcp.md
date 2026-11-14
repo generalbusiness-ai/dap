@@ -385,7 +385,7 @@ issuer is `issueInvitation` in the [CLI API](../packages/cli/src/invitations.ts)
 3. The controller (or an admin) signs a **control request** with their own
    member key and sends `create` with the link as the body. The Worker's
    registry checks the signature, that the request is for this service and
-   this membership with its incarnation, the body's digest, the deadline
+   this membership with its genesis, the body's digest, the deadline
    (at most 15 minutes ahead), and the signer's current authority, read
    from the membership now: an active key of an active member who holds
    `membership.manage` or is the agent's recorded controller. Then it
@@ -418,7 +418,7 @@ does not do that cleanup. A refusal is a fixed body that names a rule,
 never a value:
 
 - `403` for a bad signature, another service, another repository or
-  incarnation, a revoked key, an ended member or a signer without
+  genesis, a revoked key, an ended member or a signer without
   authority.
 - `400` for a binding that does not match the route, a body digest that
   differs or a deadline out of range.

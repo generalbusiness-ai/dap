@@ -793,7 +793,7 @@ accepted-key reuse, rollback, refusal, unknown and late replies. The late
 reply records confirmed metadata with no plaintext after a replacement
 takes the eighth place, and the next fresh mint still refuses `limit`. The second
 uses real SQLite with scripted opening entries and grants. It covers
-private expiry, legacy and incarnation boundaries, a 64-row cleanup quantum,
+private expiry, legacy rows, other-genesis boundaries, a 64-row cleanup quantum,
 and the last representable clock; it proves no Native authority or provider
 behavior. The existing read-token owner retains its one-time-read,
 historical-hours, and replay witnesses.

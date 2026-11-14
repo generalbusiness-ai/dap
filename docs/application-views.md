@@ -291,7 +291,7 @@ Other members' reports do not erase this recorded state. The separate
 
 The presence item's `reportedAt` slot has native type `fact` and is written
 from `self`. Its raw local value is the report's entry position, qualified
-by the projection's complete Site scope and incarnation. It is not the
+by the projection's complete Site reference, its scope ID and genesis. It is not the
 item revision. A reader can resolve that known position directly to its
 entry and hash. A refused, missing or unavailable lookup supplies no fact.
 Provisioning leaves the room and report slots null.
@@ -475,7 +475,7 @@ and app callers.
 
 The service resolves typed party and journal signer fields into
 `data.members.records`, keyed by the canonical full member reference.
-Membership incarnation is part of that key. The table holds at most 32
+The membership genesis is part of that key. The table holds at most 32
 distinct references, including controllers. `data.members.overflow` counts
 references beyond the limit, and the kit shows that count. A reference
 outside the table, or one the service cannot read, renders as Member

@@ -306,7 +306,7 @@ only the one repository in the installation.
    ```
 
    Record the destination's full scope reference, including its
-   incarnation, and the branch chosen at creation. The register still
+   genesis, and the branch chosen at creation. The register still
    records host `none`.
 8. Write the exact authorization pair in a nonsecret `bindings.json`, in
    the [binding format](hosts.md#github-host-githubcom). Use the actual

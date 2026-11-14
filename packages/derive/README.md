@@ -130,7 +130,7 @@ A judge answers one of these. Only the first records anything.
 | `unavailable` | Not judged, with a reason. It is offered again. An entry that judges time is `clock-behind` while the clock is behind. |
 | `repeat` (`accepted-before` for an act) | Already recorded, by the entry of that `seq`. |
 | `due` | A transition is due. Nothing is written and the drain runs first. |
-| `routing` | A delivery addressed to another scope or incarnation. |
+| `routing` | A delivery addressed to another scope or genesis. |
 | `refused` | An act that is refused, with the head it was judged at, and with the name its failed guard declares, if it declares one; or an input the scope can never write. |
 | `mismatch` | An act whose key is on another sealed intent. |
 
@@ -142,7 +142,7 @@ What the caller supplies for each input:
 | Input | Beside the clock and bounds |
 |---|---|
 | An act | Each grant the act may be judged on, with whether it is current, as the commit decided it from what was read before the turn; or null when nothing was read, which is `authority-unavailable`; each fetched foreign entry its fields name; the prepared rule results; `own`, the reader of the scope's own entries, for a local fact. |
-| A genesis | The scope's own name and a new incarnation. For a child, the source entry: the creator's entry that holds the `create` send. |
+| A genesis | The scope's own name and a new genesis nonce. For a child, the source entry: the creator's entry that holds the `create` send. |
 | A delivery | The send's address, source fact, ordinal and message; the source entry as read from the source scope. For a result, this scope's own entry that sent the request. |
 | A diagnosis | The request by `seq` and ordinal, the attempt log, and this scope's own entry that sent the request. |
 | An outcome | The pinned owner rules, the retained foreign entries of its origin, its observations and the canonical bytes of values that the observations or evidence name. |
