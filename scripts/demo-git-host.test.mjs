@@ -6,15 +6,18 @@ import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
-import { DOMAINS } from "@generalbusiness/dap-contract";
-import { b64url, domainBytes, isScopeId, newIncarnation, publicKeyOf, textDigest, unb64url } from "@generalbusiness/dap-bytes";
-import { buildCreation, buildPlan, DemoPreparationError, plan, postInstall, prepare, readPrivateState } from "./demo-git-host.mjs";
+import { tsImport } from "tsx/esm/api";
+
+// This file belongs to the plain Node stage. Its production dependency graph
+// uses TypeScript syntax that Node's type stripping alone cannot load.
+const { DOMAINS } = await tsImport("@generalbusiness/dap-contract", import.meta.url);
+const { b64url, domainBytes, isFactRef, isScopeId, publicKeyOf, textDigest, unb64url } = await tsImport("@generalbusiness/dap-bytes", import.meta.url);
+const { buildCreation, buildPlan, DemoPreparationError, plan, postInstall, prepare, readPrivateState } = await tsImport("./demo-git-host.mjs", import.meta.url);
 const script = fileURLToPath(new URL("./demo-git-host.mjs", import.meta.url));
 const checkout = fileURLToPath(new URL("../", import.meta.url));
-const loader = process.execArgv.filter((argument) => !argument.startsWith("--test"));
 // The pinned loader uses deprecated module.register on Node26. Suppress only
 // that known runtime warning when checking the CLI's own structured events.
-const childRuntime = [...loader, "--disable-warning=DEP0205"];
+const childRuntime = ["--import", import.meta.resolve("tsx"), "--disable-warning=DEP0205"];
 
 // Invariant: actual filesystem preparation preserves private keys on repeat,
 // restricts custody to the owner, and exposes a genuine signed public install
@@ -74,7 +77,9 @@ test("owner-only exclusive preparation keeps keys off stdout and locks one genui
     await writeFile(legacyPath, legacyBytes, { flag: "wx", mode: 0o600 });
     const reopened = await readPrivateState(legacyDirectory);
     const resumed = buildPlan(reopened, "2030-01-01T00:10:00Z", now);
-    const fact = { at: { scope: resumed.registerScope, inc: newIncarnation(new Uint8Array(16).fill(2)), kind: "register" }, seq: 0, hash: textDigest("TEST scripted accepted install") };
+    const genesis = textDigest("TEST scripted accepted install");
+    const fact = { at: { scope: resumed.registerScope, genesis }, seq: 0, hash: genesis };
+    assert.equal(isFactRef(fact), true);
     const creation = buildCreation(reopened, resumed, { answer: "accepted", receipt: { fact, definition: resumed.definition } }, 0, "2030-01-01T00:10:00Z", now);
     assert.equal(resumed.creation.idempotencyKey, "demo-found-retained-v1");
     assert.equal(creation.intent.idempotencyKey, "demo-found-retained-v1");
