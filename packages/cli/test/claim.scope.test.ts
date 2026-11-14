@@ -2,7 +2,7 @@ import { describe, expect, test, onTestFinished } from "vitest";
 import type { Entry, OperationId, ScopeId, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, intentDigest, isSeed, LATE, scopeIdOf, seedDigest, timeMs, timeOf, within } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
-import { DIRECTORY_OF, repositoryName } from "@generalbusiness/dap-platform";
+import { BASE_COHORT, DIRECTORY_OF, repositoryName } from "@generalbusiness/dap-platform";
 import { net } from "@generalbusiness/dap-scope/testing";
 import { ScriptedClock } from "../../scope/src/testing.ts";
 import { env } from "cloudflare:test";
@@ -105,7 +105,7 @@ async function resumed(owner: SessionOwner, cleanups: (() => void)[], resourcesA
       // response metadata is scripted; the actual core's receipt is checked.
       const actual = await response.json() as { answer: string; receipt: { definition: string } };
       owner.active();
-      expect([actual.answer, actual.receipt.definition]).toEqual(["accepted", "platform:register@26"]);
+      expect([actual.answer, actual.receipt.definition]).toEqual(["accepted", BASE_COHORT.register]);
       return Response.json({ ...actual, receipt: { ...actual.receipt, definition: "platform:register@1" } });
     }
     if (kind === after) { after = null; await response.body?.cancel(); owner.active(); throw new Error("scripted loss after accepted enrollment"); }
@@ -309,7 +309,7 @@ async function resumed(owner: SessionOwner, cleanups: (() => void)[], resourcesA
   const resumedClaim = await run("claim", "demo");
   expect(resumedClaim.code, resumedClaim.lines.join("\n")).toBe(0);
   const config = (await configOf())!;
-  expect([config.claim, config.handle, resumedClaim.lines[1], resumedClaim.lines[2]]).toEqual([undefined, "@rita", "Definitions: platform:directory@25, platform:membership@12, platform:rules@10, platform:destination@19.", expect.stringMatching(/^You are @rita, an admin, on key key_\S+; your inbox is sc_\S+\.$/)]);
+  expect([config.claim, config.handle, resumedClaim.lines[1], resumedClaim.lines[2]]).toEqual([undefined, "@rita", `Definitions: ${BASE_COHORT.directory}, ${BASE_COHORT.membership}, ${BASE_COHORT.rules}, ${BASE_COHORT.destination}.`, expect.stringMatching(/^You are @rita, an admin, on key key_\S+; your inbox is sc_\S+\.$/)]);
   const D = platform(config.repository!.directory.scope);
   expect((await owner.required(() => D.entries()))[0]!.uses.map((use) => use.fact.seq)).toContain((await creates())[1]!.seq);
   // No third found; each creation attempt was sent once, by the pass that the register's first call after its restart started.

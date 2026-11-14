@@ -6,14 +6,14 @@ import type { Config, PlannedInstall } from "./store.ts";
 import { canonicalize, intentDigest, isReceipt, isScopeId, isSignedIntentShape, parseStrict, scopeIdOf, textDigest, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { create, signedIntent, type Signing } from "@generalbusiness/dap-client";
 import { type Digest, type KeyId, type PlatformDefinition, PROPOSED_BOUNDS, type ScopeId, type SignedIntent } from "@generalbusiness/dap-contract";
-import { CLI_INSTALL_REGISTERS, answersVersionQuestion, ARCHIVE_DEVICE_APPLICATION_COHORT, NEWEST, platform, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+import { CLI_INSTALL_REGISTERS, answersVersionQuestion, ARCHIVE_DEVICE_APPLICATION_COHORT, BASE_COHORT, NEWEST, platform } from "@generalbusiness/dap-platform";
 
 const NEW_REGISTER = NEWEST["platform:register"]!;
 
 // ---------------------------------------------------------------- the commands
 
-/** Named creation families; host none defaults to the unpublished family. */
-export type InstallCohort = "own-agent" | "failed-claim" | "repository-binding" | "separate-recovery" | "commons" | "unpublished" | "file-publication" | "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-device-publication" | "archive-certified-rules" | "hardened-certified-rules" | "archive-declared-application" | "invitation-key";
+/** Named creation families; every host, none included, defaults to the base family (ruling bccd8dd1, Q5). */
+export type InstallCohort = "base" | "own-agent" | "failed-claim" | "repository-binding" | "separate-recovery" | "commons" | "unpublished" | "file-publication" | "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-device-publication" | "archive-certified-rules" | "hardened-certified-rules" | "archive-declared-application" | "invitation-key";
 
 export type RegisterPolicy = "keys" | "open";
 
@@ -23,10 +23,11 @@ const INSTALL_COHORTS = CLI_INSTALL_REGISTERS;
 
 /** New plans only. Historical selectors remain in INSTALL_COHORTS for retained custody.
  * The owning test pins these register versions to Scope's CREATION_COHORTS. */
-export const CREATION_INSTALL_COHORTS = ["own-agent", "failed-claim", "repository-binding", "separate-recovery", "commons", "unpublished", "application", "archive-device-application", "archive-device-publication", "archive-certified-rules", "hardened-certified-rules"] as const satisfies readonly InstallCohort[];
+export const CREATION_INSTALL_COHORTS = ["base", "own-agent", "failed-claim", "repository-binding", "separate-recovery", "commons", "unpublished", "application", "archive-device-application", "archive-device-publication", "archive-certified-rules", "hardened-certified-rules"] as const satisfies readonly InstallCohort[];
 
 function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === undefined) return undefined;
+  if (cohort === "base") return INSTALL_COHORTS.base;
   if (cohort === "own-agent") return INSTALL_COHORTS["own-agent"];
   if (cohort === "failed-claim") return INSTALL_COHORTS["failed-claim"];
 
@@ -66,8 +67,8 @@ function installSelection(options: InstallOptions, retained = false): PlatformDe
   }
   const selected = selectedRegister(options.cohort);
   if (options.host === "none") {
-    if (selected !== undefined && !answersVersionQuestion(selected, "cliNoHostInstallRegister")) return stopCommand(usage("--host none requires the unpublished, repository-binding, own-agent or commons cohort; this run signed and sent nothing."));
-    return selected ?? UNPUBLISHED_COHORT.register;
+    if (selected !== undefined && !answersVersionQuestion(selected, "cliNoHostInstallRegister")) return stopCommand(usage("--host none requires the base, unpublished, repository-binding, own-agent or commons cohort; this run signed and sent nothing."));
+    return selected ?? BASE_COHORT.register;
   }
   if (options.registerPolicy !== "open" || answersVersionQuestion(selected, "cliOpenPolicyExplicitRegister")) return selected;
   if (selected === undefined) return retained ? undefined : NEW_REGISTER;

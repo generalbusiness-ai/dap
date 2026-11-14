@@ -32,6 +32,14 @@ test('a foreign retained plan refuses without changing custody or creating a pro
   assert.deepEqual(await readdir(paths.home), ['config.json']);
 });
 
+test('a plan on the base family refuses with the flag and the cohort that celld runs', async t => {
+  const config = retainedPlan(); config.plan.definition = 'platform:register@28';
+  const paths = await fixture(t, config);
+  await assert.rejects(prepareProject({ origin, ...paths }), error => error instanceof ProjectPreparationError
+    && error.message === 'Project preparation refused: cohort. celld runs the unpublished and repository-binding families: plan with --host none and --cohort unpublished or --cohort repository-binding. Retain any private output for inspection.');
+  await assert.rejects(lstat(paths.out), { code: 'ENOENT' });
+});
+
 test('a new private project preserves the maintained configuration and cannot replace its session custody', async t => {
   const paths = await fixture(t), homeBefore = await readFile(join(paths.home, 'config.json'));
   const previous = process.umask(0o777);

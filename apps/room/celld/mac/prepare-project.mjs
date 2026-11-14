@@ -10,8 +10,14 @@ const worker = fileURLToPath(new URL('../../worker.ts', import.meta.url));
 const absolute = value => typeof value === 'string' && value.length <= 4096 && isAbsolute(value)
   && resolve(value) === value && !/[\x00-\x1f\x7f]/.test(value);
 
+/** What each refused stage adds to its message. */
+const ADVICE = {
+  // Ruling 96676b22: celld keeps its present family in CF-1, and `dap install` defaults to `base`.
+  cohort: ' celld runs the unpublished and repository-binding families: plan with --host none and --cohort unpublished or --cohort repository-binding.',
+};
+
 export class ProjectPreparationError extends Error {
-  constructor(stage) { super(`Project preparation refused: ${stage}. Retain any private output for inspection.`); }
+  constructor(stage) { super(`Project preparation refused: ${stage}.${ADVICE[stage] ?? ''} Retain any private output for inspection.`); }
 }
 
 export async function prepareProject(options) {
@@ -30,8 +36,11 @@ export async function prepareProject(options) {
     stage = 'plan';
     const context = await contextForCelldSmoke({ base: origin, home, fetch: () => { throw Error('HTTP is disabled during preparation'); } });
     const config = await context.store.config();
-    if (config?.v !== 2 || config.service !== origin || config.plan?.service !== origin
-      || !await celldAnswersVersionQuestion(config.plan.definition, "celldPreparedNoHostRegister") || typeof config.plan.register !== 'string'
+    if (config?.v !== 2 || config.service !== origin || config.plan?.service !== origin) throw Error();
+    stage = 'cohort';
+    if (!await celldAnswersVersionQuestion(config.plan.definition, "celldPreparedNoHostRegister")) throw Error();
+    stage = 'plan';
+    if (typeof config.plan.register !== 'string'
       || !/^sc_[a-z2-7]{52}$/.test(config.plan.register)
       || config.plan.founding?.intent?.fields?.host !== 'none' || config.plan.founding.intent.fields.namespace !== '') throw Error();
     const project = JSON.parse(await readFile(maintained, 'utf8'));

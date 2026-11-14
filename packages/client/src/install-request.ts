@@ -6,10 +6,10 @@
  */
 import type { Answer, Digest, PlatformDefinition, Read, ScopeId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, intentDigest, isDigest, isPlatformDefinition, isReceipt, isScopeRef, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, entryHash, intentDigest, isDigest, isPlatformDefinition, isReceipt, isRecord, isScopeRef, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { COMMONS_COHORT, VERSIONS, answersVersionQuestion, mcpApplicationRoomCohort, platform } from "@generalbusiness/dap-platform";
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
-import { readApplicationInstallOptions, readDeviceApplicationInstallOptions, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall } from "./application-install.ts";
+import { readApplicationInstallOptions, readDeviceApplicationInstallOptions, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, signedPublishedApplicationInstall } from "./application-install.ts";
 import { readApplicationPackage } from "./application-package.ts";
 import { applicationScreenPath } from "./application-route.ts";
 import { applicationTrustForSource, readApplicationTrust } from "./application-trust.ts";
@@ -215,6 +215,13 @@ export interface InstallArguments { uri: unknown; release: unknown; roles: unkno
  * Sign one native install under custody and send it. Custody keeps the exact envelope before it is sent, and the same key and
  * meaning send that envelope again. Acceptance records the request; the installation read shows its later state.
  */
+/** The Rules declaration states its install owner as optional: the pin admits an ordinary version 2 package. */
+function ordinaryVersion2(definition: DefinitionLike): boolean {
+  const act: unknown = (definition as unknown as { acts?: Record<string, unknown> }).acts?.["install-application"];
+  const owner: unknown = isRecord(act) && isRecord(act["fields"]) ? act["fields"]["owner"] : undefined;
+  return isRecord(owner) && owner["required"] === false;
+}
+
 export async function installApplication(handle: InstallHandle, custody: Custody, args: InstallArguments, options: InstallOptions): Promise<InstallRequest> {
   const refused = (refusal: InstallRefusal): InstallRequest => ({ outcome: "refused", refusal });
   const key = args.idempotencyKey;
@@ -227,7 +234,9 @@ export async function installApplication(handle: InstallHandle, custody: Custody
   let selected: ReturnType<typeof readApplicationInstallOptions> | ReturnType<typeof readDeviceApplicationInstallOptions>;
   try {
     const ordinary = { rules: room.rules, uri: args.uri, release: args.release, roles: args.roles, values: args.values };
-    selected = answersVersionQuestion(room.cohort.rules, "mcpDeviceInstallOptionsRules") ? readDeviceApplicationInstallOptions({ ...ordinary, owner: args.owner }) : readApplicationInstallOptions(ordinary);
+    // A device Rules pin whose declaration makes the owner optional also installs an ordinary version 2 package.
+    selected = answersVersionQuestion(room.cohort.rules, "mcpDeviceInstallOptionsRules") && (args.owner !== undefined || !ordinaryVersion2(definition))
+      ? readDeviceApplicationInstallOptions({ ...ordinary, owner: args.owner }) : readApplicationInstallOptions(ordinary);
     if (!answersVersionQuestion(room.cohort.rules, "mcpOwnerFieldRules") && args.owner !== undefined) throw Error("this cohort has no owner selection");
   }
   catch { return refused({ refused: "installation" }); }
@@ -247,8 +256,9 @@ export async function installApplication(handle: InstallHandle, custody: Custody
     const fetched = await options.packageBytes(address, PACKAGE_BYTES);
     if (!fetched.ok) throw new PackageUnavailable(fetched.reason);
     const bytes = fetched.bytes;
-    const prepare = answersVersionQuestion(pin, "mcpSemanticInstallSignatureRules") ? signedApplicationInstall2 : signedApplicationInstall;
-    const packet = prepare === signedApplicationInstall2 || "owner" in selected
+    const prepare = answersVersionQuestion(pin, "mcpSemanticInstallSignatureRules") ? signedApplicationInstall2
+      : ordinaryVersion2(definition) ? signedPublishedApplicationInstall : signedApplicationInstall;
+    const packet = prepare !== signedApplicationInstall || "owner" in selected
       ? readPublishedApplicationPackage2(bytes, selected.release, { bytes: PACKAGE_BYTES, definitionBytes: 64 * 1024 })
       : readApplicationPackage(bytes, selected.release, { bytes: PACKAGE_BYTES, definitionBytes: 64 * 1024 });
     if (packet.package.release.manifest.publisher !== allowed.publisher) throw new ApplicationPackageError("invalid");

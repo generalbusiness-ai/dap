@@ -15,7 +15,8 @@ export const deviceApplicationDirectory: PlatformData = {
   } },
 };
 
-function grantOf(given: RuleGiven): DeviceCommandGrant | null {
+/** The checked device grant that the request carries. Null: absent or invalid. */
+export function grantOf(given: RuleGiven): DeviceCommandGrant | null {
   const raw = given.resolved.fields["deviceGrant"], membership = directoryMembership(given.state);
   if (typeof raw !== "string" || utf8(raw).length > DEVICE_GRANT_BYTES || !membership) return null;
   try {

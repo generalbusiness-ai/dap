@@ -275,11 +275,11 @@ dap pack <source-root> --config <relative-file> --publisher <existing-key> --out
 
 Before installation, commit the packet and retain its printed release and
 publisher. The host operator must trust that exact release and publisher.
-The caller needs `application.install` in a compatible room. An ordinary
-v2 package currently needs an existing historical `declared-application`
-room. New room creation does not offer that family. Device-command and
-archive packages have separate room and owner requirements. Do not choose
-one merely to make an ordinary package installable.
+The caller needs `application.install` in a compatible room. A room of the
+`base` cohort, the default for new rooms, installs an ordinary v2 package
+without `--owner`. A device-command package also needs `--owner`.
+[Creation cohorts](https://github.com/generalbusiness-ai/dap/blob/main/docs/cli.md#creation-cohorts) lists the
+cohorts.
 
 Use the immutable packet URI, expected release, and one retained request:
 

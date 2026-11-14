@@ -23,6 +23,7 @@ const AT_7EA170C9: Record<string, string> = {
 test("the install request's declaration digest of each trusted Rules pin is the digest MCP computed before the move", () => {
   const pins = new Set<string>();
   for (const pin of Object.keys(VERSIONS)) { const cohort = mcpApplicationRoomCohort(pin as PlatformDefinition); if (cohort) pins.add(cohort.rules); }
-  expect([...pins].sort()).toEqual(Object.keys(AT_7EA170C9).sort());
+  expect([...pins].sort()).toEqual([...Object.keys(AT_7EA170C9), "platform:rules@15"].sort());
+  pins.delete("platform:rules@15");
   for (const pin of pins) expect(declarationDigest(platform(pin as PlatformDefinition)!.data as unknown as DefinitionLike, "install-application", pin), pin).toBe(AT_7EA170C9[pin]);
 });
