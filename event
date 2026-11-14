@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a77f784ec40b255421ea3d48eede5878771c95ef","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/capacity-retained-rows.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ad50ce027f5e1a69e4ac3b95de5038ac58b09334","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-13-cf1-base-family.md."}
