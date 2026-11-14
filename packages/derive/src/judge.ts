@@ -18,6 +18,7 @@ import type { Signer } from "./attribution.ts";
 import { withinCounts, type Drawn } from "./draws.ts";
 import { requestReservation } from "./request-duties.ts";
 import type { Amount } from "./held.ts";
+import type { ItemDuty } from "./item-duties.ts";
 import { namedBody } from "./program/structure.ts";
 import { executeBody } from "./program/body.ts";
 import { declarationOf } from "./program/declaration.ts";
@@ -25,7 +26,7 @@ import { isIntent, presentedTypes, readFields, type Reading } from "./fields.ts"
 import { covers } from "./grant.ts";
 import type { Judging, ReplayAssumptions } from "./guards.ts";
 import { judgmentFacts, readJudgmentFacts, replayContext, verifiedContext } from "./operand.ts";
-import { alsoItems, giving } from "./handlers.ts";
+import { alsoItems, giving, type ItemSettlement } from "./handlers.ts";
 import { actionOf, atHand, atHandByRows, fieldOutsideType, grantByRule, placeWithoutValue, placesOf, retainedOf, RuleFault, selectedBy, unjudged, type JudgedInput, type ValueRead } from "./marks.ts";
 import { listedBy, rowsOfAct, settle, type Listed, type Needed, type Observing, type Settled } from "./observes.ts";
 import type { Item, StateView } from "./state.ts";
@@ -202,7 +203,8 @@ type BodyJudgment = Refused | Unjudged | { result: "due"; next: Due }
       presented: Readonly<Record<string, FactRef>>; observed: readonly ObservationUse[];
       signer: Signer | null; selfRefs: readonly number[]; recordRefs: readonly RecordSelfRef[] };
 type ExploredBodyJudgment = Exclude<BodyJudgment, { result: "write" }>
-  | (Extract<BodyJudgment, { result: "write" }> & { drawn: Drawn; requestReservations: ReadonlyMap<number, Amount> });
+  | (Extract<BodyJudgment, { result: "write" }> & { drawn: Drawn; requestReservations: ReadonlyMap<number, Amount>;
+      itemDuties: ReadonlyMap<number, readonly ItemDuty[]>; itemSettlement: ItemSettlement | null });
 interface ActBodyFrame {
   actor: KeyId;
   signed?: SignedIntent;
@@ -212,6 +214,7 @@ interface ActBodyFrame {
   selfRefs?: number[];
   recordRefs?: EmittedRecordSelfRef[];
   unavailableEntry?: () => never;
+  itemBookkeeping?: { itemDuties: Map<number, readonly ItemDuty[]>; itemSettlement: ItemSettlement | null };
 }
 
 /** The same body as a recorded act, without signature, key or lifetime checks.
@@ -220,6 +223,7 @@ export function judgeActBody(view: StateView, definition: ValidDefinition, body:
   let missing: "intent" | "entry" | null = null;
   const selfRefs: number[] = [];
   const recordRefs: EmittedRecordSelfRef[] = [];
+  const itemBookkeeping: NonNullable<ActBodyFrame["itemBookkeeping"]> = { itemDuties: new Map(), itemSettlement: null };
   let drawn: Drawn | undefined;
   const unavailableIntent = (): never => {
     missing ??= "intent";
@@ -234,7 +238,7 @@ export function judgeActBody(view: StateView, definition: ValidDefinition, body:
     if (!scope) return { result: "unavailable", reason: "unavailable" } as const;
     const verified = verifiedContext(context, { body, actor: context.actor });
     return actBodyJudged(view, definition, body, verified, scope,
-      { actor: context.actor, plan: false, unavailableIntent, selfRefs, recordRefs, unavailableEntry });
+      { actor: context.actor, plan: false, unavailableIntent, selfRefs, recordRefs, unavailableEntry, itemBookkeeping });
   }), body, counts => { drawn = counts; });
   if (missing) return { result: "unavailable", reason: "unavailable", lacks: [missing] };
   if (answer.result === "write") {
@@ -243,7 +247,7 @@ export function judgeActBody(view: StateView, definition: ValidDefinition, body:
     if (definition.declared.capacity?.name === "whole-scope") for (const send of answer.draft.sends) {
       if (send.message.class === "request") requestReservations.set(send.n, requestReservation(definition, { body, sends: answer.draft.sends }, send.n));
     }
-    return { ...answer, drawn, requestReservations };
+    return { ...answer, drawn, requestReservations, ...itemBookkeeping };
   }
   return answer;
 }
@@ -467,7 +471,8 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
   };
 
   // Guards, then effects, then sends, then the bound on the type it opens, as for a handler. The cause of a scope it creates is the intent's digest.
-  const ran = executeBody(j, namedBody(definition, "act", intent.kind, "act"), digest);
+  const ran = executeBody(j, namedBody(definition, "act", intent.kind, "act"), digest,
+    frame.itemBookkeeping ? { itemBookkeeping: frame.itemBookkeeping } : undefined);
   if (ran.result === "unavailable") return ran;
   if (ran.result === "refused") return { ...refused(ran.reason, ran.detail), ...(ran.name === undefined ? {} : { name: ran.name }) };
 

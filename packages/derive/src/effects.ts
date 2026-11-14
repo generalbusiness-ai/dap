@@ -132,7 +132,7 @@ type EffectInstruction = { readonly kind: "native"; readonly mark: Mark; readonl
 interface AttentionInstruction { readonly body: BodyStructure; readonly node: AttentionNode; readonly plan: AttentionPlan }
 
 /** Execute only the effect and attention instructions of this admitted body. */
-export function evaluateEffects(j: Judging, body: BodyStructure | null, opens: string | null): EffectResult {
+export function evaluateEffects(j: Judging, body: BodyStructure | null, opens: string | null, changed?: Map<number, Item>): EffectResult {
   if (!body) throw new TypeError("effects have no admitted body context");
   checkedBody(j.definition, body);
   const instructions = body.nodes.filter(node => node.category === "effect").map((owner): EffectInstruction => {
@@ -147,7 +147,7 @@ export function evaluateEffects(j: Judging, body: BodyStructure | null, opens: s
   const notices = body.nodes.filter(node => node.category === "attention").map((owner): AttentionInstruction => {
     return { body, node: owner, plan: attentionPlan(j.definition, body, owner) };
   });
-  return executeEffects(j, instructions, notices, opens);
+  return executeEffects(j, instructions, notices, opens, changed);
 }
 
 /** Trusted outcome callers join already-returned rule effects without fabricating admitted syntax. */
@@ -155,7 +155,7 @@ export function joinReturnedEffects(j: Judging, mark: Mark): EffectResult {
   return executeEffects(j, [{ kind: "native", mark }], [], null);
 }
 
-function executeEffects(j: Judging, instructions: readonly EffectInstruction[], attention: readonly AttentionInstruction[], opens: string | null): EffectResult {
+function executeEffects(j: Judging, instructions: readonly EffectInstruction[], attention: readonly AttentionInstruction[], opens: string | null, changed?: Map<number, Item>): EffectResult {
   const items = declarationOf(j.definition).items;
   const working = new Map(j.subjects);
   const effects: GenesisEffect[] = [];
@@ -187,6 +187,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
     sets(effect, null);
     effects.push(effect);
     working.set(subject, changeItem(working.get(subject)!, effect, j.definition, j.signer));
+    changed?.set(effect.item, working.get(subject)!);
   };
   /** The item that this entry opens, when a rule opens it. */
   let byRule: Item | null = null;
@@ -250,6 +251,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
         if (opens !== null || byRule || !type || effect.item !== j.self || effect.state !== type.initial || j.definition.holdTypes.includes(effect.type)) throw outside(mark, "an opening that its entry cannot make");
         byRule = newItem(effect, type, null);
         others.set(effect.item, byRule);
+        changed?.set(effect.item, byRule);
         effects.push(effect);
         continue;
       }
@@ -305,10 +307,11 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
       }
       sets(applied, mark);
       effects.push(applied);
-      const changed = changeItem(item, applied, j.definition, j.signer);
-      if (subject !== undefined) working.set(subject, changed);
-      else others.set(item.id, changed);
-      if (byRule && changed.id === byRule.id) byRule = changed;
+      const next = changeItem(item, applied, j.definition, j.signer);
+      if (subject !== undefined) working.set(subject, next);
+      else others.set(item.id, next);
+      changed?.set(item.id, next);
+      if (byRule && next.id === byRule.id) byRule = next;
     }
     return null;
   };
@@ -330,6 +333,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
     const open = { effect: "open", item: j.self, type: opens, state: own(items, opens)!.initial } as const;
     effects.push(open);
     working.set("on", newItem(open, own(items, opens)!, null));
+    changed?.set(open.item, working.get("on")!);
     recordProgramLeaf(j.definition, "effects", `items.${opens}`, "open", open);
   }
 
@@ -475,7 +479,10 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
         const slot = code.slot.name, texts = [...j.view.texts(id, slot)];
         const now = own(working.get(subject)!.values, slot);
         if (isDigest(now) && now !== own(was?.values, slot) && !texts.includes(now)) texts.push(now);
-        if (texts.length > 0) effects.push({ effect: "redact", item: id, slot, texts });
+        if (texts.length > 0) {
+          effects.push({ effect: "redact", item: id, slot, texts });
+          changed?.set(id, item);
+        }
         break;
       }
       case "hold": {
@@ -505,7 +512,14 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
   // a hold ends with such an item too, when a rule took it to a final state.
   const left = new Map<string, Item>([...[...others].map(([id, item]) => [`item ${id}`, item] as const), ...working]);
   for (const { subject, effect } of endsUnder(j, left)) {
-    if (subject === null || !working.has(subject)) effects.push(effect);
+    if (subject === null || !working.has(subject)) {
+      effects.push(effect);
+      if (changed) {
+        const held = changed.get(effect.item) ?? j.view.item(effect.item);
+        if (!held) throw new TypeError("the ended hold has no working item");
+        changed.set(effect.item, changeItem(held, effect, j.definition, j.signer));
+      }
+    }
     else apply(subject, effect);
   }
   // Authority note, section 5.7, "What is derived, and at which entry": when the definition's holds have a workspace, the code of

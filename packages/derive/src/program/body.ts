@@ -4,10 +4,13 @@ import type { Digest, Effect, GenesisEffect, PlatformTimedRule, Prepared, Refusa
 import { evaluateEffects } from "../effects.ts";
 import { evaluateSends } from "../sends.ts";
 import type { Judging } from "../guards.ts";
+import type { ItemSettlement } from "../handlers.ts";
+import { updateItemDuties, type ItemDuty } from "../item-duties.ts";
+import type { Item } from "../state.ts";
 import { judgeGuardNodes } from "./guard-value.ts";
 import { overMax } from "./finalize.ts";
 import { bodyJudgesClock, checkedBody, guardSource, type BodyStructure } from "./structure.ts";
-import { settlementMatches, settlementSubject } from "./settlement.ts";
+import { settlementForm, settlementMatches, settlementSubject } from "./settlement.ts";
 import { enterProgramInstruction } from "./observe.ts";
 
 export type Ran =
@@ -25,6 +28,7 @@ export interface BodyOptions {
   readonly first?: number;
   readonly directory?: ScopeRef | null;
   readonly timed?: Pick<Judging, "platform">;
+  readonly itemBookkeeping?: { itemDuties: Map<number, readonly ItemDuty[]>; itemSettlement: ItemSettlement | null };
 }
 
 /** Guards, effects, sends, live-item bounds and settlement preserve their admitted order. */
@@ -60,7 +64,8 @@ export function executeBody(j: Judging, structure: BodyStructure | null, cause: 
   }
   if (guards.result !== "pass") return { result: "unavailable", reason: guards.result };
   // Sections 6.6 and 6.7: a condition, or a range that a source or a send reads, that is not completed leaves the input not judged.
-  const effects = evaluateEffects(j, structure, opens);
+  const changed = options.itemBookkeeping ? new Map<number, Item>() : undefined;
+  const effects = evaluateEffects(j, structure, opens, changed);
   if (!effects.ok) {
     if (structure.frame.kind === "timed") throw new Error(`timed rule ${row.name} cannot apply: ${"unavailable" in effects ? effects.unavailable : effects.reason}`);
     return "unavailable" in effects ? { result: "unavailable", reason: effects.unavailable } : { result: "refused", reason: effects.reason, detail: effects.detail, prepared: j.used };
@@ -96,6 +101,16 @@ export function executeBody(j: Judging, structure: BodyStructure | null, cause: 
   const subject = settled && settled.op !== "copy" ? settlementSubject(settled) : null;
   const [was, is] = subject !== null ? [j.subjects.get(subject), effects.working.get(subject)] : [];
   const settles = settled !== null && settled.op !== "copy" && settlementMatches(settled.states, settled.op === "mark" ? settled.slot.name : null, was, is);
+  if (options.itemBookkeeping) {
+    const bookkeeping = options.itemBookkeeping;
+    const binding = settled !== null && settled.op !== "copy" && was ? { item: was.id, form: settlementForm(settled) } : null;
+    bookkeeping.itemSettlement = binding;
+    const sink = {
+      itemDuties: (id?: number) => id === undefined ? j.view.itemDuties() : bookkeeping.itemDuties.get(id) ?? j.view.itemDuties(id),
+      putItemDuties: (id: number, duties: readonly ItemDuty[]) => { bookkeeping.itemDuties.set(id, duties); },
+    };
+    for (const [id, item] of changed!) updateItemDuties(sink, j.definition, { input: { type: "act" } }, j.view.item(id), item, binding);
+  }
   return { result: "ran", effects: effects.effects, sends, prepared: j.used, judgesTime, settles };
   } finally { endObservation(); }
 }

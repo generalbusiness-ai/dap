@@ -4,10 +4,12 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { ActType, Effect, Intent } from "@generalbusiness/dap-contract";
 import { judgeActBody, validateDefinition, type Capabilities } from "../src/index.ts";
-import { Scope, created, deskDefinition, grantOf, keys, laneDefinition, on, otherLane, t, valid, variant } from "./fixtures.ts";
+import { Scope, created, deskDefinition, directory, grantOf, keys, laneDefinition, on, otherLane, t, valid, variant } from "./fixtures.ts";
 import { gateRules, gateWith } from "./fixtures-marks.ts";
 import { Works, changed, works } from "./fixtures-holds.ts";
 import { deviceCommandFixture } from "./fixtures-device-command.ts";
+import { M } from "./definition-corpus/forms-settles-data.ts";
+import { settlesChanges } from "./definition-corpus/settles-variants.ts";
 
 const { rita } = keys;
 const act = (over: Partial<ActType> & Pick<ActType, "step" | "on">): ActType => ({
@@ -175,4 +177,24 @@ test("the keyless body draws on the same holder account and stops when its reque
   expect(scope.does("use", { ...on(scope, job), fields: { peer: otherLane } })).toBe("written");
   expect(scope.state.holder(job)?.requests ?? 0).toBe(0);
   expect(judgeActBody(scope.state, definition, body(), context())).toEqual({ result: "unavailable", reason: "unavailable" });
+});
+
+test("body item duties use the actual pre-entry settlement target when the same effects move its selector", () => {
+  const definition = variant(M, settlesChanges.alias);
+  const scope = new Scope(definition), { una } = keys;
+  const start = () => scope.did(una, "start", { fields: { desk: directory } }).seq;
+  const primary = start(), oldTarget = start(), nextTarget = start();
+  scope.did(una, "point", { ...on(scope, primary), fields: { target: oldTarget } });
+  const over = { ...on(scope, primary, { target: oldTarget }), fields: { next: nextTarget } };
+  const signed = scope.intent(una, "mark-target", over), before = scope.state.snapshot();
+  const answer = judgeActBody(scope.state, definition, bodyOf(signed.intent), { ...scope.context(), actor: una.key });
+  expect(answer.result).toBe("write");
+  if (answer.result !== "write") return expect.fail("the shared marker body must write");
+  expect(answer.itemSettlement).toEqual({ item: oldTarget, form: { of: "also.target", in: ["open", "held"], sets: "a" } });
+  expect(answer.itemDuties.get(oldTarget)?.some(duty => duty.slot === "a")).toBe(false);
+  expect(answer.itemDuties.has(nextTarget)).toBe(false);
+  expect(scope.state.snapshot()).toBe(before);
+  scope.did(una, "mark-target", over);
+  for (const [id, duties] of answer.itemDuties) expect(scope.state.itemDuties(id)).toEqual(duties);
+  expect(scope.state.itemDuties(nextTarget).some(duty => duty.slot === "a")).toBe(true);
 });
