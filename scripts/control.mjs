@@ -115,7 +115,13 @@ function readVitest(report) {
       if (t.status === "failed") {
         // vitest's JSON report gives a timeout no words of its own: its stack begins "Error: STACK_TRACE_ERROR".
         const text = (t.failureMessages ?? []).join("\n");
-        failed.push({ name: t.fullName, message: /^Error: STACK_TRACE_ERROR\b|\btimed out\b/im.test(text) ? "Test timed out" : firstLine(text) });
+        const timedOut = /^Error: STACK_TRACE_ERROR\b|\btimed out\b/im.test(text);
+        const headline = text.split("\n")[0];
+        // Vitest 4.1.12 JSON drops error names. Promise assertions can carry an earlier Error stack.
+        // Match the complete constructor headline before the display limit cuts off its suffix.
+        const assertion = !timedOut && (/^AssertionError\b/.test(headline)
+          || /^Error: promise (?:rejected "[^\r\n]*" instead of resolving|resolved "[^\r\n]*" instead of rejecting)$/.test(headline));
+        failed.push({ name: t.fullName, message: timedOut ? "Test timed out" : firstLine(text), assertion });
       }
     }
   }
@@ -164,7 +170,7 @@ function readTap(output) {
 function firstLine(text) {
   return String(text ?? "").split("\n")[0].slice(0, 300);
 }
-const isAssertion = (t) => /^AssertionError\b/.test(t.message);
+const isAssertion = (t) => t.assertion ?? /^AssertionError\b/.test(t.message);
 
 process.on("exit", () => {
   if (!preserveScratch) rmSync(scratch, { recursive: true, force: true });
