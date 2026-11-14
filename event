@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2bc7c342f66f1cc2dcdfe8d9474408cc8a9f02f0","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/lane-applications.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3396aa248b78dab660db22a24ba62de98d821ef7","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/directory-partition-lanes.scope.fixture.ts."}
