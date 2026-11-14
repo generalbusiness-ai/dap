@@ -1,11 +1,11 @@
 /** Change one hosted Worker's file-owned register settings. No deployment. */
 import { createRequire } from "node:module";
-import { readFile, writeFile, mkdtemp, rename, rm } from "node:fs/promises";
+import { readFile, writeFile, mkdtemp, rename, rm, lstat, chmod } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { execFileSync, spawnSync } from "node:child_process";
 import { resolve, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { checkout, readConfig, parseConfig, smokePolicy } from "./deploy-config.mjs";
+import { checkout, configPath, readConfig, parseConfig, smokePolicy } from "./deploy-config.mjs";
 
 const require = createRequire(new URL("../packages/cli/bin/dap.js", import.meta.url));
 let validators;
@@ -25,9 +25,9 @@ function argumentsOf(argv) {
   const [name, ...args] = argv, values = {};
   for (let i = 0; i < args.length; i++) {
     const flag = args[i];
-    if (!["--register", "--genesis", "--only", "--start-origin", "--deployment", "--definition"].includes(flag)
+    if (!["--register", "--genesis", "--only", "--keep", "--start-origin", "--deployment", "--definition"].includes(flag)
       || Object.hasOwn(values, flag)) throw Error("Unknown or repeated argument.");
-    if (flag === "--only") values[flag] = true;
+    if (flag === "--only" || flag === "--keep") values[flag] = true;
     else {
       if (!args[i + 1] || args[i + 1].startsWith("--")) throw Error("Missing argument value.");
       values[flag] = args[++i];
@@ -35,9 +35,10 @@ function argumentsOf(argv) {
   }
   if (!["demo", "grow", "lending"].includes(name)) throw Error("Choose demo, grow or lending.");
   if (!values["--register"] || !values["--genesis"]) throw Error("Supply --register and --genesis.");
+  if (Boolean(values["--only"]) === Boolean(values["--keep"])) throw Error("Choose exactly one of --only and --keep.");
   const bootstrap = ["--start-origin", "--definition"].filter(key => Object.hasOwn(values, key));
   if (bootstrap.length !== 0 && (bootstrap.length !== 2 || !values["--deployment"] || name !== "demo")) throw Error("Demo Start needs all three explicit metadata arguments.");
-  return { name, register: values["--register"], genesis: values["--genesis"], only: values["--only"] === true,
+  return { name, register: values["--register"], genesis: values["--genesis"], mode: values["--only"] ? "only" : "keep",
     deployment: values["--deployment"],
     ...(bootstrap.length ? { start: { origin: values["--start-origin"], deployment: values["--deployment"], definition: values["--definition"] } } : {}) };
 }
@@ -104,6 +105,8 @@ function replaceVars(source, updates) {
 
 /** Validate the complete candidate before the caller can write any bytes. */
 export async function registerValuesSource(source, options) {
+  if (options === null || typeof options !== "object" || !Object.hasOwn(options, "mode")
+    || !["only", "keep"].includes(options.mode) || "only" in options || "keep" in options) throw Error("Supply mode 'only' or 'keep', without legacy only/keep fields.");
   if (Buffer.byteLength(source) > 128 * 1024) throw Error("Configuration is too large.");
   const config = parseConfig(source), native = await production(), vars = config.vars;
   if (config.name !== `dap-${options.name}` || !["demo", "grow", "lending"].includes(options.name)) throw Error("Worker name differs.");
@@ -113,7 +116,7 @@ export async function registerValuesSource(source, options) {
   const bindings = config.artifacts?.filter(binding => binding.binding === "ARTIFACTS") ?? [];
   const namespace = vars.ARTIFACTS_NAMESPACE ?? native.ARTIFACTS_NAMESPACE;
   if (bindings.length !== 1 || bindings[0].namespace !== namespace || artifacts.namespace !== namespace) throw Error("Artifacts namespace differs from its binding.");
-  const scopes = options.only ? [options.register] : [...new Set([...installed.scopes, options.register])];
+  const scopes = options.mode === "only" ? [options.register] : [...new Set([...installed.scopes, options.register])];
   const updates = { REGISTER_SCOPE: options.register, ARTIFACTS_CONFIG: JSON.stringify({ ...artifacts, registerScope: options.register }),
     INSTALLED_REGISTER_SCOPES: JSON.stringify(scopes) };
   if (options.deployment !== undefined && vars.DEPLOYMENT !== undefined && vars.DEPLOYMENT !== options.deployment) throw Error("Start deployment differs.");
@@ -143,7 +146,9 @@ export async function registerValuesSource(source, options) {
 
 export async function registerValuesMain(argv, { root = checkout, write = text => process.stdout.write(text) } = {}) {
   try {
-    const options = argumentsOf(argv), { path, bytes } = await readConfig(root, options.name);
+    const options = argumentsOf(argv), target = resolve(root, configPath(options.name)), original = await lstat(target);
+    if (!original.isFile()) throw Error("The target configuration must be a regular file.");
+    const { path, bytes } = await readConfig(root, options.name);
     const source = bytes.toString("utf8"), candidate = await registerValuesSource(source, options);
     // Prepare the diff before writing, so invalid Git state cannot leave a
     // changed tracked file behind. Temporary files hold public config only.
@@ -160,17 +165,23 @@ export async function registerValuesMain(argv, { root = checkout, write = text =
       if (result.error || ![0, 1].includes(result.status)) throw Error("Could not prepare the configuration diff.");
       diff = result.stdout.replaceAll(`a${before}`, `a/${path}`).replaceAll(`b${after}`, `b/${path}`);
     } finally { await rm(scratch, { recursive: true }); }
-    if (!bytes.equals(await readFile(resolve(root, path)))) throw Error("The tracked configuration changed during preparation.");
+    if (!bytes.equals(await readFile(target))) throw Error("The tracked configuration changed during preparation.");
     write(diff);
-    if (candidate !== source) {
-      const pendingDirectory = await mkdtemp(resolve(root, path) + ".register-values-");
-      try {
+    let pendingDirectory;
+    try {
+      if (candidate !== source) {
+        pendingDirectory = await mkdtemp(target + ".register-values-");
         const pending = join(pendingDirectory, "candidate");
         await writeFile(pending, candidate, { flag: "wx", mode: 0o600 });
-        // The final rename changes exactly the selected tracked path.
-        await rename(pending, resolve(root, path));
-      } finally { await rm(pendingDirectory, { recursive: true }); }
-    }
+        // chmod preserves the observed bits even when the process umask filters creation.
+        await chmod(pending, original.mode & 0o7777);
+      }
+      const current = await lstat(target);
+      if (!current.isFile() || current.dev !== original.dev || current.ino !== original.ino || current.mode !== original.mode
+        || !bytes.equals(await readFile(target))) throw Error("The tracked configuration changed during preparation.");
+      // The selected file must stay idle: rename does not provide compare-and-swap.
+      if (pendingDirectory) await rename(join(pendingDirectory, "candidate"), target);
+    } finally { if (pendingDirectory) await rm(pendingDirectory, { recursive: true }); }
     return 0;
   } catch (error) {
     write(`Register settings refused: ${error instanceof Error ? error.message : "invalid input"}\n`);

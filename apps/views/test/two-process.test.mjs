@@ -28,18 +28,29 @@ const item = (id, type, state, values = {}, refs = {}, parties = {}) => ({ id, t
 /** One process's stdio, with the requests of the desktop app's client. */
 function server(home, brief) {
   const child = spawn(process.execPath, ['--import', 'tsx', 'apps/views/src/node.ts', '--brief', brief], { cwd: ROOT, env: { ...process.env, DAP_HOME: home }, stdio: ['pipe', 'pipe', 'pipe'] });
-  const waiting = new Map(); let buffer = '', errors = '', next = 0;
-  child.stderr.on('data', data => { errors += data; });
+  const closed = new Promise(resolve => child.once('close', resolve));
+  const waiting = new Map(); let buffer = '', errors = '', next = 0, ended = null;
+  const fail = failure => {
+    ended ??= failure;
+    for (const pending of waiting.values()) { clearTimeout(pending.timer); pending.reject(ended); }
+    waiting.clear();
+  };
+  child.once('error', failure => fail(failure));
+  child.once('close', (code, signal) => fail(Error(`The views process closed (${signal ?? code}). ${errors.slice(-400)}`)));
+  child.stdin.on('error', failure => fail(failure));
+  child.stderr.on('data', data => { errors = (errors + data).slice(-4096); });
   child.stdout.on('data', data => {
     buffer += data;
     for (let at = buffer.indexOf('\n'); at >= 0; at = buffer.indexOf('\n')) {
       const message = JSON.parse(buffer.slice(0, at)); buffer = buffer.slice(at + 1);
-      waiting.get(message.id)?.(message); waiting.delete(message.id);
+      const pending = waiting.get(message.id);
+      if (pending) { clearTimeout(pending.timer); waiting.delete(message.id); pending.resolve(message); }
     }
   });
   const request = (method, params = {}) => new Promise((resolve, reject) => {
-    const id = ++next, timer = setTimeout(() => reject(Error(`${method}: no answer. ${errors.slice(-400)}`)), 30_000);
-    waiting.set(id, message => { clearTimeout(timer); resolve(message); });
+    if (ended) { reject(ended); return; }
+    const id = ++next, timer = setTimeout(() => { waiting.delete(id); reject(Error(`${method}: no answer. ${errors.slice(-400)}`)); }, 30_000);
+    waiting.set(id, { resolve, reject, timer });
     child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id, method, params })}\n`);
   });
   return {
@@ -49,7 +60,7 @@ function server(home, brief) {
       child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' })}\n`);
     },
     call: async (name, args) => { const reply = await request('tools/call', { name, arguments: args }); assert.ok(reply.result, JSON.stringify(reply.error)); return reply.result; },
-    stop() { child.kill(); },
+    stop() { child.kill(); return closed; },
     pid: child.pid,
   };
 }
@@ -57,7 +68,13 @@ function server(home, brief) {
 /** A room with one question that asks @rita, over a loopback server. `loseNext` drops the next act's reply after the stand-in keeps it. `holdNext` delays the next act until its release. */
 async function room(t) {
   const home = realpathSync(mkdtempSync(join(tmpdir(), 'artroom-two-process-')));
-  t.after(() => rmSync(home, { recursive: true, force: true }));
+  let http, pair = [];
+  t.after(async () => {
+    try {
+      await Promise.all(pair.map(process_ => process_.stop()));
+      if (http) await new Promise(resolve => { http.closeAllConnections(); http.close(resolve); });
+    } finally { rmSync(home, { recursive: true, force: true }); }
+  });
   const signer = secretSigner(SECRET), peer = new StandIn(signer.key, 'admin', ['issue.approve', 'issue.decide', 'change.merge']);
   const viewer = { membership: peer.membership, member: '@rita' }, other = { membership: peer.membership, member: '@vic' };
   const M = peer.scopes.get(peer.membership.scope); M.definition = 'platform:membership@8';
@@ -75,7 +92,7 @@ async function room(t) {
     item(5, 'approval-request', 'open', {}, { ask: opening.entry.seq, bodyAt: opening.entry.seq }, { requested: viewer, requester: other }));
   lane.retained.set(`text ${textDigest(BODY)}`, canonicalize(BODY));
   const posted = []; let lose = false, held = null, reached = () => {};
-  const http = createServer((request, response) => { void (async () => {
+  http = createServer((request, response) => { void (async () => {
     let body = ''; for await (const chunk of request) body += chunk;
     const url = new URL(request.url, SERVICE), init = { method: request.method, headers: Object.fromEntries(Object.entries(request.headers)), ...(body ? { body } : {}) };
     if (request.method === 'POST' && !url.pathname.endsWith('/sessions')) posted.push(url.pathname);
@@ -91,13 +108,13 @@ async function room(t) {
     response.writeHead(answer.status, { 'content-type': 'application/json' }); response.end(bytes);
   })().catch(error => { response.writeHead(500); response.end(String(error)); }); });
   await new Promise(resolve => http.listen(0, '127.0.0.1', resolve));
-  t.after(() => new Promise(resolve => { http.closeAllConnections(); http.close(resolve); }));
   const service = `http://127.0.0.1:${http.address().port}`, store = fileStore(home);
   await store.keep('operator', SECRET);
-  await store.save({ v: 2, service, register: peer.register ?? { scope: 'sc_test', genesis: textDigest('TEST register genesis') }, key: 'operator', handle: '@rita', repository: peer.config().repository });
+  // This application opens an existing room. Its optional installation register is absent,
+  // rather than the old invalid `sc_test` fallback that fileStore.config must refuse.
+  await store.save({ v: 2, service, key: 'operator', handle: '@rita', repository: peer.config().repository });
   const file = join(home, 'brief.txt'); writeFileSync(file, BRIEF);
-  const pair = [server(home, file), server(home, file)];
-  t.after(() => { for (const process_ of pair) process_.stop(); });
+  pair = [server(home, file), server(home, file)];
   await Promise.all(pair.map(process_ => process_.start()));
   return { home, peer, lane, pair, posted, subject: questionSubject(ref, opening.entry.seq), loseNext() { lose = true; },
     holdNext() { let open; held = new Promise(resolve => { open = resolve; }); return open; }, posting() { return new Promise(resolve => { reached = resolve; }); } };

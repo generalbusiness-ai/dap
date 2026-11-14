@@ -29,7 +29,7 @@ import { at, type Rec } from "./shape.ts";
  */
 export interface Read { form: string; type: FieldType | null; open: boolean; fields: readonly string[]; slot: string | null; node: OperandRead }
 
-const OPERANDS: readonly OperandKind[] = ["field", "presented", "slot", "element", "item", "signer", "sender", "source", "update", "result", "scope", "intent", "none", "const"];
+const OPERANDS: readonly OperandKind[] = ["field", "presented", "slot", "element", "item", "signer", "sender", "source", "update", "result", "scope", "intent", "none", "const", "read"];
 /** The operands that hold a value a part may read inside. */
 const WITH_PART = ["field", "presented", "slot", "element"];
 /** The parts that are one word. The first three are read from the reference, and the others from the entry's bytes. */
@@ -81,7 +81,7 @@ export function operand(d: Defining, v: unknown, path: string, ctx: Ctx, owner: 
       return name === null ? undefined : entry(null, pp, { op: pf[0] as "field" | "opened", name });
     }
     const r = rec(pf[1], at(pp, "set"), ["item", "slot"]);
-    const item = r && operand(d, r["item"], at(at(pp, "set"), "item"), ctx, owner, guard);
+    const item = r && operand(d, r["item"], at(at(pp, "set"), "item"), { ...ctx, readList: false }, owner, guard);
     if (!r || !item || str(r["slot"], at(at(pp, "set"), "slot")) === null) return undefined;
     fields.push(...item.fields);
     return entry(null, pp, { op: "set", item: item.node, slot: r["slot"] as string });
@@ -198,6 +198,14 @@ export function operand(d: Defining, v: unknown, path: string, ctx: Ctx, owner: 
     case "const":
       try { canonicalize(x); } catch { return bad("shape", path, "is not a value"); }
       data = { op: "const", value: immutable(x as FieldValue) };
+      break;
+    case "read":
+      // The sequenced note, section 5.2: the list of records that a `reads` entry of a sequenced act bound as of its cut. Only
+      // the package holds the member's definition, so the type of an element is the commit's.
+      if (!ctx.reads) return bad("shape", path, "a read is read only in a sequenced act");
+      if (!ctx.readList) return bad("shape", path, "a read is the list of an each, has, distinct or sameSet");
+      if (typeof x !== "string" || !ctx.reads.has(x)) return bad("name", path, "names no reads entry of the act");
+      data = { op: "read", name: x };
       break;
   }
   // Section 6.2: no guard, and no form that only compares or lists, reads a detached value.

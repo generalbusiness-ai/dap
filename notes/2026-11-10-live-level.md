@@ -131,6 +131,8 @@ and timed rules. A definition that uses none of the forms below
 validates at either level, so one turn rule can run as live practice or
 as a kept session, in two scopes.
 
+A platform declaration cannot be live in version 1.
+
 The validator refuses these forms in a live definition, because each
 one promises something that outlasts memory or that another scope rests
 on:
@@ -408,7 +410,7 @@ install one with a live scope.
 
 | Head | Owns | Needs | Witness |
 |---|---|---|---|
-| LV1, validator and fold | `live` version 1 in `validateFormat1`, with the refusals of 3.2. The fold's refusal of an entry after a live scope's confirmation | Identifiers head (c+d) | A definition-corpus row for each admitted form, and a refusal pair for each refused form. The corpus row that refuses `live` today becomes an admission. A journal with a third entry does not fold |
+| LV1, validator and fold | `live` version 1 in `validateFormat1`, with the refusals of 3.2. The fold's refusal of an entry after a live scope's confirmation. Until LV2 supplies the platform's live mode, `derivable` stays false for live and runtime creation answers `unsupported-definition` without writing (ruling `a1fe9aaf`) | Identifiers head (c+d) | A definition-corpus row for each admitted form, and a refusal pair for each refused form. The corpus row that refuses `live` today becomes an admission. A journal with a third entry does not fold |
 | LV2, the live turn | The object's live mode, chosen by the pinned level. The generation. The turn of 3.3 over memory, with the judges of `derive`. Timed rules from memory. The answers. Any change that a judge needs to run with no sealed entry | LV1 | One definition and one sequence of acts: the live run and the recorded run reach the same items and states. On native storage: an applied act, a refused stale `expected`, and an act that names an old generation after an eviction, answered `reset`. A repeat of an applied intent after a reset applies again. The stored rows after many live acts equal the stored rows after creation |
 | LV3, reads and the watch | The live reads and the watch of 3.5. The bounds of the live state (O1) | LV2 | Two viewers receive a line for a change. A slow viewer reads the latest state. A read names the generation and the tick. A viewer with no session is refused |
 | LV4, package and tools | The package graph's entry for a live scope, and its refusal of a send to one. The app-only MCP tool, the client call and `dap act` | LV1 for the graph. LV3 for the tool | A package with one live scope installs, and a presence card enters, renews and leaves. A package that sends to its live scope is refused |

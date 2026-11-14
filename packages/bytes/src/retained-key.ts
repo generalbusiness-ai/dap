@@ -21,6 +21,8 @@ export function retainedByteDomain(kind: RetainedInput["kind"], domain?: string)
   }
   // A `birth` names its sequence by the genesis entry hash, not its bytes by a digest in a domain (ruling ae48dd39).
   if (kind === "birth") throw new RangeError("a birth row is named by an entry hash, not by a byte digest");
+  // The sequenced note, section 5.5: no runtime retains a page yet, and none names its byte domain.
+  if (kind === "page") throw new RangeError("a page has no retained byte domain yet");
   if (!Object.hasOwn(RETAINED_BYTE_DOMAINS, kind)) throw new RangeError("unknown retained byte kind");
   return RETAINED_BYTE_DOMAINS[kind];
 }

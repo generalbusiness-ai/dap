@@ -109,7 +109,8 @@ const CLASS: Record<Message["class"], true> = { request: true, result: true, con
 const DECISION: Record<Extract<Input, { decision: unknown; type: "delivery" }>["decision"], true> = { applied: true, refused: true, superseded: true };
 const CLAUSE: Record<NonNullable<OutboxItem["result"]>["clause"], true> = { applied: true, refused: true, superseded: true, conflict: true };
 const FINDING: Record<NonNullable<OutboxItem["diagnosis"]>["finding"], true> = { undelivered: true, "delivery-unavailable": true };
-const RETAINED: Record<RetainedInput["kind"], true> = { definition: true, entry: true, rule: true, text: true, snapshot: true, value: true, birth: true };
+/** A `page` (sequenced note, section 5.5) is not admitted: no runtime retains one until the sequenced runtime does. */
+const RETAINED: Record<Exclude<RetainedInput["kind"], "page">, true> = { definition: true, entry: true, rule: true, text: true, snapshot: true, value: true, birth: true };
 /** Why a delivery was refused: a code the contract names and, where one exists, the name the failed guard declares. */
 const reason = recordShape({ code: among(REFUSAL_REASONS) }, { name: wellFormedText });
 
@@ -292,6 +293,7 @@ const deliveryOf: Record<Message["class"], Check> = {
   control: recordShape(delivered),
   advisory: recordShape(delivered),
 };
+const refused: Check = () => false;
 const input = variant("type", {
   floor: recordShape({ type: any, floor: isLocalId, receipt: recordShape({ commit: (v) => typeof v === "string" && /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(v), through: recordShape({ seq: isLocalId, hash: isDigest }) }), keep: listOf(isLocalId) }),
   genesis: (v) => recordShape({
@@ -313,6 +315,9 @@ const input = variant("type", {
     result: among({ confirmed: true, refused: true, unknown: true }), evidence,
   }, { observed }),
   checkpoint: recordShape({ type: any, through: isLocalId, state: isDigest }),
+  // The sequenced note, sections 5.2 and 5.3: the contract names these six inputs, and no runtime writes or derives one yet. Each
+  // is refused here until the heads that write, fold and replay it admit its shape.
+  prepare: refused, commit: refused, abandon: refused, allocation: refused, resolution: refused, hole: refused,
 } satisfies Record<Input["type"], Check>);
 export const isInput = (v: unknown): v is Input => input(v);
 

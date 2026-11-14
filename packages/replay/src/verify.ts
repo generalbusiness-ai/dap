@@ -2561,6 +2561,9 @@ class Verifier {
         // Checked against the fold through that sequence. It is never taken as proof of the prefix (section 9.2).
         judged = judgeCheckpoint(state, definition, { through: input.through, state: input.state }, { clock, bounds });
         break;
+      // The sequenced note, sections 5.2, 5.3 and 5.8: the bytes check refuses these inputs, and this replay has no checks of them yet.
+      case "prepare": case "commit": case "abandon": case "allocation": case "resolution": case "hole":
+        throw new Stop("unsupported-definition", `entry ${entry.seq} is a ${input.type} entry of the sequenced level, which this replay has no checks for`, where);
     }
     if (judged.result !== "write") {
       const said = [judged.result, "reason" in judged ? judged.reason : "", "detail" in judged ? judged.detail : "", "failed" in judged ? judged.failed : ""].filter((part) => part !== "").join(", ");

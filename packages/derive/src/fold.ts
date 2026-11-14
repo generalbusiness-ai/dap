@@ -76,6 +76,8 @@ function relationOwnerKind(entry: Entry, at: ScopeRef, localKind: ScopeKind | nu
 
 export function applyEntry(writer: StateWriter, definition: ValidDefinition, entry: Entry, hash: Digest, options: DrawOptions = {}): void {
   const scope = writer.scope();
+  // Live note, sections 3.1 and 7: creation and confirmation are the whole retained journal.
+  if (definition.declared.level?.name === "live" && scope?.status === "active") throw new FoldError("a live scope records no entry after confirmation");
   const input = entry.input;
   const at: ScopeRef = input.type === "genesis" ? { scope: scopeIdOf(input.seed), genesis: hash } : scope?.at ?? (() => { throw new FoldError("a later entry has no sequence"); })();
   if (input.type !== "genesis" && (!("genesis" in entry) || entry.genesis !== at.genesis)) throw new FoldError("the entry names another sequence");

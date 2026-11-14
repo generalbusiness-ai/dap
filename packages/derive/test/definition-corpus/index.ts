@@ -22,6 +22,8 @@ import { bindingVariantDefinitions } from "./binding-variants.ts";
 import { settlesVariantDefinitions } from "./settles-variants.ts";
 import { holdsVariantDefinitions } from "./holds-variants.ts";
 import { platformFixtureDefinitions } from "./platform-fixtures.ts";
+import { sequencedVariantDefinitions } from "./sequenced-variants.ts";
+import { liveVariantDefinitions } from "./live-variants.ts";
 import type { DefinitionCorpusRow } from "./row.ts";
 
 export const definitionCorpus: readonly DefinitionCorpusRow[] = withFixtureOriginAliases([
@@ -34,6 +36,8 @@ export const definitionCorpus: readonly DefinitionCorpusRow[] = withFixtureOrigi
   ...generalCreationDefinitions,
   ...clockCutoverDefinitions,
   ...platformFixtureDefinitions,
+  ...sequencedVariantDefinitions,
+  ...liveVariantDefinitions,
   ...holdsVariantDefinitions,
   ...settlesVariantDefinitions,
   ...bindingVariantDefinitions,

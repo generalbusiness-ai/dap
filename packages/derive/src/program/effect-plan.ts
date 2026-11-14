@@ -33,7 +33,7 @@ export function sourceStated(read: OperandRead): boolean {
     case "field": case "element": return read.baseType.kind !== "unknown";
     case "source": return read.entry.op === "intent";
     case "slot": case "presented": case "item": case "signer": case "intent": return true;
-    case "update": case "result": case "sender": case "scope": case "none": case "const": return false;
+    case "update": case "result": case "sender": case "scope": case "none": case "const": case "read": return false;
     default: return exhaustive(read);
   }
 }
