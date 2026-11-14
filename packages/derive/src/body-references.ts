@@ -31,7 +31,14 @@ export class BodyReferences {
   readonly #emitted: EffectReference[] = [];
   readonly #opened = new WeakSet<Item>();
   readonly #entry = Object.freeze({});
-  constructor(readonly classify: Provenance, readonly unavailable: () => never, readonly supplied: Readonly<Record<string, unknown>>) {}
+  readonly classify: Provenance;
+  readonly unavailable: () => never;
+  readonly supplied: Readonly<Record<string, unknown>>;
+  constructor(classify: Provenance, unavailable: () => never, supplied: Readonly<Record<string, unknown>>) {
+    this.classify = classify;
+    this.unavailable = unavailable;
+    this.supplied = supplied;
+  }
 
   #identity(value: unknown): Identity | undefined {
     return value !== null && typeof value === "object" ? this.#atoms.get(value) : undefined;
