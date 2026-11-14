@@ -195,12 +195,13 @@ export interface CustodyStore {
   /** The records not yet terminal, oldest first: their identity digests and keys. */
   unresolved(): Promise<{ id: string; key: string; created: string }[]>;
   /**
-   * A store that accounts capacity reserves a new identity's completion need here, under the exclusive admission, before the
+   * A store that accounts capacity reserves an identity's completion need here, under the exclusive admission, before the
    * envelope is built and signed; it throws its own `full` when the need cannot be reserved. `bytes` is the caller's account
-   * of what the envelope will carry. A store without a budget leaves this out.
+   * of what the envelope will carry. Its `admit` for an existing identity is safe to repeat.
+   * A store without a budget leaves this out.
    */
   admit?(id: string, bytes: number): Promise<void>;
-  /** Release what `admit` reserved for an identity whose preparation did not come to a record. */
+  /** Release what `admit` reserved for a new identity whose preparation did not come to a record. */
   unadmit?(id: string): Promise<void>;
   /**
    * Put outcomes in the record's segment at position `at` (the count the segment holds by the record's account), in order.
@@ -508,8 +509,13 @@ export class Custody {
       await this.#write(id, next, true, record.phase);
       return next;
     };
-    // A refused record becomes unresolved again: it is admitted against the capacity under the shared lease, as a resubmission is.
-    return record.phase === "refused" ? this.store.exclusive(async () => { await this.#admitted(); return sign(); }) : sign();
+    return this.store.exclusive(async () => {
+      // Only a refused record takes another count slot; an unresolved record already occupies one.
+      if (record.phase === "refused") await this.#admitted();
+      await this.store.admit?.(id, bytes + RECORD_OVERHEAD);
+      // A failed rebuild leaves the earlier record and its completion reservation intact.
+      return sign();
+    });
   }
 
   /**

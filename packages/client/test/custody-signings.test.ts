@@ -102,6 +102,29 @@ describe("custody record version 2 holds the signings of one request", { timeout
     expect([s.builds(), (await s.record("bytes")).signings.length]).toEqual([1, 1]);
   });
 
+  // Invariant (6ad2e7bc): a store's budget refusal precedes a replacement build or signing and preserves the earlier record's bytes.
+  test.each(["refused", "unknown"] as const)("budget refusal before %s resign builds, signs and sends nothing", async (phase) => {
+    let now = T0, builds = 0, signs = 0, sends = 0, full = false;
+    const store = memoryStore(), custody = new Custody(store, () => timeOf(now));
+    const who = identity(`budget-${phase}`), id = identityId(who);
+    store.admit = async () => { if (full) throw new CustodyError({ held: "full", reason: "budget", bytes: RECORD_BYTES }); };
+    const countedSigner = { key: signer.key, sign: async (bytes: Uint8Array) => { signs++; return signer.sign(bytes); } };
+    const build = (body: string) => async () => {
+      builds++;
+      return { binding: { definition: "issue", kind: "comment", declaration: null, pinned: "platform:inbox@1" as const },
+        envelope: { signed: await signedIntent(countedSigner, { to: lane, kind: "comment", fields: { body } }, { idempotencyKey: who.key, now, lifetimeSeconds: 60 }), beside: {} } };
+    };
+    const deliver = async () => { sends++; if (phase === "unknown") throw new Lost(); return refusedFor("revision-moved"); };
+    await custody.send(who, meaningOf("first"), build("first"), deliver, { notAfter, resign: true });
+    if (phase === "unknown") now += 2 * MINUTE;
+    const before = store.records.get(id), counts = [builds, signs, sends];
+    full = true;
+    const failure = await custody.send(who, meaningOf("next"), build("next"), deliver, { notAfter, resign: true }).catch((error: unknown) => error);
+    expect([builds, signs, sends]).toEqual(counts);
+    expect(failure).toMatchObject({ why: { held: "full", reason: "budget" } });
+    expect(store.records.get(id)).toBe(before);
+  });
+
   // Invariant (5.2): without `resign` a new meaning is conflicting; with it, custody signs again only for a refused record or an
   // unresolved one whose latest signing is dead, and never for a record with steps, a standalone record or a creation.
   test("resign signs again for a refused record or a dead unresolved signing, and refuses steps, standalone and creations", async () => {
