@@ -115,7 +115,8 @@ test("pending command records retain exact counts and guard only marked entry va
   expect(projected.effects).toEqual([{ ...effects[0], key: [{ entry: source }], values: { targetAt: { entry: source }, device: 11 } }]);
   const reader = projected.records.reader(() => { throw new Error("the command entry has not recorded"); });
   expect([reader.recordCount(DEVICE_COMMAND, "command", "open"), reader.records(DEVICE_COMMAND, "command").length]).toEqual([1, 1]);
-  const command = reader.record(DEVICE_COMMAND, "command", [17]);
+  expect(() => reader.record(DEVICE_COMMAND, "command", [17])).toThrow("the command entry has not recorded");
+  const command = reader.records(DEVICE_COMMAND, "command")[0];
   if (!command) throw new Error("the hypothetical command is absent");
   expect([command.state, command.values["device"]]).toEqual(["open", 11]);
   expect(() => command.key[0]).toThrow("the command entry has not recorded");

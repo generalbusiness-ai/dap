@@ -73,27 +73,62 @@ export class ActRecords {
       const marked = this.#pending.get(recordKey(row.capability, row.kind, row.key));
       if (!marked) return row;
       const paths = new Set(marked.paths.map(path => canonicalize(path.map(String))));
-      const wrap = <T extends object>(value: T, path: readonly string[]): T => new Proxy(value, {
-        get: (target, key, receiver) => {
+      const wrap = <T extends object>(value: T, path: readonly string[]): T => {
+        const copy = Array.isArray(value) ? [] : Object.create(Object.getPrototypeOf(value));
+        for (const key of Reflect.ownKeys(value)) {
+          const descriptor = Reflect.getOwnPropertyDescriptor(value, key)!;
+          Object.defineProperty(copy, key, { ...descriptor, configurable: !(Array.isArray(value) && key === "length") });
+        }
+        const read = (key: PropertyKey): unknown => {
           const nextPath = [...path, String(key)];
           if (paths.has(canonicalize(nextPath))) return missing(marked.source);
-          const next: unknown = Reflect.get(target, key, receiver);
+          const next: unknown = Reflect.get(value, key);
           return typeof next === "object" && next !== null ? wrap(next, nextPath) : next;
-        },
-      });
+        };
+        return new Proxy(copy, {
+          get: (_target, key) => read(key),
+          getOwnPropertyDescriptor: (target, key) => {
+            const descriptor = Reflect.getOwnPropertyDescriptor(target, key);
+            return !descriptor || !descriptor.configurable ? descriptor
+              : { configurable: true, enumerable: descriptor.enumerable ?? false, get: () => read(key) };
+          },
+        }) as T;
+      };
       return wrap(row, []);
     };
     const selected = (capability: RecordState["capability"], kind: string): RecordState[] =>
       [...this.#rows.values()].filter(row => row.capability === capability && row.kind === kind);
+    // An unknown key is a wildcard at its actual marked positions. A
+    // different unmarked structure can exclude it without guessing its value.
+    const couldMatch = (value: unknown, query: unknown, path: readonly (string | number)[], paths: readonly (readonly (string | number)[])[]): boolean => {
+      if (paths.some(mark => canonicalize(mark) === canonicalize(path))) return typeof query === "number";
+      if (Array.isArray(value)) return Array.isArray(query) && value.length === query.length
+        && value.every((member, index) => couldMatch(member, query[index], [...path, index], paths));
+      if (value !== null && typeof value === "object") return query !== null && typeof query === "object" && !Array.isArray(query)
+        && Object.keys(value).length === Object.keys(query).length && Object.entries(value).every(([name, member]) =>
+          Object.hasOwn(query, name) && couldMatch(member, Reflect.get(query, name), [...path, name], paths));
+      return canonicalize(value) === canonicalize(query);
+    };
     return {
       record: (capability, kind, key) => {
+        for (const row of selected(capability, kind)) {
+          const pending = this.#pending.get(recordKey(row.capability, row.kind, row.key));
+          const paths = pending?.paths.filter(path => path[0] === "key") ?? [];
+          if (pending && paths.length && couldMatch(row.key, key, ["key"], paths)) missing(pending.source);
+        }
         const row = this.#rows.get(recordKey(capability, kind, key));
         return row ? guarded(row) : null;
       },
-      records: (capability, kind, where = {}) => selected(capability, kind)
-        .sort((a, b) => byteOrder(canonicalize(a.key), canonicalize(b.key))).map(guarded).filter(row => (!where.states || where.states.includes(row.state))
+      records: (capability, kind, where = {}) => {
+        const rows = selected(capability, kind).filter(row => (!where.states || where.states.includes(row.state))
           && (where.member === undefined || (Object.hasOwn(row.values, where.member)
-            && canonicalize(row.values[where.member]) === canonicalize(where.value)))),
+            && canonicalize(guarded(row).values[where.member]) === canonicalize(where.value))));
+        if (rows.length > 1) for (const row of rows) {
+          const pending = this.#pending.get(recordKey(row.capability, row.kind, row.key));
+          if (pending?.paths.some(path => path[0] === "key")) missing(pending.source);
+        }
+        return rows.sort((a, b) => byteOrder(canonicalize(a.key), canonicalize(b.key))).map(guarded);
+      },
       // Counting by kind and state never reads a marked key or value.
       recordCount: (capability, kind, state) => selected(capability, kind).filter(row => state === undefined || row.state === state).length,
     };

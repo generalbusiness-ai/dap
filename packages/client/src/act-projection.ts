@@ -2,7 +2,7 @@
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, isEffect } from "@generalbusiness/dap-bytes";
 import { fixedRowsOf, headsOf, indexRows, itemSettledBy, released, reserved,
-  type judgeActBody, type OwnRequest, type Owners, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
+  type Capabilities, type judgeActBody, type OwnRequest, type Owners, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
 import type { ActEffect, ActView, ItemName, Source } from "./act-types.ts";
 import type { ActSymbols } from "./act-symbols.ts";
 import { projectActItems, textSlot } from "./act-items.ts";
@@ -10,6 +10,7 @@ import { ActRecords, replaceMarked } from "./act-records.ts";
 import { ActReferences, type SlotMark } from "./act-references.ts";
 import { presentActRows, presentActValue } from "./act-rows.ts";
 import { copyActState } from "./act-state.ts";
+import { ActOpaque, markPendingRequest } from "./act-opaque.ts";
 
 type BodyWrite = Extract<ReturnType<typeof judgeActBody>, { result: "write" }>;
 type CaptureName = number | object;
@@ -26,7 +27,7 @@ export class UnavailableEntryValue extends Error {
 }
 
 function pendingRequest(source: Source, request: Omit<OwnRequest, "hash">): OwnRequest {
-  return { ...request, get hash(): never { throw new UnavailableEntryValue(source); } };
+  return markPendingRequest({ ...request, get hash(): never { throw new UnavailableEntryValue(source); } }, source);
 }
 
 /** Every frame retains its actual recorded cut and its own private writer. */
@@ -71,6 +72,14 @@ export class ActProjection {
    * actual compiled definition, without changing an earlier after view. */
   forJudgment(definition: ValidDefinition): ActProjection {
     return new ActProjection(definition, this.recorded, this.raw, this.#records, this.references.fork(this.raw), this.history, this.assumes);
+  }
+
+  capabilities(capabilities: Capabilities | null | undefined): Capabilities | null | undefined {
+    return capabilities ? this.opaque().capabilities(capabilities) : capabilities;
+  }
+
+  private opaque(): ActOpaque {
+    return new ActOpaque(this, source => { throw new UnavailableEntryValue(source); });
   }
 
   reader(): StateView {
@@ -186,7 +195,7 @@ export class ActProjection {
       });
     const after: ActView<D> = { head: structuredClone(scope.head), assumes: [...next.assumes], ...rows,
       count: (type, state) => reader.count(type, state), recordCount: (capability, kind, state) => reader.recordCount(capability, kind, state),
-      reservations: reserved(reader, this.definition, { type: "act" }, owners) };
+      reservations: reserved(reader, this.definition, { type: "act" }, next.opaque().owners(owners)) };
     const exposed = records.effects.map((effect, index): ActEffect => {
       if (effect.effect === "relation") return effect;
       const item = "item" in effect ? writer.item(idOf(effect.item)) : null;
