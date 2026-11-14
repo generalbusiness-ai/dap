@@ -3,11 +3,12 @@
 GS-1 request `b29bd21ebda5346fd5e673cad8471b6e1cc0ec74` and promise
 `f3d79f874bd82a5b6d0b3d106912e8048bf1c16d` cover this head. This
 head implements Parts A and B and the Part C case selection. Five affected
-compiler contexts, six Node owners (19 tests), the definition corpus (1413
+compiler contexts, seven Node owners (31 tests), the definition corpus (1413
 cases) and the 14 changed Native owners (54 passed, one optional recorder
 skipped) pass their development checks. The single notes-selection control
 distinguishes the intended mixed-change rule. Gate attempt 1 stops at
-formatting before typechecking or tests. Attempt 2 remains UNRUN.
+formatting; attempt 2 stops at the source-inventory owner. Both failures
+remain retained. Attempt 3 remains UNRUN.
 
 The branch `builder/gs1-short-gate-20261114` preserves its original source
 from repaired combined head `1c80cef3c7749f1c6220fbdc77ed85491b4c6502`.
@@ -15,10 +16,11 @@ Merge `6f67e604a2ab598e2ee3e8bf98482d12c32c8a62` takes the actual
 combined landing and planner note at main
 `270dc8c7a69a4506fc3d5525339f08a4adb2803f`. The merge changes only
 the two landed notes. The planner's note END `6818d989` and deployment END
-`3f4af41d` release integration and gate ordering. Development checks use
-source head `6784a5b55ccc09e984849c8fca8c67e2318e167f`. The only
-later executable-file change formats the lane test config: its parsed JSON
-value stays identical. Root grants the next gate separately.
+`3f4af41d` release integration and gate ordering. Initial development checks
+use source head `6784a5b55ccc09e984849c8fca8c67e2318e167f`. The only
+later changes format the lane test config without changing its parsed
+value, and correct one stale checker-inventory fixture path. Root grants
+the next gate separately.
 
 ## What changed
 
@@ -234,25 +236,36 @@ reports a clean checkout. No third green run is claimed.
 | Check | Result or retained record |
 |---|---|
 | Five affected compiler contexts | DEV PASS |
-| Six whole Node owners | DEV PASS: notes 3, gate selection 2, scale selection 6, phase partition 1, test runner 6, tracked selection 1; 19 final passes |
+| Seven whole Node owners | DEV PASS: notes 3, gate selection 2, scale selection 6, phase partition 1, test runner 6, tracked selection 1, active source 12; 31 final passes |
 | Whole definition corpus | DEV PASS: 1413 cases |
 | Changed Native owners | DEV PASS: 54 passed and one skipped in 14 files; exact ordinary/scale membership checked |
-| Control baseline | `/Users/hughpyle/play/artroom-evidence/2026-11-14-gs1-gate-attempt2/control/tmp/artroom-control-tYCQS4/before.tap` (SHA-256 `400a28c4354964a0e5fe95c13575832962b32fb655dd4fab1a0505ef2208dcf7`); two passed |
-| Control fault | `/Users/hughpyle/play/artroom-evidence/2026-11-14-gs1-gate-attempt2/control/tmp/artroom-control-tYCQS4/after.tap` (SHA-256 `7fe550c922373f1ccf11f52830616976d90255d95982ac91bea6a9ae97a2bcf3`); two actual assertion failures, zero passed, skipped or cancelled |
-| Control helper result | `/Users/hughpyle/play/artroom-evidence/2026-11-14-gs1-gate-attempt2/control/helper.stderr.log` (SHA-256 `61e51a622a8cbef212848cad4d6d27c60b922c5fef7aa10de125c03f596ee52c`); exit 0, DISTINGUISHES; original source restored |
+| Control baseline | `/Users/hughpyle/play/artroom-evidence/2026-11-14-gs1-gate-attempt3/control/tmp/artroom-control-tYCQS4/before.tap` (SHA-256 `400a28c4354964a0e5fe95c13575832962b32fb655dd4fab1a0505ef2208dcf7`); two passed |
+| Control fault | `/Users/hughpyle/play/artroom-evidence/2026-11-14-gs1-gate-attempt3/control/tmp/artroom-control-tYCQS4/after.tap` (SHA-256 `7fe550c922373f1ccf11f52830616976d90255d95982ac91bea6a9ae97a2bcf3`); two actual assertion failures, zero passed, skipped or cancelled |
+| Control helper result | `/Users/hughpyle/play/artroom-evidence/2026-11-14-gs1-gate-attempt3/control/helper.stderr.log` (SHA-256 `61e51a622a8cbef212848cad4d6d27c60b922c5fef7aa10de125c03f596ee52c`); exit 0, DISTINGUISHES; original source restored |
 | Native baseline | R2 Grow full gate log `/Users/hughpyle/play/artroom-evidence/2026-11-14-r2-grow-gate-attempt1/00-full-gate/stdout.log`, SHA-256 `147ff2effb1553e6edf6ba05d7ca16d5c7c944b083afca509bb7d433f88a3fa2`; Native wall 836.300133 s at its earlier source |
 | GS-1 gate attempt 1 | Exit 1, wall 12.06 s at `97ed0f6a`, tree `c6c7e4af`; format check flags only `apps/room/lanes/tsconfig.test.json`. Typechecking, definition pins and all test stages are unreached. Log `/Users/hughpyle/play/artroom-evidence/2026-11-14-gs1-gate-attempt1/gate.log`, SHA-256 `3f082569f321cac84399b9e54d88e7b599a612c4a287409d11b69918fa688597`; END `f72dad87`. |
-| GS-1 gate attempt 2 | UNRUN; a new clean-head `npm run gate` will write `/Users/hughpyle/play/artroom-evidence/2026-11-14-gs1-gate-attempt2/gate.log` after root's fresh grant |
+| GS-1 gate attempt 2 | Exit 1, wall 156.71 s at `e05d6ced`, tree `eb9fe888`; formatting, typecheck and pins pass. Kernel passes; Node has 195 tests, 194 passed and one stale-path assertion failure. Counting, Plain and Native are unreached. Log `/Users/hughpyle/play/artroom-evidence/2026-11-14-gs1-gate-attempt2/gate.log`, SHA-256 `acf787a8b5cbfdd6a45fb843bab89fc60fc19f8ce6bac8f87defc8361c8200f7`; END `3849584d`. |
+| GS-1 gate attempt 3 | UNRUN; a new clean-head `npm run gate` will write `/Users/hughpyle/play/artroom-evidence/2026-11-14-gs1-gate-attempt3/gate.log` after root's fresh grant |
 | Review | Architecture, Security, Simplification and exact-head correspondence remain owed after the gate |
 
 The attempt-1 formatter reports only the lane test config. The pinned local
 Prettier 3.9.10 expands its three-entry exclusion array across lines; parsed
-JSON values remain identical. No compiler, Node, corpus, Native or control
-reruns follow this whitespace-only repair. The next full gate checks the
-final formatting. Attempt 1 and its entire directory remain intact. Eight
-actual control/helper files copy unchanged beside the future attempt-2 log;
-no synthetic Git fixture tree copies and no control rerun follow. The cited
+JSON values remain identical. No separate development compiler, Node,
+corpus, Native or control run follows this whitespace-only repair. The full
+gate naturally runs its selected checks and tests. The next gate checks
+the final source. Both failed attempts and their directories remain intact.
+Eight actual control/helper files copy unchanged beside the future
+attempt-3 log. No synthetic Git fixture tree or control rerun follows. The cited
 control hashes therefore remain the same, and refer to the same one result.
+
+Attempt 2 finds one stale source-inventory path after the manifest case
+split. Its exact checker-boundary assertion names the old ordinary entry
+instead of `manifest-tree.scope.fixture.ts`, where the same checker import
+now lives. Commit `6d4f521b` replaces only that path. Every other allowlist
+entry and its cardinality stay unchanged. The whole failed `active-source`
+owner then passes all 12 tests once (exit zero, outer 8.32 seconds). No other
+passed owner, compiler, Native case or control reruns for this literal fix.
+This is not a runtime failure or a weakened checker dependency boundary.
 
 ## Open limits
 
