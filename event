@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d0d60a01f063797486ac07bec68a38013100cfb","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/device-application-rules.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7ea77ed50d151ebc5502de6ed92532328d5e74bf","text":"Merge retired a covered predecessor; the successor is at docs/self-host-cloudflare.md."}
