@@ -1,0 +1,81 @@
+{
+  "qualification": "Focused functional evidence on Battery Power, powermode 0; no timeouts. No generated-suite run and no gate.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-c2-reconnect-8dba5200",
+  "checkpoint": {
+    "commit": "8dba5200c99e0c1ba0b4581fad676b563aa85fbb",
+    "tree": "73dae91de1e13dfe7b49ac981f92aae60a13f367"
+  },
+  "fileCount": 14,
+  "files": [
+    {
+      "path": "checkpoint.txt",
+      "bytes": 82,
+      "sha256": "b9a59cc1db2b8ab694b7c422fc1bfbad2716e5579b37baefadbede07fb6d8c6b"
+    },
+    {
+      "path": "exit.txt",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "power-end.txt",
+      "bytes": 826,
+      "sha256": "2387ce315e391a3dae9ac4af6f9f72e891f8032a1481fce416df8a67c700fed1"
+    },
+    {
+      "path": "power-start.txt",
+      "bytes": 826,
+      "sha256": "2387ce315e391a3dae9ac4af6f9f72e891f8032a1481fce416df8a67c700fed1"
+    },
+    {
+      "path": "replica.test.ts.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "replica.test.ts.log",
+      "bytes": 305,
+      "sha256": "7c4569849b33b27e9308d0b016dbddd38824a842cb419fc4d777b90a5b49ebdf"
+    },
+    {
+      "path": "status-start.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tsconfig.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "tsconfig.json.log",
+      "bytes": 29,
+      "sha256": "b0a4bf0896505585c076e33e7502b51a5e2e488e6cee5d27cebf9f56795f7e26"
+    },
+    {
+      "path": "tsconfig.node.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "tsconfig.node.json.log",
+      "bytes": 29,
+      "sha256": "de3d1a92f879aeb251563c4e5d8c3bcc9cec1d0525ec9774f402079eca5e3b22"
+    },
+    {
+      "path": "tsconfig.test.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "tsconfig.test.json.log",
+      "bytes": 29,
+      "sha256": "aaf99757d7206ff4dfacc035019c92d80662116e319c54ada9a7c83a7f518798"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1101,
+      "sha256": "15916c3fa3dff3388af1a221a7b2dc59665ff0700b9311b5537601fde94f50b2"
+    }
+  ]
+}

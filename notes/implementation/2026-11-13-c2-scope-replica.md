@@ -160,6 +160,29 @@ the view equals the view computed again from that state. A prediction of
 (ruling `b1b1d492`). The run made 32,000 steps, 10,356 entries, 650
 predictions and 1,886 reloads in 18.9 s, on battery power.
 
+## Focused evidence for the reconnect repair
+
+The three client compiler contexts and the whole `replica.test.ts` file
+passed at commit `8dba5200c99e0c1ba0b4581fad676b563aa85fbb`, tree
+`73dae91de1e13dfe7b49ac981f92aae60a13f367`. The test file passed all 24
+cases, including reconnect after a failed read. No timeout occurred.
+The commands ran sequentially in the single test slot. The escalated
+process recorded Battery Power and `powermode 0` at both ends. The
+sandbox's AC Power reading does not describe that run.
+
+The [manifest](evidence/2026-11-13-c2-reconnect.manifest.json) holds the
+14 sealed files in
+`~/play/artroom-evidence/2026-11-13-c2-reconnect-8dba5200`. Each row below
+names the output file and its SHA-256. Compiler commands ran from the
+checkout root. The Vitest command ran from `packages/client`.
+
+| Check | Command | Exit | Output and SHA-256 |
+|---|---|---|---|
+| Client source types | `node node_modules/typescript/bin/tsc -p packages/client/tsconfig.json` | 0 | `tsconfig.json.log`: `b0a4bf0896505585c076e33e7502b51a5e2e488e6cee5d27cebf9f56795f7e26` |
+| Client Node types | `node node_modules/typescript/bin/tsc -p packages/client/tsconfig.node.json` | 0 | `tsconfig.node.json.log`: `de3d1a92f879aeb251563c4e5d8c3bcc9cec1d0525ec9774f402079eca5e3b22` |
+| Client test types | `node node_modules/typescript/bin/tsc -p packages/client/tsconfig.test.json` | 0 | `tsconfig.test.json.log`: `aaf99757d7206ff4dfacc035019c92d80662116e319c54ada9a7c83a7f518798` |
+| Replica behavior | `node ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts test/replica.test.ts` | 0 | `replica.test.ts.log`: `7c4569849b33b27e9308d0b016dbddd38824a842cb419fc4d777b90a5b49ebdf` |
+
 ## Limits
 
 A `TransportError` from `ScopeHandle.log` keeps the replica `behind`
@@ -179,4 +202,5 @@ one. Section 9 of the client note now names both fields.
 The reconnect repair changes no protected function of `observe.ts`.
 The Observation model covers obsolete callbacks and cancellation, and
 excludes reconnect behavior. Its source correspondence stays unchanged.
-The reconnect test, the 400-seed suite on AC, and the gate remain due.
+The 400-seed suite on AC, its duration, and the gate remain due under
+request `208a0378` and ruling `aa12ecdd`.
