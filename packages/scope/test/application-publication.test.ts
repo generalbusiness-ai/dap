@@ -6,7 +6,7 @@ import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { DeclaredDefinition, FactRef, Intent, ScopeKind, Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, factRefOf, intentDigest, isSeed, scopeIdOf, signIntent, textDigest, timeOf } from "@generalbusiness/dap-bytes";
-import { applicationPublicationOrigin, archiveDevicePublicationOrigin, FAILED_CLAIM_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, FILE_PUBLICATION_COHORT, fileReceiptRef, platform } from "@generalbusiness/dap-platform";
+import { applicationPublicationOrigin, archiveDevicePublicationOrigin, BASE_COHORT, PUBLICATION_PATHS, FAILED_CLAIM_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, FILE_PUBLICATION_COHORT, fileReceiptRef, platform } from "@generalbusiness/dap-platform";
 import { Reader } from "@generalbusiness/dap-git";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { SqliteStore } from "../src/index.ts";
@@ -331,6 +331,7 @@ test.each([
   { name: "a failed-claim", cohort: FAILED_CLAIM_COHORT },
   { name: "an unpublished-family", cohort: UNPUBLISHED_COHORT },
   { name: "a Commons", cohort: COMMONS_COHORT },
+  { name: "a base", cohort: BASE_COHORT },
 ])("$name application automatically publishes device reports and supersedes an unsent older report", async ({ cohort }) => {
   const declared: DeclaredDefinition = {
     ...devicePackageFixture,
@@ -352,7 +353,9 @@ test.each([
     ...emptyPackageComposition(), v: 2, entry: id, definitions: [{ id, bytes: canonicalize(declared) }],
     connections: [{ from: id, item: "root", slot: "destination", to: "outside" }],
     host: { execution: "recorded-do", profiles: ["restricted@1"] },
-    capabilities: [{ name: DEVICE_COMMAND, bounds: { kinds: ["heater"], owners: 1 } }],
+    // CF-1: the base family's Destination accepts only paths under the package's declared prefixes.
+    capabilities: [{ name: DEVICE_COMMAND, bounds: { kinds: ["heater"], owners: 1 } },
+      ...(cohort === BASE_COHORT ? [{ name: PUBLICATION_PATHS, bounds: { prefixes: ["device/"] } }] : [])],
     roles: { admin: ["command", "start"] }, projections: { root: readApplicationProjection({ v: 1, definition: id, revision: "revision",
       sources: { root: { item: "root", read: "one", states: ["ready"], limit: 1, fields: {} } } }) }, predecessor: null,
   }, presentation: { v: 2, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }],
@@ -433,8 +436,9 @@ test.each([
     await effectFixture([Q], life.wait); await dispatchFixture(nodes, life.wait);
     const creation = (await D.entries()).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.definition === id);
     if (!creation || !isSeed(creation.to)) return expect.fail("The native install must create this exact device publisher");
-    expect(creation.message).toMatchObject({ body: { creationContext: { v: 2, delegate: true,
-      deviceCommand: { capability: DEVICE_COMMAND, owner: { membership, member: "@rita" }, root: id, definitions: [id] } } } });
+    expect(creation.message).toMatchObject({ body: { creationContext: { v: cohort === BASE_COHORT ? 3 : 2, delegate: true,
+      deviceCommand: { capability: DEVICE_COMMAND, owner: { membership, member: "@rita" }, root: id, definitions: [id] },
+      ...(cohort === BASE_COHORT ? { publication: ["device/"] } : {}) } } });
     const C = life.platform(scopeIdOf(creation.to)); nodes.push(C);
     await pause(nodes);
     for (const [node, pin] of [[R, cohort.register], [D, cohort.directory], [M, cohort.membership], [Q, cohort.rules], [G, cohort.destination]] as const)

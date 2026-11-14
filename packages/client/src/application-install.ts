@@ -76,6 +76,14 @@ export async function signedDeviceApplicationInstall(signer: Signer, bytes: Uint
   return signApplicationInstall(signer, packet, owned, signing, owned.owner);
 }
 
+/** An ordinary version 2 package, without an owner, for a Rules pin that admits one (Rules 15, ruling 710a5d76). */
+export async function signedPublishedApplicationInstall(signer: Signer, bytes: Uint8Array, options: ApplicationInstallOptions, signing: Signing = {}, publisher?: KeyId): Promise<SignedApplicationInstall> {
+  const owned = readApplicationInstallOptions(options);
+  const packet = readPublishedApplicationPackage2(bytes, owned.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
+  if (publisher !== undefined && packet.package.release.manifest.publisher !== publisher) return invalid();
+  return signApplicationInstall(signer, packet, owned, signing);
+}
+
 async function signApplicationInstall(signer: Signer, packet: AnyPackedApplication, owned: ApplicationInstallOptions, signing: Signing, owner?: MemberRef): Promise<SignedApplicationInstall> {
   const semantic = applicationJson(packet.package.semantic, 256 * 1024), release = applicationJson(packet.package.release, 4096);
   const values = applicationJson(owned.values, 16 * 1024);

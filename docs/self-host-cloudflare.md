@@ -158,11 +158,9 @@ outside Git credential.
 
 ## Install a maintained application
 
-No room that you create on this Worker installs Counter or Lending. They
-are ordinary signed application packages, and new room creation offers no
-cohort that installs ordinary packages. The steps below apply only to an
-existing historical `declared-application` room. In a new room, run a
-definition on its own, as [Run your app](run-your-app.md) shows.
+Counter and Lending are ordinary signed application packages. A room of
+the `base` cohort, the default for new rooms, installs them. An existing
+historical `declared-application` room installs them as well.
 
 The Worker serves an installed package's screens through the route
 `/applications/<directory>/<install-item>/<presentation>/`.

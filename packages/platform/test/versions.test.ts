@@ -21,6 +21,12 @@ import { creationRita as rita } from "./fixtures-entry.ts";
 // Evidence: /tmp/artroom-cohort25-generation-one/result.json
 // SHA-256: e2a2052d23705690ec4b884786f453718875f6505d515fdda88a20191eb64269.
 const DIGESTS: Readonly<Record<string, string>> = {
+  // CF-1 base family (ruling bccd8dd1), observed from the generator; every earlier literal stays exact.
+  "platform:membership@14": "sha256:c909fd58a24433568f5cca3db0890de379b8456f403596fa8a8971cba19c1400",
+  "platform:rules@15": "sha256:de1f83120e304f4970e3d81504a1c888d512bcf037e66774df4e324cd73eeb0c",
+  "platform:directory@27": "sha256:3bcc3fef39c145c2de415debf0d45b4d9873df689aae898209835487f1044a23",
+  "platform:destination@21": "sha256:6c6bb1a919e3eeef6d8c486a6fca6b7d8e690090b54f17225944ed8e3c69fe6d",
+  "platform:register@28": "sha256:cc5fadbde47db6dc9a833af1a15536d22ecbf33c69faeaf0aa3acc8aa349ce12",
   // Own-agent generation preserves all 92 earlier pin and declaration byte pairs.
   "platform:destination@20": "sha256:400ab350d2593ec2a8c6139810e1a0160fa2842833668ab4f9851043c057542a",
   "platform:directory@26": "sha256:7e0a9d4cb8c2227c35878c0db62dd4bc09b969f2f338fcec16de653b5d443f63",
@@ -161,9 +167,9 @@ test("every shipped version resolves to its own data, pinned by digest, and vers
   for (const named of Object.keys(DIGESTS)) expect(platform(named)).toBe(VERSIONS[named]);
   expect(["platform:destination@9999", "platform:destination@0", "platform:destination@02", "platform:destination", "platform:task@1", "toString"].map(platform)).toEqual(Array(6).fill(null));
   // New creation defaults advance together; every historical catalog pin above stays exact.
-  expect(NEWEST).toEqual({ "platform:register": "platform:register@26", "platform:directory": "platform:directory@25",
-    "platform:membership": "platform:membership@12", "platform:rules": "platform:rules@10",
-    "platform:destination": "platform:destination@19", "platform:inbox": "platform:inbox@1" });
+  expect(NEWEST).toEqual({ "platform:register": "platform:register@28", "platform:directory": "platform:directory@27",
+    "platform:membership": "platform:membership@14", "platform:rules": "platform:rules@15",
+    "platform:destination": "platform:destination@21", "platform:inbox": "platform:inbox@1" });
   // Version 2 adds the act `read-token` and its operation `mint-read` to the destination, and nothing to version 1.
   const [one, two] = [platform("platform:destination@1")!, platform("platform:destination@2")!];
   expect([Object.hasOwn(one.data.acts, "read-token"), Object.hasOwn(one.data.outcomes, "mint-read"), Object.hasOwn(one.rules, "mint-read"), Object.hasOwn(one.rules, "open-read-token")]).toEqual([false, false, false, false]);
