@@ -50,7 +50,8 @@ function capturedRecord(entry: Entry): CertifiedPublicationStateV15 {
 // check proofs, SQLite entries and replay are real. Git objects, callback
 // scheduling and the checker's known result use explicit TEST stands. No live
 // checker runner or external provider HTTP is exercised.
-test("G15 admits the maximum constructed capture, retains 32 real proofs, and refuses the next capture before storing passes", { timeout: 180_000 }, async ({ annotate }) => {
+// Timeout: three times the slowest measured run, 91,567 ms in RC-1 gate attempt 2.
+test("G15 admits the maximum constructed capture, retains 32 real proofs, and refuses the next capture before storing passes", { timeout: 275_000 }, async ({ annotate }) => {
   const room = await hardeningNativeRoom(), { life, host, D, M, Q, G, nodes, pause } = room;
   try {
     let base = host.stand.refs.get("refs/heads/main");

@@ -171,9 +171,10 @@ the `platform:` prefix.
 
 | `--cohort` | register | directory | membership | rules | destination | inbox |
 |---|---|---|---|---|---|---|
-| `failed-claim` (the default) | 26 | 25 | 12 | 10 | 19 | 1 |
+| `base` (the default) | 28 | 27 | 14 | 15 | 21 | 1 |
+| `failed-claim` | 26 | 25 | 12 | 10 | 19 | 1 |
 | `archive-device-publication` | 18 | 17 | 8 | 10 | 13 | 1 |
-| `unpublished` (selected by `--host none`) | 21 | 20 | 8 | 10 | 16 | 1 |
+| `unpublished` | 21 | 20 | 8 | 10 | 16 | 1 |
 | `application` | 5 | 5 | 4 | 3 | 2 | 1 |
 | `archive-device-application` | 17 | 16 | 8 | 10 | 12 | 1 |
 | `archive-certified-rules` | 19 | 18 | 8 | 11 | 14 | 1 |
@@ -184,6 +185,31 @@ the `platform:` prefix.
 | `own-agent` | 27 | 26 | 13 | 10 | 20 | 1 |
 
 The `commons` cohort also pins `platform:commons@1`.
+
+The `base` cohort is the default for every host, `none` included. It keeps
+the failed-claim final state, separate founder and recovery keys, the
+one-hour Git read token of Destination 19, eight controlled agents, archive
+binding and later repository binding. Membership 14 lets a member leave:
+
+- An active key retires itself or marks itself compromised with
+  `revoke-key`. Another member's key refuses `not-own-key`.
+- An active key of a member removes that member with `leave`. Another
+  member refuses `not-own-member`.
+- An active person who holds `membership.own-agent` removes an agent that
+  they control, or revokes one of its active keys.
+
+An own agent holds at most four invited or active keys. `last-admin-kept`
+skips its check only for an act that the recovery key signs, so none of
+these acts removes the last admin.
+
+Rules 15 installs three kinds of version 2 package. An ordinary package
+takes no `--owner`. A `device-command@1` package takes `--owner`, as below.
+A package can also declare `publication-paths@1` with one to eight
+directory prefixes, such as `shelf/`. The application then publishes files
+only inside its prefixes. The directory refuses a second application whose
+prefixes overlap a held claim, by the name `publication-prefix-in-use`. A
+failed creation releases its claim. A package without the declaration
+publishes no file.
 
 The `failed-claim` cohort requires separate founder and recovery keys. After
 all three repository-creation attempts fail, the claim enters a final failed
@@ -206,10 +232,9 @@ and no journal archive export.
 [Create rooms that refuse a shared founder and recovery key](deploy.md#create-rooms-that-refuse-a-shared-founder-and-recovery-key)
 says what a deployment does before it creates rooms on this cohort.
 
-Without `--cohort`, a host other than `none` selects
-`failed-claim`, including with `--register-policy open`. `--host none` selects `unpublished` by
-default and also accepts explicit `repository-binding`, `own-agent`, or
-`commons` selection. The service's creation policy still decides whether it accepts a
+Without `--cohort`, every host selects `base`, including with
+`--register-policy open`. `--host none` also accepts explicit `unpublished`,
+`repository-binding`, `own-agent`, or `commons` selection. The service's creation policy still decides whether it accepts a
 new register. An unknown or repeated `--cohort`, or a conflict with a
 retained plan's cohort, service, host or namespace, is refused before
 anything is signed. Adding an explicit choice does not change the
@@ -242,9 +267,9 @@ R26/D25/M12/Destination19 to the separate failed-claim cohort.
 
 The device cohorts install `device-command@1` packages with an explicit
 existing owner, and accept an archive binding when the room is created
-or later. No current cohort installs ordinary application packages such
-as Counter or Lending. The `application` cohort supports explicit
-definition activation instead, as the next sections describe.
+or later. The `base` cohort installs ordinary packages such as Counter
+or Lending as well. The `application` cohort supports explicit definition
+activation, as the next sections describe.
 
 #### Historical cohorts
 
@@ -326,23 +351,25 @@ unsupported pin is a verification failure.
 #### Install an application package
 
 `dap install <git+https-uri> --release <release-id> --request <kept-key>`
-records one application install in the room. No room that a current
-Worker creates installs an ordinary package, one that requires no host
-capability.
+records one application install in the room.
 
+- An ordinary version 2 package, or one that declares
+  `publication-paths@1`, needs a room of the `base` cohort. It takes no
+  `--owner`.
 - An ordinary version 1 package needs an existing historical
-  `trusted-application` room. An ordinary version 2 package needs an
-  existing historical `declared-application` room.
-- A device-command package needs a room of a current device cohort, or an
-  existing historical `device-application` room. It also needs `--owner`
+  `trusted-application` room. An existing historical
+  `declared-application` room also installs an ordinary version 2 package.
+- A device-command package needs a room of the `base` cohort or of a
+  current device cohort, or an existing historical `device-application`
+  room. It also needs `--owner`
   with the full JSON member reference: the membership scope ID and genesis,
   and the member handle. The install checks that the member is active in the
   room's membership. The signed package declares the kinds and one owner
   requirement. It supplies no member identity or authority.
 - A package whose signed host requirements include `archive` needs an
   archive-capable room: historical `archive-application` for version 1,
-  historical `archive-declared-application` for version 2, or a current
-  device cohort for a version 2 package with `device-command@1`. The
+  historical `archive-declared-application` for version 2, or a `base` or
+  current device cohort room for a version 2 package. The
   room's directory must have the binding `archive: "journal"`. An admin
   sets it with `bind-archive`, when the room is created or later. Without
   the binding the install ends with `archive-unavailable` before it grants

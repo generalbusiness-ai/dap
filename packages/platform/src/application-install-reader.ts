@@ -1,3 +1,4 @@
+import { BASE_COHORT as BC } from "./base-cohort.ts";
 import { OWN_AGENT_COHORT as OA } from "./own-agent-cohort.ts";
 import { REPOSITORY_BINDING_COHORT as RB } from "./repository-binding-cohort.ts";
 import { EVIDENCE_RULES_COHORT as ERC } from "./evidence-cohort.ts";
@@ -17,15 +18,15 @@ import { FAILED_CLAIM_COHORT as FC } from "./failed-claim-cohort.ts";
 import { SEPARATE_RECOVERY_COHORT as SR } from "./separate-recovery-cohort.ts";
 export function applicationRoom(state: StateView, named: string): ApplicationRoom | null {
   const scope = state.scope();
-  if ((named !== OA.directory && named !== FC.directory && named !== RB.directory && named !== SR.directory && named !== CC.directory && named !== U.directory && named !== C.directory && named !== C2.directory && named !== D.directory && named !== ADC.directory && named !== ADP.directory && named !== ERC.directory && named !== HCR.directory && named !== ACR.directory && named !== AC.directory && named !== AC2.directory) || scope?.status !== "active" || scope.kind !== "directory") return null;
+  if ((named !== BC.directory && named !== OA.directory && named !== FC.directory && named !== RB.directory && named !== SR.directory && named !== CC.directory && named !== U.directory && named !== C.directory && named !== C2.directory && named !== D.directory && named !== ADC.directory && named !== ADP.directory && named !== ERC.directory && named !== HCR.directory && named !== ACR.directory && named !== AC.directory && named !== AC2.directory) || scope?.status !== "active" || scope.kind !== "directory") return null;
   const rules = state.page("repository", ["open"], null, 1).items[0]?.refs["rules"];
   // Rules 10 serves several Membership pins, so only this Directory can name the one beside it.
-  return isScopeRef(rules) ? { directory: scope.at, rules, ...(named === OA.directory ? { membershipDefinition: OA.membership } : named === FC.directory ? { membershipDefinition: FC.membership } : named === RB.directory ? { membershipDefinition: RB.membership } : named === SR.directory ? { membershipDefinition: SR.membership } : {}) } : null;
+  return isScopeRef(rules) ? { directory: scope.at, rules, ...(named === BC.directory ? { membershipDefinition: BC.membership } : named === OA.directory ? { membershipDefinition: OA.membership } : named === FC.directory ? { membershipDefinition: FC.membership } : named === RB.directory ? { membershipDefinition: RB.membership } : named === SR.directory ? { membershipDefinition: SR.membership } : {}) } : null;
 
 }
 export function applicationInstallation(state: StateView, named: string, directory: ScopeRef, item: number): ApplicationInstallation | null {
   const scope = state.scope();
-  if ((named !== CC.rules && named !== C.rules && named !== C2.rules && named !== D.rules && named !== ADC.rules && named !== ERC.rules && named !== HCR.rules && named !== ACR.rules && named !== AC.rules && named !== AC2.rules) || scope?.status !== "active" || scope.kind !== "rules" || !isScopeRef(directory)
+  if ((named !== BC.rules && named !== CC.rules && named !== C.rules && named !== C2.rules && named !== D.rules && named !== ADC.rules && named !== ERC.rules && named !== HCR.rules && named !== ACR.rules && named !== AC.rules && named !== AC2.rules) || scope?.status !== "active" || scope.kind !== "rules" || !isScopeRef(directory)
     || !Number.isSafeInteger(item) || item < 0 || item > scope.head.seq) return null;
   const room = state.page("rules", ["current"], null, 1).items[0], job = state.item(item);
   if (!room || !isScopeRef(room.refs["directory"]) || canonicalize(room.refs["directory"]) !== canonicalize(directory) || job?.type !== "installation" || job.state !== "active") return null;

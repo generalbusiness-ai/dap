@@ -3,7 +3,7 @@
 const QUESTION_PINS = {
   nativeTimedOperationOpen: [
     "platform:destination@13", "platform:destination@14", "platform:destination@15", "platform:destination@19",
-    "platform:destination@3",
+    "platform:destination@21", "platform:destination@3",
   ],
   gitArchiveDirectMembership: [
     "platform:membership@6",
@@ -18,35 +18,37 @@ const QUESTION_PINS = {
     "platform:destination@6",
   ],
   archiveMembershipForeignCopy: [
-    "platform:membership@12", "platform:membership@8",
+    "platform:membership@12", "platform:membership@14", "platform:membership@8",
   ],
   archiveRegisterForeignCopy: [
     "platform:register@17", "platform:register@18", "platform:register@19", "platform:register@20",
-    "platform:register@26",
+    "platform:register@26", "platform:register@28",
   ],
   applicationScreenMembership: [
     "platform:membership@10", "platform:membership@11", "platform:membership@12", "platform:membership@13",
-    "platform:membership@7", "platform:membership@8", "platform:membership@9",
+    "platform:membership@14", "platform:membership@7", "platform:membership@8", "platform:membership@9",
   ],
   clientCreationOfferRegister: [
-    "platform:register@17", "platform:register@26",
+    "platform:register@17", "platform:register@26", "platform:register@28",
   ],
   clientAgentKeyInvitationMembership: [
     "platform:membership@10", "platform:membership@11", "platform:membership@12", "platform:membership@13",
-    "platform:membership@2", "platform:membership@4", "platform:membership@5", "platform:membership@6",
-    "platform:membership@7", "platform:membership@8", "platform:membership@9",
+    "platform:membership@14", "platform:membership@2", "platform:membership@4", "platform:membership@5",
+    "platform:membership@6", "platform:membership@7", "platform:membership@8", "platform:membership@9",
   ],
   clientCheckerKeyInvitationMembership: [
-    "platform:membership@12", "platform:membership@8",
+    "platform:membership@12", "platform:membership@14", "platform:membership@8",
   ],
   clientPersonInvitationMembership: [
     "platform:membership@1", "platform:membership@10", "platform:membership@11", "platform:membership@12",
-    "platform:membership@13", "platform:membership@2", "platform:membership@4", "platform:membership@5",
-    "platform:membership@6", "platform:membership@7", "platform:membership@8", "platform:membership@9",
+    "platform:membership@13", "platform:membership@14", "platform:membership@2", "platform:membership@4",
+    "platform:membership@5", "platform:membership@6", "platform:membership@7", "platform:membership@8",
+    "platform:membership@9",
   ],
   clientInvitationSignatureCredential: [
     "platform:membership@10", "platform:membership@11", "platform:membership@12", "platform:membership@13",
-    "platform:membership@6", "platform:membership@7", "platform:membership@8", "platform:membership@9",
+    "platform:membership@14", "platform:membership@6", "platform:membership@7", "platform:membership@8",
+    "platform:membership@9",
   ],
   clientCommonsReadDefinition: [
     "platform:commons@1",

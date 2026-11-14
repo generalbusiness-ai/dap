@@ -149,7 +149,7 @@ test("operator sweep validates locally and reports exact listed genesis outcomes
   held = utf8(`${canonicalize(manifest)}\n`);
   const versions = await scopeIndexCommand(ctx, ["versions", "--manifest", "saved.json"], files);
   expect(versions.code).toBe(0);
-  expect(JSON.parse(versions.lines[0]!)).toMatchObject({ manifestDigest: digestBytes(held), ready: true, listed: 3, usableCreationCohorts: ["failed-claim"] });
+  expect(JSON.parse(versions.lines[0]!)).toMatchObject({ manifestDigest: digestBytes(held), ready: true, listed: 3, usableCreationCohorts: ["base", "failed-claim"] });
   expect(calls.filter(call => !call.endsWith("/sessions"))).toEqual(manifest.scopes.map(row => `GET:/v1/scopes/${row.at.scope}/entries/0`));
   expect(versions.lines.join("\n")).toContain("No setting is changed or emitted");
   const report = await verifyIndexManifest(manifest, { ...f.reads, entry: async (scope, seq) => {
@@ -185,14 +185,14 @@ test("operator versions binds saved genesis and separates observed catalog pins 
   const f = fixture(), manifest = await captureIndexManifest("https://service.test", f.D, f.reads);
   f.calls.length = 0;
   expect(await indexManifestVersions(manifest, f.reads)).toMatchObject({ ready: true,
-    observedPins: ["platform:directory@17", "platform:register@18", "platform:rules@10"], usableCreationCohorts: ["failed-claim"] });
+    observedPins: ["platform:directory@17", "platform:register@18", "platform:rules@10"], usableCreationCohorts: ["base", "failed-claim"] });
   expect(f.calls).toEqual(manifest.scopes.map(row => `entry:${row.at.scope}:0`));
   // Old ADC pins remain recognized observations. This partial inventory lacks
   // its Destination12, so it does not claim that complete old creation cohort.
   const historical = fixture({ definitions: { register: "platform:register@17", directory: "platform:directory@16", rules: "platform:rules@10" } });
   const held = await captureIndexManifest("https://service.test", historical.D, historical.reads);
   expect(await indexManifestVersions(held, historical.reads)).toMatchObject({ ready: true,
-    observedPins: ["platform:directory@16", "platform:register@17", "platform:rules@10"], usableCreationCohorts: ["failed-claim"] });
+    observedPins: ["platform:directory@16", "platform:register@17", "platform:rules@10"], usableCreationCohorts: ["base", "failed-claim"] });
   const legacy = fixture({ definitions: { register: "platform:register@3", directory: "platform:directory@3", rules: "platform:rules@2" } });
   const old = await captureIndexManifest("https://service.test", legacy.D, legacy.reads);
   const report = await indexManifestVersions(old, legacy.reads);
@@ -244,12 +244,12 @@ test("Commons inventory discovers and exports closed sibling references before r
   expect(wire.scopes.every(row => Object.keys(row).sort().join(",") === "at,kind"
     && Object.keys(row.at).sort().join(",") === "genesis,scope")).toBe(true);
   const versions = await indexManifestVersions(manifest, f.reads);
-  expect(versions).toMatchObject({ ready: true, usableCreationCohorts: ["failed-claim", "commons"],
+  expect(versions).toMatchObject({ ready: true, usableCreationCohorts: ["base", "failed-claim", "commons"],
     observedPins: ["platform:commons@1", "platform:destination@16", "platform:directory@22", "platform:membership@9", "platform:register@23", "platform:rules@14"] });
   expect(versions.rows.every(row => row.result === "verified")).toBe(true);
   const partial = { ...manifest, scopes: manifest.scopes.filter(row => row.at.scope !== f.refOf(q).scope) };
   expect(await indexManifestVersions(partial, f.reads)).toMatchObject({ ready: true,
-    usableCreationCohorts: ["failed-claim"] });
+    usableCreationCohorts: ["base", "failed-claim"] });
 });
 
 // Invariant: Node custody never replaces an existing manifest and bounds the

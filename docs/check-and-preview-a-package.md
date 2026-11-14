@@ -6,10 +6,10 @@ read a refusal in its scenario, and preview it with `dap dev`. Each
 command runs on your computer with public TEST actors. No room or
 service is involved.
 
-No room that a current Worker creates installs an ordinary package such
-as this starter. `dap check` and `dap dev` are the way to run it today.
-To run a definition in a room, activate it on its own, as
-[Run your app](run-your-app.md) shows.
+To run this starter in a room, pack it with `dap pack` and install it in
+a room of the `base` cohort, as
+[Install an application package](cli.md#install-an-application-package)
+describes.
 
 ## Before you start
 
@@ -184,9 +184,9 @@ notes-custody, step 2: Expected the exact named native refusal.
   composition, the checks behind `dap check`, and device commands.
 - [Declared application views](application-views.md) describes the
   views that show a package's items in an AI app.
-- [`dap pack`](cli.md#dap-pack) signs the package. No cohort that a new
-  room can be created with installs an ordinary package such as this
-  one. [Creation cohorts](cli.md#creation-cohorts) lists the cohorts.
+- [`dap pack`](cli.md#dap-pack) signs the package. A room of the `base`
+  cohort installs it. [Creation cohorts](cli.md#creation-cohorts) lists
+  the cohorts.
 
 ## Source
 

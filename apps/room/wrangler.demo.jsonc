@@ -11,7 +11,7 @@
   "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
   "vars": {
     "SCOPE_INDEX_MODE": "enforce",
-    "PLATFORM_CREATION_PINS": "[\"platform:register@17\",\"platform:directory@16\",\"platform:membership@8\",\"platform:rules@10\",\"platform:destination@12\",\"platform:inbox@1\"]",
+    "PLATFORM_CREATION_PINS": "[\"platform:register@28\",\"platform:directory@27\",\"platform:membership@14\",\"platform:rules@15\",\"platform:destination@21\",\"platform:register@17\",\"platform:directory@16\",\"platform:membership@8\",\"platform:rules@10\",\"platform:destination@12\",\"platform:inbox@1\"]",
     "ARTIFACTS_NAMESPACE": "dap-demo",
     "REGISTER_SCOPE": "sc_zm56yco5zyx7n3kx7e5jcxz55q5wp7y2lcuy2ialj7r7mzzcarjq",
     "INSTALLED_REGISTER_SCOPES": "[\"sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq\",\"sc_zm56yco5zyx7n3kx7e5jcxz55q5wp7y2lcuy2ialj7r7mzzcarjq\"]",

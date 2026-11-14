@@ -6,7 +6,7 @@ import { canonicalize, isRecord, parseStrict, parseStrictBytes, utf8 } from "@ge
 import { ApplicationPackageError, readApplicationPackage } from "@generalbusiness/dap-platform/application";
 import { readPublishedApplicationPackage2, type AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
 import { validateDefinition } from "@generalbusiness/dap-derive";
-import { deviceApplicationRequirement, INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_BYTES } from "@generalbusiness/dap-platform";
+import { applicationCapabilities, INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_BYTES } from "@generalbusiness/dap-platform";
 import { admit, RuleEvalError, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 
 /** This host's finite packet allowance, below the portable 16 MiB codec
@@ -31,10 +31,11 @@ export function readTrustedApplication(bytes: Uint8Array, release: Digest, trust
   else if (version === 2) packet = readPublishedApplicationPackage2(owned, release, { bytes: APPLICATION_HOST_PACKAGE_BYTES });
   else throw new ApplicationPackageError("invalid");
   if (packet.package.release.manifest.publisher !== allowed.publisher) return admissionFailure("untrusted-release");
-  // Only the finite native device-command version is supported beside ordinary
-  // packages. Native installation separately binds an existing owner.
+  // A capability needs package version 2: the finite native device-command
+  // version, declared publication prefixes, or both. Each room's Rules pin
+  // admits its own sets; native installation binds a device owner.
   if (packet.package.semantic.host.execution !== "recorded-do" || packet.package.semantic.host.profiles.some(profile => profile !== "restricted@1")
-    || packet.package.semantic.capabilities.length > 0 && (packet.package.v !== 2 || !deviceApplicationRequirement(packet.package.semantic))) return admissionFailure("unsupported-host");
+    || packet.package.semantic.capabilities.length > 0 && (packet.package.v !== 2 || !applicationCapabilities(packet.package.semantic))) return admissionFailure("unsupported-host");
   if (utf8(canonicalize(packet.package.semantic)).length > INSTALL_SEMANTIC_BYTES) return admissionFailure("unsupported-definition");
   for (const part of packet.package.semantic.definitions) {
     if (utf8(part.bytes).length > INSTALL_DEFINITION_BYTES) return admissionFailure("unsupported-definition");

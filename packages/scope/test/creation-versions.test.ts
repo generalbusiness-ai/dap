@@ -8,7 +8,7 @@ import { expect, test } from "vitest";
 import type { Intent, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, isSignedIntentShape, parseStrict, scopeIdOf, signIntent, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { keys } from "@generalbusiness/dap-derive/testing";
-import { FAILED_CLAIM_COHORT, OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT, COMMONS_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, SEPARATE_RECOVERY_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
+import { BASE_COHORT, FAILED_CLAIM_COHORT, OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT, COMMONS_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, SEPARATE_RECOVERY_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
 import { readPlatformCreationPolicy, injectedPlatformCreationPolicy, permitsNewPlatformScope } from "../src/creation-versions.ts";
 import { admitChildCreation, type CreationTimer } from "../src/creation-lineage.ts";
 import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";
@@ -35,7 +35,7 @@ test("install fixture is a valid signed intent at an exact-second deadline", () 
 
 test("creation policy owns bounded known pins; absent and explicit undefined default, invalid configuration closes", () => {
   // The new default joins retained hosted and explicit host-none families.
-  const expected = [...new Set([...Object.values(FAILED_CLAIM_COHORT), ...Object.values(ARCHIVE_DEVICE_PUBLICATION_COHORT), ...Object.values(UNPUBLISHED_COHORT), ...Object.values(COMMONS_COHORT)])];
+  const expected = [...new Set([...Object.values(BASE_COHORT), ...Object.values(FAILED_CLAIM_COHORT), ...Object.values(ARCHIVE_DEVICE_PUBLICATION_COHORT), ...Object.values(UNPUBLISHED_COHORT), ...Object.values(COMMONS_COHORT)])];
   for (const settings of [{}, { PLATFORM_CREATION_PINS: undefined }, { PLATFORM_CREATION_PINS: "[]" }]) {
     const policy = readPlatformCreationPolicy(settings);
     expect(policy?.pins).toEqual(expected);

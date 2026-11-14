@@ -17,7 +17,7 @@
   "vars": {
     // Recorded live mode; preserve enforced admission on deployment.
     "SCOPE_INDEX_MODE": "enforce",
-    "PLATFORM_CREATION_PINS": "[\"platform:register@5\",\"platform:directory@5\",\"platform:membership@4\",\"platform:rules@3\",\"platform:destination@2\",\"platform:inbox@1\"]",
+    "PLATFORM_CREATION_PINS": "[\"platform:register@28\",\"platform:directory@27\",\"platform:membership@14\",\"platform:rules@15\",\"platform:destination@21\",\"platform:register@5\",\"platform:directory@5\",\"platform:membership@4\",\"platform:rules@3\",\"platform:destination@2\",\"platform:inbox@1\"]",
     // This Worker has no generic screen installation, content bucket or trust.
     // A later reviewed release/install must supply them before a host is added.
     "APPLICATION_SCREEN_HOSTS": "[]",
