@@ -5,7 +5,7 @@ import { inject, expect, test, onTestFinished } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FactRef, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, b64url, canonicalize, entryHash, timeOf, unb64url, definitionDigest, sign, keyIdOfSecret, digestBytes, factRefOf, scopeIdOf, timeMs, utf8, textDigest } from "@generalbusiness/dap-bytes";
 import { requestSession, sessionRequest, signedReader, type Fetch } from "@generalbusiness/dap-client";
-import { FAILED_CLAIM_COHORT, firstExtents, CONFIGURATION_DOMAIN, platform, revokedToken, destinationWrite, destinationRevokedMint } from "@generalbusiness/dap-platform";
+import { BASE_COHORT, firstExtents, CONFIGURATION_DOMAIN, platform, revokedToken, destinationWrite, destinationRevokedMint } from "@generalbusiness/dap-platform";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { SqliteStore, CAPABILITY_CODE } from "@generalbusiness/dap-scope";
 import { ownOf } from "../../../../packages/scope/src/core.ts";
@@ -310,7 +310,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   const repository = (await creator.store.config())!.repository!;
   const G = new Platform(repository.destination); known.push(G); await pause([]);
   expect((await G.summary()).value.definition).toBe(newestCreation
-    ? FAILED_CLAIM_COHORT.destination : "platform:destination@3");
+    ? BASE_COHORT.destination : "platform:destination@3");
   const first = host.refs.get("refs/heads/main")!;
   if (receiptRecoveryOnly) {
     ok(await run(creator, "act", "publish", "--on", "rules", "--target", "0", "--set", "approvals=0", "--set", "ownerMayReview=false", "--set", "checks=[]", "--set", "labels=[]", "--set", `extents=${JSON.stringify(firstExtents({ approvals: 0, checks: [] }))}`));
@@ -606,7 +606,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
     expect(await runDurableObjectAlarm(G.object)).toBe(true);
     const expired = (await G.entries()).filter((entry) => entry.input.type === "timed" && entry.input.item === expiring.id && entry.effects.some((effect) => effect.effect === "operation" && effect.kind === "reservation-delete" && effect.attempts === 3));
     expect(expired).toHaveLength(1);
-    if (newestCreation) expect(expired[0]!.effects).toContainEqual({ effect: "operation", k: 0, owner: FAILED_CLAIM_COHORT.destination, kind: "reservation-delete", attempts: 3, for: expiring.id });
+    if (newestCreation) expect(expired[0]!.effects).toContainEqual({ effect: "operation", k: 0, owner: BASE_COHORT.destination, kind: "reservation-delete", attempts: 3, for: expiring.id });
     for (let attempt = 0; attempt < 4; attempt++) { await pause([repository.destination]); net.clock.now = timeOf(timeMs(net.clock.now)! + 2000); }
     const owed = (await G.summary()).value.items.find((item) => item.type === "publication" && item.state === "cleanup-owed")!;
     if (unknownMintOnly) {
