@@ -34,6 +34,7 @@
   },
   "include": [
     "*.ts",
+    "publisher/**/*.ts",
     "browser/model.ts",
     "browser/model.test.ts",
     "browser/custody.ts",
