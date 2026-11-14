@@ -72,7 +72,8 @@ export async function openSession(home: string, options: { fetch?: Fetch; now?: 
   let active: Original | null = null, busy = false;
   // The engine resolves scope IDs itself. Fence its actual record before any
   // dispatch, including a target/resource incarnation change after our read.
-  const validateRecord = (record: CustodyRecord, original: Original): void => {
+  // A write carries a record as the store holds it, of either version.
+  const validateRecord = (record: Parameters<typeof rawCustody.write>[1], original: Original): void => {
     if (!equal(record.identity, original.identity) || !same(record.envelope.signed.intent.to, original.identity.target)) refuse("custody-binding");
     for (const step of Object.values(record.steps)) {
       if (!original.resource || !same(step.resource, original.resource)) refuse("resource-binding");

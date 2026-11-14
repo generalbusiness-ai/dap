@@ -2,7 +2,7 @@
 import type { KeyId, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, isSignedIntentShape, parseStrict, same, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { isAgentKeyMembership } from "@generalbusiness/dap-client";
-import type { CustodyRecord, Identity } from "@generalbusiness/dap-client";
+import type { Identity, StoredCustodyRecord } from "@generalbusiness/dap-client";
 
 export type RetirementBody = { valid: true; revoke: SignedIntent | null } | { valid: false };
 
@@ -26,7 +26,7 @@ export function retirementBody(bytes: Uint8Array, membership: ScopeRef, actor: K
 /** In these pinned memberships, invite-key opens the key at its own sequence.
  * Only the endpoint's verified accepted enrolment identifies that invitation.
  * An absent or unresolved record supplies no substitute target. */
-export function enrolledKeyItem(record: CustodyRecord | null, identity: Identity): number | null {
+export function enrolledKeyItem(record: StoredCustodyRecord | null, identity: Identity): number | null {
   if (!record || record.phase !== "accepted" || canonicalize(record.identity) !== canonicalize(identity)
     || !isAgentKeyMembership(record.binding.pinned) || record.binding.kind !== "enrol") return null;
   const signed = record.envelope.signed, intent = signed.intent;

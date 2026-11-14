@@ -2,8 +2,9 @@
 
 Status: current. Hugh ratified this note on 13 November 2026, for request
 `e5b86654`. The review of the checker then added the rule of 5.1 for a
-record that holds 8 envelopes. Nothing here is built. Section 13 lists
-the build steps.
+record that holds 8 envelopes. An amendment of 13 November 2026 adds
+section 5.5 for request `43de81ee`. Nothing here is built. Section 13
+lists the build steps.
 
 A page shows a scope and lets a member act on it. Today the page author
 assembles that from parts: a signer, a handle, a fold, a store of sent
@@ -109,10 +110,12 @@ signing is live and the client holds no answer for that send. A lost
 reply and the answer `unavailable` are not answers. An **attempt** is
 the set of copies that the client sends after one submit of the member.
 
-A signing is **closed** when it cannot hold the key. Each of its copies
-has a refusal. Or a read after its death shows that the key is not in
-the record: a settlement read that answers `not-found`, or a journal
-read to a head that does not hold the key.
+A signing is **closed** when it cannot hold the key. A signing closes in
+four cases. A settlement read after its death answers `not-found`. The
+caller states with `absent` that a journal read to a head after its
+death does not hold the key. The scope answers `mismatch` to it. Or a
+verified journal entry holds the key with another intent, and the
+caller states it with `folded`. A refusal alone closes no signing.
 
 The **replica** is the client's fold of the scope's journal, from the
 genesis entry to a head. The **record** is the scope's journal. A
@@ -259,13 +262,88 @@ FG-1 (`212e97dd`) adds the check of the genesis definition.
 
 `Custody` gains `absent(identity, signing, head)`. The caller states
 that a verified journal, read to that head after the signing died, does
-not hold the key. `Custody` closes the signing and drops its envelope,
-unless it is the latest signing. The caveat of section 5.3 for a slow
-clock applies in the same way.
+not hold the key. For an earlier signing, `Custody` closes the signing
+and drops its envelope. For the latest signing, section 5.5 applies.
+The caveat of section 5.3 for a slow clock applies in the same way.
 
 The store port gains one read: the open and returned records of one
 signer at one target. Each store port also gains a signal that another
 client changed the store.
+
+### 5.5 A record ends when its latest signing is dead and absent
+
+Ana's page lost every reply of a request, and the signing expired. A
+read after the death does not hold the key. Nothing that the store
+holds can still take effect, but sections 5.1 to 5.4 give that record
+no end. Its phase stays `prepared`, `sent` or `unknown`, and it counts
+in the 256 unresolved records for good. A member who gives up 256
+requests fills the store.
+
+The rule: `absent` for the latest signing ends the record.
+
+- The record's phase is `prepared`, `sent` or `unknown`, and its latest
+  signing is dead. The caller states `absent` for that signing at a
+  head. `Custody` closes the signing, appends the outcome `unsent` with
+  the head, and makes the phase `refused`.
+- `Custody` keeps the envelope of the latest signing, as 5.1 says.
+- The record then follows each rule of 5.3 for the phase `refused`. It
+  does not count in the 256. `Custody` sends nothing for it until the
+  caller submits again, and `resign` signs again. The store keeps it as
+  it keeps each terminal record.
+- `absent` for a latest signing that is live changes nothing.
+
+The phase `refused` gains no new meaning for capacity or for sending,
+so the stored vocabulary gains no phase. It gains one outcome, `unsent`.
+`Custody` invents no refusal of the scope. A reader of the record sees
+that the client ended it, and at which head.
+
+**Who ends a record.** Only `absent` does. A `not-found` of `settle` for
+the latest signing of an unresolved record changes nothing, as in
+version 1. A caller with a replica states a head, and a settlement read
+names none. The MCP service, the hosted agent and the CLI install hold
+no replica and never call `absent`. They keep the behavior of version 1,
+and they read a record with the outcome `unsent` as `unreadable`, as
+they read a folded record.
+
+**The schedule.** Section 7 reads the journal for a dead signing that
+has a copy with no answer. That row leaves out a record that the client
+signed and never sent, for example after a reload between the signing
+and the first send. The row becomes: for each unresolved record whose
+latest signing is dead, the client reads the journal to its head. If
+the replica does not hold the key, the client calls `absent`. A read
+that fails is not that read, and the client reads again when the feed
+returns. On a reload the client applies the row to each record that it
+finds.
+
+So each record ends at the first good read after its latest signing
+dies. The unresolved records are the requests that the member signed
+in the last lifetime, and the requests of a time with no feed.
+
+**A late seal.** A scope whose clock is behind the client's by more
+than the margin can seal the signing after `absent`. A client whose
+clock is ahead gives the same case. The record still holds the intent
+digest of each signing. When the replica folds the entry, the client
+calls `folded`, and the record moves from `refused` to `accepted`. The
+status of section 6 reads the replica, so the request shows `recorded`.
+
+**The member's view.** Nothing changes in section 6. Rule 5 already
+returns a request whose latest signing is dead, with the cause
+`unsent`. Nothing changes in section 8. `dismiss` and `discard` change
+no custody record: a dismissed request leaves the list, and its record
+ends by an answer of the scope or by `absent`. A page needs no "give
+up" call and no list of given-up keys.
+
+The cases of 5.5 in the tests of section 12:
+
+1. 257 requests in one store. Each loses every reply, its signing
+   dies, and a read to the head does not hold its key. The 257th submit
+   signs.
+2. After `absent`, the scope seals a held copy of the signing. After
+   the fold the record reads `accepted`, and the status is `recorded`.
+3. A reload between the signing and the first send. The signing dies,
+   and the record ends at the next read.
+4. The feed is down when the signing dies. The record stays unresolved
+   until the feed returns, and then it ends.
 
 ## 6. Status of a request
 
@@ -370,7 +448,8 @@ to send. The client of this note has one schedule, in one place.
 | A refusal | The attempt ends |
 | `notAfter` passes | Send nothing more for that signing |
 | The signing dies with no answer | The request returns, `unsent` |
-| A signing is dead and has a copy with no answer | Read the journal to its head one time. If the replica does not hold the key, call `absent` |
+| The latest signing of an unresolved record is dead | Read the journal to its head. If the replica does not hold the key, call `absent` (5.5). A read that fails is not that read |
+| An earlier signing is dead and has a copy with no answer | Read the journal to its head one time. If the replica does not hold the key, call `absent` |
 
 The client holds one timer, set to the earliest time that any request
 is due. `close()` clears the timer and cancels the observation. No other
@@ -608,7 +687,8 @@ intention. The suite checks seven invariants after each step.
 7. After `close()`, no timer and no observation remain.
 
 Custody has its own cases. A literal version 1 record reads as version 2
-and settles. Each rule of sections 5.1 to 5.4 has one case. The MCP
+and settles. Each rule of sections 5.1 to 5.4 has one case, and 5.5
+lists its four cases. The MCP
 witnesses of NF-3 keep their behavior, and each takes a new literal for
 the version 2 bytes, captured one time.
 
@@ -624,7 +704,7 @@ step C1 goes first, then NF-5. NF-5 does not wait for steps C2 to C4.
 | C1 | Custody record version 2: signings, `resign`, the rules of 5.3, `folded`, `absent`, the read by target, the change signal | The cutover head, RC-1 |
 | NF-5 | As filed, on version 2 | C1 |
 | C2 | The replica: fold of a declared scope from `ScopeHandle.log` and `observeScope`, the states, `Judged`, typed rows with their index | RC-1, FG-1, IE-1, PG-1 |
-| C3 | Requests: the status rules, the schedule, the view | C1, C2 |
+| C3 | Requests: the status rules, the schedule, the view, and the end of a record (5.5) | C1, C2 |
 | C4 | Slots and drafts: slot types, the draft store, the calls | C3 |
 
 Each step lands with its part of the generated suite. Each step is one
@@ -667,7 +747,7 @@ them, because the status of a request never rests on a refusal alone.
 | Item of `e5b86654` | Section |
 |---|---|
 | 1. Successive envelopes under one key | 4, 5.1, 5.2 |
-| 2. The refusals that resolve a record | 5.3, 6 |
+| 2. The refusals that resolve a record | 5.3, 5.5, 6 |
 | 3. A late acceptance, and "another version holds this key" | 5.3, 5.4, 6.2 |
 | 4. Custody checked against a replica | 5.4, 6 |
 | 5. A view of custody for a page | 9 |

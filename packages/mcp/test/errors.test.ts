@@ -1,12 +1,12 @@
 import { descriptions } from "../src/description-context.ts";
 import { describe, expect, test } from "vitest";
 import type { Answer, DeclaredDefinition, MismatchReason, ReadRefusal, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
-import { REFUSAL_REASONS, READ_REFUSALS, b64url, utf8 } from "@generalbusiness/dap-bytes";
+import { REFUSAL_REASONS, READ_REFUSALS, b64url, intentDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { INVITATION_LINK, readApplicationInstallOptions, secretSigner, signedIntent, TransportError } from "@generalbusiness/dap-client";
 import { TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { projectAnswer, ACT_OUTPUT, type ActResult } from "../src/act-result.ts";
 import { earlierSaid } from "../src/errors.ts";
-import { McpService, MISMATCH_NOTES, UNAVAILABLE_NOTES, answered, finding, meaningOf, memoryStore, type Finding } from "../src/index.ts";
+import { Custody, McpService, MISMATCH_NOTES, UNAVAILABLE_NOTES, answered, finding, meaningOf, memoryStore, type Finding } from "../src/index.ts";
 import { type DefinitionLike } from "@generalbusiness/dap-client";
 import { READ_CREDENTIAL, SERVICE, SESSION_TOKEN, StandIn } from "./support/standin.ts";
 import { fixedSigner } from "./fixtures.ts";
@@ -88,6 +88,37 @@ test("archived submit and settlement stay explicit and terminal without inventin
   expect(said.sentence).toContain(`hash ${fact.hash}, genesis ${fact.at.genesis}`);
   expect(said.sentence).toContain(`through entry 6, hash ${head.hash}`);
   expect(said.sentence).not.toContain("accepted");
+});
+
+// Real MCP custody and scripted transport only. The MCP service holds no replica, so it cannot project a fold that another
+// client of the same store made: it reads the record as unreadable, and sends and settles nothing.
+test("a store that holds a folded record gives the MCP service unreadable", async () => {
+  const signer = fixedSigner(23), stand = new StandIn(signer.key), store = memoryStore();
+  const now = Date.parse("2099-01-01T00:00:00Z");
+  let posts = 0, settlements = 0;
+  const service = new McpService({ service: SERVICE, signer, custody: store, now: () => now,
+    config: { read: async () => stand.config(), addRoot: async () => { throw Error("must not grant a root"); } },
+    fetch: async (url, init) => {
+      if (url.endsWith("/acts")) { posts++; throw new TransportError("scripted lost reply"); }
+      if (url.endsWith("/settle")) { settlements++; throw new TransportError("scripted lost settlement"); }
+      return stand.fetch(url, init);
+    } });
+  await service.page();
+  const args = { on: 0, fields: { hours: 1 }, idempotencyKey: "folded-elsewhere" };
+  await service.call("repository.read-token", args);
+  const [open] = await store.unresolved();
+  const record = (await store.read(open!.id))!;
+  const fact = { at: stand.destination, seq: 3, hash: head.hash };
+  await new Custody(store, () => timeOf(now)).folded(record.identity, { fact, intent: intentDigest(record.envelope.signed.intent) });
+  const counted = [posts, settlements];
+  for (const [tool, given] of [["settle", { target: "destination", idempotencyKey: "folded-elsewhere" }], ["repository.read-token", args]] as const) {
+    // A call that throws instead of giving a finding fails here by the assertion, not by the throw.
+    const result = await service.call(tool, given).catch((error: unknown) => ({ isError: true, structuredContent: { error: "thrown", message: String(error) } }));
+    // The custody finding of state `unreadable` says so in its message.
+    expect([result.isError, result.structuredContent["error"], String(result.structuredContent["message"])])
+      .toEqual([true, "custody", expect.stringContaining("This server cannot say whether an earlier send under this key went.")]);
+  }
+  expect([posts, settlements]).toEqual(counted);
 });
 
 // Existing retained envelope and scripted room/settlement only. This tests

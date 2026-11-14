@@ -9,7 +9,7 @@ import { describe, expect, test } from "vitest";
 import type { Receipt } from "@generalbusiness/dap-contract";
 import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { COMPLETION_BYTES, SEGMENT_ROW_BYTES, SQLITE_CUSTODY_BOUNDS, chargedOf, sqliteStore, type Sql, type SqlValue, type SqliteCustodyBounds } from "../src/sqlite-custody.ts";
-import { Custody, CustodyError, Lost, RECORD_BYTES, TERMINAL, identityId, memoryStore, type CustodyRecord, type CustodyStore, type Outcome } from "@generalbusiness/dap-client";
+import { Custody, CustodyError, Lost, RECORD_BYTES, TERMINAL, identityId, memoryStore, type CustodyRecordV1, type CustodyStore, type StoredOutcome } from "@generalbusiness/dap-client";
 import { McpService } from "../src/service.ts";
 import { fixedSigner } from "./fixtures.ts";
 import { SERVICE, StandIn } from "./support/standin.ts";
@@ -38,7 +38,7 @@ function nodeSql(): Sql & { db: DatabaseSync } {
 
 const T = "2026-10-13T20:00:00Z";
 const ref = { scope: "sc_target", genesis: `sha256:${"a".repeat(64)}` } as never;
-function recordOf(key: string, phase: CustodyRecord["phase"], padding = 0, outcomes: Outcome[] = []): CustodyRecord {
+function recordOf(key: string, phase: CustodyRecordV1["phase"], padding = 0, outcomes: StoredOutcome[] = []): CustodyRecordV1 {
   return {
     v: 1, identity: { service: "https://s", membership: null, signer: "key_a" as never, target: ref, key }, binding: { definition: "d", kind: "k", declaration: null, pinned: "sha256:0" as never },
     meaning: "sha256:m" as never, envelope: { signed: { intent: { v: 1, kind: "k", notAfter: T, pad: "x".repeat(padding) }, sig: "s" } as never, beside: {} },
@@ -46,9 +46,9 @@ function recordOf(key: string, phase: CustodyRecord["phase"], padding = 0, outco
   };
 }
 const receipt = (): Receipt => ({ fact: { at: ref, seq: 1 }, hash: "sha256:r", time: T } as unknown as Receipt);
-const settled = (n: number): Outcome => ({ at: T, settled: receipt(), attempt: n });
+const settled = (n: number): StoredOutcome => ({ at: T, settled: receipt(), attempt: n });
 const count = (sql: Sql, table: string, id: string): number => Number(sql.exec(`SELECT COUNT(*) AS n FROM ${table} WHERE id = ?`, id).toArray()[0]!["n"]);
-const sized = (record: CustodyRecord): number => utf8(canonicalize(record)).length;
+const sized = (record: CustodyRecordV1): number => utf8(canonicalize(record)).length;
 
 describe("the custody store over SQLite", () => {
   test("a record is written in chunks and read back equal; a storage failure leaves it as it was", async () => {
@@ -74,7 +74,7 @@ describe("the custody store over SQLite", () => {
     expect([store.used(), store.reserved()]).toEqual([used, reserved]);
     expect((await store.unresolved()).map((r) => r.key)).toEqual(["small", "large"]);
 
-    const golden = readFileSync(new URL("../../client/test/fixtures/custody-record-v1.json.txt", import.meta.url), "utf8");
+    const golden = readFileSync(new URL("../../client/test/fixtures/custody-record-v2.json.txt", import.meta.url), "utf8");
     const goldenSql = nodeSql();
     const scene = await goldenRecord(now => sqliteStore(goldenSql, SQLITE_CUSTODY_BOUNDS, now));
     const chunks = goldenSql.exec("SELECT bytes FROM chunk WHERE id = ? ORDER BY idx", scene.id).toArray();
@@ -95,7 +95,7 @@ describe("the custody store over SQLite", () => {
       await store.write(identityId(seeded.identity), seeded);
     }
     let builds = 0;
-    const keep = (record: CustodyRecord) => custody.keep(record.identity, record.meaning, async () => {
+    const keep = (record: CustodyRecordV1) => custody.keep(record.identity, record.meaning, async () => {
       builds++;
       return { binding: record.binding, envelope: record.envelope };
     }, T);
@@ -129,12 +129,12 @@ describe("the custody store over SQLite", () => {
     let failing = false;
     const store = sqliteStore(sql, { budget: 256 * 1024 * 1024, identityMost: 64 * 1024 * 1024, terminalMost: 1024, ageDays: 30, fail: () => { if (failing) throw new Error("SQLITE_FULL"); } });
     await store.write("a", recordOf("a", "sent"), { dispatch: true });
-    const many: Outcome[] = Array.from({ length: 120 }, (_, i) => ({ at: T, answer: { answer: "refused", reason: "x".repeat(20 * 1024) + i } as never, attempt: 1 }));
+    const many: StoredOutcome[] = Array.from({ length: 120 }, (_, i) => ({ at: T, answer: { answer: "refused", reason: "x".repeat(20 * 1024) + i } as never, attempt: 1 }));
     await store.segment("a", 0, many);
     expect(await store.segmented("a", 0, 120)).toEqual(many);
     expect(await store.segmented("a", 118, 10)).toEqual(many.slice(118));
     // One outcome larger than a segment row is split across rows by part and reads back whole.
-    const huge: Outcome = { at: T, answer: { answer: "refused", reason: "y".repeat(SEGMENT_ROW_BYTES + 4096) } as never, attempt: 1 };
+    const huge: StoredOutcome = { at: T, answer: { answer: "refused", reason: "y".repeat(SEGMENT_ROW_BYTES + 4096) } as never, attempt: 1 };
     await store.segment("a", 120, [huge]);
     expect(Number(sql.exec(`SELECT COUNT(*) AS n FROM segment WHERE id = ? AND ordinal = 120`, "a").toArray()[0]!["n"])).toBe(2);
     expect(await store.segmented("a", 120, 1)).toEqual([huge]);
@@ -201,7 +201,7 @@ describe("the custody store over SQLite", () => {
     const sql = nodeSql();
     const store = sqliteStore(sql, { budget: 1024 * 1024 * 1024, identityMost: COMPLETION_BYTES + SEGMENT_ROW_BYTES + 256 * 1024, terminalMost: 1024, ageDays: 30 });
     await store.write("a", recordOf("a", "sent"), { dispatch: true });
-    const outcome = (n: number): Outcome => ({ at: T, answer: { answer: "refused", reason: "z".repeat(SEGMENT_ROW_BYTES - 4096) } as never, attempt: n });
+    const outcome = (n: number): StoredOutcome => ({ at: T, answer: { answer: "refused", reason: "z".repeat(SEGMENT_ROW_BYTES - 4096) } as never, attempt: n });
     await store.segment("a", 0, [outcome(1)]);
     await store.write("a", recordOf("a", "unknown"));
     await store.segment("a", 1, [outcome(2)]);
@@ -232,7 +232,7 @@ describe("the custody store over SQLite", () => {
 test("an archived refusal resubmitted is live again, terminal again and archived again, with its history", async () => {
   const sql = nodeSql();
   const store = sqliteStore(sql, { budget: 64 * 1024 * 1024, identityMost: 64 * 1024 * 1024, terminalMost: 0, ageDays: 30 });
-  const refused: Outcome = { at: T, answer: { answer: "refused", reason: "not-yet" } as never, attempt: 1 };
+  const refused: StoredOutcome = { at: T, answer: { answer: "refused", reason: "not-yet" } as never, attempt: 1 };
   await store.write("a", recordOf("a", "refused", 0, [refused]));
   expect([store.archived(), count(sql, "record", "a"), count(sql, "archive", "a")]).toEqual([1, 0, 1]);
   // The explicit resubmission: a new attempt, kept unresolved before anything is sent, takes the archived copy's place.
@@ -258,7 +258,7 @@ test("at a saturated budget, results that the reservation covers are written, an
   await store.write("a", first, { dispatch: true });
   expect(store.used() + store.reserved()).toBe(COMPLETION_BYTES);
   // 65 lost outcomes: the 65th spills a segment row; each result write consumes the held capacity and reserves nothing.
-  const outcomes: Outcome[] = [];
+  const outcomes: StoredOutcome[] = [];
   for (let n = 1; n <= 65; n++) {
     outcomes.push({ at: T, lost: true, attempt: 1 });
     const record = recordOf("a", "unknown", 0, outcomes.slice(-64));
