@@ -171,12 +171,41 @@ plus the witness files. It reported no failures:
 | Check after the reload | `joined` |
 | After Check | 1 record, `accepted`, 1 signing; 1 `POST` in all; 1 journal entry under the key; the entry equals the envelope in custody; the slot's key is the record's key; the slot is empty |
 
-The witness does not cover the Counter act. The Counter scope exists only after
-a package install. A room that the current Worker creates installs no ordinary
-package (`docs/cli.md`, "Install an application package"). The install's host
-also fetches the package from a public HTTPS Git commit that the host operator
-lists, so a local branch cannot be installed. The Counter act needs a
-historical `declared-application` room with a listed release of this branch.
+The join run above did not cover the Counter act. CF-1 now lets a new
+`base` room install Counter. Ruling `bc826726` moves the five NF-7 facts
+to NF-5 after CF-1 lands; the join run does not stand for Counter.
+
+The Counter half is a source draft, not a passing witness. It uses the
+normal Node CLI and its persistent request custody. A packet from this
+head must first be packed with a private scratch publisher, committed,
+and pushed at an immutable public Git URI. The local Worker receives
+the exact release, publisher and Git host in `APPLICATION_TRUST`, and a
+local R2 `APPLICATION_CONTENT` bucket. The CLI installs it in a `base`
+room and reads its screen through `dap application`. No packet has been
+generated for this draft.
+
+The draft opens the real installed Counter, enrolls its browser through
+an invitation, and loses the reply to one `participate` act after the
+Worker records it. It reads Counter's IndexedDB records without writing
+them, reloads, uses Check command, and compares its retained signed
+envelope with the one journal act under that actor and key. It records
+counts, equality results, and screenshots without invitation or session
+text. Browser plugin is not available; the witness uses the existing
+Playwright harness and real Chrome. The privacy guide of
+`modern-web-guidance` shaped this limit: collect the minimum needed for
+the witness, not request bodies or credentials.
+
+The normal local screen route remains unresolved in request `e010df0e`.
+With no `APPLICATION_SCREEN_HOSTS` descriptor, `applicationPage` returns
+404. A configured descriptor redirects to its sandbox origin.
+`applicationScreenTransport` needs the verified sandbox host that
+`loadApplicationScreenContext` binds only for an HTTPS `inguz.space`
+origin. A local HTTP celld screen has no such binding. No local server,
+browser, compiler, build, packet or test ran during this source work.
+The draft adds no origin bypass or production browser change. CB-1
+(`b5f200f2`) moves celld planning to `base`, but does not itself change
+these screen-origin restrictions. The planner must name the normal
+path or the owning repair before the Counter run.
 
 The witness calls no export of the two `storage.browser.test.ts` files.
 
