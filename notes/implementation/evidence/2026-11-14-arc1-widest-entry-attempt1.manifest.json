@@ -1,0 +1,111 @@
+{
+  "qualification": "ARC-1 measurement only at exact main plus one fixture: real receiver Scope/native SQLite/archive driver/floor fence; one genuine derive fixture source ledger, scripted authority/privacy policy/clock/Git host; no deployed custody claim, no production or cap changes, no gate. The geometry has 128 maximum-size later uses from one source, not 128 source sequences.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-arc1-widest-entry-attempt1",
+  "checkpoint": {
+    "commit": "3a4d824ad38d48fd619c033c4309c36e2c48468f",
+    "tree": "7f722091f34db57ed3911f911c40505d34e4b322"
+  },
+  "fileCount": 20,
+  "files": [
+    {
+      "path": "analysis.json",
+      "bytes": 13709,
+      "sha256": "529da1dac29b4faafdd16a72d3bde988d6df26821a63ccc51e934589f4e71c39"
+    },
+    {
+      "path": "checkpoint.json",
+      "bytes": 183,
+      "sha256": "b1ff8dd2452a41fafe42dabe4fcb13ce92064f4d32887c60d133c56e5308eea4"
+    },
+    {
+      "path": "compiler.json",
+      "bytes": 341,
+      "sha256": "82d76140538228555f7f6e2d27c8eceb8367f3c907139d20b5fa230dfa13a636"
+    },
+    {
+      "path": "compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "controller.py",
+      "bytes": 3814,
+      "sha256": "e1cfacb34e1fde8bdfd97d8758a6320144ec950a13c59e1c07c485fcbc05785b"
+    },
+    {
+      "path": "dependencies.json",
+      "bytes": 3592,
+      "sha256": "e34ee664e785c743827f432770b69ee09c0a6c62156b35d9340fc89ea37e8a1a"
+    },
+    {
+      "path": "extract.py",
+      "bytes": 4113,
+      "sha256": "b36aeb895f1906551b15730bc110552b3bfa93106fd0ceffda456c6a9f97d530"
+    },
+    {
+      "path": "fixture.test.ts",
+      "bytes": 10681,
+      "sha256": "e1ee285cbfbae715e1188f7c8f39bb6f29c842a2a915e11a71379ae5cdd4c1ac"
+    },
+    {
+      "path": "measured-diagnostic.txt",
+      "bytes": 2898,
+      "sha256": "d01bf150fc73c89e20f3ee3610793882c0c1086028124a8910035657d6747631"
+    },
+    {
+      "path": "native-results.json",
+      "bytes": 1046,
+      "sha256": "71eca8d71df5d546b79403cf4037c90b92a71e5a7975a3a170fc0206ad4a9c9c"
+    },
+    {
+      "path": "native.json",
+      "bytes": 665,
+      "sha256": "87d3663e2a5aafd5ffc96f129e7bfef8dec8aa60f8abcfd53c87cd2157bdb7a3"
+    },
+    {
+      "path": "native.log",
+      "bytes": 13237,
+      "sha256": "9b9cc195cf9dad1f944e0c022a76df89120fae6b6077776bf7702ee01c6a3e18"
+    },
+    {
+      "path": "planned-geometry.md",
+      "bytes": 7739,
+      "sha256": "a5572599580d4d1674d68013890c22190e79456f80cd93f92032550e9bbd5250"
+    },
+    {
+      "path": "power-during.jsonl",
+      "bytes": 34040,
+      "sha256": "89681f34047557ab4d0abecbdcf05ac727a55adae81baca776d8c0831e3b6cb7"
+    },
+    {
+      "path": "power-end.json",
+      "bytes": 928,
+      "sha256": "127d07ae5c8791bc972645192c3770b2e899f101c01df86259241e58000fc6dd"
+    },
+    {
+      "path": "power-start.json",
+      "bytes": 928,
+      "sha256": "e111777c0d6747c25966060d389e6e1b4042df8d81f31f4b8281252b48d7e35e"
+    },
+    {
+      "path": "terminal.json",
+      "bytes": 155,
+      "sha256": "bc79b56e0e0eee0eed3a1cd203a925c4553da10aa639e3ff10e2c00a2fe66bde"
+    },
+    {
+      "path": "tracked-inputs.sha256",
+      "bytes": 568594,
+      "sha256": "54a0422581c50f88f050bdb6b6c3a8d03b05a504753a6783acf60586b98b1b27"
+    },
+    {
+      "path": "versions.json",
+      "bytes": 86,
+      "sha256": "2ca7a490410066182734571159356f14e91b5da86de231eadca534d00b7f61a1"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1558,
+      "sha256": "87134780870fc4627445ae05b4082a3ec226717ad431fa82b3010367ee3a35f4"
+    }
+  ]
+}
