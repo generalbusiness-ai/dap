@@ -38,7 +38,9 @@ test("binding preserves written text and symbolic names while capturing only mis
   const capture = { on: captureName, fields: lowered.fields };
   const bound = bindActBasis(notes, act, captureSubjects, capture, at);
   expect(bound).toEqual({ act: { ...act, expected: { on: { after: prior } } }, bound: ["on"] });
-  expect(lowerActBasis(notes.acts.write, subjects, lowered.on, lowered.fields, at, bound.act.expected, symbols)).toEqual({ on: 1 });
+  expect(lowerActBasis(notes.acts.write, captureSubjects, capture.on, capture.fields, at, bound.act.expected, {
+    revision: (source, subject) => subject === captureName && source.key === prior.key && source.version === prior.version ? 1 : null,
+  })).toEqual({ on: 1 });
   expect(act.expected).toBeUndefined();
   const source: Source = { key: "write-note", version: actVersion(bound.act) };
   expect(source.version).not.toBe(actVersion({ ...lowered, kind: "write", expected: { on: 1 } }));

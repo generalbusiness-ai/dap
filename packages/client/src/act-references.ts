@@ -1,6 +1,6 @@
 /** Private identities follow positions, never the integers used to hold a draft. */
-import type { Item } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/dap-bytes";
+import type { FieldValue, Item } from "@generalbusiness/dap-contract";
+import { canonicalize, isFieldValue, isRecord } from "@generalbusiness/dap-bytes";
 import type { judgeActBody, StateView } from "@generalbusiness/dap-derive";
 import type { ItemName, Revision, Source } from "./act-types.ts";
 import { UnavailableActSource } from "./act-symbols.ts";
@@ -9,6 +9,7 @@ type Provenance = NonNullable<Parameters<typeof judgeActBody>[3]["provenance"]>;
 type ReferenceData = ReturnType<Provenance>;
 type Origin = Parameters<Provenance>[0]["origin"];
 type Path = readonly (string | number)[];
+type Token = Readonly<Record<string, never>>;
 
 export type SlotMark = { readonly space: "refs" | "values"; readonly path: Path;
   readonly reference: { readonly output: Source } | { readonly entry: Source } };
@@ -23,7 +24,7 @@ interface RowIdentity {
 
 /** One registry belongs to one recorded scope and owner. */
 export class ActReferences {
-  readonly #tokens = new Map<string, object>();
+  readonly #tokens = new Map<string, Token>();
   readonly #sources = new Map<object, Source>();
   readonly #rows = new Map<Item, RowIdentity>();
   readonly #subjects = new Map<number, object>();
@@ -44,7 +45,7 @@ export class ActReferences {
   /** An admitted step extends a new frame; older hypothetical views stay fixed. */
   fork(view: StateView): ActReferences { return new ActReferences(view, [], this); }
 
-  token(source: Source): object {
+  token(source: Source): Token {
     const key = canonicalize(source);
     let token = this.#tokens.get(key);
     if (!token) {
@@ -100,6 +101,38 @@ export class ActReferences {
     return row.slots.get(canonicalize([space, ...path])) ?? null;
   }
 
+  captureName(name: ItemName | null): number | Token | null {
+    return name === null || typeof name === "number" ? name : this.token(name.output);
+  }
+
+  #capture(value: FieldValue, sources: ReadonlyMap<string, Source>, path: Path): FieldValue {
+    const source = sources.get(canonicalize(path));
+    if (source) return this.token(source);
+    if (Array.isArray(value)) return value.map((member, index) => this.#capture(member, sources, [...path, index]));
+    if (isRecord(value)) return Object.fromEntries(Object.entries(value).map(([name, member]) => {
+      if (!isFieldValue(member)) throw new TypeError("a captured field has no field value");
+      return [name, this.#capture(member, sources, [...path, name])];
+    }));
+    return value;
+  }
+
+  captureFields(fields: Readonly<Record<string, FieldValue>>, sources: ReadonlyMap<string, Source>): Record<string, FieldValue> {
+    return Object.fromEntries(Object.entries(fields).map(([name, value]) => [name, this.#capture(value, sources, [name])]));
+  }
+
+  /** The existing basis resolver sees separate recorded and pending namespaces. */
+  captureSubjects(items: readonly Item[]): readonly { id: number | Token; type: string; refs: Item["refs"]; revision: Revision }[] {
+    return items.map(item => {
+      const row = this.#rows.get(item);
+      if (!row) throw new TypeError("a captured subject has no row provenance");
+      const sources = new Map(row.marks.flatMap(mark => mark.space === "refs" && "output" in mark.reference
+        ? [[canonicalize(mark.path), mark.reference.output] as const] : []));
+      return { id: typeof row.name === "number" ? row.name : this.token(row.name.output), type: item.type,
+        refs: Object.fromEntries(Object.entries(item.refs).map(([name, value]) =>
+          [name, value === null ? null : this.#capture(value, sources, [name])])), revision: row.seen };
+    });
+  }
+
   /** Inputs retain their authored positions after shaping and basis capture. */
   classifier(input: { readonly source: Source; readonly on: ItemName | null;
     readonly fields: ReadonlyMap<string, Source>; readonly expected: Readonly<Record<string, Revision>> }): Provenance {
@@ -129,7 +162,14 @@ export class ActReferences {
         const source = input.fields.get(canonicalize(origin.path));
         return source ? pending(source) : type?.type === "item" || use === "subject" ? numeric(value) : null;
       }
-      if (origin.at === "subject") return identity({ at: "item", item: origin.item, currentOutput: false });
+      if (origin.at === "subject") {
+        const row = this.#rows.get(origin.item);
+        if (!row) throw new TypeError("a selected subject has no row provenance");
+        // Section 5.4 deliberately refuses the whole subject until its entry
+        // slot records. A typed field that merely names it is not a subject.
+        if (row.marks.some(mark => "entry" in mark.reference)) return { is: "entry" };
+        return identity({ at: "item", item: origin.item, currentOutput: false });
+      }
       if (origin.at === "slot") {
         const row = this.#rows.get(origin.item);
         if (!row) throw new TypeError("a slot read has no row provenance");

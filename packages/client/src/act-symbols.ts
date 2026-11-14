@@ -51,9 +51,10 @@ export function lowerActNames(act: { readonly on: ItemName | null; readonly fiel
 }
 
 /** Select subjects with the existing resolver, then resolve `after` for that exact item. */
-export function lowerActBasis(act: ActType, items: readonly Pick<Item, "id" | "type" | "refs">[],
-  on: number | null, fields: Readonly<Record<string, FieldValue>>, at: ScopeRef,
-  expected: Readonly<Record<string, Revision>>, symbols: ActSymbols): Record<string, number> {
+export function lowerActBasis<I extends number | object>(act: ActType,
+  items: readonly (Pick<Item, "type" | "refs"> & { readonly id: I })[],
+  on: I | null, fields: Readonly<Record<string, FieldValue>>, at: ScopeRef,
+  expected: Readonly<Record<string, Revision>>, symbols: { revision(source: Source, item: I): number | null }): Record<string, number> {
   const subjects = expectedOf(act, items.map(item => ({ ...item, revision: item.id })), on, effectiveFields(act, fields, at));
   return Object.fromEntries(Object.entries(expected).map(([name, revision]) => {
     if (typeof revision === "number") return [name, revision];
