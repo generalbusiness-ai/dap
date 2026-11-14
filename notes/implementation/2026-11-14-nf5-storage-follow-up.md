@@ -313,25 +313,17 @@ Voice correspondence before an integrated gate. The dated execution
 results below record what later ran and retain inconclusive attempts.
 They do not turn that original plan into an integrated-head pass.
 
-## Verification scope and NF-7
+## Verification scope at the original checkpoint
 
-The Voice skill covers `start`, `ready`, `stopAudio` and `settle`.
-NF5's earlier head changed those functions. The combined review repair
-also fences `start` after its synchronous speaking notice. The old coverage pin does not cover the NF5
-head. The correspondence still needs review: successful audio mark/readback
-before speech, restored marker/report fencing, generation before cancel,
-and verified accepted report before clear/archive. Storage failure,
-multi-tab behavior and speech-engine behavior remain outside that model's
-assumptions. Do not refresh the hash without the reserved model/source
-checks and meaningful source control. The restart witness moved since the
-old line citation. The negative arm now names the stable assertion
-`a retained audio start must block rearming after restart`, and the control
-metadata names the same message. Neither control nor model has run here.
+NF5 changed Voice's protected `start`, `ready`, `stopAudio`, and `settle`,
+including the fence after the speaking notice. At that source checkpoint,
+the old pin did not cover the edits. The later C/Q section records the
+completed source control, owners, model, coverage pin, and chart comparison
+with their actual heads and bounded assumptions.
 
-Observation covers `observe.ts`; Effects covers Scope operations and
-SQLite sent marking. Those protected sources do not change here. Their
-skills do not establish the new browser persistence or authority boundaries.
-No model or statechart ran for this source checkpoint.
+Observation protects `observe.ts`; Effects protects Scope operations and
+SQLite sent marking. Those functions remain unchanged. Their skills do
+not establish browser persistence or authority boundaries.
 
 ## Combined review repairs after the first checkpoint
 
@@ -381,15 +373,13 @@ No main merge or dependency change took place.
   after reload. This maps to interruption after SaveStart and before Speak;
   Voice.tla, its config and view need no change.
 
-The accepted Voice plan keeps two later intervals: controls and targeted
-source owners at frozen commit C, then coverage-pin commit Q and the Voice
-check. The stable restart assertion above replaces the stale line number.
-The disposal and restored-accepted/unknown proof owners remain in interval C.
-Statechart tooling must use preserved scratch copies with the one cleanup
-line disabled; home skill files stay unchanged. Compare generated chart.mmd
-bytes to the tracked chart. Equal bytes retain the existing SVG; different
-bytes stop for a report, with no renderer fetch. None of that preparation
-or execution ran in this source repair.
+At that source checkpoint, the accepted Voice plan separated source
+controls and targeted owners at C from coverage pins and the model
+check at Q. The disposal and restored-proof cases belonged to C.
+Statechart work used scratch copies with only the cleanup line disabled;
+home skill files stayed unchanged. Equal Mermaid bytes retained the SVG;
+a mismatch required a report, with no renderer fetch. The later C/Q
+section records the actual outcomes. None ran at this source checkpoint.
 
 Planner ruling `119140cd017925f29bc66d3d65c6ba077b5430f1` also leaves an
 owning-slot obligation after NF5 merges main holding R1: use R1's single
