@@ -1,1 +1,0 @@
-rg --hidden -l '71e10ca9|gg4rXwy4|DEMO_RELEASE|DEMO_PUBLISHER' . --glob '*.ts' --glob '*.json' --glob '*.jsonc' --glob '*.md' --glob '!**/.git/**' --glob '!**/.codex/**' --glob '!**/.aws/**' --glob '!**/.dap/**' --glob '!**/node_modules/**' --glob '!**/dist/**' --glob '!**/build/**'
