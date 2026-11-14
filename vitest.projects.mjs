@@ -6,7 +6,7 @@
  * two, two, one, one, and two. Each group uses separate runtimes.
  * The file-task limit does not cap child processes or overlapping teardown.
  */
-import { scopeScaleFiles } from "./packages/scope/vitest.scale-files.ts";
+import { scopeScaleFiles, scopeScaleGroup } from "./packages/scope/vitest.scale-files.ts";
 
 const project = (name, dir, config, group, options = {}) =>
   ({ extends: `./${dir}/${config}`, test: { name, root: `./${dir}`, sequence: { groupOrder: group }, ...options } });
@@ -75,10 +75,11 @@ const namesEqual = (actual, expected) => actual.length === expected.length && ac
 
 // Select data before Vitest resolves any inherited package config/plugin.
 // This fixed partition is not a new project registration or runner API.
-export function testOptions(phase = "all", scale = "run") {
+export function testOptions(phase = "all", scale = "all") {
   if (!["all", "plain", "native", "scale"].includes(phase)) throw new Error("Unknown test phase.");
-  if (!["run", "omit"].includes(scale) || (scale === "omit" && phase !== "native")) {
-    throw new Error("Only the native gate phase may omit scale.");
+  scopeScaleGroup(scale);
+  if ((scale !== "all" && !["native", "scale"].includes(phase)) || (scale === "omit" && phase !== "native")) {
+    throw new Error("Only the native gate may omit scale; only native and scale may select moved.");
   }
   const plain = projects.filter(project => project.test.sequence.groupOrder === 0);
   const native = projects.filter(project => project.test.sequence.groupOrder !== 0);
@@ -93,6 +94,6 @@ export function testOptions(phase = "all", scale = "run") {
       ? { reporters: ["verbose", "./scripts/test-progress.mjs"] } : {}),
     projects: phase === "plain" ? plain
       : phase === "scale" ? native.filter(project => project.test.name === "scope-scale")
-      : phase === "native" ? native.filter(project => scale === "run" || project.test.name !== "scope-scale") : projects,
+      : phase === "native" ? native.filter(project => scale !== "omit" || project.test.name !== "scope-scale") : projects,
   };
 }

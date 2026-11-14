@@ -30,4 +30,7 @@ through a scratch-only link and install nothing.
 
 After the execution slot becomes available, run the changed Node and shell
 syntax checks, then `node --test scripts/git-hooks.test.mjs`. Validation
-stays behind NF5, C2, C3 and E1. The eventual gate and review remain owed.
+stays behind NF5, C2 and C3. GS3 request `3a4f6d1c` now combines this
+source with its two-group scale selector under one tooling gate before
+E1's full gate. E1 development proceeds independently. The eventual gate
+and review remain owed; no shared hook activation follows from this merge.

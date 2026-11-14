@@ -138,6 +138,33 @@ Internal workspace test exports are not part of the public nine-package
 SDK. In particular, `@generalbusiness/dap-platform/testing` is available
 only in this checkout.
 
+### Scale selection in the review gate
+
+The gate reads the complete merge-base-to-head path list and records one
+of three answers:
+
+| Answer | Scale work |
+|---|---|
+| `omit` | No scale command or scale result. The summary marks the project omitted. |
+| `moved` | The sixteen cases that GS-1 moved, in their nine complete owners. |
+| `all` | All 22 cases in 13 complete owners, including the older six. |
+
+A path that selected scale at main `270dc8c7`, before GS-1, selects `all`.
+A path that only GS-1 protects selects `moved`; `packages/derive/src/judge.ts`
+alone takes this answer. When both rules match, `all` wins. Selector,
+scale configuration and count-inventory changes also select `all`.
+Main, ordinary `npm test`, and the daily run at 05:00 UTC select `all`.
+The [testing reference](testing-reference.md#scale-selection-in-the-review-gate)
+lists the families and owners.
+
+The configuration and runner take the selected owner list and case counts
+from the same two-group inventory. The runner rejects an unknown answer,
+missing or extra owners, and wrong per-owner or total counts. It never
+turns `omit` into a zero-case pass. Every case keeps its body, bounds and
+deadline; the Worker ceiling stays at two. The first gate that selects
+`moved` must report its actual Native wall time. Concurrent case-duration
+sums do not predict that wall time.
+
 ### Show that a test distinguishes
 
 When you add or change a guard, show its witness fails without it. Break

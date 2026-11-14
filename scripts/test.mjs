@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { gateScaleSelection } from './scale-selection.mjs';
+import { scopeScaleGroup } from '../packages/scope/vitest.scale-files.ts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const stageNames = ['kernel', 'node', 'counting', 'plain', 'native'];
@@ -63,8 +64,9 @@ export const excludedTests = [
 
 // Fixed production argv. The exported runner below accepts tiny commands only
 // so its owning test can observe real process ordering without starting Workers.
-export function fixedStages(directory, environment = process.env, scaleSelection = { include: true, reason: 'ordinary-test' }) {
-  if (typeof scaleSelection.include !== "boolean") throw new Error('The native scale selection must be explicit.');
+export function fixedStages(directory, environment = process.env, scaleSelection = { mode: 'all', include: true, reason: 'ordinary-test' }) {
+  const scale = scopeScaleGroup(scaleSelection.mode);
+  if (scaleSelection.include !== (scale.mode !== 'omit')) throw new Error('The native scale selection must be explicit and consistent.');
   const reporter = pathToFileURL(resolve(root, 'scripts/test-summary.mjs')).href;
   const phases = ['plain', 'native'];
   const progress = Object.fromEntries(phases.map(phase => [phase,
@@ -84,7 +86,7 @@ export function fixedStages(directory, environment = process.env, scaleSelection
       args: [resolve(root, 'node_modules/vitest/vitest.mjs'), 'run', '--config', resolve(root, 'vitest.' + phase + '.config.ts')],
       env: { ARTROOM_TEST_PHASE: phase, ARTROOM_TEST_TIMING: resolve(directory, phase + '.jsonl'),
         ...(progress[phase] ? { ARTROOM_TEST_PROGRESS: progress[phase] } : {}),
-        ...(phase === 'native' ? { ARTROOM_SCALE_MODE: scaleSelection.include ? 'run' : 'omit' } : {}) },
+        ...(phase === 'native' ? { ARTROOM_SCALE_MODE: scale.mode } : {}) },
       ...(phase === 'native' ? { scaleSelection } : {}) })),
   ];
 }
@@ -180,9 +182,9 @@ async function main(args) {
   if (directory) await mkdir(directory, { mode: 0o700 });
   else directory = await mkdtemp(resolve(tmpdir(), 'artroom-test-'));
   console.log(`Test evidence: ${directory}`);
-  const scaleSelection = gate ? gateScaleSelection(root) : { include: true, reason: 'ordinary-test' };
+  const scaleSelection = gate ? gateScaleSelection(root) : { mode: 'all', include: true, reason: 'ordinary-test' };
   await writeFile(resolve(directory, 'scale-selection.json'), JSON.stringify(scaleSelection, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
-  console.log(`Scale selection: ${scaleSelection.include ? 'run' : 'omitted by review gate'} (${scaleSelection.reason})`);
+  console.log(`Scale selection: ${scaleSelection.mode} (${scaleSelection.reason})`);
   const result = await runStages({ directory, stages: fixedStages(directory, process.env, scaleSelection), finalize: deferSummary ? null : () => summary(directory) });
   for (const error of result.ledger.reportErrors) console.error('Test reporting error: ' + error);
   process.exitCode = result.exitCode;
