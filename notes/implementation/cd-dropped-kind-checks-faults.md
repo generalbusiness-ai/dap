@@ -186,7 +186,10 @@ fill sums both payload tables. The existing SQLite accounting witness in
 counts, repeated insertion does not, and rollback restores its bytes.
 The one shared-store Turns witness names each exempt input and compares
 the byte stop with `fits`, including conflict and ordinary inputs that
-must not pass.
+must not pass. This hand-draft stop comparison covers no genesis,
+preparation or floor judgment. The separate confirmation witness covers
+creation's real admission, and the retained-birth witness covers a real
+floor that frees no retained bytes.
 
 ### The settlement exception needs a separate rule-row bound
 

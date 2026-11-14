@@ -680,11 +680,14 @@ export class SqliteStore implements Store {
   }
   retain(input: Retained): number {
     if (input.kind === "birth") throw new Error("a birth row is retained only with its association, by retainBirth");
-    if (input.kind === "value" && (typeof input.domain !== "string" || input.domain === "")) throw new Error("a retained value states its byte domain");
     // RETURNING gives a row only when the INSERT inserts one: a row already held adds nothing to the total.
-    const added = input.kind === "value"
-      ? this.#one("INSERT INTO retained_value (domain, digest, bytes) VALUES (?, ?, ?) ON CONFLICT (domain, digest) DO NOTHING RETURNING octet_length(bytes) AS size", input.domain, input.digest, input.bytes)
-      : this.#one("INSERT INTO retained_input (kind, digest, bytes, under) VALUES (?, ?, ?, ?) ON CONFLICT (kind, digest) DO NOTHING RETURNING octet_length(bytes) AS size", input.kind, input.digest, input.bytes, input.under ?? null);
+    let added: Row | null;
+    if (input.kind === "value") {
+      if (typeof input.domain !== "string" || input.domain === "") throw new Error("a retained value states its byte domain");
+      added = this.#one("INSERT INTO retained_value (domain, digest, bytes) VALUES (?, ?, ?) ON CONFLICT (domain, digest) DO NOTHING RETURNING octet_length(bytes) AS size", input.domain, input.digest, input.bytes);
+    } else {
+      added = this.#one("INSERT INTO retained_input (kind, digest, bytes, under) VALUES (?, ?, ?, ?) ON CONFLICT (kind, digest) DO NOTHING RETURNING octet_length(bytes) AS size", input.kind, input.digest, input.bytes, input.under ?? null);
+    }
     if (!added) return 0;
     const size = added["size"] as number;
     this.#addRetainedBytes(size);
