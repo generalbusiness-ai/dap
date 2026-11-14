@@ -31,7 +31,7 @@ import { observeDirectoryFinish } from "./support/archive-finish-observer.ts";
 import { growArchivePolicies, type GrowArchiveRelease } from "../../../apps/room/archive-policy.ts";
 import { demoDefinitions } from "../../../examples/grow/demo-definitions.ts";
 import { growArchiveDriver } from "../../../apps/room/archive.ts";
-import { RECORDED_GROW_RELEASE } from "./support/recorded-grow-release.ts";
+import { EARLIER_GROW_ARCHIVE_RELEASE } from "./support/earlier-grow-release.ts";
 import { archiveHostWiring, roomArchiveWiring, roomArchiveConstructions } from "./worker.ts";
 import type { OutsideGiven } from "../src/object.ts";
 import type { DestinationRepository } from "../src/destination-host.ts";
@@ -214,7 +214,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     expect(packet.package.release.manifest.publisher).toBe(fixedSigner(254).key);
     expect([rootId, childId]).toEqual([definitionDigest(demo.site), definitionDigest(demo.room)]);
   }
-  const trusted: GrowArchiveRelease = productionScenario ? { release: packet.ids.release, publisher: packet.package.release.manifest.publisher, entry: rootId } : RECORDED_GROW_RELEASE;
+  const trusted: GrowArchiveRelease = productionScenario ? { release: packet.ids.release, publisher: packet.package.release.manifest.publisher, entry: rootId } : EARLIER_GROW_ARCHIVE_RELEASE;
   const C = scenario === "Grow base" ? BASE_COHORT : scenario === "Grow failed-claim" ? FAILED_CLAIM_COHORT : scenario === "Grow publication" ? ARCHIVE_DEVICE_PUBLICATION_COHORT
     : kind === "fixture" ? ARCHIVE_DECLARED_APPLICATION_COHORT : ARCHIVE_DEVICE_APPLICATION_COHORT;
   const replayPlatform = replayFamily ? ARCHIVE_REPLAY_CODE.platform : platform;
