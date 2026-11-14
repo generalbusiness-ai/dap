@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e60efe4f2ba9a06dec06aa3b103a3d2fd09c94f7","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.connect.jsonc."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e6c3cc22d1506d9db8b0381ba4823f905bb22e30","text":"Merge retired a covered predecessor; the successor is at docs/cli.md."}
