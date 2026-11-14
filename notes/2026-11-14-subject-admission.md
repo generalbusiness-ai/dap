@@ -333,8 +333,8 @@ environment note orders.
 Step A2 changes these documents: section 6.4 of
 `notes/2026-10-04-scope-and-replay-contract.md`, promise 3 and
 sections 7 and 7.1 of `docs/kernel.md`, `docs/mcp.md` and
-`docs/hosted-mcp.md` for the input `at`, and the definition reference
-that an author reads.
+`docs/hosted-mcp.md` for the input `at`, and
+`docs/write-an-application.md` for the author.
 
 **Named cases of A2.** Each has one test.
 
