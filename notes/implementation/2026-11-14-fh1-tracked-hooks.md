@@ -1,10 +1,11 @@
 # Tracked commit hooks
 
 Request `c8b2f4f674a1fe1348fd697e9122071291581038` and promise
-`1be80098072bfb87aed9bedef0046f5219e6a0f7` track FH1. This source checkpoint
-starts from main `0166423ac8abe7ffe955a9c8ddf1a319cba75712`. All syntax,
-test, formatter and gate checks remain **UNRUN**. No dependency setup or
-shared Git configuration changed.
+`1be80098072bfb87aed9bedef0046f5219e6a0f7` track FH1. Its source starts
+from main `0166423ac8abe7ffe955a9c8ddf1a319cba75712`. The combined GS3/FH1
+head `8338e447aa1a65b62b8e9cbca6717fb1012a4f56` passed ordinary development
+checks. The full gate and repository formatter remain **UNRUN**. The
+worktree owns a matched dependency copy; no shared Git configuration changed.
 
 The executable pre-commit hook calls a small Node helper. It refuses a
 checkout without local Prettier, including a notes-only checkout. The helper
@@ -28,9 +29,16 @@ refuses with the setup instruction. The scratch repositories retain each
 message and child stream. They use the existing real Prettier package
 through a scratch-only link and install nothing.
 
-After the execution slot becomes available, run the changed Node and shell
-syntax checks, then `node --test scripts/git-hooks.test.mjs`. Validation
-stays behind NF5, C2 and C3. GS3 request `3a4f6d1c` now combines this
-source with its two-group scale selector under one tooling gate before
-E1's full gate. E1 development proceeds independently. The eventual gate
-and review remain owed; no shared hook activation follows from this merge.
+The shell hook, commit-msg hook, Node helper and whole hook owner passed
+their syntax checks. `node --test scripts/git-hooks.test.mjs` passed all
+three cases, with no skips, in 2.84 seconds wall time. Its real formatter
+runs stayed inside the authorized scratch fixtures; no repository
+formatter command or shared hook activation ran. The
+[combined DEV and control evidence](2026-11-14-gs3-two-scale-groups.md#development-and-control-evidence)
+records the exact frozen source, logs and the selector's distinguishing
+control. No extra checks followed that control.
+
+GS3 request `3a4f6d1c` combines this source with its two-group scale
+selector under one tooling gate after NF5, C2 and C3, before E1's full
+gate. E1 development proceeds independently. The eventual gate and review
+remain owed; no shared hook activation follows from this merge.
