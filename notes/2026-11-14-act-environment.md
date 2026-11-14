@@ -296,13 +296,13 @@ from an item's ID gets its basis in this way, and sees that it did.
 **The source of an explored act.** Explore takes a key beside the act
 and the context, and the key is required. Without a key, Explore could
 not name the item that an `open` makes. The key carries no authority,
-and Explore retains nothing. Explore computes the version from the bound act, so a caller
-cannot state the version first. The `source` of the result is that key
-and that version. `opens` and each symbolic name in the hypothetical
-view use it. The MCP tool `explore` takes the key argument of the act
-tool. A local instance gives the key of the draft or of the request.
-An agent or a page that submits with the same key gets the names that
-it explored.
+and Explore retains nothing. Explore computes the version from the
+bound act, so a caller cannot state the version first. The `source` of
+the result is that key and that version. `opens` and each symbolic
+name in the hypothetical view use it. The MCP tool `explore` takes the
+key argument of the act tool. A local instance gives the key of the
+draft or of the request. An agent or a page that submits with the same
+key gets the names that it explored.
 
 ### 5.4 Explore invents no input
 
