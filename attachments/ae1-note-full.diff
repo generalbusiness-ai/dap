@@ -1,0 +1,364 @@
+diff --git a/notes/implementation/2026-11-14-ae1-shared-archive.md b/notes/implementation/2026-11-14-ae1-shared-archive.md
+index db9b0b1ad4..2084236bd2 100644
+--- a/notes/implementation/2026-11-14-ae1-shared-archive.md
++++ b/notes/implementation/2026-11-14-ae1-shared-archive.md
+@@ -4,9 +4,10 @@ Initial source-only draft under AE-1 request 0c265d01 and ruling 59767cd8.
+ Updated promise 43fa0d74 selects one combined head: removing Grow's
+ production import before installed-package policy exists would lose its
+ answers. The source-composition sections retain their historical execution
+-limits. The current development and attestation section below records the
+-later compiler results and reviewed expectation adoption. Runtime owners,
+-generated assets, the gate and the Security conclusion remain owed.
++limits. The evidence section records actual results through `2740e6d1` on
++2026-11-14. Two shared installed-package producers and their command
++followers remain failed. Scale owners, assets, the gate and the Security
++conclusion remain unrun.
+ 
+ The driver stays in `packages/scope`. `apps/room/archive.ts` supplies one
+ Artifacts adapter for the common room `DeployedScope`; `worker.grow.ts`
+@@ -83,7 +84,9 @@ clock and per-entry selection schedule are explicit fixture stand-ins.
+ The Base case creates a second real installation of the same definition:
+ substituting the first install's genuine proof fails the second scope's
+ authority check, while the second install's actual proof succeeds.
+-Existing Grow scenarios remain. These are witness drafts, not passed runs.
++Existing Grow scenarios remain. At `ca1efcea`, both shared producers
++failed before completing this intended flow. Their trust-removal and
++public-clone acceptance remain held; the evidence table retains the failures.
+ One additional native driver case starts from an actually confirmed
+ fixture row. A labelled TEST policy callback produces a pending result and
+ then a permanent metadata refusal. The witness checks row bytes, receipt,
+@@ -245,30 +248,20 @@ witness draft. It imports real Main, waits for its workbench lifecycle and
+ opens both real room disclosure summaries over scripted Room/DOM ports.
+ It checks no-repository and unavailable-provider notices, their absence
+ for Artifacts, and the unpublished branch. Existing no-key-operation and
+-no-settings-write assertions remain. This source-only witness proves no
+-browser layout or Native authority; its owning compiler and test are UNRUN.
++no-settings-write assertions remain. The integrated compiler and whole
++page owner passed at `ca1efcea`.
++That scripted DOM result proves no browser layout or Native authority.
+ 
+-## Initial validation plan
++## Validation scope
+ 
+-These were the source draft's pending checks. The current status below
+-supersedes the compiler and attestation rows only.
+-
+-| Check | Status |
+-|---|---|
+-| Read-only source review and whitespace inspection | Completed; found and repaired pre-debit materialization and stop-reason propagation issues |
+-| Affected compiler contexts | Not run; waiting for root's slot |
+-| Strict proof-reader owning file | Not run |
+-| Shared Base/installed-package and existing Grow owning file | Not run |
+-| Joint admission/archive root-child witness | Not run |
+-| Prepaid terminal cost, count-stop and operator owning files | Not run |
+-| Plain host configuration and page data witnesses | Not run |
+-| Relevant entry-point seals and required checks | Not run; source correspondence review precedes any seal adoption |
+-| Final gate and checker review | Pending |
++The initial draft left all checks pending. The evidence table below records
++later execution while preserving the earlier failures.
+ 
+ The protected `Operations` dispatch functions and `SqliteStore.markSent`
+ remain unchanged. The Effects model covers those functions, not this new
+-archive policy/proof lifecycle. No model result or source seal has been
+-invented or advanced. The checker must review the new proof boundary and
++archive policy/proof lifecycle. The later attestation checkpoint records
++actual reviewed AST values; no model result covers this new lifecycle.
++The checker must review the new proof boundary and
+ provider scope with an explicit Security conclusion after validation.
+ 
+ AE-1 changes no kernel or archive cap, archive format, staging contract,
+@@ -332,98 +325,55 @@ and ARC-1's separate supported-cohort proof.
+ 
+ At that composition checkpoint, all compilers, owners, controls, generated
+ page assets, source-seal checks and the gate remained **UNRUN**, and the
+-checkout had no dependency view. Future work still must integrate actual
+-main, run the
+-affected checks, review any required source-seal changes, and obtain the
+-checker's Security conclusion before landing. No push, pack, signing,
+-provider call, or deployment occurred during this source preparation.
+-
+-## Current development and attestation status
+-
+-The current source is `9011b593aa1dfdc0dcab05b5e443630c5b0687f3`, tree
+-`cfc137dc01d92097c1948400b876d75bd3e76714`. The CB1 merge added only its
+-Python fixture and two notes; it preserved all 30 AE1 source blobs. Repair
+-`ad4c61e32f45f042c19c0687ef4376260fcee11f` narrowed the two archive ports to
+-the optional `APPLICATION_TRUST` string and used the same portable parser
+-already re-exported by Scope admission. It changed no trust grammar.
+-
+-The earlier Node-only lanes compiler failed because importing Worker
+-application bindings pulled `R2Bucket` into its portable context. Its
+-original failure and prior repair logs remain separate; the later pass
+-does not change those verdicts. Four affected or unrun contexts now pass.
+-The five other earlier successes stand only for unchanged applicable inputs:
+-platform source and tests, Scope source, and page source and tests. The
+-owned dependency lock and stamp matched `f2885ca5` before this resumption;
+-no install or dependency change occurred.
+-
+-Root reviewed the exact 17-boundary source map in act
+-`0258f47c151f044023a6fb1d81c9c8f47b44a258` before computation. The maintained
+-`sourceSeal` and `namedSourceSeals` functions then computed the actual
+-TypeScript AST values, recorded in act
+-`20fd934656d0ad05a8f8efc68db4ab4a153e0fc1`. Root reviewed that exact output
+-before adoption. The expectation update adds eight whole-file rows,
+-updates eight existing whole-file rows, and updates the two existing
+-`object.ts` named values. It leaves every other expected row unchanged.
+-These are AST attestations, not raw-file hashes or evidence that an owner
+-passed.
+-
+-`object.ts` keeps exactly `$module` and `ScopeObject`. The reviewed changes
+-are its two value imports at lines 68–69 and the namespace-only
+-`applicationArchiveProofBytes` method inside `ScopeObject`, at lines
+-872–878. No standalone method selector or new top-level runtime declaration
+-was added. The method checks retirement, proof identity and the exact pin
+-without first-ingress dispatch or cold-pin repair. The signed-install
+-reader, current publisher trust and closed export policy remain separate
+-checks. Source review found no definite new gap; it does not supply the
+-checker's Security conclusion.
+-
+-The table's paths resolve under
+-`/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-development-attempt2`.
+-`N` is `/opt/homebrew/bin/node`. Times are actual `/usr/bin/time -p` wall
+-times; parser output identifies every old and proposed row. No source seal
+-was inferred from intent or copied from another checkout.
+-
+-| Check | Command | Exit and actual result | Output and SHA-256 |
+-|---|---|---|---|
+-| Four compiler contexts | `N node_modules/typescript/bin/tsc -p CONFIG`; `apps/room/lanes/tsconfig.test.json`, `packages/scope/tsconfig.test.json`, `apps/room/lanes/tsconfig.scope.json`, `apps/room/page/tsconfig.scope.json`, sequentially once | All four 0; walls 0.51, 0.92, 0.66 and 0.57 s; stdout and stderr empty | `01-compiler.stdout.log` through `04-compiler.stdout.log` and matching stderr files, each `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+-| Maintained AST computation | `N --import tsx attestation-computation/compute.mjs`, wrapper at the external output path | 0; 0.97 s; 17 file boundaries, no unexpected parser or selector change | `attestation-computation/parser.stdout.json` — `81e1198bd2eebc16a63b29276413354163d6ea05163fe8b2a7b5b025b68b472a` |
+-| Source-attestation whole Node owner at `f189881e` | `N --test scripts/security-entry-points.test.mjs` | 1; 12 cases, 11 passed and one assertion failure; zero cancelled, skipped or todo; 3.69 s | `security-entry-points.stdout.log` — `d4f167e73793c6053324281d0cda925e8247ee6f2dba3a4218978381ebf91c29` |
+-| Runtime owners and generated page assets | Separate root grant after actual-main and GS1 owner reconciliation | **UNRUN** | No passing result claimed |
+-| Full AE1 gate and explicit Security review | `npm run gate` and exact-head review after integration | **UNRUN** | No gate result or Security conclusion claimed |
+-
+-This expectation-and-note checkpoint changes no production source, parser,
+-model, dependency, release or operator value. At that checkpoint the
+-actual-main merge and GS1 archive-owner split remained open. The
+-Effects functions and models remain unchanged. SB1 retains its earlier
+-alarm-recovery bound, ARC1 retains its supported-cohort work, and Artifacts
+-remains the only admitted provider here. No hash adoption expands authority.
+-
+-### Separate inherited CB1 attestation repair
+-
+-The first whole Node owner stopped at the pre-existing
+-`packages/platform/src/version-questions.ts` expectation, outside the 17
+-reviewed AE1 boundaries. Its actual AST seal was
+-`e13a31cfa361891571369a4b976abe053189285547b9238d2a80bfabb19fc2f0`;
+-the retained expectation was
+-`069eaf4cc12c5e65caff4936d3deb088e19a5d173882131885ff1596b71fdef8`.
+-The failed run remains failed. It does not establish that all 17 adopted
+-boundaries were reached.
+-
+-Root reviewed CB1's exact two-line source delta and ruling
+-`4d03ff1dda006ad8ff50a29ea471001ff46218ae`, together with the actual
+-prepare-project and owned-plan guards. CB1 adds Register 28 only to
++checkout had no dependency view. Later checkpoints below record actual-main
++integration, dependency setup, reviewed attestations and development checks.
++The checker's Security conclusion remains required before landing. No push,
++pack, signing, provider call or deployment occurred during this preparation.
++
++## Portability and attestation checkpoints on 2026-11-14
++
++At `9011b593aa1dfdc0dcab05b5e443630c5b0687f3`, tree
++`cfc137dc01d92097c1948400b876d75bd3e76714`, the CB1 merge added only its
++Python fixture and two notes and preserved all 30 AE1 source blobs.
++Repair `ad4c61e32f45f042c19c0687ef4376260fcee11f` narrowed two archive ports
++to optional `APPLICATION_TRUST` and used the same portable parser already
++re-exported by Scope admission. It changed no trust grammar and repaired
++the Node-only lanes compiler's accidental `R2Bucket` dependency.
++
++Root reviewed all 17 boundaries in act
++`0258f47c151f044023a6fb1d81c9c8f47b44a258` before maintained `sourceSeal`
++and `namedSourceSeals` computation in act
++`20fd934656d0ad05a8f8efc68db4ab4a153e0fc1`. Root then reviewed the actual
++output before commit `f189881e` adopted eight new whole-file rows, eight
++changed whole-file rows and two existing named values: 18 AST values for
++17 files. Every unrelated expectation stayed unchanged. Raw-file hashes
++do not replace AST attestations or establish a passing owner.
++
++`object.ts` retains exactly `$module` and `ScopeObject`. Its reviewed delta
++contains two value imports and the namespace-only
++`applicationArchiveProofBytes` class method. No standalone method selector
++or new top-level runtime declaration enters the inventory. The method
++checks retirement, proof identity and the exact pin without first-ingress
++dispatch or cold-pin repair. Signed-install validation, current publisher
++trust and closed export policy remain separate checks. Source review does
++not supply the checker's Security conclusion.
++
++The first whole security owner failed at the inherited
++`packages/platform/src/version-questions.ts` expectation, outside those 17
++boundaries. Expected
++`069eaf4cc12c5e65caff4936d3deb088e19a5d173882131885ff1596b71fdef8`
++differed from actual
++`e13a31cfa361891571369a4b976abe053189285547b9238d2a80bfabb19fc2f0`.
++That failed run does not establish that it reached every adopted boundary.
++Root reviewed CB1's exact two-line delta and ruling
++`4d03ff1dda006ad8ff50a29ea471001ff46218ae`: Register 28 enters only
+ `celldPreparedNoHostRegister` and `celldSmokeOwnedPlanRegister`.
+-`celldPreparedBindingPolicyRegister` remains Register 25, and the exact
+-includes predicate stays unchanged. The source has no AE1 delta against
+-the CB1 base. Root approved the one inherited expected value from the
+-maintained owner's actual report.
+-
+-This repair changes only that expected seal and this note. It preserves
+-all 17 AE1 values, every selector, every other C1/R2/H1 expectation and all
+-production source. A separate granted whole-owner run at `5e8d4a63`
+-passed all twelve cases, recorded by act
+-`11035435699893eebc0f819b40e36fdfed9f5d8e`. The original failed run remains
+-failed. That pass covers its exact source head, not the later composition.
++`celldPreparedBindingPolicyRegister` stays Register 25, with its exact
++includes predicate unchanged. Commit `5e8d4a63` adopted only that inherited
++actual seal and this note. The whole security owner then passed 12/12.
++Later composition preserved those exact source and parser inputs; it does
++not relabel the earlier failure. No hash adoption expands authority.
++Effects functions/models and SB1/ARC1 ownership remain unchanged.
+ 
+ ## Source composition onto actual main and the GS1 split
+ 
+@@ -461,8 +411,8 @@ before copying. The existing lock stamp copied unchanged, and all fifteen
+ relative workspace links resolve inside this new worktree. No install,
+ download, restamp, package edit or global dependency mutation occurred.
+ 
+-The runtime owner inventory follows the current registration and config
+-source. After a separate grant, select these whole files from the root:
++The runtime owner inventory follows the composed registration and config
++source. The evidence table records the selections that actually ran:
+ 
+ | Root configuration and project | Exact owning files |
+ |---|---|
+@@ -494,24 +444,118 @@ entries. Main's lanes test config excludes `.scope.fixture.ts` files from
+ the portable context; the lanes Scope context covers those fixtures.
+ The Scope package also lists `test/support/tsconfig.node.json` for the
+ local-clone helper, whose sources remain unchanged by this composition.
+-No compiler has run on the composed head; earlier results retain their
++All nine contexts passed at `ca1efcea`. The two Scope contexts passed
++again for the diagnostic repair at `2740e6d1`. Earlier results retain their
+ exact-head and imported-input qualifications.
+ 
+ The separate page producer is `npm run build --workspace
+-@generalbusiness/dap-page`, which calls its maintained `scripts/assets.mjs`.
+-It remains unrun, as do runtime owners, the integrated compiler contexts,
+-the AE1 gate and explicit Security review. No parser, test, compiler,
+-formatter, build, push or deployment ran during this composition. The
+-subsequent verified dependency copy supplies no new passing result.
+-
+-The integrated Native development attempt at `ca1efcea` confirmed the
+-driver's fixed-next archive pass, then failed its diagnostic completeness
+-assertion. The first-finish capture retained 64 sites and dropped one,
+-with only the site-overflow flag and a reconciled ledger. AE1's terminal
+-read and prepaid stop write add two legitimate charged sites before that
+-quote. The observer now retains at most 66 sites. Its existing overflow
+-witness uses 67 distinct spenders and preserves the incomplete-attribution
+-and settlement checks. This diagnostic storage bound grants no archive
+-work. Production budgets, deadlines, prices and the driver's completeness
+-assertion stay exact. No compiler, test, formatter, control or gate has run
+-for this repair. The shared Base and shared Grow failures remain open.
++@generalbusiness/dap-page`, which calls maintained `scripts/assets.mjs`.
++It remains **UNRUN**, together with the coupled scale owner, full AE1 gate
++and explicit Security review. Composition and copying supplied no result.
++
++## Integrated failures and bounded diagnostic repair
++
++The integrated Native run at `ca1efcea0b1b8ca9c0aa6b0a0de83e9db36600bd`,
++tree `dbbff0e26f9d602c4c96b3b57e71bf7df714c87d`, finished with 69 passes
++and five failures: three primary failures and two dependent handoffs.
++The driver completed its fixed-next pass, then failed diagnostic
++`firstFinishAttribution.complete` at `archive-driver.test.ts:656`.
++The capture retained 64 sites, dropped one and set only the site-overflow
++flag, with a reconciled ledger. AE1's terminal read and prepaid stop write
++add two legitimate charged sites. Commit
++`2740e6d1534ead6756e068e582dc7e33b89645a0`, tree
++`1193e450b731499128ba376adf8e73b1ac40b6c6`, changes only this recorder
++bound to 66. Its overflow witness uses 67 distinct spenders and retains
++incomplete-attribution and settlement checks. The follow-up passed all 12
++observation and 21 driver cases. The formerly interrupted callback reached
++its remaining privacy, margin, cap, head and final foreign-source-unavailable
++terminal checks. No archive allowance, price, deadline or driver assertion
++changed. This follow-up does not relabel Native74.
++
++Both shared producers reached an actual `finish-affordability` refusal.
++The unchanged allowance is entries 4096, attempts 512, nodes 64, calls 16384,
++metadata 4194304 and input work 67108864, with the original 30-second
++deadline. Base's earliest failed root prefix is sequence 1, after sequence
++0 confirmed: 35 nodes spent leave 29; the finish needs 30, short by one.
++Grow fails its first root prefix, sequence 0: input work 45969870 spent
++leaves 21138994; the finish needs 29732767, short by 8593773. All other
++axes fit. Both refusals show zero unsettled metadata and no settlement
++refusal, timeout or policy refusal.
++
++The exact eligible array is `[rootScope, childScope, D, A, G]`; private
++`R` and `M` stay excluded. Each cutoff gets a fresh ordinary budget and
++native-only initial policy map. The shared adapter pays current signed-install
++policy before row load. Adaptive planning checks its finish quote against
++that same allowance, persists the prepaid capacity wake and returns
++`retry/limit` before provider send for the failed prefix. Base retains its
++preceding receipt. The custom fixture budget supplies no component-level
++debit attribution, so the aggregate shortage establishes no removable charge.
++The two command followers then fail at fixture line 1904 because the
++preceding producers never publish a retained command session. They are
++consequences, not two additional root bugs.
++
++Genuine installed-policy, trust-revocation and public-clone acceptance
++remain failed or unreached. Fresh planner question
++`d61031367cfface1e2120bb7866017ca5a502a43` holds the AE1/ARC1 acceptance
++and ownership boundary. No raised cap, reduced price, changed deadline,
++weaker assertion, one-pass claim or eventual retry-success claim follows.
++
++The independent Directory control makes the receiver return a genuine
++signed proof for a Directory with a different genesis. The metadata
++subtraction-to-addition fault reaches the existing full-record read trap;
++the sender's catch returns `malformed-or-unsupported`, and the direct
++`metadata-limit` assertion fails. Its later zero-read assertion does not run.
++These controls distinguish recipient binding and combined pre-read metadata
++admission. They do not close installed-export or trust-removal acceptance.
++
++## Evidence checkpoints on 2026-11-14
++
++These are development checks and individual controls, not a gate result.
++The sole evidence table keeps each source checkpoint and original verdict.
++`N` is `/opt/homebrew/bin/node`; `V` is
++`N node_modules/vitest/vitest.mjs run`. The path abbreviations are exact:
++
++- `O`: `/private/tmp/artroom-ae1-dev-20261114`.
++- `A`: `/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-development-attempt2`.
++- `I`: `/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-integrated-development-attempt1`.
++- `D`: `/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-diagnostic-development-attempt1`.
++
++Original compiler logs retain no argv, exit or wall record; those fields
++remain unavailable. Later `*.argv.json` and `*.result.json` files retain
++actual commands and exits. `A` uses actual `/usr/bin/time -p` wall values;
++`I` and `D` use monotonic elapsed seconds. `EMPTY` means SHA-256
++`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
++
++| Checkpoint | Actual command | Result and wall | Retained output and SHA-256 |
++|---|---|---|---|
++| Initial compiler failures | Original argv unavailable; logs identify Platform, Scope/Page and Node-only lanes diagnostics | TS7053; union/optional-host narrowing; TS4111 during repair; TS2304 `R2Bucket`; exit/wall unavailable | `O/01-compiler.log` `8d7c4cfd96901bc295a150dc4d571e50d010d9ed3f6b8e37fcd1669bfc7f7476`; `04-compiler.log` `3790273e403e83200ca85ddd1fc45d429499be6c702658323a18a62722806beb`; `04-compiler-repair.log` `1405bf8ceb219b16c1e626d06f388501140d747c9de4922510c20ac8299ee48d`; `07-compiler.log` `8ffae07a8390cb9a76f0030e787526ea8a886899be52640f3e710cdb7729ebfc` |
++| `9011b593` four compilers | `N node_modules/typescript/bin/tsc -p` each of `apps/room/lanes/tsconfig.test.json`, `packages/scope/tsconfig.test.json`, `apps/room/lanes/tsconfig.scope.json`, `apps/room/page/tsconfig.scope.json` | All exit 0; 0.51, 0.92, 0.66, 0.57 s | `A/01-compiler` through `04-compiler` argv/result/stdout/stderr; output `EMPTY` |
++| Reviewed AST17 before adoption | `N --import tsx A/attestation-computation/compute.mjs`, absolute argv retained | Exit 0; 0.97 s; 18 AST values in 17 files, reviewed before `f189881e` adoption | `A/attestation-computation/parser.stdout.json` `81e1198bd2eebc16a63b29276413354163d6ea05163fe8b2a7b5b025b68b472a`; wrapper and old/new rows retained |
++| `f189881e` security owner | `N --test scripts/security-entry-points.test.mjs` | Exit 1; 11 pass / 1 fail of 12; 3.69 s; inherited CB1 seal | `A/security-entry-points.stdout.log` `d4f167e73793c6053324281d0cda925e8247ee6f2dba3a4218978381ebf91c29`; stderr `EMPTY` |
++| `5e8d4a63` inherited repair | Same whole security command | Exit 0; 12/12 pass; 3.90 s; zero cancelled/skipped/todo | `A/security-entry-points-attempt2/stdout.log` `652f236777a9c948f247652eae161dc0d03082153a6900a6c132102e284e1b8b`; stderr `EMPTY` |
++| `ca1efcea` nine compilers | `N node_modules/typescript/bin/tsc -p` each config in the compiler table above, in listed order | All exit 0; 0.657, 0.377, 0.380, 0.889, 0.440, 0.630, 0.311, 0.426, 0.568 s | `I/01-compiler` through `09-compiler` argv/result/stdout/stderr; output `EMPTY` |
++| `ca1efcea` compatibility | `N scripts/cloudflare-pool-compat.mjs` | Exit 0; 0.091 s; copied:false | `I/10-compat.stdout.log` `e6455ec422a4d281a56a4a8b272bc95acdd9aa50a553127506a5e87c855e6c43`; before/after bundle `cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39`; stderr `EMPTY` |
++| `ca1efcea` Plain3 | `V --config vitest.plain.config.ts --project lanes --project page apps/room/lanes/test/grow-archive.test.ts apps/room/page/test/joined-shell.test.ts apps/room/page/test/publication.test.ts --reporter=default --reporter=json --outputFile.json=I/11-plain.report.json` | Exit 0; three files / four cases pass; 2.071 s | `I/11-plain.report.json` `f8ba4660015f77daf114530c22d7feff4b7e3c38ec7e09b44a5aeb0c942553be`; stdout `39de4de6dc62813961c9a37ecc17e2c92992ca79cf4fc97ff2ad6e632b95c719`; stderr `EMPTY` |
++| `ca1efcea` Native7 | `V --config vitest.native.config.ts --project scope packages/scope/test/archive-application-proof.test.ts packages/scope/test/archive-driver.test.ts packages/scope/test/archive-row.test.ts packages/scope/test/archive-installed.test.ts packages/scope/test/archive-budget.test.ts packages/scope/test/archive-operator.test.ts packages/scope/test/archive-build.test.ts --reporter=default --reporter=json --outputFile.json=I/12-native.report.json` | **Exit 1; 69 pass / 5 fail of 74; 52.714 s**; driver and installed owners fail | `I/12-native.report.json` `ddc9604558288aa8fe1697182e9097fa2fd77615268548c614d550999de8fd82`; stdout `058468eec5339bb0f99c9f14bcb4103ba1cce1e5ac72a1b39c25bbf250ca5270`; stderr `3994b66bb4e8e49026271bba5ac7e2d846d04f1cdf1a3c2007c1d79a6b3cd02f` |
++| `ca1efcea` control compatibility | `N scripts/cloudflare-pool-compat.mjs` | Exit 0; 0.075 s | `I/controls/compat.stdout.log` `e6455ec422a4d281a56a4a8b272bc95acdd9aa50a553127506a5e87c855e6c43`; argv/stderr/result beside it |
++| `ca1efcea` Directory control | `N I/controls/directory-binding/control-retained.mjs packages/scope/src/applications/archive-proof.ts 'same(proof.installation.directory, expected.directory)' true --expect TITLE -- packages/scope --config vitest.worker.config.ts test/archive-application-proof.test.ts` | Helper 0 **DISTINGUISHES**; child exits 0/1; baseline 2 pass; mutant 1 pass / 1 fail; 13.010 s; intended line 83 `toBeNull` | `I/controls/directory-binding/tmp/artroom-control-uoPotK/before.json` `664d9bdece13715a5b39a4d051b06eda88e084fb8cbd3d93202cd43c4163caea`; `after.json` `507780aaa2d9ddb0ddd6417d76574d01ed705345bb7f822f4eef2a207c15e1aa`; helper stderr `ad70f2b1a431ef2d4cb64309cecadbfc9b69b33b3e9d29439c959df0587f3378` |
++| `ca1efcea` metadata control | `N I/controls/combined-metadata/control-retained.mjs packages/scope/src/applications/archive-proof.ts 'jobBytes > PREPARATION_BOUNDS.metadata - rules[0]!.size' 'jobBytes > PREPARATION_BOUNDS.metadata + rules[0]!.size' --expect TITLE -- packages/scope --config vitest.worker.config.ts test/archive-application-proof.test.ts` | Helper 0 **DISTINGUISHES**; child exits 0/1; baseline 2 pass; mutant 1 pass / 1 fail; 12.792 s; intended line 65 refusal assertion | `I/controls/combined-metadata/tmp/artroom-control-1Nfily/before.json` `368a43a7df82062456eb713076bdcf5011197aad361904d9ce5a2c7638d965bc`; `after.json` `ef3dc31ed42391e520c2a4d4f2ab0f4b6acdbc4eb629debc5fa4cdad95ccaca5`; helper stderr `ec82ca8dc8c31e229e5f6cc1a0653db9a727273b1811b29a91769413b4aa4ad5` |
++| `2740e6d1` Scope compilers | `N node_modules/typescript/bin/tsc -p packages/scope/tsconfig.json`, then `-p packages/scope/tsconfig.test.json` | Both exit 0; 0.371 and 0.849 s | `D/01-scope-source` and `02-scope-test` argv/result/stdout/stderr; output `EMPTY` |
++| `2740e6d1` compatibility | `N scripts/cloudflare-pool-compat.mjs` | Exit 0; 0.073 s | `D/03-compat.stdout.log` `e6455ec422a4d281a56a4a8b272bc95acdd9aa50a553127506a5e87c855e6c43`; stderr `EMPTY` |
++| `2740e6d1` diagnostic follow-up | `V --config vitest.native.config.ts --project scope packages/scope/test/archive-capacity-observation.test.ts packages/scope/test/archive-driver.test.ts --reporter=default --reporter=json --outputFile.json=D/04-native.report.json` | Exit 0; observation 12 + driver 21 = 33 pass; 23.727 s; full callback reached | `D/04-native.report.json` `b7330108fc7ad4085412752da65547220ec4f2093ae6b1995013c34780756f5a`; stdout `2457b4f93eaa6a3427ee4e32387f98e844a4a9b044d0ae63fdf2919fd0e33870`; stderr `EMPTY` |
++| Scale, assets, gate, Security review | Coupled `archive-installed-scale.test.ts`; page build; `npm run gate`; exact-head review | **UNRUN** | No pass or Security conclusion claimed |
++
++`TITLE` means the single exact argument
++`archive install proof binds Base Rules, exact signed IDs and native retained byte limits without codec fallback`.
++Both controls run the unchanged whole two-case owner without a name filter,
++with zero pending/todo and no cancelled/skipped case. Each retains its
++original helper, cleanup-only copy and one-line diff. Original SHA:
++`8d7ba44b672b1c84c2272dd185661c77ecc06b958e59fb83b5b4a0d0562aa818`;
++copy SHA: `172b74d82244d6b93f5febcade352ce0c2fd67bdec609af0a63d7164beec5415`.
++Each restored source SHA
++`98322b0ce019612c520df52a65241ba4f13f8d617c5782e4784ed747c679003e`
++and mode `0644` exactly. No third green ran. Act
++`cc682d8b499a77cac05b3edd46ae2716f93bbdd9` records both controls; END
++`666921f396c74fd584830f0c20e00f3cb7821152` records the diagnostic follow-up.
++This doc-only checkpoint changes no source, cap, price, deadline,
++expectation, release, model or operator value. No check ran for this update.
