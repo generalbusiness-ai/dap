@@ -32,7 +32,11 @@ test("binding preserves written text and symbolic names while capturing only mis
   const lowered = { on: names.on, fields: shaped.fields };
   expect([lowered, shaped.texts]).toEqual([{ on: 17, fields: { body: textDigest(body) } }, [body]]);
   const subjects = [{ id: 17, type: "note", refs: {}, revision: { after: prior } }];
-  const bound = bindActBasis(notes, act, subjects, lowered, at);
+  const captureName = Object.freeze({});
+  const captureSubjects = [{ id: 3, type: "note", refs: {}, revision: 1 },
+    { id: captureName, type: "note", refs: {}, revision: { after: prior } }];
+  const capture = { on: captureName, fields: lowered.fields };
+  const bound = bindActBasis(notes, act, captureSubjects, capture, at);
   expect(bound).toEqual({ act: { ...act, expected: { on: { after: prior } } }, bound: ["on"] });
   expect(lowerActBasis(notes.acts.write, subjects, lowered.on, lowered.fields, at, bound.act.expected, symbols)).toEqual({ on: 1 });
   expect(act.expected).toBeUndefined();
@@ -41,10 +45,12 @@ test("binding preserves written text and symbolic names while capturing only mis
   expect(actVersion({ ...bound.act, fields: { body: `${body}!` } })).not.toBe(source.version);
   expect(actVersion({ ...bound.act, on: { output: { ...prior, key: "another-note" } } })).not.toBe(source.version);
 
-  const captured = bindActBasis(notes, { ...act, expected: { on: 3 } }, subjects, lowered, at);
+  const captured = bindActBasis(notes, { ...act, expected: { on: 3 } }, captureSubjects, capture, at);
   expect(captured.act.expected).toEqual({ on: 3 });
   expect(captured.bound).toEqual([]);
   expect(lowerActBasis(notes.acts.write, subjects, lowered.on, lowered.fields, at, captured.act.expected, symbols)).toEqual({ on: 3 });
+  const unrecorded = bindActBasis(notes, { ...act, on: 17 }, captureSubjects, { ...capture, on: 17 }, at);
+  expect([unrecorded.act.on, unrecorded.act.expected, unrecorded.bound]).toEqual([17, {}, []]);
 });
 
 test("private state and public rows retain recorded knowledge without exposing pending item aliases", () => {

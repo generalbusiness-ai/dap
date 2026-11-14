@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
-import type { FactRef } from "@generalbusiness/dap-contract";
+import type { FactRef, Item as StoredItem } from "@generalbusiness/dap-contract";
 import { expectedOf, viaLeft } from "../src/index.ts";
 
 type Act = Parameters<typeof expectedOf>[0];
-type Item = Parameters<typeof expectedOf>[1][number];
+type Item = Pick<StoredItem, "id" | "type" | "revision" | "refs">;
 const item = (id: number, type: string, revision: number, refs: Item["refs"] = {}): Item => ({ id, type, revision, refs });
 
 // Pure derivation over supplied item records. These fixtures prove no read,
