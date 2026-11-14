@@ -61,12 +61,23 @@ if [ "$failed" = 0 ] && [ -n "$base" ]; then step whitespace git diff --check -B
 if [ "$failed" = 0 ]; then
   if step notes node scripts/check-notes.mjs "$base" HEAD; then cat "$out/notes.log"; fi
 fi
+[ "$failed" = 0 ] && step notes-test node --test scripts/check-notes.test.mjs
+[ "$failed" = 0 ] && step selection-test node --test scripts/gate-test-selection.test.mjs
 [ "$failed" = 0 ] && step format npm run format:check
 [ "$failed" = 0 ] && step typecheck npm run typecheck
 [ "$failed" = 0 ] && step def-pins node --import tsx scripts/check-definition-pins.mjs
 # npm's unchanged pretest hook prepares compatibility once. The fixed test
 # owner defers its summary to this gate's unconditional EXIT finalizer.
-[ "$failed" = 0 ] && step test npm test -- --gate --defer-summary --evidence "$test_evidence"
+if [ "$failed" = 0 ]; then
+  test_selection=$(node scripts/gate-test-selection.mjs "$base" HEAD) || failed=$?
+  if [ "$failed" = 0 ]; then
+    case "$test_selection" in
+      notes-only) echo "test       skipped: only paths under notes/ changed" ;;
+      full) step test npm test -- --gate --defer-summary --evidence "$test_evidence" ;;
+      *) echo "test selection: unexpected answer" >&2; failed=2 ;;
+    esac
+  fi
+fi
 if [ -f "$out/test.log" ]; then
   grep -h "Tests \|ℹ pass\|Test evidence:\|plain timing:\|native timing:\|plain progress:\|native progress:" "$out/test.log" | sed 's/^ */  /'
 fi
