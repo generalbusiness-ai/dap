@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,24 +8,32 @@ import { test } from "node:test";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const prettier = join(root, "node_modules/prettier");
+const rolldown = join(root, "node_modules/rolldown");
 const formatted = '{\n  "answer": 42\n}\n';
 
-// Real scratch Git commits run the tracked hooks and the actual formatter.
+// Real scratch Git commits run the tracked hooks and their actual checks.
 // Keep every repository, message and child stream for diagnosis.
 function repository({ dependencies = true } = {}) {
   const cwd = mkdtempSync(join(tmpdir(), "artroom-git-hooks-"));
   console.log(`Git hook witness scratch: ${cwd}`);
   for (const directory of [".githooks", "scripts", "logs"]) mkdirSync(join(cwd, directory));
-  for (const file of [".githooks/pre-commit", ".githooks/commit-msg", "scripts/pre-commit.mjs", "scripts/format-json.mjs", "scripts/check-commit-messages.mjs"]) {
+  for (const file of [".githooks/pre-commit", ".githooks/commit-msg", "scripts/pre-commit.mjs", "scripts/format-json.mjs", "scripts/check-shared-helpers.mjs", "scripts/check-commit-messages.mjs"]) {
     copyFileSync(join(root, file), join(cwd, file));
   }
   for (const name of ["pre-commit", "commit-msg"]) chmodSync(join(cwd, ".githooks", name), 0o755);
   writeFileSync(join(cwd, "package.json"), '{\n  "type": "module"\n}\n');
   writeFileSync(join(cwd, "data.json"), formatted);
+  mkdirSync(join(cwd, "packages/bytes"), { recursive: true });
+  copyFileSync(join(root, "packages/bytes/package.json"), join(cwd, "packages/bytes/package.json"));
+  cpSync(join(root, "packages/bytes/src"), join(cwd, "packages/bytes/src"), { recursive: true });
   if (dependencies) {
     assert.equal(JSON.parse(readFileSync(join(prettier, "package.json"))).name, "prettier");
-    mkdirSync(join(cwd, "node_modules"));
+    assert.equal(JSON.parse(readFileSync(join(rolldown, "package.json"))).name, "rolldown");
+    mkdirSync(join(cwd, "node_modules/@generalbusiness"), { recursive: true });
     symlinkSync(prettier, join(cwd, "node_modules/prettier"), "dir");
+    symlinkSync(rolldown, join(cwd, "node_modules/rolldown"), "dir");
+    symlinkSync(join(cwd, "packages/bytes"), join(cwd, "node_modules/@generalbusiness/dap-bytes"), "dir");
+    symlinkSync(join(root, "packages/contract"), join(cwd, "node_modules/@generalbusiness/dap-contract"), "dir");
   }
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith("GIT_")));
   env.PATH = `${dirname(process.execPath)}${delimiter}${env.PATH ?? ""}`;
@@ -49,7 +57,7 @@ function repository({ dependencies = true } = {}) {
   git("config", "--local", "user.email", "hook-test@example.invalid");
   git("config", "--local", "commit.gpgsign", "false");
   git("config", "--local", "core.hooksPath", ".githooks");
-  git("add", "--", ".githooks", "scripts", "package.json", "data.json");
+  git("add", "--", ".githooks", "scripts", "packages", "package.json", "data.json");
   let messages = 0;
   const commit = message => {
     const file = join(cwd, `message-${++messages}.txt`);
@@ -106,4 +114,27 @@ test("the pre-commit hook refuses a checkout without local Prettier explicitly",
   assert.match(refused.stderr, /local Prettier is missing/);
   assert.match(refused.stderr, /npm ci before committing/);
   assert.equal(repo.git("rev-list", "--all", "--count"), "0");
+});
+
+test("the pre-commit hook refuses a local bytes helper and accepts its shared import", () => {
+  const repo = repository();
+  const file = "examples/hook-source.ts";
+  const duplicate = 'export const natural = (value: unknown): value is number => typeof value === "number";\n';
+  mkdirSync(join(repo.cwd, "examples"));
+  writeFileSync(join(repo.cwd, file), duplicate);
+  repo.git("add", "--", file);
+  const index = repo.git("write-tree");
+  const refused = repo.commit("Use a shared helper\n");
+  assert.equal(refused.status, 1);
+  assert.match(refused.stderr, /examples\/hook-source\.ts: natural is already owned by packages\/bytes\/src\/values\.ts/);
+  assert.equal(repo.git("rev-list", "--all", "--count"), "0");
+  assert.equal(repo.git("write-tree"), index, "the hook must preserve every staged byte");
+  assert.equal(readFileSync(join(repo.cwd, file), "utf8"), duplicate, "the hook must preserve the working source");
+  const shared = 'import { natural } from "@generalbusiness/dap-bytes";\nexport { natural };\n';
+  writeFileSync(join(repo.cwd, file), shared);
+  repo.git("add", "--", file);
+  const accepted = repo.commit("Use a shared helper\n");
+  assert.equal(accepted.status, 0, accepted.stderr);
+  assert.equal(repo.git("rev-list", "--all", "--count"), "1");
+  assert.equal(readFileSync(join(repo.cwd, file), "utf8"), shared);
 });

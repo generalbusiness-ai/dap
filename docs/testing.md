@@ -95,10 +95,17 @@ staging intact and asks you to stage the formatted file. The commit-msg hook
 reads the actual UTF-8 message and reuses the
 subject and body rules in `scripts/check-commit-messages.mjs`.
 
+After formatting passes, the pre-commit hook runs
+`node scripts/check-shared-helpers.mjs`. It refuses a local implementation
+of a helper that `packages/bytes` exports. Import the existing helper, or
+give a different meaning a different name. The hook leaves the source and
+index unchanged. The slower citations check stays in the gate.
+
 The pre-commit hook fails closed when the checkout has no local Prettier,
 including a notes-only worktree. Set up its committed dependencies with
 `npm ci` before committing; do not install a separate formatter or borrow
-an unmatched dependency view. Both checks still run in the gate.
+an unmatched dependency view. Formatting, shared helpers, and commit-message
+checks still run in the gate.
 
 Run the tests of what you changed while you work, not the repository.
 

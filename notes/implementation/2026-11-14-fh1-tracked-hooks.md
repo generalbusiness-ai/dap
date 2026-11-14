@@ -42,3 +42,25 @@ GS3 request `3a4f6d1c` combines this source with its two-group scale
 selector under one tooling gate after NF5, C2 and C3, before E1's full
 gate. E1 development proceeds independently. The eventual gate and review
 remain owed; no shared hook activation follows from this merge.
+
+## Shared-helper check
+
+Ruling `a71906b7ec8e98ae5d9184f40df0e1de1d57fa19` adds the existing
+shared-helper check to the pre-commit hook. After formatting passes, the
+hook runs `node scripts/check-shared-helpers.mjs` and refuses a nonzero
+exit, signal, or failed launch. It preserves both the working files and
+the index. The gate keeps this check. The citations check stays outside
+the hook.
+
+A fourth scratch-Git witness stages a local `natural` implementation.
+The real checker must refuse the commit, name its bytes owner, and leave
+the full staged tree and working source unchanged. Replacing the local
+implementation with a shared import must permit the same commit message.
+The scratch repositories use the actual bytes source, the existing
+contract export source, and the owned pinned parser and formatter. They
+install nothing and retain their child streams.
+
+This addition is source only: its syntax checks, four-case hook owner,
+gate, and review are **UNRUN**. Earlier three-case results above describe
+the earlier source. NF5's repair and gate come first. This checkout does
+not activate hooks or change shared Git configuration.

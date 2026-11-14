@@ -24,6 +24,11 @@ function check() {
     console.error("pre-commit: run node scripts/format-json.mjs --write, review the changes, and stage them before committing.");
     return 1;
   }
+  const helpers = spawnSync(process.execPath, ["scripts/check-shared-helpers.mjs"], { cwd: root, stdio: "inherit" });
+  if (helpers.error || helpers.signal || helpers.status !== 0) {
+    console.error("pre-commit: fix the shared-helper check before committing; import the existing helper or name the different meaning.");
+    return 1;
+  }
   return 0;
 }
 
