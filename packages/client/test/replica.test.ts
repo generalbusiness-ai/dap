@@ -134,8 +134,8 @@ describe("the states of the replica", () => {
     const { replica, serving } = await started(s);
     const from = s.head.seq + 1;
     const reads = serving.reads.length;
-    let nextRead!: (read: Promise<void>) => void;
-    const completed = new Promise<void>((resolve) => { nextRead = resolve; });
+    let nextRead!: (read: Promise<boolean>) => void;
+    const completed = new Promise<boolean>((resolve) => { nextRead = resolve; });
     const unsubscribe = replica.subscribe(() => {
       unsubscribe();
       // The first microtask precedes the loop's final continuation; the second
