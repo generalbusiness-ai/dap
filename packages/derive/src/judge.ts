@@ -242,7 +242,7 @@ export function judgeActBody(view: StateView, definition: ValidDefinition, body:
     if (!scope) return { result: "unavailable", reason: "unavailable" } as const;
     const verified = verifiedContext(context, { body, actor: context.actor });
     return actBodyJudged(view, definition, body, verified, scope,
-      { actor: context.actor, plan: false, unavailableIntent, selfRefs, recordRefs, unavailableEntry, itemBookkeeping, references });
+      { actor: context.actor, plan: false, unavailableIntent, selfRefs, recordRefs, unavailableEntry, itemBookkeeping, ...(references ? { references } : {}) });
   }), body, counts => { drawn = counts; });
   if (missing) return { result: "unavailable", reason: "unavailable", lacks: [missing] };
   if (answer.result === "write") {
