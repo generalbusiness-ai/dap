@@ -19,7 +19,7 @@
  */
 import type {
   ActType, AlsoRule, AuthorSource, CapabilityArg, CapabilityName, CapacityVersion, DeclaredDefinition, Digest, DurabilityLevel, EffectForm,
-  EntryPart, FieldType, FieldValue, Guard, ItemType, Notify, Operand, Part, PlatformDefinition, Range, ReceiveType, ResultClauses, ScopeKind,
+  EntryPart, FieldType, FieldValue, GroupRead, Guard, ItemType, Notify, Operand, Part, PlatformDefinition, Range, ReceiveType, ResultClauses, ScopeKind,
   SendForm, SendSource, Settles, Source, Subject, TimedRule, Where,
 } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
@@ -525,6 +525,21 @@ export function receive<I extends ItemDef | null = null, const F extends Fields 
 }
 /** The settlement of a relationship copy. */
 export const settlesCopy = (...states: readonly string[]): Settles => ({ copy: states });
+
+// ================================================================ the sequenced level
+
+/** Version 1 of the sequenced level, for the `level` of `define` (sequenced note, section 5.11). */
+export const sequencedLevel = { name: "sequenced", version: 1 } as const satisfies DurabilityLevel;
+/**
+ * A read of a member of the group as of the act's cut (sequenced note, section 5.2): the items of `item`, a type of the member's
+ * definition, in the listed states. `member` is the member's name in the order scope.
+ */
+export const groupRead = <I extends ItemDef>(member: string, item: I, states: readonly States<I>[]): GroupRead => ({ member, items: { type: item.name, states } });
+/** Mark an act sequenced: it takes a position in its group's order, and reads each member that `reads` names as of its cut. */
+export const sequenced = <const A extends ActType, const R extends Record<string, GroupRead> = {}>(act: A, reads?: R): A & { readonly sequenced: true; readonly reads?: R } =>
+  ({ ...act, sequenced: true, ...(reads && Object.keys(reads).length > 0 ? { reads } : {}) });
+/** The list of records that a `reads` entry of a sequenced act bound: the `list` of `each`, `has`, `distinct` or `sameSet`. */
+export const groupList = (name: string) => ({ read: name }) as const;
 
 // ================================================================ timed rules
 

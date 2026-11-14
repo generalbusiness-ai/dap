@@ -18,10 +18,11 @@
  * `run-returned`, which is over the order of entries and is the verifier's.
  */
 
-import type { Grant, Head, KeyId, Observation, ObservationUse, ScopeFilter, ScopeKind, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import type { Digest, FreshnessProof, Grant, Head, KeyId, MemberRef, Observation, ObservationUse, ScopeFilter, ScopeKind, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { isHead, isKeyId, isMemberId, isPlatformDefinition, isRecord, platformName } from "@generalbusiness/dap-bytes";
 import { actionOf } from "./marks.ts";
 import { declarationOf } from "./program/declaration.ts";
+import type { Presented } from "./judge.ts";
 import type { StateView } from "./state.ts";
 import { timeMs, type Clock } from "./time.ts";
 import type { ValidDefinition } from "./validate/index.ts";
@@ -141,6 +142,46 @@ export function observationOf(answer: unknown, at: Timestamp): Observation | nul
 export function grantFrom(use: ObservationUse): Grant {
   const o = use.observation as Observation;
   return { issued: { at: o.of, seq: o.head.seq, hash: o.head.hash }, subject: { membership: o.of, member: o.member }, key: o.key, principal: null, actions: o.actions, within: o.within, notAfter: o.notAfter, fresh: use };
+}
+
+/** The key that a prediction stands in for, the member it acts as, and the member it acts for. */
+export interface PredictionActor { key: KeyId; member: MemberRef; principal: MemberRef | null }
+
+/** The freshness proof of a stand-in grant: none. Its bytes are `null`. */
+const NO_PROOF = null as unknown as FreshnessProof;
+const NO_FACT: Digest = `sha256:${"0".repeat(64)}`;
+
+/**
+ * A stand-in grant for a prediction: every action that the definition's acts
+ * state, for one key in one scope, presented as current. A replica outside
+ * the runtime passes it to `judgeAct` to predict what the scope writes for
+ * the same signed bytes.
+ *
+ * The scope decides authority, and the prediction does not:
+ *
+ * - When the actor's key matches the signed intent and the scope matches
+ *   the judged scope's full reference, including genesis, the prediction never
+ *   answers `unauthorized` for an act whose `grant` states an action. In platform
+ *   data, a mark at `grant` that states no action runs its rule, and that rule
+ *   can still refuse.
+ * - The grant holds no freshness proof, so it serves no row of `observes`.
+ *   Under a definition that states such rows, a prediction can answer
+ *   `authority-unavailable` where the scope writes.
+ * - Its `issued` names no fact: sequence 0 of the actor's membership, with
+ *   a digest of zeros. An entry that records this grant is not one that a
+ *   scope writes, and a replay with `grants: "proven"` refuses it.
+ *
+ * The judge checks the intent's `notAfter` against the clock that the caller
+ * passes. A caller's clock that is far from the scope's predicts `expired`
+ * wrongly, in either direction.
+ */
+export function predictionGrant(definition: ValidDefinition, actor: PredictionActor, scope: ScopeRef): Presented {
+  const actions = [...new Set(Object.values(declarationOf(definition).acts).flatMap((act) => actionOf(act, definition) ?? []))];
+  const grant: Grant = {
+    issued: { at: actor.member.membership, seq: 0, hash: NO_FACT }, subject: actor.member, key: actor.key, principal: actor.principal,
+    actions, within: scope, notAfter: null, fresh: NO_PROOF,
+  };
+  return { grant, current: true };
 }
 
 /** True when a recorded grant is exactly the grant that the observation it retains gives (section 16.1, the row "Replay path"). */

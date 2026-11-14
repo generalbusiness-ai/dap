@@ -862,6 +862,8 @@ describe("the rows of `observes`, replayed: the origin, the subject lists, the g
 test("a well-hashed journal declaring unsupported durability is unsupported at its genesis", async () => {
   for (const name of ["live", "sequenced"] as const) {
     const declared = { ...notesDefinition.declared, level: { name, version: 1 as const } };
+    // Inject a version that remains unsupported after live/sequenced v1 admission.
+    Object.assign(declared, { level: { name, version: 2 } });
     const history = unsupportedDefinitionHistory(declared, `unsupported-${name}`);
     const result = await verify(new MemorySource([history]), { mode: "replay", scope: history.scope.scope, ...AS_RECORDED });
     expect([result.report.result, result.report.at?.seq, result.why]).toEqual([

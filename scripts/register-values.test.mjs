@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, mkdir, readFile, writeFile, rm } from "node:fs/promises";
+import { chmodSync, lstatSync, renameSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { configPath, parseConfig, smokePolicy } from "./deploy-config.mjs";
@@ -11,7 +12,7 @@ import { registerValuesMain, registerValuesSource } from "./register-values.mjs"
 const register = "sc_" + "b".repeat(51) + "a", genesis = "sha256:" + "b".repeat(64);
 const next = "sc_" + "c".repeat(51) + "a";
 const start = ["--start-origin", "https://dap-demo.inguz.workers.dev", "--deployment", "TEST-demo", "--definition", "platform:register@28"];
-const args = (name = "demo") => [name, "--register", register, "--genesis", genesis];
+const args = (name = "demo", mode = "keep") => [name, "--register", register, "--genesis", genesis, `--${mode}`];
 const input = name => readFile(new URL(`../${configPath(name)}`, import.meta.url), "utf8");
 
 async function fixture(t, change) {
@@ -34,6 +35,103 @@ async function fixture(t, change) {
     invoke: argv => registerValuesMain(argv, { root, write: text => output.push(text) }),
     read: async name => parseConfig(await readFile(join(root, configPath(name)), "utf8")) };
 }
+
+// Invariant: omitting a retention choice refuses valid ordinary input instead
+// of silently widening creation authority. Keep argv independent of args() so
+// this same witness reaches the old default in the exact-baseline control.
+test("no choice refuses a valid rotation and names both explicit choices", async t => {
+  const f = await fixture(t, (name, source) => {
+    if (name !== "grow") return source;
+    const config = parseConfig(source);
+    delete config.vars.INSTALLED_REGISTER_SCOPES;
+    return JSON.stringify(config, null, 2) + "\n";
+  });
+  assert.equal(await f.invoke(["grow", "--register", register, "--genesis", genesis]), 1);
+  assert.match(f.output.join(""), /--only/);
+  assert.match(f.output.join(""), /--keep/);
+  assert.deepEqual(await f.snapshot(), f.before);
+});
+
+test("contradictory and repeated choices refuse before reading a target", async () => {
+  for (const choices of [["--only", "--keep"], ["--keep", "--only"], ["--only", "--only"], ["--keep", "--keep"]]) {
+    const output = [];
+    assert.equal(await registerValuesMain(["grow", "--register", register, "--genesis", genesis, ...choices], {
+      root: join(tmpdir(), "TEST-no-register-target"), write: text => output.push(text),
+    }), 1);
+    assert.match(output.join(""), /exactly one of --only and --keep|repeated argument/);
+  }
+});
+
+test("only and keep use explicit list or implicit primary without changing other tracked bytes", async t => {
+  for (const mode of ["only", "keep"]) for (const listed of [false, true]) {
+    let primary;
+    const f = await fixture(t, (name, source) => {
+      if (name !== "grow") return source;
+      const config = parseConfig(source);
+      primary = config.vars.REGISTER_SCOPE;
+      // Include the requested root before the primary to witness keep's order
+      // and de-duplication, with two other distinct installed roots.
+      if (listed) config.vars.INSTALLED_REGISTER_SCOPES = JSON.stringify([next, register, primary]);
+      else delete config.vars.INSTALLED_REGISTER_SCOPES;
+      return JSON.stringify(config, null, 2) + "\n";
+    });
+    assert.equal(await f.invoke(args("grow", mode)), 0, `${mode}/${listed}: ${f.output.join("")}`);
+    const after = await f.read("grow");
+    assert.equal(after.vars.REGISTER_SCOPE, register);
+    assert.equal(JSON.parse(after.vars.ARTIFACTS_CONFIG).registerScope, register);
+    assert.deepEqual(JSON.parse(after.vars.INSTALLED_REGISTER_SCOPES), mode === "only" ? [register]
+      : listed ? [next, register, primary] : [primary, register]);
+    const snapshot = await f.snapshot();
+    for (const [path, bytes] of f.before) if (path !== configPath("grow")) assert.deepEqual(snapshot.get(path), bytes, path);
+    assert.equal(f.git(["diff", "--name-only"]).trim(), configPath("grow"));
+  }
+});
+
+test("direct helper refuses missing or contradictory mode before parsing source", async () => {
+  const base = { name: "grow", register, genesis };
+  for (const options of [undefined, { ...base }, { ...base, mode: "default" }, { ...base, mode: "only", only: false },
+    { ...base, mode: "keep", keep: undefined }, Object.assign(Object.create({ mode: "keep" }), base),
+    Object.assign(Object.create({ only: true }), base, { mode: "keep" })]) {
+    await assert.rejects(registerValuesSource("TEST not JSON", options), /mode 'only' or 'keep'/);
+  }
+});
+
+test("a successful atomic replacement preserves permission bits 0640", async t => {
+  const f = await fixture(t), path = join(f.root, configPath("grow"));
+  chmodSync(path, 0o640);
+  assert.equal(await f.invoke(args("grow", "only")), 0, f.output.join(""));
+  assert.equal(lstatSync(path).mode & 0o7777, 0o640);
+  assert.equal((await f.read("grow")).vars.REGISTER_SCOPE, register);
+});
+
+test("a diff-output callback cannot lose later bytes, replacement identity or mode", async t => {
+  for (const fault of ["bytes", "identity", "mode"]) {
+    const f = await fixture(t), path = join(f.root, configPath("grow"));
+    chmodSync(path, 0o644);
+    const original = await readFile(path), later = fault === "bytes" ? Buffer.concat([original, Buffer.from("\n// TEST later edit\n")]) : original;
+    let edited = false, observed;
+    const code = await registerValuesMain(args("grow", "only"), { root: f.root, write: text => {
+      f.output.push(text);
+      if (edited || !text.startsWith("diff --git ")) return;
+      edited = true;
+      if (fault === "bytes") writeFileSync(path, later);
+      else if (fault === "mode") chmodSync(path, 0o640);
+      else {
+        const replacement = path + ".TEST-replacement";
+        writeFileSync(replacement, original); chmodSync(replacement, 0o644); renameSync(replacement, path);
+      }
+      observed = lstatSync(path);
+    } });
+    assert.equal(edited, true, fault);
+    assert.equal(code, 1, f.output.join(""));
+    assert.match(f.output.join(""), /changed during preparation/);
+    assert.deepEqual(await readFile(path), later, fault);
+    const after = lstatSync(path);
+    assert.deepEqual([after.dev, after.ino, after.mode], [observed.dev, observed.ino, observed.mode], fault);
+    const snapshot = await f.snapshot();
+    for (const [name, bytes] of f.before) if (name !== configPath("grow")) assert.deepEqual(snapshot.get(name), bytes, name);
+  }
+});
 
 // Invariant: a register rotation changes only the selected tracked file and
 // keeps every prior root exactly once, while coupled identities agree.
@@ -73,7 +171,7 @@ test("demo bootstrap validates explicit deployment without adding a tracked vari
     delete config.vars.DEMO_START_CONFIG; delete config.vars.DEPLOYMENT;
     return JSON.stringify(config, null, 2) + "\n";
   });
-  assert.equal(await f.invoke([...args(), "--only", ...start]), 0, f.output.join(""));
+  assert.equal(await f.invoke([...args("demo", "only"), ...start]), 0, f.output.join(""));
   const config = await f.read("demo"), policy = smokePolicy(config);
   assert.deepEqual(JSON.parse(config.vars.INSTALLED_REGISTER_SCOPES), [register]);
   assert.equal(Object.hasOwn(config.vars, "DEPLOYMENT"), false);
@@ -82,11 +180,11 @@ test("demo bootstrap validates explicit deployment without adding a tracked vari
   assert.equal(policy.offer.deployment, "TEST-demo");
   f.git(["add", "."]); f.git(["-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", "commit", "--quiet", "-m", "TEST bootstrapped offer"]);
   const committed = await f.snapshot();
-  assert.equal(await f.invoke(["demo", "--register", next, "--genesis", genesis]), 1);
+  assert.equal(await f.invoke(["demo", "--register", next, "--genesis", genesis, "--keep"]), 1);
   assert.deepEqual(await f.snapshot(), committed);
-  assert.equal(await f.invoke(["demo", "--register", next, "--genesis", genesis, "--deployment", "TEST-wrong"]), 1);
+  assert.equal(await f.invoke(["demo", "--register", next, "--genesis", genesis, "--keep", "--deployment", "TEST-wrong"]), 1);
   assert.deepEqual(await f.snapshot(), committed);
-  assert.equal(await f.invoke(["demo", "--register", next, "--genesis", genesis, "--deployment", "TEST-demo"]), 0, f.output.join(""));
+  assert.equal(await f.invoke(["demo", "--register", next, "--genesis", genesis, "--keep", "--deployment", "TEST-demo"]), 0, f.output.join(""));
   const rotated = await f.read("demo");
   assert.deepEqual(smokePolicy(rotated).offer.register, { scope: next, genesis });
   assert.equal(Object.hasOwn(rotated.vars, "DEPLOYMENT"), false);
@@ -102,9 +200,9 @@ test("invalid names, references, metadata and dirty target refuse before tracked
     return JSON.stringify(config, null, 2) + "\n";
   });
   for (const argv of [
-    args("artroom-scope"), args("sandbox"), args("unknown"), [...args(), "--only", "--only"],
-    ["demo", "--register", "sc_invalid", "--genesis", genesis],
-    ["demo", "--register", register, "--genesis", "sha256:invalid"],
+    args("artroom-scope"), args("sandbox"), args("unknown"),
+    ["demo", "--register", "sc_invalid", "--genesis", genesis, "--keep"],
+    ["demo", "--register", register, "--genesis", "sha256:invalid", "--keep"],
     [...args(), "--start-origin", "https://dap-demo.inguz.workers.dev"],
     [...args("grow"), ...start], [...args(), ...start.slice(0, -1), "platform:register@23"],
     [...args(), ...start.slice(0, 1), "https://dap-demo.inguz.workers.dev/path", ...start.slice(2)],
@@ -139,7 +237,7 @@ test("production parser disagreement, deployment mismatch and root capacity refu
     assert.equal(await f.invoke(fault === "deployment" ? [...args(), ...start] : args()), 1, fault);
     assert.deepEqual(await f.snapshot(), f.before, fault);
     if (fault === "capacity") {
-      assert.equal(await f.invoke([...args(), "--only"]), 0, f.output.join(""));
+      assert.equal(await f.invoke(args("demo", "only")), 0, f.output.join(""));
       assert.deepEqual(JSON.parse((await f.read("demo")).vars.INSTALLED_REGISTER_SCOPES), [register]);
     }
   }
@@ -149,7 +247,7 @@ test("production parser disagreement, deployment mismatch and root capacity refu
 // and duplicate keys cannot make the parser and editor choose different roots.
 test("JSONC edits retain comments and reject duplicate targeted settings", async () => {
   const source = await input("grow"), sourceVars = parseConfig(source).vars;
-  const candidate = await registerValuesSource(source, { name: "grow", register, genesis });
+  const candidate = await registerValuesSource(source, { name: "grow", register, genesis, mode: "keep" });
   for (const line of source.split("\n")) if (line.trim().startsWith("//")) assert.ok(candidate.includes(line), line);
   const edited = parseConfig(candidate).vars;
   for (const [key, value] of Object.entries(sourceVars)) {
@@ -157,5 +255,5 @@ test("JSONC edits retain comments and reject duplicate targeted settings", async
     assert.deepEqual(edited[key], value, key);
     if (typeof value === "string") assert.ok(candidate.includes(JSON.stringify(key) + ": " + JSON.stringify(value)), key);
   }
-  await assert.rejects(registerValuesSource(source.replace('"REGISTER_SCOPE":', '"REGISTER_SCOPE": "TEST duplicate", "REGISTER_SCOPE":'), { name: "grow", register, genesis }), /Duplicate/);
+  await assert.rejects(registerValuesSource(source.replace('"REGISTER_SCOPE":', '"REGISTER_SCOPE": "TEST duplicate", "REGISTER_SCOPE":'), { name: "grow", register, genesis, mode: "keep" }), /Duplicate/);
 });

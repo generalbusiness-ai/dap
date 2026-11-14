@@ -39,11 +39,20 @@ export function validateFormat1(input: unknown, bounds: Bounds, profiles: Readon
   // The format-1 checks begin here, after the existing bounded preamble.
   // Durability A0a: omission preserves the original declaration bytes. A level
   // requiring an executor we do not have must never fall back to recording.
+  // The sequenced note, section 5.11: version 1 of the sequenced level is admitted here. No runtime derives it yet, so
+  // `derivable` is false for it, and no scope pins it.
+  let sequenced = false, live = false;
   if (Object.hasOwn(top, "level")) {
     const level = rec(top["level"], "level", ["name", "version"]);
-    if (level && (level["name"] !== "recorded" || level["version"] !== 1)) {
-      bad("unsupported-definition", "level", "this runtime implements only recorded durability version 1");
+    sequenced = level !== null && level["name"] === "sequenced" && level["version"] === 1;
+    live = level !== null && level["name"] === "live" && level["version"] === 1;
+    if (level && !sequenced && !live && (level["name"] !== "recorded" || level["version"] !== 1)) {
+      bad("unsupported-definition", "level", "the validator admits recorded, live and sequenced durability version 1");
     }
+  }
+  if (live && platform) {
+    bad("live-platform", "level", "a platform declaration cannot be live in version 1");
+    return { ok: false, problems };
   }
   // The definition pins its rule for the scope's entire life. Never add a
   // default field to older definitions or reinterpret an unknown version.
@@ -66,6 +75,7 @@ export function validateFormat1(input: unknown, bounds: Bounds, profiles: Readon
     ...read, bounds, name: typeof top["name"] === "string" ? top["name"] : null, typeNames: new Set(isObject(top["items"]) ? Object.keys(top["items"]) : []), types: new Map(), rules: new Set(), holds: false, holdTypes: new Set(),
     capabilities: new Map(), underived: [],
     indexes: [], clauseSets: [], clauseRetains: new Map(), clausePaths: new Map(), clause: null, pendingWork: [], platform, marks: [], places: new Map(), valueSets: [], bindings: [], observing: false,
+    sequenced, live,
   };
 
   const profile = rec(top["profile"], "profile", ["name", "version"]);
@@ -141,6 +151,7 @@ export function validateFormat1(input: unknown, bounds: Bounds, profiles: Readon
       if (o && "observes" in o) observes(d, o["observes"], at(at("outcomes", kind), "observes"), { where: "outcome" });
       if (!o || !("send" in o)) return;
       const p = at(at("outcomes", kind), "send");
+      if (d.live) { bad("shape", p, "a live definition declares no send"); return; }
       const send = marked(o["send"]) ? mark(d, o["send"], p, "send", ["result"], ["once"]) : bad("shape", p, "an outcome's mark holds at most one send, and it is a mark: an outcome's row writes no send");
       const clauses = send ? rec(send["result"], at(p, "result"), [], ["applied", "refused", "superseded", "undelivered", "conflict"]) : null;
       for (const [clause, effects] of Object.entries(clauses ?? {})) {

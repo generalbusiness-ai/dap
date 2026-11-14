@@ -4,6 +4,7 @@
  */
 
 import type { Digest, FactRef, MemberRef, PlatformDefinition, ScopeRef, Seed, Timestamp } from "./scope.ts";
+import type { Range } from "./definition.ts";
 import type { Attempt, OutboxId, Entry, Message, Receipt } from "./entry.ts";
 import type { FieldValue } from "./intent.ts";
 import type { Head, ReadRefusal } from "./result.ts";
@@ -150,6 +151,38 @@ export interface LogPage { scope: ScopeRef; definition: Digest | PlatformDefinit
  * scope keeps the bytes as an `entry` row under their content digest, and an
  * association from the sequence to that row. A reader admits the bytes with
  * the use's full sequence reference, its scope and its genesis.
+ * `page`: the canonical bytes of one page that a sequenced input read from
+ * a member as of a cut, under the digest that its `GroupReadUse` names
+ * (sequenced note, section 5.5). It is written when the entry is committed.
  * `bytes` is canonical JSON text.
  */
-export interface RetainedInput { kind: "definition" | "entry" | "rule" | "text" | "snapshot" | "value" | "birth"; digest: Digest; bytes: string; under?: string; domain?: string }
+export interface RetainedInput { kind: "definition" | "entry" | "rule" | "text" | "snapshot" | "value" | "birth" | "page"; digest: Digest; bytes: string; under?: string; domain?: string }
+
+// ---------------------------------------------------------------- the `at` read (sequenced note, section 5.5)
+
+/** The most items of one page that the `at` read answers (sequenced note, section 5.9). */
+export const AT_PAGE_ITEMS = 64;
+
+/**
+ * One item of a member as of a cut: its ID, state, revision and value
+ * slots, in the member's own types. A record holds no detached text: the
+ * page leaves each detached text slot out.
+ */
+export interface GroupRecord { readonly id: number; readonly state: string; readonly revision: number; readonly values: Readonly<Record<string, FieldValue | null>> }
+
+/** What a member of a group answers when another member asks for the items of a range as of a cut position. */
+export interface AtQuery { readonly cut: number; readonly items: Range }
+
+/**
+ * The answer of the `at` read. `entry`: the member's cut entry at `cut`,
+ * its last commit entry at or below it or its genesis. `uncommitted`: the
+ * member holds a prepare entry at or below the cut whose position is
+ * resolved and whose commit entry it has not written. `cut-gone`: the
+ * member keeps no cut copy for that cut. A reader that is not a joined
+ * member of the same order scope is refused `forbidden`.
+
+ */
+export type AtRead =
+  | { ok: true; cut: number; entry: FactRef; items: readonly GroupRecord[] }
+  | { ok: false; reason: "uncommitted" | "cut-gone" }
+  | { ok: false; reason: Exclude<ReadRefusal, "archived" | "behind"> };

@@ -23,9 +23,9 @@ const pausing = (change: Change): Change => (d) => {
 export const rows: readonly (readonly [string, DeclaredDefinition, Change, ProblemCode | null])[] = [
   ["the lane passes", lane, () => {}, null],
   ["the small definition passes", small, () => {}, null],
-  // A0a invariant: only absent or exact recorded@1 levels can reach recorded execution.
+  // Admission keeps each exact level's forms; an unknown version never falls back to recorded.
   ["explicit recorded durability passes", small, (d) => { d.level = { name: "recorded", version: 1 }; }, null],
-  ["live durability cannot use recorded execution", small, (d) => { d.level = { name: "live", version: 1 }; }, "unsupported-definition"],
+  ["live durability admits its non-durable grammar", small, (d) => { d.level = { name: "live", version: 1 }; delete d.acts.cite; delete d.acts.echo; }, null],
   ["archived durability cannot use recorded execution", small, (d) => { d.level = { name: "archived", version: 1 }; }, "unsupported-definition"],
   ["an unknown durability version", small, (d) => { d.level = { name: "recorded", version: 2 }; }, "unsupported-definition"],
   ["an unknown durability name", small, (d) => { d.level = { name: "eventual", version: 1 }; }, "unsupported-definition"],

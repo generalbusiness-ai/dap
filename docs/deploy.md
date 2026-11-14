@@ -316,15 +316,18 @@ you retain the planned register's scope ID and genesis digest, update one
 Worker with `demo`, `grow` or `lending` as the name:
 
 ```sh
-node scripts/register-values.mjs grow \
+node scripts/register-values.mjs grow --keep \
 	--register "$REGISTER_SCOPE" --genesis "$REGISTER_GENESIS"
 ```
 
 The script updates `REGISTER_SCOPE` and `ARTIFACTS_CONFIG.registerScope`
-together. It appends the new root once to `INSTALLED_REGISTER_SCOPES`,
-keeps the other roots, and refuses a list longer than 32. Add `--only` to
-replace the list with the new root alone when the earlier rooms no longer
-need service. The identifier cutover uses `--only` because the service
+together. Choose exactly one of `--only` and `--keep`; omitting both,
+supplying both, or repeating a choice refuses before the script reads the
+target. `--keep` retains the installed roots in order and adds the new root
+once. Without a list, it explicitly retains the existing primary root.
+`--only` replaces the list with the new root alone. A listed root admits
+creation under that root. The script refuses a list longer than 32.
+The identifier cutover uses `--only` because the service
 does not read rooms of the retired roots.
 
 For an existing Browser Start setting, also supply `--deployment` with
@@ -353,6 +356,20 @@ validation failure. A successful call changes only that Worker's tracked
 configuration and prints its diff. Review and commit the diff before
 deployment. The script neither installs the register nor deploys the
 Worker.
+
+A successful replacement keeps the selected file's permission bits. The
+script stages `<selected-config>.register-values-<suffix>/candidate`
+beside the file, then checks the target's bytes, identity and mode before
+an atomic rename. Keep the selected file idle through replacement:
+ordinary rename does not provide compare-and-swap with another writer.
+
+If a run dies and leaves a pending directory, clean up that run only:
+
+1. Confirm that the run has stopped.
+2. Inspect `git diff -- <selected-config>`. The rename may already have
+   completed, so check the selected configuration before removing anything.
+3. If that run's `candidate` file remains, remove only that exact file.
+4. Remove that run's empty pending directory. Keep every other run's files.
 
 A `dap-grow` register switch also needs its archive bridge fixed first.
 The installed list does not update the single-root checks in

@@ -215,10 +215,15 @@ export function versionOf(declared: DeclaredDefinition, name: string): Capabilit
 /**
  * True when every form of the definition can be derived with these rules:
  * each form that needs a capability's own code is one the rules implement.
- * With no rules, that is a definition that needs none.
+ * With no rules, that is a definition that needs none. A definition of the
+ * sequenced level is never derivable here: the validator admits its first
+ * version (sequenced note, section 5.11), and no judge derives a prepare, a
+ * commit or a read at a cut yet. Live also remains non-derivable until LV2
+ * supplies the platform's live mode; LV1 admits its forms and creation fold only.
  */
 export const derivable = (definition: ValidDefinition, capabilities: Capabilities | null | undefined): boolean =>
-  definition.underived.every((u) => capabilities?.implements(u) === true);
+  definition.declared.level?.name !== "sequenced" && definition.declared.level?.name !== "live"
+  && definition.underived.every((u) => capabilities?.implements(u) === true);
 
 /** The rules for one guard or effect of the capability a form names. Null: the judge was given none for it, and the input is not judged. */
 function rulesFor(j: Judging, version: CapabilityName, form: "guard" | "effect", of: string): { version: CapabilityName; rules: Capabilities; declared: Capability } | null {

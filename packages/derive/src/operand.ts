@@ -629,6 +629,8 @@ export function operand(j: Judging, o: Operand, item: Item | null): unknown {
   if ("result" in o) return j.result?.name ?? null;
   if ("item" in o) return (o.item === "each" ? j.each : j.subjects.get(o.item))?.id ?? null;
   if ("source" in o) return j.source ? partOf(j, copyFact(j.source), o.source, item) : null;
+  // The sequenced note, section 5.2. No judge derives a sequenced definition yet (`derivable`), so no page is given here.
+  if ("read" in o) throw new TypeError("a group read has no page in this judgment");
   let value: unknown;
   if ("field" in o) value = own(j.fields, o.field) ?? null;
   else if ("presented" in o) value = own(j.presented, o.presented) ?? null;

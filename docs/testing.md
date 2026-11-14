@@ -134,13 +134,27 @@ runs them again and restores the file. It gives one of three results:
 
 | Result | Exit | Meaning |
 |---|---|---|
-| distinguishes | 0 | a test failed by an assertion with the change applied |
+| distinguishes | 0 | a test failed by an assertion with the change applied, including a rejected Vitest `.resolves` or resolved `.rejects` assertion |
 | survives | 1 | every test still passed: they do not see this fault |
 | inconclusive | 2 | nothing was shown: the tests did not start, did not pass before the change, did not load or compile with it, ran fewer tests than before, had any timeout, or failed only by a thrown error |
 
 A result-checking helper fails with
 `expect.fail`, not with a thrown `Error`, so that a test which fails there
 has failed by an assertion.
+
+The pinned Vitest 4.1.12 JSON reporter omits error names. A promise
+assertion can therefore carry an earlier `Error` stack. After checking the
+`AssertionError` headline, the helper accepts only these complete first-line
+forms, before it truncates the printed message:
+
+- `Error: promise rejected "<inspected payload>" instead of resolving`
+- `Error: promise resolved "<inspected payload>" instead of rejecting`
+
+An ordinary thrown error remains inconclusive. If its entire message
+counterfeits one of these two forms, the JSON reporter's missing name makes
+it indistinguishable from the promise assertion. This fallback cannot
+establish the error's constructor. Test names supply no error authority.
+Earlier control exits, raw records and offline qualifications stay as filed.
 
 Only the first is evidence. With `--expect`, the test you name must be one
 of those that failed by an assertion, or the result is inconclusive. The

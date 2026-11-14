@@ -162,6 +162,8 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
   const unsure: string[] = [];
   let steady = true;
   list(v, path, bounds.sends).forEach((s, i) => {
+    // The creation result is implicit in the genesis judge; it is not a declared send.
+    if (d.live) { bad("shape", at(path, i), "a live definition declares no send"); return; }
     if (d.platform && marked(s)) {
       // Section 6.1, place 6: the rule gives no request, or one: a `create`, a `tell` or a `relate`. Its clauses are the mark's
       // own, as data, with the `conflict` clause of a creation. It is counted as one send and one request.
@@ -286,6 +288,7 @@ export function attention(d: Defining, v: unknown, path: string, ctx: Ctx): numb
   const { bounds, bad, rec, list, str } = d;
   let told = 0;
   list(v, path, bounds.attention).forEach((n, i) => {
+    if (d.live) { bad("shape", at(path, i), "a live definition notifies no other scope"); return; }
     const o = rec(n, at(path, i), ["notify"]);
     const r = o && rec(o["notify"], at(path, i), ["slot", "of", "when", "reason"], ["if"]);
     if (!r) return;

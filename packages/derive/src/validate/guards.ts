@@ -147,7 +147,7 @@ function guardBody(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nes
    * nothing about the subject for the effects, so `live` is its own.
    */
   const binding = (r: Rec): { ctx: Ctx; list: OperandRead; binding: ElementBinding } | null => {
-    const read = operand(d, r["list"], at(p, "list"), ctx, item);
+    const read = operand(d, r["list"], at(p, "list"), { ...ctx, readList: true }, item);
     const as = str(r["as"], at(p, "as"));
     if (as?.includes(".")) return bad("shape", at(p, "as"), "a dot names a member of a record element, so the name has none");
     if (!read || as === null) return null;

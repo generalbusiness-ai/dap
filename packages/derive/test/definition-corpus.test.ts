@@ -3,7 +3,7 @@ import { isDigest } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "../src/index.ts";
 import { definitionCorpus } from "./definition-corpus/index.ts";
 
-test.for(definitionCorpus)("pinned definition corpus: $name", async row => {
+test.for(definitionCorpus)("pinned definition corpus [%#]: $name", async row => {
   const checked = validateDefinition(await row.declaration(), row.bounds, row.profiles, row.options);
   const named = `Pinned definition corpus refused ${row.name}; origins: ${row.origins.join(", ")}`;
   expect(checked.ok ? [] : checked.problems, named).toEqual([]);

@@ -23,6 +23,7 @@ This ledger starts from the landed security inventory basis `f7b59bf92d1abe20300
 | `grow-examples-mapping.md` | Device, Zone, simulator parent, demo and maintained Site/Room, and actual launcher caller families |
 | `lane-applications-mapping.md` | Lanes source definitions, office/custom/foreign fixtures, partition contexts, and exact shape bounds |
 | `lane-apps-mapping.md` | Named application, foreign target, edit variants, and existing demo pin witness |
+| `sequenced-variants.ts` | Version 1 of the sequenced level: each form that `forms-sequenced.test.ts` admits, and the admitted half of each of its refusal pairs |
 | `bytes-fixtures.ts` | Complete journal projection fixture; its original projection test is not a Native admission claim |
 
 ## Derive form correspondence

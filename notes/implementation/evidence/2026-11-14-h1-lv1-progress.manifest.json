@@ -1,0 +1,307 @@
+{
+  "qualification": "Partial H1/LV1 checkpoint. H1 main integration generator ran on source subsequently committed as 2ca131acee5aa12e6d33537b29e3149adf6dbf65, tree914fe9b0f4652d5e02efcdaea47ca4c19bb2e265. LV1 followed that merge; source-before-compiler/ retains every one of its 16 changed/added files before sequential compiler checks. All seven compiler contexts passed, with an initial define-test dependency-resolution failure retained separately. No focused tests, native witnesses or full gate ran. LV1 trusted-platform policy request35a0cbe4 was unresolved when the slot released. No package installation or manifests/lock changes; only an ignored dependency link to existing pinned prettier3.9.10.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-h1-lv1-focused-attempt1",
+  "checkpoint": {
+    "commit": "2ca131acee5aa12e6d33537b29e3149adf6dbf65",
+    "tree": "914fe9b0f4652d5e02efcdaea47ca4c19bb2e265",
+    "qualification": "H1 generator source checkpoint. LV1 compiler run used the exact dirty source retained in source-before-compiler/ with its own file hashes."
+  },
+  "fileCount": 59,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 7034,
+      "sha256": "74fee352f73354174181c27db920d1737b7d1bb3707df4e96f34a6fcdbef6651"
+    },
+    {
+      "path": "commands.txt",
+      "bytes": 383,
+      "sha256": "f422da4ae341b638527eff979b9b923b166a36a50d7a4dc21357a518c1626b60"
+    },
+    {
+      "path": "compiler-contract-tsconfig.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "compiler-contract-tsconfig.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compiler-define-tsconfig.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "compiler-define-tsconfig.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compiler-define-tsconfig.test.json.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "compiler-define-tsconfig.test.json.log",
+      "bytes": 254,
+      "sha256": "a8ca7071e50af85892c264f73129f84bdb23d177855e184aa7f8808c179f3c8f"
+    },
+    {
+      "path": "compiler-derive-tsconfig.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "compiler-derive-tsconfig.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compiler-derive-tsconfig.test.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "compiler-derive-tsconfig.test.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compiler-followup-define-tsconfig.test.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "compiler-followup-define-tsconfig.test.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compiler-followup-scope-tsconfig.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "compiler-followup-scope-tsconfig.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compiler-followup-scope-tsconfig.test.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "compiler-followup-scope-tsconfig.test.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "dependency-view.txt",
+      "bytes": 177,
+      "sha256": "0ac5e6a045c8b43ea694c4395d301faba335e1885f6e7562c0248bd0b53c19c1"
+    },
+    {
+      "path": "h1-generator.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "h1-generator.log",
+      "bytes": 140,
+      "sha256": "37eb474ff480c06e485c1cd6ff4146e5d5de1e9debf0d8f5c9a3c167f0482a86"
+    },
+    {
+      "path": "lv1-preserved-before-merge/manifest.json",
+      "bytes": 2442,
+      "sha256": "092c2b567d0cef88ce346f12c315559cd25898d21078532ff5621970f30cfeb4"
+    },
+    {
+      "path": "lv1-preserved-before-merge/source/packages/contract/src/definition.ts",
+      "bytes": 16544,
+      "sha256": "ff372db4d74d45ba5fd5e074f8386822bc881988bb61b40bc10323e393b81b49"
+    },
+    {
+      "path": "lv1-preserved-before-merge/source/packages/derive/src/fold.ts",
+      "bytes": 25148,
+      "sha256": "27d097db851a9afad70493871d7a20abf8c9f03f3d2885ddd2c49ac9f84d41ce"
+    },
+    {
+      "path": "lv1-preserved-before-merge/source/packages/derive/src/validate/capability.ts",
+      "bytes": 10642,
+      "sha256": "083a06a1363c0c70ce6ff950b07e9619355afc6ea1e2fc8389e7048a680f0a67"
+    },
+    {
+      "path": "lv1-preserved-before-merge/source/packages/derive/src/validate/context.ts",
+      "bytes": 13162,
+      "sha256": "d7392f93436d7d28daffb864d8e70ff54d55d1c847902ce5b8822db18a4b66cd"
+    },
+    {
+      "path": "lv1-preserved-before-merge/source/packages/derive/src/validate/fields.ts",
+      "bytes": 11324,
+      "sha256": "e4668d00ccf37b31b109831e5ae5c98b9896e305c785c5d8bbf20070d5041a4c"
+    },
+    {
+      "path": "lv1-preserved-before-merge/source/packages/derive/src/validate/format-1.ts",
+      "bytes": 14075,
+      "sha256": "4b617af14352dc84f60275849e07d852c23b22dd6c835b88aca65c41450df8a9"
+    },
+    {
+      "path": "lv1-preserved-before-merge/source/packages/derive/src/validate/handlers.ts",
+      "bytes": 30258,
+      "sha256": "454940678f1335c60619ae77e85c4ed47668bb0dba6d93cdfa399fd59743f81d"
+    },
+    {
+      "path": "lv1-preserved-before-merge/source/packages/derive/src/validate/sends.ts",
+      "bytes": 22809,
+      "sha256": "5847776afd08a9ed5ffadd902a8033fef7e09e2ed9806ee51614e63f9b55ebd9"
+    },
+    {
+      "path": "lv1-preserved-before-merge/source/packages/derive/test/definition-corpus/index.ts",
+      "bytes": 2797,
+      "sha256": "8da07a02572d12698a1110c869f31226facdfcfc5c18e12d249ad0eafd3ee8ce"
+    },
+    {
+      "path": "lv1-preserved-before-merge/source/packages/derive/test/definition-corpus/live-data.ts",
+      "bytes": 6257,
+      "sha256": "3f8980dbc9f5663145f8d2cae5c7aec0715b7b7769cc797073bc6b91751145fd"
+    },
+    {
+      "path": "lv1-preserved-before-merge/source/packages/derive/test/definition-corpus/live-variants.ts",
+      "bytes": 971,
+      "sha256": "567e469ad3078ed20069413cc547e627a1f3b34a0923422267bdb7edbedee5bc"
+    },
+    {
+      "path": "lv1-preserved-before-merge/source/packages/derive/test/definition-corpus/validate-table-data.ts",
+      "bytes": 10546,
+      "sha256": "e870107a11254ad8db894bcf678370373984499dcf6e6efdadd15e47886703d2"
+    },
+    {
+      "path": "lv1-preserved-before-merge/source/packages/derive/test/forms-live.test.ts",
+      "bytes": 5714,
+      "sha256": "ce91155de2d4abcba85fdb5ec2147751bfeb8ba52e3c26f4bd8eab42329b7c60"
+    },
+    {
+      "path": "lv1-preserved-before-merge/tracked.patch",
+      "bytes": 13102,
+      "sha256": "ac97ec776d6c45cc6c7ab383f5aa538f206d6c50ffcd4c768ca0cc5f663fd055"
+    },
+    {
+      "path": "lv1-preserved-before-merge/untracked-originals/packages/derive/test/definition-corpus/live-data.ts",
+      "bytes": 6257,
+      "sha256": "3f8980dbc9f5663145f8d2cae5c7aec0715b7b7769cc797073bc6b91751145fd"
+    },
+    {
+      "path": "lv1-preserved-before-merge/untracked-originals/packages/derive/test/definition-corpus/live-variants.ts",
+      "bytes": 971,
+      "sha256": "567e469ad3078ed20069413cc547e627a1f3b34a0923422267bdb7edbedee5bc"
+    },
+    {
+      "path": "lv1-preserved-before-merge/untracked-originals/packages/derive/test/forms-live.test.ts",
+      "bytes": 5714,
+      "sha256": "ce91155de2d4abcba85fdb5ec2147751bfeb8ba52e3c26f4bd8eab42329b7c60"
+    },
+    {
+      "path": "power-end.txt",
+      "bytes": 819,
+      "sha256": "605527cc4f439ffba8cbe6d03d6414d816d5702ab60711e626e6d7626991a8be"
+    },
+    {
+      "path": "power-start.txt",
+      "bytes": 819,
+      "sha256": "605527cc4f439ffba8cbe6d03d6414d816d5702ab60711e626e6d7626991a8be"
+    },
+    {
+      "path": "qualification.txt",
+      "bytes": 686,
+      "sha256": "2a47555dc32768883291530df2613bdf6723c319e9fb7ea741ab1f320d334729"
+    },
+    {
+      "path": "source-before-compiler/notes/2026-11-10-live-level.md",
+      "bytes": 26562,
+      "sha256": "3e50b6e8e3876489e7e185f62d6f6cfae30d7e497173bc1c9d17442c8ac83927"
+    },
+    {
+      "path": "source-before-compiler/packages/contract/src/definition.ts",
+      "bytes": 16544,
+      "sha256": "ff372db4d74d45ba5fd5e074f8386822bc881988bb61b40bc10323e393b81b49"
+    },
+    {
+      "path": "source-before-compiler/packages/derive/src/capability.ts",
+      "bytes": 21740,
+      "sha256": "26dc79ec1380d4a4200f5afcd5c31877d7e41ba004ee3ca4c86a0205a62cee7b"
+    },
+    {
+      "path": "source-before-compiler/packages/derive/src/fold.ts",
+      "bytes": 25148,
+      "sha256": "27d097db851a9afad70493871d7a20abf8c9f03f3d2885ddd2c49ac9f84d41ce"
+    },
+    {
+      "path": "source-before-compiler/packages/derive/src/validate/capability.ts",
+      "bytes": 10642,
+      "sha256": "083a06a1363c0c70ce6ff950b07e9619355afc6ea1e2fc8389e7048a680f0a67"
+    },
+    {
+      "path": "source-before-compiler/packages/derive/src/validate/context.ts",
+      "bytes": 13162,
+      "sha256": "d7392f93436d7d28daffb864d8e70ff54d55d1c847902ce5b8822db18a4b66cd"
+    },
+    {
+      "path": "source-before-compiler/packages/derive/src/validate/fields.ts",
+      "bytes": 11324,
+      "sha256": "e4668d00ccf37b31b109831e5ae5c98b9896e305c785c5d8bbf20070d5041a4c"
+    },
+    {
+      "path": "source-before-compiler/packages/derive/src/validate/format-1.ts",
+      "bytes": 14075,
+      "sha256": "4b617af14352dc84f60275849e07d852c23b22dd6c835b88aca65c41450df8a9"
+    },
+    {
+      "path": "source-before-compiler/packages/derive/src/validate/handlers.ts",
+      "bytes": 30258,
+      "sha256": "454940678f1335c60619ae77e85c4ed47668bb0dba6d93cdfa399fd59743f81d"
+    },
+    {
+      "path": "source-before-compiler/packages/derive/src/validate/sends.ts",
+      "bytes": 22809,
+      "sha256": "5847776afd08a9ed5ffadd902a8033fef7e09e2ed9806ee51614e63f9b55ebd9"
+    },
+    {
+      "path": "source-before-compiler/packages/derive/test/definition-corpus/index.ts",
+      "bytes": 2797,
+      "sha256": "8da07a02572d12698a1110c869f31226facdfcfc5c18e12d249ad0eafd3ee8ce"
+    },
+    {
+      "path": "source-before-compiler/packages/derive/test/definition-corpus/live-data.ts",
+      "bytes": 6257,
+      "sha256": "3f8980dbc9f5663145f8d2cae5c7aec0715b7b7769cc797073bc6b91751145fd"
+    },
+    {
+      "path": "source-before-compiler/packages/derive/test/definition-corpus/live-variants.ts",
+      "bytes": 971,
+      "sha256": "567e469ad3078ed20069413cc547e627a1f3b34a0923422267bdb7edbedee5bc"
+    },
+    {
+      "path": "source-before-compiler/packages/derive/test/definition-corpus/validate-table-data.ts",
+      "bytes": 10546,
+      "sha256": "e870107a11254ad8db894bcf678370373984499dcf6e6efdadd15e47886703d2"
+    },
+    {
+      "path": "source-before-compiler/packages/derive/test/forms-live.test.ts",
+      "bytes": 6064,
+      "sha256": "baa4bdf756e6745d704811eb628b73f758b9f5c25fb7719b0d39c849c9c514ef"
+    },
+    {
+      "path": "source-before-compiler/packages/scope/test/live-creation.test.ts",
+      "bytes": 2411,
+      "sha256": "f94aeb66d36c9febae6857958447b3a018f9bb990001e764178bcb8d62b11301"
+    },
+    {
+      "path": "source-before-compiler.json",
+      "bytes": 2607,
+      "sha256": "63ba7309ddf2ee9e07f591476bf471dddc49d6091aba3c68aa48c3873b9f41e5"
+    }
+  ]
+}

@@ -353,7 +353,7 @@ const personRefusals: [PersonPhase, Parameters<typeof personOn>[0], StopWord][] 
   ["decide", { lanes }, "no-question"],
   ["roles", {}, "no-standing"],
 ];
-test.each(personRefusals)("%s stops without its input", async (phase, record, word) => {
+test.each(personRefusals)("[%#] %s stops without its input", async (phase, record, word) => {
   const port = personOn(record);
   expect(await stoppedWith(() => personPhase(phase, port, "@agent"))).toBe(word);
   expect(port.acts).toEqual([]);
