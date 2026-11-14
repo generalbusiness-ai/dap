@@ -3,6 +3,7 @@ import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Effect, 
 import { textDigest } from "@generalbusiness/dap-bytes";
 import { bindActBasis } from "../src/act-basis.ts";
 import { actVersion } from "../src/act-version.ts";
+import { actExplore } from "../src/act-explore.ts";
 import type { Act, Source } from "../src/act-types.ts";
 import { ActRecords } from "../src/act-records.ts";
 import { lowerActBasis, lowerActNames, type ActSymbols } from "../src/act-symbols.ts";
@@ -11,6 +12,7 @@ import { copyActState } from "../src/act-state.ts";
 import { projectActItems } from "../src/act-items.ts";
 import { presentActRows } from "../src/act-rows.ts";
 import { fixedRowsOf, MemoryState, newItem, validateDefinition } from "@generalbusiness/dap-derive";
+import { created, keys, valid } from "@generalbusiness/dap-derive/testing";
 import { clientNotes as notes } from "./definition-corpus-data.ts";
 
 test("binding preserves written text and symbolic names while capturing only missing subject revisions", () => {
@@ -123,4 +125,56 @@ test("pending command records retain exact counts and guard only marked entry va
   const next = projected.records.project(effects, refs, { ...source, key: "next-command" }, 18);
   expect(next.records.reader(() => { throw new Error("entry absent"); }).recordCount(DEVICE_COMMAND, "command", "open")).toBe(2);
   expect(reader.recordCount(DEVICE_COMMAND, "command", "open")).toBe(1);
+});
+
+const explorationNotes = { ...notes, acts: { ...notes.acts, add: { ...notes.acts.start, grant: "write",
+  fields: { title: { type: "text", max: 10, required: false } },
+} } } as const satisfies DeclaredDefinition;
+
+function explorationScope(key: string) {
+  const ledger = created(valid(validateDefinition(explorationNotes, PROPOSED_BOUNDS)), {}, key);
+  const context = { ...ledger.context(), actor: keys.rita.key, scope: ledger.at, evidence: [], owners: null };
+  return { ledger, context };
+}
+
+test("undefined Owners is a programming fault before incomplete input or state reads", () => {
+  const { ledger, context } = explorationScope("E1-owner-input");
+  const before = structuredClone(ledger.state.all()), entries = ledger.entries.length;
+  let reads = 0;
+  const view = new Proxy(ledger.state, { get: (target, key, receiver) => {
+    reads++;
+    return Reflect.get(target, key, receiver);
+  } });
+  const input = { key: "write", act: { kind: "write", on: 0, fields: {} }, context: { ...context, owners: undefined } };
+  // Reflect.apply represents an untyped caller; the typed context requires Owners|null.
+  expect(() => Reflect.apply(actExplore, undefined, [ledger.definition, view, input]))
+    .toThrow(new TypeError("owners must be supplied explicitly; use null for checked absence"));
+  const incomplete = actExplore<typeof explorationNotes, "write">(ledger.definition, view,
+    { key: "write", act: { kind: "write", on: 0, fields: {} }, context });
+  expect(incomplete).toEqual({ is: "incomplete", act: { kind: "write", on: 0, fields: {} }, missing: ["fields.body"] });
+  expect(reads).toBe(0);
+  expect([ledger.state.all(), ledger.entries.length]).toEqual([before, entries]);
+});
+
+test("an after view rejects its exact assumed Source while retaining distinct versions of one key", () => {
+  const { ledger, context } = explorationScope("E1-duplicate-source");
+  const before = structuredClone(ledger.state.all()), entries = ledger.entries.length;
+  const first = actExplore<typeof explorationNotes, "add">(ledger.definition, ledger.state,
+    { key: "add-note", act: { kind: "add", on: null, fields: { title: "First" } }, context });
+  expect(first.is).toBe("admitted");
+  if (first.is !== "admitted") throw new Error("the actual first opening was not admitted");
+  const rows = structuredClone(first.after.rows("note")), head = structuredClone(first.after.head);
+  const count = first.after.count("note", "kept");
+  expect(first.opens).toEqual({ output: first.source });
+  expect(() => actExplore(ledger.definition, first.after, { key: first.source.key, act: first.act, context }))
+    .toThrow(new TypeError("the exploration already assumes this source"));
+  expect([first.after.rows("note"), first.after.head, first.after.count("note", "kept")]).toEqual([rows, head, count]);
+  const another = actExplore<typeof explorationNotes, "add">(ledger.definition, first.after,
+    { key: first.source.key, act: { kind: "add", on: null, fields: { title: "Second" } }, context });
+  expect(another.is).toBe("admitted");
+  if (another.is !== "admitted") throw new Error("the distinct version was not admitted");
+  expect(another.source.key).toBe(first.source.key);
+  expect(another.source.version).not.toBe(first.source.version);
+  expect(another.after.rows("note")).toHaveLength(rows.length + 1);
+  expect([ledger.state.all(), ledger.entries.length]).toEqual([before, entries]);
 });

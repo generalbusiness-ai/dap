@@ -30,7 +30,7 @@ function pendingRequest(source: Source, request: Omit<OwnRequest, "hash">): OwnR
 }
 
 /** Every frame retains its actual recorded cut and its own private writer. */
-export class ActProjection<D extends DeclaredDefinition> {
+export class ActProjection {
   readonly references: ActReferences;
   readonly definition: ValidDefinition;
   readonly recorded: StateView;
@@ -67,6 +67,12 @@ export class ActProjection<D extends DeclaredDefinition> {
     return { revision: (source, subject) => this.history.get(sourceKey(source))?.get(subject) ?? null };
   }
 
+  /** A judgment interns its tokens in a new frame and retains the caller's
+   * actual compiled definition, without changing an earlier after view. */
+  forJudgment(definition: ValidDefinition): ActProjection {
+    return new ActProjection(definition, this.recorded, this.raw, this.#records, this.references.fork(this.raw), this.history, this.assumes);
+  }
+
   reader(): StateView {
     const records = this.#records.reader(source => { throw new UnavailableEntryValue(source); });
     return new Proxy(this.raw, { get: (target, key) => {
@@ -76,8 +82,8 @@ export class ActProjection<D extends DeclaredDefinition> {
     } });
   }
 
-  project(inputSource: Source, body: BodyWrite, owners: Owners | null): {
-    projection: ActProjection<D>; after: ActView<D>; effects: readonly ActEffect[]; opens: ItemName | null;
+  project<D extends DeclaredDefinition>(inputSource: Source, body: BodyWrite, owners: Owners | null): {
+    projection: ActProjection; after: ActView<D>; effects: readonly ActEffect[]; opens: ItemName | null;
   } {
     const source = Object.freeze(structuredClone(inputSource));
     const scope = this.recorded.scope();
@@ -166,7 +172,7 @@ export class ActProjection<D extends DeclaredDefinition> {
     }
     const history = new Map(this.history);
     history.set(sourceKey(source), revisions);
-    const next = new ActProjection<D>(this.definition, this.recorded, copy.view, records.records, references, history, [...this.assumes, source]);
+    const next = new ActProjection(this.definition, this.recorded, copy.view, records.records, references, history, [...this.assumes, source]);
     const reader = next.reader();
     const rows = presentActRows(this.definition.declared as D, copy.view.all().items,
       item => {

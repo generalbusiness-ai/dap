@@ -4,6 +4,7 @@ import { canonicalize, isFieldValue, isRecord } from "@generalbusiness/dap-bytes
 import type { judgeActBody, StateView } from "@generalbusiness/dap-derive";
 import type { ItemName, Revision, Source } from "./act-types.ts";
 import { UnavailableActSource } from "./act-symbols.ts";
+import { ShapeError } from "./declared.ts";
 
 type Provenance = NonNullable<Parameters<typeof judgeActBody>[3]["provenance"]>;
 type ReferenceData = ReturnType<Provenance>;
@@ -107,18 +108,18 @@ export class ActReferences {
     return name === null || typeof name === "number" ? name : this.token(name.output);
   }
 
-  #capture(value: FieldValue, sources: ReadonlyMap<string, Source>, path: Path): FieldValue {
+  #capture(value: unknown, sources: ReadonlyMap<string, Source>, path: Path): FieldValue {
     const source = sources.get(canonicalize(path));
     if (source) return this.token(source);
     if (Array.isArray(value)) return value.map((member, index) => this.#capture(member, sources, [...path, index]));
     if (isRecord(value)) return Object.fromEntries(Object.entries(value).map(([name, member]) => {
-      if (!isFieldValue(member)) throw new TypeError("a captured field has no field value");
       return [name, this.#capture(member, sources, [...path, name])];
     }));
-    return value;
+    if (isFieldValue(value)) return value;
+    throw new ShapeError(`fields.${path.join(".")}`, "is not a field value");
   }
 
-  captureFields(fields: Readonly<Record<string, FieldValue>>, sources: ReadonlyMap<string, Source>): Record<string, FieldValue> {
+  captureFields(fields: Readonly<Record<string, unknown>>, sources: ReadonlyMap<string, Source>): Record<string, FieldValue> {
     return Object.fromEntries(Object.entries(fields).map(([name, value]) => [name, this.#capture(value, sources, [name])]));
   }
 

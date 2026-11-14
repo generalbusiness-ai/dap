@@ -27,10 +27,10 @@ function outputOf(value: unknown): Source | null {
 }
 
 /** Unknown fields and malformed values stay intact for the shared shape checker. */
-export function lowerActNames(act: { readonly on: ItemName | null; readonly fields: Readonly<Record<string, unknown>> },
-  fields: Readonly<Record<string, ShapeField>>, symbols: ActSymbols,
-  reference?: (source: Source, position: "on" | readonly (string | number)[]) => void): { on: number | null; fields: Record<string, unknown> } {
-  const item = (value: ItemName, position: "on" | readonly (string | number)[]): number => {
+export function lowerActNames<I extends number | object>(act: { readonly on: ItemName | null; readonly fields: Readonly<Record<string, unknown>> },
+  fields: Readonly<Record<string, ShapeField>>, symbols: { item(name: ItemName): I | null },
+  reference?: (source: Source, position: "on" | readonly (string | number)[]) => void): { on: I | number | null; fields: Record<string, unknown> } {
+  const item = (value: ItemName, position: "on" | readonly (string | number)[]): I | number => {
     const found = symbols.item(value);
     if (found !== null) {
       if (typeof value !== "number") reference?.(value.output, position);
