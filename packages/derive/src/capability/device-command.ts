@@ -44,6 +44,8 @@ function open(args: Readonly<Record<string, unknown>>, given: CapabilityGiven): 
     || typeof level !== "number" || !Number.isSafeInteger(level) || level < 0 || level > 100) throw new Error(`${DEVICE_COMMAND}: invalid target`);
   const command: Recorded = { kind: "command", key: [given.self], state: "open",
     values: { device: device.id, kind: device.values["kind"], target, level, targetAt: given.self, owner: grant.owner, decided: 0 } };
+  given.markSelf?.(command, ["key", 0]);
+  given.markSelf?.(command, ["values", "targetAt"]);
   return { records: [command], itemEffects: [
     { effect: "value", item: device.id, slot: "outcome", value: null },
     { effect: "ref", item: device.id, slot: "outcomeAt", to: null },

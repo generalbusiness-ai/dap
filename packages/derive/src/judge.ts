@@ -12,10 +12,14 @@
  */
 
 import { nativeMark } from "./program/native.ts";
-import type { Entry, FactRef, FactUse, Grant, Head, Input, MismatchReason, ObservationUse, Prepared, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
+import { BodyReferences, type Provenance, type OutputReference } from "./body-references.ts";
+import type { Digest, Entry, FactRef, FactUse, Grant, Head, Input, Intent, KeyId, MismatchReason, ObservationUse, Prepared, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { intentDigest, isEffect, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
-import { withinCounts } from "./draws.ts";
+import { withinCounts, type Drawn } from "./draws.ts";
+import { requestReservation } from "./request-duties.ts";
+import type { Amount } from "./held.ts";
+import type { ItemDuty } from "./item-duties.ts";
 import { namedBody } from "./program/structure.ts";
 import { executeBody } from "./program/body.ts";
 import { declarationOf } from "./program/declaration.ts";
@@ -23,8 +27,8 @@ import { isIntent, presentedTypes, readFields, type Reading } from "./fields.ts"
 import { covers } from "./grant.ts";
 import type { Judging, ReplayAssumptions } from "./guards.ts";
 import { judgmentFacts, readJudgmentFacts, replayContext, verifiedContext } from "./operand.ts";
-import { alsoItems, giving } from "./handlers.ts";
-import { actionOf, atHand, atHandByRows, fieldOutsideType, grantByRule, placeWithoutValue, placesOf, retainedOf, selectedBy, unjudged, type JudgedInput, type ValueRead } from "./marks.ts";
+import { alsoItems, giving, type ItemSettlement } from "./handlers.ts";
+import { actionOf, atHand, atHandByRows, fieldOutsideType, grantByRule, placeWithoutValue, placesOf, retainedOf, RuleFault, selectedBy, unjudged, type JudgedInput, type ValueRead } from "./marks.ts";
 import { listedBy, rowsOfAct, settle, type Listed, type Needed, type Observing, type Settled } from "./observes.ts";
 import type { Item, StateView } from "./state.ts";
 import { nextDue, type Due } from "./timed.ts";
@@ -191,6 +195,67 @@ export function judgeActForReplay(view: StateView, definition: ValidDefinition, 
   return context ? withinCounts(view, definition, unjudged(() => actJudged(view, definition, signed, context, false))) : { result: "unavailable", reason: "dependency-unavailable" };
 }
 
+type ActBody = Pick<Intent, "kind" | "on" | "fields" | "expected">;
+type RecordSelfRef = { effect: number; path: readonly (string | number)[] };
+type EmittedRecordSelfRef = { effect: Extract<Draft["effects"][number], { effect: "record" }>; path: readonly (string | number)[] };
+type BodyJudgment = Refused | Unjudged | { result: "due"; next: Due }
+  | { result: "unavailable"; reason: "unavailable"; lacks: readonly ["intent" | "entry"] }
+  | { result: "write"; draft: Omit<Draft, "input">; authority: readonly Grant[];
+      presented: Readonly<Record<string, FactRef>>; observed: readonly ObservationUse[];
+      signer: Signer | null; selfRefs: readonly number[]; recordRefs: readonly RecordSelfRef[] };
+type ExploredBodyJudgment = Exclude<BodyJudgment, { result: "write" }>
+  | (Extract<BodyJudgment, { result: "write" }> & { drawn: Drawn; requestReservations: ReadonlyMap<number, Amount>;
+      itemDuties: ReadonlyMap<number, readonly ItemDuty[]>; itemSettlement: ItemSettlement | null;
+      outputRefs: readonly OutputReference[] });
+interface ActBodyFrame {
+  actor: KeyId;
+  signed?: SignedIntent;
+  digest?: Digest;
+  plan: boolean;
+  unavailableIntent?: () => never;
+  selfRefs?: number[];
+  recordRefs?: EmittedRecordSelfRef[];
+  unavailableEntry?: () => never;
+  itemBookkeeping?: { itemDuties: Map<number, readonly ItemDuty[]>; itemSettlement: ItemSettlement | null };
+  references?: BodyReferences;
+}
+
+/** The same body as a recorded act, without signature, key or lifetime checks.
+ * A reached need for its absent signed input leaves no partial consequences. */
+export function judgeActBody(view: StateView, definition: ValidDefinition, body: Pick<Intent, "kind" | "on" | "fields" | "expected">, context: JudgeContext & { actor: KeyId; provenance?: Provenance }): ExploredBodyJudgment {
+  let missing: "intent" | "entry" | null = null;
+  const selfRefs: number[] = [];
+  const recordRefs: EmittedRecordSelfRef[] = [];
+  const itemBookkeeping: NonNullable<ActBodyFrame["itemBookkeeping"]> = { itemDuties: new Map(), itemSettlement: null };
+  let drawn: Drawn | undefined;
+  const unavailableIntent = (): never => {
+    missing ??= "intent";
+    throw new RuleFault("the body needs its absent signed intent");
+  };
+  const unavailableEntry = (): never => {
+    missing ??= "entry";
+    throw new RuleFault("the body needs an unsupported entry symbol");
+  };
+  const references = context.provenance ? new BodyReferences(context.provenance, unavailableEntry, body.fields) : undefined;
+  const answer = withinCounts(view, definition, unjudged(() => {
+    const scope = view.scope();
+    if (!scope) return { result: "unavailable", reason: "unavailable" } as const;
+    const verified = verifiedContext(context, { body, actor: context.actor });
+    return actBodyJudged(view, definition, body, verified, scope,
+      { actor: context.actor, plan: false, unavailableIntent, selfRefs, recordRefs, unavailableEntry, itemBookkeeping, ...(references ? { references } : {}) });
+  }), body, counts => { drawn = counts; });
+  if (missing) return { result: "unavailable", reason: "unavailable", lacks: [missing] };
+  if (answer.result === "write") {
+    if (!drawn) throw new TypeError("the admitted body has no derived count result");
+    const requestReservations = new Map<number, Amount>();
+    if (definition.declared.capacity?.name === "whole-scope") for (const send of answer.draft.sends) {
+      if (send.message.class === "request") requestReservations.set(send.n, requestReservation(definition, { body, sends: answer.draft.sends }, send.n));
+    }
+    return { ...answer, drawn, requestReservations, ...itemBookkeeping, outputRefs: references?.output(answer.draft.effects) ?? [] };
+  }
+  return answer;
+}
+
 /**
  * The subject list of an act, before its turn (section 16.1, "The order
  * before the turn", part 3): the subjects of the rows of its form that have
@@ -234,6 +299,20 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   if (asOf >= notAfter) return refused("expired", "notAfter");
   if (notAfter - asOf > bounds.intentLifetimeSeconds * 1000) return refused("bad-intent", "notAfter is further ahead than an intent may live");
 
+  const body = actBodyJudged(view, definition, intent, context, scope, { actor: intent.actor, signed, digest, plan }, declared, asOf);
+  if (body.result !== "write") return body;
+  const input = { type: "act", signed, authority: body.authority, presented: body.presented,
+    ...(body.observed.length > 0 ? { observed: body.observed } : {}) } as const;
+  return { result: "write", draft: { input, ...body.draft } };
+}
+
+function actBodyJudged(view: StateView, definition: ValidDefinition, intent: ActBody, context: JudgeContext,
+  scope: NonNullable<ReturnType<StateView["scope"]>>, frame: ActBodyFrame,
+  declared = declarationOf(definition), asOf = timeMs(context.clock.asOf)!): BodyJudgment {
+  const refused = (reason: RefusalReason, detail: string): Refused => ({ result: "refused", reason, detail, judgedAt: scope.head });
+  const { clock, bounds } = context;
+  const { digest } = frame;
+
   // Section 5.2, step 6.3: an input that is not timed never passes a due transition.
   const next = nextDue(view, definition, clock.asOf);
   if (next) return { result: "due", next };
@@ -249,7 +328,7 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   if (!read.ok) return refused("bad-field", read.detail);
   // Section 6.2: a fact that names this scope is a local fact. It is checked against this scope's own entry, and is then its `seq`.
   const local = { at: scope.at, own: context.own, texts: context.texts }; // Own.sequence is the held genesis admission, never scope.at alone.
-  const named = readJudgmentFacts(view, act.fields, read.fields, judgmentFacts(context), local);
+  const named = readJudgmentFacts(view, act.fields, read.fields, judgmentFacts(context), local, frame.references);
   if (named.result === "unavailable") return { result: "unavailable", reason: "dependency-unavailable" };
   if (named.result !== "read") return refused(named.result, named.detail);
   const { fields } = named;
@@ -266,7 +345,8 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   if (uses.length > bounds.usesPerEntry) return refused("bad-field", `more than ${bounds.usesPerEntry} foreign entries`);
   // Platform data: what a rule of this row is given (section 6.1). The input is the act as it arrived. No grant is judged yet.
   const clocked = { clock: false };
-  const judged: JudgedInput = { type: "act", signed, grant: null, presented: context.presented ?? {} };
+  const judged: JudgedInput | undefined = frame.signed
+    ? { type: "act", signed: frame.signed, grant: null, presented: context.presented ?? {} } : undefined;
   // Sections 4.1 and 6.2: the further observations and the values at hand, which only a rule reads. What a rule reads of them is noted.
   // Revision 19, section 6.2: the places of the act that name a value are in the pinned data, which only platform data states.
   const places = placesOf(act.fields, fields);
@@ -274,7 +354,9 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   // settled, after check 8. Under any other, the older rule stands as a stand-in: what a rule reads is what the entry retains.
   const beside = definition.observing ? atHandByRows(context.values, places)
     : context.observed === undefined && context.values === undefined && places.length === 0 ? undefined : atHand(context.observed, context.values, places);
-  const g = { ...giving(view, definition, context, scope, scope.head.seq + 1, judged, clocked, fields, facts), beside };
+  const g = { ...giving(view, definition, context, scope, scope.head.seq + 1, judged, clocked, fields, facts), beside,
+    ...(frame.references ? { references: frame.references } : {}),
+    ...(frame.unavailableIntent ? { unavailableIntent: frame.unavailableIntent } : {}) };
   // Check 7, with the fields: a place that names a value and has none at hand is refused `bad-field` (section 6.2, "The checks, in
   // the commit"). The value of each place is kept with the entry.
   const unplaced = placeWithoutValue(beside);
@@ -289,7 +371,10 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   if (act.step === "open" || act.on === null) {
     if (intent.on !== null) return refused("bad-intent", "this act names no item in `on`");
   } else {
-    const item = intent.on === null ? null : view.item(intent.on);
+    let item = intent.on === null ? null : frame.references
+      ? frame.references.lookup(view, { at: "on" }, intent.on, { type: "item", of: act.on }) : view.item(intent.on);
+    if (item?.type !== act.on) return refused("no-item", `on names no ${act.on}`);
+    if (frame.references) item = frame.references.lookup(view, { at: "subject", name: "on", binding: "on", item }, item.id, { type: "item", of: act.on });
     if (item?.type !== act.on) return refused("no-item", `on names no ${act.on}`);
     subjects.set("on", item);
     if (act.step === "transition") expects.push("on");
@@ -298,7 +383,7 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   // `expected` has no key for it. A transition's primary item exists before the entry, so a `via` may read its slots.
   // Check 8: a name of `also` that a mark selects is resolved by the mark's rule, which gives one item or none. The signer named
   // no item, so such a name has no key in `expected`. The rule on aliases holds for it.
-  const also = alsoItems(view, definition, act.also, fields, act.step === "transition" ? (subjects.get("on") ?? null) : null, undefined, (mark, bound) => selectedBy({ ...g, subjects: bound }, mark));
+  const also = alsoItems(view, definition, act.also, fields, act.step === "transition" ? (subjects.get("on") ?? null) : null, undefined, (mark, bound) => selectedBy({ ...g, subjects: bound }, mark), frame.references);
   if (!also.ok) return refused("no-item", also.detail);
   for (const [name, item] of also.items) {
     subjects.set(`also.${name}`, item);
@@ -309,7 +394,8 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   if (Object.keys(intent.expected).length !== expects.length || expects.some((k) => !Object.hasOwn(intent.expected, k))) return refused("bad-intent", `expected has one key for each of: ${expects.join(", ")}`);
   for (const key of expects) {
     const item = subjects.get(key === "on" ? "on" : `also.${key}`)!;
-    if (own(intent.expected, key) !== item.revision) return refused("revision-moved", `${key} is at revision ${item.revision}`);
+    if (frame.references ? !frame.references.basis(item, key, own(intent.expected, key), Object.hasOwn(intent.expected, key)) : own(intent.expected, key) !== item.revision)
+      return refused("revision-moved", `${key} is at revision ${item.revision}`);
   }
   // Section 6.3: an item in a final state refuses every transition. Comments are still allowed.
   const primary = subjects.get("on");
@@ -323,7 +409,9 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   const recorded = context.observing?.membership ?? context.membership ?? null;
   let list: Listed[] = [];
   if (rows.length > 0) {
-    const reading: Judging = { view, definition, bounds, clock, scope, self: scope.head.seq + 1, kind: intent.kind, fields, fieldTypes: act.fields, subjects, signer: null, facts, prepared: [], used: [], own: context.own, intent: digest, presented: shownFacts.fields };
+    const reading: Judging = { view, definition, bounds, clock, scope, self: scope.head.seq + 1, kind: intent.kind, fields, fieldTypes: act.fields, subjects, signer: null, facts, prepared: [], used: [], own: context.own, intent: digest, presented: shownFacts.fields,
+      ...(frame.unavailableIntent ? { unavailableIntent: frame.unavailableIntent } : {}),
+      ...(frame.references ? { references: frame.references } : {}) };
     const listed = listedBy(reading, rows, recorded);
     if (listed.foreign) return refused("bad-field", "a row of observes is given a member of another repository, or a value that is no member");
     const over = listed.rows.find((row) => row.over);
@@ -332,7 +420,7 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   }
   const settling = { view, bounds, clock, observed: context.observed ?? [], values: context.values ?? [], observing: { ...context.observing, membership: recorded } };
   // Before the turn, the same derivation says what to read, and judges nothing.
-  if (plan) return { result: "unavailable", reason: "authority-unavailable", missing: settle(list, settling).missing };
+  if (frame.plan) return { result: "unavailable", reason: "authority-unavailable", missing: settle(list, settling).missing };
 
   // Section 4.2, check 9. Section 6.4: every act of a declared definition needs a current grant for its `grant` action. In platform data the `grant` of a
   // row may be a mark: its rule stands in place of the grant check. A mark may state an action as well, and then check 9 is made
@@ -342,9 +430,12 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   const action = actionOf(act, definition);
   // The first presented grant that qualifies is the one recorded. Section 16.1: a grant's `within` covers this scope when it names
   // it, or when it is a filter whose `membership` is the membership reference that this scope records.
-  const presented = action === null ? undefined : context.grants?.find(({ grant, current }) =>
-    current && grant.key === intent.actor && grant.actions.includes(action) && covers(grant.within, scope.at, context.membership ?? null)
-    && (grant.notAfter === null || asOf < (timeMs(grant.notAfter) ?? -Infinity)));
+  const presented = action === null ? undefined : context.grants?.find(({ grant, current }) => {
+    if (!(current && grant.key === frame.actor && grant.actions.includes(action) && covers(grant.within, scope.at, context.membership ?? null))) return false;
+    if (grant.notAfter === null) return true;
+    clocked.clock = true;
+    return asOf < (timeMs(grant.notAfter) ?? -Infinity);
+  });
   let signer: Signer | null;
   if (presented) signer = { member: presented.grant.subject, principal: presented.grant.principal };
   else if (!mark) {
@@ -382,24 +473,38 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   const j: Judging = {
     view, definition, bounds, clock, scope, self: scope.head.seq + 1, kind: intent.kind, fields, fieldTypes: act.fields, subjects, signer, facts, prepared: context.prepared, used: [], asked: context.asked,
     own: context.own, snapshot: context.snapshot, intent: digest, presented: shownFacts.fields, capabilities: context.capabilities,
-    platform: context.platform, judged: { ...judged, grant: granted }, ran: clocked, beside,
+    platform: context.platform, judged: judged ? { ...judged, grant: granted } : undefined, ran: clocked, beside,
+    ...(frame.unavailableIntent ? { unavailableIntent: frame.unavailableIntent } : {}),
+    ...(frame.selfRefs ? { selfRef: (index: number) => { frame.selfRefs!.push(index); } } : {}),
+    ...(frame.recordRefs ? { recordSelfRef: (effect: EmittedRecordSelfRef["effect"], path: EmittedRecordSelfRef["path"]) => { frame.recordRefs!.push({ effect, path }); } } : {}),
+    ...(frame.unavailableEntry ? { unavailableEntry: frame.unavailableEntry } : {}),
+    ...(frame.references ? { references: frame.references } : {}),
   };
 
   // Guards, then effects, then sends, then the bound on the type it opens, as for a handler. The cause of a scope it creates is the intent's digest.
-  const ran = executeBody(j, namedBody(definition, "act", intent.kind, "act"), digest);
+  const ran = executeBody(j, namedBody(definition, "act", intent.kind, "act"), digest,
+    frame.itemBookkeeping ? { itemBookkeeping: frame.itemBookkeeping } : undefined);
   if (ran.result === "unavailable") return ran;
   if (ran.result === "refused") return { ...refused(ran.reason, ran.detail), ...(ran.name === undefined ? {} : { name: ran.name }) };
 
-  // Section 5.3: every act judges its `notAfter` and its grant's expiry on the commit clock, so no act is written while the clock is behind.
-  if (clock.behind) return { result: "unavailable", reason: "clock-behind" };
+  // A recorded act always judges its envelope expiry. A keyless body keeps
+  // the engine's structural policy and its grant/observation time checks.
+  const judgesTime = frame.signed !== undefined || ran.judgesTime || clocked.clock || settled !== undefined;
+  if (judgesTime && clock.behind) return { result: "unavailable", reason: "clock-behind" };
   // The entry records each presented fact as it arrived: a whole fact reference, also for an entry of this scope.
   // Section 4.2: the entry records the one grant judged. An act that the rule of a mark at `grant` passed records none.
   // Section 4.1, "An input may retain observations": the entry holds each further observation that a rule of its row read, in
   // ascending order of `read.n`, and the member is left out when it retains none. Section 6.2: a value that a rule read is kept
   // with the entry, and is in no entry.
   const retained = retainedOf(beside);
-  const input = { type: "act", signed, authority: granted ? [granted] : [], presented: shown.fields as Record<string, FactRef>, ...(retained.observed.length > 0 ? { observed: retained.observed } : {}) } as const;
-  return { result: "write", draft: { input, uses, prepared: ran.prepared, effects: ran.effects, sends: ran.sends, judgesTime: true, settles: ran.settles, ...(retained.values.length > 0 ? { values: retained.values } : {}), ...(settled ? { rows: settled } : {}) } };
+  const recordRefs = (frame.recordRefs ?? []).map(mark => {
+    const effect = ran.effects.indexOf(mark.effect);
+    if (effect < 0) throw new TypeError("the marked capability record was not emitted");
+    return { effect, path: mark.path };
+  });
+  return { result: "write", draft: { uses, prepared: ran.prepared, effects: ran.effects, sends: ran.sends, judgesTime, settles: ran.settles, ...(retained.values.length > 0 ? { values: retained.values } : {}), ...(settled ? { rows: settled } : {}) },
+    authority: granted ? [granted] : [], presented: shown.fields as Record<string, FactRef>, observed: retained.observed,
+    signer, selfRefs: frame.selfRefs ?? [], recordRefs };
 }
 
 /**

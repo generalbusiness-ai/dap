@@ -15,14 +15,14 @@
  * cannot derive does not judge the input.
  */
 
-import { CAPABILITIES } from "@generalbusiness/dap-contract";
+import { CAPABILITIES, DEVICE_COMMAND } from "@generalbusiness/dap-contract";
 import type { Bounds, Capability, CapabilityName, DeclaredDefinition, Effect, FieldValue, Guard, Digest, ScopeKind, ScopeRef, SequenceRef, UnavailableReason } from "@generalbusiness/dap-contract";
 import type { Fetched, GuardResult, Judging } from "./guards.ts";
 import type { Underived } from "./validate/capability.ts";
 import { coveredItems } from "./lists.ts";
 import { readValue, type ElementValues } from "./program/read-value.ts";
 import type { CapabilityEffectPlan, CapabilityGuardPlan } from "./program/capability-plan.ts";
-import { copyFact, matchesCopy, slotOf } from "./operand.ts";
+import { copyFact, matchesCopy, readSlotValue } from "./operand.ts";
 import type { HoldEffect } from "./hold.ts";
 import type { Most } from "./ledger.ts";
 import type { Item, StateView } from "./state.ts";
@@ -73,6 +73,8 @@ export type CapabilityGiven = Pick<Judging, "view" | "definition" | "scope" | "s
   from?: Readonly<Record<string, number>>;
   /** Bound slot subjects as preceding ordinary effects left them. */
   fromItems?: Readonly<Record<string, Item>>;
+  /** Internal body-only marker for a returned record position written from `self`. */
+  markSelf?: ((record: Recorded, path: readonly (string | number)[]) => void) | undefined;
 };
 
 /**
@@ -192,7 +194,7 @@ export function counted(definition: ValidDefinition, capabilities: Capabilities 
   return null;
 }
 
-const given = ({ view, definition, scope, self, kind, fields, signer, intent, facts, source, own, snapshot, clock, judged }: Judging): CapabilityGiven => {
+const given = ({ view, definition, scope, self, kind, fields, fieldTypes, signer, intent, facts, source, own, snapshot, clock, judged, unavailableIntent, references }: Judging): CapabilityGiven => {
   const verified = new Map<Digest, Fetched>();
   for (const [hash, copy] of facts) if (copy.mode === "verified" && matchesCopy(copy, copyFact(copy))) verified.set(hash, copy.value);
   const verifiedSource = source?.mode === "verified" && matchesCopy(source, copyFact(source)) ? source.value : undefined;
@@ -200,7 +202,14 @@ const given = ({ view, definition, scope, self, kind, fields, signer, intent, fa
   const sourceKind = judged?.type === "delivery" || judged?.type === "genesis" ? judged.sourceKind : null;
   const kindContext = Object.freeze({ source: fact && sourceKind ? Object.freeze({ at: Object.freeze({ ...fact.at }), kind: sourceKind }) : null,
     declared: Object.freeze({}) });
-  return { view, definition, scope, self, kind, fields, signer, intent, facts: verified, source: verifiedSource, kindContext, own, snapshot, clock };
+  const value: CapabilityGiven = { view: references ? references.opaqueView(view, definition) : view, definition, scope, self, kind,
+    fields: references ? new Proxy(fields, { get: (target, name) => typeof name === "string" && Object.hasOwn(target, name)
+      ? references.opaque(references.field(fieldTypes, fields, name)) : Reflect.get(target, name) }) : fields,
+    signer, intent, facts: verified, source: verifiedSource, kindContext, own, snapshot, clock };
+  if (unavailableIntent) Object.defineProperty(value, "intent", {
+    enumerable: true, configurable: true, get: () => intent ?? unavailableIntent(),
+  });
+  return value;
 };
 
 /** What a capability version declares, or undefined for a version that the contract's tables do not have. */
@@ -253,10 +262,12 @@ export function capabilityGuard(j: Judging, plan: CapabilityGuardPlan, item: Ite
     } else if (from.op === "items") {
       const range = coveredItems(j, from.range, elements);
       if (range === null) return "guard-incomplete";
-      args.push([arg, range.map((i) => slotOf(i, from.slot.name))]);
+      if (j.references) for (const item of range) j.references.expose(j.references.item(item));
+      args.push([arg, range.map((i) => readSlotValue(j, i, from.slot.name))]);
     } else args.push([arg, readValue(j, from.read, item, elements)]);
   }
-  const answer = observeCapabilityCall(j.definition, "guard", matched.version, guard, () => matched.rules.guard(matched.version, guard, Object.fromEntries(args), given(j)));
+  const argumentsValue = Object.fromEntries(args);
+  const answer = observeCapabilityCall(j.definition, "guard", matched.version, guard, () => matched.rules.guard(matched.version, guard, j.references ? j.references.opaque(argumentsValue) : argumentsValue, given(j)));
   if (answer === true) return "pass";
   if (typeof answer !== "string") return "unavailable";
   if (!own(matched.declared.guards, guard)?.refusals.includes(answer)) throw new Error(`${matched.version} declares no refusal ${answer} for its guard ${guard}`);
@@ -289,9 +300,21 @@ export function capabilityEffect(j: Judging, plan: CapabilityEffectPlan, item: I
     read.op === "field" && read.projection === null && read.baseType.kind === "declared" && read.baseType.type.type === "scope"
       ? [[arg, read.baseType.type.kind]] : []) : []);
   const base = given(j);
-  const reading = { ...base, from, fromItems, kindContext: Object.freeze({ source: base.kindContext.source, declared: Object.freeze(declared) }) };
-  const made = matched.rules.deriveEffect ? observeCapabilityCall(j.definition, "deriveEffect", matched.version, plan.action, () => matched.rules.deriveEffect!(matched.version, plan.action, args, reading))
-    : observeCapabilityCall(j.definition, "effect", matched.version, plan.action, () => matched.rules.effect(matched.version, plan.action, args, reading));
+  const details = { from: j.references ? new Proxy(from, { get: (target, name) => typeof name === "string" && fromItems[name]
+      ? j.references!.metadata(fromItems[name]!, "id") : Reflect.get(target, name) }) : from,
+    fromItems: j.references ? Object.fromEntries(Object.entries(fromItems).map(([name, item]) => [name,
+      j.references!.opaqueItem(item, j.definition, matched.version === DEVICE_COMMAND && plan.action === "open")])) : fromItems,
+    kindContext: Object.freeze({ source: base.kindContext.source, declared: Object.freeze(declared) }) };
+  // Body-only intent stays lazy: spreading its getter would read it even
+  // when the capability's actual branch never needs the signed input.
+  const reading: CapabilityGiven = j.unavailableIntent
+    ? Object.assign(Object.create(Object.getPrototypeOf(base), Object.getOwnPropertyDescriptors(base)), details)
+    : { ...base, ...details };
+  const selfMarks: { record: Recorded; path: readonly (string | number)[] }[] = [];
+  if (j.recordSelfRef) reading.markSelf = (record, path) => { selfMarks.push({ record, path: [...path] }); };
+  const argumentsValue = j.references ? j.references.opaque(args) : args;
+  const made = matched.rules.deriveEffect ? observeCapabilityCall(j.definition, "deriveEffect", matched.version, plan.action, () => matched.rules.deriveEffect!(matched.version, plan.action, argumentsValue, reading))
+    : observeCapabilityCall(j.definition, "effect", matched.version, plan.action, () => matched.rules.effect(matched.version, plan.action, argumentsValue, reading));
   if ("unavailable" in made) return "unavailable";
   const records = "records" in made ? made.records : made;
   const items = "records" in made ? (made.itemEffects ?? []) : [];
@@ -301,7 +324,15 @@ export function capabilityEffect(j: Judging, plan: CapabilityEffectPlan, item: I
   const recorded = records.map((r): Extract<Effect, { effect: "record" }> => {
     const kind = own(matched.declared.records, r.kind);
     if (!kind?.states.includes(r.state)) throw new Error(`${matched.version} declares no record ${r.kind} with the state ${r.state}`);
-    return { effect: "record", capability: matched.version, kind: r.kind, key: r.key, state: r.state, values: r.values };
+    const effect: Extract<Effect, { effect: "record" }> = { effect: "record", capability: matched.version, kind: r.kind, key: r.key, state: r.state, values: r.values };
+    for (const mark of selfMarks) if (mark.record === r) {
+      if (matched.version !== DEVICE_COMMAND) {
+        j.unavailableEntry?.();
+        throw new TypeError("the body cannot symbolize this capability's record");
+      }
+      j.recordSelfRef?.(effect, mark.path);
+    }
+    return effect;
   });
   return [...recorded, ...capabilityItemEffects(j.view, j.definition, matched.version, items, j.self, j.kind, j.bounds)];
 }

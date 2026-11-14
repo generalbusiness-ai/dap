@@ -95,9 +95,7 @@
       "owner": "packages/replay/test/archive-git.test.ts",
       "case": {
         "kind": "test",
-        "path": [
-          "replays an owed detached text from the caller directory"
-        ],
+        "path": ["replays an owed detached text from the caller directory"],
         "position": "_5"
       },
       "calls": 2,
@@ -1349,9 +1347,7 @@
       "owner": "packages/derive/test/judge.test.ts",
       "case": {
         "kind": "collection",
-        "path": [
-          "a refused act"
-        ],
+        "path": ["a refused act"],
         "position": "0"
       },
       "calls": 7,
@@ -1362,9 +1358,7 @@
       "owner": "packages/derive/test/judge.test.ts",
       "case": {
         "kind": "collection",
-        "path": [
-          "range guards (section 6.5)"
-        ],
+        "path": ["range guards (section 6.5)"],
         "position": "0"
       },
       "calls": 8,
@@ -1417,10 +1411,7 @@
       "owner": "packages/derive/test/judge.test.ts",
       "case": {
         "kind": "test",
-        "path": [
-          "a refused act",
-          "a grant of another action: unauthorized"
-        ],
+        "path": ["a refused act", "a grant of another action: unauthorized"],
         "position": "_1_5"
       },
       "calls": 1,
@@ -1431,10 +1422,7 @@
       "owner": "packages/derive/test/judge.test.ts",
       "case": {
         "kind": "test",
-        "path": [
-          "a refused act",
-          "a grant past its notAfter: unauthorized"
-        ],
+        "path": ["a refused act", "a grant past its notAfter: unauthorized"],
         "position": "_1_7"
       },
       "calls": 1,
@@ -1459,10 +1447,7 @@
       "owner": "packages/derive/test/judge.test.ts",
       "case": {
         "kind": "test",
-        "path": [
-          "a refused act",
-          "a grant to another key: unauthorized"
-        ],
+        "path": ["a refused act", "a grant to another key: unauthorized"],
         "position": "_1_4"
       },
       "calls": 1,
@@ -1473,10 +1458,7 @@
       "owner": "packages/derive/test/judge.test.ts",
       "case": {
         "kind": "test",
-        "path": [
-          "a refused act",
-          "a grant within another scope: unauthorized"
-        ],
+        "path": ["a refused act", "a grant within another scope: unauthorized"],
         "position": "_1_6"
       },
       "calls": 1,
@@ -1487,10 +1469,7 @@
       "owner": "packages/derive/test/judge.test.ts",
       "case": {
         "kind": "test",
-        "path": [
-          "a refused act",
-          "a party list past its max: slot-full"
-        ],
+        "path": ["a refused act", "a party list past its max: slot-full"],
         "position": "_1_19"
       },
       "calls": 1,
@@ -1557,10 +1536,7 @@
       "owner": "packages/derive/test/judge.test.ts",
       "case": {
         "kind": "test",
-        "path": [
-          "a refused act",
-          "an intent at its notAfter: expired"
-        ],
+        "path": ["a refused act", "an intent at its notAfter: expired"],
         "position": "_1_21"
       },
       "calls": 1,
@@ -1585,10 +1561,7 @@
       "owner": "packages/derive/test/judge.test.ts",
       "case": {
         "kind": "test",
-        "path": [
-          "a refused act",
-          "an item that does not exist: no-item"
-        ],
+        "path": ["a refused act", "an item that does not exist: no-item"],
         "position": "_1_25"
       },
       "calls": 1,
@@ -1683,10 +1656,7 @@
       "owner": "packages/derive/test/judge.test.ts",
       "case": {
         "kind": "test",
-        "path": [
-          "a refused act",
-          "no grant: unauthorized"
-        ],
+        "path": ["a refused act", "no grant: unauthorized"],
         "position": "_1_3"
       },
       "calls": 1,
@@ -1697,10 +1667,7 @@
       "owner": "packages/derive/test/judge.test.ts",
       "case": {
         "kind": "test",
-        "path": [
-          "a refused act",
-          "notIn: a review by an author: guard-failed"
-        ],
+        "path": ["a refused act", "notIn: a review by an author: guard-failed"],
         "position": "_1_11"
       },
       "calls": 1,
@@ -1767,10 +1734,7 @@
       "owner": "packages/derive/test/judge.test.ts",
       "case": {
         "kind": "test",
-        "path": [
-          "a refused act",
-          "two names that resolve to one item: alias"
-        ],
+        "path": ["a refused act", "two names that resolve to one item: alias"],
         "position": "_1_1"
       },
       "calls": 1,
@@ -2160,9 +2124,7 @@
       "owner": "packages/replay/test/archive-git.test.ts",
       "case": {
         "kind": "test",
-        "path": [
-          "replays an owed detached text from the caller directory"
-        ],
+        "path": ["replays an owed detached text from the caller directory"],
         "position": "_5"
       },
       "calls": 1,

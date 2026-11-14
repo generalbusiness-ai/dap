@@ -485,11 +485,14 @@ export function unjudged<T>(judge: () => T): T | { result: "unavailable"; reason
 export const markOf = (v: unknown): Mark | null => (isObject(v) && typeof v["code"] === "string" && typeof v["row"] === "string" ? (v as unknown as Mark) : null);
 
 /** What a judge holds when it gives a rule its six things: the parts of a `Judging` that a rule is given. */
-export type Giving = Pick<Judging, "definition" | "view" | "clock" | "bounds" | "scope" | "self" | "fields" | "subjects" | "signer" | "facts" | "own" | "source" | "platform" | "judged" | "ran" | "beside" | "outcome">;
+export type Giving = Pick<Judging, "definition" | "view" | "clock" | "bounds" | "scope" | "self" | "fields" | "subjects" | "signer" | "facts" | "own" | "source" | "platform" | "judged" | "ran" | "beside" | "outcome" | "unavailableIntent">;
 
 /** The six things, and no other (section 6.1). The entries in `uses` are those that the input's fields name, and for a delivery its source entry. */
 export function givenTo(g: Giving): RuleGiven {
-  if (!g.judged) throw new RuleFault("a rule is run for an entry whose input the judge did not state");
+  if (!g.judged) {
+    g.unavailableIntent?.();
+    throw new RuleFault("a rule is run for an entry whose input the judge did not state");
+  }
   const copies = [...(g.source ? [g.source] : []), ...g.facts.values()];
   const uses: Fetched[] = [];
   for (const copy of copies) {

@@ -59,6 +59,7 @@ export type Derived<T> = ({ ok: true } & T) | { ok: false; reason: RefusalReason
  * any depth, as `readFacts` checks the fields of an input.
  */
 export function held(j: Judging, type: FieldType, value: unknown): GenesisFieldValue | undefined {
+  if (j.references?.isReference(value) && type.type !== "item") j.references.expose(value);
   if (type.type === "scope" && isGenesisSelfRef(value)) return j.judged?.type === "genesis" && same(value, j.scope.at) ? value : undefined;
   if (type.type === "list") {
     if (!Array.isArray(value) || value.length > Math.min(type.max, j.bounds.listElements)) return undefined;
@@ -77,6 +78,11 @@ export function held(j: Judging, type: FieldType, value: unknown): GenesisFieldV
     return Object.fromEntries(members);
   }
   if (type.type === "item") {
+    if (j.references) {
+      const candidate = j.references.isReference(value) || isLocalId(value) ? value : isFactRef(value) && isLocalFact(value, j.scope.at) ? value.seq : null;
+      const item = candidate === null ? null : j.references.lookup(j.view, { at: "untyped" }, candidate, type);
+      return item?.type === type.of && (!isFactRef(value) || item.opened === value.hash) ? item.id : undefined;
+    }
     const id = isLocalId(value) ? value : isFactRef(value) && isLocalFact(value, j.scope.at) && j.view.item(value.seq)?.opened === value.hash ? value.seq : null;
     return id !== null && j.view.item(id)?.type === type.of ? id : undefined;
   }
@@ -92,7 +98,8 @@ export function held(j: Judging, type: FieldType, value: unknown): GenesisFieldV
     const under = fetched ? copyUnder(fetched) : declarationOf(j.definition).name;
     return kind && type.kind.includes(kind) && under === type.under ? (local ? value.seq : value) : undefined;
   }
-  return isValue(type, value, j.bounds) ? (value as FieldValue) : undefined;
+  const checked = j.references ? j.references.expose(value) : value;
+  return isValue(type, checked, j.bounds) ? (checked as FieldValue) : undefined;
 }
 
 /** The slot that holds the end of a hold of that type: the deadline of the timed rule that ends it, of which a hold type has one (section 6.8). */
@@ -132,7 +139,7 @@ type EffectInstruction = { readonly kind: "native"; readonly mark: Mark; readonl
 interface AttentionInstruction { readonly body: BodyStructure; readonly node: AttentionNode; readonly plan: AttentionPlan }
 
 /** Execute only the effect and attention instructions of this admitted body. */
-export function evaluateEffects(j: Judging, body: BodyStructure | null, opens: string | null): EffectResult {
+export function evaluateEffects(j: Judging, body: BodyStructure | null, opens: string | null, changed?: Map<number, Item>): EffectResult {
   if (!body) throw new TypeError("effects have no admitted body context");
   checkedBody(j.definition, body);
   const instructions = body.nodes.filter(node => node.category === "effect").map((owner): EffectInstruction => {
@@ -147,7 +154,7 @@ export function evaluateEffects(j: Judging, body: BodyStructure | null, opens: s
   const notices = body.nodes.filter(node => node.category === "attention").map((owner): AttentionInstruction => {
     return { body, node: owner, plan: attentionPlan(j.definition, body, owner) };
   });
-  return executeEffects(j, instructions, notices, opens);
+  return executeEffects(j, instructions, notices, opens, changed);
 }
 
 /** Trusted outcome callers join already-returned rule effects without fabricating admitted syntax. */
@@ -155,7 +162,7 @@ export function joinReturnedEffects(j: Judging, mark: Mark): EffectResult {
   return executeEffects(j, [{ kind: "native", mark }], [], null);
 }
 
-function executeEffects(j: Judging, instructions: readonly EffectInstruction[], attention: readonly AttentionInstruction[], opens: string | null): EffectResult {
+function executeEffects(j: Judging, instructions: readonly EffectInstruction[], attention: readonly AttentionInstruction[], opens: string | null, changed?: Map<number, Item>): EffectResult {
   const items = declarationOf(j.definition).items;
   const working = new Map(j.subjects);
   const effects: GenesisEffect[] = [];
@@ -183,10 +190,20 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
   const notJudged = (unavailable: UnavailableReason) => ({ ok: false, unavailable }) as const;
   // A source reads each subject as the effects written before it left it, and the item this entry opens as `on`.
   const after: Judging = { ...j, subjects: working };
-  const apply = (subject: string, effect: ItemEffect) => {
+  const apply = (subject: string, effect: ItemEffect, source?: unknown) => {
     sets(effect, null);
     effects.push(effect);
-    working.set(subject, changeItem(working.get(subject)!, effect, j.definition, j.signer));
+    const previous = working.get(subject)!;
+    working.set(subject, changeItem(previous, effect, j.definition, j.signer));
+    if (j.references) {
+      const declared = own(items, previous.type)!;
+      const actual = effect.effect === "ref" ? effect.to : effect.effect === "value" ? effect.value : undefined;
+      const type = effect.effect === "ref" ? own(declared.refs, effect.slot)!.to : effect.effect === "value" ? own(declared.values, effect.slot)!.of : null;
+      const tagged = type ? source === j.references.entry() ? source : j.references.forWrite(source, actual, type) : actual;
+      j.references.changed(previous, working.get(subject)!, effect.effect === "ref" ? "refs" : effect.effect === "value" ? "values" : undefined,
+        "slot" in effect ? effect.slot : undefined, tagged);
+    }
+    changed?.set(effect.item, working.get(subject)!);
   };
   /** The item that this entry opens, when a rule opens it. */
   let byRule: Item | null = null;
@@ -249,7 +266,9 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
         if (j.bound) throw outside(mark, "an opening, in a delivery that is bound");
         if (opens !== null || byRule || !type || effect.item !== j.self || effect.state !== type.initial || j.definition.holdTypes.includes(effect.type)) throw outside(mark, "an opening that its entry cannot make");
         byRule = newItem(effect, type, null);
+        j.references?.opened(byRule);
         others.set(effect.item, byRule);
+        changed?.set(effect.item, byRule);
         effects.push(effect);
         continue;
       }
@@ -305,10 +324,12 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
       }
       sets(applied, mark);
       effects.push(applied);
-      const changed = changeItem(item, applied, j.definition, j.signer);
-      if (subject !== undefined) working.set(subject, changed);
-      else others.set(item.id, changed);
-      if (byRule && changed.id === byRule.id) byRule = changed;
+      const next = changeItem(item, applied, j.definition, j.signer);
+      j.references?.changed(item, next);
+      if (subject !== undefined) working.set(subject, next);
+      else others.set(item.id, next);
+      changed?.set(item.id, next);
+      if (byRule && next.id === byRule.id) byRule = next;
     }
     return null;
   };
@@ -330,6 +351,8 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
     const open = { effect: "open", item: j.self, type: opens, state: own(items, opens)!.initial } as const;
     effects.push(open);
     working.set("on", newItem(open, own(items, opens)!, null));
+    j.references?.opened(working.get("on")!);
+    changed?.set(open.item, working.get("on")!);
     recordProgramLeaf(j.definition, "effects", `items.${opens}`, "open", open);
   }
 
@@ -378,7 +401,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
       const coded = ofCodedType(j, to, source, { item: id, slot });
       if (coded !== null) return coded ? source as FieldValue : undefined;
       if (!copied) throw new TypeError("copied effect value has no admitted source");
-      return copied.stated ? source as FieldValue : held(j, to, source);
+      return copied.stated ? (j.references ? j.references.forType(source, to) : source) as FieldValue : held(j, to, source);
     };
     const member = (v: unknown): MemberRef | null => isMemberRef(v) && memberFits(v, j.bounds) ? v : null;
     const listed = (slot: string) => members(own(working.get(subject)!.parties, slot));
@@ -418,7 +441,10 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
         const slot = code.slot.name;
         const to = code.source.op === "clear" ? null : code.source.op === "self" ? j.self : fits(own(type.refs, slot)!.to, slot);
         if (to === undefined) return bad("the source is not a value of the slot's type");
-        apply(subject, { effect: "ref", item: id, slot, to });
+        const effect = { effect: "ref", item: id, slot, to } as const;
+        if (j.references && copied) j.references.lower(source, own(type.refs, slot)!.to, effect, ["to"]);
+        apply(subject, effect, code.source.op === "self" && j.references ? j.references.entry() : copied && j.references ? source : undefined);
+        if (code.source.op === "self") j.selfRef?.(effects.length - 1);
         break;
       }
       case "value": {
@@ -428,7 +454,9 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
         if (derived !== null && derived > LAST_MS) return bad("the derived time is past the last timestamp");
         const value = derived !== null ? timeOf(derived) : code.source.op === "clear" ? null : fits(own(type.values, slot)!.of, slot);
         if (value === undefined) return bad("the source is not a value of the slot's type");
-        apply(subject, { effect: "value", item: id, slot, value });
+        const effect = { effect: "value", item: id, slot, value } as const;
+        if (j.references && copied) j.references.lower(source, own(type.values, slot)!.of, effect, ["value"]);
+        apply(subject, effect, copied && j.references ? source : undefined);
         break;
       }
       case "attribute": {
@@ -474,7 +502,10 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
         const slot = code.slot.name, texts = [...j.view.texts(id, slot)];
         const now = own(working.get(subject)!.values, slot);
         if (isDigest(now) && now !== own(was?.values, slot) && !texts.includes(now)) texts.push(now);
-        if (texts.length > 0) effects.push({ effect: "redact", item: id, slot, texts });
+        if (texts.length > 0) {
+          effects.push({ effect: "redact", item: id, slot, texts });
+          changed?.set(id, item);
+        }
         break;
       }
       case "hold": {
@@ -504,7 +535,15 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
   // a hold ends with such an item too, when a rule took it to a final state.
   const left = new Map<string, Item>([...[...others].map(([id, item]) => [`item ${id}`, item] as const), ...working]);
   for (const { subject, effect } of endsUnder(j, left)) {
-    if (subject === null || !working.has(subject)) effects.push(effect);
+    if (subject === null || !working.has(subject)) {
+      effects.push(effect);
+      if (changed) {
+        const held = changed.get(effect.item) ?? j.view.item(effect.item);
+        if (!held) throw new TypeError("the ended hold has no working item");
+        changed.set(effect.item, changeItem(held, effect, j.definition, j.signer));
+        j.references?.changed(held, changed.get(effect.item)!);
+      }
+    }
     else apply(subject, effect);
   }
   // Authority note, section 5.7, "What is derived, and at which entry": when the definition's holds have a workspace, the code of
@@ -519,6 +558,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
     const listed = new Set(declarationOf(j.definition).capabilities.map(c => `${c.name}@${c.version}`));
     const most = j.capabilities.maxima?.filter((m) => m.form === "workspace" && listed.has(m.capability)).reduce((n, m) => n + m.effects, 0);
     if (most !== undefined && derived.length > holds.length * most) throw new Error(`the workspace of ${holds.length} holds declares at most ${holds.length * most} effects, and it returned ${derived.length}`);
+    if (j.unavailableEntry && derived.some(effect => effect.effect === "record" || effect.effect === "operation")) j.unavailableEntry();
     effects.push(...derived);
     // The count of `counted` holds before an entry is derived. An entry that would still pass the bound is refused, by the
     // bound's name, and nothing is cut short. An entry that cannot be refused never reaches this: its opening was refused.
