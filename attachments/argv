@@ -1,9 +1,0 @@
-{
-  "cwd": "/Users/hughpyle/play/artroom/.builder-worktrees/ae1-on-cb1-combined-source-20261114",
-  "argv": [
-    "/opt/homebrew/bin/node",
-    "--import",
-    "tsx",
-    "/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-development-attempt2/attestation-computation/compute.mjs"
-  ]
-}
