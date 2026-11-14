@@ -248,6 +248,11 @@ that base is unavailable.
 npm run gate
 ```
 
+Before every full-gate START, root runs `node scripts/check-shared-helpers.mjs`
+and `npm run typecheck` at the exact head in the executor slot, requires both
+to exit 0, and states both codes in START without a separate grant, evidence
+directory, or END.
+
 File START with the clean head, tree, and current main. Keep the gate's
 output in one log in a new directory under `~/play/artroom-evidence/`.
 File END with the actual exit code, wall time, stage count lines, and log
