@@ -428,7 +428,8 @@ const repositoryOf = (state: Pick<StateView, "page">): Item | null => state.page
  * no act that needs a grant (section 12.1.2, "What the directory admits").
  */
 export function directoryMembership(state: Pick<StateView, "page">): ScopeRef | null {
-  // The slot's type is a scope of the kind `membership`, which the commit checked when the clause set it.
+  // The `applied` clause of the membership `create` set the slot. The create-result admission checked the result's source kind against
+  // the seed's kind, `membership` (derive/src/delivery.ts, `result`).
   const held: unknown = repositoryOf(state)?.refs["membership"];
   return isScopeRef(held) ? held : null;
 }
