@@ -273,7 +273,8 @@ the gate of the reference field:
 - The install rule refuses a definition with the part unless the
   room's Rules pin opts in. The reason is
   `admission-requires-rules<n>`, where `<n>` is the lowest pin that
-  opts in.
+  opts in. The reason is a name in `packages/platform`, as
+  `reference-requires-rules14` is.
 - A pin opts in by name. An unknown later pin stays closed until its
   cohort opts in.
 - The pins that opt in are the pins that install reference fields at
@@ -311,7 +312,7 @@ Three kinds of act suit `current`, and two do not:
 | Act | Under `current` |
 |---|---|
 | An act that sets an absolute value: `move`, `resize` | Suits. Each act records, and the last value stands |
-| An act whose effect computes from the state: a count that rises by one | Suits. The effect reads the state at the commit |
+| An act that adds a party to a list slot, or removes one | Suits. The effect changes the list that the item holds at the commit |
 | An act that adds beside an item, with a guard on that item: a comment on a place | Suits. The guard is the precondition |
 | An act that carries content which its signer wrote from what the signer saw: Lending `borrow` with its page content | Does not suit. The content can be stale |
 | An edit of a text | Does not suit. The member sees the other text first |
