@@ -102,12 +102,11 @@ export async function checkClone(git: PublicationGit, exported: ExportedJournal)
       seen.add(at);
       const bytes = await git.commit(at);
       if (idOf("commit", bytes) !== at) return { ok: false, checked, reason: "mismatch" };
-      const parsed = parseCommit(bytes), trailer = readPublicationTrailer(bytes);
-      if (trailer === null) {
-        // Staff named this opaque baseline. It is not a commit that the publication fold produced.
-        if (context.adopted.has(at)) break;
-        return { ok: false, checked, reason: "unreported-commit" };
-      }
+      const parsed = parseCommit(bytes);
+      // Staff adopted this intact commit as an opaque baseline, regardless of its trailer.
+      if (context.adopted.has(at)) break;
+      const trailer = readPublicationTrailer(bytes);
+      if (trailer === null) return { ok: false, checked, reason: "unreported-commit" };
       if (!sameScope(trailer.scope, context.journal.scope)) return { ok: false, checked, reason: "mismatch" };
       // Bind the report by its recorded input before comparing IDs. A changed file has another ID but keeps this context.
       const report = context.reports.get(reportKey(trailer));

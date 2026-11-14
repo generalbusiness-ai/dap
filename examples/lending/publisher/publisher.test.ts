@@ -11,11 +11,11 @@ import { isRecord, utf8 } from "@generalbusiness/dap-bytes";
 import { Custody, DeclaredHandle, ScopeHandle, secretSigner } from "@generalbusiness/dap-client";
 import { fileStore } from "@generalbusiness/dap-client/node";
 import { fixtureSequence, keys, type Actor } from "@generalbusiness/dap-derive/testing";
-import { GitProgram, idOf, parseCommit, snapshotCommit } from "@generalbusiness/dap-git";
+import { GitProgram, SNAPSHOT_BOUNDS, idOf, parseCommit, snapshotCommit } from "@generalbusiness/dap-git";
 import { nodeExec } from "@generalbusiness/dap-git/node";
-import type { ExportedJournal } from "./check.ts";
+import { checkClone, type ExportedJournal } from "./check.ts";
 import { lendingPublisher } from "./definition.ts";
-import type { BuiltPublication } from "./fold.ts";
+import { buildPublication, publicationTrailer, type BuiltPublication } from "./fold.ts";
 import { LocalGit } from "./git.ts";
 import { SCOPE_METHODS, type ChildMessage, type ParentMessage, type ProcessConfig, type PublicationStage } from "./ipc.ts";
 import { publish, type PublicationResult, type PublisherOptions } from "./publisher.ts";
@@ -155,13 +155,13 @@ async function readerCommand(repository: string, work: string, journal: string) 
   });
 }
 
-async function outside(w: World, base: string) {
+async function outside(w: World, base: string, message = "TEST outside writer\n") {
   const data = utf8("TEST outside writer\n"), blob = idOf("blob", data);
   const snapshot = snapshotCommit([...(await w.git.files(base)), { path: "outside.txt", mode: "100644", id: blob }], "TEST outside writer\n");
-  const bytes = utf8(`tree ${snapshot.tree}\nparent ${base}\nauthor TEST Writer <test@invalid> 1893456000 +0000\ncommitter TEST Writer <test@invalid> 1893456000 +0000\n\nTEST outside writer\n`);
+  const bytes = utf8(`tree ${snapshot.tree}\nparent ${base}\nauthor TEST Writer <test@invalid> 1893456000 +0000\ncommitter TEST Writer <test@invalid> 1893456000 +0000\n\n${message}`);
   const commit = idOf("commit", bytes);
   const publication: BuiltPublication = { commit, tree: snapshot.tree, objects: [{ id: blob, type: "blob", data }, ...snapshot.objects.filter(object => object.type === "tree"), { id: commit, type: "commit", data: bytes }],
-    through: w.ledger.fact(w.ledger.last.seq), base, message: "TEST outside writer\n", skipped: [] };
+    through: w.ledger.fact(w.ledger.last.seq), base, message, skipped: [] };
   await writeObjects(w.bare, publication);
   await program.ok("update-ref", ["-C", w.bare, "update-ref", "refs/heads/main", commit, base]);
   return commit;
@@ -242,6 +242,28 @@ test("an external branch writer stops signing until staff adopts its head", asyn
   wrote(await act(w.ledger, keys.rita, "adopt-head", { commit: changed }));
   expect((await publish(options(w, keys.una, "after-adopt"))).status).toBe("published");
   expect(parseCommit(await w.git.commit((await w.git.head())!)).parents).toEqual([changed]);
+});
+
+test("the reader honors an adopted foreign trailer after integrity checks and refuses it before adoption", async () => {
+  const w = await world(); await donate(w.ledger);
+  expect((await publish(options(w))).status).toBe("published");
+  const base = (await w.git.head())!, foreign = makePublisher({ key: "foreign-adopted-baseline" });
+  const message = "TEST staff-selected foreign baseline\n\n" + publicationTrailer(foreign.at, foreign.fact(0), base);
+  const adopted = await outside(w, base, message);
+  expect(readPublicationTrailer(await w.git.commit(adopted))).toMatchObject({ scope: foreign.at, base });
+  expect(await checkClone(w.git, exported(w.ledger))).toMatchObject({ ok: false, reason: "mismatch" });
+  await donate(w.ledger, "Bowl", "shelf/bowl.md");
+  expect(await publish(options(w, keys.una, "unadopted-foreign"))).toEqual({ status: "stopped", reason: "branch-differs" });
+  wrote(await act(w.ledger, keys.rita, "adopt-head", { commit: adopted }));
+  expect((await publish(options(w, keys.una, "adopted-foreign"))).status).toBe("published");
+  expect(parseCommit(await w.git.commit((await w.git.head())!)).parents).toEqual([adopted]);
+  expect(await checkClone(w.git, exported(w.ledger))).toEqual({ ok: true, checked: 1 });
+  // The real bare repository supplies the whole history. This single corrupt
+  // read proves that adoption does not bypass the commit's integrity check.
+  const corrupt = { head: () => w.git.head(), files: (base: string | null) => w.git.files(base),
+    commit: async (id: string) => id === adopted ? utf8("TEST corrupt adopted object\n") : w.git.commit(id),
+    compare: (base: string | null, publication: BuiltPublication) => w.git.compare(base, publication) };
+  expect(await checkClone(corrupt, exported(w.ledger))).toMatchObject({ ok: false, reason: "mismatch" });
 });
 
 async function report(w: World, actor: Actor, fields: Record<string, FieldValue>) {
@@ -339,4 +361,29 @@ test("an unwritable shelf path is named and skipped while a later valid page sti
   expect(bytes).toContain(`Skipped entry ${skipped} ${w.ledger.fact(skipped).hash}: bad-path\n`);
   const paths = await w.git.files(head);
   expect(paths.map(file => file.path)).toEqual(["shelf/pot.md"]);
+});
+
+// The base aliases one leaf tree at many directory paths. It needs no large
+// disk fixture or Native item count; the read limit counts path occurrences.
+test("the fold skips a write beyond the directory bound and accepts the adjacent tree count", async () => {
+  const ledger = makePublisher({ key: "directory-bound" }); ledger.now = new Date(NOW).toISOString();
+  await donate(ledger);
+  const through = ledger.fact(ledger.last.seq), blob = idOf("blob", utf8("TEST shared baseline blob\n"));
+  const files = Array.from({ length: SNAPSHOT_BOUNDS.trees - 1 }, (_, index) => ({
+    path: `dir-${index}/same.md`, mode: "100644" as const, id: blob,
+  }));
+  expect(files.length + 1).toBe(SNAPSHOT_BOUNDS.trees);
+  expect(files.length + 1).toBeLessThanOrEqual(SNAPSHOT_BOUNDS.files);
+  const base = snapshotCommit(files, "TEST aliased baseline\n");
+  expect(base.objects.filter(object => object.type === "tree")).toHaveLength(2);
+  const input = { scope: ledger.at, files, entries: ledger.entries, openings: [], through, base: base.commit };
+  const skipped = buildPublication(input);
+  expect(skipped.skipped).toEqual([{ fact: through, reason: "tree-limit" }]);
+  expect(skipped.tree).toBe(base.tree);
+  expect(skipped.message).toContain(`Skipped entry ${through.seq} ${through.hash}: tree-limit\n`);
+  const nearFiles = files.slice(1), nearBase = snapshotCommit(nearFiles, "TEST one directory below the bound\n");
+  const accepted = buildPublication({ ...input, files: nearFiles, base: nearBase.commit });
+  expect(accepted.skipped).toEqual([]);
+  expect(accepted.tree).not.toBe(nearBase.tree);
+  expect(accepted.objects.some(object => object.type === "blob" && object.id === idOf("blob", utf8("Available pot\n")))).toBe(true);
 });

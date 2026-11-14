@@ -16,7 +16,7 @@ export interface PublicationInput {
   readonly through: FactRef;
 }
 export interface PublicationObject { readonly id: ObjectId; readonly type: "blob" | "tree" | "commit"; readonly data: Uint8Array }
-export interface SkippedWrite { readonly fact: FactRef; readonly reason: "bad-path" | "path-conflict" | "file-limit" }
+export interface SkippedWrite { readonly fact: FactRef; readonly reason: "bad-path" | "path-conflict" | "file-limit" | "tree-limit" }
 export interface BuiltPublication {
   readonly commit: ObjectId;
   readonly tree: ObjectId;
@@ -108,6 +108,10 @@ export function buildPublication(input: PublicationInput): BuiltPublication {
     if (!pathAllowed(path)) { skipped.push({ fact: at, reason: "bad-path" }); continue; }
     if (directories.has(path) || prefixes(path).some(prefix => files.has(prefix))) { skipped.push({ fact: at, reason: "path-conflict" }); continue; }
     if (!files.has(path) && files.size >= SNAPSHOT_BOUNDS.files) { skipped.push({ fact: at, reason: "file-limit" }); continue; }
+    const introduced = prefixes(path).filter(prefix => !directories.has(prefix));
+    // snapshotFiles counts every directory path it visits, even when many
+    // paths share one Git tree object. Include its root in the same bound.
+    if (1 + directories.size + introduced.length > SNAPSHOT_BOUNDS.trees) { skipped.push({ fact: at, reason: "tree-limit" }); continue; }
     const data = utf8(write.content), id = idOf("blob", data);
     files.set(path, { path, mode: "100644", id });
     for (const prefix of prefixes(path)) directories.add(prefix);

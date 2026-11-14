@@ -141,3 +141,26 @@ This checkpoint is source-only. CUT-A holds executable work. The new and
 affected owning tests, compiler contexts, controls, and one gate before
 review remain owed. No test, compiler, generator, build, install, network
 request, remote Git write, deployment, or landing has validated P1 yet.
+
+
+## Source review repairs: UNRUN
+
+The reader honors a staff-adopted commit after checking its object identity
+and commit syntax, before it interprets any publisher trailer. The adopted
+baseline may carry a trailer for another room. An unadopted foreign trailer
+still refuses, and a corrupt adopted-object read still refuses. The owning
+witness uses a small real bare repository; only its corrupt-read check
+substitutes bytes at that read boundary.
+
+The fold bounds directory paths, including the root, by the existing
+`SNAPSHOT_BOUNDS.trees`. It counts path occurrences, so aliased subtrees do
+not reduce the count. Before a mapped write adds directories, the fold
+checks the prospective total. An excess write changes neither file nor
+directory state, and its entry appears in the commit message as
+`tree-limit`. The pure witness supplies aliased baseline files at the
+bound and one below it, with only two distinct tree objects.
+
+These two repairs and their witnesses have not run. The original nine
+witnesses and all earlier behavior assertions remain. Head A owns the
+executable slot; compiler, focused owner, controls, and gate still wait for
+the root's explicit instruction.
