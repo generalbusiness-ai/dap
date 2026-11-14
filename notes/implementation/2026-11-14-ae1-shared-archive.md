@@ -43,11 +43,17 @@ entries select their own installation proofs, with no scan of every
 installation or trusted release. The declaration builder pays the original
 fresh validation price before parsing each immutable signed declaration.
 No policy or payload admission survives a different scope or release.
+An equal declaration digest does not let another scope reuse that proof.
+The owner reuses only an installation proved for the exact full reference
+within the current pass. An outstanding proof RPC stays owned until its
+underlying promise settles, even after its caller reaches the deadline.
 
 Trust removal produces `application-policy-revoked`, before new package
 policy or provider work for that package scope. A provider-independent
 terminal record names the full scope and reason; it preserves any existing
-confirmed receipt and stops its wake. Reconstruction returns that same
+archive row byte-for-byte, including its confirmed receipt, and stops its
+wake. Policy preparation precedes a potentially large pending-row read.
+The operator view overlays the terminal reason. Reconstruction returns that same
 state. An authenticated package outside supported runtime policy uses
 `application-policy-unavailable`. Missing or temporarily unreadable proof
 retries without selecting payload. Restoring a trust row alone does not
@@ -61,15 +67,76 @@ states that another repository provider cannot archive here. A room with
 no repository states that it has no archive. Existing rows retain their
 repository binding; a different discovered target cannot retarget history.
 
-The new source witnesses cover the strict signed-proof reader and a real
-non-Grow Base room with an ordinary signed root/child package. The latter
-uses native-only initial policies, actual installation-proof RPCs, the
-shared adapter, the Artifacts transport, clone and public replay flow. Its
+The new source witnesses cover the strict signed-proof reader, a real
+non-Grow Base room with an ordinary signed root/child package, and a signed
+TEST Grow installation with accepted device answers. Both installed cases
+use native-only initial policies, actual installation-proof RPCs, the
+shared adapter, the Artifacts transport, clone and public replay flow. Their
 five expected public journal identities come from actual creation before
-provider refs exist. It then removes trust and checks the terminal state,
+provider refs exist. Each then removes trust and checks the terminal state,
 unchanged confirmed coverage and no further provider calls. The provider,
 clock and per-entry selection schedule are explicit fixture stand-ins.
+The Base case creates a second real installation of the same definition:
+substituting the first install's genuine proof fails the second scope's
+authority check, while the second install's actual proof succeeds.
 Existing Grow scenarios remain. These are witness drafts, not passed runs.
+
+## Policy setup costs and remaining proof work
+
+`apps/room/archive-setup-cost.ts` supplies shared prices for the new policy
+setup. These functions describe work that the actual operations still pay.
+They grant no proof, trust, source or export permission. In this table,
+`M` means metadata, `W` means input work, and omitted coordinates are zero.
+
+| Operation | Shared price |
+|---|---|
+| Proof sender metadata and identity/pin work | `forecastArchivePackageProofFixed`: W 5,570,560, independent of reply length |
+| Signed proof RPC and both validations | `forecastArchivePackageProofReply`: 1 call, M 270,336, W 25,952,256; settle M and proportional W at actual reply bytes |
+| Current trust JSON parse | `forecastArchiveTrustParse(u)`: M `3u`, W `192u + 4096`, where `u` is UTF-16 units |
+| Trust setting and publisher comparisons | `forecastArchiveTrustCheck(u,r,t)`: W `3u + 512rt + 128`, for `r` releases and `t` rows |
+| Clear and populate policy tables | `forecastArchivePolicyTables(d,s)`: M `512s`, W `1024(d+s)` |
+| Fresh declaration validation | Existing `forecastArchiveDeclarationValidation(u)`: W `48u` for each immutable declaration |
+| Terminal overlay read | `forecastArchiveTerminalRead`: 1 call, M 512, W 4608 |
+| Terminal overlay and wake write | `forecastArchiveTerminalWrite(512)`: 2 calls, M 576, W 8192, paid before serialization |
+
+The proof reply price covers both sender and receiver validation. Fixed
+sender metadata work cannot shrink when a small reply settles. Actual
+Rules-birth admission separately reserves one node, one call, M `E` and
+W `8E`, then settles at returned bytes `n` and pays W `32n` before parsing.
+The original entry bound supplies `E`; this adds no allowance.
+
+Some paid operations still lack a shared forecast: the immutable ancestor
+walk and local `ProofBytes` reads, native Rules/Directory candidate scalar
+queries, Rules-birth lookup, full-reference and flight bookkeeping, and
+runtime capability checks. The adapter pays for its own target-birth
+admission before the target pays for a second admission. Native SQL also
+adds each returned metadata reservation to input work. A later total must
+count these operations and every current-trust callback, including repeated
+provider checks. No successful-pass multiplicity bound or sufficient
+numeric ARC-1 cohort follows from this table.
+
+The finite catalog and host configuration initialize outside the archive
+pass. The table does not describe cold Worker CPU time. ARC-1 must state
+that boundary when it combines policy, target, source, build and provider
+costs. The call coordinates above count caller-side operations, including
+one namespace RPC; they do not enumerate SQL calls inside that peer.
+
+Planner question `ed162ad1` covers a concrete missing sender charge in the
+new ancestry walk. Existing `nativeBirth` runs `ReadPreparation.birth`,
+which can load and validate a declared ancestor's retained declaration
+beside a small genesis reply. The existing definition bound is 256 KiB.
+An exact proof read also performs sender identity and body checks. Current
+ancestry charges cover bounded replies and receiver validation, not this
+fixed sender preparation. The planner must choose a static precharge from
+existing bounds or a bounded size quote before that protocol grows. A
+complete cost proof must also state whether peer SQL calls belong in the
+caller call coordinate. No completed charge or cost proof is claimed here.
+
+Planner question `59c2e3cb` covers the proof refusal contract. The current
+text-or-null namespace reply does not distinguish pending installation
+from oversized sender metadata or invalid immutable proof. AE-1 treats a
+missing proof as transient. ARC-1 cannot infer a permanent structural stop
+from null without a further ruling. The draft keeps the wire unchanged.
 
 ## Validation remains pending
 

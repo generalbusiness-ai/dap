@@ -1,6 +1,6 @@
 /** Native installed TEST applications, root/child creation, issued session
  * reads and SQLite. Package peer, clock, scheduler and remote service are
- * explicit fixtures. The shared Base case prepares production policy from
+ * explicit fixtures. The shared Base/Grow cases prepare production policy from
  * retained proof; older diagnostic cases label their fixture policies.
  * Device replies are TEST owner input, not physical or hosted execution. */
 import { env, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
@@ -178,15 +178,18 @@ function commandReportDiagnostic(value: unknown) {
 // Each offline follower immediately follows its own native producer. No
 // Native owner, private key or plaintext read token crosses this boundary.
 interface NativeCommandHandoff { producer: string; id: string; lines: readonly string[]; refs: readonly { ref: string; id: string }[] }
-for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation warm", "Grow activation evicted", "Grow publication", "Grow failed-claim", "Grow base", "Grow Room A shape", "shared Base"]) {
+for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation warm", "Grow activation evicted", "Grow publication", "Grow failed-claim", "Grow base", "Grow Room A shape", "shared Base", "shared Grow"]) {
+  const sharedScenario = scenario === "shared Base" || scenario === "shared Grow";
   const producerTitle = scenario === "shared Base"
     ? "installed non-Grow Base room archives through shared retained-proof policy and preserves coverage on trust removal"
+    : scenario === "shared Grow"
+    ? "installed signed Grow room exports accepted device answers through shared retained-proof policy"
     : scenario === "Grow Room A shape"
     ? "installed old R17 Grow advances a published thirty-seven-pass history from sequence 146 with an exact remainder"
     : `installed ${scenario} scopes export genesis zero after a late native membership directory binding`;
   let retainedCommand: NativeCommandHandoff | null = null;
   test(producerTitle, { timeout: 30_000 }, async context => {
-  const sharedBaseScenario = scenario === "shared Base", activationScenario = scenario.startsWith("Grow activation"), productionScenario = scenario === "Grow production" || scenario === "Grow Room A shape" || activationScenario,
+  const sharedBaseScenario = scenario === "shared Base", activationScenario = scenario.startsWith("Grow activation"), productionScenario = scenario === "Grow production" || scenario === "Grow Room A shape" || scenario === "shared Grow" || activationScenario,
     kind = scenario === "fixture" || sharedBaseScenario ? "fixture" : "Grow";
   let roomAFan: number | null = null;
   const prepared = kind === "fixture" ? await applicationOwnedScopesPacket() : await (async () => {
@@ -227,7 +230,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
   // witnesses may advance this shared clock by milliseconds. Advance it
   // monotonically before creating any scope; keep its identity and history.
   if (kind === "Grow") net.clock.now = timeOf(Math.ceil(timeMs(net.clock.now)! / 1000) * 1000);
-  const platformHost = productionScenario || sharedBaseScenario ? { host: "artifacts", namespace: "artroom-demo" } : undefined;
+  const platformHost = productionScenario || sharedScenario ? { host: "artifacts", namespace: "artroom-demo" } : undefined;
   const { life, R, D, children } = await sessionRoom(C.register, undefined, platformHost), [M, A, G] = children;
   if (!M || !A || !G) throw Error("The declared cohort requires three siblings.");
   let productionPeer: ArchiveArtifactsPeer | undefined;
@@ -503,8 +506,8 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     const issued = await life.owner.required(() => requestSession(port.service, M.name, sessionRequest(membership, rita.secret, soon(60), crypto.randomUUID()), { fetch: routed }));
     if (!issued.ok) throw Error("Native membership must issue the fixture read session.");
     const handle = (scope: typeof rootScope.name) => new ScopeHandle(httpTransport(port.service, { fetch: routed }), scope, issued.session.reader());
-    if (sharedBaseScenario) {
-      // AE-1: this ordinary signed package uses the same room adapter as every
+    if (sharedScenario) {
+      // AE-1: each signed installed package uses the same room adapter as every
       // Worker. Only the Artifacts service/HTTP peer, clock and one-entry
       // selection schedule are stand-ins; no package policy is injected.
       const repository = (await life.wait(() => D.item(0))).values["repository"] as unknown as DestinationRepository;
@@ -534,13 +537,18 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       expect(new Set(eligible.map(scope => scope.name)).size).toBe(5);
       expect(eligible.some(scope => scope.name === R.name || scope.name === M.name)).toBe(false);
       const records = await Promise.all(eligible.map(async scope => ({ scope, at: await life.wait(() => scope.at()), rows: await life.wait(() => scope.sealed()) })));
+      if (scenario === "shared Grow") {
+        const rows = records.find(record => record.scope.name === childScope.name)!.rows;
+        expect(rows.some(row => row.entry.input.type === "preparation" && row.entry.input.capability === DEVICE_COMMAND && row.entry.input.step === "answer")).toBe(true);
+        expect(rows.flatMap(row => row.entry.effects)).toContainEqual(expect.objectContaining({ effect: "record", capability: DEVICE_COMMAND, kind: "command" }));
+      }
       const run = (scope: typeof rootScope, cutoff: Head) => life.wait(() => runInDurableObject(scope.object, async (_instance, state) => {
         const sql = archiveSql(state), store = new SqliteStore(sql), given = archiveGiven(store);
         const policies = new Map(nativePolicies), owner = roomArchivePackages(given, sql, binding, environment, policies, PROPOSED_BOUNDS);
         expect(policies.has(rootId)).toBe(false); expect(policies.has(childId)).toBe(false);
         const options = roomArchiveDriver(given, sql, binding, environment, policies, PROPOSED_BOUNDS,
           request => { providerCalls++; return host.fetch(request); }, owner);
-        if (!options) throw Error("Shared Artifacts archive adapter must admit this Base room");
+        if (!options) throw Error("Shared Artifacts archive adapter must admit this installed room");
         const at = store.scope()!.at, budget = new ArchiveBudget();
         const result = await new ArchiveDriver({ ...options, sql, current: () => ({ at, head: cutoff }),
           clock: () => timeOf(life.now()), bounds: PROPOSED_BOUNDS, budget: () => budget }).run();
@@ -561,6 +569,52 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       const rootRecord = records.find(record => record.scope.name === rootScope.name)!, final = rootRecord.rows.at(-1)!;
       const rootHead = { seq: final.entry.seq, hash: final.hash };
       const confirmed = await life.wait(() => runInDurableObject(rootScope.object, (_instance, state) => new ArchiveRows(archiveSql(state), rootRecord.at).load()!.confirmed));
+      let sameDefinitionAuthority: unknown = null;
+      if (sharedBaseScenario) {
+        // A second genuine installation exists only to distinguish scope
+        // authority from a policy map that already contains its definition.
+        const second = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release,
+          roles: ["admin"], values: {}, idempotencyKey: "TEST-archive-same-definition-second-install" }));
+        expect(second.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
+        await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
+        const secondCreate = (await life.wait(() => D.entries())).flatMap(entry => entry.sends)
+          .find(send => isSeed(send.to) && send.to.definition === rootId && scopeIdOf(send.to) !== rootScope.name);
+        if (!secondCreate || !isSeed(secondCreate.to)) throw Error("Second native installation must create its own root");
+        const otherRoot = life.platform(scopeIdOf(secondCreate.to));
+        await driveFixture([R, D, M, A, G, otherRoot], life.wait);
+        const otherAt = await life.wait(() => otherRoot.at()), otherRows = await life.wait(() => otherRoot.sealed());
+        const otherGenesis = otherRows[0]!.entry.input, firstGenesis = rootRecord.rows[0]!.entry.input;
+        if (otherGenesis.type !== "genesis" || firstGenesis.type !== "genesis") throw Error("Both real installed roots must retain genesis");
+        expect(otherAt).not.toEqual(rootRecord.at); expect(otherGenesis.seed.definition).toBe(rootId);
+        const otherBirth = await life.wait(() => namespace(env.PLATFORM).births.read(otherAt, 10_000, PROPOSED_BOUNDS.entryBytes));
+        if (!otherBirth) throw Error("Second installed root must expose its real bounded birth proof");
+        const firstInstall = (await life.wait(() => A.sealed())).find(row => row.entry.input.type === "act"
+          && row.entry.input.signed.intent.kind === "install-application"
+          && row.entry.input.signed.intent.idempotencyKey === "TEST-archive-installed-scopes");
+        if (!firstInstall) throw Error("First native installation act must remain available");
+        sameDefinitionAuthority = await life.wait(() => runInDurableObject(rootScope.object, async (_instance, state) => {
+          let substituteFirst = true;
+          const guarded = { idFromName: binding.idFromName, get: (id: DurableObjectId) => {
+            const target = binding.get(id);
+            return new Proxy(target, { get(peer, key) {
+              if (key !== "applicationArchiveProofBytes") return Reflect.get(peer, key);
+              return (where: ScopeRef, item: number) => (target as unknown as { applicationArchiveProofBytes(directory: ScopeRef, item: number): Promise<unknown> })
+                .applicationArchiveProofBytes(where, substituteFirst ? firstInstall.entry.seq : item);
+            } });
+          } };
+          const sql = archiveSql(state), store = new SqliteStore(sql), policies = new Map(nativePolicies), budget = new ArchiveBudget();
+          const owner = roomArchivePackages(archiveGiven(store), sql, guarded, environment, policies, PROPOSED_BOUNDS);
+          await owner.prepare(rootRecord.at, firstGenesis.seed, budget);
+          expect(policies.has(rootId)).toBe(true);
+          const birth = { bytes: otherBirth.proof.bytes, hash: otherBirth.proof.fact.hash };
+          const substituted = await owner.source(otherAt, otherGenesis.seed, birth, budget);
+          expect(substituted).toBe(false); expect(policies.has(rootId)).toBe(true);
+          substituteFirst = false;
+          const genuine = await owner.source(otherAt, otherGenesis.seed, birth, budget);
+          expect(genuine).toBe(true);
+          return { first: rootRecord.at, second: otherAt, definition: rootId, substituted, genuine, cost: budget.admitted() };
+        }));
+      }
       bindings.APPLICATION_TRUST = "[]"; environment.APPLICATION_TRUST = bindings.APPLICATION_TRUST;
       const calls = providerCalls;
       const revoked = await run(rootScope, rootHead);
@@ -604,9 +658,9 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       expect(command.code, command.lines.join("\n")).toBe(0); expect(mints).toBe(1);
       retainedCommand = { producer: producerTitle, id: commandSession.id, lines: [...command.lines], refs: cloned.refs };
       commandTransferred = true;
-      Object.assign(context.task.meta, { sharedBaseArchive: { passes, proofReads, revoked, repeated,
+      Object.assign(context.task.meta, { [scenario === "shared Grow" ? "sharedGrowArchive" : "sharedBaseArchive"]: { passes, proofReads, revoked, repeated, sameDefinitionAuthority,
         expectedScopes: records.map(({ at }) => at),
-        qualification: "Actual non-Grow Base room, normal signed ordinary package installation/root+child and namespace-only retained proof RPC; native-only initial policy map; shared roomArchivePackages/roomArchiveDriver, actual Artifacts token and Git adapter, real clone and public replay command. Binding/HTTP peer, clock and per-entry cutoff scheduler are TEST stand-ins. Every pass retains original caps/deadline; no alarm-cadence or hosted claim." } });
+        qualification: `${scenario === "shared Grow" ? "Actual signed TEST Grow demo installed through its native cohort, distinct enrolled agents and accepted device answer" : "Actual non-Grow Base room and normal signed ordinary package installation"}; genuine root/child and namespace-only retained proof RPC; native-only initial policy map; shared roomArchivePackages/roomArchiveDriver, actual Artifacts token and Git adapter, real clone and public replay command. Binding/HTTP peer, clock and per-entry cutoff scheduler are TEST stand-ins. Every pass retains original caps/deadline; no alarm-cadence or hosted claim.` } });
       return;
     }
     const histories: { scope: typeof rootScope; read: { value: readonly Sealed[]; at: Head } }[] = [];
@@ -1781,9 +1835,9 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
   } finally { life.release(); }
   });
 
-  if (scenario === "Grow production" || scenario === "shared Base") {
-    // Shared Base reuses this bounded command follower; the older Grow
-    // timings below are not observations of its new Native producer.
+  if (scenario === "Grow production" || sharedScenario) {
+    // Shared cases reuse this bounded command follower; the older Grow
+    // timings below are not observations of their new Native producers.
     // BR-4: prior sealed runs took 25,668 and 29,457 ms. Three times
     // their median is 82,687.5 ms. Each concurrent replay child gets 90 s;
     // the follower leaves another 10 s for reporting and joined cleanup.

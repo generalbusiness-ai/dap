@@ -16,6 +16,8 @@ export class ArchiveStopped extends Error {
 export class ArchivePolicyStopped extends ArchiveStopped {
   constructor(readonly policyReason: "application-policy-revoked" | "application-policy-unavailable") { super("unavailable"); }
 }
+/** Policy proof may lag native creation; it must remain a retry. */
+export class ArchivePolicyPending extends ArchiveStopped { constructor() { super("unavailable"); } }
 const zero = (): ArchiveCost => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
 export interface ArchiveCapacityCheck {
   readonly kind: "debit" | "lookahead-reserve" | "window-metadata" | "window-entry" | "finish-quote" | "migration-quote";

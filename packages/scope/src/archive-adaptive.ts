@@ -5,7 +5,7 @@ import type { ArchiveReplayContext } from "./archive-publication.ts";
 import type { Bounds, Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, same, utf8 } from "@generalbusiness/dap-bytes";
 import { JournalPassPreparation, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
-import { ARCHIVE_BOUNDS, ArchiveStopped, ArchivePolicyStopped, type ArchiveBudget, type ArchiveCost, type ArchiveCapacityRefusal } from "./archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveStopped, ArchivePolicyStopped, ArchivePolicyPending, type ArchiveBudget, type ArchiveCost, type ArchiveCapacityRefusal } from "./archive-budget.ts";
 import { planPublishedArchivePass, planRootPublishedArchivePass, planRootFixedPublishedArchivePass, planRootFixedLegacyArchivePass, planLegacyArchiveAnchors, type ArchiveBuildFailure } from "./archive-build.ts";
 import { archiveDeclarationHandoffCost } from "./archive-declaration-plan.ts";
 import { archiveRetainedHandoffCost } from "./archive-retained.ts";
@@ -186,7 +186,7 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
       preparation, ...(legacyAnchors ? { legacyAnchors } : {}), ...constraints }, budget);
     return built.ok ? { ...built, parentObjects: selected.parent.ids, rowContextBytes } : built;
   } catch (error) {
-    if (error instanceof ArchivePolicyStopped) throw error;
+    if (error instanceof ArchivePolicyStopped || error instanceof ArchivePolicyPending) throw error;
     if (error instanceof ArchiveStopped) return { ok: false, reason: error.reason,
       capacityRefusal: error.capacityRefusal && { ...error.capacityRefusal, site: "plan-debit" } };
     if (error instanceof ArchivePrefixStopped) return { ok: false, reason: error.reason, ...(error.sourceFailure ? { sourceFailure: error.sourceFailure } : {}) };
@@ -217,7 +217,7 @@ export async function planRootFixedArchivePass(sql: Sql, context: AdaptiveArchiv
     }
     return await planRootFixedPublishedArchivePass(sql, { ...context, ...rowContext }, budget);
   } catch (error) {
-    if (error instanceof ArchivePolicyStopped) throw error;
+    if (error instanceof ArchivePolicyStopped || error instanceof ArchivePolicyPending) throw error;
     if (error instanceof ArchiveStopped) return { ok: false as const, reason: error.reason,
       capacityRefusal: error.capacityRefusal && { ...error.capacityRefusal, site: "plan-debit" as const } };
     if (error instanceof ArchivePrefixStopped) return { ok: false as const, reason: error.reason, ...(error.sourceFailure ? { sourceFailure: error.sourceFailure } : {}) };
@@ -236,7 +236,7 @@ export async function planRootFixedUnpublishedArchivePass(sql: Sql, context: Ada
     if (!rowContext.ok) return rowContext;
     return await planRootFixedLegacyArchivePass(sql, { ...context, ...rowContext }, budget);
   } catch (error) {
-    if (error instanceof ArchivePolicyStopped) throw error;
+    if (error instanceof ArchivePolicyStopped || error instanceof ArchivePolicyPending) throw error;
     if (error instanceof ArchiveStopped) return { ok: false as const, reason: error.reason,
       capacityRefusal: error.capacityRefusal && { ...error.capacityRefusal, site: "plan-debit" as const } };
     if (error instanceof ArchivePrefixStopped) return { ok: false as const, reason: error.reason, ...(error.sourceFailure ? { sourceFailure: error.sourceFailure } : {}) };

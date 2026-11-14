@@ -14,6 +14,7 @@ import { planAdaptiveArchivePass, planRootAdaptiveArchivePass, planRootFixedArch
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { archiveOwnReplayContext, type ArchiveReplayContext } from "./archive-publication.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, archivePinReadBytes, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
+import { archivePinValidationWork } from "./archive-inventory-cost.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { ArchiveRows, type ArchiveMark, type ArchiveRow } from "./archive-row.ts";
 import { finishArchiveParentRead, startArchiveParentReadPass } from "./archive-parent-read-diagnostic.ts";
@@ -172,11 +173,27 @@ export class ArchiveDriver {
     try {
       const rows = this.#store();
       if (!rows || this.#options.policies.registry.size === 0) return done({ state: "disabled", next: null });
-      budget.spend({ inputWork: 4 * (ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES) });
+      budget.spend({ inputWork: archivePinValidationWork() });
       const current = this.#options.current()!;
       const at = { ...current.at }, through = { ...current.head };
       const terminal = rows.terminal(budget);
       if (terminal) return done({ state: "stopped", next: null, reason: terminal });
+      let policySeed: Seed | null = null;
+      if ("production" in this.#options && this.#options.preparePolicies) {
+        // Policy denial must not depend on decoding a large old pending row.
+        // This metadata pin grants no body/export admission: the normal pin
+        // and row checks still run below before any provider work.
+        budget.spend({ inputWork: archivePinValidationWork() });
+        const initial = readArchivePinAfterReceipt(budget.native(this.#options.sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }), archivePinReadBytes), at);
+        if (!initial) return done({ state: "retry", next: this.#later(0), reason: "unavailable" });
+        policySeed = initial.seed;
+        const prepare = this.#options.preparePolicies;
+        const prepared = await budget.wait(() => prepare(at, initial.seed, budget));
+        if (prepared?.stop) {
+          rows.halt(prepared.stop, budget);
+          return done({ state: "stopped", next: null, reason: prepared.stop });
+        }
+      }
       let row = rows.load(budget);
       phase = !row ? "absent" : row.stopped ? "stopped" : row.pending ? "pending" : row.confirmed ? "confirmed" : "target";
       confirmed = row?.confirmed?.through.seq ?? null; pending = row?.pending?.through.seq ?? null;
@@ -187,14 +204,7 @@ export class ArchiveDriver {
       const pin = readPin(budget.native(this.#options.sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }), archivePinReadBytes), at);
       budget.check();
       if (!pin) return done({ state: "retry", next: this.#later(0), reason: "unavailable" });
-      if ("production" in this.#options && this.#options.preparePolicies) {
-        const prepare = this.#options.preparePolicies;
-        const prepared = await budget.wait(() => prepare(at, pin.seed, budget));
-        if (prepared?.stop) {
-          rows.halt(prepared.stop, budget);
-          return done({ state: "stopped", next: null, reason: prepared.stop });
-        }
-      }
+      if (policySeed && !same(policySeed, pin.seed)) return done({ state: "retry", next: this.#later(0), reason: "unavailable" });
       if ("production" in this.#options && !this.#options.admit(at, pin.seed)) { this.#disabled = true; return done({ state: "disabled", next: null }); }
       const policy = this.#options.policies.registry.get(pin.seed.definition);
       if (!policy || !policy.review || policy.support.named !== pin.seed.definition) { this.#disabled = true; return done({ state: "disabled", next: null }); }

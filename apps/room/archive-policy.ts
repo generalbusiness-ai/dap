@@ -38,7 +38,7 @@ export function growArchivePolicies(packetText: string, trusted: GrowArchiveRele
     if (native && !isDigest(pin)) {
       const code = ownersOf(checked.definition, { named: pin, rules: native.rules }, null), kinds = new Map<string, OperationRules>();
       for (const kind of Object.keys(native.data.outcomes ?? {})) {
-        const rules = code?.rules(pin, kind); if (!rules) throw new Error("Grow archive native rules unavailable");
+        const rules = code?.rules(pin as PlatformDefinition, kind); if (!rules) throw new Error("Grow archive native rules unavailable");
         kinds.set(kind, rules);
       }
       owners.set(pin, kinds);
@@ -66,7 +66,7 @@ export function nativeArchivePolicies(): ArchivePolicyRegistry {
     const owners = new Map<string, Map<string, OperationRules>>(), kinds = new Map<string, OperationRules>();
     const code = ownersOf(checked.definition, { named: pin as PlatformDefinition, rules: native.rules }, null);
     for (const kind of Object.keys(native.data.outcomes ?? {})) {
-      const rules = code?.rules(pin, kind);
+      const rules = code?.rules(pin as PlatformDefinition, kind);
       if (!rules) throw Error("archive catalog outcome unavailable");
       kinds.set(kind, rules);
     }

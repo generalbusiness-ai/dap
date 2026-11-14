@@ -19,7 +19,7 @@ import type { ApplicationBindings } from "../../packages/scope/src/applications/
 import type { Sql } from "../../packages/scope/src/sqlite.ts";
 import { archiveSourceReferences } from "../../packages/scope/src/archive-source-window.ts";
 import { ArchivePrefixStopped } from "../../packages/scope/src/archive-prefix.ts";
-import { ArchiveStopped } from "../../packages/scope/src/archive-budget.ts";
+import { ArchiveStopped, ArchivePolicyPending } from "../../packages/scope/src/archive-budget.ts";
 import type { ArchiveReplayContext } from "../../packages/scope/src/archive-publication.ts";
 
 export interface RoomArchiveEnvironment extends ArtifactsBindings, ApplicationBindings { ARCHIVE_RESTART_DIRECTIVE?: string }
@@ -51,11 +51,12 @@ export function roomArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
       const births = new Map<string, FixtureArchiveSourceBirth>();
       const nativeBirths = namespace(binding).births;
       const capture = async (where: SequenceRef, reply: Awaited<ReturnType<typeof nativeBirths.read>>) => {
-        // archiveTarget's own admission of this same reply debits the archive budget. This copy charges nothing more.
-        const admitted = readNativeBirth(reply, where, 256 * 1024, () => {});
+        // The adapter and target each admit this reply. Pay for this copy
+        // before parsing; the target pays for its own admission below.
+        const admitted = readNativeBirth(reply, where, 256 * 1024, size => budget.spend({ metadata: size, inputWork: size * 8 }));
         if (!admitted) return null;
         const birth = admitted.birth;
-        if (policyOwner && !policies.has(birth.named) && !await policyOwner.source(where, admitted.entry.input.seed, { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, budget)) return null;
+        if (policyOwner && isDigest(admitted.entry.input.seed.definition) && !await policyOwner.source(where, admitted.entry.input.seed, { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, budget)) return null;
         const policy = policies.get(birth.named);
         if (!policy) return null;
         births.set(canonicalize(where), { at: where, birth: { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, ...(policy.declaration ? { declaration: policy.declaration } : {}) });
@@ -109,12 +110,12 @@ export function roomArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
               }
             });
             // The debit settles the reservation at the actual size, before parsing.
-            const birth = readNativeBirth(reply, where, 256 * 1024, size => budget.settle(reservation, size))?.birth ?? null;
-            if (birth && policyOwner && !policies.has(birth.named)) {
-              const checked = admitSequenceGenesis(birth.proof.bytes, where, bounds.entryBytes);
-              if (!checked) throw new ArchivePrefixStopped("foreign-source-mismatch");
-              const seed = readNativeBirth(reply, where, 256 * 1024, () => {})?.entry.input.seed;
-              if (!seed || !await policyOwner.source(where, seed, { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, budget)) throw new ArchivePrefixStopped("foreign-source-unavailable");
+            const admitted = readNativeBirth(reply, where, 256 * 1024, size => budget.settle(reservation, size));
+            const birth = admitted?.birth ?? null;
+            if (birth && admitted && policyOwner && isDigest(admitted.entry.input.seed.definition)) {
+              if (!await policyOwner.source(where, admitted.entry.input.seed, { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, budget)) {
+                throw new ArchivePolicyPending();
+              }
             }
             const policy = birth ? policies.get(birth.named) : null;
             if (!birth || !policy) {

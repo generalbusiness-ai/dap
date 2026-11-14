@@ -13,7 +13,7 @@ import { confirmRetainedArchivePass } from "./archive-retained-pass.ts";
 import { archiveReplayScopeRefs, archiveReplayScopeUnits, readArchivePublication } from "./archive-publication.ts";
 import { ARCHIVE_ROW_MANIFEST_BYTES as MANIFEST_BYTES, ARCHIVE_ROW_BYTES, ARCHIVE_CONFIRMED_ROW_BYTES, ARCHIVE_ROW_SIZE_METADATA,
   ARCHIVE_ROW_SAVE_FIXED_WORK, archiveRowLoadWork, archivePendingManifestWork, archiveMarkWork,
-  archiveRowSaveReservation, archiveConfirmedRowSaveReservation } from "./archive-row-cost.ts";
+  archiveRowSaveReservation, archiveConfirmedRowSaveReservation, archiveTerminalReadReservation, forecastArchiveTerminalWrite } from "./archive-row-cost.ts";
 export { ARCHIVE_ROW_BYTES } from "./archive-row-cost.ts";
 
 const KEY = "archive-row-1";
@@ -321,7 +321,7 @@ export class ArchiveRows {
   /** A policy stop needs no repository, provider format or fabricated row.
    * It preserves any existing confirmed receipt and prevents scheduling. */
   terminal(budget = new ArchiveBudget()): string | null {
-    const rows = budget.native(this.#sql, () => ({ metadata: 512, inputWork: 4096 })).exec("SELECT v FROM meta WHERE k = ? AND typeof(v) = 'text' AND octet_length(v) <= 512 LIMIT 1", TERMINAL).toArray();
+    const rows = budget.native(this.#sql, archiveTerminalReadReservation).exec("SELECT v FROM meta WHERE k = ? AND typeof(v) = 'text' AND octet_length(v) <= 512 LIMIT 1", TERMINAL).toArray();
     if (!rows.length) return null;
     const bytes = rows[0]?.["v"];
     if (typeof bytes !== "string") return refuse("unavailable");
@@ -333,10 +333,10 @@ export class ArchiveRows {
   halt(reason: string, budget = new ArchiveBudget()): void {
     if (!/^[a-z][a-z0-9-]{0,127}$/.test(reason)) return refuse("unavailable");
     this.#sql.transaction(() => {
-      const previous = this.#load(budget)?.row;
-      if (previous) this.#save({ ...previous, next: null, stopped: { reason, where: null } }, budget);
+      // A potentially large pending row remains byte-for-byte untouched.
+      // The scope-bound terminal overlay is sufficient to stop this owner.
+      budget.spend(forecastArchiveTerminalWrite(512));
       const value = canonicalize({ v: 1, at: this.#at, reason });
-      budget.spend({ calls: 2, metadata: value.length + 64, inputWork: value.length * 8 + 4096 });
       this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO NOTHING", TERMINAL, value).toArray();
       this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", WAKE, canonicalize({ pending: false, stopped: true, next: null })).toArray();
       budget.check();

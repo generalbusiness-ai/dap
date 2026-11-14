@@ -85,8 +85,8 @@ export async function archiveOperatorState(sql: Pick<Sql, "exec">, name: ScopeId
       const restartGeneration = rows.restartReceipt(budget).generation;
       const pending = value.pending;
       row = { state: "present", rowDigest, restartGeneration, at: { ...value.at }, repository: { ...value.repository }, format: value.format,
-        phase: value.stopped ? "stopped" : pending ? "pending" : value.confirmed !== null ? "confirmed" : "target",
-        reason: value.stopped === null ? null : (reasons as readonly string[]).includes(value.stopped.reason) ? value.stopped.reason as ArchiveOperatorReason : "unknown",
+        phase: terminal.state === "present" || value.stopped ? "stopped" : pending ? "pending" : value.confirmed !== null ? "confirmed" : "target",
+        reason: terminal.state === "present" ? terminal.reason : value.stopped === null ? null : (reasons as readonly string[]).includes(value.stopped.reason) ? value.stopped.reason as ArchiveOperatorReason : "unknown",
         confirmed: value.confirmed === null ? null : position(value.confirmed),
         pendingMark: pending === null ? null : { commit: pending.commit, parent: pending.parent, through: { ...pending.through }, markedAt: pending.markedAt, ...(pending.layout === 2 ? { layout: 2 as const } : {}) }, attempts: value.attempts, next: value.next };
     }

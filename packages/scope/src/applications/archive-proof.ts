@@ -9,6 +9,7 @@ import { applicationJson } from "../../../platform/src/application-codec/applica
 import { applicationArchiveProof, checkApplicationArchiveProof, type ApplicationArchiveProof } from "../../../platform/src/application-archive-reader.ts";
 import type { Store } from "../store.ts";
 import type { SqliteStore } from "../sqlite.ts";
+import { archiveDeclarationValidationWork } from "../archive-inventory-cost.ts";
 import { PREPARATION_BOUNDS } from "../preparation-budget.ts";
 
 export type { ApplicationArchiveProof, ArchiveInstallation } from "../../../platform/src/application-archive-reader.ts";
@@ -18,9 +19,10 @@ export const APPLICATION_ARCHIVE_PROOF_BYTES = APPLICATION_SEMANTIC_VALUE2.max +
 /** Fixed item-record work: the response size cannot refund the sender's
  * Rules/installation metadata read. This changes no service/kernel cap. */
 export const APPLICATION_ARCHIVE_PROOF_METADATA_WORK = PREPARATION_BOUNDS.metadata * 64;
-/** Complete upper work envelope. Debit METADATA_WORK separately when a
- * byte reservation settles the reply's proportional work at its actual size. */
-export const APPLICATION_ARCHIVE_PROOF_WORK = APPLICATION_ARCHIVE_PROOF_METADATA_WORK + APPLICATION_ARCHIVE_PROOF_BYTES * 48;
+/** Both the sender and receiver validate the complete signed proof. */
+export const APPLICATION_ARCHIVE_PROOF_VALIDATION_WORK = 2 * archiveDeclarationValidationWork(1);
+/** Debit METADATA_WORK separately so response settlement cannot refund it. */
+export const APPLICATION_ARCHIVE_PROOF_WORK = APPLICATION_ARCHIVE_PROOF_METADATA_WORK + APPLICATION_ARCHIVE_PROOF_BYTES * APPLICATION_ARCHIVE_PROOF_VALIDATION_WORK;
 type ArchiveProofStore = StateView & Pick<Store, "retainedSize" | "retained"> & Pick<SqliteStore, "itemBytes" | "itemPositions">;
 export interface ApplicationArchiveProofExpected { readonly named: string; readonly rules: ScopeRef; readonly directory: ScopeRef; readonly item: number }
 
