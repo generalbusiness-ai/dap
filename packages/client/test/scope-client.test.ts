@@ -1,8 +1,9 @@
 /** The in-memory judge/fold is real; the transport, observation and client clock are deterministic stand-ins. */
 import { expect, test } from "vitest";
 import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
-import { Custody, memoryStore } from "../src/custody.ts";
+import { Custody, identityId, memoryStore } from "../src/custody.ts";
 import { signedIntent } from "../src/intent.ts";
+import { sendableAt } from "../src/originals.ts";
 import { intentMeaning } from "../src/replica.ts";
 import { scopeClient, request, clientReplica, clientIdle, type DraftRead } from "../src/scope-client.ts";
 import { requestScene } from "./request-support.ts";
@@ -156,6 +157,73 @@ function gate() {
   const held = new Promise<void>(done => { release = done; });
   return { started, release, wait: () => { entered(); return held; } };
 }
+
+// Invariant candidate (a5301b54, planner pending): a newer complete post-death proof cannot join a finished absence drain.
+test("a post-death proof arriving at absence handoff ends the signing without another read", async () => {
+  const s = requestScene(), store = memoryStore(), ending = gate(), draft = gate();
+  let now = s.now(), blockDraft = false;
+  // Move the injected clock without firing death/retry timers: only the two explicit reads can supply proofs.
+  s.clock.now = () => now;
+  const { client, who } = clientAt(s, store, { read: async key => {
+    if (blockDraft && key === "later") { blockDraft = false; await draft.wait(); }
+    return null;
+  } });
+  const custody = new Custody(store, () => timeOf(now));
+  const prepare = async (key: string) => {
+    const signed = await signedIntent(s.signer, { to: s.handle.at, kind: "remark", on: 0, fields: { text: key } },
+      { now, idempotencyKey: key, lifetimeSeconds: 60 });
+    await custody.keep({ ...who, key }, intentMeaning(signed.intent), async () => ({
+      binding: { definition: s.handle.definition.name, kind: "remark", declaration: s.handle.digest, pinned: s.handle.digest },
+      envelope: { signed, beside: {} },
+    }), timeOf(now + 30_000));
+    return signed;
+  };
+  s.feed.current(s.scope); await client.read(); await clientIdle(client);
+  const earlier = await prepare("earlier"); now += 30_000;
+  const later = await prepare("later"); await clientIdle(client);
+  s.feed.down(); await clientIdle(client);
+  const earlierIdentity = { ...who, key: "earlier" }, laterIdentity = { ...who, key: "later" };
+  const earlierId = identityId(earlierIdentity), lock = store.lock.bind(store);
+  let blockRelease = true;
+  store.lock = async (id, notAfter) => {
+    const release = await lock(id, notAfter);
+    if (!release) return null;
+    return async () => {
+      await release();
+      // The real absence write and actual unlock completed; only its asynchronous return is held.
+      if (blockRelease && id === earlierId) { blockRelease = false; await ending.wait(); }
+    };
+  };
+  const signs = s.signs(), copies = s.copies.length, head = client.view.head;
+  const reads = s.serving.reads.length;
+  let first: Promise<void> | undefined, second: Promise<void> | undefined;
+  try {
+    now = sendableAt(earlier.intent.notAfter);
+    expect(now).toBeLessThan(sendableAt(later.intent.notAfter));
+    first = client.read(); await ending.started;
+    expect((await custody.find(earlierIdentity))!.phase).toBe("refused");
+    expect((await custody.find(laterIdentity))!.phase).toBe("prepared");
+    // Drain the write's background sync while the first absence drain still awaits its lock-release return.
+    // clientIdle performs no journal read and supplies no absence proof.
+    await clientIdle(client);
+    now = sendableAt(later.intent.notAfter);
+    blockDraft = true; second = client.read(); await draft.started;
+    // These independently gated port settlements create M,Q,E,S,F in the source-derived job table.
+    ending.release(); queueMicrotask(draft.release);
+    await first; await second;
+    // Both read promises settle even when the old owner drops the second proof. Assert before any third trigger.
+    expect(s.serving.reads.slice(reads)).toHaveLength(2);
+    expect([s.signs(), s.copies.length]).toEqual([signs, copies]);
+    expect(client.view.head).toEqual(head);
+    const ended = (await custody.find(laterIdentity))!;
+    expect(ended.phase).toBe("refused");
+    expect(ended.signings.at(-1)!.closed).toBe(true);
+    expect(ended.outcomes.at(-1)).toMatchObject({ unsent: head });
+    expect(await store.unresolved()).toEqual([]);
+  } finally {
+    ending.release(); draft.release(); client.close(); store.lock = lock;
+  }
+});
 
 // Invariant: close at a store await prevents both a new signature and the new custody record.
 test.each(["find", "admission"] as const)("close during %s cannot resume into signing or dispatch", async boundary => {
