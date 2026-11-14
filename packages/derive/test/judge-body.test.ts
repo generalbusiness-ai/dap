@@ -157,7 +157,7 @@ test("self-ref metadata names actual emitted refs without relabeling equal numer
 
 test("the keyless body draws on the same holder account and stops when its request count is empty", () => {
   const definition = valid(changed(works, data => {
-    data.items.job.refs.peer = { fixed: false, required: false, to: { type: "scope", kind: "lane" } };
+    data.items.job.refs = { ...data.items.job.refs, peer: { fixed: false, required: false, to: { type: "scope", kind: "lane" } } };
     data.acts.use = { ...data.acts.again, grant: "works.use", fields: { peer: { type: "scope", kind: "lane", required: true } },
       effects: [{ ref: { slot: "peer", from: { field: "peer" } } }],
       sends: [{ tell: { to: { slot: "peer" }, message: "hello", fields: {}, result: {} } }] };
