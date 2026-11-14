@@ -520,10 +520,12 @@ The client exports the function that computes it.
 type Judged =
   | { is: "recorded"; fact: FactRef }
   | { is: "write"; effects: readonly Effect[] }
-  | { is: "refused-here"; reason: RefusalReason; class: RefusalClass }
-  | { is: "never"; reason: RefusalReason }
+  | { is: "refused-here"; reason: RefusalReason; name?: string; class: Exclude<RefusalClass, "never"> }
+  | { is: "never"; reason: RefusalReason; name?: string }
   | { is: "not-judged" }
 ```
+
+`name` holds the guard's name from the judge's `refused` answer, when present.
 
 The function calls `judgeAct` of `packages/derive` and reads the class
 from RC-1's table. It lives in `packages/client`. It adds nothing to

@@ -241,7 +241,10 @@ export class Replica<D extends DeclaredDefinition> {
     if (this.#stopped) return;
     switch (state.status) {
       case "forbidden": this.#stop({ by: "forbidden" }); return;
-      case "streaming": this.#feed = true; break;
+      case "streaming":
+        this.#feed = true;
+        if (!this.#reading && this.#target > (this.#held.head?.seq ?? -1)) void this.read();
+        break;
       case "current": this.#feed = true; this.#target = Math.max(this.#target, state.snapshot.at.seq); void this.read(); break;
       case "retained":
         if (state.reason === "subscription-ended") this.#feed = false;
