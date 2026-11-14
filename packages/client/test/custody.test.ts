@@ -83,9 +83,9 @@ describe("custody keeps the exact envelope under the caller's key", { timeout: 6
     expect(points).toEqual(["prepared", "sent", "unknown", "accepted"]);
 
     // A throwing observation port cannot replace a completed record or step write.
-    // These are predecessor bytes, not an expected value serialized by this implementation: the NF-3 capture,
-    // run again at the cutover head c38bf62a, before the move, because the cutover changes reference bytes.
-    const golden = readFileSync(new URL("./fixtures/custody-record-v1.json.txt", import.meta.url), "utf8");
+    // These are captured bytes, not an expected value serialized again by this test: the NF-3 scene, captured one time at C1
+    // as version 2. The version 1 bytes of the same scene stay in custody-record-v1.json.txt, read by custody-signings.test.ts.
+    const golden = readFileSync(new URL("./fixtures/custody-record-v2.json.txt", import.meta.url), "utf8");
     let transitions = 0, stepTransitions = 0;
     const memoryRun = goldenRecord(() => memoryStore(), {
       transition: () => { transitions++; throw new Error("TEST observation failure"); },
@@ -106,7 +106,7 @@ describe("custody keeps the exact envelope under the caller's key", { timeout: 6
       expect("lost" in scene.lost).toBe(true);
       expect(scene.copies.map(value => canonicalize(value))).toEqual(Array(3).fill(canonicalize(scene.original.envelope.signed)));
       expect(scene.record).toEqual(JSON.parse(golden));
-      expect([scene.record?.phase, Object.values(scene.record!.steps)[0]?.phase, scene.record?.outcomes.map(value => Object.keys(value).filter(key => key !== "at" && key !== "attempt"))]).toEqual(["accepted", "answered", [["lost"], ["settled"]]]);
+      expect([scene.record?.phase, Object.values(scene.record!.steps)[0]?.phase, scene.record?.outcomes.map(value => Object.keys(value).filter(key => key !== "at" && key !== "attempt" && key !== "signing"))]).toEqual(["accepted", "answered", [["lost"], ["settled"]]]);
     }
     // Format is not a record. Merely constructing the adapter touches nothing.
     const fresh = mkdtempSync(join(tmpdir(), "mcp-format2-")), current = fileStore(fresh);
@@ -577,7 +577,7 @@ describe("custody keeps the exact envelope under the caller's key", { timeout: 6
     // The record is refused; as archival selects it, another process resubmits it: its file now says sent.
     const record = JSON.parse(readFileSync(path, "utf8")) as CustodyRecord;
     interleave = () => writeFileSync(path, canonicalize({ ...record, phase: "sent", attempt: 2 }));
-    await store.write(id, { ...record, phase: "refused", count: 1, outcomes: [{ at: timeOf(T0), answer: refused, attempt: 1 }] });
+    await store.write(id, { ...record, phase: "refused", count: 1, outcomes: [{ at: timeOf(T0), answer: refused, attempt: 1, signing: 0 }] });
     expect(existsSync(path)).toBe(true);
     expect((await store.read(id))!.phase).toBe("sent");
     expect((await store.unresolved()).map((u) => u.key)).toEqual(["refused-one"]);

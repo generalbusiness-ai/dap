@@ -18,7 +18,7 @@ export async function prepareGrowDemo(destination?: string): Promise<string> {
   }
   const config = parseStrictBytes(new Uint8Array(await readFile(join(root, "dap.application.json"))));
   if (!isRecord(config) || !isRecord(config["presentation"]) || !Array.isArray(config["presentation"]["assets"])) throw new Error("The maintained fixture has no package-v2 presentation source.");
-  config["name"] = "ai.generalbusiness.grow-demo"; config["version"] = "1.0.0";
+  config["name"] = "ai.generalbusiness.grow-demo"; config["version"] = "2.0.0";
   config["roles"] = {
     admin: ["grow.climate", "grow.configure", "grow.heat"],
     maintainer: ["grow.apply", "grow.water", "grow.water-more"],
