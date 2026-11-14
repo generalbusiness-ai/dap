@@ -1,0 +1,122 @@
+{
+  "qualification": "Compare-only public TEST preparation, no tracked writes or public packet",
+  "inputHead": "37c1092133c2829a16688f1c595bb0983fc03b70",
+  "inputTree": "dd944b1a3736177809d91cd3e4a8596c0d376095",
+  "result": {
+    "time": "2026-11-14T12:29:06.734405+00:00",
+    "exitCode": 0,
+    "wallSeconds": 2.064650291,
+    "userSeconds": 2.39905,
+    "systemSeconds": 0.41355
+  },
+  "fences": {
+    "time": "2026-11-14T12:29:07.396073+00:00",
+    "sourceToolDependencyFencesEqual": true,
+    "powerStayedACMode0": true,
+    "monitorStopped": true
+  },
+  "powerSamples": 4,
+  "powerLabels": [
+    "before-preflight",
+    "before-invocation",
+    "after-invocation",
+    "terminal"
+  ],
+  "applications": [
+    {
+      "name": "Grow",
+      "version": "2.0.0",
+      "identifiersChanged": false,
+      "coordinates": {
+        "entry": {
+          "old": "sha256:833c0702b5e301cf7cee5f4f354f55f747c5f1830a4a7623afdb94205a46bac5",
+          "candidate": "sha256:833c0702b5e301cf7cee5f4f354f55f747c5f1830a4a7623afdb94205a46bac5",
+          "changed": false
+        },
+        "definitions": {
+          "old": [
+            "sha256:3ea5dcacd1c7a57af0e6e28d2678bf9d159d242ae338eb4eae03c2852edd5d41",
+            "sha256:833c0702b5e301cf7cee5f4f354f55f747c5f1830a4a7623afdb94205a46bac5"
+          ],
+          "candidate": [
+            "sha256:3ea5dcacd1c7a57af0e6e28d2678bf9d159d242ae338eb4eae03c2852edd5d41",
+            "sha256:833c0702b5e301cf7cee5f4f354f55f747c5f1830a4a7623afdb94205a46bac5"
+          ],
+          "changed": false
+        },
+        "semantic": {
+          "old": "sha256:49eddfe2a06f9412ac7ba7551c06e71e1266330cc6e7df094cdd0dd71dae9883",
+          "candidate": "sha256:49eddfe2a06f9412ac7ba7551c06e71e1266330cc6e7df094cdd0dd71dae9883",
+          "changed": false
+        },
+        "presentation": {
+          "old": "sha256:2a3adecf80d11e4734d1b63fc43121e7e73197ee16c3448782cec15e586ef78c",
+          "candidate": "sha256:2a3adecf80d11e4734d1b63fc43121e7e73197ee16c3448782cec15e586ef78c",
+          "changed": false
+        }
+      }
+    },
+    {
+      "name": "Lending",
+      "version": "0.2.0",
+      "identifiersChanged": true,
+      "coordinates": {
+        "entry": {
+          "old": "sha256:0c43dd56cf6d96a8051cbb0386be71737d04925e5db917a7c316c20d660b7993",
+          "candidate": "sha256:0c43dd56cf6d96a8051cbb0386be71737d04925e5db917a7c316c20d660b7993",
+          "changed": false
+        },
+        "definitions": {
+          "old": [
+            "sha256:0c43dd56cf6d96a8051cbb0386be71737d04925e5db917a7c316c20d660b7993"
+          ],
+          "candidate": [
+            "sha256:0c43dd56cf6d96a8051cbb0386be71737d04925e5db917a7c316c20d660b7993"
+          ],
+          "changed": false
+        },
+        "semantic": {
+          "old": "sha256:728a8579d56510e47850da024d44b3f68c4a3f7ba554e10d4d3fba6c0e2c07ca",
+          "candidate": "sha256:728a8579d56510e47850da024d44b3f68c4a3f7ba554e10d4d3fba6c0e2c07ca",
+          "changed": false
+        },
+        "presentation": {
+          "old": "sha256:ed6546a0a2767e22dc3ddc7f352786dac3a1508f95085902fec0f6d772d783ee",
+          "candidate": "sha256:4767d6991f44b9bf6d0b07cbe134faef1cf186351d4997c6d181f806171d731f",
+          "changed": true
+        }
+      }
+    },
+    {
+      "name": "Counter",
+      "version": "0.2.0",
+      "identifiersChanged": true,
+      "coordinates": {
+        "entry": {
+          "old": "sha256:b55824346382d9b158be4cadd9d098008f8129147fba772537778e2f738d5271",
+          "candidate": "sha256:b55824346382d9b158be4cadd9d098008f8129147fba772537778e2f738d5271",
+          "changed": false
+        },
+        "definitions": {
+          "old": [
+            "sha256:b55824346382d9b158be4cadd9d098008f8129147fba772537778e2f738d5271"
+          ],
+          "candidate": [
+            "sha256:b55824346382d9b158be4cadd9d098008f8129147fba772537778e2f738d5271"
+          ],
+          "changed": false
+        },
+        "semantic": {
+          "old": "sha256:a5a44ebcb0b85df701d08edda0ba53c54520eaa808b646635ffa13a1696bf77f",
+          "candidate": "sha256:a5a44ebcb0b85df701d08edda0ba53c54520eaa808b646635ffa13a1696bf77f",
+          "changed": false
+        },
+        "presentation": {
+          "old": "sha256:b72a14f74d04946a4745a6ead257e42ccb120ecc58ea192ff85885eafb7d4d0a",
+          "candidate": "sha256:a3f17a70d49d1f35dcf28c29c6f6021fde067eefae0ab8b20527b0b445f8cfc1",
+          "changed": true
+        }
+      }
+    }
+  ]
+}
