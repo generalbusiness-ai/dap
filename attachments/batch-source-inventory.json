@@ -1,0 +1,420 @@
+{
+  "qualification": "SOURCE INVENTORY ONLY, not a DEV plan/grant/fence/evidence artifact. No new tests, compilers, copies or merges performed to build this reference. PG1/CTL1 DEV statuses come only from ordinary source checkpoints and are not evidence.",
+  "mainObserved": "918ce5d73c215154d88005b74c2a97b58d61880a",
+  "parts": [
+    {
+      "part": "PG1",
+      "source": "4ac923936a6ee884bec2408902b608f981124a51",
+      "tree": "384fd3c0a7dbcbad8b8bcbf5b36ec344610c98f7",
+      "worktree": "/Users/hughpyle/play/artroom/.builder-worktrees/pg1-prediction-grant-20261113",
+      "dirty": "",
+      "mergeBaseCurrentMain": "694a8c7f83deedb4e8d34706c51203029726121a",
+      "ownedCommitsOldestFirst": [
+        "b76871b3df55fbfa5a0883947d45df9721daedac PG-1: export predictionGrant, a typed stand-in grant for prediction",
+        "a87d68ee1c858b2ceb49f6ee0f3fa50f39cd6d98 PG-1: fixtures take grantOf from predictionGrant; witness the prediction",
+        "fb25b8ba7aa69b19428e69a774f666a4b4e6905f PG-1: implementation note with the kernel-review facts",
+        "4ac923936a6ee884bec2408902b608f981124a51 Clarify prediction grant authority and witness limits"
+      ],
+      "excludedDependencyMergeCommits": [
+        "379d7be9efe3264fb5404a90c0939899bb14ffa3 Merge reviewed item-effect and genesis guards into PG-1",
+        "1358432e98a82ee45ed1248cc57f7ab536061172 Merge reviewed main into PG-1",
+        "b64c238adfbe0a75ad7461516a87a5abb1bf5645 Merge CF-1 main into PG-1"
+      ],
+      "files": [
+        "A\tnotes/implementation/2026-11-13-pg1-prediction-grant.md",
+        "M\tpackages/derive/README.md",
+        "M\tpackages/derive/src/grant.ts",
+        "M\tpackages/derive/test/fixtures.ts",
+        "A\tpackages/derive/test/prediction-grant.test.ts"
+      ],
+      "compilerContexts": [
+        "packages/derive/tsconfig.json",
+        "packages/derive/tsconfig.test.json"
+      ],
+      "changedTestOwners": [
+        "packages/derive/test/prediction-grant.test.ts"
+      ],
+      "supportFixtureConsumers": [],
+      "lockSha256": "f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54",
+      "dependencyRootPresent": true,
+      "dependencyRootOwned": true,
+      "stamp": "f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54",
+      "overlapCurrentMain": [],
+      "overlapNF5": [],
+      "devStatus": "compiled; changed owner passed DEV (not evidence)",
+      "devOwnerCases": 3,
+      "minimumDevReference": {
+        "compilers": [
+          "node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.json",
+          "node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.test.json"
+        ],
+        "test": "node scripts/cloudflare-pool-compat.mjs; node node_modules/vitest/vitest.mjs run --config vitest.plain.config.ts --project derive packages/derive/test/prediction-grant.test.ts",
+        "status": "Completed once as ordinaryDEV, compiled/3casespassed; not evidence"
+      }
+    },
+    {
+      "part": "H1LV1",
+      "source": "215b907db9ee2428ba45b8aae84494ccea765adc",
+      "tree": "a73e5c1d6a1ba66f7a709d67a329accf3ea6ba78",
+      "worktree": "/Users/hughpyle/play/artroom/.builder-worktrees/h1-sequenced-level-20261113",
+      "dirty": "",
+      "mergeBaseCurrentMain": "694a8c7f83deedb4e8d34706c51203029726121a",
+      "ownedCommitsOldestFirst": [
+        "c3aa60e5aa228ad77f413f2c8c97a3c1ee1223b0 H1: contract types of the sequenced level, the kind order and platform:order",
+        "5f1ba4b1ba82977f1364d31ef962473182b95d54 H1: validateFormat1 admits sequenced version 1, with corpus rows and refusal pairs",
+        "bb6e9128a0ea4d5740d37df90124880a17462644 H1: builders of the sequenced level in define",
+        "13c9272f15e618ab767cd117b7dac14ec854ea28 H1: the read operand has no part, and read.ts holds no reason-code TODO",
+        "25799a27c9444dd40d44bfc38b6d546c4b6d763e H1: the sequenced note takes the ruled reason codes, and an H1 implementation note",
+        "1d1f54b378dea3a8dc9005ab8bccde50cfd591ec Admit live v1 forms and stop its fold after confirmation",
+        "935ccc4b402a01192e5c930a1843075590ca19dc Record H1 and LV1 focused evidence",
+        "215b907db9ee2428ba45b8aae84494ccea765adc Qualify historical H1 and LV1 evidence"
+      ],
+      "excludedDependencyMergeCommits": [
+        "ca476feea96a7de762a9e3a6146636ea7a8faba4 Merge reviewed item-effect and genesis guards into H1 and LV1",
+        "b9ea81d75ac85bd20e5b01d57436d8b81e7a227f Merge reviewed main into H1 and LV1",
+        "2ca131acee5aa12e6d33537b29e3149adf6dbf65 Merge CF-1 main into H1"
+      ],
+      "files": [
+        "M\tapps/room/page/assets.ts",
+        "M\tnotes/2026-10-18-sequenced-level-and-order-scope.md",
+        "M\tnotes/2026-11-10-live-level.md",
+        "A\tnotes/implementation/2026-11-13-h1-sequenced-contract.md",
+        "A\tnotes/implementation/2026-11-14-h1-lv1-progress.md",
+        "A\tnotes/implementation/evidence/2026-11-14-h1-lv1-focused.manifest.json",
+        "A\tnotes/implementation/evidence/2026-11-14-h1-lv1-progress.manifest.json",
+        "M\tpackages/bytes/src/ids.ts",
+        "M\tpackages/bytes/src/records.ts",
+        "M\tpackages/bytes/src/retained-key.ts",
+        "M\tpackages/contract/src/definition.ts",
+        "M\tpackages/contract/src/entry.ts",
+        "M\tpackages/contract/src/read.ts",
+        "M\tpackages/contract/src/scope.ts",
+        "M\tpackages/define/src/index.ts",
+        "M\tpackages/define/test/contract-forms.test.ts",
+        "A\tpackages/define/test/sequenced.test.ts",
+        "M\tpackages/derive/src/capability.ts",
+        "M\tpackages/derive/src/fold.ts",
+        "M\tpackages/derive/src/operand.ts",
+        "M\tpackages/derive/src/program/effect-plan.ts",
+        "M\tpackages/derive/src/program/read-value.ts",
+        "M\tpackages/derive/src/program/reads.ts",
+        "M\tpackages/derive/src/program/requirements.ts",
+        "M\tpackages/derive/src/validate/capability.ts",
+        "M\tpackages/derive/src/validate/context.ts",
+        "M\tpackages/derive/src/validate/fields.ts",
+        "M\tpackages/derive/src/validate/format-1.ts",
+        "M\tpackages/derive/src/validate/guards.ts",
+        "M\tpackages/derive/src/validate/handlers.ts",
+        "M\tpackages/derive/src/validate/operands.ts",
+        "M\tpackages/derive/src/validate/sends.ts",
+        "M\tpackages/derive/src/validate/shape.ts",
+        "M\tpackages/derive/test/definition-corpus/coverage.md",
+        "M\tpackages/derive/test/definition-corpus/index.ts",
+        "A\tpackages/derive/test/definition-corpus/live-data.ts",
+        "A\tpackages/derive/test/definition-corpus/live-variants.ts",
+        "A\tpackages/derive/test/definition-corpus/sequenced-data.ts",
+        "A\tpackages/derive/test/definition-corpus/sequenced-variants.ts",
+        "M\tpackages/derive/test/definition-corpus/validate-table-data.ts",
+        "A\tpackages/derive/test/forms-live.test.ts",
+        "A\tpackages/derive/test/forms-sequenced.test.ts",
+        "M\tpackages/platform/src/application-codec/application-projection.ts",
+        "M\tpackages/replay/src/verify.ts",
+        "M\tpackages/replay/test/archive-git-fixture.ts",
+        "A\tpackages/scope/test/live-creation.test.ts",
+        "M\tscripts/security-entry-points.test.mjs"
+      ],
+      "compilerContexts": [
+        "packages/bytes/tsconfig.json",
+        "packages/bytes/tsconfig.test.json",
+        "packages/contract/tsconfig.json",
+        "packages/define/tsconfig.json",
+        "packages/define/tsconfig.test.json",
+        "packages/derive/tsconfig.json",
+        "packages/derive/tsconfig.test.json",
+        "packages/platform/tsconfig.json",
+        "packages/platform/tsconfig.test.json",
+        "packages/replay/tsconfig.json",
+        "packages/replay/tsconfig.node.json",
+        "packages/replay/tsconfig.test.json",
+        "apps/room/page/tsconfig.json",
+        "apps/room/page/tsconfig.test.json",
+        "apps/room/page/tsconfig.scope.json",
+        "packages/scope/tsconfig.json",
+        "packages/scope/tsconfig.test.json",
+        "packages/scope/test/support/tsconfig.node.json"
+      ],
+      "changedTestOwners": [
+        "packages/define/test/contract-forms.test.ts",
+        "packages/define/test/sequenced.test.ts",
+        "packages/derive/test/forms-live.test.ts",
+        "packages/derive/test/forms-sequenced.test.ts",
+        "packages/scope/test/live-creation.test.ts",
+        "scripts/security-entry-points.test.mjs"
+      ],
+      "supportFixtureConsumers": [
+        "packages/derive/test/definition-corpus.test.ts",
+        "packages/derive/test/program-structure.test.ts",
+        "packages/derive/test/validate.test.ts",
+        "packages/replay/test/archive-git.test.ts",
+        "packages/replay/test/clone-audit.test.ts"
+      ],
+      "lockSha256": "f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54",
+      "dependencyRootPresent": true,
+      "dependencyRootOwned": true,
+      "stamp": "5a717d43fd1c1c54bb029db4067806940b640f60e320c9ebe33fe099dfd2e73c",
+      "overlapCurrentMain": [
+        "scripts/security-entry-points.test.mjs"
+      ],
+      "overlapNF5": [],
+      "devStatus": "not compiled for current checkpoint; changed owners not run DEV in this coordination",
+      "dependencyCaveat": "Original owned view has mismatching stale5a717 stamp. Preserve it. Integration prepares a fresh same-source worktree from authentic C1 f288 view; await exact readiness.",
+      "minimumDevReference": {
+        "compilers": "The18listed configs are the declared typecheck contexts of bytes,contract,define,derive,platform,replay,page,scope; use each once in a ready same-source worktree",
+        "plain": "node scripts/cloudflare-pool-compat.mjs; node node_modules/vitest/vitest.mjs run --config vitest.plain.config.ts packages/define/test/contract-forms.test.ts packages/define/test/sequenced.test.ts packages/derive/test/forms-live.test.ts packages/derive/test/forms-sequenced.test.ts packages/derive/test/definition-corpus.test.ts packages/derive/test/program-structure.test.ts packages/derive/test/validate.test.ts packages/replay/test/archive-git.test.ts packages/replay/test/clone-audit.test.ts",
+        "native": "node node_modules/vitest/vitest.mjs run --config vitest.config.ts --project scope packages/scope/test/live-creation.test.ts",
+        "node": "node --test scripts/security-entry-points.test.mjs",
+        "qualification": "Changed declarations plus direct changed-fixture consumers; no whole suite or gate proposed as DEV"
+      },
+      "freshSameSourceWorktree": {
+        "path": "/Users/hughpyle/play/artroom/.builder-worktrees/h1-lv1-owned-deps-20261114",
+        "branch": "builder/h1-lv1-owned-deps-20261114",
+        "head": "215b907db9ee2428ba45b8aae84494ccea765adc",
+        "tree": "a73e5c1d6a1ba66f7a709d67a329accf3ea6ba78",
+        "targetLock": "f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54",
+        "dependencyState": "ABSENT; integration confirmed copy has not begun; do not mark ready"
+      }
+    },
+    {
+      "part": "HL1",
+      "source": "6811566e708a1a35bed8e44ac14476b833596ae8",
+      "tree": "9a3b6be59e5c6ab20cd6bc7afc287cdad6bc3d42",
+      "worktree": "/Users/hughpyle/play/artroom/.builder-worktrees/hl1-unrun-tests-20261113",
+      "dirty": "",
+      "mergeBaseCurrentMain": "694a8c7f83deedb4e8d34706c51203029726121a",
+      "ownedCommitsOldestFirst": [
+        "10edae557342b2abb2b1040a4c8e4f1c8b7b70c4 Gate test selection: run j5, list exclusions, and fail on an unselected test file",
+        "2f2afca7e01c81c8f104c2437d921df77d47f602 Repair HL-1 fixture startup and retire unused browser modules",
+        "0f7ca4aa2c02e74e445eb16abb4c42e6cd18b516 Retire the unused demo Git host creation path",
+        "6811566e708a1a35bed8e44ac14476b833596ae8 Await views fixture children before shared cleanup"
+      ],
+      "excludedDependencyMergeCommits": [
+        "2043de70479838fcee896e3f7594cc03da3f67cb Merge reviewed item-effect and genesis guards into HL-1",
+        "0acd46c25c2918569404f22b5c153d1f0d557c48 Merge reviewed main into HL-1",
+        "8345b3cd8c9f0251c97ad7406f2127ef8129722a Merge CF-1 main into HL-1"
+      ],
+      "files": [
+        "D\tapps/counter/browser/storage.browser.test.ts",
+        "M\tapps/views/test/two-process.test.mjs",
+        "M\tdocs/testing-reference.md",
+        "M\texamples/lending/README.md",
+        "D\texamples/lending/browser/storage.browser.test.ts",
+        "A\tnotes/implementation/2026-11-13-hl1-unrun-tests.md",
+        "A\tnotes/implementation/2026-11-14-hl1-followups.md",
+        "D\tscripts/demo-git-host.mjs",
+        "D\tscripts/demo-git-host.test.mjs",
+        "A\tscripts/test-selection.test.mjs",
+        "M\tscripts/test.mjs"
+      ],
+      "compilerContexts": [
+        "apps/counter/browser/tsconfig.json",
+        "examples/lending/browser/tsconfig.json",
+        "apps/views/tsconfig.json"
+      ],
+      "changedTestOwners": [
+        "scripts/test-selection.test.mjs",
+        "apps/views/test/two-process.test.mjs"
+      ],
+      "supportFixtureConsumers": [
+        "apps/views/test/j5.test.mjs",
+        "scripts/test.test.mjs"
+      ],
+      "lockSha256": "f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54",
+      "dependencyRootPresent": true,
+      "dependencyRootOwned": true,
+      "stamp": "f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54",
+      "overlapCurrentMain": [
+        "scripts/test.mjs"
+      ],
+      "overlapNF5": [
+        "apps/counter/browser/storage.browser.test.ts",
+        "examples/lending/README.md",
+        "examples/lending/browser/storage.browser.test.ts"
+      ],
+      "devStatus": "not compiled for current checkpoint; changed owners not run DEV in this coordination",
+      "minimumDevReference": {
+        "compilers": [
+          "node node_modules/typescript/bin/tsc -p apps/counter/browser/tsconfig.json",
+          "node node_modules/typescript/bin/tsc -p examples/lending/browser/tsconfig.json",
+          "node node_modules/typescript/bin/tsc -p apps/views/tsconfig.json"
+        ],
+        "test": "node scripts/cloudflare-pool-compat.mjs; node --test scripts/test-selection.test.mjs apps/views/test/two-process.test.mjs apps/views/test/j5.test.mjs scripts/test.test.mjs",
+        "qualification": "Browser contexts cover remaining files after two TS-test removals; views context covers src, not changedMJS, so real Node owners remain necessary. test-selection itself calls Vitest list as its actual owner behavior."
+      }
+    },
+    {
+      "part": "CUTA2",
+      "source": "41ce712b5a4ea1add59c983af277f3b6de5d6646",
+      "tree": "ff6a0441962c011601688d257e8429c5ae3014c8",
+      "worktree": "/Users/hughpyle/play/artroom/.builder-worktrees/cut-a2-register-choice-20261114",
+      "dirty": "",
+      "mergeBaseCurrentMain": "bc79b6aabb24d98e5e379fd5006de6ee9464682f",
+      "ownedCommitsOldestFirst": [
+        "41ce712b5a4ea1add59c983af277f3b6de5d6646 Require an explicit register-root retention choice"
+      ],
+      "excludedDependencyMergeCommits": [],
+      "files": [
+        "M\tdocs/deploy.md",
+        "M\tscripts/register-values.mjs",
+        "M\tscripts/register-values.test.mjs"
+      ],
+      "compilerContexts": [],
+      "changedTestOwners": [
+        "scripts/register-values.test.mjs"
+      ],
+      "supportFixtureConsumers": [],
+      "lockSha256": "f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54",
+      "dependencyRootPresent": false,
+      "dependencyRootOwned": false,
+      "stamp": null,
+      "overlapCurrentMain": [],
+      "overlapNF5": [],
+      "devStatus": "not compiled for current checkpoint; changed owners not run DEV in this coordination",
+      "dependencyCaveat": "No local node_modules. Real Node tests lazily require tsx/esm/api and production TS validators; must provide an owned view, not ancestor main dependency resolution.",
+      "minimumDevReference": {
+        "test": "node --test scripts/register-values.test.mjs",
+        "compiler": "No owning TS context for changedMJS: scripts/tsconfig.json excludes these files. Real Node owner parses them and loads productionTS validators through tsx; requires local owned dependencies."
+      }
+    },
+    {
+      "part": "CTL1",
+      "source": "0333afcf9bdcc64842a6783bf7c4df1c97f7b947",
+      "tree": "c385a2ba6a7107c922b6c34e14be80132abf8d35",
+      "worktree": "/Users/hughpyle/play/artroom/.builder-worktrees/ctl1-promise-assertions-20261114",
+      "dirty": "",
+      "mergeBaseCurrentMain": "918ce5d73c215154d88005b74c2a97b58d61880a",
+      "ownedCommitsOldestFirst": [
+        "974725c8495eba33ff5445ea3cd2b66bf454d830 Recognize Vitest promise assertion failures before truncation",
+        "0333afcf9bdcc64842a6783bf7c4df1c97f7b947 Keep full promise payloads in control fixtures"
+      ],
+      "excludedDependencyMergeCommits": [],
+      "files": [
+        "M\tdocs/testing.md",
+        "M\tscripts/control.mjs",
+        "M\tscripts/control.test.mjs"
+      ],
+      "compilerContexts": [],
+      "changedTestOwners": [
+        "scripts/control.test.mjs"
+      ],
+      "supportFixtureConsumers": [],
+      "lockSha256": "f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54",
+      "dependencyRootPresent": true,
+      "dependencyRootOwned": true,
+      "stamp": "f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54",
+      "overlapCurrentMain": [],
+      "overlapNF5": [],
+      "devStatus": "compiled; changed owner passed DEV (not evidence)",
+      "devOwnerCases": 8,
+      "publication": "Local only; push stopped after two rejections. Root coordinates authorization; no alternate export or batch merge yet.",
+      "minimumDevReference": {
+        "syntax": [
+          "node --check scripts/control.mjs",
+          "node --check scripts/control.test.mjs"
+        ],
+        "test": "node --test scripts/control.test.mjs",
+        "status": "Reported completed ordinaryDEV at0333afcf,8casespassed; not evidence"
+      }
+    }
+  ],
+  "pairwiseNonNoteOverlaps": [
+    {
+      "parts": [
+        "PG1",
+        "H1LV1"
+      ],
+      "files": []
+    },
+    {
+      "parts": [
+        "PG1",
+        "HL1"
+      ],
+      "files": []
+    },
+    {
+      "parts": [
+        "PG1",
+        "CUTA2"
+      ],
+      "files": []
+    },
+    {
+      "parts": [
+        "PG1",
+        "CTL1"
+      ],
+      "files": []
+    },
+    {
+      "parts": [
+        "H1LV1",
+        "HL1"
+      ],
+      "files": []
+    },
+    {
+      "parts": [
+        "H1LV1",
+        "CUTA2"
+      ],
+      "files": []
+    },
+    {
+      "parts": [
+        "H1LV1",
+        "CTL1"
+      ],
+      "files": []
+    },
+    {
+      "parts": [
+        "HL1",
+        "CUTA2"
+      ],
+      "files": []
+    },
+    {
+      "parts": [
+        "HL1",
+        "CTL1"
+      ],
+      "files": []
+    },
+    {
+      "parts": [
+        "CUTA2",
+        "CTL1"
+      ],
+      "files": []
+    }
+  ],
+  "integrationRule": "Merge only after root names actual R2 Grow main; preserve original branches/evidence; never replay old dependency merges as feature commits.",
+  "packedInputs": {
+    "normalPath": [
+      "examples/grow/prepare-demo.ts -> prepare-check.ts",
+      "packages/cli/src/application-files.ts -> derive.validateDefinition",
+      "packages/cli/src/application-browser.ts -> esbuild browser entry imports",
+      "packages/cli/test/application-release-reproduction.test.ts"
+    ],
+    "potentialPackedClosureChanges": [
+      "PG1 derive/grant.ts is exported from derive and may reach preparation/browser imports; actual byte effect uncomputed",
+      "H1LV1 changes bytes/contract/define/derive/platform/replay shared code used by validation, codecs or browser imports; all three identifier sets require actual normal comparison; no Grow-equality inference"
+    ],
+    "noDirectConfiguredPackInputs": [
+      "HL1 test selection/fixtures/deleted unselected browser tests",
+      "CUTA2 register/deployment helper and docs",
+      "CTL1 control helper/owner/testing docs"
+    ],
+    "standingPolicy": "119140cd: same-head normal-path identifier reproduction/refresh for actual packed-byte changes. Grow2.0.0 is public; any actual changed Grow identifiers stop for planner version/signing disposition. Counter/Lending remain0.2.0 before first signing; keep immutable earlier Grow packet/codec constants. No comparison, generation, refresh or signing performed."
+  }
+}
