@@ -3,6 +3,10 @@
 Planner ruling `7bf2c93b` (HL-1). Builder act `e1844d08` lists the tracked
 test files that no gate step ran at `65ade11a`.
 
+This note records the original HL-1 checkpoint. The
+[14 November follow-up](2026-11-14-hl1-followups.md) records later source
+repairs and the checks still owed.
+
 ## What changed
 
 `scripts/test.mjs` exports `nodeFiles` and a new `excludedTests` list. Each

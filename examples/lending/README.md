@@ -86,7 +86,7 @@ previously observed staff role has changed.
 | `browser/storage.ts` | This origin's private storage: the device key, the seat (this member's item in membership), and the kept requests, in IndexedDB under a Web Lock. |
 | `browser/main.ts`, `index.html`, `style.css` | The screens: join, the shelf, donate, borrow, return, cancel, the kept request, each page's text, and the journal. |
 | `dap.application.json` | Builds the signed package, including browser source, ordinary assets, native definition, default roles, and local scenarios. The host serves its exact installed presentation. |
-| `browser/model.test.ts`, `browser/custody.test.ts`, `browser/publication.test.ts`, `browser/storage.browser.test.ts` | Tests of the model, the custody, the published-page comparison, and the browser storage. |
+| `browser/model.test.ts`, `browser/custody.test.ts`, `browser/publication.test.ts` | Tests of the model, the custody, and the published-page comparison. |
 | `runbook.md` | Current publication-room provisioning, preserved rehearsal, and incomplete six-output observation ledger. |
 | `demo-script.md` | The script for the recording. |
 | `definition.test.ts` | Plain-function tests: the bytes and the pin, the story of Nasruddin and the pot with the page each act sends, shelf paths, and the bounds. Grants are scripted. |

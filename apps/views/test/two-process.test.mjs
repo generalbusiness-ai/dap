@@ -28,18 +28,28 @@ const item = (id, type, state, values = {}, refs = {}, parties = {}) => ({ id, t
 /** One process's stdio, with the requests of the desktop app's client. */
 function server(home, brief) {
   const child = spawn(process.execPath, ['--import', 'tsx', 'apps/views/src/node.ts', '--brief', brief], { cwd: ROOT, env: { ...process.env, DAP_HOME: home }, stdio: ['pipe', 'pipe', 'pipe'] });
-  const waiting = new Map(); let buffer = '', errors = '', next = 0;
-  child.stderr.on('data', data => { errors += data; });
+  const waiting = new Map(); let buffer = '', errors = '', next = 0, ended = null;
+  const fail = failure => {
+    ended ??= failure;
+    for (const pending of waiting.values()) { clearTimeout(pending.timer); pending.reject(ended); }
+    waiting.clear();
+  };
+  child.once('error', failure => fail(failure));
+  child.once('close', (code, signal) => fail(Error(`The views process closed (${signal ?? code}). ${errors.slice(-400)}`)));
+  child.stdin.on('error', failure => fail(failure));
+  child.stderr.on('data', data => { errors = (errors + data).slice(-4096); });
   child.stdout.on('data', data => {
     buffer += data;
     for (let at = buffer.indexOf('\n'); at >= 0; at = buffer.indexOf('\n')) {
       const message = JSON.parse(buffer.slice(0, at)); buffer = buffer.slice(at + 1);
-      waiting.get(message.id)?.(message); waiting.delete(message.id);
+      const pending = waiting.get(message.id);
+      if (pending) { clearTimeout(pending.timer); waiting.delete(message.id); pending.resolve(message); }
     }
   });
   const request = (method, params = {}) => new Promise((resolve, reject) => {
-    const id = ++next, timer = setTimeout(() => reject(Error(`${method}: no answer. ${errors.slice(-400)}`)), 30_000);
-    waiting.set(id, message => { clearTimeout(timer); resolve(message); });
+    if (ended) { reject(ended); return; }
+    const id = ++next, timer = setTimeout(() => { waiting.delete(id); reject(Error(`${method}: no answer. ${errors.slice(-400)}`)); }, 30_000);
+    waiting.set(id, { resolve, reject, timer });
     child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id, method, params })}\n`);
   });
   return {
@@ -94,7 +104,9 @@ async function room(t) {
   t.after(() => new Promise(resolve => { http.closeAllConnections(); http.close(resolve); }));
   const service = `http://127.0.0.1:${http.address().port}`, store = fileStore(home);
   await store.keep('operator', SECRET);
-  await store.save({ v: 2, service, register: peer.register ?? { scope: 'sc_test', genesis: textDigest('TEST register genesis') }, key: 'operator', handle: '@rita', repository: peer.config().repository });
+  // This application opens an existing room. Its optional installation register is absent,
+  // rather than the old invalid `sc_test` fallback that fileStore.config must refuse.
+  await store.save({ v: 2, service, key: 'operator', handle: '@rita', repository: peer.config().repository });
   const file = join(home, 'brief.txt'); writeFileSync(file, BRIEF);
   const pair = [server(home, file), server(home, file)];
   t.after(() => { for (const process_ of pair) process_.stop(); });

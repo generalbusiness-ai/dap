@@ -38,6 +38,7 @@ export const nodeFiles = [
   'apps/views/test/s4.test.mjs',
   'apps/views/test/decision.test.mjs',
   'apps/views/test/j5.test.mjs',
+  'apps/views/test/two-process.test.mjs',
   'apps/room/page/test/row-press-probe.test.mjs',
   'apps/jam/test/managed-assets.test.mjs',
   'scripts/test.test.mjs',
@@ -58,10 +59,7 @@ export const excludedTests = [
   { file: 'apps/room/celld/mac/test/certificate.test.mjs', reason: 'scripts/mac-host-kit.test.mjs runs it as a child, on Darwin only' },
   { file: 'apps/room/celld/mac/test/prepare-github.test.mjs', reason: 'scripts/mac-host-kit.test.mjs runs it as a child, on Darwin only' },
   { file: 'apps/room/celld/mac/test/prepare-project.test.mjs', reason: 'scripts/mac-host-kit.test.mjs runs it as a child, on Darwin only' },
-  { file: 'apps/counter/browser/storage.browser.test.ts', reason: 'browser witness module with no test cases, and no runner calls it' },
-  { file: 'examples/lending/browser/storage.browser.test.ts', reason: 'browser witness module with no test cases, and no runner calls it' },
-  { file: 'apps/views/test/two-process.test.mjs', reason: 'fails: each case times out waiting for the initialize answer' },
-  { file: 'scripts/demo-git-host.test.mjs', reason: 'fails: needs the tsx loader, and with it fails on invalid-register-receipt' },
+  { file: 'scripts/demo-git-host.test.mjs', reason: 'pending planner request 39a9f638: the demo helper still checks obsolete ScopeRef kind fields' },
 ];
 
 // Fixed production argv. The exported runner below accepts tiny commands only
