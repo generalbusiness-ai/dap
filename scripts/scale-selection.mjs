@@ -64,6 +64,7 @@ const protectedFiles = new Set([
   "packages/platform/src/application-codec/application-package-v2.ts",
   "packages/cli/src/archive-remote.ts", "packages/cli/src/clone-outcome.ts",
   "packages/cli/src/command-repository.ts", "packages/cli/src/command-change.ts",
+  "packages/scope/src/worker.ts",
   "packages/scope/src/object.ts", "packages/scope/src/stage-snapshot.ts",
   "packages/scope/src/destination-host.ts", "packages/checkers/src/service.ts",
   "packages/checkers/src/reservation-snapshot.ts", "packages/checkers/src/job.ts",

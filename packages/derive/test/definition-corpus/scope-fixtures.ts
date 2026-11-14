@@ -104,7 +104,7 @@ export const scopeFixtureDefinitions: readonly DefinitionCorpusRow[] = [
   ...native("Scope/compose whole desk", ["packages/scope/test/compose.test.ts#directory whole-scope"],
     () => scopeData(desk, composeWholeDeskChange({ digest: definitionDigest(ticket) }, { digest: definitionDigest(wholeTicket()) }))),
   ...([
-    ["kept commitment5000", "floor-kept-scale.test.ts#definition", floorKeptChange],
+    ["kept commitment5000", "floor-kept.test.ts#definition", floorKeptChange],
     ["monotonic references", "floor-monotonic.test.ts#definition", floorMonotonicChange],
     ["request receiver", "floor-requests.test.ts#receiverDefinition at both request witnesses", floorReceiverChange],
     ["request sender", "floor-requests.test.ts#senderDefinition at both request witnesses", floorSenderChange],

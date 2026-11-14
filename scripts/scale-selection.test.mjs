@@ -87,9 +87,9 @@ test("runtime families and their test owners select scale with literal full path
 test("GS1 moved Native cases, their fixtures and actual production boundaries select scale", () => {
   for (const path of [
     "packages/contract/src/bounds.ts",
-    "packages/cli/test/fixed-slot-membership-scale.scope.test.ts", "packages/scope/test/floor-kept-scale.test.ts",
-    "apps/room/lanes/test/directory-partition-capacity-scale.scope.test.ts",
-    "apps/room/lanes/test/certified-rules-hardening-budget-scale.scope.test.ts",
+    "packages/cli/test/fixed-slot-membership.scope.test.ts", "packages/scope/test/floor-kept.test.ts",
+    "apps/room/lanes/test/directory-partition-capacity.scope.test.ts",
+    "apps/room/lanes/test/certified-rules-hardening-budget.scope.test.ts",
     "packages/scope/test/archive-installed-scale.test.ts", "packages/scope/test/evidence-rules-real-scale.test.ts",
     "apps/room/lanes/test/directory-partition-lanes-scale.scope.test.ts",
     "apps/room/lanes/test/manifest-tree-scale.scope.test.ts", "apps/room/lanes/test/demo-scale.scope.test.ts",
@@ -137,6 +137,7 @@ test("GS1 moved Native cases, their fixtures and actual production boundaries se
     "packages/platform/src/application-codec/application-package-v2.ts",
  "packages/cli/src/archive-remote.ts",
     "packages/cli/src/clone-outcome.ts", "packages/cli/src/command-repository.ts", "packages/cli/src/command-change.ts",
+    "packages/scope/src/worker.ts",
     "packages/scope/src/object.ts", "packages/scope/src/stage-snapshot.ts", "packages/scope/src/destination-host.ts",
     "packages/checkers/src/service.ts", "packages/checkers/src/reservation-snapshot.ts", "packages/checkers/src/job.ts",
     "scripts/demo/rehearse.ts", "packages/scope/src/artifacts-wiring.ts", "packages/scope/src/github-wiring.ts",

@@ -14,7 +14,7 @@ const sourceDefinitions = [
   ["changeDemo", changeDemo, DEMO_DIGESTS.change], ["issueDemo", issueDemo, DEMO_DIGESTS.issue],
   ["change3", change3, MANIFEST_DIGESTS.change], ["changeDemo3", changeDemo3, MANIFEST_DIGESTS.demo],
 ] as const;
-const directoryOrigins = ["directory-partition-capacity-scale.scope.test.ts", "directory-partition-success-capacity.scope.test.ts", "directory-partition-handoff.scope.test.ts"];
+const directoryOrigins = ["directory-partition-capacity.scope.test.ts", "directory-partition-success-capacity.scope.test.ts", "directory-partition-handoff.scope.test.ts"];
 export const laneApplicationDefinitions: readonly DefinitionCorpusRow[] = [
   ...(["issue", "change"] as const).flatMap(name => Object.entries(laneShapeBounds[name]).map(([bound, value]) => ({
     name: `lanes/shape-bound/${name}/${bound}=${value}`,

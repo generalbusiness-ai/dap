@@ -98,7 +98,9 @@ source audit `1e47c170ac6de80f0ca19adbcb81cd63b4078fbf`. The head
 moves exactly the 16 cases below. It keeps the other 39 final cases from
 the nine original owners ordinary, including the optional demo recorder.
 Five mixed owners now share fixtures between separate ordinary and scale
-registration entry points. The Grow production producer and public-command
+registration entry points. The four sole-case owners keep their original
+paths and source bytes. Scale membership moves their cases under planner
+ruling `e8edea0d`. The Grow production producer and public-command
 follower keep their loop-local `retainedCommand` and their relative order.
 No callback, assertion, data row or deadline changes. The three lane fixtures
 use the `.scope.fixture.ts` suffix and stay outside the plain Node test
@@ -152,7 +154,7 @@ the omission rule. Existing archive, floor and directory prefix rules stay.
 | G15 capture bound | `packages/contract/src/bounds.ts`, `packages/platform/src/destination-budget-v15.ts`, `packages/platform/src/destination-v15.ts`, `packages/platform/src/destination.ts`, `packages/platform/src/rules-certificate-v15.ts`, `packages/platform/src/rules-policy-v11.ts` |
 | G17 evidence/hold/timeout/ordering | `packages/platform/src/destination-evidence-v17.ts`, `packages/platform/src/evidence-index-v17.ts`, `packages/platform/src/evidence-decision-v17.ts`, `packages/platform/src/evidence-holds-v17.ts`, `packages/platform/src/destination-evidence-capacity-v17.ts`, `packages/platform/src/destination-evidence-funding-v17.ts`, `packages/platform/src/reservation-v17.ts`, `packages/platform/src/destination-v17.ts`, `packages/platform/src/evidence-incident-origin-v17.ts`, `packages/derive/src/fold.ts`, `packages/scope/src/operations.ts`, `packages/scope/src/sqlite.ts` |
 | Current Grow archive closure/CLI | `packages/scope/src/archive*`, `packages/replay/src/archive.ts`, `packages/platform/src/archive-binding.ts`, `packages/platform/src/archive-replay-code.ts`, `packages/scope/src/native-birth.ts`, `apps/room/archive.ts`, `apps/room/archive-policy.ts`, `packages/cli/src/archive-remote.ts`, `packages/cli/src/clone-outcome.ts`, `packages/cli/src/command-repository.ts` |
-| Manifest publication and checker | `packages/cli/src/command-change.ts`, `packages/platform/src/destination.ts`, `packages/platform/src/reservation.ts`, `packages/scope/src/object.ts`, `packages/scope/src/stage-snapshot.ts`, `packages/scope/src/destination-host.ts`, `packages/checkers/src/service.ts`, `packages/checkers/src/reservation-snapshot.ts`, `packages/checkers/src/job.ts`, `packages/scope/src/operations.ts`, `packages/scope/src/sqlite.ts` |
+| Manifest publication and checker | `packages/scope/src/worker.ts` (`snapshotReaderOf`), `packages/cli/src/command-change.ts`, `packages/platform/src/destination.ts`, `packages/platform/src/reservation.ts`, `packages/scope/src/object.ts`, `packages/scope/src/stage-snapshot.ts`, `packages/scope/src/destination-host.ts`, `packages/checkers/src/service.ts`, `packages/checkers/src/reservation-snapshot.ts`, `packages/checkers/src/job.ts`, `packages/scope/src/operations.ts`, `packages/scope/src/sqlite.ts` |
 | Optional demo manifest | `scripts/demo/rehearse.ts`, `packages/cli/src/command-change.ts`, `packages/platform/src/destination.ts`, `packages/scope/src/artifacts-wiring.ts`, `packages/scope/src/github-wiring.ts`, `packages/scope/src/site/route.ts`, `apps/room/worker.ts` |
 
 The production Grow archive pair does not read the deployed signed packet.
@@ -194,8 +196,8 @@ residency, whole-room CLI verification or provider behavior. No model ran.
 This checkpoint is source-only. No syntax, compiler, test, control,
 generator, build, model, or gate command ran for these changes. No package
 production source changes. The changed scripts remain unchecked until the
-execution slot permits their development checks. No timing result or
-evidence manifest accompanies this note.
+execution slot permits their development checks. No after-change timing
+result or new evidence manifest accompanies this note.
 
 | Check | Command or boundary | Result |
 |---|---|---|

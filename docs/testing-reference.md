@@ -452,10 +452,10 @@ report checks every owner's count and the complete total.
 
 | Scale owner | Cases | Boundary |
 |---|---:|---|
-| `packages/cli/test/fixed-slot-membership-scale.scope.test.ts` | 1 | Real 2000-member shipped-default whole-room verification |
-| `packages/scope/test/floor-kept-scale.test.ts` | 1 | Actual 4096-kept ceiling and refusal after it |
-| `apps/room/lanes/test/directory-partition-capacity-scale.scope.test.ts` | 1 | 1000 real generations and 3000 standing entries |
-| `apps/room/lanes/test/certified-rules-hardening-budget-scale.scope.test.ts` | 1 | Maximal capture and 32 actual proofs |
+| `packages/cli/test/fixed-slot-membership.scope.test.ts` | 1 | Real 2000-member shipped-default whole-room verification |
+| `packages/scope/test/floor-kept.test.ts` | 1 | Actual 4096-kept ceiling and refusal after it |
+| `apps/room/lanes/test/directory-partition-capacity.scope.test.ts` | 1 | 1000 real generations and 3000 standing entries |
+| `apps/room/lanes/test/certified-rules-hardening-budget.scope.test.ts` | 1 | Maximal capture and 32 actual proofs |
 | `packages/scope/test/archive-installed-scale.test.ts` | 2 | Linked production Grow producer and public archive-command follower |
 | `packages/scope/test/evidence-rules-real-scale.test.ts` | 4 | Landing reuse, published holds, actual TIME recovery and outcome ordering |
 | `apps/room/lanes/test/directory-partition-lanes-scale.scope.test.ts` | 2 | Dense 32-frame residency and cross-root/deep lineage |
