@@ -1,0 +1,131 @@
+{
+  "qualification": "Functional focused evidence on actual Battery Power with powermode 0. First run: compiler narrowing failure repaired, then native 34 passed/2 fixture-setup failures. Follow-up changes only capacity-retained-rows.test.ts and passes its compiler and all four cases. No gate or AC residency timing claim.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-cdf1-wide-focused",
+  "checkpoint_commit": "7d9506cb72039914cde7c93ece193665f775e28f",
+  "checkpoint_tree": "8c0b84af35ca2ac4c0dc4990e265dd1e7b4cb158",
+  "followup_commit": "ba05343e1e5003fc4982446b618553e15aba62e8",
+  "followup_tree": "f379bf33378c4cbe6cea900e0a679ec5940e55b9",
+  "file_count": 24,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 2025,
+      "sha256": "fe563f7ddb11bd064376666592c6a888c9bfb857520f4e0740e54172534cf82f"
+    },
+    {
+      "path": "contract-typecheck.json",
+      "bytes": 178,
+      "sha256": "d30e01321182266ad557f38c0711f99274ed900c62450d128ea41cc80b6a57e6"
+    },
+    {
+      "path": "contract-typecheck.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "followup/native-owning.json",
+      "bytes": 262,
+      "sha256": "b33005accaf5576ffd17024eccd961d2f3e411add04cd0cbd515ea4d4f5ab7ee"
+    },
+    {
+      "path": "followup/native-owning.log",
+      "bytes": 262,
+      "sha256": "5092840cc6a74d02f02339d9745e6abca4ff8ddb004c47545c651cfd38123849"
+    },
+    {
+      "path": "followup/power-end.log",
+      "bytes": 826,
+      "sha256": "97c1d5bdf45424f9181a63218380728b4280eb7c947d1546c671a420e011838b"
+    },
+    {
+      "path": "followup/power-start.log",
+      "bytes": 826,
+      "sha256": "97c1d5bdf45424f9181a63218380728b4280eb7c947d1546c671a420e011838b"
+    },
+    {
+      "path": "followup/scope-test-typecheck.json",
+      "bytes": 180,
+      "sha256": "891ad9b90237df9dc596d48df0976990f89c52dcfb4d27ccc800630774942582"
+    },
+    {
+      "path": "followup/scope-test-typecheck.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "followup/source.json",
+      "bytes": 407,
+      "sha256": "ede896a0a6ca3e3c22a34eeec4e826005edc4b20232f969b71a3629b1fb93ecc"
+    },
+    {
+      "path": "native-four.json",
+      "bytes": 407,
+      "sha256": "0309a777aa006d66b1cc980e3030c16a1b9224ccc907ecdb692a498233838f01"
+    },
+    {
+      "path": "native-four.log",
+      "bytes": 3640,
+      "sha256": "6c2a537dd8876add8d093f91bfd8e0e741705e572f7cf19d921c08cd28b4987a"
+    },
+    {
+      "path": "power-end.log",
+      "bytes": 826,
+      "sha256": "b1e33310d8979cf0ac8a702c72def36545544cd547aeca414300d841094d41ae"
+    },
+    {
+      "path": "power-start.log",
+      "bytes": 826,
+      "sha256": "a0d9591647dde254460bbe731e2b7967fb0c11556f3cbe8faf721a8e7911433a"
+    },
+    {
+      "path": "scope-test-typecheck.json",
+      "bytes": 180,
+      "sha256": "42a16c8d84786665ab288d5e8b67a8c3c35037cc0478df8de5f4b262106380bb"
+    },
+    {
+      "path": "scope-test-typecheck.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scope-typecheck-2.json",
+      "bytes": 175,
+      "sha256": "d1da179eed63f54173deb951adcd254e57cd697a4c8f351341935aaf646d1268"
+    },
+    {
+      "path": "scope-typecheck-2.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scope-typecheck.json",
+      "bytes": 175,
+      "sha256": "7894e479fafb1da5b4fad23fd016881c32af54c8eaab9cb5d8845fe8391e8756"
+    },
+    {
+      "path": "scope-typecheck.log",
+      "bytes": 199,
+      "sha256": "bffca4cbc42320f2c4831c49630ecbcf4a36d2d31ce7ce5235e3f468e45c77d5"
+    },
+    {
+      "path": "seal-review.txt",
+      "bytes": 887,
+      "sha256": "8a8abf465eba955ab4108fce5942df68c7c907a70d6b6117fd0575df17f543ac"
+    },
+    {
+      "path": "security-seals.json",
+      "bytes": 172,
+      "sha256": "b67a0b887503daf99284ee90fd5dc041cc0ef4b5919d8ea3b139c3acb0b419da"
+    },
+    {
+      "path": "security-seals.log",
+      "bytes": 1549,
+      "sha256": "78ecb56f6d37472119a8e502a3986553e8b382ca2a19f87cd54cf80418ec4e1e"
+    },
+    {
+      "path": "source.json",
+      "bytes": 1474,
+      "sha256": "bc7bc1f803d14c3b062a688dd86338464d8f32b5f80f3c1ae4353de7e8c3a8e9"
+    }
+  ]
+}

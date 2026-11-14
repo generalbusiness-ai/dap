@@ -16,7 +16,7 @@ import type { KeyId, MemberRef, ScopeRef } from "./scope.ts";
 
 /** The Rules observation's admin-published service and exact signing key. */
 export interface ServiceMark { checker: MemberRef; key: KeyId }
-/** The last service change under one exact Rules incarnation. */
+/** The last service change under one Rules scope at one exact genesis. */
 export interface ScopedRulesPosition { rules: ScopeRef; seq: number }
 
 /** The authenticated answer to that attempt's own request. */
