@@ -1,0 +1,16 @@
+apps/counter/browser/app.test.ts
+apps/counter/browser/client.test.ts
+apps/counter/browser/client.ts
+apps/counter/browser/installed.ts
+apps/counter/browser/voice-controller.test.ts
+apps/counter/browser/voice-controller.ts
+apps/room/page/test/custody-store-witness.ts
+apps/room/page/test/custody-witness.mjs
+examples/lending/browser/client.ts
+notes/implementation/2026-11-13-nf5-browser-custody.md
+notes/implementation/2026-11-14-nf5-storage-follow-up.md
+packages/client/src/browser-custody.ts
+packages/client/src/browser-joining.ts
+packages/client/test/browser-custody.test.ts
+packages/client/test/browser-joining.test.ts
+verification/state-machines/controls.json
