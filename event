@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:843f07383d8ebd36c0f05c07f64b1d422c39480f","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/service.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8596a38724872b7c817257e07a52fb7c40da4557","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-c1-custody-gate.manifest.json."}
