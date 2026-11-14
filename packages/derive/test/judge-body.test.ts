@@ -1,11 +1,13 @@
 /** Real in-memory body/runtime judges. Fixture grants and platform rules are
  * explicit stand-ins; no native commit, membership service or transport runs. */
 import { expect, test } from "vitest";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { ActType, Effect, Intent } from "@generalbusiness/dap-contract";
-import { judgeActBody, type Capabilities } from "../src/index.ts";
+import { judgeActBody, validateDefinition, type Capabilities } from "../src/index.ts";
 import { Scope, created, deskDefinition, grantOf, keys, laneDefinition, on, otherLane, t, valid, variant } from "./fixtures.ts";
 import { gateRules, gateWith } from "./fixtures-marks.ts";
 import { Works, changed, works } from "./fixtures-holds.ts";
+import { deviceCommandFixture } from "./fixtures-device-command.ts";
 
 const { rita } = keys;
 const act = (over: Partial<ActType> & Pick<ActType, "step" | "on">): ActType => ({
@@ -57,15 +59,11 @@ test("only a reached intent read stops a body and exposes no earlier partial eff
 });
 
 test("primitive capability intent stays lazy through the effect context copy and stops only on the reached read", () => {
-  const definition = variant(deskDefinition.declared, data => {
-    data.capabilities = [{ name: "device-command", version: 1 }];
-    data.acts.probe = act({ step: "transition", on: "repo",
-      guards: [{ capability: { name: "device-command", guard: "allowed", with: { kind: { const: "fan" } } } }],
-      effects: [{ capability: { name: "device-command", do: "open", with: { device: { const: "fan" } } } }],
-    });
-  });
-  const scope = created(definition), before = scope.state.snapshot();
-  const body = { kind: "probe", on: 0, fields: {}, expected: { on: scope.item(0).revision } };
+  const definition = valid(validateDefinition(deviceCommandFixture, PROPOSED_BOUNDS));
+  const scope = created(definition, {}, "TEST primitive intent");
+  const device = scope.did(rita, "commission", { fields: { kind: "fan" } });
+  const before = scope.state.snapshot();
+  const body = { kind: "command", on: device.seq, fields: { target: "on", level: 1 }, expected: { on: scope.item(device.seq).revision } };
   let readAt: "none" | "guard" | "effect" = "none";
   const visited: string[] = [];
   // Scripted primitive rules witness the actual given/copy boundary, not
@@ -135,8 +133,8 @@ test("a Native given cannot read a fabricated signed input", () => {
 test("self-ref metadata names actual emitted refs without relabeling equal numeric values", () => {
   const definition = variant(deskDefinition.declared, data => {
     data.items.issue.refs = {
-      me: { fixed: true, required: true, to: { type: "item", of: "issue" } },
-      at: { fixed: true, required: true, to: { type: "fact", kind: ["probe"], under: data.name } },
+      me: { fixed: true, required: false, to: { type: "item", of: "issue" } },
+      at: { fixed: true, required: false, to: { type: "fact", kind: ["probe"], under: data.name } },
     };
     data.items.issue.values.marker = { fixed: false, required: false, of: { type: "int", min: 0, max: 10 } };
     data.acts.probe = act({ step: "open", on: "issue", effects: [
@@ -159,8 +157,10 @@ test("self-ref metadata names actual emitted refs without relabeling equal numer
 
 test("the keyless body draws on the same holder account and stops when its request count is empty", () => {
   const definition = valid(changed(works, data => {
+    data.items.job.refs.peer = { fixed: false, required: false, to: { type: "scope", kind: "lane" } };
     data.acts.use = { ...data.acts.again, grant: "works.use", fields: { peer: { type: "scope", kind: "lane", required: true } },
-      sends: [{ tell: { to: { field: "peer" }, message: "hello", fields: {}, result: {} } }] };
+      effects: [{ ref: { slot: "peer", from: { field: "peer" } } }],
+      sends: [{ tell: { to: { slot: "peer" }, message: "hello", fields: {}, result: {} } }] };
   }));
   const scope = new Works(definition);
   expect(scope.start()).toBe("written");
