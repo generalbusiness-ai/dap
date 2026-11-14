@@ -38,6 +38,11 @@ export interface Sql {
  * The tables of one scope.
  *
  * - `meta`: the scope's record: its reference, status, head and last time.
+ *   `retained-bytes` is the total UTF-8 size of every row in
+ *   `retained_input` and `retained_value`, once per key, that the
+ *   `scopeBytes` stop counts in every scope. Only `retain` and `forget`
+ *   change it, in the transaction that changes the rows. It is no folded
+ *   state, and no digest or replay reads it.
  * - `entry`: the history. `actor`, `idem` and `intent` are set on an act
  *   entry: the idempotency index is an index over the history (section 4.2).
  * - `item`, `item_count`: the items, and the exact number in each type and
@@ -138,6 +143,8 @@ const OPEN = "opened + unknown + unopened > 0";
 const REQUEST_ROWS = "SELECT o.seq, o.n, o.target, o.request, o.result, o.diagnosis, COALESCE(e.hash,o.hash) AS hash, r.value AS reservation FROM outbox o LEFT JOIN entry e ON e.seq = o.seq LEFT JOIN folded r ON r.kind = 'capacity-request' AND r.key = json_array(o.seq, o.n)";
 
 type Row = Record<string, SqlValue>;
+/** The `meta` key of the stored total of retained canonical bytes. */
+const RETAINED_BYTES = "retained-bytes";
 /** The entry that opened an operation and its ordinal there, from its ID. */
 const partsOf = (id: OperationId): [seq: number, k: number] => id.split(":").map(Number) as [number, number];
 const rowJson = <T>(text: SqlValue | undefined): T => JSON.parse(text as string) as T;
@@ -166,6 +173,8 @@ export class SqliteStore implements Store {
       const held = this.#all(`PRAGMA table_info(${table})`);
       for (const column of columns) if (!held.some(row => row["name"] === column)) this.#run(`ALTER TABLE ${table} ADD COLUMN ${column} TEXT`);
     }
+    // A scope made before the stored total counts its rows once, here.
+    this.#run(`INSERT INTO meta (k, v) SELECT ?, CAST((SELECT COALESCE(SUM(octet_length(bytes)), 0) FROM (SELECT bytes FROM retained_input UNION ALL SELECT bytes FROM retained_value)) AS TEXT) WHERE NOT EXISTS (SELECT 1 FROM meta WHERE k = ?) ON CONFLICT (k) DO NOTHING`, RETAINED_BYTES, RETAINED_BYTES);
     this.localSigners = new LocalSigners(sql, () => this.#signerScope());
   }
 
@@ -669,26 +678,40 @@ export class SqliteStore implements Store {
       this.#run("UPDATE attempt SET outcome = ? WHERE seq = ? AND k = ? AND attempt = ? AND outcome IS NULL", entry.seq, seq, k, entry.input.attempt);
     }
   }
-  retain(input: Retained): void {
+  retain(input: Retained): number {
     if (input.kind === "birth") throw new Error("a birth row is retained only with its association, by retainBirth");
+    // RETURNING gives a row only when the INSERT inserts one: a row already held adds nothing to the total.
+    let added: Row | null;
     if (input.kind === "value") {
       if (typeof input.domain !== "string" || input.domain === "") throw new Error("a retained value states its byte domain");
-      this.#run("INSERT INTO retained_value (domain, digest, bytes) VALUES (?, ?, ?) ON CONFLICT (domain, digest) DO NOTHING", input.domain, input.digest, input.bytes);
-      return;
+      added = this.#one("INSERT INTO retained_value (domain, digest, bytes) VALUES (?, ?, ?) ON CONFLICT (domain, digest) DO NOTHING RETURNING octet_length(bytes) AS size", input.domain, input.digest, input.bytes);
+    } else {
+      added = this.#one("INSERT INTO retained_input (kind, digest, bytes, under) VALUES (?, ?, ?, ?) ON CONFLICT (kind, digest) DO NOTHING RETURNING octet_length(bytes) AS size", input.kind, input.digest, input.bytes, input.under ?? null);
     }
-    this.#run("INSERT INTO retained_input (kind, digest, bytes, under) VALUES (?, ?, ?, ?) ON CONFLICT (kind, digest) DO NOTHING", input.kind, input.digest, input.bytes, input.under ?? null);
+    if (!added) return 0;
+    const size = added["size"] as number;
+    this.#addRetainedBytes(size);
+    return size;
   }
 
-  retainBirth(at: SequenceRef, input: Retained & { kind: "entry" }): void {
-    this.retain(input);
+  retainBirth(at: SequenceRef, input: Retained & { kind: "entry" }): number {
+    const added = this.retain(input);
     this.#run("INSERT INTO retained_birth (genesis, scope, digest) VALUES (?, ?, ?) ON CONFLICT (genesis, scope) DO NOTHING", at.genesis, at.scope, input.digest);
+    return added;
+  }
+  retainedBytes(): number { return Number(this.#one("SELECT v FROM meta WHERE k = ?", RETAINED_BYTES)!["v"]); }
+  #addRetainedBytes(delta: number): void {
+    this.#run("UPDATE meta SET v = CAST(CAST(v AS INTEGER) + ? AS TEXT) WHERE k = ?", delta, RETAINED_BYTES);
   }
   retainedBirth(at: SequenceRef): Retained | null {
     const row = this.#one("SELECT i.digest AS digest, i.bytes AS bytes, i.under AS under FROM retained_birth b JOIN retained_input i ON i.kind = 'entry' AND i.digest = b.digest WHERE b.scope = ? AND b.genesis = ?", at.scope, at.genesis);
     return row && { kind: "entry", digest: row["digest"] as Digest, bytes: row["bytes"] as string, ...(row["under"] === null ? {} : { under: row["under"] as string }) };
   }
 
-  forget(kind: Retained["kind"], digest: Digest): void { this.#run("DELETE FROM retained_input WHERE kind = ? AND digest = ?", kind, digest); }
+  forget(kind: Retained["kind"], digest: Digest): void {
+    const removed = this.#one("DELETE FROM retained_input WHERE kind = ? AND digest = ? RETURNING octet_length(bytes) AS size", kind, digest);
+    if (removed) this.#addRetainedBytes(-(removed["size"] as number));
+  }
 
   stored(seq: number): Stored | null { return this.storedFrom(seq, 1).find((s) => s.seq === seq) ?? null; }
   storedFrom(seq: number, limit: number): Stored[] {
