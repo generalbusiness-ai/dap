@@ -1,0 +1,15 @@
+# Interval C: dedicated, clean NF5 worktree at final reviewed commit C.
+# Root must already own the sole slot; no other validation/build is running.
+node verification/state-machines/control.mjs Voice "$nf5_voice_evidence/source-control"
+node --import tsx --test --test-name-pattern='Restored accepted phase without receipt confirmation|Unknown retains the slot|Disposal during the speaking notice retains the start without invoking playback' apps/counter/browser/voice-controller.test.ts
+# Inspect baseline/broken/restored assertion and status; verify restored source hash and clean Git.
+# END C. Only after both C results pass, the owner updates Voice coverage hash/syncCommit
+# and truthful verification note/skill provenance, commits clean bookkeeping head Q,
+# and verifies protected source/model/cfg/view bytes equal reviewed C.
+
+# Interval Q, new fixed-head START on clean Q:
+node verification/state-machines/check.mjs Voice
+/opt/homebrew/bin/node --disable-warning=ExperimentalWarning "$nf5_voice_scratch/tool/worker.ts" "$nf5_voice_scratch/statechart-stage" "$nf5_voice_scratch/Voice.tla" "$nf5_voice_scratch/Voice.cfg" "$nf5_voice_scratch/view.mjs"
+cmp "$nf5_voice_scratch/statechart-stage/done/chart.mmd" verification/state-machines/Voice/chart.mmd
+# Equal: tracked chart.svg stands; no renderer runs.
+# Different: stop, retain byte/unified diff and report. No normalization, SVG replacement or Pele fetch.
