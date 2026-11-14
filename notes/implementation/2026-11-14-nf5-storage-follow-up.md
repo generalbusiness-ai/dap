@@ -89,7 +89,8 @@ The whole normal R1 reproduction owner then passed its one case at
 citations, document links, and note limits also passed once. END
 `1f77fdd386b1bf8179105cdc795954196e756f0e` retains those six results.
 This note-only follow-up changes no checked source, test, or identifier.
-Gate attempt 2 remains UNRUN; the first gate remains failed.
+The later gate attempt 2 failed as recorded below; the first gate
+retains its failed verdict.
 
 The full pre-code proposal remains attached as `proposal` to builder request
 `2a65dcffc89bd43675bb3c07536dc30c41d6cacb`. It covers schema history,
@@ -99,6 +100,28 @@ rulings `14609eb8335b24ffdb794ea8a0a4e30e6ec4ed9a` and
 `3505c36b38ee0e63d5438102da48cfad1879e99c`, rather than the proposal's
 conditional draft conversion or lease-drain options. Request
 `df42ed848bce9cdfe196d040c1df4c8025d13265` records the lifecycle question.
+
+## Second gate and Native caller migration
+
+Gate attempt 2 at `034d68a8`, tree `f5a48a9e`, failed typecheck: exit 1,
+wall 24.248759167 seconds. The scope test compiler found removed
+`Kept`, `KeptStore`, and `CommandStore` imports, old gateway options,
+and two joining callers without custody. Runtime stages were UNREACHED,
+with zero cases. END `5d088e21f3c23669655ead42aeb5912ec8634d3f` retains
+that failure and its original raw output.
+
+The repair changes only the two Native test callers. They now supply the
+actual SDK memory custody store; Lending keeps page-owned given-up state
+and joining keeps its separate v2 pointer. Pending checks read unresolved
+records, since terminal custody records stay retained. The original lost
+Lending record and lost join record are captured before Check and restored
+exactly before explicit Continue, alongside the join pointer. Envelope
+assertions read the actual latest signing through `envelopeOf`.
+All original expected values, case counts, deadlines, native authority,
+POST/journal idempotency, causal publication, and replay checks remain.
+No production, helper, configuration, dependency, packet, or identifier
+changes. The migrated compiler and two whole owners remain UNRUN;
+gate attempt 3 also remains UNRUN.
 
 ## First released storage layout
 
@@ -281,47 +304,14 @@ opening comments say so. They do not prove native IDB rollback. The browser
 helper's protocol ports do not prove native membership. The original native
 join retains that separate role.
 
-### Proposed validation after root grants a slot
+### Validation plan at the original checkpoint
 
-Run these compiler roots sequentially with the owned existing dependency
-view, using `node node_modules/typescript/bin/tsc -p <path>`:
-
-- `packages/client/tsconfig.json`, `tsconfig.node.json` and
-  `tsconfig.test.json`;
-- `apps/counter/browser/tsconfig.json`;
-- `examples/lending/browser/tsconfig.json`;
-- `apps/room/page/tsconfig.test.json`.
-
-Before direct Vitest, run `node scripts/cloudflare-pool-compat.mjs` once.
-From `packages/client`, run the whole owning files with the existing
-Vitest:
-
-```sh
-node ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts \
-  test/browser-custody.test.ts test/browser-request.test.ts \
-  test/browser-joining.test.ts test/custody.test.ts test/custody-signings.test.ts
-```
-
-The Counter owners run through `node apps/counter/scripts/test-browser.mjs`.
-Lending's configured plain owners and the affected source import closure
-remain owed by the final gate. The real IDB and two-tab cases run through
-the existing no-argument `apps/room/page/test/custody-witness.mjs` command
-with existing external Playwright/Chrome/Wrangler and a new private witness
-directory. Record actual AC/mode0 and raw per-case outcomes externally.
-No browser package installation or checkout install is needed.
-
-Two targeted controls are proposed, not run: remove the pre-build current
-check from `buildCurrent` and require the held-admission zero-signer
-assertion to fail; map a malformed Row to absence and require the
-no-replacement/pointer-retention assertion to fail. The native held-delivery
-witness must distinguish bypassing the exclusive dispatch fence. Run
-controls with whole owning files and retain inconclusive attempts. Do not
-run a mutation sweep.
-
-After source fixes, meaningful controls and browser acceptance, run one
-`npm run gate` at the clean integrated head. Root reserves execution;
-R1's full gate and C1 precede NF5. No successful suite should repeat without
-a source change or unresolved failure.
+The original source checkpoint proposed sequential affected compilers,
+whole client/Counter/Lending owners, compatibility before direct Vitest,
+real-browser acceptance, two targeted storage/authority controls, and
+Voice correspondence before an integrated gate. The dated execution
+results below record what later ran and retain inconclusive attempts.
+They do not turn that original plan into an integrated-head pass.
 
 ## Verification scope and NF-7
 
@@ -494,6 +484,7 @@ to `2026-11-14-nf5-natural-development-attempt1`,
 `2026-11-14-nf5-natural-canonical-attempt1`, and
 `2026-11-14-nf5-natural-reproduction-attempt1`. Their command and result
 records retain the exact argv, working directories, exits, and process walls.
+`G` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-browser-custody-full-gate-attempt2`.
 
 The eight compiler roots were `packages/client/tsconfig.json`,
 `packages/client/tsconfig.node.json`, `packages/client/tsconfig.test.json`,
@@ -535,7 +526,8 @@ the current ordinary development rows do not turn it into a pass.
 | Normal canonical comparison after repair | Exact unmodified wrapper compare-only argv in `D/commands.json`; three normal preparations, public TEST signer | 0; 2.408427375 s; Grow unchanged, Counter/Lending presentation only; exact pairs in `C` | `D/04-canonical-compare.stdout.log` — `b6f34628409852adfe1b8d4f788c1b5d5e759cee368808c0f4ca69dcc744e687` |
 | Whole normal R1 reproduction at `91c49425` | Exact argv in `R/commands.json`; existing `application-release-reproduction.test.ts` | 0; 1 passed; 2.053530042 s | `R/01-reproduction.stdout.log` — `b20d032a3a1c0ec0e9447dede216eadc1fbd788f244767b0e1bd5bacfae903c3` |
 | Five pre-gate checks at `91c49425` | Exact commands in `R/commands.json` | All 0; per-command walls in result record | `R/results.json` — `d95a17e6d1b1c1600525921d570dcbcf259118ca7464769ee68a960e6f6cb045` |
-| Full NF5 gate attempt 2 | `npm run gate`, separate root grant pending | **UNRUN** | No attempt-2 result yet |
+| Full NF5 gate attempt 2 at `034d68a8` | Exact argv in `G/command.json` | 1; 24.248759167 s; typecheck failed; runtime stages UNREACHED, zero cases | `G/gate.log` — `877d2bc37dc9e2ef2cb40ccf9a5e8bfbdd0aa325e26df60d0ce1f824c25557cc` |
+| Migrated Native callers and gate attempt 3 | Root review and execution pending | **UNRUN** | No later result at this checkpoint |
 
 The browser run used the established unchanged Playwright helper because the
 Browser plugin was not available. It made no visual or screenshot claim.
