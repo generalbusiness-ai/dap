@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:18b89fcbccae9f21dda2f10f9519ebe7c9733646","text":"Merge retired a covered predecessor; the successor is at packages/git/src/archive-policy.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1a88a0702489e3e70d485252c82b9972ee2667d9","text":"Merge retired a covered predecessor; the successor is at docs/self-host-cloudflare.md."}
