@@ -1,6 +1,7 @@
 // The page of custody-witness.mjs: browser joining with the browser custody store, in a real browser. The script bundles this
 // file and serves it at /custody-witness/ on the Worker's origin, so the invitation's service is the page's origin.
-import { browserCustodyStore, browserJoining, browserPrivateSlots, generateBrowserDeviceKey, invitationOf, readBrowserInvitation, storedWebCryptoSigner, type CustodyRecord, type KeyId } from "@generalbusiness/dap-client";
+import { browserCustodyStore, browserJoining, browserPrivateSlots, generateBrowserDeviceKey, invitationOf, readBrowserInvitation, storedWebCryptoSigner, type CustodyRecord } from "@generalbusiness/dap-client";
+import type { KeyId } from "@generalbusiness/dap-contract";
 import { custodyStoreWitness } from "./custody-store-witness.ts";
 
 const DATABASE = "custody-witness-records-v2";

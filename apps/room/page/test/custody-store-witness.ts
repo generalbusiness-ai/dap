@@ -113,7 +113,7 @@ export function custodyStoreWitness(seed: CustodyRecord, signer: Signer) {
     const note = (method: string, key: IDBValidKey | IDBKeyRange | null | undefined, count: number | undefined, req: IDBRequest) => {
       const range = key instanceof IDBKeyRange ? key : null;
       const lower = range?.lower, upper = range?.upper;
-      const position = Array.isArray(key) && key[0] === id && Number.isSafeInteger(key[1]) && key[1] >= from && key[1] < from + limit;
+      const position = Array.isArray(key) && key[0] === id && typeof key[1] === "number" && Number.isSafeInteger(key[1]) && key[1] >= from && key[1] < from + limit;
       const bounded = position || Array.isArray(lower) && Array.isArray(upper) && lower[0] === id && upper[0] === id
         && lower[1] >= from && upper[1] <= from + limit && (upper[1] < from + limit || range!.upperOpen);
       const read = { method, ranged: range !== null, rows: 0, bounded: Boolean(bounded && (count === undefined || count <= limit)) };
