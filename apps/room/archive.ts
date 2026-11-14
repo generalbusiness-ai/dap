@@ -19,7 +19,7 @@ import type { ApplicationBindings } from "../../packages/scope/src/applications/
 import type { Sql } from "../../packages/scope/src/sqlite.ts";
 import { archiveSourceReferences } from "../../packages/scope/src/archive-source-window.ts";
 import { ArchivePrefixStopped } from "../../packages/scope/src/archive-prefix.ts";
-import { ArchiveStopped, ArchivePolicyPending } from "../../packages/scope/src/archive-budget.ts";
+import { ArchiveStopped, ArchivePolicyPending, ArchivePolicyStopped, ArchiveChainLimit } from "../../packages/scope/src/archive-budget.ts";
 import type { ArchiveReplayContext } from "../../packages/scope/src/archive-publication.ts";
 
 export interface RoomArchiveEnvironment extends ArtifactsBindings, ApplicationBindings { ARCHIVE_RESTART_DIRECTIVE?: string }
@@ -113,8 +113,12 @@ export function roomArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
             const admitted = readNativeBirth(reply, where, 256 * 1024, size => budget.settle(reservation, size));
             const birth = admitted?.birth ?? null;
             if (birth && admitted && policyOwner && isDigest(admitted.entry.input.seed.definition)) {
-              if (!await policyOwner.source(where, admitted.entry.input.seed, { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, budget)) {
-                throw new ArchivePolicyPending();
+              try {
+                if (!await policyOwner.source(where, admitted.entry.input.seed, { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, budget)) throw new ArchivePolicyPending();
+              } catch (error) {
+                if (error instanceof ArchivePolicyStopped) throw new ArchivePolicyStopped(error.policyReason, { ...error.details, position: { ...candidate.position } });
+                if (error instanceof ArchiveChainLimit) throw new ArchiveChainLimit({ ...candidate.position });
+                throw error;
               }
             }
             const policy = birth ? policies.get(birth.named) : null;

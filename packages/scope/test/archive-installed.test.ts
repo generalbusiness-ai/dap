@@ -31,6 +31,10 @@ import { ArchiveArtifactsPeer } from "./support/archive-artifacts.ts";
 import { observeDirectoryFinish } from "./support/archive-finish-observer.ts";
 import { growArchivePolicies, nativeArchivePolicies, type GrowArchiveRelease } from "../../../apps/room/archive-policy.ts";
 import { roomArchivePackages } from "../../../apps/room/archive-packages.ts";
+import { archiveInstallationIdentity } from "../../../apps/room/archive-identity.ts";
+import { ApplicationActAdmission, APPLICATION_ACT_ADMISSION_BOUNDS } from "../src/applications/act-admission.ts";
+import { ReadPreparation } from "../src/read-preparation.ts";
+import { ProofBytes } from "../src/proof-bytes.ts";
 import { demoDefinitions } from "../../../examples/grow/demo-definitions.ts";
 import { growArchiveDriver, roomArchiveDriver } from "../../../apps/room/archive.ts";
 import { RECORDED_GROW_RELEASE } from "./support/recorded-grow-release.ts";
@@ -537,6 +541,57 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       expect(new Set(eligible.map(scope => scope.name)).size).toBe(5);
       expect(eligible.some(scope => scope.name === R.name || scope.name === M.name)).toBe(false);
       const records = await Promise.all(eligible.map(async scope => ({ scope, at: await life.wait(() => scope.at()), rows: await life.wait(() => scope.sealed()) })));
+      const chainAgreement: unknown[] = [];
+      if (sharedBaseScenario) {
+        // Both real walks consume the same actual root/child creation bytes.
+        // Admission hides its release; the current-trust probe distinguishes
+        // that exact release from an unrelated trusted one. The only fault
+        // substitutes a genuine Rules birth at the wrong parent address.
+        const rulesAt = records.find(record => record.scope.name === A.name)!.at;
+        for (const record of records.filter(record => record.scope.name === rootScope.name || record.scope.name === childScope.name)) {
+          for (const wrongParent of [false, true]) chainAgreement.push(await life.wait(() => runInDurableObject(record.scope.object, async (_instance, state) => {
+            const sql = archiveSql(state), store = new SqliteStore(sql), core = new Scope(record.at.scope, store, production(), PROPOSED_BOUNDS);
+            const first = record.rows[0]!.entry.input;
+            if (first.type !== "genesis") throw Error("The chain fixture must start at actual genesis");
+            let senderCalls = 0;
+            const selected = { idFromName: binding.idFromName, get: (id: DurableObjectId) => {
+              const target = binding.get(id);
+              return new Proxy(target, { get(peer, key) {
+                if (key !== "nativeBirth" && key !== "proofSource") return Reflect.get(peer, key);
+                const method = Reflect.get(peer, key) as (...args: unknown[]) => Promise<unknown>;
+                return (...args: unknown[]) => {
+                  senderCalls++;
+                  if (wrongParent && key === "nativeBirth") return (A.object as unknown as {
+                    nativeBirth(at: ScopeRef, milliseconds: number, maximum: number): Promise<unknown>;
+                  }).nativeBirth(rulesAt, args[1] as number, args[2] as number);
+                  return Reflect.apply(method, peer, args);
+                };
+              } });
+            } };
+            let trust = canonicalize([{ release: packet.ids.release, publisher: packet.package.release.manifest.publisher }]);
+            const peers = namespace(selected), preparation = new ReadPreparation(sql, {
+              policy: () => "TEST joint immutable archive/admission chain",
+              declared: bytes => core.validate(bytes), platform: named => core.platform(named),
+            });
+            const admission = new ApplicationActAdmission({ preparation, local: new ProofBytes(sql), births: peers.births, proofs: peers.proofs, trust: () => trust });
+            const admitted = await admission.read(), admissionCalls = senderCalls;
+            senderCalls = 0;
+            const budget = new ArchiveBudget(), archived = await archiveInstallationIdentity(record.at, first.seed, sql, selected, PROPOSED_BOUNDS, budget);
+            if (wrongParent) { expect(admitted).toBeNull(); expect(archived).toBeNull(); }
+            else {
+              expect(admitted?.current()).toBe("allowed");
+              if (!archived || archived === "unpackaged") throw Error("The archive must prove the actual installed release");
+              expect(archived.ids.release).toBe(packet.ids.release);
+              trust = canonicalize([{ release: textDigest("TEST unrelated trusted release"), publisher: packet.package.release.manifest.publisher }]);
+              expect(admitted?.current()).toBe("application-revoked");
+            }
+            expect(admissionCalls).toBeLessThanOrEqual(APPLICATION_ACT_ADMISSION_BOUNDS.rpcs);
+            expect(senderCalls).toBeLessThanOrEqual(APPLICATION_ACT_ADMISSION_BOUNDS.rpcs);
+            return { at: record.at, wrongParent, release: archived && archived !== "unpackaged" ? archived.ids.release : null,
+              admission: admitted === null ? "refused" : "exact-release-trust-probed", admissionCalls, archiveCalls: senderCalls, cost: budget.admitted() };
+          })));
+        }
+      }
       if (scenario === "shared Grow") {
         const rows = records.find(record => record.scope.name === childScope.name)!.rows;
         expect(rows.some(row => row.entry.input.type === "preparation" && row.entry.input.capability === DEVICE_COMMAND && row.entry.input.step === "answer")).toBe(true);
@@ -658,7 +713,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       expect(command.code, command.lines.join("\n")).toBe(0); expect(mints).toBe(1);
       retainedCommand = { producer: producerTitle, id: commandSession.id, lines: [...command.lines], refs: cloned.refs };
       commandTransferred = true;
-      Object.assign(context.task.meta, { [scenario === "shared Grow" ? "sharedGrowArchive" : "sharedBaseArchive"]: { passes, proofReads, revoked, repeated, sameDefinitionAuthority,
+      Object.assign(context.task.meta, { [scenario === "shared Grow" ? "sharedGrowArchive" : "sharedBaseArchive"]: { passes, proofReads, revoked, repeated, sameDefinitionAuthority, chainAgreement,
         expectedScopes: records.map(({ at }) => at),
         qualification: `${scenario === "shared Grow" ? "Actual signed TEST Grow demo installed through its native cohort, distinct enrolled agents and accepted device answer" : "Actual non-Grow Base room and normal signed ordinary package installation"}; genuine root/child and namespace-only retained proof RPC; native-only initial policy map; shared roomArchivePackages/roomArchiveDriver, actual Artifacts token and Git adapter, real clone and public replay command. Binding/HTTP peer, clock and per-entry cutoff scheduler are TEST stand-ins. Every pass retains original caps/deadline; no alarm-cadence or hosted claim.` } });
       return;

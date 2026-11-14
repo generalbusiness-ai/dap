@@ -97,7 +97,7 @@ export function roomArchivePackages(_given: OutsideGiven, sql: Sql, binding: Bin
       // A refusal keeps the full reserved read charge. Active installation
       // already retained its signed inputs; no archive repair owns them.
       if (raw.reason === "installation-not-active") throw new ArchivePolicyPending();
-      throw new ArchivePolicyStopped("application-policy-unavailable", raw.reason);
+      throw new ArchivePolicyStopped("application-policy-unavailable", { proofReason: raw.reason });
     }
     if (isRoomRetiredStop(raw) || typeof raw !== "string" || raw.length > APPLICATION_ARCHIVE_PROOF_BYTES) return null;
     const bytes = utf8(raw).length;
@@ -186,10 +186,15 @@ export function roomArchivePackages(_given: OutsideGiven, sql: Sql, binding: Bin
             identities.push({ directory: at, rules, rulesNamed: cohort.rules, item: job });
         }
       }
-      for (const identity of identities) {
-        const checked = await proof(identity, budget);
-        if (!checked) throw new ArchivePolicyPending();
-        add(checked, budget);
+      try {
+        for (const identity of identities) {
+          const checked = await proof(identity, budget);
+          if (!checked) throw new ArchivePolicyPending();
+          add(checked, budget);
+        }
+      } catch (error) {
+        if (error instanceof ArchivePolicyStopped) throw new ArchivePolicyStopped(error.policyReason, { ...error.details, position: { seq, hash } });
+        throw error;
       }
     },
   };

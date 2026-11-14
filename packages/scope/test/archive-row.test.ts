@@ -10,7 +10,7 @@ import { at, create, type Lane } from "./fixtures-native.ts";
 import { SqliteStore, type SqlValue } from "../src/sqlite.ts";
 import { readRetainedArchivePass } from "../src/archive-retained-pass.ts";
 import { archiveSql } from "./support/archive.ts";
-import { ARCHIVE_CONFIRMED_ROW_BYTES, archivePendingRowBytesUpper, forecastArchiveBookkeeping } from "../src/archive-row-cost.ts";
+import { ARCHIVE_CONFIRMED_ROW_BYTES, archivePendingRowBytesUpper, forecastArchiveBookkeeping, forecastArchiveTerminalWrite } from "../src/archive-row-cost.ts";
 
 const repository = { host: "fixture-host", namespace: "fixture-room", name: "archive-fixture", id: "fixture-repository" };
 const rows = <T>(lane: Lane, work: (store: ArchiveRows) => T) => lane.inside(state => work(new ArchiveRows({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: action => state.storage.transactionSync(action) }, lane.at)));
@@ -20,6 +20,25 @@ async function refusal(action: Promise<unknown>, reason: string): Promise<void> 
   expect(rejected, "the conflicting mark must be refused").toBe(true);
   expect(message).toContain(reason);
 }
+
+test("one prepaid terminal write matches its shared price and needs no remaining work allowance", async () => {
+  const lane = await create(), head = await lane.head();
+  // Static closed-schema maximum, not an admitted journal or policy reason.
+  const id = `sha256:${"f".repeat(64)}`, largest = { v: 1, at: { scope: id, genesis: id }, reason: "r".repeat(128),
+    proofReason: "malformed-or-unsupported", chainReason: "admission-limit", position: { seq: Number.MAX_SAFE_INTEGER, hash: id } };
+  expect(utf8(canonicalize(largest)).length).toBeLessThanOrEqual(512);
+  await rows(lane, store => {
+    const price = forecastArchiveTerminalWrite(512), budget = new ArchiveBudget(price), halt = store.prepareHalt(budget);
+    expect(budget.admitted()).toEqual(price);
+    expect(budget.canSpend({ calls: 1 })).toBe(false); expect(budget.canSpend({ inputWork: 1 })).toBe(false);
+    halt("application-policy-unavailable", { chainReason: "admission-limit", position: head });
+    expect(budget.admitted()).toEqual(price);
+    expect(store.terminal()).toEqual({ reason: "application-policy-unavailable", chainReason: "admission-limit", position: head });
+    expect(store.storedWake()).toEqual({ pending: false, stopped: true, next: null });
+    expect(store.load()).toBeNull();
+    expect(() => halt("application-policy-unavailable")).toThrow("archive-row-unavailable");
+  });
+});
 
 // Invariant: one exact outstanding mark survives eviction and later native
 // entries; a stale/other confirmation cannot clear it or advance the prefix.

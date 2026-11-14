@@ -4,7 +4,7 @@ import type { Bounds, Digest, Entry, FactRef, ScopeRef, Seed } from "@generalbus
 import { admitSequenceGenesis, canonicalize, deliveryCauseDigest, isDigest, isFactRef, isMemberRef, isPlatformDefinition, isRecord, isScopeRef, isSeed, messageDigest, resolveGenesisSelf, scopeIdOf, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { same, sentBy } from "@generalbusiness/dap-derive";
 import { applicationAdmissionCohort, platform } from "@generalbusiness/dap-platform";
-import { ArchiveBudget } from "../../packages/scope/src/archive-budget.ts";
+import { ArchiveBudget, ArchiveChainLimit } from "../../packages/scope/src/archive-budget.ts";
 import { APPLICATION_ACT_ADMISSION_BOUNDS as LIMIT } from "../../packages/scope/src/applications/act-admission.ts";
 import { readNativeBirth } from "../../packages/scope/src/native-birth.ts";
 import { namespace, type Binding } from "../../packages/scope/src/namespace.ts";
@@ -39,7 +39,7 @@ export async function archiveInstallationIdentity(at: ScopeRef, seed: Seed, sql:
   let bodies = 1, received = utf8(first.value.bytes).length, rpcs = 0;
   const capacity = () => {
     budget.check();
-    if (bodies >= LIMIT.bodies || received >= LIMIT.bytes || rpcs > LIMIT.rpcs) return budget.stop("limit");
+    if (bodies >= LIMIT.bodies || received >= LIMIT.bytes || rpcs > LIMIT.rpcs) throw new ArchiveChainLimit();
     return Math.min(maximum, LIMIT.bytes - received);
   };
   const decode = (value: ProofBody, fact: FactRef, sequence: CheckedSequence, content?: Digest) => {
@@ -60,7 +60,7 @@ export async function archiveInstallationIdentity(at: ScopeRef, seed: Seed, sql:
     const uses = child.uses.filter(use => same(use.fact, born.source));
     if (uses.length !== 1) return null;
     const use = uses[0]!, cap = capacity();
-    if (++rpcs > LIMIT.rpcs) return budget.stop("limit");
+    if (++rpcs > LIMIT.rpcs) throw new ArchiveChainLimit();
     const held = budget.reserve({ nodes: 1, calls: 1, metadata: cap, inputWork: cap * 8 });
     const reply = await budget.wait(() => peers.births.read(parent, Math.min(10_000, budget.remaining()), cap));
     const admitted = readNativeBirth(reply, parent, cap, size => { budget.settle(held, size); budget.spend({ inputWork: size * 32 }); bodies++; received += size; });
@@ -73,7 +73,7 @@ export async function archiveInstallationIdentity(at: ScopeRef, seed: Seed, sql:
     }
     if (!source) {
       const cap = capacity();
-      if (++rpcs > LIMIT.rpcs) return budget.stop("limit");
+      if (++rpcs > LIMIT.rpcs) throw new ArchiveChainLimit();
       const reservation = budget.reserve({ calls: 1, metadata: cap, inputWork: cap * 8 });
       const exact = await budget.wait(() => peers.proofs.read(born.source!, cap, Math.min(10_000, budget.remaining())));
       if (!exact) return null;
@@ -106,5 +106,5 @@ export async function archiveInstallationIdentity(at: ScopeRef, seed: Seed, sql:
     return { directory: parent, rules: made.from.at, rulesNamed: cohort.rules, item: fields["job"], root: childAt, definition: born.seed.definition,
       ids: { release: fields["release"], semantic: fields["semantic"], presentation: fields["presentation"] } };
   }
-  return null;
+  throw new ArchiveChainLimit();
 }

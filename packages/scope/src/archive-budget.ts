@@ -1,6 +1,7 @@
 /** One local inventory pass's admitted work, not a heap or custody proof.
  * Native callers must reserve SQL/parse work before touching the bodies. */
 import { natural } from "@generalbusiness/dap-bytes";
+import type { Head } from "@generalbusiness/dap-contract";
 import type { Sql, SqlValue } from "./sqlite.ts";
 
 export const ARCHIVE_BOUNDS = Object.freeze({ entries: 4096, attempts: 512, nodes: 64, calls: 16384, metadata: 4 * 1024 * 1024, inputWork: 64 * 1024 * 1024 });
@@ -14,7 +15,13 @@ export class ArchiveStopped extends Error {
 /** Trusted policy owner may stop before any repository has been selected.
  * It crosses wait() intact; it neither resets nor exhausts the budget. */
 export class ArchivePolicyStopped extends ArchiveStopped {
-  constructor(readonly policyReason: "application-policy-revoked" | "application-policy-unavailable", readonly proofReason?: string) { super("unavailable"); }
+  constructor(readonly policyReason: "application-policy-revoked" | "application-policy-unavailable", readonly details: ArchivePolicyStopDetails = {}) { super("unavailable"); }
+}
+export interface ArchivePolicyStopDetails { readonly proofReason?: string; readonly chainReason?: "admission-limit"; readonly position?: Head }
+/** Immutable admission counts differ from a shortage in this pass's ledger.
+ * Keep the ledger usable for its already paid terminal write. */
+export class ArchiveChainLimit extends ArchiveStopped {
+  constructor(readonly position?: Head) { super("limit"); }
 }
 /** Policy proof may lag native creation; it must remain a retry. */
 export class ArchivePolicyPending extends ArchiveStopped { constructor() { super("unavailable"); } }

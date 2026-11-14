@@ -4,7 +4,7 @@ import { canonicalize, digestBytes, isDigest, same, utf8 } from "@generalbusines
 import type { Bounds, Head, SequenceRef, Seed, Timestamp } from "@generalbusiness/dap-contract";
 import { isSequenceRef, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { captureJournalParentFrontier, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
-import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, ArchivePolicyStopped, type ArchiveCapacityRefusal } from "./archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, ArchivePolicyStopped, ArchiveChainLimit, type ArchiveCapacityRefusal, type ArchivePolicyStopDetails } from "./archive-budget.ts";
 import { archiveParent, copyArchiveObjects } from "./archive-parent.ts";
 import { ArchiveFrontiers, type ArchiveFrontierBase, type ArchiveFrontierPrepared } from "./archive-frontier-store.ts";
 import { archiveFrontierRowContextBound } from "./archive-frontier-cost.ts";
@@ -160,6 +160,8 @@ export class ArchiveDriver {
     let capacityRefusal: ArchiveCapacityRefusal | null = null;
     let fixedFinish: ArchiveFixedFinish | null = null;
     let sourceFailure: ArchiveSourceFailure | null = null;
+    let policyStop: ArchivePolicyStopDetails | null = null;
+    let halt: ReturnType<ArchiveRows["prepareHalt"]> | null = null;
     // Capture codes: 0 no planner, 1 adaptive, 2 fixed published,
     // 3 fixed unpublished, 4 conversion, 5 pending rebuild.
     let captureStrategy = 0, captureThrough: number | null = null, captureSelected: number | null = null;
@@ -178,8 +180,13 @@ export class ArchiveDriver {
       const at = { ...current.at }, through = { ...current.head };
       const terminal = rows.terminal(budget);
       if (terminal) return done({ state: "stopped", next: null, reason: terminal.reason });
+      // The original ledger pays once before any policy work. Every later
+      // outer lookahead starts with this write already removed from its
+      // available allowance; failure need not leave spare write capacity.
+      if ("production" in this.#options) halt = rows.prepareHalt(budget);
       let policySeed: Seed | null = null;
       if ("production" in this.#options && this.#options.preparePolicies) {
+        step = "policy"; detail = "own-preparation";
         // Policy denial must not depend on decoding a large old pending row.
         // This metadata pin grants no body/export admission: the normal pin
         // and row checks still run below before any provider work.
@@ -190,9 +197,10 @@ export class ArchiveDriver {
         const prepare = this.#options.preparePolicies;
         const prepared = await budget.wait(() => prepare(at, initial.seed, budget));
         if (prepared?.stop) {
-          rows.halt(prepared.stop, budget);
+          halt!(prepared.stop);
           return done({ state: "stopped", next: null, reason: prepared.stop });
         }
+        detail = "none";
       }
       let row = rows.load(budget);
       phase = !row ? "absent" : row.stopped ? "stopped" : row.pending ? "pending" : row.confirmed ? "confirmed" : "target";
@@ -473,9 +481,20 @@ export class ArchiveDriver {
       if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return done({ state: "stopped", next: null, reason: "conflict" }); }
       return done({ state: "retry", next });
     } catch (error) {
-      if (error instanceof ArchivePolicyStopped) {
-        const rows = this.#store();
-        if (rows) { rows.halt(error.policyReason, budget, error.proofReason); return done({ state: "stopped", next: null, reason: error.policyReason }); }
+      if (error instanceof ArchivePolicyStopped || error instanceof ArchiveChainLimit) {
+        const reason = error instanceof ArchivePolicyStopped ? error.policyReason : "application-policy-unavailable";
+        policyStop = error instanceof ArchivePolicyStopped ? error.details
+          : { chainReason: "admission-limit", ...(error.position ? { position: { ...error.position } } : {}) };
+        if (halt) {
+          try { halt(reason, policyStop); return done({ state: "stopped", next: null, reason }); }
+          catch (writeError) {
+            // Prepayment preserves work capacity, not extra time. An
+            // elapsed original deadline cannot persist a late terminal.
+            if (!(writeError instanceof ArchiveStopped)) throw writeError;
+            this.#fallback = scheduled ?? this.#later(0);
+            return done({ state: "retry", next: this.#fallback, reason: writeError.reason });
+          }
+        }
       }
       if (error instanceof ArchivePrefixStopped) sourceFailure = error.sourceFailure ?? null;
       // Preserve a terminal planner debit if a subsequent row stop encounters
@@ -519,7 +538,7 @@ export class ArchiveDriver {
           attempted, state: observed.outcome?.state ?? "threw", reason: reason === undefined ? "none" : known.includes(reason) ? reason : "other",
           caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost,
           reservationCosts: ArchiveBudget.prototype.reservationCosts.call(budget),
-          parentRead, capacityRefusal, fixedFinish, sourceFailure, capacityObservation,
+          parentRead, capacityRefusal, fixedFinish, sourceFailure, capacityObservation, ...(policyStop ? { policyStop } : {}),
         });
       } catch { /* Observation cannot replace the original archive result. */ }
     }

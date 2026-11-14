@@ -11,7 +11,7 @@ import { canonicalize, digestBytes, timeOf, utf8 } from "@generalbusiness/dap-by
 import { platform } from "@generalbusiness/dap-platform";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
-import { ARCHIVE_BOUNDS, ArchiveBudget, ArchivePolicyPending, ArchivePolicyStopped, type ArchiveCost, type ArchiveCapacityRefusal } from "../src/archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, ArchivePolicyPending, ArchivePolicyStopped, ArchiveChainLimit, type ArchiveCost, type ArchiveCapacityRefusal } from "../src/archive-budget.ts";
 import { driver, ScriptedHost } from "./support/archive-driver.ts";
 import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import { archiveHostGate as gate } from "./support/archive-provider.ts";
@@ -67,7 +67,7 @@ test("policy proof retry and permanent metadata stop preserve the confirmed nati
     preparePolicies: async () => {
       ownerCalls++;
       if (pending) throw new ArchivePolicyPending();
-      throw new ArchivePolicyStopped("application-policy-unavailable", "metadata-limit");
+      throw new ArchivePolicyStopped("application-policy-unavailable", { proofReason: "metadata-limit" });
     },
     target: { resolve: async () => { targetCalls++; throw Error("policy disposition must precede target resolution"); } },
     provider: new Proxy(host, { get(target, key) {
@@ -102,6 +102,43 @@ test("policy proof retry and permanent metadata stop preserve the confirmed nati
   expect(reconstructed.terminal).toEqual(stopped.terminal); expect(reconstructed.bytes).toEqual(before);
   expect(reconstructed.confirmed).toEqual(confirmed); expect(ownerCalls).toBe(2);
   expect(targetCalls).toBe(0); expect(providerCalls).toBe(0); expect(await lane.head()).toEqual(head);
+});
+
+test("an immutable chain count refusal during candidate preparation stops with its position and preserves the native receipt", async () => {
+  const host = new ScriptedHost("sha1"), lane = await createNativeArchiveLane({}, {}, archiveDefinition);
+  expect(await lane.inside(state => driver(lane, state, host).run())).toMatchObject({ state: "confirmed" });
+  const confirmed = (await row(lane))!.confirmed!;
+  await lane.did(rita, "remark", { on: 0, fields: { text: "TEST later candidate" } });
+  const head = await lane.head(), sends = host.sends.length, mints = host.mintCalls;
+  const before = await lane.inside(state => state.storage.sql.exec("SELECT v FROM meta WHERE k = 'archive-row-1'").toArray());
+  let targets = 0, candidates = 0;
+  // Native bytes, writer, adaptive catches and terminal are real. Only the
+  // target/source/policy disposition ports are explicit TEST stand-ins.
+  const run = () => lane.inside(state => {
+    const sql = archiveSql(state);
+    return new ArchiveDriver({ production: "room-binding", sql,
+      current: () => ({ at: lane.at, head }), clock: () => lane.c.clock.now, bounds: PROPOSED_BOUNDS,
+      policies: { registry: archiveAuthorityPolicies(lane, archivePolicies) }, admit: () => true, provider: host,
+      target: { resolve: async () => { targets++; return archiveRepository; } },
+      sources: async (_after, _through, budget) => ({ pins: archiveAuthorityBasis(lane)!.pins,
+        replayContext: ownReplayContext(sql, lane.at, PROPOSED_BOUNDS.entryBytes, budget),
+        prepare: async seq => { candidates++; expect(seq).toBe(head.seq); throw new ArchiveChainLimit(head); } }),
+    }).run();
+  });
+  expect(await run()).toMatchObject({ state: "stopped", reason: "application-policy-unavailable", next: null });
+  await lane.inside(async state => {
+    const sql = archiveSql(state), rows = new ArchiveRows(sql, lane.at);
+    expect(sql.exec("SELECT v FROM meta WHERE k = 'archive-row-1'").toArray()).toEqual(before);
+    expect(rows.load()!.confirmed).toEqual(confirmed);
+    expect(rows.terminal()).toEqual({ reason: "application-policy-unavailable", chainReason: "admission-limit", position: head });
+    expect(rows.storedWake()).toEqual({ pending: false, stopped: true, next: null });
+    expect(await archiveRowDiagnostic(sql, lane.name, () => state.storage.getAlarm())).toMatchObject({
+      phase: "stopped", reason: "application-policy-unavailable", chainReason: "admission-limit", position: head,
+    });
+  });
+  expect(await run()).toMatchObject({ state: "stopped", reason: "application-policy-unavailable", next: null });
+  expect(targets).toBe(1); expect(candidates).toBe(1);
+  expect(host.sends).toHaveLength(sends); expect(host.mintCalls).toBe(mints); expect(await lane.head()).toEqual(head);
 });
 
 // Native alarm owns the writer. Its host wait does not hold native turns,

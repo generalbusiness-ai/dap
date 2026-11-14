@@ -398,6 +398,13 @@ that is not active yet retries while its native creation result can arrive.
 An unreadable namespace reply also retries. Neither case selects archive
 payload or grants export permission.
 
+`chainReason: admission-limit` marks a permanent creator-proof count limit.
+For a stopped native journal, the diagnostic also names the refused entry's
+`position`. Its confirmed prefix stays intact; that entry and later entries
+of the journal do not archive. Until ARC-1 adds its supported-cohort check,
+a creator walk that exceeds the remaining pass budget can report `limit`
+on every retry. The existing archive diagnostic shows the failing site.
+
 Use an independently enumerated and verified list of the room's expected
 public native and application scope references. Exclude private root
 journals according to policy, not because a ref is absent from the clone.

@@ -87,6 +87,20 @@ fixture row. A labelled TEST policy callback produces a pending result and
 then a permanent metadata refusal. The witness checks row bytes, receipt,
 stopped wake, reconstruction, existing diagnostic and zero provider calls.
 The callback grants no signed-reader or installation-authority evidence.
+A second native driver case carries an immutable count refusal through
+candidate preparation and the adaptive catches. It checks the fixed
+`chainReason`, exact entry position, unchanged receipt and row, stopped
+wake and reconstruction. The policy disposition remains a TEST callback.
+The row witness ties the prepaid terminal price to its shared function,
+checks the closed record's 512-byte bound, and writes once with no work
+or call allowance left. The original ledger stays valid throughout.
+
+The shared Base fixture also runs both actual creator walks over its root
+and child. Archive provenance names the signed packet's release. Admission
+allows that release and revokes when only an unrelated release remains
+trusted; its public API intentionally hides the release itself. A genuine
+Rules birth supplied at the wrong parent address makes both walks refuse.
+The witness adds no synthetic creator chain or second installation.
 
 ## Policy setup costs and remaining proof work
 
@@ -104,7 +118,7 @@ They grant no proof, trust, source or export permission. In this table,
 | Clear and populate policy tables | `forecastArchivePolicyTables(d,s)`: M `512s`, W `1024(d+s)` |
 | Fresh declaration validation | Existing `forecastArchiveDeclarationValidation(u)`: W `48u` for each immutable declaration |
 | Terminal overlay read | `forecastArchiveTerminalRead`: 1 call, M 512, W 4608 |
-| Terminal overlay and wake write | `forecastArchiveTerminalWrite(512)`: 2 calls, M 576, W 8192, paid before serialization |
+| Terminal overlay and wake write | `forecastArchiveTerminalWrite(512)`: 2 calls, M 576, W 8192, prepaid once before policy work |
 
 The proof reply price covers both sender and receiver validation. Fixed
 sender metadata work cannot shrink when a small reply settles. Actual
@@ -128,16 +142,66 @@ that boundary when it combines policy, target, source, build and provider
 costs. The call coordinates above count caller-side operations, including
 one namespace RPC; they do not enumerate SQL calls inside that peer.
 
-Planner question `ed162ad1` covers a concrete missing sender charge in the
-new ancestry walk. Existing `nativeBirth` runs `ReadPreparation.birth`,
-which can load and validate a declared ancestor's retained declaration
-beside a small genesis reply. The existing definition bound is 256 KiB.
-An exact proof read also performs sender identity and body checks. Current
-ancestry charges cover bounded replies and receiver validation, not this
-fixed sender preparation. The planner must choose a static precharge from
-existing bounds or a bounded size quote before that protocol grows. A
-complete cost proof must also state whether peer SQL calls belong in the
-caller call coordinate. No completed charge or cost proof is claimed here.
+Ruling `25222294` keeps the two existing chain-read senders' work in their
+own preparation bounds. The archive receiver pays its reserved reply,
+measured decode and fixed hop work. It adds no sender-ceiling charge and
+no quote. The separate new signed-install proof read keeps the fixed price
+in the table above.
+
+`APPLICATION_ACT_ADMISSION_BOUNDS` supplies 18 ancestor hops, 37 bodies,
+16 MiB aggregate proof bytes and 36 RPCs. One chain walk for one full scope
+reference therefore makes at most 36 sender calls in a pass. Package-proof
+and target reads are separate. Each pass clears the proved-reference set
+and repeats the walk; another use of a successfully proved full reference
+within that pass reuses its identity. No cross-pass proof or trust cache
+grants permission.
+
+The birth sender uses `PreparationBudget` and a 10-second deadline
+(`ScopeObject.nativeBirth`, `ReadPreparation.birth`): at most 16 calls,
+16 candidates, 64 KiB metadata, 256 KiB declaration, and 1 MiB genesis.
+The archive's existing entry bound further limits its requested body to
+256 KiB. The exact proof sender limits SQL calls to five, the scope row
+to 4096 bytes and its body to the requested bound before selecting it
+(`ScopeObject.proofSource`, `ProofBytes.exact`).
+
+The separate SB-1 request `836283176f960b8c886eeab41ee36ca4b83316e3`
+owns the existing birth sender's earlier alarm-recovery read. Recovery can
+load full scope metadata before the proof budget starts. It exists on main
+and admission uses it too. SB-1 follows AE-1; this head neither changes that
+recovery nor claims its missing bound. Audit `853f63cf` records the finding.
+
+Ruling `50ce6650` distinguishes immutable admission counts from budget
+shortage. `ArchiveChainLimit` carries an immutable count refusal through
+the adaptive catches. The driver records `application-policy-unavailable`
+with `chainReason: admission-limit`, in own or candidate preparation.
+Candidate stops include the exact entry sequence and hash.
+
+Each production pass that starts policy work prepays one terminal write in
+its original ledger. Later outer lookahead starts with that price already
+spent, so failure cannot consume it. The one-use writer checks the same
+deadline and writes the closed terminal and wake without another debit.
+It never revives a stopped ledger or adds an allowance. No second ledger,
+stored marker, second walk or discovery reordering enters this head.
+
+Every budget shortage keeps `limit`, capacity deferral and retry, including
+own preparation and the first candidate. Until ARC-1 lands, a chain that
+cannot fit can repeat `limit` on each pass; the existing diagnostic shows
+the failing site. AE-1 makes no permanence claim from candidate position.
+ARC-1 owns the fits-one-pass predicate and its permanent outside-cohort
+stop. Its number act must bound these five variable pre-entry components
+beside the measured creator-chain cost:
+
+1. Target discovery and initial format/target persistence, including
+   actual mutable Directory/Destination query reply sizes. A later pass
+   can skip a target save that already committed.
+2. Warm policy/release/prepared/owned table sizes, which determine reset
+   work. A cold object starts with native tables only.
+3. Current trust text length, row count and repeated provider guard
+   comparisons. Unrelated valid trust rows can change their cost.
+4. The retained archive row, manifests, confirmed frontier and current
+   parent. Receipt progress or a layout transition changes those bytes.
+5. Selection setup, including adaptive versus fixed strategy after a
+   capacity deferral and snapshot versus standalone row-context work.
 
 Ruling `12115613` resolves planner question `59c2e3cb` with this closed list.
 Each refusal has one `reason` property, no sender label or payload, and a
@@ -164,13 +228,15 @@ adds no repair or resume trigger for the old terminal scope. Its confirmed
 receipt stays intact. No provider call follows a refusal during that
 scope's policy preparation.
 
-Planner question `0ee81c18` asks about native control-journal ordering.
-Rules/Directory candidate entries discover their package proof in source
-preparation, after the existing target, format or parent read. A refusal
-there prevents further provider work but does not undo those earlier
-reads. Moving candidate discovery ahead of every provider call needs a
-bounded scheduling decision. The draft makes no universal zero-call claim
-for that native candidate path and adds no whole-prefix preflight scan.
+Ruling `ff83b78d` preserves native control-journal ordering. Rules/Directory
+candidate entries discover package proof in source preparation, after the
+native journal's target, format or current-parent reads. Those calls carry
+no refused entry payload, label or package policy. No provider call follows
+the refusal. The terminal and existing diagnostic record its fixed reason
+and exact local entry position. The stored confirmed prefix stays intact;
+the refused entry and every later entry of that stopped native journal
+remain unarchived. AE-1 adds no prefix scan. ARC-1 separately owns the
+per-entry predicate before provider work.
 
 ## Validation remains pending
 
@@ -180,6 +246,8 @@ for that native candidate path and adds no whole-prefix preflight scan.
 | Affected compiler contexts | Not run; waiting for root's slot |
 | Strict proof-reader owning file | Not run |
 | Shared Base/installed-package and existing Grow owning file | Not run |
+| Joint admission/archive root-child witness | Not run |
+| Prepaid terminal cost, count-stop and operator owning files | Not run |
 | Plain host configuration and page data witnesses | Not run |
 | Relevant entry-point seals and required checks | Not run; source correspondence review precedes any seal adoption |
 | Final gate on actual AC and checker review | Pending |
