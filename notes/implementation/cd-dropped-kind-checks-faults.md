@@ -113,7 +113,10 @@ The fix, in `packages/scope`:
   replay reads the row.
 - The `SqliteStore` constructor fills the row with one scan when the row
   is absent. A scope made before the fix gets its true total when its
-  store opens, before its first turn.
+  store opens, before its first turn. The scan and the write are one SQL
+  statement (`INSERT … SELECT … ON CONFLICT DO NOTHING`), so they commit
+  together or not at all. So a read of an old store also writes this one
+  row, the first time the store opens.
 - `#full` (`scope/src/turn.ts`) applies the stop after the existing checks.
   An input that adds new `entry` bytes and leaves the total above
   `scopeBytes` writes no entry. A create or genesis, an act and a
@@ -128,6 +131,10 @@ The fix, in `packages/scope`:
 - An input that adds no new `entry` bytes passes: a read, a floor, a
   checkpoint, a timed turn, and an input that reuses retained sequences
   only. No input frees the space.
+- A diagnosis entry is not exempt from the stop. Today a diagnosis
+  re-retains only rows that the scope already holds, so it adds no bytes.
+  A later change that lets a diagnosis retain new rows must revisit the
+  stop.
 
 The cap adds no export name, no reason code and no record form. `Store`
 gains `retainedEntryBytes()`, and its `retain` and `retainBirth` return
