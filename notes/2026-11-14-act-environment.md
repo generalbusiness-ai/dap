@@ -294,8 +294,9 @@ revision from the view, and `bound` lists each key that it added. The
 from an item's ID gets its basis in this way, and sees that it did.
 
 **The source of an explored act.** Explore takes a key beside the act
-and the context. The key carries no authority, and Explore retains
-nothing. Explore computes the version from the bound act, so a caller
+and the context, and the key is required. Without a key, Explore could
+not name the item that an `open` makes. The key carries no authority,
+and Explore retains nothing. Explore computes the version from the bound act, so a caller
 cannot state the version first. The `source` of the result is that key
 and that version. `opens` and each symbolic name in the hypothetical
 view use it. The MCP tool `explore` takes the key argument of the act
@@ -967,7 +968,7 @@ Hugh decided each item as this section states it, with the words
 7. **The third symbolic name, `{ entry }`: yes,** with the coarse rule
    of section 5.4.
 
-The note itself waits for review and for Hugh's ratification.
+Hugh ratified the note on 14 November 2026, after its review.
 
 ## 18. Rulings of step E1
 
