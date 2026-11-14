@@ -88,23 +88,59 @@ Wall times come from `/usr/bin/time -p`; case counts come from actual Vitest
 JSON reports. Earlier temporary raw files remain, and the retained copies
 match them byte-for-byte. This table records development, not a gate.
 
+The generated outputs and development note then committed at
+`321f09ab9e7f3a060812170e55b273597e487ab7`, tree
+`785c9dee6e4db0694ccdb1f9c083aed2f62123de`. The Native owner and both
+control attempts used that clean head. This documentation update changes
+no production source, generated outputs, tests, dependencies or configuration.
+
+Both control commands used `examples/lending/definition.ts` as `SOURCE`,
+old text `none(reservation, ["held"], held => [` as `OLD`, and new text
+`none(reservation, ["lapsed"], held => [` as `NEW`. `TITLE` was exactly
+`production reservation slots compare opaque day labels and lapse without changing their tool`.
+The helper copies changed only the success-cleanup line to retain raw files;
+classification, fault, test assertions, runner and deadlines stayed unchanged.
+
 | Check | Command | Exit and actual result | Output and SHA-256 |
 |---|---|---|---|
 | Four compiler contexts | `N node_modules/typescript/bin/tsc -p CONFIG`; configs are `examples/lending/tsconfig.json`, `examples/lending/browser/tsconfig.json`, `packages/define/tsconfig.test.json` and `packages/scope/tsconfig.test.json`, sequentially once | All four 0; stdout and stderr empty | `compiler-1.stdout.log` through `compiler-4.stdout.log` and matching stderr files, each `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
 | Typed producer | `N --import tsx examples/lending/scripts/pin.mjs` | 0; exactly three outputs; 1.00 s | `producer.stdout.log` — `af6199b1b863abf7d5955f1cdbd19453fd9d8b2adbddb3830c3efa0c5921595a` |
 | Whole Lending definition owner | From `examples/lending`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts definition.test.ts` | 0; eight passed, zero failed, pending or todo; 0.86 s | `lending.json` — `bbc62e17734c133408178a0687bb591dd1530ab68eb8befe77c9e1a27e1ab99e` |
 | Whole Define story and package owners | From `packages/define`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts test/story.test.ts test/package.test.ts` | 0; six story and five package cases passed, zero failed, pending or todo; 0.67 s | `define.json` — `42633973cc21b3f97869bc102b1b5002597338168ec266101f27b260b19ab15a` |
-| Native Lending owner | From `packages/scope`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.lending.config.ts test/lending.test.ts` | **UNRUN** at this generated-source checkpoint | No output yet |
+| Native Lending owner | From `packages/scope`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.lending.config.ts test/lending.test.ts` | 0; one whole file and one scenario passed; zero failed, pending or todo; 11.46 s | `native-lending.json` — `bee66653e695d11702574f858999e4371585e518d9ee4d8f1e9fbfbe7afdedd0` |
+| Guard control attempt 1 | `N controls/held-reservation/control.retained.mjs SOURCE OLD NEW --expect TITLE -- examples/lending --config vitest.config.ts definition.test.ts`, helper path under the output directory | 2, INCONCLUSIVE; package preflight stopped before any child or mutation; 0.07 s | `controls/held-reservation/control.stderr.log` — `43248b73322f0fb46fb8cf3386750a4b4739981285913fbebda1516a39833e50` |
+| Corrected guard control attempt 2 | `N controls/held-reservation-attempt2/control.retained.mjs SOURCE OLD NEW --expect TITLE -- . --config examples/lending/vitest.config.ts definition.test.ts`, helper path under the output directory | 0, DISTINGUISHES; baseline eight passed; mutant six passed and two assertion failures; 2.36 s | `controls/held-reservation-attempt2/control.stderr.log` — `bd0e786d652ced3298fe208bdae1684fde58e287e0d6950bee686aaa28fe834d` |
 
-Both plain runs had empty stderr. The producer's only stderr was the Node
-`DEP0205` deprecation warning. No Native, control, canonical package bundle,
-release signing, version raise or gate ran for this checkpoint.
+Both plain runs and the Native run had empty stderr. The producer's only
+stderr was the Node `DEP0205` deprecation warning. The dedicated Native
+configuration retained its existing one-worker, no-isolation and 30-second
+test allowance. It exercised real scopes and SQLite; the Git host and clock
+keep their stand-in limits described above.
+
+Attempt 1 used the wrong package argument: `examples/lending` has no
+`package.json`. Its inconclusive verdict and raw output remain unchanged;
+it provides no guard evidence. Attempt 2 used the repository root as its
+package boundary and the existing Lending config as its test root. Both
+whole-owner reports have eight cases. The mutant failed the required
+production assertion at `definition.test.ts:113`: it wrote the occupied
+reservation instead of returning `guard-failed` with `tool-day-taken`.
+The expected companion assertion at line 127 also detected the changed
+definition bytes. That pin failure alone would not establish admission
+protection; the production refusal failure supplies that distinction.
+No other case failed, cancelled or skipped, and no load or runtime error
+occurred. Source bytes restored exactly to SHA256
+`cb17d224d6ad6518f1ad8dfe2bf15e2db0604ac0d5c52c48830be0f42bb20eee`
+and mode `0644`. No third green run or generated pin rewrite occurred.
+
+Canonical release packaging, release signing, version raise and the full
+gate remain **UNRUN**. The 19 plain development cases, one Native scenario
+and guard distinction do not replace that gate or determine release IDs.
 
 ## Release boundary
 
-Lending remains at version `0.2.0`. The committed identifiers and
-signatures remain unchanged. After normal generation identifies the
-new definition and release inputs, stop for the planner's signing
-decision. Raise the version and run the gate only after the planner
-signs Lending `0.2.0`, as the request requires. No landing or deployment
-follows from this source stage.
+Lending remains at version `0.2.0`. Its new definition pin is distinct from
+the committed canonical release identifiers, which remain unchanged, as do
+the manifest and release signatures. Canonical release preparation waits
+for NF5's actual main inputs and the planner's signing order. Raise the
+version and run the gate only after the planner signs Lending `0.2.0`, as
+the request requires. No landing or deployment follows from these checks.
