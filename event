@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5d32453acf723d8d14c117ef26efa4b16030b25a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-h1-lv1-focused.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5e6af174878a919f5f187950fc3e5e9bd2934db5","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/validate/operands.ts."}
