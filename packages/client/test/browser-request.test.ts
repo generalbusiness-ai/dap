@@ -4,14 +4,14 @@
  * `memoryStore` stands in for the browser store. The signatures are real.
  */
 import { expect, test } from "vitest";
-import type { Answer, Receipt } from "@generalbusiness/dap-contract";
+import type { Answer, FieldRecord, Receipt } from "@generalbusiness/dap-contract";
 import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
 import { browserRequests, meaningOf, memoryStore, signedIntent, type BrowserRequestPorts, type Envelope } from "../src/index.ts";
 import { T0, lane, receiptOf, signer } from "./support/custody.ts";
 
 const who = { service: "https://scopes.test", membership: null, signer: signer.key, target: lane };
 const notAfter = timeOf(T0 + 60_000);
-function bench(fields: Record<string, unknown> = { name: "Sieve" }) {
+function bench(fields: FieldRecord = { name: "Sieve" }) {
   const store = memoryStore(), calls: string[] = [], posted: string[] = [];
   let builds = 0;
   const script: { post: (e: Envelope) => Promise<Answer>; settle: boolean; sound: boolean; current: boolean } = {
@@ -53,7 +53,7 @@ test("a request is kept before its one send, and each answer leaves the phase th
   expect(await unsound.send("k")).toEqual({ status: "unknown" });
   expect(await unsound.phase("k")).toBe("unknown");
 
-  for (const post of [async () => { throw new Error("the reply was lost"); }, async (): Promise<Answer> => ({ answer: "unavailable", reason: "TEST" } as Answer)]) {
+  for (const post of [async () => { throw new Error("the reply was lost"); }, async (): Promise<Answer> => ({ answer: "unavailable", reason: "unavailable" })]) {
     const lost = bench();
     lost.script.post = post;
     expect(await lost.send("k")).toEqual({ status: "unknown" });
