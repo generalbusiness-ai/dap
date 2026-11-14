@@ -70,7 +70,7 @@
  */
 
 import type { Answer, Beside, DeclaredDefinition, Digest, FactRef, Head, KeyId, PlatformDefinition, Receipt, RefusalReason, ScopeRef, Settlement, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
-import { REFUSAL_CLASSES, canonicalize, digestBytes, intentDigest, isDefinitionName, isDigest, isFactRef, isKeyId, isReceipt, isRecord, isScopeRef, isSignedIntentShape, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { REFUSAL_CLASSES, canonicalize, digestBytes, intentDigest, isDefinitionName, isDigest, isFactRef, isHead, isKeyId, isReceipt, isRecord, isScopeRef, isSignedIntentShape, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { ANSWERS } from "./answers.ts";
 import { sendableAt } from "./originals.ts";
 import { StoreFormatError } from "./store-format-error.ts";
@@ -340,6 +340,30 @@ const UNRESOLVED: ReadonlySet<Phase> = new Set(["prepared", "sent", "unknown"]);
 const deathOf = (answer: Answer): CustodySigning["dead"] => answer.answer !== "refused" ? undefined
   : answer.reason === "expired" ? "expired" : REFUSAL_CLASSES[answer.reason as RefusalReason] === "never" ? "never" : undefined;
 
+/** Read death evidence from a store-owned slice, without reconstructing its segment. */
+function deathIn(outcomes: readonly StoredOutcome[]): CustodySigning["dead"] {
+  let death: CustodySigning["dead"];
+  for (const outcome of outcomes) {
+    if (!isRecord(outcome) || typeof outcome["at"] !== "string" || timeMs(outcome["at"]) === null
+      || !Number.isSafeInteger(outcome["attempt"]) || Number(outcome["attempt"]) < 1) throw new CustodyError({ held: "unreadable" });
+    if ("answer" in outcome) {
+      const answer = outcome["answer"];
+      if (!isRecord(answer) || typeof answer["answer"] !== "string") throw new CustodyError({ held: "unreadable" });
+      if (answer["answer"] === "refused") {
+        const named = Object.hasOwn(answer, "name");
+        const refusalShape = Object.keys(answer).length === (named ? 4 : 3) && ["answer", "reason", "judgedAt"].every(key => Object.hasOwn(answer, key))
+          && typeof answer["reason"] === "string" && isHead(answer["judgedAt"]) && (!named || typeof answer["name"] === "string");
+        if (!refusalShape) throw new CustodyError({ held: "unreadable" });
+        const found = deathOf(answer as unknown as Answer);
+        if (found) death = found;
+      } else if (!["accepted", "archived", "unavailable", "mismatch"].includes(answer["answer"])) throw new CustodyError({ held: "unreadable" });
+    } else if (!(("lost" in outcome && outcome["lost"] === true)
+      || ("settled" in outcome && isRecord(outcome["settled"]))
+      || ("archivedSettlement" in outcome && isRecord(outcome["archivedSettlement"])))) throw new CustodyError({ held: "unreadable" });
+  }
+  return death;
+}
+
 const signingOf = (envelope: Envelope, meaning: Digest): CustodySigning => ({ intent: intentDigest(envelope.signed.intent), meaning, notAfter: envelope.signed.intent.notAfter });
 
 /** A version 1 record as version 2: one signing, which holds every outcome. A refusal that killed it marks it dead; a mismatch closes it. */
@@ -348,7 +372,8 @@ function upgraded(stored: StoredCustodyRecord): CustodyRecord {
   const { outcomes, ...fields } = stored;
   const signing = signingOf(stored.envelope, stored.meaning);
   const inline = outcomes.map((o): Outcome => ("signing" in o && o.signing !== undefined ? o : { ...o, signing: 0 }) as Outcome);
-  for (const o of inline) { const dead = "answer" in o ? deathOf(o.answer) : undefined; if (dead) signing.dead = dead; }
+  const dead = deathIn(outcomes);
+  if (dead) signing.dead = dead;
   if (stored.phase === "mismatch") signing.closed = true;
   return { ...fields, v: 2, signings: [signing], outcomes: inline };
 }
@@ -394,9 +419,25 @@ export class Custody {
 
   /** The record under `id`, as version 2. This is the one place that upgrades a stored record's version. */
   async #read(id: string): Promise<CustodyRecord | null> {
-    let stored: StoredCustodyRecord | null;
-    try { stored = await this.store.read(id); } catch (error) { if (error instanceof StoreFormatError) throw error; throw new CustodyError({ held: "unreadable" }); }
-    return stored === null ? null : upgraded(stored);
+    try {
+      const stored = await this.store.read(id);
+      if (stored === null) return null;
+      const record = upgraded(stored);
+      if (stored.v === 1) {
+        const inSegment = record.count - record.outcomes.length;
+        if (!Number.isSafeInteger(inSegment) || inSegment < 0) throw new CustodyError({ held: "unreadable" });
+        // The store owns parsing and byte limits. Read the existing bounded
+        // slices, never one reconstructed array of the whole history.
+        for (let from = 0; from < inSegment; from += DECIDED_SLICE) {
+          const limit = Math.min(DECIDED_SLICE, inSegment - from);
+          const outcomes = await this.store.segmented(id, from, limit);
+          if (!Array.isArray(outcomes) || outcomes.length !== limit) throw new CustodyError({ held: "unreadable" });
+          const dead = deathIn(outcomes);
+          if (dead) record.signings[0]!.dead = dead;
+        }
+      }
+      return record;
+    } catch (error) { if (error instanceof StoreFormatError) throw error; throw new CustodyError({ held: "unreadable" }); }
   }
 
   /** A signing is dead when the scope refused it with a reason of class `never` or `expired`, or when this clock is past its `notAfter` by the margin. */
@@ -548,9 +589,13 @@ export class Custody {
     // A preparation step is keyed by the intent it prepared, a standalone record holds a step's own intent, and a creation is
     // named by its definition: a second signing fits none of them (ruling 0767a3f9).
     if (record.standalone || Object.keys(record.steps).length > 0 || "create" in record.identity.target) throw this.#conflicting(record);
-    const envelopes = envelopesOf(record), signings = record.signings.length;
-    if (envelopes >= ENVELOPES_MOST || signings >= SIGNINGS_MOST) throw new CustodyError({ held: "full", reason: "signings", envelopes, signings });
-    if (envelopeBytes(record) + bytes + RECORD_OVERHEAD > RECORD_BYTES) throw new CustodyError({ held: "full", reason: "bytes", bytes });
+    // Count the record the new signing leaves. A closed latest envelope is
+    // replaced, while an open latest envelope must stay with its signing.
+    const replaced = record.signings.at(-1)!.closed === true;
+    const envelopes = envelopesOf(record) - (replaced ? 1 : 0), signings = record.signings.length;
+    if (envelopes + 1 > ENVELOPES_MOST || signings >= SIGNINGS_MOST) throw new CustodyError({ held: "full", reason: "signings", envelopes, signings });
+    const keptBytes = envelopeBytes(record) - (replaced ? envelopeBytes(record.envelope) : 0);
+    if (keptBytes + bytes + RECORD_OVERHEAD > RECORD_BYTES) throw new CustodyError({ held: "full", reason: "bytes", bytes });
     const sign = async (): Promise<CustodyRecord> => {
       const { binding, envelope } = await build();
       const next: CustodyRecord = structuredClone(record);

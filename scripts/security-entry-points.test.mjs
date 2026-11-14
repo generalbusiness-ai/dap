@@ -348,8 +348,8 @@ const seals = {
   "packages/client/src/application-trust.ts": "137391c8b1ed6f59f66e9368012c1355ed77325fdb16f67b73296be1ccc856b3", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "packages/client/src/application-install.ts": "f6c69d8f3abb87eaaecdaf25360deaaca98eec3ca6cb57a5912d72121cb1000c", // Reviewed R10 trust-before-fetch owner; actual maintained parser output. CF-1 changes it; actual maintained parser output.
   "packages/scope/src/applications/resolve.ts": "6338c9357780846b115999454239b68f34c5d6be3c090ca3f18b8f6e8771d0e2", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
-  "examples/grow/simulator-worker.ts": "cb1ca915e33f702245c3c37215d75fe89aa8531caf4424e694b9ee54780710f1",
-  "examples/grow/simulator-host.ts": "a503e2868ee7245629ea5a16f474ccc19d28ac9faae8b265039e59df2b0430c4"
+  "examples/grow/simulator-worker.ts": "9f1c5f0a8fd16fd2200e5b4aecc5ebbe874bfd6497476e19e120c3a0dfd834d0",
+  "examples/grow/simulator-host.ts": "25147890d54ef509cbea2996d81f4a8ea6d37d5309be90bf47e9a76acd381541"
 };
 // Integrated archive owners computed by the maintained owning parser.
 // Root adopted the reviewed outputs; the historical map name is retained here.
@@ -368,7 +368,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "packages/scope/src/object-archive.ts": namedOwners["packages/scope/src/object-archive.ts"],
-  "apps/room/worker.grow.ts": "af224660bab6d1eef101f6f05a7596af83888883b21571067e2b589483cee2da",
+  "apps/room/worker.grow.ts": "59069aaa3e846f59f18375de9172d35e09fef8588b73611ad7f87d69797fada3",
   "apps/room/archive-policy.ts": "d22a58a9531989db6c9c5ab388af23795cf0e0ef4d1d839b88b082cc88f66d21",
   "apps/room/archive.ts": "f48d094c318ffdd1012f5917ba7997477285e165555d05cacf18a8fd388e2d8f", // Valid source proof settles; source policy and identity checks unchanged.
   "packages/scope/src/archive-host-item.ts": "b5e7e65542613603b5ace32572067d6449f0101bf569f697889ffb82c4299b28",

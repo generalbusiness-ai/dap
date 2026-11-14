@@ -61,6 +61,98 @@ describe("custody record version 2 holds the signings of one request", { timeout
     expect([stored.v, stored.signings.length, stored.outcomes.map((o) => [o.signing, "settled" in o])]).toEqual([2, 1, [[0, false], [0, true]]]);
   });
 
+  // Invariant (ruling a7128e20): a v1 refusal that killed the signing still
+  // does so after later losses spill that refusal out of the inline outcomes.
+  test("a version 1 signing takes its death from the segment before the local clock expires", async () => {
+    const v1 = JSON.parse(readFileSync(new URL("./fixtures/custody-record-v1.json.txt", import.meta.url), "utf8")) as CustodyRecordV1;
+    const s = scene(), id = identityId(v1.identity);
+    const loss = { at: v1.updated, attempt: 2, lost: true } as const;
+    // This ordinary act has no preparation steps that independently forbid resigning.
+    const legacy: CustodyRecordV1 = { ...v1, steps: {}, phase: "unknown", attempt: 2, count: 130, outcomes: Array.from({ length: 64 }, () => ({ ...loss })) };
+    s.store.records.set(id, canonicalize(legacy));
+    await s.store.segment(id, 0, [...Array.from({ length: 64 }, () => ({ at: v1.created, attempt: 1, lost: true as const })),
+      { at: v1.created, attempt: 1, answer: refusedFor("scope-refused") }, loss]);
+    const slices: [number, number][] = [];
+    const custody = new Custody({ ...s.store, segmented: (name, from, limit) => {
+      slices.push([from, limit]);
+      return s.store.segmented(name, from, limit);
+    } }, () => timeOf(s.at()));
+    expect(Date.parse(v1.envelope.signed.intent.notAfter)).toBeGreaterThan(s.at());
+
+    const read = (await custody.find(v1.identity))!;
+    expect(slices).toEqual([[0, 64], [64, 2]]);
+    expect([read.signings[0]!.dead, s.custody.dead(read.signings[0]!), read.outcomes.every(o => "lost" in o)])
+      .toEqual(["never", true, true]);
+    expect(JSON.parse(s.store.records.get(id)!).v).toBe(1);
+    // A valid optional guard name preserves the same death on the next read.
+    await s.store.segment(id, 64, [{ at: v1.created, attempt: 1, answer: { answer: "refused", reason: "scope-refused", judgedAt: head, name: "TEST legacy guard" } }, loss]);
+    const next = await custody.send(v1.identity, meaningOf("replacement"), s.build(v1.identity.key, "replacement"), async e => {
+      s.sent.push(e.signed);
+      return refusedFor("scope-refused");
+    }, { notAfter, resign: true });
+    expect([next.record.v, next.record.signings.length, next.record.signings[0]!.dead, s.builds(), s.sent.length])
+      .toEqual([2, 2, "never", 1, 1]);
+  });
+
+  test("a version 1 unreadable or malformed outcome segment refuses a new signing", async () => {
+    const v1 = JSON.parse(readFileSync(new URL("./fixtures/custody-record-v1.json.txt", import.meta.url), "utf8")) as CustodyRecordV1;
+    for (const failure of ["missing", "malformed", "read"] as const) {
+      const s = scene(), id = identityId(v1.identity);
+      const loss = { at: v1.updated, attempt: 2, lost: true } as const;
+      const legacy: CustodyRecordV1 = { ...v1, phase: "unknown", attempt: 2, count: 2, outcomes: [loss] };
+      s.store.records.set(id, canonicalize(legacy));
+      const custody = new Custody({ ...s.store, segmented: async () => {
+        if (failure === "read") throw Error("TEST unreadable segment");
+        return failure === "missing" ? [] : [{ at: v1.created, attempt: 1, answer: null } as never];
+      } }, () => timeOf(s.at()));
+      await expect(custody.send(v1.identity, meaningOf("replacement"), s.build(v1.identity.key, "replacement"), async () => {
+        throw Error("must not send");
+      }, { notAfter, resign: true })).rejects.toMatchObject({ why: { held: "unreadable" } });
+      expect([s.builds(), s.sent.length, s.store.records.get(id)]).toEqual([0, 0, canonicalize(legacy)]);
+    }
+  });
+
+  test("a version 1 truncated final outcome slice refuses a new signing", async () => {
+    const v1 = JSON.parse(readFileSync(new URL("./fixtures/custody-record-v1.json.txt", import.meta.url), "utf8")) as CustodyRecordV1;
+    const s = scene(), id = identityId(v1.identity), slices: [number, number][] = [];
+    const loss = { at: v1.updated, attempt: 2, lost: true } as const;
+    const legacy: CustodyRecordV1 = { ...v1, steps: {}, phase: "unknown", attempt: 2, count: 130, outcomes: Array.from({ length: 64 }, () => ({ ...loss })) };
+    const stored = canonicalize(legacy);
+    s.store.records.set(id, stored);
+    const custody = new Custody({ ...s.store, segmented: async (_name, from, limit) => {
+      slices.push([from, limit]);
+      return from === 0 ? Array.from({ length: 64 }, () => ({ at: v1.created, attempt: 1, lost: true as const }))
+        : [{ at: v1.created, attempt: 1, answer: refusedFor("scope-refused") }];
+    } }, () => timeOf(s.at()));
+    await expect(custody.send(v1.identity, meaningOf("replacement"), s.build(v1.identity.key, "replacement"), async e => {
+      s.sent.push(e.signed);
+      return refusedFor("scope-refused");
+    }, { notAfter, resign: true })).rejects.toMatchObject({ why: { held: "unreadable" } });
+    expect(slices).toEqual([[0, 64], [64, 2]]);
+    expect([s.builds(), s.sent.length, s.store.records.get(id)]).toEqual([0, 0, stored]);
+  });
+
+  test("a version 1 malformed refusal cannot authorize a replacement signing", async () => {
+    const v1 = JSON.parse(readFileSync(new URL("./fixtures/custody-record-v1.json.txt", import.meta.url), "utf8")) as CustodyRecordV1;
+    for (const extra of [{ name: 123 }, { unexpected: true }, { name: undefined }]) {
+      const s = scene(), id = identityId(v1.identity);
+      const loss = { at: v1.updated, attempt: 2, lost: true } as const;
+      const legacy: CustodyRecordV1 = { ...v1, steps: {}, phase: "unknown", attempt: 2, count: 2, outcomes: [loss] };
+      const stored = canonicalize(legacy);
+      s.store.records.set(id, stored);
+      // This store read supplies malformed data, including an own undefined
+      // optional field that canonical storage itself cannot write.
+      const custody = new Custody({ ...s.store, segmented: async () => [{ at: v1.created, attempt: 1,
+        answer: { ...refusedFor("scope-refused"), ...extra } } as never] }, () => timeOf(s.at()));
+      expect(Date.parse(v1.envelope.signed.intent.notAfter)).toBeGreaterThan(s.at());
+      await expect(custody.send(v1.identity, meaningOf("replacement"), s.build(v1.identity.key, "replacement"), async e => {
+        s.sent.push(e.signed);
+        return refusedFor("scope-refused");
+      }, { notAfter, resign: true })).rejects.toMatchObject({ why: { held: "unreadable" } });
+      expect([s.builds(), s.sent.length, s.store.records.get(id)]).toEqual([0, 0, stored]);
+    }
+  });
+
   // Invariant (5.1, ruling 72b1d654): a record holds at most 8 envelopes; a further signing is refused before anything is signed,
   // and a submit signs again after one signing closes.
   test("nine submits refused revision-moved: the ninth is full and signs nothing; after one signing closes the next signs", async () => {
@@ -93,6 +185,24 @@ describe("custody record version 2 holds the signings of one request", { timeout
     expect("answer" in ninth && [ninth.record.signings.length, envelopesOf(ninth.record), s.sent.length]).toEqual([9, 8, 9]);
   });
 
+  // Invariant (ruling bfbfcca4): a closed latest envelope is replaced rather
+  // than retained, so eight held envelopes do not prevent that replacement.
+  test("eight held envelopes allow a new signing after only the latest signing closes", async () => {
+    const s = scene();
+    for (let n = 0; n < ENVELOPES_MOST; n++) await s.submit("latest", `draft ${n}`, refusedFor("revision-moved"));
+    s.advance(2 * MINUTE);
+    const closed = await s.custody.absent(identity("latest"), ENVELOPES_MOST - 1, head);
+    expect([envelopesOf(closed!), closed!.signings.map(g => g.closed === true), s.builds(), s.sent.length])
+      .toEqual([8, [false, false, false, false, false, false, false, true], 8, 8]);
+
+    const replacing = s.submit("latest", "replacement", refusedFor("revision-moved"));
+    await expect(replacing).resolves.toMatchObject({ record: { phase: "refused" } });
+    const next = await replacing;
+    expect([next.record.signings.length, envelopesOf(next.record), s.builds(), s.sent.length]).toEqual([9, 8, 9, 9]);
+    expect([next.record.signings[7]!.closed, next.record.signings[7]!.envelope, next.record.envelope.signed])
+      .toEqual([true, undefined, s.sent.at(-1)]);
+  });
+
   // Invariant (5.1, ruling 0767a3f9 R1): a new signing that would not fit the record's byte bound is refused before it is signed.
   test("a signing past the byte bound is refused full, reason bytes, before it is signed", async () => {
     const s = scene();
@@ -100,6 +210,43 @@ describe("custody record version 2 holds the signings of one request", { timeout
     const second = s.custody.send(identity("bytes"), meaningOf("second"), s.build("bytes", "second"), async () => { throw new Error("must not send"); }, { notAfter, resign: true, bytes: RECORD_BYTES });
     await expect(second).rejects.toMatchObject({ why: { held: "full", reason: "bytes" } });
     expect([s.builds(), (await s.record("bytes")).signings.length]).toEqual([1, 1]);
+  });
+
+  // Invariant (ruling bfbfcca4): pre-sign byte admission keeps an open latest
+  // envelope, but omits a closed latest envelope that the write replaces.
+  test("byte admission counts a closed latest replacement and refuses a nonfitting replacement before signing", async () => {
+    const s = scene(), bytes = 1024 * 1024;
+    const texts = Array.from({ length: 16 }, (_, n) => n.toString(16) + "x".repeat(64 * 1024 - 1));
+    const large = (body: string) => {
+      const build = s.build("byte-replace", body);
+      return async () => {
+        const value = await build();
+        value.envelope.beside = { texts };
+        return value;
+      };
+    };
+    const deliver = async (e: Envelope) => { s.sent.push(e.signed); return refusedFor("revision-moved"); };
+    await s.custody.send(identity("byte-replace"), meaningOf("first"), large("first"), deliver, { notAfter, bytes });
+
+    // Two retained one-MiB envelopes plus metadata cannot fit in two MiB.
+    await expect(s.custody.send(identity("byte-replace"), meaningOf("next"), large("next"), deliver, { notAfter, resign: true, bytes }))
+      .rejects.toMatchObject({ why: { held: "full", reason: "bytes" } });
+    expect([s.builds(), s.sent.length]).toEqual([1, 1]);
+
+    s.advance(2 * MINUTE);
+    await s.custody.absent(identity("byte-replace"), 0, head);
+    // Even after replacing the old envelope, a two-MiB estimate leaves no
+    // room for metadata and must refuse before the signer runs.
+    await expect(s.custody.send(identity("byte-replace"), meaningOf("next"), large("next"), deliver, { notAfter, resign: true, bytes: RECORD_BYTES }))
+      .rejects.toMatchObject({ why: { held: "full", reason: "bytes" } });
+    expect([s.builds(), s.sent.length, (await s.record("byte-replace")).signings.length]).toEqual([1, 1, 1]);
+
+    const replacing = s.custody.send(identity("byte-replace"), meaningOf("next"), large("next"), deliver, { notAfter, resign: true, bytes });
+    await expect(replacing).resolves.toMatchObject({ record: { phase: "refused" } });
+    const next = await replacing;
+    expect([s.builds(), s.sent.length, next.record.signings.length, envelopesOf(next.record)]).toEqual([2, 2, 2, 1]);
+    expect([next.record.signings[0]!.closed, next.record.signings[0]!.envelope, next.record.envelope.beside.texts])
+      .toEqual([true, undefined, texts]);
   });
 
   // Invariant (5.2): without `resign` a new meaning is conflicting; with it, custody signs again only for a refused record or an

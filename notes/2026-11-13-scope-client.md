@@ -193,10 +193,12 @@ signing. `Custody` writes version 2 for each new record.
 
 `Custody` keeps the envelope of the latest signing while the record is
 open. It keeps the envelope of each earlier signing until that signing
-is closed. A record holds at most 8 envelopes and 64 signings.
+is closed. After a new signing, a record holds at most 8 envelopes and
+64 signings.
 
 `Custody` checks both bounds before it signs. A record that holds 8
-envelopes or 64 signings refuses a further signing: `full`, reason
+envelopes of signings that are not closed, or 64 signings, refuses a
+further signing: `full`, reason
 `signings`. Nothing is signed, and the draft keeps the member's values
 (section 8). `Custody` drops no envelope to make room, because the
 scope can seal the signing of each envelope that is not closed. A

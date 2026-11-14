@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 // The published reader requires these packet bytes to stay canonical.
 export const CANONICAL_PROTOCOL_PACKETS = Object.freeze([
   "examples/grow/demo/application.dap.json",
+  "examples/grow/fixtures/earlier-application.dap.json",
 ]);
 
 // Default formatting exceeds the CLI's 65,536-byte source-read allowance.

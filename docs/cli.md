@@ -100,12 +100,12 @@ creator key.
   `--host artifacts --namespace artroom-demo`.
 - `--register-policy keys`, the default, lets only the install's founder
   keys create rooms. `open` lets a key outside that list create a room.
-  `open` selects the `archive-device-application` cohort, or `unpublished`
-  with `--host none`. With any other `--cohort`, `open` is refused.
+  A new install uses the `base` cohort by default, including with
+  `--host none`. An explicit cohort must support the chosen policy.
 - `--cohort` selects a [creation cohort](#creation-cohorts).
 
 ```
-Installed: register sc_hinqqbm4..., under platform:register@26.
+Installed: register sc_hinqqbm4..., under platform:register@28.
 The operator key key_baqzbaDy... is kept in the config directory, readable only by you. It is the one creator key.
 ```
 
@@ -126,7 +126,7 @@ keeps the signed intent, the version and the ID in the config. With
 operator must back up the service.
 
 ```
-Planned: register sc_4kq2v7..., under platform:register@26, on host artifacts, namespace artroom-demo. The seed's time is 2026-10-08T09:14:00Z.
+Planned: register sc_4kq2v7..., under platform:register@28, on host artifacts, namespace artroom-demo. The seed's time is 2026-10-08T09:14:00Z.
 Set REGISTER_SCOPE to sc_4kq2v7... in the Worker's settings, then run dap install --planned before 2026-10-08T09:14:00Z.
 ```
 
@@ -142,7 +142,7 @@ them. Before it sends anything, it checks the plan:
 - `retired-cohort`: the plan is for the retired register@6 cohort.
 
 ```
-Installed: register sc_4kq2v7..., under platform:register@26, as planned.
+Installed: register sc_4kq2v7..., under platform:register@28, as planned.
 Service-acknowledged identity recovery. The original plan and receipt are retained for later history verification.
 ```
 
