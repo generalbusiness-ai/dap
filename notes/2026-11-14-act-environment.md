@@ -1,8 +1,9 @@
 # One environment for the acts of a declared scope
 
-Status: current. Hugh asked for this note on 14 November 2026. He has
-not ratified it. Section 17 lists the decisions that wait for him.
-Nothing here is built. Section 13 lists the build steps.
+Status: current. Draft 3, for request `98f450a1`. Hugh asked for this
+note on 14 November 2026. He has not ratified it. Section 17 lists the
+decisions that wait for him. Nothing here is built. Section 13 lists
+the build steps.
 
 A dap application has more than one interface. A member acts through a
 page, an agent acts through MCP tools, and an operator acts through the
