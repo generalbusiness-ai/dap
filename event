@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:142f10ef619ee8e45d9902e5e52b94f2c8076af2","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-13-cdf1-retained-bytes-gate-attempt1.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:167f41ce5e094854e2aedbf345484eff2137062f","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.test.mjs."}
