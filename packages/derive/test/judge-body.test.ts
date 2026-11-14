@@ -202,14 +202,14 @@ test("body item duties use the actual pre-entry settlement target when the same 
 test("typed pending equality rejects numeric constants and copied working refs retain their actual provenance", () => {
   const definition = variant(deskDefinition.declared, data => {
     data.items.repo.refs.peer = { fixed: false, required: false, to: { type: "item", of: "issue" } };
-    data.items.repo.values.matched = { fixed: false, required: false, of: { type: "bool" } };
+    data.items.repo.values.matched = { fixed: false, required: false, of: { type: "item", of: "issue" } };
     const fields: ActType["fields"] = { left: { type: "item", of: "issue", required: true }, right: { type: "item", of: "issue", required: true } };
     data.acts.same = act({ step: "transition", on: "repo", fields, guards: [{ equals: { a: { field: "left" }, b: { field: "right" } } }] });
     for (const n of [1, 2]) data.acts[`number-${n}`] = act({ step: "transition", on: "repo", fields,
       guards: [{ equals: { a: { field: "left" }, b: { const: n } } }] });
     data.acts.copy = act({ step: "transition", on: "repo", fields, effects: [
       { ref: { slot: "peer", from: { field: "left" } } },
-      { value: { slot: "matched", from: { const: true } }, if: [{ equals: { a: { slot: "peer" }, b: { field: "left" } } }] },
+      { value: { slot: "matched", from: { slot: "peer" } } },
     ] });
     data.acts.shape = act({ step: "transition", on: "repo", fields: {
       list: { type: "list", of: { type: "item", of: "issue" }, max: 2, required: true },
@@ -244,10 +244,13 @@ test("typed pending equality rejects numeric constants and copied working refs r
   const copied = judgeActBody(scope.state, definition, body("copy"), context);
   expect(copied.result).toBe("write");
   if (copied.result !== "write") return expect.fail("the typed copy must keep its Source");
-  expect(copied.outputRefs).toEqual([{ effect: 0, path: ["to"], token: firstToken }]);
+  expect(copied.outputRefs).toEqual([
+    { effect: 0, path: ["to"], token: firstToken },
+    { effect: 1, path: ["value"], token: firstToken },
+  ]);
   expect(copied.draft.effects).toEqual([
     { effect: "ref", item: 0, slot: "peer", to: first },
-    { effect: "value", item: 0, slot: "matched", value: true },
+    { effect: "value", item: 0, slot: "matched", value: first },
   ]);
   expect(judgeActBody(scope.state, definition, { ...body("shape"), fields: { list: [first], record: { "0": first } } }, context))
     .toMatchObject({ result: "refused", reason: "guard-failed" });
