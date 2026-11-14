@@ -1,0 +1,226 @@
+{
+  "qualification": "CDF-1 gate at checkpoint 01bbd802 after main integration and the separate AC residency-file run; carried CF-2 changes only comments and documents.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-cdf1-retained-bytes-gate-attempt1",
+  "checkpoint": {
+    "commit": "01bbd802261446972f5e030aa0d220eef4261cd3",
+    "tree": "5f3c41f6410dc54b144cc2934ea597a82d17737c"
+  },
+  "fileCount": 43,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 3987,
+      "sha256": "b5d0027dd456ccc0ba7f41b2adabcfc67baa7d5297272e7500eb5a59969a6521"
+    },
+    {
+      "path": "gate-internals/citations.log",
+      "bytes": 1577107,
+      "sha256": "4369c347d4d491e36f925b5e988faa3ef5aad4b9e1aeb2d8c29682f2aafd567c"
+    },
+    {
+      "path": "gate-internals/citations.time",
+      "bytes": 29,
+      "sha256": "2c32fcb4d2790d445ac041f0a9db60488ee0c873ef90b7c3ace34ed09c60a751"
+    },
+    {
+      "path": "gate-internals/cite-test.log",
+      "bytes": 760,
+      "sha256": "949cccc0d0f3b7e0e1e53de4586c783074ceab6865500f3f723969001e31215d"
+    },
+    {
+      "path": "gate-internals/cite-test.time",
+      "bytes": 29,
+      "sha256": "10a723bc3b9c9f73c12f8f0f4dff4a202a179b8fbbe6f4d72a968e50311ebcd1"
+    },
+    {
+      "path": "gate-internals/commit-messages.log",
+      "bytes": 39,
+      "sha256": "a10de4a3f7fd57a28011b05efb9a9e5a251f0b4fe90fdef4ecb8fb0f7ed14075"
+    },
+    {
+      "path": "gate-internals/commit-messages.time",
+      "bytes": 29,
+      "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
+    },
+    {
+      "path": "gate-internals/commit-test.log",
+      "bytes": 592,
+      "sha256": "7ef1960f98693730398e148013773fd65a911f6e46053b0a3c9b9f96a8faaa67"
+    },
+    {
+      "path": "gate-internals/commit-test.time",
+      "bytes": 29,
+      "sha256": "2dde58beea15e95ee5fc57009d582769e8ebf01c9ff7f44ec37cc6217ea499b5"
+    },
+    {
+      "path": "gate-internals/def-pins.log",
+      "bytes": 678,
+      "sha256": "bd28555b9a9732edeacecee13a09ed72181232fd1fe7359692cc19b8df544672"
+    },
+    {
+      "path": "gate-internals/def-pins.time",
+      "bytes": 29,
+      "sha256": "9e011d3519f6ed939c908cdd30af4c3f5c88d852c0978faa1cc4ca812d2b05d4"
+    },
+    {
+      "path": "gate-internals/doc-links.log",
+      "bytes": 36,
+      "sha256": "e738f746a19fabbb74101a21ca6e83400052cd0c46d58e10823059c8c7aa818b"
+    },
+    {
+      "path": "gate-internals/doc-links.time",
+      "bytes": 29,
+      "sha256": "42bbd5f82f23d8630fd588bd0df2d18199f7d8ab9f1215d1a9e3e4e5f855b59f"
+    },
+    {
+      "path": "gate-internals/format.log",
+      "bytes": 114,
+      "sha256": "6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79"
+    },
+    {
+      "path": "gate-internals/format.time",
+      "bytes": 29,
+      "sha256": "8fb0f32cc5949c14ee7df97f98b5bec795f17ddc1c644860e625e505a41fc7a4"
+    },
+    {
+      "path": "gate-internals/helpers.log",
+      "bytes": 68,
+      "sha256": "f8f462116d6bf13f12ca087aa4b16adf42075612a36e8aaa3439c49df97a2c37"
+    },
+    {
+      "path": "gate-internals/helpers.time",
+      "bytes": 29,
+      "sha256": "6f612ee832bc0e41de319d418755c8e00dad231a4bbd8edbfa047f56b622e13b"
+    },
+    {
+      "path": "gate-internals/notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "gate-internals/notes.time",
+      "bytes": 29,
+      "sha256": "ae8c3b753efaf09d23c1a445cf7f53eb3d0acdf1273b6cad21592d1bcd5124b5"
+    },
+    {
+      "path": "gate-internals/section-citations.json",
+      "bytes": 3952971,
+      "sha256": "af2eb7d273c7d5020dfdabcfb857a1c6c050fafd98ae961c0cc9f42542b9b9d8"
+    },
+    {
+      "path": "gate-internals/test-evidence/counting-sources.json",
+      "bytes": 1020,
+      "sha256": "6ee0cc1d0ec4794a94a32b256e7604b0535164a3358e475cd77a6a851e373fb2"
+    },
+    {
+      "path": "gate-internals/test-evidence/counting.jsonl",
+      "bytes": 136142,
+      "sha256": "1ba6dd274f856cc0b5e327d0f32b089bb56650b7bc6c8454b60811ae90464d08"
+    },
+    {
+      "path": "gate-internals/test-evidence/native.jsonl",
+      "bytes": 1136238,
+      "sha256": "866de3832f853454866ad3719eb065d1ec13bc317b005ee4185f96a506a865fa"
+    },
+    {
+      "path": "gate-internals/test-evidence/node.jsonl",
+      "bytes": 454469,
+      "sha256": "e8a7ce4163774c293160a59dbadeb959768060c474a4b9d58b579d0b525e4845"
+    },
+    {
+      "path": "gate-internals/test-evidence/plain.jsonl",
+      "bytes": 3964287,
+      "sha256": "d7c19fbae51108d4e25248c8190be4a056010aada23af84b267bcde9da120199"
+    },
+    {
+      "path": "gate-internals/test-evidence/scale-selection.json",
+      "bytes": 1549,
+      "sha256": "db58a83d46f8e5b96f042b16e067439c20d469dd16768be72102fce2a03674cf"
+    },
+    {
+      "path": "gate-internals/test-evidence/stages.json",
+      "bytes": 2758,
+      "sha256": "189fea9dd0f58f6b9908db4cad1542782dab07aa48354195290f4c494b7a61b0"
+    },
+    {
+      "path": "gate-internals/test.log",
+      "bytes": 11506055,
+      "sha256": "574182faa9111a2598456c8635b59f83b1f5b624364fd8310e59e2d546bb0489"
+    },
+    {
+      "path": "gate-internals/test.time",
+      "bytes": 37,
+      "sha256": "c84319bf39d9ffc743b4eb7bf108a272da31a9171dc06b37a99f092b661bad56"
+    },
+    {
+      "path": "gate-internals/typecheck.log",
+      "bytes": 2247,
+      "sha256": "a9abf7e40e10fbda74447d08a5ea3b33733361ecd9ac199658065cfbc874936a"
+    },
+    {
+      "path": "gate-internals/typecheck.time",
+      "bytes": 31,
+      "sha256": "e2d32a12470b9db83ad9673325559576510e5fcb3c879687e104bfe6d57a3c26"
+    },
+    {
+      "path": "gate-internals/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "gate-internals/whitespace.time",
+      "bytes": 29,
+      "sha256": "f5d04e3f394dbde846fb5bf863e4e5541e917ef60e9e5b8a7a746282662ee215"
+    },
+    {
+      "path": "gate.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "gate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "gate.stdout",
+      "bytes": 7314,
+      "sha256": "4ac1e9f05411c171fe78cc0d7c73bbcbac7e4de7e824fcaec515f51a7047deaa"
+    },
+    {
+      "path": "head.txt",
+      "bytes": 82,
+      "sha256": "d2a3b585d81af9d2ceaca16a76a520352496039213a046e3bdf66f9f3c1916e2"
+    },
+    {
+      "path": "internals-copy.json",
+      "bytes": 117,
+      "sha256": "996f5c02320d9954e5151824506fbca2a11bf3e79eed67a79de5b14ee32053c0"
+    },
+    {
+      "path": "pmset-batt-end.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-batt-start.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-powermode-end.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "pmset-powermode-start.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "power-during.jsonl",
+      "bytes": 53302,
+      "sha256": "d17877c9553bdb47661ab35d6b3a0ebc046801285cf783ccd269380a785cc3a7"
+    }
+  ]
+}

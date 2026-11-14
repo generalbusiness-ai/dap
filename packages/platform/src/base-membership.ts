@@ -6,7 +6,8 @@
  *
  * - `revoke-key`: an active key may retire itself or mark itself
  *   compromised, and an active person may revoke an active key of an agent
- *   that the person controls. Another key refuses `not-own-key`.
+ *   that the person controls, without holding `membership.own-agent`.
+ *   Another key refuses `not-own-key`.
  * - `leave`: an active key of a member removes that member. Another member
  *   refuses `not-own-member`. Every member kind may leave.
  * - `remove-member`: an active person who holds `membership.own-agent` may
