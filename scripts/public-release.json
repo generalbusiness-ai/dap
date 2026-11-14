@@ -111,7 +111,11 @@
     },
     {
       "dir": "client",
-      "exports": { ".": "src/index", "./application": "src/application", "./scope": "src/scope" },
+      "exports": {
+        ".": "src/index",
+        "./application": "src/application",
+        "./scope": "src/scope"
+      },
       "dependencies": {
         "@generalbusiness/dap-bytes": "coordinated",
         "@generalbusiness/dap-contract": "coordinated",
