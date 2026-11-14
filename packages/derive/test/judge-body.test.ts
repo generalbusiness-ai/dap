@@ -345,3 +345,40 @@ test("numeric absence changes only when the actual current opening becomes looku
   expect(seen).toEqual([["guard", null], ["known after", 0], ["missing after", null]]);
   expect(scope.state.snapshot()).toBe(before);
 });
+
+test("opaque snapshots and descriptors preserve the runtime cut while working subjects show earlier effects", () => {
+  const definition = valid(validateDefinition(deviceCommandFixture, PROPOSED_BOUNDS));
+  const scope = created(definition, {}, "TEST opaque snapshot cut");
+  const device = scope.did(rita, "commission", { fields: { kind: "fan" } }).seq;
+  const row = scope.item(device), before = scope.state.snapshot();
+  let read: "state" | "direct" | "descriptor" | "enumeration" = "state";
+  const seen: unknown[] = [];
+  const provenance: NonNullable<Parameters<typeof judgeActBody>[3]["provenance"]> = ({ origin }) =>
+    origin.at === "item" && origin.item === row ? { is: "entry" } : null;
+  // These scripts reach the real opaque boundary. They do not implement or
+  // attest device authority, records, native execution or client projection.
+  const capabilities: Capabilities = {
+    implements: () => true, guard: () => true,
+    effect(_capability, _effect, _args, given) {
+      const snapshot = given.view.all();
+      expect(Array.isArray(Object.getOwnPropertyDescriptor(snapshot, "items")?.get?.())).toBe(true);
+      const deviceRow = snapshot.items.find(item => item.type === "device");
+      if (!deviceRow) throw new Error("the recorded device is missing");
+      seen.push([given.fromItems?.["device"]?.values["level"], deviceRow.values["level"]]);
+      if (read === "direct") void deviceRow.id;
+      if (read === "descriptor") Object.getOwnPropertyDescriptor(deviceRow, "id")?.get?.();
+      if (read === "enumeration") Object.assign({}, deviceRow);
+      return [];
+    },
+  };
+  const body = { kind: "command", on: device, fields: { target: "on", level: 1 }, expected: { on: row.revision } };
+  const context = { ...scope.context(), actor: rita.key, capabilities, provenance };
+  expect(judgeActBody(scope.state, definition, body, context).result).toBe("write");
+  expect(seen).toEqual([[1, 0]]);
+  for (const mode of ["direct", "descriptor", "enumeration"] as const) {
+    read = mode;
+    expect(judgeActBody(scope.state, definition, body, context))
+      .toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
+  }
+  expect(scope.state.snapshot()).toBe(before);
+});

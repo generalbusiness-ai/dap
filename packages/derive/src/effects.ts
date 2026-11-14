@@ -553,7 +553,10 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
   const holds = effects.filter((effect): effect is HoldEffect => effect.effect === "hold");
   if (holds.length > 0 && j.capabilities?.workspace) {
     const k = effects.filter((effect) => effect.effect === "operation").length;
-    const derived = observeCapabilityCall(j.definition, "workspace", null, "hold effects", () => j.capabilities!.workspace!(j.view, j.definition, j.self, k, holds, (id) => [...working.values()].find((held) => held.id === id) ?? null));
+    const derived = observeCapabilityCall(j.definition, "workspace", null, "hold effects", () => j.capabilities!.workspace!(j.references ? j.references.opaqueView(j.view, j.definition) : j.view, j.definition, j.self, k, holds, (id) => {
+      const item = [...working.values()].find((held) => held.id === id) ?? null;
+      return item && j.references ? j.references.opaqueItem(item, j.definition) : item;
+    }));
     // Section 6.1, "In the commit": code that returns more than it declared has a fault, and the input is not judged.
     const listed = new Set(declarationOf(j.definition).capabilities.map(c => `${c.name}@${c.version}`));
     const most = j.capabilities.maxima?.filter((m) => m.form === "workspace" && listed.has(m.capability)).reduce((n, m) => n + m.effects, 0);

@@ -178,43 +178,61 @@ export class BodyReferences {
     if (data?.is === "entry" || data?.is === "after" || data?.is === "pending") return this.unavailable();
     return item[member];
   }
-  opaque<T>(value: T): T {
-    if (this.#identity(value) || value === this.#entry) return this.expose(value) as T;
-    if (value === null || typeof value !== "object") return value;
+  /** Accessor descriptors keep reflection on the same guarded read path. */
+  #reading<T extends object>(value: T, read: (key: PropertyKey) => unknown): T {
     const copy = Array.isArray(value) ? [] : Object.create(Object.getPrototypeOf(value));
     for (const key of Reflect.ownKeys(value)) {
       const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
-      Object.defineProperty(copy, key, { ...descriptor, configurable: Array.isArray(value) && key === "length" ? false : true });
+      Object.defineProperty(copy, key, { ...descriptor, configurable: !(Array.isArray(value) && key === "length") });
     }
-    return new Proxy(copy, { get: (target, key, receiver) => this.opaque(Reflect.get(target, key, receiver)) });
+    return new Proxy(copy, {
+      get: (_target, key) => read(key),
+      getOwnPropertyDescriptor: (target, key) => {
+        const descriptor = Reflect.getOwnPropertyDescriptor(target, key);
+        return !descriptor || !descriptor.configurable ? descriptor
+          : { configurable: true, enumerable: descriptor.enumerable ?? false, get: () => read(key) };
+      },
+    }) as T;
+  }
+  opaque<T>(value: T): T {
+    if (this.#identity(value) || value === this.#entry) return this.expose(value) as T;
+    if (value === null || typeof value !== "object") return value;
+    return this.#reading(value, key => this.opaque(Reflect.get(value, key)));
   }
   opaqueItem(item: Item, definition: ValidDefinition, currentDeviceCommand = false): Item {
     const declaration = definition.declared.items[item.type];
-    return new Proxy({ ...item }, { get: (target, key, receiver) => {
+    return this.#reading(item, key => {
       if (key === "id" || key === "revision" || key === "opened") return this.metadata(item, key);
-      if (key === "refs" || key === "values") return new Proxy({ ...target[key] }, { get: (slots, name) => {
-        if (typeof name !== "string" || !Object.hasOwn(slots, name)) return Reflect.get(slots, name);
+      if (key === "refs" || key === "values") return this.#reading(item[key], name => {
+        if (typeof name !== "string" || !Object.hasOwn(item[key], name)) return Reflect.get(item[key], name);
         if (currentDeviceCommand && key === "refs" && name === "targetAt"
           && this.#working.get(item)?.get(JSON.stringify(["refs", "targetAt"])) === this.#entry) return item.refs["targetAt"];
         const type = key === "refs" ? declaration?.refs[name]?.to : declaration?.values[name]?.of;
         return this.opaque(this.slot(item, key, name, type ?? null));
-      } });
-      return Reflect.get(target, key, receiver);
-    } });
+      });
+      return Reflect.get(item, key);
+    });
   }
   opaqueView(view: StateView, definition: ValidDefinition): StateView {
-    return new Proxy(view, { get: (target, key) => {
+    return this.#reading(view, key => {
+      const target = view;
       if (key === "item") return (id: number) => {
         const item = this.lookup(view, { at: "untyped" }, id, null);
         return item ? this.opaqueItem(item, definition) : null;
       };
       if (key === "page") return (...args: Parameters<StateView["page"]>) => {
+        if (args[2] !== null) this.lookup(view, { at: "untyped" }, args[2], null);
         const page = target.page(...args);
         return { ...page, items: page.items.map(item => this.opaqueItem(item, definition)) };
       };
+      if (key === "all") return () => {
+        const snapshot = target.all();
+        return this.#reading(snapshot, member => member === "items"
+          ? snapshot.items.map(item => this.opaqueItem(item, definition)) : Reflect.get(snapshot, member));
+      };
       const value: unknown = Reflect.get(target, key);
       return typeof value === "function" ? value.bind(target) : value;
-    } });
+    });
   }
   lower(value: unknown, type: FieldType | null, effect: object, path: Path): unknown {
     const identity = this.#identity(value);
