@@ -6,6 +6,69 @@ Request `208a0378` builds step C2 of the client design note
 `7c8774a2` and `b258370c` bind it. C2 holds no custody record and sends
 nothing.
 
+## Current pre-gate state
+
+C2 contains landed main `0166423ac8abe7ffe955a9c8ddf1a319cba75712`.
+Merge `351a5da0c45137fbfc7c6302c392b81bd9bde1f8`, tree
+`1cdf4bd06ea6c8f59a5e70d5f6186c7af2121343`, had no conflict. It adds
+main's 40 paths to source checkpoint `5994abd7`. All C2 client source,
+owning tests, package metadata, release mapping and lock bytes equal
+that checkpoint. The owned dependency view remains unchanged, with lock
+SHA-256 `8b2ae5f7108ce36cf84753d99d4248d59cc21251d5e01da3da37a111bb495e20`.
+The delta to main has 16 C2 paths. Original branches and evidence remain
+intact; the replay kept C2's four original commits and lifecycle repair,
+dropping the two old dependency merges.
+
+Three client compiler contexts and 33 cases passed in ordinary DEV at
+`5994abd7`. Those results describe that source graph. The main merge did
+not rerun them. The two lifecycle controls below ran at `351a5da0` and
+restore the source exactly. This follow-up changes this note only.
+
+**The full C2 gate is UNRUN.** Planner ruling `d8f9e590` permits C2 to
+take the next gate if it is ready before NF-5. Root grants the execution
+slot and START separately. A passing control does not replace that gate.
+
+| Current check | Actual result | Retained output and SHA-256 |
+| --- | --- | --- |
+| Client neutral, Node and test compiler contexts | Three exits 0 in prior ordinary DEV | `/private/tmp/artroom-c2-ordinary-dev-20261114/client-neutral.log`, `client-node.log`, `client-test.log`; each empty log has `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Whole replica owner | 26 passed in prior ordinary DEV | `/private/tmp/artroom-c2-ordinary-dev-20261114/replica.log`; `44ef30701616490a36653ea66c9caf5cfc65be6219c33484708399c579d10743` |
+| Root-entry isolation owner | 1 passed in prior ordinary DEV | `/private/tmp/artroom-c2-ordinary-dev-20261114/scope-entry.log`; `963e1d2b70b70e980e4b064837a8898e3c436301f5e93e16f028708a298ac90b` |
+| Whole generated replica owner | 1 passed: all 400 fixed seeds of 80 steps; test body 17.51 s, Vitest total 18.65 s | `/private/tmp/artroom-c2-ordinary-dev-20261114/replica-generated.log`; `8c2c908952332f6f184d844d8be05dda45bdadcd7f1838224d06070493d85340` |
+| Whole public-release module owner | 5 passed in prior ordinary DEV | `/private/tmp/artroom-c2-ordinary-dev-20261114/public-release-modules.log`; `2fb32c274687e83df8cf510495e50fde0a5b6b76d8a985d7702a636dc925f0b2` |
+| Synchronous observation ownership control | Baseline 26 passed; mutant 25 passed and 1 direct assertion failed; helper exit 0, real 3.12 s | `~/play/artroom-evidence/2026-11-14-c2-lifecycle-gate-attempt1/controls/observation-cancellation/helper.stderr`; `45f30a4f82646e277140c348fc0df048c4be41e8fb426ff89dd117edbeaf9f84` |
+| Read-owner handoff control | Baseline 26 passed; mutant 25 passed and 1 direct assertion failed; helper exit 0, real 5.28 s | `~/play/artroom-evidence/2026-11-14-c2-lifecycle-gate-attempt1/controls/read-handoff/helper.stderr`; `d88655ebf92dff3d38f80f3983cbaeb75a4b0bebcf5e6f4a4d0b2ee91cb58f78` |
+
+The generated owner retains its 400-by-80 loop and invariants: after each
+step, the replica equals the `MemoryState` fold of the same entries, its
+head and rows equal a fresh view, and its current/behind state matches
+the feed and held head. Predictions agree with `judgeAct`; close leaves
+no observation or timer. The current body duration above comes from the
+actual DEV output, not the earlier 18.9-second measurement below.
+
+Each control ran the unchanged whole 26-case `replica.test.ts` owner,
+with its exact expected title and no test filter. Omitting only
+`if (this.#stopped) observation.cancel()` failed the existing
+forbidden-before-Observe-return witness: zero cancellation calls instead
+of one. Deferring only `this.#reading = null` to `queueMicrotask` failed
+the subscriber next-head witness: cursors `[4]` instead of `[4, 5]`.
+The finishing promise settled; the cursor assertion showed the lost
+read without a timeout or a new test gate.
+
+Both controls retain all 26 cases, with no skipped or unloaded case and
+no timeout. Each ran its baseline and mutant once; neither added a third
+restored-green run. Each case directory above contains the actual child
+JSON and stdout/stderr under `tmp/artroom-control-*`, original and retained
+helper copies, their diff, and before/after source-restoration records.
+The external helper changes only successful exit cleanup to retain raw
+output. It preserves the CTL1 classifier, runner, deadlines and source
+restoration. Source bytes and mode match exactly after both controls, and
+the checkout was clean. Checkpoint `5c45c148` records the results.
+
+Compatibility ran once before the controls. It reported `copied: false`
+and the same bundle hash before and after, `cd50d18a`; raw output is in
+the controls directory. No model, browser, generator or full gate ran in
+that interval. Neither wrapper repair belongs to the Observation model.
+
 ## The entry
 
 `packages/client/package.json` adds the entry
@@ -183,7 +246,7 @@ checkout root. The Vitest command ran from `packages/client`.
 | Client test types | `node node_modules/typescript/bin/tsc -p packages/client/tsconfig.test.json` | 0 | `tsconfig.test.json.log`: `aaf99757d7206ff4dfacc035019c92d80662116e319c54ada9a7c83a7f518798` |
 | Replica behavior | `node ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts test/replica.test.ts` | 0 | `replica.test.ts.log`: `7c4569849b33b27e9308d0b016dbddd38824a842cb419fc4d777b90a5b49ebdf` |
 
-## Lifecycle repair source checkpoint
+## Historical lifecycle repair source checkpoint
 
 Ruling `bd699704` assigns both wrapper repairs from audit `2cadf894` to
 C2 before integration. Branch `builder/c2-lifecycle-repair-20261114`
@@ -211,12 +274,11 @@ The other requests a newer head from a subscriber during read completion
 through deterministic microtasks. It checks the two log cursors, the
 newest published head and fold equality without a third trigger.
 
-**All validation for this repair checkpoint is UNRUN.** C1 holds the
-single validation slot. No compiler, test, formatter, model, control,
-build or generator ran, and no dependency changed. The earlier evidence
-above describes its recorded heads only. Later checks must cover the
-client compiler contexts, the whole replica owner, distinguishing
-controls and the maintained gate in the assigned slot.
+At that source-only repair checkpoint, all validation was UNRUN while
+C1 held the single validation slot. No compiler, test, formatter, model,
+control, build or generator ran then, and no dependency changed. The
+current pre-gate section above records the later DEV and control results;
+the older evidence describes only its recorded heads.
 
 The Observation model covers neither repair. Its protected source is
 `observe.ts`: `RefreshCoordinator.check`, `RefreshCoordinator.read`,
@@ -225,9 +287,9 @@ model checks obsolete painting for one read and cancellation; it does
 not cover Replica's factory ownership or its read-completion handoff.
 This checkpoint changes no protected function, API, model or seal.
 
-Integration still waits for PG-1 main. The later replay keeps all four
-own C2 commits and these repairs, dropping only the two local dependency
-merges. The C2 gate remains after C1 and NF-5.
+That checkpoint waited for PG-1 main. The current replay and main merge
+now include the landed prerequisites. Planner ruling `d8f9e590` replaces
+the earlier requirement to wait for NF-5's gate.
 
 ## Limits
 
@@ -248,5 +310,8 @@ one. Section 9 of the client note now names both fields.
 The reconnect repair changes no protected function of `observe.ts`.
 The Observation model covers obsolete callbacks and cancellation, and
 excludes reconnect behavior. Its source correspondence stays unchanged.
-The 400-seed suite on AC, its duration, and the gate remain due under
-request `208a0378` and ruling `aa12ecdd`.
+The current ordinary DEV result covers all 400 seeds of 80 steps, with
+its actual duration above. The full gate, exact-head review and landing
+remain due under request `208a0378`. Ruling `f45b355a` retires the earlier
+power and formal evidence-interval conditions; it does not change the
+generated suite, its assertions or its deadline.
