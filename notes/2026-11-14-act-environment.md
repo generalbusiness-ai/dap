@@ -1,9 +1,9 @@
 # One environment for the acts of a declared scope
 
-Status: current. Draft 3, for request `98f450a1`. Hugh asked for this
-note on 14 November 2026. He has not ratified it. Section 17 lists the
-decisions that wait for him. Nothing here is built. Section 13 lists
-the build steps.
+Status: current. Draft 4, for request `98f450a1`. Hugh asked for this
+note on 14 November 2026, and decided each item of section 17 on that
+day. The note waits for review and for his ratification. Nothing here
+is built. Section 13 lists the build steps.
 
 A dap application has more than one interface. A member acts through a
 page, an agent acts through MCP tools, and an operator acts through the
@@ -35,9 +35,9 @@ environment is not a second judge of conflicts.
 The note keeps the client of
 [the client note](2026-11-13-scope-client.md) as the machinery for
 submit and observe. This note calls that note D12. Section 15 lists
-each change to D12. Three parts of the design enter the kernel, and
-section 16 gives the rule that each meets. Two drafts and two reviews
-came before this note,
+each change to D12. Two parts of the design enter the kernel and a
+third waits, and section 16 gives the rule that each meets. Two drafts
+and two reviews came before this note,
 in `~/play/dap-foldkit` (`ENVIRONMENT.draft-1.md` and
 `ENVIRONMENT.draft-2.md`). Each fact below is read at main
 `189cf7b64a`. Each name in a code block is a sketch, and a build step
@@ -298,7 +298,7 @@ stated way:
 |---|---|
 | The commit time | The clock of the context. The exploration does not predict the commit's clock |
 | The item that an `open` makes, and the revision that an act leaves | The symbolic names `{ output }` and `{ after }`. The hypothetical view holds the pending row, so a later act can name it |
-| The entry itself, which the effect `ref` reads with `"from": "self"` | The symbolic name `{ entry: Source }` in that slot. A later act that copies the slot is judged. A later act that reads a part of that entry, or compares it, is `unavailable` |
+| The entry itself, which the effect `ref` reads with `"from": "self"` | The symbolic name `{ entry: Source }` in that slot. The act itself is judged. A later act that names that item as a subject is `unavailable` until the source's entry fills the slot |
 
 The third row is in the first version for one reason. The definitions
 `examples/grow/definitions/room.json` and `site.json` hold 24 such
@@ -306,6 +306,11 @@ effects: `grep -c '"from": *"self"'` counts 22 and 2. Without the name,
 each of those acts is `unavailable`. The first version has no other
 symbolic value. General symbolic effects wait for an application that
 needs them.
+
+The rule of the third row is coarse by choice. A later act that only
+copies the slot could be judged, but that finer rule needs a record of
+what a judgment read, and section 5.6 defers that record. A single act
+is the common case, and the coarse rule does not touch it.
 
 ### 5.5 Describe gives the templates
 
@@ -338,21 +343,21 @@ against the full recomputation. A reader that wraps item reads does not
 see an empty range that a new item will match, the capacity of the
 scope, or a change of authority.
 
-### 5.7 Three placements give one shape
+### 5.7 Two placements give one shape, and a third waits
 
 | Placement | Judges on | Use |
 |---|---|---|
 | A local instance | Its replica and the owner's pending steps | Each frame of a drag, each key stroke, with no network |
-| The scope | Its own state at its head, with the standing that it reads for the caller | `POST /v1/scopes/<scope>/explore`. A read, with no entry |
-| The agent host | The scope's answer | The MCP tool `explore` |
+| The agent host | Its own replica of the scope, and the grants that it holds for its key | The MCP tool `explore` |
+| The scope | Its own state at its head, with the standing that it reads for the caller | Held (section 16). A method `explore` on `ScopeApi`, with the route `POST /v1/scopes/<scope>/explore`. A read, with no entry |
 
 Each placement states its context. A placement that lacks an input
 answers `unavailable`. Over a transport, `after` holds the rows that
 the act changes, and not the whole view.
 
-The route and the tool need only sections 5.1 to 5.4, and no replica.
-So they come early (section 13) and test the claim of one environment
-before a page moves.
+The contract of section 5.1 does not wait for a transport. Invariant 9
+of the suite (section 12) tests it in one process, against the
+in-memory scope.
 
 ## 6. A draft keeps the basis that the member saw
 
@@ -449,9 +454,13 @@ D12 section 5.5 defines.
 same deadline, though it has no signing yet. With the default, the
 second row never applies: the first signing's `notAfter` is the
 deadline. A phone that is offline for longer than one signing then
-hands each step back, as D12 section 14 rules. A caller states a later
-deadline at the gesture, and D12's `resign` (section 5.2) then signs
-under the second row.
+hands each step back, as D12 section 14 rules.
+
+The first build has only the default deadline, so it never signs under
+the second row. The rule also permits a later deadline that a caller
+states at the gesture, and D12's `resign` (section 5.2) then signs
+under the second row. That part waits for an application that needs
+it.
 
 ### 7.3 One key owns a step, and one store coordinates it
 
@@ -612,8 +621,8 @@ is published.
 | Part | Is |
 |---|---|
 | The local instance | D12's `scopeClient`, in `@generalbusiness/dap-client/scope`. It gains Explore, the draft rules, authorizations and dependencies |
-| The agent host | The MCP server. It holds a key and custody today. It gains the tool `explore`, and it resolves the steps that it retained |
-| The scope | Gains the explore route |
+| The agent host | The MCP server. It holds a key and custody today. It gains a replica, the tool `explore`, and the resolution of the steps that it retained |
+| The scope | Gains nothing in the first version. The method `explore` is held (section 16) |
 | `dap dev` | Gains `log` and the head stream, so that a local instance runs against it. It serves neither today |
 
 **The descriptor** is data, with a digest. For each act it holds the
@@ -765,32 +774,35 @@ Each of these cases has one test:
    again, with another change before the second submit.
 8. An act with a `current` subject and an `observed` subject, where a
    reference changes its target. Validation refuses the definition.
-9. An effect whose value is `unavailable` and a later act whose guard
-   reads it. The later exploration is `unavailable`.
+9. An act whose effect writes `{ entry }` into a slot, and a later act
+   on that item before the source's entry. The later exploration is
+   `unavailable`.
 
 A small model also runs to a bound over every order of its steps.
 
-## 13. Explore comes first, and reaches two transports early
+## 13. Explore comes first, and decision A comes last
 
 | Step | Work | Needs |
 |---|---|---|
-| E1 | Explore for complete acts: the split of `actJudged`, the context, the result, the hypothetical view and the three symbolic names | The ruling on the export (section 16) |
-| E2 | The explore route of the scope and the MCP tool `explore`, with the same result and context | E1, and the ruling on the route (section 16) |
+| E1 | Explore for complete acts: the split of `actJudged`, the context, the result, the hypothetical view and the three symbolic names | The planner's ruling for the export, from Hugh's decision (section 16) |
+| E2 | The MCP tool `explore`, on a replica in the agent host, with the same result and context | E1, C2 |
 | E3 | Explore in the local instance, again at each view and each tick. Drafts and references: `ref` with its sources, the basis of a draft, changed fields, the new version after a return, one identity for a row | E1, C2, C4 |
-| E4 | Retained authorization: the record with versions, the deadline, the four operations, the owner and the store, the transaction of a submit, the predicate | C1, C3 |
+| E4 | Retained authorization: the record with versions, the default deadline, three of the four operations (no new envelope for the same version), the owner and the store, the transaction of a submit, the predicate | C1, C3 |
 | E5 | Sequential dependencies: sources by key and version, the materialized act, `waits`, the returns | E4 |
 | E6 | Environment resolution through MCP `settle`, React and foldkit. `dap dev` with `log` and the head stream | E3 to E5 |
-| A | Decision A: the admission of a subject, in the act form, the validator and the judge | The ruling on decision A, and its carrier (section 16). E1 to E6 do not wait for it |
 | R | The reservation definition, with its scenario | Starts with E1 |
+| A | Decision A: the admission of a subject, in the definition, the validator and the judge | E1 to E6, and its own design with the carrier and the kernel ruling (section 16) |
 
-E1 and E2 need no replica. An agent and a command line explore before
-any page moves. The pinboard and the map move after E5.
+E1 needs no replica. Invariant 9 tests it against the in-memory scope.
+E2 and E3 need C2. The pinboard and the map move after E5.
+
+One part is held and has no step: the method `explore` on `ScopeApi`,
+with its route. A review after E3 takes it up again (section 16).
 
 ## 14. Deferred
 
-- **A new basis without a gesture.** If Hugh declines decision A, a
-  narrow rule for declared acts can follow. The first version has
-  none.
+- **A later deadline, and a new envelope with no click.** Section 7.2.
+- **The method `explore` on `ScopeApi`.** Section 16.
 - **Patch acts.** An act under `current` whose guards compare each
   slot that it sets with the value that the member saw. The
   precondition stays in the definition.
@@ -806,6 +818,9 @@ any page moves. The pinboard and the map move after E5.
   actor, and the instance could then sign a dependent step at the
   gesture.
 
+One part is not taken: a new basis without a gesture. Decision A
+covers the acts that need no basis.
+
 ## 15. What this note changes in D12
 
 | D12 | Change |
@@ -814,34 +829,46 @@ any page moves. The pinboard and the map move after E5.
 | Rule 5: the intent is built "at the replica's head" | A draft keeps the basis that it opened on, and a returned draft takes the basis `now` (section 6) |
 | Section 8, step 3: the stop `busy` | Stays for an `observed` subject whose pending step the act does not name. An act that names the step waits (section 7.4) |
 | Section 9: `ClientView` and `Judged` | The view gains `explore` and `offers`, and each row gains `ref` and `recorded`. `Judged` is the exploration of a signed version |
-| Section 10: no file and no export in `packages/contract` or `packages/derive` | Three parts enter the kernel (section 16) |
-| Section 15: work offline for longer than one signing is not taken | A caller states a later deadline (section 7.2) |
+| Section 10: no file and no export in `packages/contract` or `packages/derive` | Step E1 adds one export to `packages/derive` (section 16) |
+| Section 15: work offline for longer than one signing is not taken | Stays not taken in the first build. The rule of section 7.1 permits a later deadline (section 7.2) |
 
-Steps C1 to C4 keep their order. E3 lands with C4, and E4 with C3.
+Steps C1 to C4 keep their order. C4 takes the changed rule 5 from its
+first build, so no build holds the old rule. E3 lands with C4, and E4
+with C3.
 
-## 16. Three parts enter the kernel, and each needs a ruling
+## 16. One part enters the kernel first, one enters last, and one waits
 
 `docs/kernel.md` section 7 admits a part to the kernel only after a
 review. The review says why the part cannot be a platform service or an
-application.
+application. Hugh decided each part on 14 November 2026 (section 17).
 
-| Part | Enters | Why it is kernel |
-|---|---|---|
-| The judgment of an intent body under a context (step E1) | `packages/derive`, as one export | Promise 9: the runtime and the verifier call the same functions. An exploration that runs other code is a second judge, and dap has three partial ones today |
-| The explore read (step E2) | `ScopeApi` in `packages/contract/src/transport.ts`, as one method with its argument and its answer | Each native read is a method of `ScopeApi`. Each transport must agree on the shapes, as section 7.4 of that page says for read minimums |
-| The admission of a subject (decision A) | The act form in `packages/contract/src/definition.ts`, the validator and the judge | The admission changes how the judge reads `expected`. The runtime and replay must derive one answer from one definition |
+| Part | Enters | Why it is kernel | Decided |
+|---|---|---|---|
+| The judgment of an intent body under a context | `packages/derive`, as one export, in step E1 | Promise 9: the runtime and the verifier call the same functions. An exploration that runs other code is a second judge, and dap has three partial ones today | Yes. The condition: `judgeAct` gives identical answers on the replay corpus |
+| The admission of a subject (decision A) | The definition form in `packages/contract/src/definition.ts`, the validator and the judge, in step A | The admission changes how the judge reads `expected`. The runtime and replay must derive one answer from one definition | Yes to the direction. The part enters last, with its own design |
+| The explore read | `ScopeApi` in `packages/contract/src/transport.ts`, as one method with its argument and its answer | Each native read is a method of `ScopeApi`. Each transport must agree on the shapes, as section 7.4 of that page says for read minimums | Held |
 
 No part closes a K item of that page. Its section 7.1 holds a head
 that adds to the kernel and closes no K item. The owner's decisions
 with rulings `08c5ff25` and `4b5e0ec2` released two levels from that
-hold. Each part of the table waits for a ruling of the same kind
-(section 17).
+hold. The export of step E1 needs a ruling of the same kind, and the
+planner files it from Hugh's decision.
 
-**Step E2 has a form with no kernel part.** If the ruling refuses the
-method, the agent host explores on a replica of its own, as a local
-instance does. Step E2 then keeps only the MCP tool, and it needs C2.
+**The explore method waits for a stable shape.** The exploration is
+the least settled type of this note. An answer shape in
+`packages/contract` is closed: a new member breaks each older client
+(D12 section 10), and each change needs the review of section 7 again.
+Invariant 9 tests the contract of section 5.1 with no transport. So the
+first version has no method and no route. The agent host explores on a
+replica of its own, as a local instance does. A review after step E3
+takes the method up again.
 
-**Decision A meets two more rules** of that page.
+This note did not check how the MCP server reads the state of a scope
+inside the runtime, which imports it (`packages/scope/src/worker.ts`).
+If the server reads that state directly, step E2 does not need C2.
+
+**Decision A enters with its own design.** Two more rules of that page
+apply to it.
 
 - Section 7.2 binds validation to the format `artroom-definition-1`.
   The validator refuses each member of an act that the contract does
@@ -849,19 +876,25 @@ instance does. Step E2 then keeps only the MCP tool, and it needs C2.
   `validate/handlers.ts:193`). So today's validator refuses a
   definition that states an admission. Decision A needs a compatibility
   review and a carrier: a new format, an optional part with its own
-  version, or a gate by cohort. `level` and `capacity` are parts with
-  versions (promise 3), and the `reference` field type has a gate by
-  cohort (section 7.3). Step A chooses the carrier.
+  version, or a gate by cohort. This note recommends an optional part
+  of the definition with its own version, as `level` and `capacity`
+  are (promise 3). The act form then stays as it is, an older
+  validator refuses the part, and one table holds the new grammar. The
+  design of step A rules on the carrier.
 - K5 counts each form that the validator and the judge both read.
   Decision A adds one form to that count, unless the one grammar table
   of K5 lands first.
 
-**The rest stays outside the kernel.** In step E1 the types of the
-act, the context and the exploration live in `packages/client`, which
+This note read the rule that `level` and `capacity` carry versions,
+and not their code. It did not check whether a room needs a Rules
+cohort to install a definition with a new part, as section 7.3
+requires for the `reference` field type.
+
+**The rest stays outside the kernel.** The types of the act, the
+context and the exploration live in `packages/client`, which
 `packages/scope` and `packages/mcp` import today. No recorded entry
 needs those types to be derived again, so they pass the test of section
-2 of that page. The method of step E2 moves only its argument and its
-answer to `packages/contract`.
+2 of that page.
 
 This note adds no scope kind, no platform definition name, no
 capability name or form, and no new model of the record. It adds one
@@ -869,20 +902,30 @@ MCP tool, `explore`, to the tools of a declared scope, and no tool
 family. An authorization is a record of the client's store. It is not
 a record of a scope.
 
-## 17. Decisions for Hugh
+## 17. Hugh's decisions of 14 November 2026
 
-1. Decision A: a subject's admission, `observed` or `current`, in the
-   definition, with its ruling under `docs/kernel.md` section 7. This
-   note recommends it. It also recommends that the environment gives
-   no step a new basis by itself, with decision A or without it.
-2. The authorization rule in place of D12 rule 3, with a default
-   deadline of one signing lifetime.
-3. The change of D12 rule 5: the basis of a draft, and the new version
-   after a return.
-4. The export of the body judgment from `packages/derive`, with its
-   ruling.
-5. One owner key for each step, one store for its processes, and no
-   signature by a second device.
-6. The explore method on `ScopeApi` and its route, with its ruling, or
-   the form of step E2 that has no kernel part.
-7. The third symbolic name, `{ entry }`, in the first version.
+Hugh decided each item as this section states it, with the words
+"yes - agreed".
+
+1. **Decision A: yes.** A definition states a subject's admission,
+   `observed` or `current`. The environment gives no step a new basis
+   by itself, with decision A or without it. Step A is the last step,
+   and its design rules on the carrier (section 16).
+2. **The authorization rule in place of D12 rule 3: yes.** The first
+   build has only the default deadline of one signing lifetime
+   (section 7.2).
+3. **The change of D12 rule 5: yes.** A draft keeps its basis, and a
+   submit of a returned draft is a new version. C4 takes the rule from
+   its first build.
+4. **The export of the body judgment from `packages/derive`: yes.**
+   The condition: `judgeAct` gives identical answers on the replay
+   corpus.
+5. **One owner key for each step: yes.** One store coordinates its
+   processes, and a second device signs nothing for the step.
+6. **The method `explore` on `ScopeApi`: held.** Step E2 takes the
+   form with no kernel part. A review after step E3 takes the method
+   up again (section 16).
+7. **The third symbolic name, `{ entry }`: yes,** with the coarse rule
+   of section 5.4.
+
+The note itself waits for review and for Hugh's ratification.
