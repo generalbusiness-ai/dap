@@ -163,10 +163,14 @@ other kind, in a scope without the opt-in:
 
 | Kind | Writer | Bound |
 |---|---|---|
-| `definition` | A genesis only: the scope's own declaration (`core.ts`, `delivery.ts`) and the declarations it names for its children (`scope/src/definitions.ts`, at most `namedDefinitions`). | Bounded. One genesis per scope, so at most 17 declarations of at most `definitionBytes` (262,144) each: 4.25 MiB. |
+| `definition` | A genesis retains its own and its children's declarations. Ordinary acts also retain definition-domain values through `valuesOf` (`scope/src/core.ts`) and `retainedValueKey` (`bytes/src/retained-key.ts`): for example, `activate`, `open-issue`, `open-pr` and `establish`. | No retained-byte total bounds these rows. The shipped value places bound each declaration to `definitionBytes` (262,144), but later acts can add new declarations. Nothing removes a declaration row. |
 | `rule` | Each entry that records a rule result retains that rule's input (`turn.ts`, `#judged`). | Not bounded. The input size check against `ruleInputBytes` runs only under the opt-in. Each entry can add new rows, and no floor removes one. |
 | `snapshot` | An outcome retains each snapshot that its evidence names (`operations.ts`). | Not bounded. The turn checks the snapshot's canonical form and no size. Each outcome can add new rows, and no floor removes one. |
 | `value` | An act, a delivery and an outcome retain the values that the draft names (`valuesOf`, `core.ts`), in `retained_value`. | Not bounded over a scope's life. Nothing removes a value row, and each entry can add new ones. |
+| `text` | An act or a delivery with detached text retains its canonical JSON string (`Received.retain`, `scope/src/core.ts`). | No retained-byte total bounds these rows. Each text fits its field's `max`, within `textBytes`. The stored JSON includes quoting and escapes. Only a redaction removes a text row. |
 
-The kinds `rule`, `snapshot` and `value` are findings for a new request.
-CDF-1 changes none of them.
+CDF-2 (request b5750e6e, pre-code act ca7b18ce) covers these five kinds.
+The act corrects the earlier genesis-only claim for `definition` and adds
+`text`. CDF-1 changes none of their byte limits. The journal's entry count
+still limits new work, but a floor can reclaim journal capacity without
+removing these retained rows.
