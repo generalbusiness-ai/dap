@@ -171,41 +171,66 @@ plus the witness files. It reported no failures:
 | Check after the reload | `joined` |
 | After Check | 1 record, `accepted`, 1 signing; 1 `POST` in all; 1 journal entry under the key; the entry equals the envelope in custody; the slot's key is the record's key; the slot is empty |
 
-The join run above did not cover the Counter act. CF-1 now lets a new
-`base` room install Counter. Ruling `bc826726` moves the five NF-7 facts
-to NF-5 after CF-1 lands; the join run does not stand for Counter.
+The join run above did not cover the Counter act. Ruling `657e4217`
+keeps the hosted Counter witness owed after NF-5 lands and the planner
+deploys its release. No local Counter half or adapter enters NF-5. This
+replaces the packet, trust and local-base-room preparation of `bc826726`,
+and the local preview half of `2a59af97`. None of that preparation ran.
 
-The Counter half is a source draft, not a passing witness. It uses the
-normal Node CLI and its persistent request custody. A packet from this
-head must first be packed with a private scratch publisher, committed,
-and pushed at an immutable public Git URI. The local Worker receives
-the exact release, publisher and Git host in `APPLICATION_TRUST`, and a
-local R2 `APPLICATION_CONTENT` bucket. The CLI installs it in a `base`
-room and reads its screen through `dap application`. No packet has been
-generated for this draft.
+The source read established the shared custody boundary:
+`counterCustody` in `apps/counter/browser/storage.ts` calls the same
+`browserCustodyStore`, with IndexedDB database `dap-counter-custody-1`
+and Web Lock `dap-counter-custody`. Both Counter entry paths call that
+function. The earlier Counter Node witnesses passed 52 cases, as builder
+act `371b0dd8` records. That is historical evidence; this source-only
+follow-up runs no tests and changes no Counter production code.
 
-The draft opens the real installed Counter, enrolls its browser through
-an invitation, and loses the reply to one `participate` act after the
-Worker records it. It reads Counter's IndexedDB records without writing
-them, reloads, uses Check command, and compares its retained signed
-envelope with the one journal act under that actor and key. It records
-counts, equality results, and screenshots without invitation or session
-text. Browser plugin is not available; the witness uses the existing
-Playwright harness and real Chrome. The privacy guide of
-`modern-web-guidance` shaped this limit: collect the minimum needed for
-the witness, not request bodies or credentials.
+No browser run before deployment covers these installed-screen paths:
 
-The normal local screen route remains unresolved in request `e010df0e`.
-With no `APPLICATION_SCREEN_HOSTS` descriptor, `applicationPage` returns
-404. A configured descriptor redirects to its sandbox origin.
-`applicationScreenTransport` needs the verified sandbox host that
-`loadApplicationScreenContext` binds only for an HTTPS `inguz.space`
-origin. A local HTTP celld screen has no such binding. No local server,
-browser, compiler, build, packet or test ran during this source work.
-The draft adds no origin bypass or production browser change. CB-1
-(`b5f200f2`) moves celld planning to `base`, but does not itself change
-these screen-origin restrictions. The planner must name the normal
-path or the owning repair before the Counter run.
+- `counterEnrollment` in `apps/counter/browser/installed.ts`: invitation
+  validation, browser key creation, join custody and saved-device handoff.
+- `applicationScreenTransport` in
+  `packages/client/src/application-gateway.ts`: the verified sandbox
+  host, physical route, request headers and response-location check.
+- `main.ts` in `apps/counter/browser`: installed context loading,
+  enrollment UI, `mountDevice`, and its `nativeGateway` options for the
+  installed application, reads, head stream and act fetch.
+
+`apps/room/page/test/custody-witness.mjs` now takes the deployed screen
+address as its argument. Hosted mode starts no local Worker and performs
+no install, pack or preview. The planner supplies an invitation in a
+private file for a new member permitted to participate, after installing
+Counter in a `base` room with its configured sandbox host.
+
+The unrun hosted script opens that real Counter screen, enrolls through
+its invitation UI, selects a real English (US) voice, and loses the reply
+to one `participate` act after the Worker records it. It requires the
+page's unknown/unresolved message and one unknown IndexedDB record. A
+reload and Check command must settle it without a second Counter POST.
+The script uses the browser's volatile session reader through the
+verified screen gateway to read the scope journal. It requires one act
+under that actor and key, with signed bytes equal to custody's envelope.
+The reader token stays in process memory. The report contains counts
+and equality results, and screenshots follow enrollment's removal of
+the private invitation text. Detailed failures stay in the private
+witness directory, outside evidence.
+
+Hosted command, after deployment only:
+
+```sh
+PLAYWRIGHT_CORE=<existing-playwright-core-directory> CHROMIUM=<Chrome-executable> \
+WITNESS_DIR=<new-private-directory> WITNESS_EVIDENCE=<new-evidence-directory> \
+WITNESS_INVITATION_FILE=<private-invitation-text-file> \
+node apps/room/page/test/custody-witness.mjs <deployed-Counter-screen-address>
+```
+
+Browser plugin is not available; the script extends the existing
+Playwright harness with real Chrome. The `privacy` guide of
+`modern-web-guidance` shaped the report: collect the minimum evidence,
+not credentials or raw request bodies. No local server, browser,
+compiler, build, packet or test ran in this follow-up. The hosted run
+remains unvalidated. Its failure reopens NF-5; NF-7 closes only when it
+passes after deployment (ruling `657e4217`).
 
 The witness calls no export of the two `storage.browser.test.ts` files.
 
