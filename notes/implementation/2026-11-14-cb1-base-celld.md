@@ -38,10 +38,13 @@ The earlier AE-1 owner failed with actual `e13a31cf` against retained `069eaf4c`
 Its 12 cases ended with 11 passes and one failure. The output remains at
 `/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-development-attempt2/security-entry-points.stdout.log`
 with SHA-256 `d4f167e73793c6053324281d0cda925e8247ee6f2dba3a4218978381ebf91c29`.
-That failed run supplies the adopted result, not a passing CB-1 owner result.
-All runtime checks at this new checkpoint remain UNRUN. The historical
-development results below retain their original scope. Fleet and CB-2
-obligations remain open.
+That failed run supplies the adopted result. The whole security-entry-point
+owner then passed all 12 cases at `20609219271fc127f76ef61d30c6a0171eeff8f0`,
+tree `abb82b3b024f828ac079fff5226d5882a42df7dd`, with no skipped or cancelled
+case. Its process exited 0 in 4.404171417 seconds. END `81308e427d2fd279d7fa37663527c2f4be9788e9`
+records that result. This note-only follow-up preserves the checked source.
+The other development results below retain their original scope. Actual
+post-C2 main integration, the gate, fleet and CB-2 obligations remain open.
 
 ## Base-family source changes
 
@@ -128,9 +131,18 @@ store.
 | Changed version-question and smoke tests | DEV passed: 328 Vitest cases and 5 Node cases | Owed |
 | Mac preparation and deployment-boundary tests | DEV passed: 6 project-preparation, 9 GitHub-preparation, and 12 Python cases | Owed |
 | Platform compilers and helper syntax | DEV passed: both platform contexts and four production MJS syntax checks | Owed |
+| Whole security-entry-point owner at `20609219` | 12 passed; exit 0; process wall 4.404171417 s | DEV only; raw `2026-11-14-cb1-attestation-development-attempt1/stdout.log`; SHA-256 `6aa8b99c86f2aa241fe307c043ca0d5a31cccea19bd3f4267b5c2527c9a56de4` |
 | Documentation checks | UNRUN | Owed |
 | Gate before source review | UNRUN | Owed |
 | Persistent-fleet Counter witness | Deferred by `4d03ff1d` | No machine or public release selected yet |
+
+The security-owner path above resolves under
+`/Users/hughpyle/play/artroom-evidence/`. Its `command.json` and `result.json`
+retain the actual command, source worktree, UTC interval, exit, process wall,
+and stream hashes. The command was
+`/opt/homebrew/bin/node --test scripts/security-entry-points.test.mjs`.
+Its stderr stream was empty. No AST calculation, control, compiler, build,
+gate, deployment or fleet action accompanied that run.
 
 The first Python run completed 12 tests with one failed subtest: the
 negative hostname table expected the production parser to refuse `xn--`.
