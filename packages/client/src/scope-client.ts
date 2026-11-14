@@ -164,32 +164,37 @@ export class ScopeClient<D extends DeclaredDefinition> {
     if (this.#closed || this.#halted) return;
     if (this.#running) { this.#again = true; return this.#running; }
     this.#running = (async () => {
-      do {
-        this.#again = false;
-        const replica = this.#replica.view;
-        const held = new Map<string, Held<D>>();
-        for (const row of await this.#options.store.byTarget(this.#who)) {
-          const identity = { ...this.#who, key: row.key };
-          let record = await this.#custody.find(identity);
-          if (!record || record.standalone) continue;
-          const entry = this.#replica.accepted(this.#options.signer.key, row.key);
-          if (entry && record.phase !== "accepted" && record.phase !== "archived" && record.phase !== "settled") {
-            try { record = await this.#custody.folded(identity, entry) ?? record; }
-            catch (error) { if (error instanceof CustodyError && error.why.held === "locked") return; throw error; }
+      try {
+        do {
+          this.#again = false;
+          const replica = this.#replica.view;
+          const held = new Map<string, Held<D>>();
+          for (const row of await this.#options.store.byTarget(this.#who)) {
+            const identity = { ...this.#who, key: row.key };
+            let record = await this.#custody.find(identity);
+            if (!record || record.standalone) continue;
+            const entry = this.#replica.accepted(this.#options.signer.key, row.key);
+            if (entry && record.phase !== "accepted" && record.phase !== "archived" && record.phase !== "settled") {
+              try { record = await this.#custody.folded(identity, entry) ?? record; }
+              catch (error) { if (error instanceof CustodyError && error.why.held === "locked") return; throw error; }
+            }
+            const outcomes = await this.#custody.outcomes(identityId(identity), record);
+            const draft = await this.#options.drafts.read(row.key);
+            const present = draft ?? this.#present(record);
+            held.set(row.key, { record, outcomes, present, meaning: draft ? this.#presentMeaning(present) : record.meaning });
           }
-          const outcomes = await this.#custody.outcomes(identityId(identity), record);
-          const draft = await this.#options.drafts.read(row.key);
-          const present = draft ?? this.#present(record);
-          held.set(row.key, { record, outcomes, present, meaning: draft ? this.#presentMeaning(present) : record.meaning });
-        }
-        if (this.#closed) return;
-        // A store, draft or replica change during an await invalidates this whole candidate view.
-        if (this.#again || this.#replica.view !== replica) { this.#again = true; continue; }
-        this.#held = held;
-        this.#arm();
-        this.#publish();
-      } while (this.#again && !this.#closed);
-    })().finally(() => { this.#running = null; });
+          if (this.#closed) return;
+          // A store, draft or replica change during an await invalidates this whole candidate view.
+          if (this.#again || this.#replica.view !== replica) { this.#again = true; continue; }
+          this.#held = held;
+          this.#arm();
+          this.#publish();
+        } while (this.#again && !this.#closed);
+      } finally {
+        // Release ownership with the final pending-work decision, including early returns.
+        this.#running = null;
+      }
+    })();
     return this.#running;
   }
 

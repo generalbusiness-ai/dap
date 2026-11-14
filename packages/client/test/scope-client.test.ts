@@ -1,6 +1,6 @@
 /** The in-memory judge/fold is real; the transport, observation and client clock are deterministic stand-ins. */
 import { expect, test } from "vitest";
-import { timeOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
 import { Custody, memoryStore } from "../src/custody.ts";
 import { signedIntent } from "../src/intent.ts";
 import { intentMeaning } from "../src/replica.ts";
@@ -13,6 +13,50 @@ function clientAt(s: ReturnType<typeof requestScene>, store = memoryStore(), dra
   const who = { service: member.service, membership: member.membership, signer: s.signer.key, target: s.handle.at };
   return { client, store, who };
 }
+
+// Invariant (9fa19bb3): a draft notification during publication starts another reconciliation without a third trigger.
+test("a subscriber's draft edit during publication publishes the new meaning without another trigger", async () => {
+  const s = requestScene(), store = memoryStore();
+  let text = "first", scans = 0;
+  const observers = new Set<() => void>();
+  const drafts: DraftRead<typeof s.handle.definition> & { edit(value: string): void } = {
+    read: async () => ({ kind: "remark", values: { on: 0, fields: { text } } }),
+    observe: changed => { observers.add(changed); return () => { observers.delete(changed); }; },
+    edit(value) { text = value; for (const changed of [...observers]) changed(); },
+  };
+  const byTarget = store.byTarget.bind(store);
+  store.byTarget = who => { scans++; return byTarget(who); };
+  const { client } = clientAt(s, store, drafts);
+  s.feed.current(s.scope); s.mode("refused");
+  await request(client, "handoff", "remark", { on: 0, fields: { text } });
+  const meaning = (value: string) => canonicalize({ on: 0, fields: { text: value } });
+  let edited = false, notified!: () => void, published!: () => void;
+  const notificationHandled = new Promise<void>(resolve => { notified = resolve; });
+  const newMeaningPublished = new Promise<void>(resolve => { published = resolve; });
+  const unsubscribe = client.subscribe(view => {
+    const held = view.requests.find(row => row.key === "handoff");
+    if (!held) return;
+    if (!edited && canonicalize(held.values) === meaning("second")) {
+      edited = true;
+      drafts.edit("third");
+      // edit queued the background reconciliation first. This barrier follows
+      // its call to byTarget, without waiting for or triggering another read.
+      queueMicrotask(notified);
+    }
+    if (canonicalize(held.values) === meaning("third")) published();
+  });
+  try {
+    const before = scans;
+    drafts.edit("second");
+    await notificationHandled;
+    // Old separate-finally ownership joins the finished pass here: only one
+    // scan ran. Fail that assertion before awaiting a view it would never emit.
+    expect(scans).toBe(before + 2);
+    await newMeaningPublished;
+    expect(client.view.requests.find(row => row.key === "handoff")?.values)
+      .toEqual({ on: 0, fields: { text: "third" } });
+  } finally { unsubscribe(); client.close(); }
+});
 
 // Invariant (sections 5.5 and 7): cached state after a failed read is no proof of absence after death.
 test("a failed journal read with the feed down cannot end a dead latest signing; a later complete read ends it", async () => {
