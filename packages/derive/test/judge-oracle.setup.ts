@@ -20,7 +20,7 @@ function names(node: Named | undefined): string[] {
 function label(): OracleCase {
   const task = getCurrentTest();
   if (task) return { kind: "test", path: names(task), position: task.id.slice(task.file.id.length) };
-  const suite = getCurrentSuite(), path = names(suite), key = JSON.stringify(path);
+  const suite = getCurrentSuite(), path = names(suite.suite), key = JSON.stringify(path);
   let position = collectionPositions.get(suite);
   if (position === undefined) {
     position = String(collectionOccurrences.get(key) ?? 0);
