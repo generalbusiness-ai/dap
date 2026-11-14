@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8612d0ed80707f1d60a48740b8b780dcb4c18f77","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/application-release-reproduction.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8f38e91369a70cf4cacefda4387237ca0a153896","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-14-cut-r-r2.md."}
