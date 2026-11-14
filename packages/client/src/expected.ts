@@ -5,6 +5,7 @@
 import type { FactRef, FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
 
 import { isFactRef, isRecord } from "@generalbusiness/dap-bytes";
+import type { Revision } from "./act-types.ts";
 type ExpectedField = Readonly<Record<string, unknown>> & { type?: string };
 
 interface ExpectedAct {
@@ -22,17 +23,17 @@ function ownValue(record: Readonly<Record<string, unknown>> | undefined, name: s
   return record !== undefined && Object.hasOwn(record, name) ? record[name] : undefined;
 }
 
-type Bound = Pick<Item, "id" | "type" | "revision" | "refs">;
+type Bound<R = number> = Pick<Item, "id" | "type" | "refs"> & { readonly revision: R };
 interface Rule { item?: string; one?: true; by?: string; code?: string; via?: { slot: string; of: string } }
 
 /** The act's subjects, resolved over `items`: `subject` gives the item a name selects, and `viaId` gives the ID that a `via` rule's slot holds. */
-function subjectsOf(act: ExpectedAct, items: readonly Bound[], on: number | null, fields: Readonly<Record<string, FieldValue>>) {
-  const bound = new Map<string, Bound | null>();
+function subjectsOf<R>(act: ExpectedAct, items: readonly Bound<R>[], on: number | null, fields: Readonly<Record<string, FieldValue>>) {
+  const bound = new Map<string, Bound<R> | null>();
   const viaId = (rule: Rule): number | undefined => {
     const via = rule.via ? subject(rule.via.of)?.refs[rule.via.slot] : undefined;
     return typeof via === "number" ? via : via && typeof via === "object" && "seq" in via ? (via as FactRef).seq : undefined;
   };
-  const subject = (name: string): Bound | null => {
+  const subject = (name: string): Bound<R> | null => {
     if (bound.has(name)) return bound.get(name)!;
     if (name === "on") return items.find((item) => item.id === on) ?? null;
     const rule = ownValue(act.also, name.replace(/^also\./, "")) as Rule | undefined;
@@ -52,8 +53,8 @@ function subjectsOf(act: ExpectedAct, items: readonly Bound[], on: number | null
  * that a rule selects has no key: the scope resolves it. The scope checks
  * every revision again and refuses one that moved.
  */
-export function expectedOf<A extends ExpectedAct>(act: A, items: readonly Bound[], on: number | null, fields: Readonly<Record<string, FieldValue>>): Record<string, number> {
-  const expected: Record<string, number> = {};
+export function expectedOf<A extends ExpectedAct, R extends Revision = number>(act: A, items: readonly Bound<R>[], on: number | null, fields: Readonly<Record<string, FieldValue>>): Record<string, R> {
+  const expected: Record<string, R> = {};
   if (act.step === "transition" && on !== null) {
     const at = items.find((item) => item.id === on)?.revision;
     if (at !== undefined) expected["on"] = at;
