@@ -9,6 +9,7 @@ import type { Bounds } from "@generalbusiness/dap-contract";
 import { isObject } from "../values.ts";
 
 export type ProblemCode =
+  | "live-platform"     // version 1 of the live level admits ordinary declarations only
   | "handler-body-collision"
   | "late-on-advisory"
   | "late-on-item-bound-handler"
