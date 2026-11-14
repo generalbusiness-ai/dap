@@ -1,0 +1,9 @@
+{
+  "entry": "sha256:833c0702b5e301cf7cee5f4f354f55f747c5f1830a4a7623afdb94205a46bac5",
+  "definitions": [
+    "sha256:3ea5dcacd1c7a57af0e6e28d2678bf9d159d242ae338eb4eae03c2852edd5d41",
+    "sha256:833c0702b5e301cf7cee5f4f354f55f747c5f1830a4a7623afdb94205a46bac5"
+  ],
+  "semantic": "sha256:49eddfe2a06f9412ac7ba7551c06e71e1266330cc6e7df094cdd0dd71dae9883",
+  "presentation": "sha256:2a3adecf80d11e4734d1b63fc43121e7e73197ee16c3448782cec15e586ef78c"
+}
