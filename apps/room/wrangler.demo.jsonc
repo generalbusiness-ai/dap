@@ -18,7 +18,7 @@
     "INSTALLED_REGISTER_SCOPES": "[\"sc_dtqcta4htibueaeycfficyanudk5cz3ssrsugho3qlznvrhw3jxq\"]",
     "ARTIFACTS_CONFIG": "{\"registerScope\":\"sc_dtqcta4htibueaeycfficyanudk5cz3ssrsugho3qlznvrhw3jxq\",\"namespace\":\"dap-demo\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}",
     "APPLICATION_SCREEN_HOSTS": "[]",
-    "APPLICATION_TRUST": "[{\"release\":\"sha256:71e10ca9499e926a4de1d8294ed83a772051dff677d8b1687bbd8e28e61802fa\",\"publisher\":\"key_gg4rXwy4v-kVqveN37_W_FW_-Wvsn3fgsal5z6gxfS0\",\"host\":\"github.com\"}]",
+    "APPLICATION_TRUST": "[]",
     "SERVING_CREATION_KEY_PER_HOUR": "10",
     "SERVING_CREATION_ADDRESS_PER_HOUR": "30",
     "SERVING_READ_KEY_PER_MINUTE": "240",

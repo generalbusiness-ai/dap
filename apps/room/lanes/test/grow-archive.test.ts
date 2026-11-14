@@ -9,12 +9,13 @@ import { journalRef } from "@generalbusiness/dap-git/journal";
 import { admitArchivePin } from "@generalbusiness/dap-git/archive-policy";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { growArchivePolicies } from "../../archive-policy.ts";
-import { EARLIER_GROW_DEFINITIONS } from "../../../../examples/grow/earlier-release.ts";
+import { DEMO_RELEASE } from "../../../../examples/grow/demo-release.ts";
+import { EARLIER_GROW_RELEASE, EARLIER_GROW_DEFINITIONS } from "../../../../examples/grow/earlier-release.ts";
 import { growArchiveConfiguration } from "../../archive.ts";
 import { EARLIER_GROW_ARCHIVE_RELEASE } from "../../../../packages/scope/test/support/earlier-grow-release.ts";
 import { ArtifactsProvider } from "../../../../packages/scope/src/artifacts-host.ts";
 
-test("Grow export requires its exact earlier signed release and never admits private source journals", () => {
+test("Grow export keeps earlier signed proof, rejects another activation, and excludes private source journals", () => {
   const text = readFileSync(new NodeURL("../../../../examples/grow/fixtures/earlier-application.dap.json", import.meta.url), "utf8"), policies = growArchivePolicies(text, EARLIER_GROW_ARCHIVE_RELEASE);
   for (const pin of EARLIER_GROW_DEFINITIONS) expect(policies.has(pin)).toBe(true);
   for (const pin of ["platform:directory@16", "platform:rules@10", "platform:destination@12"] as const) expect(policies.has(pin)).toBe(true);
@@ -26,6 +27,9 @@ test("Grow export requires its exact earlier signed release and never admits pri
   const source = readFileSync(new NodeURL("../../wrangler.grow.jsonc", import.meta.url), "utf8");
   const config = JSON.parse(source.replace(/^\s*\/\/.*$/gm, ""));
   expect(growArchiveConfiguration(config.vars, EARLIER_GROW_ARCHIVE_RELEASE.release)).toMatchObject({ directory: "sc_ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq", namespace: "artroom-demo" });
+  // The actual current packet differs from the retained signed archive proof.
+  expect(DEMO_RELEASE).not.toBe(EARLIER_GROW_RELEASE);
+  expect(growArchiveConfiguration(config.vars, DEMO_RELEASE)).toBeNull();
   expect(growArchiveConfiguration({ ...config.vars, GROW_ARCHIVE_CONFIG: JSON.stringify({ ...JSON.parse(config.vars.GROW_ARCHIVE_CONFIG), secret: "not-admitted" }) }, EARLIER_GROW_ARCHIVE_RELEASE.release)).toBeNull();
 });
 

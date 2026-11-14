@@ -8,6 +8,7 @@ import { permitsNewPlatformScope, readPlatformCreationPolicy } from "../../scope
 import { readInstalledRegisters } from "../../scope/src/register-setting.ts";
 import { artifactsConfiguration } from "../../scope/src/artifacts-wiring.ts";
 import { demoCreationConfig } from "../../scope/src/demo-creation.ts";
+import { DEMO_RELEASE, DEMO_PUBLISHER } from "../../../examples/grow/demo-release.ts";
 const read = (name: string) => JSON.parse(readFileSync(new URL(`../../../apps/room/${name}`, import.meta.url), "utf8").replace(/^\s*\/\/.*$/gm, ""));
 
 // Each deployed Worker owns its migration history, including its tag scheme.
@@ -67,6 +68,10 @@ test("dap-demo has private namespaces, enforced index and the Grow serving bound
   expect([demo.name, demo.main, demo.vars.SCOPE_INDEX_MODE]).toEqual(["dap-demo", "worker.ts", "enforce"]);
   expect(demo.durable_objects.bindings.map((row: { name: string }) => row.name).sort()).toEqual(["AGENTS", "REGISTRIES", "SCOPES", "SCOPE_INDEX"]);
   expect(demo.durable_objects.bindings.every((row: object) => !Object.hasOwn(row, "script_name"))).toBe(true);
+  expect(JSON.parse(grow.vars.APPLICATION_TRUST)).toEqual([{ release: DEMO_RELEASE, publisher: DEMO_PUBLISHER, host: "github.com" }]);
+  expect(grow.r2_buckets).toEqual([{ binding: "APPLICATION_CONTENT", bucket_name: "artroom-application-content" }]);
+  expect(JSON.parse(demo.vars.APPLICATION_TRUST)).toEqual([]);
+  expect(demo).not.toHaveProperty("r2_buckets");
   expect(demo.artifacts).toEqual([{ binding: "ARTIFACTS", namespace: "dap-demo", remote: true }]);
   expect(demo.vars.ARTIFACTS_NAMESPACE).toBe("dap-demo");
   const artifacts = artifactsConfiguration(demo.vars.ARTIFACTS_CONFIG);

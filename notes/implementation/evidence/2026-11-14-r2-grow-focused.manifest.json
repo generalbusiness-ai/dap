@@ -1,0 +1,415 @@
+{
+  "qualification": "R2 formal focused evidence at94a29 only: compatibility,4compiler contexts,one4file10case body,12caseNode owner and separate post-END no-Sleep supplement. No gate result, checker approval, deployment or development-check evidence. Nested sealed manifests/checksums bind all1813original and10supplement files, including uncited mutable caches and raw temp records.",
+  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "checkpoint": {
+    "commit": "94a29a264254a6fd9367b44cd24e82d6afebaf35",
+    "tree": "d6fc30ee5a48ceb0e99f37f0f07df5351769ee58"
+  },
+  "histories": {
+    "F": "2026-11-14-r2-grow-focused-attempt1",
+    "S": "2026-11-14-r2-grow-focused-post-END-sleep-supplement"
+  },
+  "file_count": 80,
+  "files": [
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/00-compatibility/command.json",
+      "bytes": 878,
+      "sha256": "96fbbe01784f98025025b61fa36b906e7ade02c7611c07b5a7f9d558446db9c9"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/00-compatibility/mutable-caches-after.json",
+      "bytes": 8458,
+      "sha256": "0f2450a426ef8aa6f54d3073f4fd973329a30d5e5105e0543e6155e1332f455f"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/00-compatibility/mutable-caches-before.json",
+      "bytes": 8115,
+      "sha256": "fa5ced6a682022b439b324ac373b65e69c2949346b0bec0306e3d5d356d2d1e0"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/00-compatibility/process.json",
+      "bytes": 121,
+      "sha256": "145603ec395631dbcb3b1ea145333f741ee38dc6d743bf84f2b029d77cd63be2"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/00-compatibility/result.json",
+      "bytes": 677,
+      "sha256": "b8e6800b64bb4b83d45f9f9dc5858dc45cd60ce7e5859c7035e4ed8253ce6f3d"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/00-compatibility/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/00-compatibility/stdout.log",
+      "bytes": 370,
+      "sha256": "ea882b9f167f9399a09e8e3e0019808d68eae861e7b308a881b909f460922b80"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/00-compatibility/time.txt",
+      "bytes": 29,
+      "sha256": "3eb9a1bab01aa2a9bee7f1db0fd23e9b6dfb3bcbf95a3f21a6c704555cbe0ee7"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/01-focused-owners/command.json",
+      "bytes": 1243,
+      "sha256": "0c8850b984a4472a2b395ceb65edd8e36ecc5e128bbe9cbca28ba6073537bc0d"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/01-focused-owners/mutable-caches-after.json",
+      "bytes": 79663,
+      "sha256": "fac5226473010c013f8b006bd6ec66eefc1528ac5639cf4285e557ba624f2fd9"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/01-focused-owners/mutable-caches-before.json",
+      "bytes": 8464,
+      "sha256": "73fe119464178d34f4762430c7f2be8bcd1e460a8701560d614ec603383b3ac4"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/01-focused-owners/process.json",
+      "bytes": 121,
+      "sha256": "a1b0bccc7e32207497c387b03f0ae2cf3ccc967d7dadf013d724f59bb6042dde"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/01-focused-owners/result.json",
+      "bytes": 679,
+      "sha256": "227a308f25fda2aa4b1d22c3e29b5d68d0c582c0f81304c18cc4b0f1c6f4e888"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/01-focused-owners/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/01-focused-owners/stdout.log",
+      "bytes": 551,
+      "sha256": "9b4e4d1e6bdb39f4b70acbf2dc01536d3f13e619bb66604fc783dce538f7f1fa"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/01-focused-owners/time.txt",
+      "bytes": 30,
+      "sha256": "c3176ed34cd1c58243831ce41a3bf02130b2937c63db951c64297bcbac5acf0a"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/02-node-security/command.json",
+      "bytes": 1628,
+      "sha256": "dea182840ca36362d574d07108dca3278e4543fc845af798bafccc8200bf0cf2"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/02-node-security/mutable-caches-after.json",
+      "bytes": 94740,
+      "sha256": "66f8706e535a13b50d82cbc61765a56347b1a2105199403a2f00d9cbb2e8626e"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/02-node-security/mutable-caches-before.json",
+      "bytes": 79663,
+      "sha256": "147e0e6416efa37b1333cfba3e279d6ee3760dcfd14f316170a3209fbef07d8e"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/02-node-security/node-case-check.json",
+      "bytes": 11021,
+      "sha256": "83d61d1599ea646c70f3dfd03052224d7b4890066065d5f19313424dd9d213ed"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/02-node-security/node.jsonl",
+      "bytes": 29553,
+      "sha256": "e5ed6c9533966ebd2bdae09de56c5adf353af99c1325251a841d8ca6c80ae9ae"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/02-node-security/process.json",
+      "bytes": 121,
+      "sha256": "2322784f93c6747bbc17e991aed81cf3a830fe1e6748801cb7ce561548be2790"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/02-node-security/result.json",
+      "bytes": 676,
+      "sha256": "f7a7684d7d70486e7812904a9ac483825916c05c069f18f0e34254fb64823e9d"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/02-node-security/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/02-node-security/stdout.log",
+      "bytes": 1557,
+      "sha256": "455c92aff67f6b76e24034199813b84b9d8c9f0182e5e3fca5e62bdc6f72ca32"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/02-node-security/time.txt",
+      "bytes": 29,
+      "sha256": "464453296ff6019035df4ade680a76eaf83e6099c55ca1390448cf56a2e933e0"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/SHA256SUMS",
+      "bytes": 298397,
+      "sha256": "f07633164342fbb672ae31a91ab46c167094f5a1651e3ac578152492aa08f2bc"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/START.commit.raw",
+      "bytes": 1975,
+      "sha256": "086cc7f0e5f0f109be8daac2123fa26d5c7171267b89b287c91548f7e919831b"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/START.event.raw",
+      "bytes": 2619,
+      "sha256": "68276bcd22f16986108225ee87972b04ab9ace0bd6dc6e0020aaaa4ccc68b10b"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/focused-owners/body.log",
+      "bytes": 1884,
+      "sha256": "3c55f638b749600f436b9ef36e180f16bdfc3a8a6e17773137ee03f3e35a6a57"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/focused-owners/cli-test.log",
+      "bytes": 29,
+      "sha256": "a9d4e8b74bd7d7c36ced3a99814224330c0f71dbe1a8015047c82bfcd4491511"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/focused-owners/coverage-ledger.json",
+      "bytes": 12694,
+      "sha256": "6808208ecb973b924914be392cb2c1798ec69808843880e8746327d3d942c979"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/focused-owners/coverage.jsonl",
+      "bytes": 15842,
+      "sha256": "b68c9107e1e14a0d9a11004b06796e4d355bb754e4fd19192f61d2343fb83cfa"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/focused-owners/grow.log",
+      "bytes": 29,
+      "sha256": "c3661aeadb310e24e07e4082f2788164c6c7cebf5eed4707bd3cdeb8fa8970a6"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/focused-owners/lanes-test.log",
+      "bytes": 29,
+      "sha256": "da178dcd1f8051533190b5e654e603c4a35d77fbd4339e8a01293717eafef51b"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/focused-owners/manifest.json",
+      "bytes": 1273,
+      "sha256": "8639254e3c31a8d59be711f1285720240d933506689f366c10a9c368c13fc983"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/focused-owners/plan.json",
+      "bytes": 2554618,
+      "sha256": "2341cb3a60fe280444202219a60c38795155b45844255dc88343e0c3721586b1"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/focused-owners/result.json",
+      "bytes": 12399,
+      "sha256": "b4e732b4e2d38f6fd47141a8eecf0f5e09b3c7a803cf871405c3d2546f775c76"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/focused-owners/scope-test.log",
+      "bytes": 29,
+      "sha256": "b5e257b36e1f2d755def2c2352f7e4117bdb4a1db5d2b960e2b9fb9c77e54b16"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/focused-owners/vitest.json",
+      "bytes": 4796,
+      "sha256": "5a415fc5414e1786e97fe3c6ec5c4671c3d39c45a53cd440421f5a98109fd550"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/guards.jsonl",
+      "bytes": 1905,
+      "sha256": "82c01a7497d792e7898cea87abd990015ce001d537710dc238ab460f74b6c93a"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/idle-before.txt",
+      "bytes": 80595,
+      "sha256": "96753e03afcdeb8f1fad7361f9f6630106114a7f91720237ff733cfe3f4e00c0"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/init-pins.json",
+      "bytes": 284,
+      "sha256": "cfb66000460836954ae37ee4c8ce41053558e8b3e8da38fb3d24ad9c8dd03d92"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/init.json",
+      "bytes": 534,
+      "sha256": "a95750c45437831a569e2b769a36876296ff80b616cf35e8524b01f987572acc"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/interval-result.json",
+      "bytes": 15262,
+      "sha256": "a9822a2ac26f5f76735a34d553da944fecc573d3e9039e1eba2fd6079eda514a"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/interval.manifest.json",
+      "bytes": 422176,
+      "sha256": "3f87edbc1a5f1a48a2cf9d349cf80f8637649ecff20ad1329bbc1df465c3751f"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/mutable-caches-init.json",
+      "bytes": 8058,
+      "sha256": "d6fb68f2817f754d16029ebe5af8daeb61728486328ac682a7449f54b357fb9c"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/pmset-log-00-compatibility-after.result.json",
+      "bytes": 631,
+      "sha256": "06b11a1d1c59553de5e4333e1d6b48e922ca7e7d6dfc467d7b5cc548f725263f"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/pmset-log-00-compatibility-after.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/pmset-log-00-compatibility-after.stdout.log",
+      "bytes": 3907629,
+      "sha256": "714ed2dc45a2234a967c63cffbb9e0f297cf2f13a7b82b852625aa430d49df1e"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/pmset-log-01-focused-owners-after.result.json",
+      "bytes": 631,
+      "sha256": "0e01065290e1b97ef5972729e547cafc8d98f7704c3184c533dde6e313c74ccd"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/pmset-log-01-focused-owners-after.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/pmset-log-01-focused-owners-after.stdout.log",
+      "bytes": 3907731,
+      "sha256": "2f5165439daf5335fe24b8a1614ba6ff69645e09002fd5b11dfecdb543d6677f"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/pmset-log-02-node-security-after.result.json",
+      "bytes": 631,
+      "sha256": "1ee94a56e4a74c63e564adfc5da4f81d19bb39845a77d2ab7a8befa1180dc073"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/pmset-log-02-node-security-after.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/pmset-log-02-node-security-after.stdout.log",
+      "bytes": 3907629,
+      "sha256": "8a4ee5cd33483ac5fda56619c76e9fccbe128b86553aec9c7f856671d2e23675"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/pmset-log-init-before.result.json",
+      "bytes": 631,
+      "sha256": "30695ed5a5cf1ec303a9247f1dda1572dcb80b3271f4cc4bb6714a0536506657"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/pmset-log-init-before.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/pmset-log-init-before.stdout.log",
+      "bytes": 3907629,
+      "sha256": "4e2261f723005229befbb7e71c9deb8c67dcd03b73871ec0fc23d920b0ee29b4"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/power-before-END.json",
+      "bytes": 1619,
+      "sha256": "e21842659a07c96da47f178e44557c5bf2d7d2078b07c54518bf82557ae92a8f"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/power.jsonl",
+      "bytes": 26105,
+      "sha256": "221f3e14769452f7e81d9870625461da72399692601fc64d1663da00be03dfe2"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/processes-terminal.txt",
+      "bytes": 81271,
+      "sha256": "bd8944da3c50a6a9c949483b6eed0b61f526c71c24235b362e16de649d41adb6"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/reviewed-plan/RUNORDER.md",
+      "bytes": 6325,
+      "sha256": "b5a2c7d9660bba2cba17297caa515f0ca475782f7926cf3b175b7ac855c22405"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/reviewed-plan/case-ledger.json",
+      "bytes": 5959,
+      "sha256": "6a7accdc57dc33f7be409dfdf372b063baddd5c926748dd3257c1621a69dfce2"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/reviewed-plan/commands.json",
+      "bytes": 1239,
+      "sha256": "69cad46564c318ab85f598952eb776b47a8640ecd6d28bf59c554a75785c6c6a"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/reviewed-plan/focused-plan.json",
+      "bytes": 2554618,
+      "sha256": "2341cb3a60fe280444202219a60c38795155b45844255dc88343e0c3721586b1"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/reviewed-plan/focused-supervisor.py",
+      "bytes": 27286,
+      "sha256": "66b909597834cdcb658329b10b03ffe1b21b98b76c2f77e2b312f5513e090fbc"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/reviewed-plan/plan-files.json",
+      "bytes": 3929,
+      "sha256": "c06ad919966e90438f3920ee235f0d8b486afc4afdedbbc6059b9abf6b1e4819"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/seal-focused.py",
+      "bytes": 8265,
+      "sha256": "049cc44d90e494666e371ce0a87b7528cc3129f3590124159084e22f4b8588b8"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-attempt1/supervisor.py",
+      "bytes": 27286,
+      "sha256": "66b909597834cdcb658329b10b03ffe1b21b98b76c2f77e2b312f5513e090fbc"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-post-END-sleep-supplement/END-power-observation.json",
+      "bytes": 1532,
+      "sha256": "3a2d9eb1f0020a084fe7ed08ed5741fc00d99e2d4102e0fd8dcb6adb1f530eb4"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-post-END-sleep-supplement/END-tool-result.json",
+      "bytes": 10614,
+      "sha256": "1d276abdea9c0492c326ccc4e6ee49f972cd3b8b6fed13b2bb666a134177c27b"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-post-END-sleep-supplement/END.commit.raw",
+      "bytes": 1704,
+      "sha256": "3e31fb0204dde0c4bbf525e371e5cb8e42c6013f3a1b8726f1285c5d2aa8735e"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-post-END-sleep-supplement/END.event.raw",
+      "bytes": 6540,
+      "sha256": "2981a210b205206560dfc5f7ea1052791cdd5fde898b0de5cbc926cdcb74e485"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-post-END-sleep-supplement/SHA256SUMS",
+      "bytes": 781,
+      "sha256": "8834aeb33c0eeb7428ae32c8a65125f1d10b445de1ff1d11ef7fe815cb8de840"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-post-END-sleep-supplement/pmset-g-log.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-post-END-sleep-supplement/pmset-g-log.stdout.log",
+      "bytes": 3907142,
+      "sha256": "25e26ad8fae42b1ba2f048746047d8f74ca2b93b63c6e064c492d44a71885c01"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-post-END-sleep-supplement/post-END-result.json",
+      "bytes": 2680,
+      "sha256": "3ab5ff80374e6d8157e16f82a1db87907edbf1896a500e6242a4279d69e3b713"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-post-END-sleep-supplement/post-END-sleep.py",
+      "bytes": 4470,
+      "sha256": "d7c136f13f66bc5214caa3aee239cdf4b4a4b9eed6275d152d9e86ff35bcbf63"
+    },
+    {
+      "path": "2026-11-14-r2-grow-focused-post-END-sleep-supplement/supplement.manifest.json",
+      "bytes": 1828,
+      "sha256": "4ce56dd5896e2fba4e8251578ba9ad00fd82deaf83859dc31a9e61001d8491f3"
+    }
+  ]
+}

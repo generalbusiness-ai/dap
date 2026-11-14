@@ -10,10 +10,7 @@ import type { ArchivePolicyRegistry, ReviewedArchivePolicy } from "../../package
 import { DEVICE_COMMAND_ARCHIVE_PREPARATIONS, DEVICE_COMMAND_ARCHIVE_RECORDS } from "../../packages/scope/src/archive-privacy.ts";
 import { CAPABILITY_CODE } from "../../packages/scope/src/ports.ts";
 
-export const GROW_ARCHIVE_DEFINITIONS = Object.freeze([
-  "sha256:d2bc830e74caaabab32dbad17adae6812050fb4d36b67e97145d39c2a4cfe2ea",
-  "sha256:b89e7f84740dfd8b24f78e8b52aff5aa8d4181750a7b5f385c1ef6f993846787",
-] as const);
+export { EARLIER_GROW_DEFINITIONS as GROW_ARCHIVE_DEFINITIONS } from "../../examples/grow/earlier-release.ts";
 const inline: ReadonlySet<Input["type"]> = new Set(["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"]);
 const review = "9674108a368c9e1380ce30a587aa57c4b503c0a4: Grow room binding; exact signed demo and native public places; no private journal export";
 
