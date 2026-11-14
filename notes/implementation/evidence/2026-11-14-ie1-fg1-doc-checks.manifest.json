@@ -1,0 +1,61 @@
+{
+  "qualification": "Cheap document, commit-message and whitespace checks after the evidence-note commit. No test, compiler, gate, bundle or installation ran. Later note/manifest filing changes documents only.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-ie1-fg1-doc-checks",
+  "checkpoint": {
+    "commit": "6927c3e53584fef33bb5c5b89e9d8b82eb13bfc2",
+    "tree": "0a07583cb1795dea9a7739780afd499f7e18284a"
+  },
+  "fileCount": 10,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 728,
+      "sha256": "7f72b6e32a92fecd690c420719d0d807d2b3bc87902937b2b96d98732cda3fd7"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 587,
+      "sha256": "c0fb6ba877bce88f5a2efccb9576f49e2b579bdb25d6ab39840e332eef97e05f"
+    },
+    {
+      "path": "links.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "links.stdout",
+      "bytes": 36,
+      "sha256": "e738f746a19fabbb74101a21ca6e83400052cd0c46d58e10823059c8c7aa818b"
+    },
+    {
+      "path": "messages.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "messages.stdout",
+      "bytes": 38,
+      "sha256": "95c32481a87cffe3e850fb0dcfc0dce82a3c17e8368e227d0271bbb66298b322"
+    },
+    {
+      "path": "notes.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "notes.stdout",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "whitespace.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "whitespace.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
