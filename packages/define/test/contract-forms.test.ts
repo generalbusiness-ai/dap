@@ -185,7 +185,10 @@ test("level and capacity stay explicit data and unsupported durability refuses",
   expect(explicit.definition.capacity).toEqual({ name: "whole-scope", version: 1 });
   expect(explicit.digest).not.toBe(omitted.digest);
   expect(compile(declaration([], {}, { level: { name: "sequenced", version: 1 } })).validation.ok).toBe(true);
-  refuses(declaration([], {}, { level: { name: "live", version: 1 } }), /recorded durability version 1 and sequenced version 1/);
+  const unsupported = declaration([], {}, { level: { name: "live", version: 1 } });
+  // Inject an unsupported version after the typed builder to test runtime validation.
+  Object.assign(unsupported, { level: { name: "live", version: 2 } });
+  refuses(unsupported, /the validator admits recorded, live and sequenced durability version 1/);
 });
 
 test("reference fragments retain their byte bound and refuse oversized bounds", () => {
