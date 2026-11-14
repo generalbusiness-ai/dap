@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:76e8fcb5002d82f43ec9706e6100aa326dc3bdcf","text":"Merge retired a covered predecessor; the successor is at docs/security/trust-boundaries.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7acf6521bab7532955b631c849e21eb23b43ecb7","text":"Merge retired a covered predecessor; the successor is at examples/repo-in-ai/hosted-loop/runbook.md."}
