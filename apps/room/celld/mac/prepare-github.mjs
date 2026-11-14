@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { chmod, lstat, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { applicationProjectSettings, readApplicationProject } from './application-settings.mjs';
 
 const maintained = new URL('../wrangler.json', import.meta.url);
 const worker = fileURLToPath(new URL('../../worker.ts', import.meta.url));
@@ -42,10 +43,11 @@ async function originalProject(project) {
   const info = await lstat(project);
   if (!info.isDirectory() || info.isSymbolicLink() || (info.mode & 0o777) !== 0o700
     || process.getuid && info.uid !== process.getuid()) throw Error();
-  const config = JSON.parse(await file(join(project, 'wrangler.json'), 64 * 1024, true));
+  const config = await readApplicationProject(await file(join(project, 'wrangler.json'), 64 * 1024, true));
   const template = JSON.parse(await readFile(maintained, 'utf8'));
-  const { vars, ...settings } = config, { vars: defaults, ...maintainedSettings } = template;
-  const optional = ['PLATFORM_CREATION_PINS', 'INSTALLED_REGISTER_SCOPES'].filter(key => vars && Object.hasOwn(vars, key));
+  const applications = await applicationProjectSettings(config);
+  const { vars, ...settings } = applications.settings, { vars: defaults, ...maintainedSettings } = template;
+  const optional = [...applications.optional, ...['PLATFORM_CREATION_PINS', 'INSTALLED_REGISTER_SCOPES'].filter(key => vars && Object.hasOwn(vars, key))];
   if (optional.includes('PLATFORM_CREATION_PINS')) {
     const policy = JSON.parse(await readFile(new URL('./repository-binding-policy.json', import.meta.url), 'utf8'));
     if (vars.PLATFORM_CREATION_PINS !== JSON.stringify(policy.PLATFORM_CREATION_PINS)) throw Error();

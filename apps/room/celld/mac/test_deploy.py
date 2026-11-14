@@ -65,6 +65,142 @@ class DeploymentSafety(unittest.TestCase):
             with self.assertRaises(Refusal):
                 deploy.prepared_project(project)
 
+    def application_project(self, root, raw="[]"):
+        project = self.project(root)
+        path = project / "wrangler.json"
+        config = json.loads(path.read_text())
+        config["r2_buckets"] = [{"binding": "APPLICATION_CONTENT", "bucket_name": "application-content"}]
+        config["vars"]["APPLICATION_TRUST"] = raw
+        path.write_text(json.dumps(config))
+        return project, path, config
+
+    def application_row(self, **changed):
+        # Public TEST syntax only. The production key parser checks canonical bytes, not curve membership.
+        return {"release": "sha256:" + "a" * 64, "publisher": "key_" + "A" * 43,
+                "host": "git.example", **changed}
+
+    def test_legacy_project_starts_no_application_validator(self):
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+            project = self.project(Path(scratch))
+            with patch.object(deploy.subprocess, "run", side_effect=AssertionError("legacy project starts no child")):
+                self.assertEqual(deploy.prepared_project(project), project)
+
+    def test_exact_application_pair_uses_production_trust_without_rewriting_private_project(self):
+        # Real offline parser; no store, provider, Git operation or deployment process.
+        rows = [self.application_row(release="sha256:" + f"{index:064x}") for index in range(128)]
+        settings = ["[]", " [\n] ", json.dumps(rows)]
+        settings.extend(json.dumps([self.application_row(host=host)]) for host in (
+            "git.example", "localhost", "git.example.", "127.0.0.1", "[::1]", "xn--fa-hia.example"))
+        for raw in settings:
+            with self.subTest(setting=raw[:120]), tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+                project, path, _ = self.application_project(Path(scratch), raw)
+                before = {name: (project / name).read_bytes() for name in ("worker.ts", "wrangler.json")}
+                self.assertEqual(deploy.prepared_project(project), project)
+                self.assertEqual({name: (project / name).read_bytes() for name in before}, before)
+                self.assertEqual(json.loads(path.read_text())["vars"]["APPLICATION_TRUST"], raw)
+
+    def test_application_pair_and_closed_project_shape_refuse_before_any_child(self):
+        def without_trust(config):
+            del config["vars"]["APPLICATION_TRUST"]
+
+        def without_bucket(config):
+            del config["r2_buckets"]
+
+        def unrelated_setting(config):
+            config["vars"]["UNREVIEWED_SETTING"] = "TEST"
+
+        def unrelated_field(config):
+            config["UNREVIEWED_FIELD"] = "TEST"
+
+        changes = [without_trust, without_bucket, unrelated_setting, unrelated_field]
+        for buckets in ([], {},
+                        [{"binding": "OTHER_CONTENT", "bucket_name": "application-content"}],
+                        [{"binding": "APPLICATION_CONTENT", "bucket_name": "another-bucket"}],
+                        [{"binding": "APPLICATION_CONTENT", "bucket_name": "application-content", "preview_bucket_name": "extra"}],
+                        [{"binding": "APPLICATION_CONTENT", "bucket_name": "application-content"},
+                         {"binding": "OTHER_CONTENT", "bucket_name": "another-bucket"}]):
+            changes.append(lambda config, value=buckets: config.update({"r2_buckets": value}))
+        for change in changes:
+            with self.subTest(change=change), tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+                project, path, config = self.application_project(Path(scratch))
+                change(config)
+                path.write_text(json.dumps(config))
+                before = path.read_bytes()
+                with patch.object(deploy.subprocess, "run", side_effect=AssertionError("closed shape starts no child")):
+                    with self.assertRaises(Refusal):
+                        deploy.prepared_project(project)
+                self.assertEqual(path.read_bytes(), before)
+
+    def test_unrelated_application_variable_cannot_reach_private_inputs_or_deployment(self):
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+            project, path, config = self.application_project(Path(scratch))
+            config["vars"]["UNREVIEWED_SETTING"] = "TEST"
+            path.write_text(json.dumps(config))
+            # The installation record is a scripted identity. No installed record or credential file is read.
+            with patch.object(deploy, "read_installation", return_value={"uid": os.getuid()}), \
+                    patch.object(deploy, "private_credentials") as credentials, \
+                    patch.object(deploy, "ensure_bucket") as bucket, \
+                    patch.object(deploy, "run_deployment") as command, \
+                    patch.object(deploy.subprocess, "run", side_effect=AssertionError("invalid project starts no child")):
+                with self.assertRaisesRegex(Refusal, "project variables differ"):
+                    deploy.deploy(Path("/TEST-owned-installation"), project, "/TEST-unused-esbuild")
+                credentials.assert_not_called()
+                bucket.assert_not_called()
+                command.assert_not_called()
+
+    def test_application_trust_refuses_ambiguous_noncanonical_and_extra_authority(self):
+        row = self.application_row()
+        settings = ["not-json", "{}", "null", "[null]", json.dumps([row, row]),
+                    json.dumps([{**row, "permission": "write"}]),
+                    '[{"release":"' + row["release"] + '","publisher":"' + row["publisher"]
+                    + '","host":"git.example","host":"other.example"}]',
+                    json.dumps([self.application_row(release="sha256:" + f"{index:064x}") for index in range(129)])]
+        for release in ("sha256:" + "A" * 64, "sha256:" + "a" * 63, "sha1:" + "a" * 40, None):
+            settings.append(json.dumps([self.application_row(release=release)]))
+        for publisher in ("key_" + "A" * 42 + "B", "key_" + "A" * 43 + "=", "key_" + "A" * 42, None):
+            settings.append(json.dumps([self.application_row(publisher=publisher)]))
+        for host in ("GIT.example", "git.example:443", "user@git.example", "git.example/path",
+                     "git.example?x", "git.example#x", "%67it.example", "faß.example", "xn--",
+                     "127.1", "0177.0.0.1", "[0:0:0:0:0:0:0:1]", "[::A]", None):
+            settings.append(json.dumps([self.application_row(host=host)]))
+        for raw in settings:
+            with self.subTest(setting=raw[:120]), tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+                project, path, _ = self.application_project(Path(scratch), raw)
+                before = path.read_bytes()
+                with self.assertRaises(Refusal):
+                    deploy.prepared_project(project)
+                self.assertEqual(path.read_bytes(), before)
+
+    def test_application_parser_child_is_bounded_private_and_fails_closed(self):
+        raw = " [\n] "
+        completed = deploy.subprocess.CompletedProcess(["TEST-node"], 0)
+        with patch.object(deploy.shutil, "which", return_value="/TEST/node"), \
+                patch.object(deploy.subprocess, "run", return_value=completed) as run:
+            deploy.check_application_trust(raw)
+            run.assert_called_once_with(["/TEST/node", str(deploy.HERE / "application-settings.mjs"), "--check-trust"],
+                                        input=raw, text=True, encoding="utf-8", errors="strict",
+                                        stdout=deploy.subprocess.DEVNULL, stderr=deploy.subprocess.DEVNULL,
+                                        timeout=10, check=False)
+        with patch.object(deploy.shutil, "which", return_value=None), patch.object(deploy.subprocess, "run") as run:
+            with self.assertRaisesRegex(Refusal, "validator unavailable"):
+                deploy.check_application_trust(raw)
+            run.assert_not_called()
+        for failure in (FileNotFoundError("TEST-private-detail"), UnicodeError("TEST-private-detail"),
+                        deploy.subprocess.TimeoutExpired("TEST-node", 10), deploy.subprocess.SubprocessError("TEST-private-detail")):
+            with self.subTest(failure=type(failure).__name__), patch.object(deploy.shutil, "which", return_value="/TEST/node"), \
+                    patch.object(deploy.subprocess, "run", side_effect=failure):
+                with self.assertRaisesRegex(Refusal, "^application trust validator unavailable$"):
+                    deploy.check_application_trust(raw)
+        with patch.object(deploy.shutil, "which", return_value="/TEST/node"), \
+                patch.object(deploy.subprocess, "run", return_value=deploy.subprocess.CompletedProcess(["TEST-node"], 1)):
+            with self.assertRaisesRegex(Refusal, "^invalid application trust$"):
+                deploy.check_application_trust(raw)
+        for invalid in (None, " " * (65536 + 1), "é" * 32769, "\ud800"):
+            with self.subTest(bound=repr(invalid)[:80]), patch.object(deploy.subprocess, "run") as run:
+                with self.assertRaisesRegex(Refusal, "^invalid application trust$"):
+                    deploy.check_application_trust(invalid)
+                run.assert_not_called()
+
     def test_actual_child_output_stays_private_and_failed_deploy_is_not_success(self):
         with tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
             project = self.project(Path(scratch))
