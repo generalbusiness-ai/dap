@@ -224,8 +224,8 @@ and the scope reads it from its own genesis for life. A reference
 carries no kind (identifiers note, section 8). The scope reads the kind
 from the order scope's genesis, once, before its first allocation, and
 holds it. When that genesis is of another kind, every sequenced input of
-the scope is refused `order-unavailable`. A `create` of a sequenced
-definition with no `order` field is refused `order-unavailable` too.
+the scope is refused `no-order`. A `create` of a sequenced
+definition with no `order` field is refused `no-order` too.
 Whether the order scope lists the scope as a member is settled by the
 enrolment of 5.3. A sequenced input of a scope that is not enrolled is
 refused `not-a-member` at its first allocation.
@@ -248,16 +248,16 @@ A timed rule is never sequenced. A genesis is never sequenced. Version
 (5.11).
 
 **The group operand.** A guard, an effect, or a send of a sequenced act
-or handler may use `{ read: string; part?: Part }`, the list that a
-`reads` entry bound as of its cut, as the `list` of `each`, `has`,
-`count`, `distinct`, and `sameSet`, and as an `element` source inside
-them. A read is a list of records. For each item the range covers in the
+or handler may use `{ read: string }`, the list that a `reads` entry
+bound as of its cut, as the `list` of `each`, `has`, `distinct`, and
+`sameSet`. The forms inside them read each record as the element that
+the form binds. A read is a list of records. For each item the range covers in the
 member as of the cut, the record holds its ID, state, revision, and
 value slots, in the member's own types. A record never holds a detached
 text. The page leaves each detached text slot out, so a redaction in the
-member never meets a retained page. A `read` whose `part` names a
-detached text slot is refused `redactable-read`, as a guard that reads
-one is today (`packages/derive/src/validate/operands.ts`). The package
+member never meets a retained page. An element of a read that names a
+detached text slot of the member is refused `redactable-read`, as a
+guard that reads one is today (`packages/derive/src/validate/operands.ts`). The package
 check makes that refusal, because only the package holds the reader's
 definition and the member's. The validator refuses `read` anywhere but a
 sequenced act or handler, and refuses `reads` on an input without
@@ -441,7 +441,7 @@ the order scope's own turn, with a new input kind:
   `order-left`, `order-closed`, or `scope-full`.
 - **Resolve.** `open` to `resolved`, recording the prepare entry's fact,
   hash included, so that exactly one prepared result can commit at that
-  position. Refused `allocation-expired` or `holed` when the allocation
+  position. Refused `allocation-expired` or `allocation-holed` when the allocation
   is already final in the state `expired` or `holed`, and `not-open`
   when it names another member's or
   input's allocation. Idempotent on a `resolved` allocation with the same
@@ -1248,6 +1248,7 @@ application that needs a group is installed in a room of the new family.
 | O8 | The `page` kind's byte bound, and whether a page is shared across readers of one cut | The item bound of 5.9, with each item bounded by the member's slot types. One retained copy per reader's scope |
 | O9 | Whether a reader may fold a member's resolved but uncommitted prepare entry itself, from the two journals, so that `uncommitted` disappears | Not in the first version. A member's own state must come from its own journal, and the commit entry is what makes the prepare effective there. Revisit after H4's measurements |
 | O10 | Which pinned version judges the install refusal in a room without the level: an opt-in of the room's Rules, or a read of the room's cohort | H5 proposes. The refusal carries a reason code, and it comes before any scope of the package is created |
+| O11 | What the `at` read answers when the range covers more than 64 items (5.9) | No page is ever cut short, because a short list gives `each` and `has` a wrong answer. The read answers a refusal, and the reader's act is refused. H4 proposes the code and its class before code (ruling `09d80b57`) |
 
 ## 12. Changes in drafts 2 to 6
 
@@ -1382,8 +1383,35 @@ expresses, so a definition pinned by digest cannot state them.
 | `Entry.position`, `Entry.reads` and `GroupReadUse` | `contract/src/entry.ts` | A new kind of reference between scopes (7.1) |
 | The mark `sequenced`, `reads`, and the `read` operand | `contract/src/definition.ts`, and the grammar in `derive` | Section 7. One more form in each copy of the grammar that K5 names |
 | The retained kind `page` | `RetainedInput` in `contract/src/read.ts` | Section 7 |
-| The `at` read, with the answers `uncommitted` and `cut-gone` | `contract/src/read.ts` and `transport.ts` | Section 7 |
-| The reason codes of 5.2 to 5.5 that `contract` lacks, among them `order-unavailable`, `not-a-member`, `order-forming`, `member-pending`, `member-uncommitted`, `cut-gone`, `source-not-effective`, `position-bound`, `not-open` and `allocation-expired` | `RefusalReason` in `contract/src/result.ts` | Section 7 |
+| The `at` read, with the answers `uncommitted` and `cut-gone` | `AtRead` in `contract/src/read.ts`. H4 adds the method to `ScopeApi` in `transport.ts` with its implementation | Section 7 |
+| The reason codes of 5.2 to 5.5 that `contract` lacks: `no-order`, `not-a-member`, `order-forming`, `cut-gone`, `position-bound`, `not-open`, `allocation-expired`, `allocation-holed`, `source-not-effective`, `order-unavailable`, `member-pending` and `member-uncommitted` | `contract/src/result.ts`, each in the head that first refuses with it (the table below) | Section 7 |
+
+**The reason codes.** Ruling `09d80b57` gives each code its class in
+RC-1's table (`REFUSAL_CLASSES` in `packages/bytes/src/records.ts`). A
+code enters `REFUSAL_REASONS` and the class table in the head that
+first refuses with it, with the property test for each `never` row. H1
+adds no code. `order-unavailable` is an `UnavailableReason` only: a
+scope with no order scope of the kind `order` is refused `no-order`.
+`holed` is the name of a state of an `allocation`, and the refusal of a
+resolve for a holed allocation is `allocation-holed`.
+
+| Code | Type | Class | Head |
+|---|---|---|---|
+| `no-order` | `RefusalReason` | `never` | H4 |
+| `not-a-member` | `RefusalReason` | `head` | H3 |
+| `order-forming` | `RefusalReason` | `head` | H3 |
+| `cut-gone` | `RefusalReason`, the refusal of an act | `head` | H4 |
+| `position-bound` | `RefusalReason` | `never` | H3 |
+| `not-open` | `RefusalReason` | `never` | H3 |
+| `allocation-expired` | `RefusalReason` | `never` | H3 |
+| `allocation-holed` | `RefusalReason` | `never` | H3 |
+| `source-not-effective` | The type and place of `source-unverified` (`DeliveryRefusal`) | none | H2 |
+| `order-unavailable` | `UnavailableReason` | none | H4 |
+| `member-pending` | `UnavailableReason` | none | H4 |
+| `member-uncommitted` | `UnavailableReason` | none | H4 |
+| `uncommitted`, `cut-gone` | Answers of the `at` read, in `AtRead` only. Neither joins `ReadRefusal` | none | H1 (type), H4 (served) |
+
+`order-left` and `order-closed` are not in version 1 (5.11).
 
 **The filing rule.** Section 7.1 of the kernel page holds a note or a
 change that adds a scope kind, a platform name, a level, an entry kind
