@@ -9,8 +9,8 @@ The three prerequisite witnesses live in
 `examples/lending/definition.test.ts` at `1475396522`. Actual PASS act
 `6175` records their earlier execution. They check the equality-only
 slot form, own-item timed effects, and a named refusal after two
-same-head opens with empty expected revisions. This source stage does
-not rerun them.
+same-head opens with empty expected revisions. They passed before the
+production edits. The renewed whole definition owner below includes them.
 
 ## Definition and witnesses
 
@@ -44,13 +44,12 @@ The browser's exhaustive refusal tables include reserve. Its existing
 circulation model excludes reserve until a separate screen exposes the
 reservation fields. No new screen or browser interaction enters R.
 
-## Source-stage status
+## Generated source
 
-Root granted source edits only while C2 owns execution. No compiler,
-tests, formatter, build, model or producer has run for these production
-edits. The typed declaration and story have changed; their generated
-JSON and pin still retain the earlier bytes until normal generation
-receives an execution grant.
+The four changed compiler contexts passed before generation. The normal
+typed producer then ran once and wrote the definition JSON, pin and retained
+scenario after computing all three outputs. The generated definition is
+`sha256:25366d110fafc4471164ca7ae8ae85ce40729032547dc107e26b3787acc4002b`.
 
 The existing Lending pin helper now imports `lendingSource`, calls the
 maintained typed compiler and shared canonical API, and awaits
@@ -71,9 +70,37 @@ intents using explicit public TEST actors and checks their real
 in-memory judgments and folds. It uses no release or operator signer
 and starts no Native scope, browser or network service.
 
-This helper repair remains unrun. The existing definition/pin owner and
-retained-story byte owner will validate its outputs after execution
-receives a grant; no separate test mirrors the generator.
+The whole definition/pin owner and retained-story byte owner passed after
+generation. No separate test mirrors the generator.
+
+## Development checks
+
+These ordinary development checks started from
+`3ee7e5909c70f9911c8c4154c922e99f21e185a9`, tree
+`27ad78ba12f4a45403e2ddb746cee03a6e81a687`. The producer changed only its
+three expected outputs. No version, manifest, release identifier or
+signature file changed. Compatibility ran once before direct Vitest,
+exited zero and left the installed bundle unchanged (`copied:false`).
+
+`N` below is `/opt/homebrew/bin/node`. Output paths resolve under
+`/Users/hughpyle/play/artroom-evidence/2026-11-14-r-reservation-development-attempt1`.
+Wall times come from `/usr/bin/time -p`; case counts come from actual Vitest
+JSON reports. Earlier temporary raw files remain, and the retained copies
+match them byte-for-byte. This table records development, not a gate.
+
+| Check | Command | Exit and actual result | Output and SHA-256 |
+|---|---|---|---|
+| Four compiler contexts | `N node_modules/typescript/bin/tsc -p CONFIG`; configs are `examples/lending/tsconfig.json`, `examples/lending/browser/tsconfig.json`, `packages/define/tsconfig.test.json` and `packages/scope/tsconfig.test.json`, sequentially once | All four 0; stdout and stderr empty | `compiler-1.stdout.log` through `compiler-4.stdout.log` and matching stderr files, each `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Typed producer | `N --import tsx examples/lending/scripts/pin.mjs` | 0; exactly three outputs; 1.00 s | `producer.stdout.log` — `af6199b1b863abf7d5955f1cdbd19453fd9d8b2adbddb3830c3efa0c5921595a` |
+| Whole Lending definition owner | From `examples/lending`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts definition.test.ts` | 0; eight passed, zero failed, pending or todo; 0.86 s | `lending.json` — `bbc62e17734c133408178a0687bb591dd1530ab68eb8befe77c9e1a27e1ab99e` |
+| Whole Define story and package owners | From `packages/define`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts test/story.test.ts test/package.test.ts` | 0; six story and five package cases passed, zero failed, pending or todo; 0.67 s | `define.json` — `42633973cc21b3f97869bc102b1b5002597338168ec266101f27b260b19ab15a` |
+| Native Lending owner | From `packages/scope`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.lending.config.ts test/lending.test.ts` | **UNRUN** at this generated-source checkpoint | No output yet |
+
+Both plain runs had empty stderr. The producer's only stderr was the Node
+`DEP0205` deprecation warning. No Native, control, canonical package bundle,
+release signing, version raise or gate ran for this checkpoint.
+
+## Release boundary
 
 Lending remains at version `0.2.0`. The committed identifiers and
 signatures remain unchanged. After normal generation identifies the

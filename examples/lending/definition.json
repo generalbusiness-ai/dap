@@ -153,6 +153,39 @@
       ],
       "step": "transition"
     },
+    "reserve": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "ref": { "from": { "field": "tool" }, "slot": "tool" } },
+        { "value": { "from": { "field": "day" }, "slot": "day" } },
+        { "value": { "from": { "field": "until" }, "slot": "until" } }
+      ],
+      "fields": {
+        "day": { "max": 10, "required": true, "type": "text" },
+        "tool": { "of": "thing", "required": true, "type": "item" },
+        "until": { "required": true, "type": "time" }
+      },
+      "grant": "lending.member",
+      "guards": [
+        {
+          "none": {
+            "states": ["held"],
+            "type": "reservation",
+            "where": [
+              {
+                "equals": { "a": { "slot": "tool" }, "b": { "field": "tool" } }
+              },
+              { "equals": { "a": { "slot": "day" }, "b": { "field": "day" } } }
+            ]
+          },
+          "reason": "tool-day-taken"
+        }
+      ],
+      "on": "reservation",
+      "sends": [],
+      "step": "open"
+    },
     "return": {
       "also": { "library": { "item": "library", "one": true } },
       "attention": [],
@@ -208,6 +241,28 @@
       "states": { "open": { "final": false } },
       "values": {}
     },
+    "reservation": {
+      "initial": "held",
+      "many": true,
+      "max": 8,
+      "parties": {},
+      "refs": {
+        "tool": {
+          "fixed": true,
+          "required": true,
+          "to": { "of": "thing", "type": "item" }
+        }
+      },
+      "states": { "held": { "final": false }, "lapsed": { "final": true } },
+      "values": {
+        "day": {
+          "fixed": true,
+          "of": { "max": 10, "type": "text" },
+          "required": true
+        },
+        "until": { "fixed": true, "of": { "type": "time" }, "required": true }
+      }
+    },
     "thing": {
       "initial": "available",
       "many": true,
@@ -262,5 +317,13 @@
   "rules": {
     "shelf-page": "$substring(fields.page, 0, 6) = \"shelf/\" and $substring(fields.page, -3) = \".md\" and $not($contains(fields.page, \"..\"))"
   },
-  "timed": {}
+  "timed": {
+    "lapse": {
+      "attention": [],
+      "deadline": "until",
+      "effects": [{ "state": "lapsed" }],
+      "on": "reservation",
+      "states": ["held"]
+    }
+  }
 }
