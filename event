@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2ae07e8005a38afbdd74f597eee042f669973bc7","text":"Merge retired a covered predecessor; the successor is at scripts/gate-test-selection.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2bc7c342f66f1cc2dcdfe8d9474408cc8a9f02f0","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/lane-applications.ts."}
