@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6c7c6534a251cd765243818dbeb77b20a3bc4bd4","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-13-cf1-base-family.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6d74288c502d283dc526c32b472bcba74ba0bb0a","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/register.ts."}
