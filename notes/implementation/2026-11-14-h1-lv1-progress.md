@@ -5,10 +5,12 @@
 H1 and LV1 share branch `builder/h1-sequenced-level-20261113`, with H1
 first, as ruling `02309bae` requires. H1's CF-1 main merge is
 `2ca131acee5aa12e6d33537b29e3149adf6dbf65`, tree
-`914fe9b0f4652d5e02efcdaea47ca4c19bb2e265`. LV1's final source checkpoint
-is `1d1f54b378dea3a8dc9005ab8bccde50cfd591ec`, tree
-`e637c3de179cade0ee305e8ed40882b96453bd98`. Focused checks pass.
-The combined gate and kernel/checker review remain due.
+`914fe9b0f4652d5e02efcdaea47ca4c19bb2e265`. LV1's focused checks passed at
+historical source checkpoint `1d1f54b378dea3a8dc9005ab8bccde50cfd591ec`,
+tree `e637c3de179cade0ee305e8ed40882b96453bd98`. Later main merges reach
+`ca476feea96a7de762a9e3a6146636ea7a8faba4`; the results below do not
+establish validation of that merged source. Its owning checks, combined
+gate and kernel/checker review remain due.
 
 [The H1 note](2026-11-13-h1-sequenced-contract.md) states the sequenced
 contract and validator changes. LV1 request `36496b5c` and promise
@@ -77,9 +79,11 @@ coverage hash or model result advances.
 ## Focused evidence
 
 The [final manifest](evidence/2026-11-14-h1-lv1-focused.manifest.json)
-binds the frozen source checkpoint above, every retained output, the
-raw JSON reports and exact commands in `commands.txt`. Subsequent evidence
-commits change implementation documentation and manifests only. The
+binds historical source checkpoint `1d1f54b3`, every retained output, the
+raw JSON reports and exact commands in `commands.txt`. The evidence
+commits immediately after that checkpoint changed implementation
+documentation and manifests only. Later main merges changed source;
+this manifest remains historical evidence for `1d1f54b3`. The
 [progress manifest](evidence/2026-11-14-h1-lv1-progress.manifest.json)
 retains the earlier dirty source, preservation copies and dependency
 failure. Rows marked progress use that manifest. Other rows use the final
@@ -120,7 +124,10 @@ reads showed AC Power and powermode 0 at both ends. No full gate ran.
 
 - H1 request `71bb8559` and LV1 request `36496b5c` own one combined gate
   and kernel/checker review before landing. The branch must take any new
-  main before that gate. The validation slot is released.
+  main before that gate. The merged source still needs the owning
+  generated-assets comparison in `apps/room/page/test/assets.test.ts`.
+  This note claims no mismatch and no current generated-byte equality.
+  The validation slot is released.
 - LV2 owns the live turn and runtime admission. LV3–LV5 own live reads,
   the watch, package tools, replay and later documents. LV1 adds no live
   runtime API or creation family.
