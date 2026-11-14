@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:264b2d2e6a6c10d8be9acd7d8cd8388a11618abe","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-18-sequenced-level-and-order-scope.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2688d0c8a3836ea56ed46c2c57cefb1d3de6f008","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus.test.ts."}
