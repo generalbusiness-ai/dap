@@ -1,0 +1,673 @@
+{
+  "qualification": "R1 preparation only. One passing maintained full gate at source 91f9cfbc after exact main 11c215a4 merge and planner deployment END. All twelve native import-closure owners and four naturally selected scale owners passed in this single gate. Earlier focused and formatter records remain separately qualified. Complete Native terminal records report 1155 passes; optional callbacks report 1110. Only notes/evidence may change after this checkpoint. Every sealed raw file was checked; this manifest lists all non-periodic files directly, and the sealed raw manifest/SHA256SUMS cover every power sample. No new release, signature or public packet is exported. Later packed-closure changes refresh their own identifiers under planner 119140cd; R2 remains separate.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cut-r-r1-gate-attempt1",
+  "checkpoint": {
+    "commit": "91f9cfbc4bff2eb6fabeab3a07a4e49e47bfc630",
+    "tree": "61e9a17ca6070ed16449ed8dc52e166725dde370"
+  },
+  "namedMain": "11c215a495138f21ea583813db306592ade02c64",
+  "continuation": "06558ec98fc3b087ce7fbb5564739e61d8109e47",
+  "phaseRuling": "119140cd017925f29bc66d3d65c6ba077b5430f1",
+  "gateStart": "af2cf63158eacfd5fe0fb91e62cb76d9d8cb769e",
+  "gateEnd": "60481670d5e938b3df7858a04609af6e8e1c4d00",
+  "gateResult": {
+    "argv": [
+      "/usr/bin/time",
+      "-p",
+      "/opt/homebrew/bin/npm",
+      "run",
+      "gate"
+    ],
+    "cwd": "/Users/hughpyle/play/artroom/.builder-worktrees/cut-r-r1-20261114",
+    "head": "91f9cfbc4bff2eb6fabeab3a07a4e49e47bfc630",
+    "started": "2026-11-14T09:35:22.535396+00:00",
+    "removedSelectorNames": [],
+    "progress": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cut-r-r1-gate-attempt1/progress",
+    "powerViolation": false,
+    "pid": 78494,
+    "exit": 0,
+    "wallSeconds": 1561.5523306670366,
+    "ended": "2026-11-14T10:01:24.116667+00:00",
+    "sourceUnchanged": true,
+    "originalGateLogs": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.TIIIT9YJwh"
+  },
+  "actualScaleSelection": {
+    "include": true,
+    "reason": "changed-scale-path",
+    "head": "91f9cfbc4bff2eb6fabeab3a07a4e49e47bfc630",
+    "main": "11c215a495138f21ea583813db306592ade02c64",
+    "changedPaths": [
+      "apps/counter/release-identifiers.json",
+      "apps/room/lanes/test/grow-archive.test.ts",
+      "apps/room/worker.grow.ts",
+      "examples/grow/demo-release.ts",
+      "examples/grow/earlier-release.ts",
+      "examples/grow/fixtures/earlier-application.dap.json",
+      "examples/grow/release-identifiers.json",
+      "examples/grow/simulator-host.ts",
+      "examples/grow/simulator-release.test.ts",
+      "examples/grow/simulator-worker.ts",
+      "examples/lending/release-identifiers.json",
+      "notes/implementation/2026-11-14-cut-r-r1.md",
+      "notes/implementation/evidence/2026-11-14-cut-r-r1-focused.manifest.json",
+      "notes/implementation/evidence/2026-11-14-cut-r-r1-format-followup.manifest.json",
+      "notes/implementation/evidence/2026-11-14-cut-r-r1-format-preflight.manifest.json",
+      "packages/cli/test/application-release-reproduction.test.ts",
+      "packages/derive/test/definition-corpus/shipped.ts",
+      "packages/platform/test/package-graph.test.ts",
+      "packages/scope/test/archive-installed.test.ts",
+      "packages/scope/test/archive-publication.test.ts",
+      "packages/scope/test/support/archive-native-authority.ts",
+      "packages/scope/test/support/earlier-grow-release.ts",
+      "packages/scope/test/support/maintained-applications-child.ts",
+      "packages/scope/test/support/maintained-applications.ts",
+      "packages/scope/test/support/recorded-grow-release.ts",
+      "scripts/format-json.mjs",
+      "scripts/format-json.test.mjs",
+      "scripts/security-entry-points.test.mjs"
+    ],
+    "matchedPaths": [
+      "packages/scope/test/archive-installed.test.ts",
+      "packages/scope/test/archive-publication.test.ts",
+      "packages/scope/test/support/archive-native-authority.ts"
+    ],
+    "base": "11c215a495138f21ea583813db306592ade02c64"
+  },
+  "completeTerminalCounts": {
+    "plain": {
+      "counts": {
+        "passed": 4617,
+        "skipped": 1
+      },
+      "end": [
+        {
+          "version": 1,
+          "runner": "vitest",
+          "phase": "plain",
+          "record": "end",
+          "reason": "passed",
+          "unhandledErrors": 0
+        }
+      ]
+    },
+    "native": {
+      "counts": {
+        "passed": 1155,
+        "skipped": 2
+      },
+      "end": [
+        {
+          "version": 1,
+          "runner": "vitest",
+          "phase": "native",
+          "record": "end",
+          "reason": "passed",
+          "unhandledErrors": 0
+        }
+      ]
+    }
+  },
+  "optionalCallbackCounts": {
+    "plain": {
+      "counts": {
+        "passed": 4617,
+        "skipped": 1
+      },
+      "end": [
+        {
+          "event": "run-end",
+          "time": "2026-11-14T09:39:24.969Z",
+          "files": 402,
+          "unhandledErrors": 0,
+          "reason": "passed"
+        }
+      ]
+    },
+    "native": {
+      "counts": {
+        "passed": 1110,
+        "skipped": 2
+      },
+      "end": [
+        {
+          "event": "run-end",
+          "time": "2026-11-14T10:01:21.563Z",
+          "files": 295,
+          "unhandledErrors": 0,
+          "reason": "passed"
+        }
+      ]
+    }
+  },
+  "closureCoverage": {
+    "qualification": "Post-run metadata from this one maintained gate, not a collection run or a repeated owner.",
+    "correspondenceSha256": "33325e53e1724b5c03a7371aabfdd9348547c4b629f3b885c704be5c0f988f4a",
+    "nativeClosure": [
+      {
+        "path": "packages/scope/test/archive-driver.test.ts",
+        "modules": [
+          {
+            "project": "scope",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "packages/scope/test/archive-installed.test.ts",
+        "modules": [
+          {
+            "project": "scope",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "packages/scope/test/archive-input-work.test.ts",
+        "modules": [
+          {
+            "project": "scope",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "packages/scope/test/archive-parent-bootstrap.test.ts",
+        "modules": [
+          {
+            "project": "scope",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "packages/scope/test/archive-build.test.ts",
+        "modules": [
+          {
+            "project": "scope",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "packages/scope/test/archive-foreign.test.ts",
+        "modules": [
+          {
+            "project": "scope",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "packages/scope/test/archive-operator.test.ts",
+        "modules": [
+          {
+            "project": "scope",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "packages/scope/test/floor-archive.test.ts",
+        "modules": [
+          {
+            "project": "scope-scale",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "packages/scope/test/archive-cadence.test.ts",
+        "modules": [
+          {
+            "project": "scope-scale",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "packages/scope/test/archive-publication.test.ts",
+        "modules": [
+          {
+            "project": "scope",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "packages/scope/test/archive-parent-state.test.ts",
+        "modules": [
+          {
+            "project": "scope",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "packages/scope/test/archive-one-entry-scale.test.ts",
+        "modules": [
+          {
+            "project": "scope-scale",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      }
+    ],
+    "scaleSelection": {
+      "include": true,
+      "reason": "changed-scale-path",
+      "head": "91f9cfbc4bff2eb6fabeab3a07a4e49e47bfc630",
+      "main": "11c215a495138f21ea583813db306592ade02c64",
+      "changedPaths": [
+        "apps/counter/release-identifiers.json",
+        "apps/room/lanes/test/grow-archive.test.ts",
+        "apps/room/worker.grow.ts",
+        "examples/grow/demo-release.ts",
+        "examples/grow/earlier-release.ts",
+        "examples/grow/fixtures/earlier-application.dap.json",
+        "examples/grow/release-identifiers.json",
+        "examples/grow/simulator-host.ts",
+        "examples/grow/simulator-release.test.ts",
+        "examples/grow/simulator-worker.ts",
+        "examples/lending/release-identifiers.json",
+        "notes/implementation/2026-11-14-cut-r-r1.md",
+        "notes/implementation/evidence/2026-11-14-cut-r-r1-focused.manifest.json",
+        "notes/implementation/evidence/2026-11-14-cut-r-r1-format-followup.manifest.json",
+        "notes/implementation/evidence/2026-11-14-cut-r-r1-format-preflight.manifest.json",
+        "packages/cli/test/application-release-reproduction.test.ts",
+        "packages/derive/test/definition-corpus/shipped.ts",
+        "packages/platform/test/package-graph.test.ts",
+        "packages/scope/test/archive-installed.test.ts",
+        "packages/scope/test/archive-publication.test.ts",
+        "packages/scope/test/support/archive-native-authority.ts",
+        "packages/scope/test/support/earlier-grow-release.ts",
+        "packages/scope/test/support/maintained-applications-child.ts",
+        "packages/scope/test/support/maintained-applications.ts",
+        "packages/scope/test/support/recorded-grow-release.ts",
+        "scripts/format-json.mjs",
+        "scripts/format-json.test.mjs",
+        "scripts/security-entry-points.test.mjs"
+      ],
+      "matchedPaths": [
+        "packages/scope/test/archive-installed.test.ts",
+        "packages/scope/test/archive-publication.test.ts",
+        "packages/scope/test/support/archive-native-authority.ts"
+      ],
+      "base": "11c215a495138f21ea583813db306592ade02c64"
+    },
+    "scaleOwners": [
+      {
+        "path": "packages/scope/test/floor-archive.test.ts",
+        "modules": [
+          {
+            "project": "scope-scale",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "packages/scope/test/archive-one-entry-scale.test.ts",
+        "modules": [
+          {
+            "project": "scope-scale",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "packages/scope/test/archive-cadence.test.ts",
+        "modules": [
+          {
+            "project": "scope-scale",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "apps/room/lanes/test/directory-partition-success-capacity.scope.test.ts",
+        "modules": [
+          {
+            "project": "scope-scale",
+            "state": "passed"
+          }
+        ],
+        "passed": true
+      }
+    ],
+    "allRequiredOwnersPassed": true
+  },
+  "rawFileCount": 371,
+  "file_count": 63,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 39130,
+      "sha256": "f87c83db7d8426f77ff1a9764de9ac6e388a4e09e30a9f72d2888aef7c777614"
+    },
+    {
+      "path": "changed-paths.json",
+      "bytes": 1444,
+      "sha256": "35ab0785afd3cbe0e206baf5178fd2e531b69d0d58c05bb06cf57897919700f8"
+    },
+    {
+      "path": "closure-coverage.json",
+      "bytes": 5649,
+      "sha256": "47402d5dfd61e44236e6e01955196b08291f02318851aa4990c8ff66dd2b6938"
+    },
+    {
+      "path": "command.json",
+      "bytes": 454,
+      "sha256": "1e8cb07674478ead3b02a20318fbbd9348d1d98c8aa06b349215390f6f06c264"
+    },
+    {
+      "path": "end-actual-escalated-battery.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "end-actual-escalated-battery.stdout",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "end-actual-escalated-custom.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "end-actual-escalated-custom.stdout",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "gate-logs/citations.log",
+      "bytes": 1577107,
+      "sha256": "bf586e1abaa1a6a60bfae7a8f3e70a01b3c1b05ac0fbb2e322c7aa64964dc926"
+    },
+    {
+      "path": "gate-logs/citations.time",
+      "bytes": 29,
+      "sha256": "2dcfc462878b94c299198adce85736a4459715fa0689aa257f0c35d539afafb3"
+    },
+    {
+      "path": "gate-logs/cite-test.log",
+      "bytes": 759,
+      "sha256": "23c899d3a5189379d88d27aee09279bd92805ccc44e5c56fb929ac868a7143bc"
+    },
+    {
+      "path": "gate-logs/cite-test.time",
+      "bytes": 29,
+      "sha256": "4888f1bb2d06f8a10868a54819bd92b9a3885a31551cc79710723df32ef023cd"
+    },
+    {
+      "path": "gate-logs/commit-messages.log",
+      "bytes": 38,
+      "sha256": "91ead7de3823298d313d394fab9b81351840869360b45d9c15c33ca3b7fa4718"
+    },
+    {
+      "path": "gate-logs/commit-messages.time",
+      "bytes": 29,
+      "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
+    },
+    {
+      "path": "gate-logs/commit-test.log",
+      "bytes": 595,
+      "sha256": "92f9464cb3d11548209d0e502a99f83766a19af899c6460f34f7d5d25887e8d8"
+    },
+    {
+      "path": "gate-logs/commit-test.time",
+      "bytes": 29,
+      "sha256": "0971b12ab3b2e5618be5af20950a857c39abb4d500324a513765d8aa7e1aee00"
+    },
+    {
+      "path": "gate-logs/def-pins.log",
+      "bytes": 678,
+      "sha256": "e367ccf68035497a7d399d2a8f72b32f78100511d3c46159acd90d1fadd0e7e6"
+    },
+    {
+      "path": "gate-logs/def-pins.time",
+      "bytes": 29,
+      "sha256": "b84f4c45ca7628b7d33b7f19bbc7e458ca5548ac4bfc7b0141ab2dd3863904b1"
+    },
+    {
+      "path": "gate-logs/doc-links.log",
+      "bytes": 36,
+      "sha256": "0b62886e12f396ee8cf60e4cfe3f4112ecc75879da8508427692a1367191bbc9"
+    },
+    {
+      "path": "gate-logs/doc-links.time",
+      "bytes": 29,
+      "sha256": "42bbd5f82f23d8630fd588bd0df2d18199f7d8ab9f1215d1a9e3e4e5f855b59f"
+    },
+    {
+      "path": "gate-logs/format.log",
+      "bytes": 114,
+      "sha256": "6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79"
+    },
+    {
+      "path": "gate-logs/format.time",
+      "bytes": 29,
+      "sha256": "b1943e1adf0589617eb1bf494e4132d9da3ca5347185726b031d67a76ff73996"
+    },
+    {
+      "path": "gate-logs/helpers.log",
+      "bytes": 68,
+      "sha256": "631f4955db3e6fa3e5f86d36349022ea6cacd3a2b124af1a95a767c69b1e6159"
+    },
+    {
+      "path": "gate-logs/helpers.time",
+      "bytes": 29,
+      "sha256": "8de2b061c8fc447e8226943c59b9f3f2318500bbe6c6d1cf7b00fae85ce937fe"
+    },
+    {
+      "path": "gate-logs/notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "gate-logs/notes.time",
+      "bytes": 29,
+      "sha256": "7a2ea4de4d41ce3427cfe163c336a5df51805a640cbba001eee3d6c074bfca12"
+    },
+    {
+      "path": "gate-logs/section-citations.json",
+      "bytes": 3953450,
+      "sha256": "9d5b9e485b41e14c5ed708f6a8694074cb634302a738fd44c56d7345270fc330"
+    },
+    {
+      "path": "gate-logs/test-evidence/counting-sources.json",
+      "bytes": 972,
+      "sha256": "23e8a56a149f3432f504b70ec4064ada9a80012941b022b04645b217006a3d41"
+    },
+    {
+      "path": "gate-logs/test-evidence/counting.jsonl",
+      "bytes": 136158,
+      "sha256": "e733e936658d65db58b53c0b7808ba644b56710b82d7c3f6aedd247f62e7af30"
+    },
+    {
+      "path": "gate-logs/test-evidence/native.jsonl",
+      "bytes": 1108883,
+      "sha256": "ca6fd1206c6a559a8dcbd1ece188824f47b251bd7b9be4593cb1128816924668"
+    },
+    {
+      "path": "gate-logs/test-evidence/node.jsonl",
+      "bytes": 447267,
+      "sha256": "75235236d99e1ce04bd55a2cd318226c90f795d6cd40ea237c5c505af79f84b4"
+    },
+    {
+      "path": "gate-logs/test-evidence/plain.jsonl",
+      "bytes": 3849357,
+      "sha256": "ab7a84abfb211a73fe49d1637c8cffff9e1cdd4520d676b503bd9c6851c27f85"
+    },
+    {
+      "path": "gate-logs/test-evidence/scale-selection.json",
+      "bytes": 1934,
+      "sha256": "709098f652321b6e728c2a6cffbdf2019842103805916ef2c34e7f06a281d8b8"
+    },
+    {
+      "path": "gate-logs/test-evidence/stages.json",
+      "bytes": 3187,
+      "sha256": "ee5fdd21ffab6d4d8ac3d6c715ee867148e1c572f6643fafebe64673438b68ed"
+    },
+    {
+      "path": "gate-logs/test.log",
+      "bytes": 42517481,
+      "sha256": "dbce247461f74236d7fb0575f8813bff0c3bbaccddbd820f34734f066a0b68da"
+    },
+    {
+      "path": "gate-logs/test.time",
+      "bytes": 37,
+      "sha256": "ef4809a1c23f4db4ddacb3a699ca0ad954f464cddf9a411811d2908802d13b7f"
+    },
+    {
+      "path": "gate-logs/typecheck.log",
+      "bytes": 2247,
+      "sha256": "a9abf7e40e10fbda74447d08a5ea3b33733361ecd9ac199658065cfbc874936a"
+    },
+    {
+      "path": "gate-logs/typecheck.time",
+      "bytes": 31,
+      "sha256": "35f16403f9e66a63b98e48c5a4fbf6bfbff465e5d668bda05ee5bfaf577dc803"
+    },
+    {
+      "path": "gate-logs/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "gate-logs/whitespace.time",
+      "bytes": 29,
+      "sha256": "6f7a7c33fa2f2674870bdcf5425236c589fc511152116278b0ed79fba5ed8c21"
+    },
+    {
+      "path": "gate.stderr",
+      "bytes": 37,
+      "sha256": "4b06b8744d466b059b6fcdf323fc0733ff0049129f55564eda1157ff6106a2e3"
+    },
+    {
+      "path": "gate.stdout",
+      "bytes": 7242,
+      "sha256": "ca6600bffb177a4b114b8dcaf7a90bceca3337b328ebf6b901510e2914153975"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 63568,
+      "sha256": "0d274769e9d51bb91df97345685594029ed3b32d1c8024143f18304787176236"
+    },
+    {
+      "path": "power-actual-escalated-battery.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "power-actual-escalated-battery.stdout",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "power-actual-escalated-custom.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "power-actual-escalated-custom.stdout",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "power-samples.json",
+      "bytes": 84521,
+      "sha256": "aa1741c85c7ede842449b93cf402b42a8c0060fc95c4bdd1a4d503ee248d8552"
+    },
+    {
+      "path": "preflight-source.py",
+      "bytes": 3722,
+      "sha256": "1219151827d554822c4db7f46dd935b712924dbfb526dab84cda4a85436141a5"
+    },
+    {
+      "path": "preflight.json",
+      "bytes": 7856,
+      "sha256": "72cc456395646ce07e9b464eab1d3f2c9b1a3e3598afd5c312306a7031d2643d"
+    },
+    {
+      "path": "progress.native.jsonl",
+      "bytes": 1272734,
+      "sha256": "6fc406d142bccdd94d3474b1408b2dc6d7d018d809e557bdb6ae0ce6dedcb4d1"
+    },
+    {
+      "path": "progress.plain.jsonl",
+      "bytes": 4594748,
+      "sha256": "5a0ca782343e36eec7016fe89a8c666040a71bb89832f1012dea686bcb47b2f3"
+    },
+    {
+      "path": "result.json",
+      "bytes": 667,
+      "sha256": "afdec7be8cae9c2d2c99b1b67ac53dc11134b6cf1e7fa6ebbe4e6c370c5347ae"
+    },
+    {
+      "path": "runner-source.py",
+      "bytes": 7891,
+      "sha256": "a07b2cfb410d74c38959a1f38b4a837c6fd9b5ac440bdec010db9842e7587f2a"
+    },
+    {
+      "path": "seal.json",
+      "bytes": 10908,
+      "sha256": "04bbe4a6db959ac5d73ffb0d75944cde37040ae557a860ae0991da47d87f531b"
+    },
+    {
+      "path": "sealer-source.py",
+      "bytes": 6441,
+      "sha256": "569294f00a67478f729713fd45288ef9fd287230cfae2fcdedb93fa67882d549"
+    },
+    {
+      "path": "source-after.json",
+      "bytes": 6167,
+      "sha256": "f68e87c7618648693b1a63af705865d05bcd9897da509a12b79832006a103921"
+    },
+    {
+      "path": "source-before.json",
+      "bytes": 6167,
+      "sha256": "abc27ae713d5fae1307b0e03e1f767fe9e3971cddf609cadbc4f2e32ee4733f3"
+    },
+    {
+      "path": "source.patch",
+      "bytes": 209411,
+      "sha256": "bc773d6717dba4723aba90412666fd78518690d10d2f51be4c1517e85c4fbfc0"
+    },
+    {
+      "path": "start-actual-escalated-battery.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "start-actual-escalated-battery.stdout",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "start-actual-escalated-custom.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "start-actual-escalated-custom.stdout",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    }
+  ],
+  "verifiedAt": "2026-11-14T10:03:39.776098+00:00"
+}
