@@ -45,8 +45,8 @@ fields in `packages/platform/src`, not 36:
 `directory-partitions.ts:73` and `:81` each declare four slots through a
 map, and `destination.ts:2807` is a record member.
 
-Each slot gets its kind from its writer. Each writer is in one of six
-classes:
+The table audits writers and read sites at `57e893c0`. Each slot gets
+its kind from its writer. Each writer is in one of six classes:
 
 | Class | Writer | Check |
 |---|---|---|
@@ -66,7 +66,7 @@ definition for `platform:task@1`.
 Duty: a definition for `platform:task` checks the kind of the lane where it
 reads the lane. Until such a definition exists, nothing reads the slot.
 
-Four runtime reads of a kind remain: `archive-target.ts:142`
+That audit at `57e893c0` found four remaining runtime reads of a kind: `archive-target.ts:142`
 (`target.sequence.kind === "destination"`), `authority.ts:476` and
 `host-wiring.ts:31` (`sourceKind === "directory"`), and
 `publishing-provenance.ts:150-154`, which reads the kind of the Directory
@@ -74,6 +74,21 @@ genesis. The comment at `directory.ts:431` said that "the commit checked"
 the membership kind. CDF-1 changes it to name the create-result admission
 in `derive/src/delivery.ts`, which checks that kind now. No source change
 follows from item 1.
+
+At landed main `4cef11d2`, the new publication readers preserve that
+correspondence. `base-directory.ts:53-55` reads the inherited
+`repository.destination` slot (W1), and `:111-115` sends
+`application-paths` there. `directory.ts:294` writes that slot from the
+Destination create result, whose admission checks the source kind.
+`base-destination.ts:39-44` admits `application-paths` only from a
+Directory (W2) and compares its sender with the inherited, parent-written
+`branch.directory` slot (W3). Its new `application` and `prefixes` slots
+hold text. The rule at `:68-72` indexes the actual admitted sender's scope
+ID. `base-register.ts:33-47` checks `input.sourceKind`, the exact result
+fact, its own original request and the Directory 27 seed. These are
+correspondence examples at `4cef11d2`, not a new declaration-site count;
+none trusts a kind tag in a slot reference. Ruling fc72755f preserves the
+historical count of 45.
 
 ## Timed turns use no foreign entry
 
@@ -213,8 +228,8 @@ ceilings and matching replay checks. It starts after the client chain
 and H1, requires a planner ruling before code and a kernel review, and
 does not hold the cutover deployment.
 
-CDF-1 keeps the first gate slot after CF-1. Before review it still needs
-the entire native raw-proof residency file
-`apps/room/lanes/test/directory-partition-lanes.scope.test.ts` on AC,
-the gate and the Security conclusion. The four failing-at-5339ccc5
-witnesses are filed in the wider-cap implementation note.
+CDF-1 passed the entire native raw-proof residency file
+`apps/room/lanes/test/directory-partition-lanes.scope.test.ts` on AC and
+then passed its gate after CF-1. The Security conclusion remains due
+before review. The [wider-cap implementation note](2026-11-13-cdf1-wide-retained-bytes.md)
+records those results and the four failing-at-5339ccc5 witnesses.

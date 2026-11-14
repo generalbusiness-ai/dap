@@ -96,7 +96,7 @@ manifest includes that correspondence record.
 |---|---|---|---|
 | Entire native residency file, 4 passed | `ARTROOM_TEST_PHASE=native node_modules/.bin/vitest run --config vitest.native.config.ts --project scope-stories apps/room/lanes/test/directory-partition-lanes.scope.test.ts --reporter=json --outputFile /Users/hughpyle/play/artroom-evidence/2026-11-13-cdf1-residency-ac/native-results.json` | 0 | `f8c8008ed77953c327b005be427977dc694a6e475f2a3041ab3f268e9f03007d` |
 
-CDF-1 still owes its gate and the Security conclusion. The wider cap holds the cutover deployment. RB-1 (request 0ce66e16)
+CDF-1 still owes the Security conclusion. The wider cap holds the cutover deployment. RB-1 (request 0ce66e16)
 accepts audit 7f6f6834's finding: no constant bounds one rule row or one
 item because whole subjects include uncapped attribution. There is no
 finite overshoot product to report. RB-1 owns the design for those
@@ -104,3 +104,37 @@ ceilings and matching replay checks, after the client chain and H1. It
 requires a planner ruling before code and kernel review, and does not
 hold the cutover deployment. FL-1 owns the journal count limit and does
 not hold the cutover deployment.
+
+The [final gate manifest](evidence/2026-11-13-cdf1-retained-bytes-gate-attempt1.manifest.json)
+records the clean checkpoint `01bbd802261446972f5e030aa0d220eef4261cd3`,
+tree `5f3c41f6410dc54b144cc2934ea597a82d17737c`. The gate passed once:
+Plain 4,612 passed and 1 skipped; Native 1,149 passed and 2 skipped.
+All 58 actual power samples showed AC and powermode 0. Dependency
+verification skipped installation. The sealed directory holds 43 files;
+its `SHA256SUMS` digest is
+`b5d0027dd456ccc0ba7f41b2adabcfc67baa7d5297272e7500eb5a59969a6521`.
+END 02510565 records the completed gate.
+
+The commands below use the gate's recorded variables: `base` is its merge
+base with `origin/main`; `out` holds gate output; `test_evidence` is
+`$out/test-evidence`. The manifest maps each output to its preserved file.
+Every source, test, configuration and dependency file in this documents-only
+follow-up equals checkpoint `01bbd802`; only this note, the historical
+audit qualification and the gate manifest change. No test rerun follows
+these document changes.
+
+| Check | Command | Exit | Output sha256 |
+|---|---|---|---|
+| Gate | `npm run gate` | 0 | `4ac1e9f05411c171fe78cc0d7c73bbcbac7e4de7e824fcaec515f51a7047deaa` |
+| Whitespace | `git diff --check -B "$base"` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Commit messages | `node scripts/check-commit-messages.mjs "$base" HEAD` | 0 | `a10de4a3f7fd57a28011b05efb9a9e5a251f0b4fe90fdef4ecb8fb0f7ed14075` |
+| Commit-message tests | `node --test scripts/check-commit-messages.test.mjs` | 0 | `7ef1960f98693730398e148013773fd65a911f6e46053b0a3c9b9f96a8faaa67` |
+| Shared helpers | `node scripts/check-shared-helpers.mjs` | 0 | `f8f462116d6bf13f12ca087aa4b16adf42075612a36e8aaa3439c49df97a2c37` |
+| Section citations | `node scripts/check-section-citations.mjs --report "$out/section-citations.json"` | 0 | `4369c347d4d491e36f925b5e988faa3ef5aad4b9e1aeb2d8c29682f2aafd567c` |
+| Citation tests | `node --test scripts/check-section-citations.test.mjs` | 0 | `949cccc0d0f3b7e0e1e53de4586c783074ceab6865500f3f723969001e31215d` |
+| Document links | `node scripts/check-doc-links.mjs` | 0 | `e738f746a19fabbb74101a21ca6e83400052cd0c46d58e10823059c8c7aa818b` |
+| Notes | `node scripts/check-notes.mjs "$base" HEAD` | 0 | `35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1` |
+| Format | `npm run format:check` | 0 | `6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79` |
+| Typecheck | `npm run typecheck` | 0 | `a9abf7e40e10fbda74447d08a5ea3b33733361ecd9ac199658065cfbc874936a` |
+| Definition pins | `node --import tsx scripts/check-definition-pins.mjs` | 0 | `bd28555b9a9732edeacecee13a09ed72181232fd1fe7359692cc19b8df544672` |
+| Tests | `npm test -- --gate --defer-summary --evidence "$test_evidence"` | 0 | `574182faa9111a2598456c8635b59f83b1f5b624364fd8310e59e2d546bb0489` |
