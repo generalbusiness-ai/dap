@@ -10,7 +10,7 @@ import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { room } from "../../../examples/grow/room.ts";
 import { keys } from "../../derive/test/fixtures.ts";
 import { grow, preFailureRelation, checkedGraph } from "../../derive/test/fixtures-package-graph.ts";
-import { DEMO_RELEASE, DEMO_PUBLISHER } from "../../../examples/grow/demo-release.ts";
+import { EARLIER_GROW_RELEASE, EARLIER_GROW_PUBLISHER } from "../../../examples/grow/earlier-release.ts";
 import { publishedCopies, insufficientCopies, twoItems as twoItemsData, conflictFrees, recyclable as recyclableData, rewritable as rewritableData, missingResult, openingReport, narrowField, unknownMessage, unusedHandler, packerCopies, pairedUnusedHandler, pairedCopies, pairedRebind, pairedMissingResult, pairedUnknownMessage, pairedNarrowField, lifetimeVariantsData, repeatedReporterData, automaticCycleData, cycleAlternativesData, pendingCreationData, differentRoomData } from "../../derive/test/definition-corpus/package-graph-variants.ts";
 const lifetimeVariants = () => lifetimeVariantsData().map(row => ({ ...row, input: checkedGraph(row.input) }));
 const repeatedReporter = (copies = 3) => checkedGraph(repeatedReporterData(copies));
@@ -47,17 +47,17 @@ function signedGrowWire(input: PackageGraphInput, omitComposition = false) {
 // The only earlier-shape exception is the already published Grow release.
 // No operator key, trust mutation, new signing or network access is involved.
 test("published consumption preserves the exact old Grow packet while new pack and validation require composition", async () => {
-  const bytes = new Uint8Array(readFileSync(new URL("../../../examples/grow/demo/application.dap.json", import.meta.url)));
-  const published = readPublishedApplicationPackage2(bytes, DEMO_RELEASE);
+  const bytes = new Uint8Array(readFileSync(new URL("../../../examples/grow/fixtures/earlier-application.dap.json", import.meta.url)));
+  const published = readPublishedApplicationPackage2(bytes, EARLIER_GROW_RELEASE);
   expect(published.bytes).toEqual(bytes);
-  expect(published.ids.release).toBe(DEMO_RELEASE);
-  expect(published.package.release.manifest.publisher).toBe(DEMO_PUBLISHER);
+  expect(published.ids.release).toBe(EARLIER_GROW_RELEASE);
+  expect(published.package.release.manifest.publisher).toBe(EARLIER_GROW_PUBLISHER);
   expect(Object.keys(published.package.semantic).sort()).toEqual(["capabilities", "creates", "definitions", "entry", "host", "predecessor", "projections", "roles", "v"]);
   expect(readPublishedApplicationPackage2(bytes, null).ids).toEqual(published.ids);
-  expect(readPublishedApplicationReleaseProof2(published.package.semantic, published.package.release, DEMO_RELEASE))
+  expect(readPublishedApplicationReleaseProof2(published.package.semantic, published.package.release, EARLIER_GROW_RELEASE))
     .toEqual({ semantic: published.package.semantic, release: published.package.release, ids: published.ids });
-  expect(() => readApplicationPackage2(bytes, DEMO_RELEASE)).toThrow("application-package-invalid");
-  expect(validatePackage(bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, DEMO_RELEASE)).toMatchObject({ ok: false, kind: "codec", reason: "invalid" });
+  expect(() => readApplicationPackage2(bytes, EARLIER_GROW_RELEASE)).toThrow("application-package-invalid");
+  expect(validatePackage(bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, EARLIER_GROW_RELEASE)).toMatchObject({ ok: false, kind: "codec", reason: "invalid" });
   expect(() => readPublishedApplicationPackage2(bytes, digestBytes(utf8("another release")))).toThrow("application-package-integrity");
   const absent = packageInput(grow()); Reflect.deleteProperty(absent.semantic, "connections");
   let signatures = 0;

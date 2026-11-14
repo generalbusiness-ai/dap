@@ -26,6 +26,7 @@ const nodeFiles = [
   'scripts/deploy-check.test.mjs',
   'scripts/deploy.test.mjs',
   'scripts/deploy-smoke.test.mjs',
+  'scripts/register-values.test.mjs',
   'scripts/demo/recorder-output.test.mjs',
   'homepage/test/home.test.mjs',
   'packages/cli/test/config-dir.test.mjs',

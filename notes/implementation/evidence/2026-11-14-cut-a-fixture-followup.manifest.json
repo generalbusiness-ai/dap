@@ -1,0 +1,226 @@
+{
+  "qualification": "CUT-A isolated hosted-loop fixture follow-up after failed gate 554187d4. Only that test file changes; every original case/deadline remains, compiler and whole owner pass, and the exact originally unreached native stage (including scale) passes. The failed gate is a separate record and stays failed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cut-a-fixture-followup",
+  "checkpoint": {
+    "commit": "d19e945336f8623a728691adae05a4f2d4e3697c",
+    "tree": "4327b264c78888fdf1bb05ca14aa27372a4eb9d2"
+  },
+  "fileCount": 43,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 3757,
+      "sha256": "6e45de951134aa0141904e73221951fa48c6f43919f04050feb4632930b1eda0"
+    },
+    {
+      "path": "capture.py",
+      "bytes": 4344,
+      "sha256": "1d5e9414162d034a8285132cfc667af591e97f803cdc6ff39c5a7c55fbe0fcae"
+    },
+    {
+      "path": "case-correspondence.json",
+      "bytes": 565,
+      "sha256": "e984e40b21807eb70f817292bfd99e8e322b1aaa892d064d049845fc87a2c0fa"
+    },
+    {
+      "path": "compatibility.command.json",
+      "bytes": 198,
+      "sha256": "ca5fe283661363855239f1c400857cf4947eccd8d84bd25392c567124245e5af"
+    },
+    {
+      "path": "compatibility.result.json",
+      "bytes": 63,
+      "sha256": "a773c7caa0e9695e04cb2dbdc6a9a03f0a63da1739ed6d7beecfb783f6baa9c4"
+    },
+    {
+      "path": "compatibility.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compatibility.stdout",
+      "bytes": 371,
+      "sha256": "d0615699e8ac329e0727516dbc6cf9a950fc9f0454704756838653c9872da8f2"
+    },
+    {
+      "path": "compatibility.time",
+      "bytes": 29,
+      "sha256": "03f1633da7cb620866c4fa11af8d3604deffeb3663bc3c02253c018f50a482ae"
+    },
+    {
+      "path": "compiler.command.json",
+      "bytes": 280,
+      "sha256": "58d99767d8b2bb203df9f6c5ed4436dd40c72108382c6720ff8b50070f2d168b"
+    },
+    {
+      "path": "compiler.result.json",
+      "bytes": 63,
+      "sha256": "7fa323da33a7bc2fa085df7871a0ac2b86f8763da5cb9e49cd647fb86cf46852"
+    },
+    {
+      "path": "compiler.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compiler.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compiler.time",
+      "bytes": 29,
+      "sha256": "16128a292a00e5bdc93b95c1f8197d1355b83901cf154155db529b11694514fc"
+    },
+    {
+      "path": "followup-summary.json",
+      "bytes": 712,
+      "sha256": "7c98be164d7e620b2cb7b544e779c140cbe4093b2de1f96ce16063e505e8281b"
+    },
+    {
+      "path": "followup.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "head.txt",
+      "bytes": 82,
+      "sha256": "b21c5afc391bbe2e8d2b43e0b9f598db7abf341ec6cb7f421e9934bf3d180ef1"
+    },
+    {
+      "path": "original-scale-selection.json",
+      "bytes": 1025,
+      "sha256": "dbb4c68bc6a09a5d531fba3f8b92767c6aa1cc921fe84972d0550fff480615b5"
+    },
+    {
+      "path": "owning-file.command.json",
+      "bytes": 341,
+      "sha256": "acf6a36c9d48b31e1484fd021ffb16072388e0fe3f3c16a91c96eb0740786349"
+    },
+    {
+      "path": "owning-file.result.json",
+      "bytes": 55,
+      "sha256": "43434d679df984e54ff822db8174e83871d0223113267324ae5dcbcf7b3a8d50"
+    },
+    {
+      "path": "owning-file.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "owning-file.stdout",
+      "bytes": 23180,
+      "sha256": "dbde24e81683c7269a15b8e823421617fc54ae9417d84427cbe8661276e4f983"
+    },
+    {
+      "path": "owning-file.time",
+      "bytes": 29,
+      "sha256": "738000f861bf154b44a788a143c9dec21c9413eecf5122cb81b1588bc0e5914b"
+    },
+    {
+      "path": "owning-file.timing.jsonl",
+      "bytes": 155790,
+      "sha256": "04c12ce56b921473e0c6a6423c31a49ea1813148c0bf802f7682adc91284ada1"
+    },
+    {
+      "path": "pmset-batt-after-compatibility.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-batt-after-compiler.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-batt-after-owning-file.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-batt-after-unreached-native.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-batt-end.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-batt-start.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "pmset-mode-after-compatibility.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "pmset-mode-after-compiler.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "pmset-mode-after-owning-file.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "pmset-mode-after-unreached-native.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "pmset-mode-end.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "pmset-mode-start.txt",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "power-during.jsonl",
+      "bytes": 61573,
+      "sha256": "1c3ce98a11200d96c49622920dbc46532e2b63dc7ac79227cb2ce57d374bcba0"
+    },
+    {
+      "path": "repair.diff",
+      "bytes": 3367,
+      "sha256": "a1841dadea23f0f9c0b34f45174ab3012b88c541bff4795954b166b33ce0ec88"
+    },
+    {
+      "path": "unreached-native.command.json",
+      "bytes": 257,
+      "sha256": "a4dc9aaba49f7eda24493c472ede4b1fc5b8636fe39c2938bf8fa6af250faa72"
+    },
+    {
+      "path": "unreached-native.result.json",
+      "bytes": 62,
+      "sha256": "288d200a5fb71ca08c0f3a338a65e41d24a081cf3903df241e1ccef7ad3285e4"
+    },
+    {
+      "path": "unreached-native.stderr",
+      "bytes": 6619,
+      "sha256": "231d05cb1814314d13f7bfc2544d0ea24fd714f24f1a740faa2c408c8d8044d3"
+    },
+    {
+      "path": "unreached-native.stdout",
+      "bytes": 41793616,
+      "sha256": "6801666ab91276dbf0e8d8f8eee17ee8966d711263174ed389bfa8fd54d47314"
+    },
+    {
+      "path": "unreached-native.time",
+      "bytes": 37,
+      "sha256": "524b6c1434c422fdb2962c186f84e2a0492bb0c37386b262ef24e4dfc8a01d64"
+    },
+    {
+      "path": "unreached-native.timing.jsonl",
+      "bytes": 1145539,
+      "sha256": "b4243eb12ad4108f72e1dd4667d1ff7d3cab2e09715612f2b3c9cfd98486dc2c"
+    }
+  ]
+}
