@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1e9ca855de9877eb277f43601dde36627e818f33","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/demo-config.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:243c1912fa8c92812d76d23bff010914ed373083","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-r2-grow-focused.manifest.json."}
