@@ -16,9 +16,13 @@ const standing = JSON.parse(readFileSync(new URL("./fixtures/version-standing-86
   rows: { pin: string; answer: boolean }[];
 };
 
+/** CF-1 adds one question, which no frozen pin answers. */
+const CUTOVER_QUESTIONS: readonly VersionQuestion[] = ["scopePublicationPrefixesDestination"];
+
 test("the question owner covers every frozen predicate and catalog pin", () => {
-  expect([...VERSION_QUESTIONS].sort()).toEqual([...frozen.questions.map(question => question.name), standing.question].sort());
-  expect(Object.keys(VERSIONS).sort()).toEqual([...frozen.catalogPins].sort());
+  expect([...VERSION_QUESTIONS].sort()).toEqual([...frozen.questions.map(question => question.name), standing.question, ...CUTOVER_QUESTIONS].sort());
+  for (const row of frozen.rows) for (const question of CUTOVER_QUESTIONS) expect(answersVersionQuestion(row.pin, question), row.pin).toBe(false);
+  expect(Object.keys(VERSIONS).filter(pin => !Object.hasOwn(CUTOVER_FAMILY_ANSWERS, pin)).sort()).toEqual([...frozen.catalogPins].sort());
   expect(frozen.rows).toHaveLength(105);
   expect(frozen.questions).toHaveLength(104);
 });
@@ -58,4 +62,48 @@ test("the frozen answers retain intentional disagreements", () => {
   expect(answers("platform:rules@13", "scopeApplicationOutsideRules")).toBe(false);
   expect(answers("platform:destination@18", "scopeDeliveryUnpublishedBranch")).toBe(true);
   expect(answers("platform:destination@18", "mcpVerifyEmptyDestination")).toBe(false);
+});
+
+/** CF-1 (ruling bccd8dd1): each family pin answers exactly the questions that
+ * the implementation note lists. The frozen fixture above stays unchanged. */
+const CUTOVER_FAMILY_ANSWERS: Readonly<Record<string, readonly VersionQuestion[]>> = {
+  "platform:destination@21": [
+    "authoritySessionBirthUnpublishedBranch", "checkerReservationOriginDestination", "cliFixedReadTokenLifetimeDestination",
+    "cliManifestListDestination", "cliOneFileDestination", "cliScopeIndexDefaultCoveragePin", "cliScopeIndexSupportedLineagePin",
+    "cliStatusUnpublishedDestination", "cliUnpublishedDestination", "mcpReadTokenFixedHourDestination",
+    "mcpVerifyEmptyDestination", "nativeFilePublication", "nativeStagedPublication", "nativeTimedOperationOpen",
+    "pageRetainedManifestListDestination", "pageRetainedOneFileDestination", "scopeArchiveHostDestination",
+    "scopeCredentialUnpublishedBranch", "scopeDeliveryNativeApplicationOrigin", "scopeDeliveryUnpublishedBranch",
+    "scopeOperationNativeApplicationOrigin", "scopePublicationPrefixesDestination", "scopeReadTokenFixedHourDestination",
+    "scopeSessionPreparationOwnScope", "scopeSessionPreparationUnpublishedPage",
+  ],
+  "platform:directory@27": [
+    "cliScopeIndexDefaultCoveragePin", "cliScopeIndexSupportedLineagePin", "pageUnpublishedDirectory",
+    "scopeApplicationAnnouncementDirectory", "scopeArchiveHostDirectory", "scopeCreationDeclarationDirectory",
+    "scopeSiteRepositoryOptionalDirectory",
+  ],
+  "platform:membership@14": [
+    "applicationProjectionMembership", "applicationScreenMembership", "archiveMembershipForeignCopy",
+    "cliOwnAgentInvitationMembership", "cliScopeIndexDefaultCoveragePin", "cliScopeIndexSupportedLineagePin",
+    "clientAgentKeyInvitationMembership", "clientCheckerKeyInvitationMembership", "clientInvitationSignatureCredential",
+    "clientPersonInvitationMembership", "scopeInvitationProofMembership", "scopeOwnStandingMembership", "scopeSessionMembership",
+    "viewsEvidenceMembership",
+  ],
+  "platform:register@28": [
+    "archiveRegisterForeignCopy", "cliFailedClaimRegister", "cliImplicitSelectedPlanRegister", "cliNewInstallRegister",
+    "cliNoHostInstallRegister", "cliOpenPolicyExplicitRegister", "cliRetainedInstallRegister",
+    "cliRetainedUnpublishedSelectionRegister", "cliScopeIndexDefaultCoveragePin", "cliScopeIndexSupportedLineagePin",
+    "clientCreationOfferRegister", "clientSettlementClaimProjectionRegister", "pageRetainedCreationRegister",
+    "scopeDemoCreationRegister", "scopeHostNoneCreationRegister", "scopeSettlementClaimRegister",
+  ],
+  "platform:rules@15": [
+    "applicationOutsideWorkerRules", "cliApplicationInstallationRules", "cliScopeIndexDefaultCoveragePin",
+    "cliScopeIndexSupportedLineagePin", "mcpDeviceInstallOptionsRules", "mcpOwnerFieldRules", "mcpSemanticInstallRoomRules",
+    "pageInitializationRules", "pageReviewPolicyRules", "scopeApplicationOutsideRules",
+  ],
+};
+
+test.each(Object.entries(CUTOVER_FAMILY_ANSWERS))("the cutover family pin %s answers exactly its chosen questions", (pin, chosen) => {
+  expect(frozen.catalogPins).not.toContain(pin);
+  expect(VERSION_QUESTIONS.filter(question => answersVersionQuestion(pin, question))).toEqual(VERSION_QUESTIONS.filter(question => chosen.includes(question)));
 });

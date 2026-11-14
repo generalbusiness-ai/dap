@@ -371,9 +371,8 @@ The Worker serves installed application packages at
 Counter and Lending are maintained packages. The Worker holds neither
 app's routes nor its compiled assets. To add a release that you trust,
 commit its packet and install it in the room. The Worker needs no new
-deployment. No room that a current Worker creates installs an ordinary
-package such as Counter or Lending. Only an existing historical room of an
-ordinary-package cohort installs one, as
+deployment. A room of the `base` cohort installs an ordinary package such
+as Counter or Lending, as
 [Install an application package](cli.md#install-an-application-package)
 lists.
 

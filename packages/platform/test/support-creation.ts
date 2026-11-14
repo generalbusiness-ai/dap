@@ -40,8 +40,8 @@ export const directoryPlatform: PlatformRules = { named: DIRECTORY, rules: direc
 
 
 /** The creation intent of a register: an `install`, signed by that key, with `to: null`. */
-export const installing = (who: Actor, policy: "keys" | "open", creators: readonly string[] | undefined, kind = "install"): SignedIntent =>
-  signIntent({ v: 1, to: null, actor: who.key, kind, on: null, expected: {}, fields: { host: "git.example", namespace: "artroom", policy, ...(creators ? { "founders": [...creators] } : {}) }, idempotencyKey: "install", notAfter: t(60) }, who.secret);
+export const installing = (who: Actor, policy: "keys" | "open", creators: readonly string[] | undefined, kind = "install", host = "git.example"): SignedIntent =>
+  signIntent({ v: 1, to: null, actor: who.key, kind, on: null, expected: {}, fields: { host, namespace: "artroom", policy, ...(creators ? { "founders": [...creators] } : {}) }, idempotencyKey: "install", notAfter: t(60) }, who.secret);
 
 /** The seed of a register that an install intent asks for (the contract's section 7.1). */
 export const registerSeed = (install: SignedIntent, over: Partial<Seed> = {}): Seed => ({ v: 1, kind: "register", definition: REGISTER, creator: null, cause: intentDigest(install.intent), ordinal: 0, ...over });

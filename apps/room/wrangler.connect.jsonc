@@ -18,7 +18,7 @@
     "DEPLOYMENT": "dap-connect",
     "SCOPE_INDEX_MODE": "enforce",
     "REGISTER_SCOPE": "PLANNED_O4_REGISTER_SCOPE",
-    "PLATFORM_CREATION_PINS": "[\"platform:register@27\",\"platform:directory@26\",\"platform:membership@13\",\"platform:rules@10\",\"platform:destination@20\",\"platform:inbox@1\"]",
+    "PLATFORM_CREATION_PINS": "[\"platform:register@28\",\"platform:directory@27\",\"platform:membership@14\",\"platform:rules@15\",\"platform:destination@21\",\"platform:register@27\",\"platform:directory@26\",\"platform:membership@13\",\"platform:rules@10\",\"platform:destination@20\",\"platform:inbox@1\"]",
     "MCP_ENABLED": "false",
     "MCP_RESOURCE_URLS": "[\"https://dap-connect.inguz.workers.dev/mcp\",\"https://dap-connect.inguz.workers.dev/mcp?host=chatgpt\"]",
     "MCP_CARD_ORIGINS": "[{\"host\":\"claude\",\"url\":\"https://dap-connect.inguz.workers.dev/mcp\",\"domain\":\"5334a0aa0cd45baa296121e471ac2759.claudemcpcontent.com\"},{\"host\":\"chatgpt\",\"url\":\"https://dap-connect.inguz.workers.dev/mcp?host=chatgpt\",\"domain\":\"https://dap-connect.inguz.workers.dev\"}]",

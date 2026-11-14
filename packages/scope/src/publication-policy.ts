@@ -1,11 +1,12 @@
 /** Host publication limits; no Native rule or recorded outcome shape changes. */
 import { canonicalize, isDigest, isHead, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { observedOf, valueDigest, type RecordedRef } from "@generalbusiness/dap-derive";
-import { classify, EXTENTS_MOST, isExtents, RULES_PATTERNS, type Extent, type JudgeChanges } from "@generalbusiness/dap-platform";
+import { classify, EXTENTS_MOST, isExtents, RULES_PATTERNS, withinPublicationPrefixes, type Extent, type JudgeChanges } from "@generalbusiness/dap-platform";
 
 /** GitHub reads workflows and ownership here; the room protects its agent instructions as rules. */
 export const PUBLICATION_RESERVED = [".github", ".github/**", "CODEOWNERS", "docs/CODEOWNERS", ...RULES_PATTERNS] as const;
-export interface PublicationRefusal { code: "reserved-publication-path"; path: string; reserved: string }
+export type PublicationRefusal = { code: "reserved-publication-path"; path: string; reserved: string }
+  | { code: "publication-path-not-declared"; path: string; outside: string };
 
 /** Current authenticated Rules answer and the exact canonical extent value it names. */
 export function publicationExtents(raw: unknown, expected: RecordedRef): readonly Extent[] | null {
@@ -33,13 +34,23 @@ export function publicationExtents(raw: unknown, expected: RecordedRef): readonl
   } catch { return null; }
 }
 
-/** Reuse the ordinary change classifier, including aliases to protected files. */
-export function publicationRefusal(path: string, changes: JudgeChanges, extents: readonly Extent[]): PublicationRefusal | null {
+/**
+ * Reuse the ordinary change classifier, including aliases to protected files.
+ * With declared prefixes (ruling 68356c6c, point 5b), every touched path and
+ * every link target must also stand inside them; an unresolved link stands
+ * outside.
+ */
+export function publicationRefusal(path: string, changes: JudgeChanges, extents: readonly Extent[], prefixes?: readonly string[]): PublicationRefusal | null {
   const paths = [...new Set([path, ...changes.paths])];
   const fixed: Extent[] = PUBLICATION_RESERVED.map((pattern, index) => ({ name: `host-reserved-${index}`, patterns: [pattern], approvals: 1, approver: "rules.publish", checks: [], class: "authority" }));
   const protectedPaths = classify(fixed, paths, changes.links, changes.unreadable);
   const touched = protectedPaths.touched[0];
   if (touched) return { code: "reserved-publication-path", path, reserved: PUBLICATION_RESERVED[Number(touched.extent.slice("host-reserved-".length))]! };
+  if (prefixes) {
+    const outside = [...paths, ...changes.links.flatMap(link => [link.path, ...(link.resolves ?? [""])])]
+      .find(touchedPath => !withinPublicationPrefixes(touchedPath, prefixes));
+    if (outside !== undefined) return { code: "publication-path-not-declared", path, outside };
+  }
   const current = classify(extents, paths, changes.links, changes.unreadable);
   const control = current.touched.find(row => extents.some(extent => extent.name === row.extent && (extent.name === "rules" || extent.class === "authority")));
   if (control) return { code: "reserved-publication-path", path, reserved: `rules extent ${control.extent}` };
