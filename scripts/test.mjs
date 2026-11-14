@@ -59,7 +59,6 @@ export const excludedTests = [
   { file: 'apps/room/celld/mac/test/certificate.test.mjs', reason: 'scripts/mac-host-kit.test.mjs runs it as a child, on Darwin only' },
   { file: 'apps/room/celld/mac/test/prepare-github.test.mjs', reason: 'scripts/mac-host-kit.test.mjs runs it as a child, on Darwin only' },
   { file: 'apps/room/celld/mac/test/prepare-project.test.mjs', reason: 'scripts/mac-host-kit.test.mjs runs it as a child, on Darwin only' },
-  { file: 'scripts/demo-git-host.test.mjs', reason: 'pending planner request 39a9f638: the demo helper still checks obsolete ScopeRef kind fields' },
 ];
 
 // Fixed production argv. The exported runner below accepts tiny commands only
