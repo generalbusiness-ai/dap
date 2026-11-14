@@ -25,6 +25,7 @@ export function actContext(definition: ValidDefinition, view: StateView, context
     clock: context.clock.reading,
     evidence: [...new Set([...context.evidence, ...shapedTexts.map(textDigest)])].sort(),
   };
-  const head = view.scope()?.head;
+  const scope = view.scope();
+  const head = scope?.at.scope === context.scope.scope && scope.at.genesis === context.scope.genesis ? scope.head : null;
   return head ? structuredClone({ ...summary, head }) : structuredClone({ ...summary, head: null });
 }

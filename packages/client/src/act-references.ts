@@ -182,7 +182,7 @@ export class ActReferences {
       if (origin.at === "expected") {
         const row = this.#rows.get(origin.subject);
         if (!row) throw new TypeError("a basis read has no subject provenance");
-        const expected = input.expected[origin.name];
+        const expected = Object.hasOwn(input.expected, origin.name) ? input.expected[origin.name] : undefined;
         return typeof expected === "number" ? { is: "recorded-revision", value: expected, subject: row.subject }
           : expected ? { is: "after", token: this.token(expected.after), subject: row.subject } : null;
       }
