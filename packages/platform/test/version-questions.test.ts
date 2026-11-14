@@ -91,6 +91,7 @@ const CUTOVER_FAMILY_ANSWERS: Readonly<Record<string, readonly VersionQuestion[]
   ],
   "platform:register@28": [
     "archiveRegisterForeignCopy", "cliFailedClaimRegister", "cliImplicitSelectedPlanRegister", "cliNewInstallRegister",
+    "celldPreparedNoHostRegister", "celldSmokeOwnedPlanRegister",
     "cliNoHostInstallRegister", "cliOpenPolicyExplicitRegister", "cliRetainedInstallRegister",
     "cliRetainedUnpublishedSelectionRegister", "cliScopeIndexDefaultCoveragePin", "cliScopeIndexSupportedLineagePin",
     "clientCreationOfferRegister", "clientSettlementClaimProjectionRegister", "pageRetainedCreationRegister",

@@ -90,7 +90,7 @@ test("smoke planning retains the actual native host-none install offline and exp
     const report = await runCelldSmoke({ phase: "plan", base: "http://127.0.0.1:9876", home, fetch });
     assert.deepEqual(Object.keys(report).sort(), ["definition", "phase", "register", "version"]);
     assert.match(report.register, /^sc_[a-z2-7]{52}$/);
-    assert.equal(report.definition, "platform:register@21");
+    assert.equal(report.definition, "platform:register@28");
     assert.equal(calls, 0);
     const config = JSON.parse(await readFile(join(home, "config.json"), "utf8"));
     assert.equal(config.plan.register, report.register);

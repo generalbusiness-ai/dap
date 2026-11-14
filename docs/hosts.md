@@ -27,14 +27,14 @@ own journal records. A deployment can serve Artifacts and GitHub at once. A
 register on `none`, or on a host that the Worker has no configuration for,
 gets no outside port. Its operations stay recorded and unsent.
 
-The opt-in `repository-binding` cohort lets a room created on `none`
-attach one GitHub repository later. The register keeps `none`; the
-destination records the attachment. The operator must authorize that exact
-destination reference (scope ID and genesis), repository, and branch in
+The `base` cohort lets a room created on `none` attach one GitHub
+repository later. Retained `repository-binding` plans keep that behavior.
+The register keeps `none`. The destination records the attachment. The
+operator must authorize that exact destination reference (scope ID and genesis), repository, and branch in
 `GITHUB_REPOSITORY_BINDINGS`. An administrator's binding grant alone gives
-no GitHub access. Earlier cohorts cannot bind a repository. Follow
-[Bind a new room to GitHub](self-host-mac.md#bind-a-new-room-to-github) for the
-celld configuration path.
+no GitHub access. Earlier rooms keep their recorded cohort's permissions.
+Follow [Bind a new room to GitHub](self-host-mac.md#bind-a-new-room-to-github)
+for the celld configuration path.
 
 `REGISTER_SCOPE` pins the one register that the Worker accepts for new
 installs. Each host port also checks its own authority: its setting names
@@ -45,14 +45,27 @@ each value.
 
 ## No host (host `none`)
 
-`--host none` takes no namespace. The CLI plans the register under the
-unpublished cohort, `platform:register@21`, unless `--cohort` names the
-repository-binding, own-agent or commons cohort. A deployed Worker refuses a
-`none` install under any other register definition. The room publishes no
-repository and keeps no journal archive. Its entries stay in the service,
-within the service's bounds, so the operator must back up the service.
-The register needs `REGISTER_SCOPE` and no host setting.
-[Run the local Worker](celld.md) uses this host.
+`--host none` takes no namespace. The CLI defaults to the `base` cohort,
+with Register 28. An explicit retained cohort keeps its own pins and
+creation policy. The Mac preparation path accepts retained `unpublished`
+Register 21 and `repository-binding` Register 25 plans as well.
+
+A host-none room has no repository and keeps no journal archive. The
+Directory reserves declared publication prefixes, but those prefixes
+supply no repository. Publication and `bind-archive` refuse
+`no-repository`. Its entries stay in the service, within the service's
+bounds, so the operator must back up the service. The register needs
+`REGISTER_SCOPE` and no Git-host setting.
+
+Ordinary packages need separate content storage and exact release trust.
+On a persistent celld fleet, Mac preparation stages the checked
+`APPLICATION_CONTENT` binding and `APPLICATION_TRUST` together. Their R2
+objects live under `r2/application-content/` in the fleet bucket. This
+storage is not an archive provider. `celld dev` has no fleet bucket and
+cannot show a package installation. See
+[Stage application packages](self-host-mac.md#stage-application-packages).
+CB-1's public Counter fleet witness remains owed. CB-2 owns celld archive
+provider work; binding a GitHub repository alone supplies no archive.
 
 ## Cloudflare Artifacts (host `artifacts`)
 
@@ -311,4 +324,6 @@ or optional evidence-host permission.
 
 ## Source
 
-Checked against main `6bfb6e16` on 10 November 2026. Sources: [packages/cli/src/commands.ts](../packages/cli/src/commands.ts), [packages/platform/src/archive-binding-wire.ts](../packages/platform/src/archive-binding-wire.ts), [packages/scope/src/creation-admission.ts](../packages/scope/src/creation-admission.ts), [packages/scope/src/artifacts-wiring.ts](../packages/scope/src/artifacts-wiring.ts), [packages/scope/src/artifacts-host.ts](../packages/scope/src/artifacts-host.ts), [packages/scope/src/github-wiring.ts](../packages/scope/src/github-wiring.ts).
+The host source review used main `6bfb6e16` on 10 November 2026. CB-1
+updates the base default and celld package-staging limits in source on
+14 November 2026. Sources: [packages/cli/src/commands.ts](../packages/cli/src/commands.ts), [packages/platform/src/archive-binding-wire.ts](../packages/platform/src/archive-binding-wire.ts), [packages/scope/src/creation-admission.ts](../packages/scope/src/creation-admission.ts), [packages/scope/src/artifacts-wiring.ts](../packages/scope/src/artifacts-wiring.ts), [packages/scope/src/artifacts-host.ts](../packages/scope/src/artifacts-host.ts), [packages/scope/src/github-wiring.ts](../packages/scope/src/github-wiring.ts).

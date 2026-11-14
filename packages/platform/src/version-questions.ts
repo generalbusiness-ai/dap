@@ -302,13 +302,13 @@ const QUESTION_PINS = {
     "platform:destination@16", "platform:destination@18", "platform:destination@20", "platform:destination@21",
   ],
   celldPreparedNoHostRegister: [
-    "platform:register@21", "platform:register@25",
+    "platform:register@21", "platform:register@25", "platform:register@28",
   ],
   celldPreparedBindingPolicyRegister: [
     "platform:register@25",
   ],
   celldSmokeOwnedPlanRegister: [
-    "platform:register@21",
+    "platform:register@21", "platform:register@28",
   ],
   mcpInventoryPartitionDirectory: [
     "platform:directory@10",

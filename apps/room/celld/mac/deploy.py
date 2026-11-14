@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import pwd
+import shutil
 import signal
 import stat
 import subprocess
@@ -19,6 +20,37 @@ from kit import (Refusal, absolute, aws_request, configuration, private_credenti
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
+
+
+def application_project_settings(config, variables):
+    """Admit one application-content bucket only with its operator trust setting."""
+    bucket = "r2_buckets" in config
+    trust = "APPLICATION_TRUST" in variables
+    if not bucket and not trust:
+        return set()
+    require(bucket and trust, "incomplete application settings")
+    require(config["r2_buckets"] == [{"binding": "APPLICATION_CONTENT", "bucket_name": "application-content"}],
+            "application content binding differs")
+    return {"APPLICATION_TRUST"}
+
+
+def check_application_trust(raw):
+    """Use the production parser offline; no Python approximation of URL or key aliases."""
+    try:
+        bounded = isinstance(raw, str) and len(raw.encode("utf-8")) <= 64 * 1024
+    except UnicodeError:
+        bounded = False
+    require(bounded, "invalid application trust")
+    node = shutil.which("node")
+    require(node is not None, "application trust validator unavailable")
+    try:
+        checked = subprocess.run([node, str(HERE / "application-settings.mjs"), "--check-trust"],
+                                 input=raw, text=True, encoding="utf-8", errors="strict",
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                 timeout=10, check=False)
+    except (OSError, UnicodeError, subprocess.SubprocessError):
+        raise Refusal("application trust validator unavailable") from None
+    require(checked.returncode == 0, "invalid application trust")
 
 
 def github_repository_bindings(raw, namespace):
@@ -116,10 +148,12 @@ def prepared_project(directory):
                 "project files must be owned with mode 0600")
     config = read_json(directory / "wrangler.json", 64 * 1024)
     maintained = read_json(HERE.parent / "wrangler.json", 64 * 1024)
-    require({k: v for k, v in config.items() if k != "vars"}
-            == {k: v for k, v in maintained.items() if k != "vars"}, "project configuration differs")
     variables = config.get("vars", {})
     require(isinstance(variables, dict), "project variables differ")
+    application = application_project_settings(config, variables)
+    excluded = {"vars", "r2_buckets"} if application else {"vars"}
+    require({k: v for k, v in config.items() if k not in excluded}
+            == {k: v for k, v in maintained.items() if k != "vars"}, "project configuration differs")
     required = {"REGISTER_SCOPE", "PUBLIC_ORIGIN", "MCP_ENABLED", "MCP_TOOL_ADDITIONS", "SESSION_SECRET"}
     if "PLATFORM_CREATION_PINS" in variables:
         policy = read_json(HERE / "repository-binding-policy.json", 4096)
@@ -142,7 +176,7 @@ def prepared_project(directory):
                 "invalid installed registers")
         required.add("INSTALLED_REGISTER_SCOPES")
     github = github_project_settings(variables)
-    require(set(variables) == set(maintained["vars"]) | required | github, "project variables differ")
+    require(set(variables) == set(maintained["vars"]) | required | github | application, "project variables differ")
     require(all(variables.get(k) == v for k, v in maintained["vars"].items()), "maintained variable differs")
     require(variables.get("MCP_ENABLED") == "true" and variables.get("MCP_TOOL_ADDITIONS") == "[]",
             "MCP configuration differs")
@@ -161,6 +195,9 @@ def prepared_project(directory):
     entry = json.dumps(str(ROOT / "apps/room/worker.ts"), ensure_ascii=False)
     expected = "export * from " + entry + ";\nexport { default } from " + entry + ";\n"
     require((directory / "worker.ts").read_text() == expected, "project does not name the production entry")
+    if application:
+        # The closed project/configuration checks precede any local child process.
+        check_application_trust(variables["APPLICATION_TRUST"])
     return directory
 
 

@@ -5,6 +5,12 @@ as LaunchDaemons under one user. The room has no Git host, and its
 journals stay in the local store. Keep the installation prefix, with its
 store and celld working directory, when you stop or remove the services.
 
+The source supports the `base` family and package storage on a persistent
+fleet. The fleet package witness remains due. It waits for the public Counter
+release in CUT-R R2 and Hugh's selection of a machine and operator. No fleet
+is currently available for that witness. The previously recorded Mac mini
+is unavailable.
+
 ## Prerequisites
 
 You need administrator access, Git, Node 26, Python 3.9 or later, and the
@@ -144,7 +150,9 @@ tunnel passes the client address before you rely on it.
 
 Keep the client home and the private project in directories that persist.
 Plan only when you can finish deployment and installation within 14
-minutes.
+minutes. To install packages, prepare the
+[application trust file](#stage-application-packages) and add its option to
+`prepare-project.mjs` before creating the project.
 
 ```sh
 export DAP_HOME="$HOME/dap-client"
@@ -160,22 +168,16 @@ python3 apps/room/celld/mac/deploy.py \
 curl --cacert "$HOME/dap-tls/cert.pem" "$BASE/health"
 ```
 
-The plan uses `--host none --cohort unpublished`. A room for a GitHub
-binding, as the next section describes, uses the `repository-binding`
-family. celld does not run `base`, the default family of `dap install`, so
-`prepare-project.mjs` refuses a `base` plan and names the `--cohort` to
-give. A celld room lacks these parts of the `base` family:
+The plan uses `--host none` and the CLI's default `base` family, with
+Register 28. `prepare-project.mjs` also accepts retained `unpublished`
+Register 21 and `repository-binding` Register 25 plans. An explicit old
+plan keeps its original pins. Preparing or deploying it does not migrate
+its room.
 
-- `leave`, `revoke-key` of the signer's own key, removal of an agent by
-  its controller, and the limit of four keys for an own agent.
-- Own agents: `add-own-agent` and up to eight agents for each person.
-- Ordinary version 2 packages and `publication-paths@1` prefixes.
-- The final failed state of a claim, and the refusal of a founder key that
-  is also the recovery key.
-- The fixed one-hour Git read token.
-- An archive. A room of the `unpublished` or the `repository-binding`
-  family refuses `bind-archive` with `no-repository`, so a celld room has
-  no archive until celld runs the `base` family.
+A host-none room has no repository. Its Directory reserves the declared
+publication prefixes, but publication and `bind-archive` refuse
+`no-repository`. CB-1 supplies no archive provider. The archive-provider
+and later archive scene belong to CB-2.
 
 The prepared project keeps the production
 Worker and its bindings, sets `REGISTER_SCOPE` to the planned register, and
@@ -198,21 +200,66 @@ uncertain result. Use the [CLI commands](cli.md) from that home for later
 work and invitations, and set `NODE_EXTRA_CA_CERTS` for each command that
 connects to the host.
 
+## Stage application packages
+
+Package storage needs a persistent celld fleet with its object-store bucket.
+`celld dev` has no fleet bucket and cannot witness a package installation.
+The `APPLICATION_CONTENT` binding uses `bucket_name: "application-content"`.
+celld stores its objects under `r2/application-content/` in the fleet bucket.
+That bucket is package storage, not a journal archive.
+
+Before preparing the project, write the approved nonsecret trust rows to a
+file. Each row has exactly `release`, `publisher`, and `host`:
+
+```json
+[{"release":"sha256:<64 lowercase hex>","publisher":"key_<publisher public key>","host":"github.com"}]
+```
+
+Use the release digest and publisher that the signed packet names, and the
+canonical lowercase hostname of its immutable Git URI. A package version
+alone does not identify a release. The file admits at most 128 rows and
+64 KiB of UTF-8 JSON. Duplicate releases and extra row fields refuse the
+whole file. An empty array trusts no release.
+
+Add this option to the initial `prepare-project.mjs` command, using a
+canonical absolute path to a plain file:
+
+```sh
+--application-trust-file "$HOME/dap-application-trust.json"
+```
+
+The helper stages exactly one R2 binding, `APPLICATION_CONTENT`, and the
+`APPLICATION_TRUST` variable. GitHub staging preserves and checks both
+settings before reading its private key. Deployment checks them again.
+The deployment check uses the checkout's production parser through Node
+and its locked dependencies. A missing validator or a rejected trust file
+refuses deployment.
+Both settings may be absent for an existing project that installs no
+packages. A partial pair, another bucket, or another added field refuses.
+The helpers retain private output and never overwrite an existing project.
+Set the same `APPLICATION_TRUST` value for the CLI that installs the packet.
+
+Follow [Install an application package](cli.md#install-an-application-package)
+with the public immutable Git URI and its exact release. CB-1's later fleet
+witness installs only the planner-signed Counter packet recorded in CUT-R
+R2 after publication. The source work has no public Counter packet to
+install yet. A TEST packet or the Grow demo cannot replace it. The recorded
+active install, journal verification, restart and stored-byte reload remain
+owed on Hugh's selected machine.
+
 ## Bind a new room to GitHub
 
-Use the explicit `repository-binding` cohort. Its pins are Register 25,
-Directory 24, Membership 11, Rules 10, Destination 18, and Inbox 1.
-`prepare-project.mjs` adds the
+A new `base` room can bind one repository after creation. A retained
+`repository-binding` plan remains supported: Register 25, Directory 24,
+Membership 11, Rules 10, Destination 18, and Inbox 1.
+`prepare-project.mjs` adds its retained
 [creation policy](../apps/room/celld/mac/repository-binding-policy.json)
-that admits this cohort when the retained plan uses it. The default
-creation policy does not admit it.
+when that plan requires it. The default `base` plan needs no historical
+creation-policy override.
 
-Earlier rooms cannot bind a repository. Their pins keep their original
-meaning. To move, create a new room with this cohort, choose the content
-and members to bring across, and retain the old room for its history.
-This procedure does not migrate a room or rewrite its journal. Within the
-new cohort, a room can contain issues before binding. Binding preserves
-those issues and their journals.
+Existing rooms keep their pins and permissions. Binding preserves the
+new room's issues and journals. This procedure does not migrate an older
+room or rewrite a journal.
 
 The App installation decides which repositories the App key can mint
 tokens for. dap restricts each publication token to one recorded
@@ -244,15 +291,15 @@ only the one repository in the installation.
    export NODE_EXTRA_CA_CERTS="$HOME/dap-tls/cert.pem"
    mkdir -m 700 "$DAP_HOME"
    node packages/cli/bin/dap.js install --plan "$BASE" \
-     --host none --cohort repository-binding
+     --host none
    node apps/room/celld/mac/prepare-project.mjs \
      --origin "$BASE" --home "$DAP_HOME" --out "$HOME/dap-binding-project"
    ```
 
-   `prepare-project.mjs` includes the creation policy for this retained
-   plan. It keeps the production Worker and bindings and creates private
-   session custody. It also continues to accept the earlier host-none plan
-   without changing its pins.
+   The default plan is `base`. To retain the old binding family, add
+   `--cohort repository-binding` to the plan command. The helper then
+   includes that retained plan's creation policy. It keeps the production
+   Worker and bindings and creates private session custody.
 
    To preserve child creation under earlier installed registers, add the
    `INSTALLED_REGISTER_SCOPES` string to this new prepared project's `vars`
@@ -327,8 +374,9 @@ only the one repository in the installation.
    node packages/cli/bin/dap.js verify --all
    ```
 
-   Membership 11 gives `destination.bind-repository` to administrators by
-   default. An ordinary member cannot bind. The destination binds once and
+   The base membership and retained Membership 11 give
+   `destination.bind-repository` to administrators by default. An ordinary
+   member cannot bind. The destination binds once and
    tells its recorded Directory which repository it chose. It records
    `empty` while first-head publication waits, then records `ready` with
    the accepted commit. Missing operator authorization sends no GitHub
@@ -344,8 +392,8 @@ only the one repository in the installation.
     recorded commit with GitHub's branch head.
 
 The binding enables repository commands. The public Site route does not
-select repositories attached after creation. Archive export admission also
-retains its existing exact cohort list.
+select repositories attached after creation. Repository binding supplies
+no archive provider for celld. CB-2 owns that separate work.
 
 ## Maintain the host
 
@@ -396,4 +444,5 @@ and the node name.
 ## Source
 
 The broader guide retains its 30 October 2026 source review at main
-`5dc9765f`. Sources: [apps/room/celld/mac](../apps/room/celld/mac/), [scripts/celld-smoke.mjs](../scripts/celld-smoke.mjs), [packages/cli/src/line.ts](../packages/cli/src/line.ts).
+`5dc9765f`. CB-1 updates the default family and package-staging path in
+source on 14 November 2026. The fleet package witness has not run. Sources: [apps/room/celld/mac](../apps/room/celld/mac/), [scripts/celld-smoke.mjs](../scripts/celld-smoke.mjs), [packages/cli/src/line.ts](../packages/cli/src/line.ts).

@@ -115,8 +115,8 @@ async function smoke(options) {
   const settings = smokeSettings(options), { phase, base, home, localAddress } = settings;
   const ctx = await contextForCelldSmoke({ base, home, localAddress, ...(options.fetch ? { fetch: options.fetch } : {}) });
   if (phase === "plan") {
-    // celld runs the unpublished family by explicit choice; the default for --host none is base (ruling bccd8dd1, Q5b).
-    await command(ctx, ["install", "--plan", base, "--host", "none", "--cohort", "unpublished"], "plan");
+    // CB-1 uses the CLI's base default. Explicit retained old-family plans remain readable.
+    await command(ctx, ["install", "--plan", base, "--host", "none"], "plan");
     const config = await ctx.store.config();
     if (!await planIsOurs(config, base)) fail("plan-identity");
     return { version: 1, phase, register: config.plan.register, definition: config.plan.definition };
