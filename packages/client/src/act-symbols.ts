@@ -7,7 +7,11 @@ import type { ItemName, Revision, Source } from "./act-types.ts";
 
 export class UnavailableActSource extends Error {
   override readonly name = "UnavailableActSource";
-  constructor(readonly source: Source) { super("the act names a source that this view cannot resolve"); }
+  readonly source: Source;
+  constructor(source: Source) {
+    super("the act names a source that this view cannot resolve");
+    this.source = source;
+  }
 }
 
 export interface ActSymbols {

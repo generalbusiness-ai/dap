@@ -30,8 +30,10 @@ export class ActReferences {
   readonly #subjects = new Map<number, object>();
   readonly #outputs = new Map<object, Item>();
   readonly #recorded: ReadonlySet<number>;
+  readonly view: StateView;
 
-  constructor(readonly view: StateView, recorded: readonly Item[], prior?: ActReferences) {
+  constructor(view: StateView, recorded: readonly Item[], prior?: ActReferences) {
+    this.view = view;
     this.#recorded = prior ? prior.#recorded : new Set(recorded.map(item => item.id));
     if (prior) {
       for (const [key, value] of prior.#tokens) this.#tokens.set(key, value);
