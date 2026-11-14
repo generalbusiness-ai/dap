@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { gateScaleSelection, scaleGateDecision } from "./scale-selection.mjs";
 import { runScale, scaleResults } from "./scale-runner.mjs";
 import { scaleDeadline, scaleDeadlineFactor } from "../packages/scope/test/support/archive-scale-deadline.ts";
-import { scopeScaleFiles } from "../packages/scope/vitest.scale-files.ts";
+import { scopeScaleFiles, scopeScaleCaseCounts } from "../packages/scope/vitest.scale-files.ts";
 import { readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
@@ -24,23 +24,29 @@ test("scale deadlines retain local limits and multiply only an explicit runner f
   assert.throws(() => scaleDeadline(1_200_000, 2000), /timer range/);
 });
 
-test("the scale capture retains full process output and failures; its summary requires all six case results", () => {
+test("the scale capture retains full process output and failures; its summary requires every owner's case results", () => {
   const repository = resolve(fileURLToPath(new URL("..", import.meta.url))), scratch = mkdtempSync(join(tmpdir(), "scale-capture-"));
-  const modules = scopeScaleFiles.map((file, i) => ({ name: resolve(repository, "packages/scope", file), status: "passed", assertionResults: Array.from({ length: i === 0 ? 3 : 1 }, (_, n) => ({ fullName: `TEST witness ${i}:${n}`, status: "passed", duration: 1000 + i + n })) }));
-  const report = { testResults: modules, numTotalTests: 6, numPassedTests: 6, numFailedTests: 0, numPendingTests: 0, numTodoTests: 0, success: true };
+  const modules = scopeScaleFiles.map((file, i) => ({ name: resolve(repository, "packages/scope", file), status: "passed", assertionResults: Array.from({ length: scopeScaleCaseCounts[file] }, (_, n) => ({ fullName: `TEST witness ${i}:${n}`, status: "passed", duration: 1000 + i + n })) }));
+  const report = { testResults: modules, numTotalTests: 22, numPassedTests: 22, numFailedTests: 0, numPendingTests: 0, numTodoTests: 0, success: true };
   assert.equal(scaleResults(report, repository).complete, true);
   assert.equal(scaleResults({ ...report, testResults: modules.slice(1) }, repository).complete, false);
   assert.equal(scaleResults({ ...report, testResults: [...modules, modules[0]] }, repository).complete, false);
+  // The global total stays 22: a case moved to the wrong owner must still fail.
+  const redistributed = structuredClone(report);
+  redistributed.testResults[1].assertionResults.push(redistributed.testResults[0].assertionResults.pop());
+  const wrongOwner = scaleResults(redistributed, repository);
+  assert.equal(wrongOwner.complete, false);
+  assert.ok(wrongOwner.issues.some(issue => issue.startsWith("Expected 3 scale cases in owner:")));
   const failed = structuredClone(report);
   failed.testResults[0].status = "failed";
   Object.assign(failed.testResults[0].assertionResults[1], { status: "failed", duration: 600_000 });
-  Object.assign(failed, { numPassedTests: 5, numFailedTests: 1, success: false });
+  Object.assign(failed, { numPassedTests: 21, numFailedTests: 1, success: false });
   const failedResult = scaleResults(failed, repository);
-  assert.deepEqual([failedResult.complete, failedResult.passed, failedResult.failed, failedResult.cases[1].durationMs], [true, 5, 1, 600_000]);
+  assert.deepEqual([failedResult.complete, failedResult.passed, failedResult.failed, failedResult.cases[1].durationMs], [true, 21, 1, 600_000]);
   const command = join(scratch, "scripted-runner.mjs");
   writeFileSync(command, `import { writeFileSync } from 'node:fs';\nprocess.stdout.write('x'.repeat(3*1024*1024));\nprocess.stderr.write('TEST retained stderr\\n');\nwriteFileSync(process.argv.find(v=>v.startsWith('--outputFile=')).slice('--outputFile='.length), ${JSON.stringify(JSON.stringify(report))});\nprocess.exitCode=1;\n`);
   const output = join(scratch, "output"), result = runScale(output, { command: [process.execPath, command], repository });
-  assert.deepEqual([result.childExit, result.exitCode, result.passed, result.complete], [1, 1, 6, true]);
+  assert.deepEqual([result.childExit, result.exitCode, result.passed, result.complete], [1, 1, 22, true]);
   assert.equal(statSync(join(output, "scale.stdout.log")).size, 3 * 1024 * 1024);
   assert.equal(readFileSync(join(output, "scale.stderr.log"), "utf8"), "TEST retained stderr\n");
   assert.equal(readFileSync(join(output, "scale.exit"), "utf8"), "exit 1\n");
@@ -70,14 +76,82 @@ test("runtime families and their test owners select scale with literal full path
     assert.equal(decision.include, true, path);
     assert.deepEqual(decision.matchedPaths, [path]);
   }
-  // The planner explicitly leaves these shared inputs to the main run.
-  for (const path of ["packages/scope/test/fixtures-native.ts", "packages/scope/test/worker.ts",
-    "packages/scope/test/outside.ts", "apps/room/lanes/test/support/room.ts",
-    "packages/scope/src/sqlite.ts", "packages/derive/src/judge.ts", "package-lock.json"]) {
+  // GS1 includes shared Native state and fixtures; unrelated paths still omit.
+  for (const path of ["packages/scope/src/metrics.ts", "packages/client/src/mark-descriptions.ts", "package-lock.json"]) {
     assert.equal(scaleGateDecision({ head, main, changedPaths: [path] }).include, false, path);
   }
   assert.throws(() => scaleGateDecision({ head: "a", main, changedPaths: [] }), /exact heads/);
   assert.throws(() => scaleGateDecision({ head, main, changedPaths: [null] }), /complete changed-path/);
+});
+
+test("GS1 moved Native cases, their fixtures and actual production boundaries select scale", () => {
+  for (const path of [
+    "packages/contract/src/bounds.ts",
+    "packages/cli/test/fixed-slot-membership.scope.test.ts", "packages/scope/test/floor-kept.test.ts",
+    "apps/room/lanes/test/directory-partition-capacity.scope.test.ts",
+    "apps/room/lanes/test/certified-rules-hardening-budget.scope.test.ts",
+    "packages/scope/test/archive-installed-scale.test.ts", "packages/scope/test/evidence-rules-real-scale.test.ts",
+    "apps/room/lanes/test/directory-partition-lanes-scale.scope.test.ts",
+    "apps/room/lanes/test/manifest-tree-scale.scope.test.ts", "apps/room/lanes/test/demo-scale.scope.test.ts",
+    "packages/scope/test/archive-installed.fixture.ts", "packages/scope/test/evidence-rules-real.fixture.ts",
+    "apps/room/lanes/test/directory-partition-lanes.scope.fixture.ts",
+    "apps/room/lanes/test/manifest-tree.scope.fixture.ts", "apps/room/lanes/test/demo.scope.fixture.ts",
+    "packages/scope/test/evidence-rules-real.test.ts", "apps/room/lanes/test/demo.scope.test.ts",
+    "apps/room/lanes/test/manifest-tree.scope.test.ts", "packages/cli/test/fixed-slot-membership.scope.test.ts",
+    "packages/platform/src/base-membership.ts", "packages/platform/src/membership.ts",
+    "packages/derive/src/program/guard-value.ts", "packages/derive/src/judge.ts", "packages/derive/src/fold.ts",
+    "packages/cli/src/command-verify.ts", "packages/cli/src/verification.ts", "packages/replay/src/verify.ts",
+    "packages/scope/src/core.ts", "packages/scope/src/turn.ts", "packages/scope/src/sqlite.ts", "packages/scope/src/operations.ts",
+    "packages/scope/src/partition-proof.ts", "packages/scope/src/receiver-reads.ts", "packages/scope/src/native-birth.ts",
+    "packages/scope/src/proof-bytes.ts", "packages/scope/src/read-preparation.ts",
+    "packages/platform/src/partition-provenance.ts", "packages/platform/src/destination-budget-v15.ts",
+    "packages/platform/src/destination-v15.ts", "packages/platform/src/destination.ts",
+    "packages/platform/src/rules-certificate-v15.ts", "packages/platform/src/rules-policy-v11.ts",
+    "packages/platform/src/destination-evidence-v17.ts", "packages/platform/src/evidence-holds-v17.ts",
+    "packages/platform/src/destination-evidence-capacity-v17.ts", "packages/platform/src/destination-evidence-funding-v17.ts",
+    "packages/platform/src/reservation-v17.ts", "packages/platform/src/destination-v17.ts",
+    "packages/platform/src/evidence-incident-origin-v17.ts", "packages/platform/src/evidence-index-v17.ts",
+    "packages/platform/src/evidence-decision-v17.ts", "packages/platform/src/reservation.ts",
+    "packages/platform/src/archive-binding.ts", "packages/platform/src/archive-replay-code.ts",
+    "apps/room/archive.ts", "apps/room/archive-policy.ts",
+    "packages/scope/test/support/maintained-applications-setup.ts",
+    "packages/scope/test/support/maintained-applications-child.ts",
+    "packages/scope/test/support/maintained-applications.ts",
+    "packages/scope/test/fixtures.ts",
+    "packages/scope/test/fixtures-core.ts",
+    "examples/grow/prepare-demo.ts",
+    "examples/grow/prepare-check.ts",
+    "examples/grow/demo-definitions.ts",
+    "examples/grow/room.ts",
+    "examples/grow/site.ts",
+    "examples/grow/definitions/room.json",
+    "examples/grow/definitions/site.json",
+    "examples/grow/check/dap.application.json",
+    "examples/grow/check/site-scenario.json",
+    "examples/grow/check/fault-scenario.json",
+    "examples/grow/check/index.html",
+    "examples/grow/check/grid.html",
+    "examples/grow/check/site.html",
+    "examples/grow/demo/simulator.json",
+    "packages/cli/src/application-files.ts",
+    "packages/platform/src/application-codec/application-package-v2.ts",
+ "packages/cli/src/archive-remote.ts",
+    "packages/cli/src/clone-outcome.ts", "packages/cli/src/command-repository.ts", "packages/cli/src/command-change.ts",
+    "packages/scope/src/worker.ts",
+    "packages/scope/src/object.ts", "packages/scope/src/stage-snapshot.ts", "packages/scope/src/destination-host.ts",
+    "packages/checkers/src/service.ts", "packages/checkers/src/reservation-snapshot.ts", "packages/checkers/src/job.ts",
+    "scripts/demo/rehearse.ts", "packages/scope/src/artifacts-wiring.ts", "packages/scope/src/github-wiring.ts",
+    "packages/scope/src/site/route.ts", "apps/room/worker.ts",
+    "packages/scope/test/fixtures-native.ts", "packages/scope/test/worker.ts", "packages/scope/test/outside.ts",
+    "packages/scope/test/definition-corpus-data.ts", "packages/scope/test/support/native-fixture-lifetime.ts",
+    "packages/scope/test/support/serving-startup.ts", "packages/scope/test/support/session-room.ts",
+    "packages/scope/test/repository.ts", "packages/scope/test/session-settings.ts", "packages/scope/test/support.ts",
+    "apps/room/lanes/test/support/room.ts", "apps/room/lanes/test/support/graph.ts",
+  ]) {
+    const decision = scaleGateDecision({ head, main, changedPaths: [path] });
+    assert.equal(decision.include, true, path);
+    assert.deepEqual(decision.matchedPaths, [path]);
+  }
 });
 
 

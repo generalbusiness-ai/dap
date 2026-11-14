@@ -2,18 +2,21 @@ import { spawnSync } from "node:child_process";
 import { closeSync, mkdirSync, openSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { scopeScaleFiles } from "../packages/scope/vitest.scale-files.ts";
+import { scopeScaleCaseCounts } from "../packages/scope/vitest.scale-files.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const expectedCases = Object.values(scopeScaleCaseCounts).reduce((sum, count) => sum + count, 0);
 
 /** Reconcile the runner's report without reading its potentially large logs. */
 export function scaleResults(report, repository = root) {
   const issues = [], cases = [], files = new Set();
-  const owners = new Set(scopeScaleFiles.map(file => relative(repository, resolve(repository, "packages/scope", file))));
+  const owners = new Map(Object.entries(scopeScaleCaseCounts).map(([file, count]) =>
+    [relative(repository, resolve(repository, "packages/scope", file)), count]));
   for (const module of report?.testResults ?? []) {
     const file = typeof module.name === "string" ? relative(repository, resolve(module.name)) : "";
     if (!owners.has(file) || files.has(file)) issues.push("Unexpected or duplicate scale owner: " + file);
     files.add(file);
+    if (owners.has(file) && (module.assertionResults ?? []).length !== owners.get(file)) issues.push(`Expected ${owners.get(file)} scale cases in owner: ${file}`);
     for (const test of module.assertionResults ?? []) {
       const durationMs = typeof test.duration === "number" && Number.isFinite(test.duration) && test.duration >= 0 ? test.duration : null;
       cases.push({ file, name: test.fullName, status: test.status, durationMs });
@@ -21,10 +24,10 @@ export function scaleResults(report, repository = root) {
     }
     if (module.status !== "passed" && !(module.assertionResults ?? []).some(test => test.status === "failed")) issues.push("Scale owner failed outside a case: " + file);
   }
-  if (files.size !== owners.size || cases.length !== 6) issues.push("Expected all six scale cases in four complete owners");
+  if (files.size !== owners.size || cases.length !== expectedCases) issues.push(`Expected all ${expectedCases} scale cases in ${owners.size} complete owners`);
   if (new Set(cases.map(test => JSON.stringify([test.file, test.name]))).size !== cases.length) issues.push("Duplicate scale case result");
   const passed = cases.filter(test => test.status === "passed").length, failed = cases.filter(test => test.status === "failed").length;
-  if (report?.numTotalTests !== cases.length || report?.numPassedTests !== passed || report?.numFailedTests !== failed || report?.numPendingTests !== 0 || report?.numTodoTests !== 0 || report?.success !== (passed === 6 && failed === 0)) issues.push("Scale report totals disagree with case results");
+  if (report?.numTotalTests !== cases.length || report?.numPassedTests !== passed || report?.numFailedTests !== failed || report?.numPendingTests !== 0 || report?.numTodoTests !== 0 || report?.success !== (passed === expectedCases && failed === 0)) issues.push("Scale report totals disagree with case results");
   return { cases, issues, passed, failed, complete: issues.length === 0 };
 }
 
@@ -42,7 +45,7 @@ export function runScale(directory, { command = ["npm", "run", "test:scale", "--
   let summary;
   try { summary = scaleResults(JSON.parse(readFileSync(resolve(out, "scale.json"), "utf8")), repository); }
   catch { summary = { cases: [], issues: ["No readable complete Vitest JSON report; inspect the retained stdout and stderr"], passed: 0, failed: 0, complete: false }; }
-  const exitCode = child.status === 0 && summary.complete && summary.passed === 6 ? 0 : child.status || 1;
+  const exitCode = child.status === 0 && summary.complete && summary.passed === expectedCases ? 0 : child.status || 1;
   const result = { childExit: child.status, signal: child.signal, spawnError: child.error?.message ?? null, exitCode, elapsedMilliseconds: performance.now() - started, ...summary };
   writeFileSync(resolve(out, "result.json"), JSON.stringify(result, null, 2) + "\n");
   writeFileSync(resolve(out, "scale.exit"), "exit " + exitCode + "\n");
