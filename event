@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:33cf80cc530059687274bce3f9e3c820cb235b61","text":"Merge retired a covered predecessor; the successor is at scripts/register-values.test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:340c37523027d993d8384c11943bd42f989f5b36","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/validate-table-data.ts."}
