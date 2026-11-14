@@ -17,7 +17,7 @@ import type { Receipt } from "./entry.ts";
 export type RefusalReason = FloorRefusal | "archived"
   | "revision-moved" | "alias" | "duplicate-relation" | "required-unset" | "scope-full"
   | "bad-intent"        // the signature, the shape, `expected` or `notAfter` is not what an intent must be
-  | "misaddressed"      // `to` is not this scope and incarnation
+  | "misaddressed"      // `to` is not this scope at this genesis
   | "expired"           // the commit clock is at or past `notAfter`
   | "scope-refused"     // the scope's genesis was refused; it admits nothing
   | "application-revoked" // deployment trust no longer admits new acts under this installed release; no entry is written
@@ -67,7 +67,7 @@ export type RoutingRefusal = "wrong-genesis" | "not-found";
 /** Why the validator refuses a definition, as far as the contract names it (section 6.4). */
 export type DefinitionRefusal = "genesis-timed";
 
-/** A creator already holds a creation result with another incarnation (section 2.2). */
+/** A creator already holds a creation result with another genesis (section 2.2). */
 export type CreationConflict = "genesis-conflict";
 
 /** The head an answer was judged at. A refusal is a statement about that head only. */

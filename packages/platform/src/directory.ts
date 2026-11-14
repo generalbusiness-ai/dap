@@ -424,17 +424,18 @@ const repositoryOf = (state: Pick<StateView, "page">): Item | null => state.page
 /**
  * Where a directory records its membership reference (section 3.3, the
  * table of four rows): the slot `repository.membership`, which the `applied`
- * clause of its own `create` sets, with the incarnation that the directory
+ * clause of its own `create` sets, with the genesis that the directory
  * confirmed. Null: the slot is not set yet, and then the directory admits
  * no act that needs a grant (section 12.1.2, "What the directory admits").
  */
 export function directoryMembership(state: Pick<StateView, "page">): ScopeRef | null {
-  // The slot's type is a scope of the kind `membership`, which the commit checked when the clause set it.
+  // The `applied` clause of the membership `create` set the slot. The create-result admission checked the result's source kind against
+  // the seed's kind, `membership` (derive/src/delivery.ts, `result`).
   const held: unknown = repositoryOf(state)?.refs["membership"];
   return isScopeRef(held) ? held : null;
 }
 
-/** The rules scope confirmed by this directory's creation result, including its incarnation. */
+/** The rules scope confirmed by this directory's creation result, including its genesis. */
 export function directoryRulesScope(state: Pick<StateView, "page">): ScopeRef | null {
   const held: unknown = repositoryOf(state)?.refs["rules"];
   return isScopeRef(held) ? held : null;

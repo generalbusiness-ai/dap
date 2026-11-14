@@ -38,7 +38,7 @@ const stored = (name: ScopeId, under: ValidDefinition) => runInDurableObject(obj
   const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
   const scope = store.scope(), last = scope ? store.stored(scope.head.seq) : null;
   const pending = last ? reserved(store, under, (JSON.parse(last.bytes) as Entry).input) : null;
-  return { scope, bytes: store.logicalBytes(), pending, retained: state.storage.sql.exec<{ kind: string; digest: string; bytes: string }>("SELECT kind, digest, bytes FROM retained_input ORDER BY kind, digest").toArray() };
+  return { scope, bytes: store.logicalBytes(), retainedBytes: store.retainedBytes(), pending, retained: state.storage.sql.exec<{ kind: string; digest: string; bytes: string }>("SELECT kind, digest, bytes FROM retained_input ORDER BY kind, digest").toArray() };
 });
 
 async function history(whole: boolean, ceiling?: number) {
@@ -154,17 +154,34 @@ test("a provisional birth funds its retained confirmation source at equality, ac
   } finally { small.cleanup(); }
 });
 
-test("omitting capacity keeps provisional confirmation's legacy entry count and byte-ceiling behavior", async () => {
-  const old = await history(false, 0);
+// Rulings 1064d0de and 0c196f9a: without the opt-in, `scopeBytes` bounds all retained rows. A creation that
+// would leave them above it is answered `retry` `scope-full`. The confirmation settles the creation, so it passes the stop.
+test("omitting capacity keeps provisional confirmation's legacy entry count; scopeBytes bounds all retained rows, and the confirmation passes", async () => {
+  const measured = await history(false);
+  let retainedBytes: number;
+  try {
+    expect(measured.birth).toMatchObject({ answer: "recorded" });
+    retainedBytes = (await stored(measured.child, measured.under.child)).retainedBytes;
+    expect(retainedBytes).toBeGreaterThan(0);
+  } finally { measured.cleanup(); }
+  const over = await history(false, retainedBytes! - 1);
+  try {
+    expect(over.birth).toEqual({ answer: "retry", reason: "scope-full", name: "scopeBytes" });
+    expect(await stored(over.child, over.under.child)).toMatchObject({ scope: null, retainedBytes: 0, retained: [] });
+  } finally { over.cleanup(); }
+  const old = await history(false, retainedBytes!);
   try {
     expect(old.birth).toMatchObject({ answer: "recorded" });
     const before = await stored(old.child, old.under.child);
+    expect(before.retainedBytes).toBe(retainedBytes!);
     expect(before.scope?.status).toBe("provisional");
     expect(before.pending).toEqual({ entries: 2, items: 0, records: 0, bytes: 0, requests: 0 });
     const { envelope } = await confirmationFrom(old.child, old.parent);
     await evictDurableObject(objectOf(old.child));
     expect(await peer(old.child).deliver(envelope)).toMatchObject({ answer: "recorded" });
-    expect((await stored(old.child, old.under.child)).pending).toEqual({ entries: 1, items: 0, records: 0, bytes: 0, requests: 0 });
+    const confirmed = await stored(old.child, old.under.child);
+    expect(confirmed.pending).toEqual({ entries: 1, items: 0, records: 0, bytes: 0, requests: 0 });
+    expect(confirmed.retainedBytes).toBeGreaterThan(retainedBytes!);
     expect(await stubOf(old.child).checkpoint()).toMatchObject({ answer: "written" });
     expect((await stored(old.child, old.under.child)).pending).toEqual({ entries: 0, items: 0, records: 0, bytes: 0, requests: 0 });
     const replayed = await verify(source(), { mode: "replay", scope: old.child, grants: "as-recorded", bounds: { ...bounds, scopeBytes: 0 } });

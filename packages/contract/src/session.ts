@@ -27,7 +27,7 @@ export const SESSION_DOMAINS = { token: "artroom-session-1", request: "artroom-s
  * A device's request for a read session. It follows the one form of a
  * signed direct request (authority note, section 4.2), less the members
  * that have no meaning here: `to` is the membership scope with its
- * incarnation, which is the repository's membership reference; `actor` is
+ * genesis, which is the repository's membership reference; `actor` is
  * the device key that signs; `operation` is an operation identity, a new
  * one for each request; and `notAfter` is at most 15 minutes ahead.
  * Exactly these members. A request is answered with a session once: the
@@ -39,7 +39,7 @@ export interface SignedSessionRequest { request: SessionRequest; sig: Base64Url 
 
 /**
  * What a session's token names (section 3.9): the deployment; the
- * membership scope and its incarnation; the member and the key; the reads
+ * membership scope and its genesis; the member and the key; the reads
  * that the member's role may make in that repository's scopes; and the end
  * time, which membership's clock wrote. Exactly these members.
  */
@@ -51,7 +51,7 @@ export interface SessionClaims { v: 1; deployment: string; membership: ScopeRef;
  * `bad-request`: the size, the shape, the signature, or a `notAfter` further
  * ahead than a signed request may have. `not-found`: the scope is no active
  * membership scope. `misaddressed`: the request is to another scope or
- * incarnation. `clock-behind`: the scope's clock reads earlier than its
+ * genesis. `clock-behind`: the scope's clock reads earlier than its
  * previous entry's time. `expired`: the reading is at or past `notAfter`.
  * `unauthorized`: the key is not an active key of an active member.
  * `replayed`: that key was already given a session for that operation
@@ -102,7 +102,7 @@ export type SignedReadName = "summary" | "history" | "entry" | "log" | "retained
  * and no read: its tag, `artroom-mcp-control-1`, is a tag of nothing else.
  *
  * - `service`: the origin of the Worker the request is for.
- * - `membership`: the repository's membership scope, with its incarnation.
+ * - `membership`: the repository's membership scope, with its genesis.
  * - `agent`: the agent object's ID, or null for `create`.
  * - `actor`: the member key that signs.
  * - `body`: the SHA-256 digest of the canonical request body.
