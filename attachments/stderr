@@ -1,0 +1,3 @@
+(node:37868) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:37868) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time

@@ -1,0 +1,12 @@
+{
+  "exit": 0,
+  "wall": "real 0.97\nuser 0.45\nsys 0.14",
+  "fileBoundaries": 17,
+  "newWholeRows": 8,
+  "changedExistingWholeRows": 8,
+  "namedSelectors": [
+    "$module",
+    "ScopeObject"
+  ],
+  "expectedSourceWritten": false
+}

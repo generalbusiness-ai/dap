@@ -1,0 +1,139 @@
+{
+  "sourceHead": "9011b593aa1dfdc0dcab05b5e443630c5b0687f3",
+  "sourceTree": "cfc137dc01d92097c1948400b876d75bd3e76714",
+  "parser": "scripts/security-entry-points.mjs maintained sourceSeal/namedSourceSeals",
+  "rows": [
+    {
+      "file": "apps/room/archive-identity.ts",
+      "extraction": "sourceSeal",
+      "old": null,
+      "proposed": "1d96727f139ac309b5632c1aa9b1b0b2e51dd0e204b5ebcaabe52f5d06042089",
+      "changed": true
+    },
+    {
+      "file": "apps/room/archive-packages.ts",
+      "extraction": "sourceSeal",
+      "old": null,
+      "proposed": "9d4b79b973a7b7576f133462a80d48f34d9414af9aea61cc203242d2d7fcac34",
+      "changed": true
+    },
+    {
+      "file": "apps/room/archive-setup-cost.ts",
+      "extraction": "sourceSeal",
+      "old": null,
+      "proposed": "ff70caaf56adfc4501cb1fe6606fa7f9283f2207b7e2d50d29063d9e9d41baed",
+      "changed": true
+    },
+    {
+      "file": "packages/platform/src/application-archive-reader.ts",
+      "extraction": "sourceSeal",
+      "old": null,
+      "proposed": "16aa46853d0e675f1ad616cc426ef8be717132b0efd57b8b555ad07912aa1c88",
+      "changed": true
+    },
+    {
+      "file": "packages/scope/src/applications/archive-proof.ts",
+      "extraction": "sourceSeal",
+      "old": null,
+      "proposed": "163a8b2f7710752ee09e24d4b81704bc2fe8ce1484ad4a58b42edb9a89d5004b",
+      "changed": true
+    },
+    {
+      "file": "packages/scope/src/archive-budget.ts",
+      "extraction": "sourceSeal",
+      "old": null,
+      "proposed": "50cb6ffeedf9a3f03a065cd4b36ae724e65fdcc60cc907e30e69d56b65f410f4",
+      "changed": true
+    },
+    {
+      "file": "packages/scope/src/archive-adaptive.ts",
+      "extraction": "sourceSeal",
+      "old": null,
+      "proposed": "ddf7c2ec284340fe10b965d73e373ca639563cdad19dcbd510b5e7b2b83953b8",
+      "changed": true
+    },
+    {
+      "file": "packages/scope/src/archive-row-cost.ts",
+      "extraction": "sourceSeal",
+      "old": null,
+      "proposed": "cb9a949c1f9a0d8be8dc678b0c82371ab2f25cf51d980e25a8bf6f21f7178855",
+      "changed": true
+    },
+    {
+      "file": "apps/room/worker.ts",
+      "extraction": "sourceSeal",
+      "old": "aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67",
+      "proposed": "0460fe0647f5494a0ed8fb38ff49a09bdf5d7c89b2fadf988ffd446be8aa465d",
+      "changed": true
+    },
+    {
+      "file": "apps/room/worker.grow.ts",
+      "extraction": "sourceSeal",
+      "old": "e5406bd609c8da87eae5ac49255c212e4711e0b8bef65bf648f90d23c928de36",
+      "proposed": "c525a1b0d13e6243099d03b80c5207b76f082c71432db2b8ecaf86ccf8cb1160",
+      "changed": true
+    },
+    {
+      "file": "apps/room/archive-policy.ts",
+      "extraction": "sourceSeal",
+      "old": "7ae44bad96028f44a3107adbd3c9936c67375438bcd0396f8606b37c5dce727f",
+      "proposed": "3723eb633f5da1572d3adc3c1321de3e37cd3a0ee2ea3da77186d6a7b374483c",
+      "changed": true
+    },
+    {
+      "file": "apps/room/archive.ts",
+      "extraction": "sourceSeal",
+      "old": "f48d094c318ffdd1012f5917ba7997477285e165555d05cacf18a8fd388e2d8f",
+      "proposed": "7a9e7aa6f3a1f38245f6dafcf526afcd27f1893462f89f287f69f4bd0997f8df",
+      "changed": true
+    },
+    {
+      "file": "packages/scope/src/archive-host-item.ts",
+      "extraction": "sourceSeal",
+      "old": "b5e7e65542613603b5ace32572067d6449f0101bf569f697889ffb82c4299b28",
+      "proposed": "72a9e8b4364fba877df3502f11bd71de4f9ae2076cbd490744aaedd7e3ca8602",
+      "changed": true
+    },
+    {
+      "file": "packages/scope/src/archive-driver.ts",
+      "extraction": "sourceSeal",
+      "old": "a8115888e3f21a5529173c3fddcb9c3317035881dcc7ca6c13c7c532136c6a5b",
+      "proposed": "388b95a5509123b3d2247b1fef682081fb05d748e67b03e8a2e0bc71db256545",
+      "changed": true
+    },
+    {
+      "file": "packages/scope/src/archive-row.ts",
+      "extraction": "sourceSeal",
+      "old": "5def61284f023e083eb03a7c605b5c2008e2460384d1c1669e48d7d435b77c71",
+      "proposed": "0dd79bd4d3c519457a1fc232d7c1f33d48f04aa6569ee4c8bdc0072a737519a9",
+      "changed": true
+    },
+    {
+      "file": "packages/scope/src/archive-operator.ts",
+      "extraction": "sourceSeal",
+      "old": "28890e3e30348c9f84a5e59b8a1d4e19584e0389dfa2623e7b2fc5c3cb9e963a",
+      "proposed": "8fca4c14a1fd93a21f5a707c60ef8fb6f8249b644fe32f367ce0321f975091b8",
+      "changed": true
+    },
+    {
+      "file": "packages/scope/src/object.ts",
+      "extraction": "namedSourceSeals",
+      "selectors": [
+        "$module",
+        "ScopeObject"
+      ],
+      "values": {
+        "$module": {
+          "old": "6316c9c49d3379a9d4d7b45233119cd8e102d09beed207051c10ed617d25d912",
+          "proposed": "61e64e92aebf2a3c602365b09d982b68ab0d7a348a1bc2b6232455b2bbf2079e",
+          "changed": true
+        },
+        "ScopeObject": {
+          "old": "5cac901a7ab4d7c00983aeeae397fb4e6393d788194808d59ee6ffc68ae0001b",
+          "proposed": "4c656dbca3dfb49f958e81ca12acb83e5b748482b67d7c70d64204d5294add92",
+          "changed": true
+        }
+      }
+    }
+  ]
+}
