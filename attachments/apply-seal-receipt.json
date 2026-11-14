@@ -1,0 +1,14 @@
+{
+  "sealedAt": "2026-11-14T12:38:22.677077+00:00",
+  "retainUntil": "2026-12-14T12:38:22.677077+00:00",
+  "minimumRetentionDays": 30,
+  "evidenceDirectory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-identifiers-apply-attempt1",
+  "manifestSha256": "4e2eeab958b7e0fae9c5b59e48a800ad1f21a54f9f5d8b818613b132ef823df5",
+  "sha256SumsSha256": "83a4872752be9864f2d8567fa7732c6392993760acf3984437983320f04c6a18",
+  "payloadFiles": 27,
+  "checksumRows": 28,
+  "verifiedReadOnlyFiles": 29,
+  "verifiedReadOnlyDirectories": 2,
+  "head": "0012cdf93d4bc8d7b3a0212f5ec9c74cbaa33f87",
+  "tree": "009a3609359a809013967225f0f5e470375d13d6"
+}

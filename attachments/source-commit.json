@@ -1,0 +1,16 @@
+{
+  "head": "0012cdf93d4bc8d7b3a0212f5ec9c74cbaa33f87",
+  "tree": "009a3609359a809013967225f0f5e470375d13d6",
+  "parent": "37c1092133c2829a16688f1c595bb0983fc03b70",
+  "subject": "Refresh Lending and Counter presentation identifiers",
+  "changedPaths": [
+    "apps/counter/release-identifiers.json",
+    "examples/lending/release-identifiers.json"
+  ],
+  "cleanStatus": "",
+  "originBranch": "0012cdf93d4bc8d7b3a0212f5ec9c74cbaa33f87",
+  "main": "918ce5d73c215154d88005b74c2a97b58d61880a",
+  "originMain": "918ce5d73c215154d88005b74c2a97b58d61880a",
+  "powerSamples": 4,
+  "sourceStepQualification": "Source commit and existing-origin push after successful supervised apply; no reproduction"
+}
