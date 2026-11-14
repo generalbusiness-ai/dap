@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dad0e1c3ba03d2c6617270f965fe33f3a88fb30f","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-head-a-current-roots.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e3674da456ef4475d47e32eea610cebc53c07778","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.lending.jsonc."}
