@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6488532286c885b77681157246dfb625b9e79f17","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-ie1-fg1-doc-checks.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6bb051fa4a30af91d7721c724e8d6d66096c7b22","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/item-effects.ts."}
