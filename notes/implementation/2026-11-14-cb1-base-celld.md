@@ -9,7 +9,41 @@ The original branch `builder/cb1-base-celld-20261114` starts at reviewed main
 The source-only composition `builder/cb1-on-combined-source-20261114`
 starts at combined head `0eb5a1aaf4174b728745d331507900f759f64e00`.
 It carries the single CB-1 feature commit without dependency merges or
-conflict resolutions. Integration with the later main remains owed.
+conflict resolutions. The integration below takes the later main.
+
+## Current source integration and attestation
+
+Branch `builder/cb1-main-attestation-20261114` preserves source head
+`efdb4c874a9664414fae7d51c5cb5cfbc9cc7280` and merges main
+`336dd74e990f057834ac8b2edc92a4287315ec8c` without conflicts.
+Merge `ef399092a50447e2ca6734534f06d6bce58cdc53` has tree
+`30d8309bc1c7a9930b1be5d1d445d3564021f577`.
+The original branch, dependency view, and development outputs remain intact.
+
+The only test expectation change adopts the reviewed AST seal
+`e13a31cfa361891571369a4b976abe053189285547b9238d2a80bfabb19fc2f0`
+for `packages/platform/src/version-questions.ts`.
+Ruling `4d03ff1dda006ad8ff50a29ea471001ff46218ae` approved its two Register 28
+additions. The source has Git blob `912e80776291071449ddb7eea59db78e4c247612`,
+identical to the source reviewed for AE-1 adoption commit
+`5e8d4a63284854eabd9c86bdb9e0645f22e6e727`.
+The maintained parser, `scripts/security-entry-points.mjs`, has identical
+blob `0fe3f77ad139a4e4402b15ad26bc6c9473d1df83` in both lanes.
+The existing whole-module selector calls `sourceSeal`, which hashes the
+normalized TypeScript AST from `rolldown/parseAst`. This is not a raw-file hash.
+This follow-up reuses the reviewed result without recalculating the AST,
+changing the selector, or updating any other expectation.
+
+The earlier AE-1 owner failed with actual `e13a31cf` against retained `069eaf4c`.
+Its 12 cases ended with 11 passes and one failure. The output remains at
+`/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-development-attempt2/security-entry-points.stdout.log`
+with SHA-256 `d4f167e73793c6053324281d0cda925e8247ee6f2dba3a4218978381ebf91c29`.
+That failed run supplies the adopted result, not a passing CB-1 owner result.
+All runtime checks at this new checkpoint remain UNRUN. The historical
+development results below retain their original scope. Fleet and CB-2
+obligations remain open.
+
+## Base-family source changes
 
 The normal celld smoke plan now uses the CLI's `base` default.
 `celldPreparedNoHostRegister` admits Register 28 beside retained Registers
