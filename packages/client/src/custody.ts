@@ -70,7 +70,8 @@
  */
 
 import type { Answer, Beside, DeclaredDefinition, Digest, FactRef, Head, KeyId, PlatformDefinition, Receipt, RefusalReason, ScopeRef, Settlement, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
-import { REFUSAL_CLASSES, canonicalize, digestBytes, intentDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { REFUSAL_CLASSES, canonicalize, digestBytes, intentDigest, isDefinitionName, isDigest, isFactRef, isKeyId, isReceipt, isRecord, isScopeRef, isSignedIntentShape, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { ANSWERS } from "./answers.ts";
 import { sendableAt } from "./originals.ts";
 import { StoreFormatError } from "./store-format-error.ts";
 
@@ -248,6 +249,55 @@ export class Lost extends Error {}
 const keyBytes = (key: unknown): boolean => typeof key === "string" && utf8(key).length >= 1 && utf8(key).length <= KEY_BYTES;
 export const validKey = keyBytes;
 
+/** Admit store-owned structure, not authority. Receipt and signature proof still belongs to the caller's trusted ports. */
+export function readStoredOutcome(value: unknown): StoredOutcome {
+  const natural = (n: unknown): n is number => Number.isSafeInteger(n) && !Object.is(n, -0) && (n as number) >= 0;
+  if (!isRecord(value) || typeof value["at"] !== "string" || timeMs(value["at"]) === null || !natural(value["attempt"]) || value["attempt"] < 1 ||
+    (value["signing"] !== undefined && value["signing"] !== null && !natural(value["signing"]))) throw new CustodyError({ held: "unreadable" });
+  const kinds = ["lost", "answer", "settled", "archivedSettlement", "folded"].filter((key) => Object.hasOwn(value, key));
+  if (kinds.length !== 1 || (value["signing"] === null && kinds[0] !== "folded")) throw new CustodyError({ held: "unreadable" });
+  const body = value[kinds[0]!];
+  if (kinds[0] === "lost" ? body !== true : !isRecord(body)) throw new CustodyError({ held: "unreadable" });
+  if ((kinds[0] === "answer" && !ANSWERS.submit(body)) || (kinds[0] === "settled" && !isReceipt(body)) ||
+    (kinds[0] === "archivedSettlement" && (!ANSWERS.settle(body) || body.ok || body.reason !== "archived")) ||
+    (kinds[0] === "folded" && (!isRecord(body) || !isFactRef(body["fact"]) || !isDigest(body["intent"])))) throw new CustodyError({ held: "unreadable" });
+  return value as unknown as StoredOutcome;
+}
+
+/** Browser storage admission uses the existing wire guards. Generic trusted stores and `Custody.#read` keep their version path. */
+export function readStoredCustodyRecord(value: unknown): StoredCustodyRecord {
+  const bad = (): never => { throw new CustodyError({ held: "unreadable" }); };
+  const natural = (n: unknown): n is number => Number.isSafeInteger(n) && !Object.is(n, -0) && (n as number) >= 0;
+  const envelope = (v: unknown): v is Envelope => isRecord(v) && isRecord(v["beside"]) && isSignedIntentShape(v["signed"]);
+  if (!isRecord(value) || (value["v"] !== 1 && value["v"] !== 2)) return bad();
+  const identity = value["identity"], binding = value["binding"];
+  if (!isRecord(identity) || typeof identity["service"] !== "string" || !isKeyId(identity["signer"]) || !validKey(identity["key"]) ||
+    (identity["membership"] !== null && !isScopeRef(identity["membership"])) ||
+    !(isScopeRef(identity["target"]) || (isRecord(identity["target"]) && isDefinitionName(identity["target"]["create"]))) ||
+    !isRecord(binding) || typeof binding["definition"] !== "string" || typeof binding["kind"] !== "string" || !isDefinitionName(binding["pinned"]) ||
+    (binding["declaration"] !== null && !isDigest(binding["declaration"])) || !isDigest(value["meaning"]) || !envelope(value["envelope"]) ||
+    !["prepared", "sent", "unknown", "accepted", "archived", "refused", "mismatch", "settled"].includes(value["phase"] as string) ||
+    !natural(value["count"]) || !natural(value["attempt"]) || value["attempt"] < 1 || !isRecord(value["steps"]) ||
+    typeof value["created"] !== "string" || timeMs(value["created"]) === null || typeof value["updated"] !== "string" || timeMs(value["updated"]) === null ||
+    !Array.isArray(value["outcomes"]) || value["outcomes"].length > value["count"]) return bad();
+  for (const outcome of value["outcomes"]) readStoredOutcome(outcome);
+  for (const step of Object.values(value["steps"])) if (!isRecord(step) || !isDigest(step["intent"]) || !isScopeRef(step["resource"]) ||
+    typeof step["capability"] !== "string" || typeof step["step"] !== "string" || !["prepared", "sent", "unknown", "answered"].includes(step["phase"] as string) ||
+    !Array.isArray(step["answers"]) || !step["answers"].every(answer => isRecord(answer) && typeof answer["at"] === "string" && timeMs(answer["at"]) !== null && (answer["answer"] === null || ANSWERS.submit(answer["answer"])))) return bad();
+  if (value["v"] === 2) {
+    const signings = value["signings"];
+    if (!Array.isArray(signings) || signings.length < 1 || signings.length > SIGNINGS_MOST) return bad();
+    for (const signing of signings) if (!isRecord(signing) || !isDigest(signing["intent"]) || !isDigest(signing["meaning"]) ||
+      typeof signing["notAfter"] !== "string" || timeMs(signing["notAfter"]) === null ||
+      (signing["dead"] !== undefined && signing["dead"] !== "never" && signing["dead"] !== "expired") ||
+      (signing["closed"] !== undefined && signing["closed"] !== true) || (signing["envelope"] !== undefined && !envelope(signing["envelope"]))) return bad();
+    for (const outcome of value["outcomes"]) if (outcome.signing !== null && (!natural(outcome.signing) || outcome.signing >= signings.length)) return bad();
+    const latest = signings.at(-1)!;
+    if (latest.intent !== intentDigest(value["envelope"].signed.intent) || latest.meaning !== value["meaning"] || latest.notAfter !== value["envelope"].signed.intent.notAfter) return bad();
+  }
+  return value as unknown as StoredCustodyRecord;
+}
+
 /** What a call under custody gives back: the outcome, and whether it was sent now or kept from before. */
 export type Sent = { record: CustodyRecord; answer: Answer; retained: boolean }
   | { record: CustodyRecord; archivedSettlement: ArchivedSettlement; retained: true }
@@ -331,7 +381,18 @@ export class Custody {
     try { return await work(); } finally { await release(); }
   }
 
-  /** The record under `id`, as version 2. This is the one place that reads a record's version. */
+  /** Enter delivery through the existing store fence, then release admission before awaiting the network. */
+  async #dispatch<T>(work: () => Promise<T>): Promise<T> {
+    let pending!: Promise<{ value: T } | { error: unknown }>;
+    await this.store.exclusive(async () => {
+      pending = work().then(value => ({ value }), error => ({ error }));
+    });
+    const result = await pending;
+    if ("error" in result) throw result.error;
+    return result.value;
+  }
+
+  /** The record under `id`, as version 2. This is the one place that upgrades a stored record's version. */
   async #read(id: string): Promise<CustodyRecord | null> {
     let stored: StoredCustodyRecord | null;
     try { stored = await this.store.read(id); } catch (error) { if (error instanceof StoreFormatError) throw error; throw new CustodyError({ held: "unreadable" }); }
@@ -552,7 +613,7 @@ export class Custody {
       const signing = record.signings.length - 1;
       let answer: Answer;
       try {
-        answer = await deliver(record.envelope);
+        answer = await this.#dispatch(() => deliver(record.envelope));
       } catch (error) {
         if (!(error instanceof Lost)) throw error;
         record.phase = "unknown";
@@ -722,7 +783,7 @@ export class Custody {
       await this.#write(id, fresh, true, before);
       try { this.metrics?.stepTransition(stepBefore, entry.phase); } catch { /* observations never own a write */ }
       let answer: Answer | null = null;
-      try { answer = await deliver(fresh.envelope.signed); } catch (error) { if (!(error instanceof Lost)) throw error; }
+      try { answer = await this.#dispatch(() => deliver(fresh.envelope.signed)); } catch (error) { if (!(error instanceof Lost)) throw error; }
       entry.phase = answer === null || answer.answer === "unavailable" ? "unknown" : "answered";
       entry.answers.push({ at: this.now(), answer });
       // A step keeps its first answer and its latest 63 (see the header): the first is what the resource repeats for the same step.

@@ -24,10 +24,13 @@ export function counterEnrollment(context: ApplicationScreenContext, current: ()
   const saved = (key: Device, seat: BrowserJoinSeat): SavedDevice => ({ name: seat.handle, binding: applicationDeviceIdentity(context, seat, key.publicKey), key: key.pair.privateKey });
   const api = (key: Device) => browserJoining(storedWebCryptoSigner(key.publicKey, key.pair.privateKey), { origin: context.origin, membershipDefinition: context.membershipDefinition, current, ...(fetch ? { fetch, actFetch: fetch } : {}),
     lock: slots, custody: counterCustody(), store: { load: () => get("join"), save: value => put("join", value), clear: async outcome => {
+      if (!current()) throw Error("This join context is no longer current.");
       const value = await get("join") as BrowserKeptJoin | null;
+      if (!current()) throw Error("This join context is no longer current.");
       // Preserve the verified seat before clearing the join slot. A later
       // device-store failure can recover this handoff without signing.
       if (outcome === "joined" && value?.v === 2) await put("seat", value.seat);
+      if (!current()) throw Error("This join context is no longer current.");
       await slots.remove(prefix + ":join");
     } },
   });

@@ -210,7 +210,7 @@ async function hostedCounter(screen) {
   await counterContext.close();
 }
 
-const report = { join: {}, counter: {} };
+const report = { join: {}, counter: {}, storage: { ran: false } };
 let browser = null;
 try {
   if (screen) await hostedCounter(screen);
@@ -269,6 +269,79 @@ try {
   check("one POST left the browser: Check only reads", posts.length, 1);
   check("the journal holds one join under the key", entries.length, 1);
   check("the journal's join is the envelope in custody", report.join.afterCheck.sameEnvelope, true);
+  check("the join slot names that record and clears only after proof", [report.join.afterCheck.slotKeyIsRecordKey, report.join.afterCheck.slotAfterCheck], [true, null]);
+
+  // These cases add real IDB rollback, bounded requests and same-origin tabs. Their transport ports are scripted.
+  // Keep the original native join proof above separate, including its one POST and exact journal-envelope equality.
+  const storageDeadline = async work => {
+    let timer;
+    try {
+      return await Promise.race([work, new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error("TEST storage witness did not reach its native event gate within 30 seconds")), 30_000);
+      })]);
+    } finally { clearTimeout(timer); }
+  };
+  const storageEvaluation = (page, run, argument) => storageDeadline(page.evaluate(run, argument));
+  report.storage = { ran: true, ...(await storageEvaluation(page, () => globalThis.witness.storageCases())) };
+  for (const result of report.storage.cases) check(result.name, result.passed, true);
+
+  let enteredPost, releaseReply;
+  const actualPost = new Promise(resolve => { enteredPost = resolve; });
+  const heldReply = new Promise(resolve => { releaseReply = resolve; });
+  await context.route(`${base}/custody-witness/held-post`, async route => {
+    enteredPost();
+    await heldReply;
+    await route.fulfill({ status: 200, contentType: "application/json", body: '{"released":true}' });
+  });
+  await storageEvaluation(page, () => globalThis.witness.heldPost("start"));
+  await storageDeadline(actualPost);
+  const whileHeld = await storageEvaluation(page, () => globalThis.witness.heldPost("retire-and-upgrade"));
+  check("a held actual POST cannot hold the retired IDB connection or block upgrade", whileHeld,
+    { upgraded: true, phase: "sent", exactSent: true, count: 0, outcomes: 0, lengths: 0 });
+  releaseReply();
+  const afterReply = await storageEvaluation(page, () => globalThis.witness.heldPost("finish"));
+  check("a late POST result gives unkept and creates no outcome or segment", afterReply,
+    { storageAnswer: { held: "unkept", answer: "accepted" }, exactSent: true, unchanged: true, phase: "sent", count: 0, outcomes: 0, lengths: 0 });
+  report.storage.heldPost = { whileHeld, afterReply, transport: "actual same-origin POST with a held route and scripted accepted reply; no-slot-clear belongs to browser-joining.test.ts" };
+
+  const second = await context.newPage();
+  second.on("pageerror", error => failures.push({ name: "second storage tab error", actual: String(error), expected: null }));
+  await second.goto(`${base}/custody-witness/`);
+  await second.waitForFunction(() => "witness" in globalThis, null, { timeout: 30_000 });
+  const tab = (page, command, options) => storageEvaluation(page, ({ command, options }) => globalThis.witness.storageTab(command, options), { command, options });
+  const tabCases = [];
+  const tabCheck = (name, actual, expected) => tabCases.push({ name, passed: check(name, actual, expected) });
+  const openTabs = async suffix => {
+    const database = `TEST-nf5-tabs-${randomBytes(8).toString("hex")}-${suffix}`;
+    await Promise.all([tab(page, "open", { database }), tab(second, "open", { database })]);
+    return database;
+  };
+  await openTabs("record");
+  tabCheck("real tab A holds the record Web Lock", await tab(page, "hold-record"), true);
+  tabCheck("real tab B cannot sign under A's record lock", await tab(second, "keep"), { kept: false, builds: 0 });
+  await tab(page, "release-record");
+  await tab(second, "observe");
+  tabCheck("the real record lock releases for a later keep", await tab(page, "keep"), { kept: true, builds: 1 });
+  tabCheck("real BroadcastChannel invalidates the other tab", await tab(second, "observed"), true);
+
+  const admission = await openTabs("admission");
+  await tab(page, "hold-admission");
+  const waiting = tab(second, "keep", { key: "admitted-first" });
+  await page.waitForFunction(name => navigator.locks.query().then(state => state.pending.some(lock => lock.name === `${name}:exclusive`)), admission);
+  await tab(page, "release-admission");
+  tabCheck("a held real admission lets the queued identity sign once after release", await waiting, { kept: true, builds: 1 });
+  tabCheck("real multi-tab admission refuses the next identity before signing", await tab(page, "keep", { key: "capacity-full" }), { kept: false, builds: 0 });
+
+  const closedQueue = await openTabs("closed-queue");
+  await tab(page, "hold-admission");
+  const obsolete = tab(second, "keep", { key: "closed-before-admission" });
+  await page.waitForFunction(name => navigator.locks.query().then(state => state.pending.some(lock => lock.name === `${name}:exclusive`)), closedQueue);
+  await tab(second, "close");
+  await tab(page, "release-admission");
+  tabCheck("closing a real tab store rejects queued admission without signing", await obsolete, { kept: false, builds: 0 });
+  await tab(page, "close");
+  await second.close();
+  report.storage.multiTab = tabCases;
 
   report.counter = { ran: false, reason: "Hosted NF-7 runs after NF-5 lands and the planner deploys its Counter release, by ruling 657e4217." };
   }

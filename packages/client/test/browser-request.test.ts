@@ -27,8 +27,14 @@ function bench(fields: Record<string, unknown> = { name: "Sieve" }) {
     return { binding: { definition: "TEST", kind: "donate", declaration: null, pinned: "platform:inbox@1" as const }, envelope: { signed: await signedIntent(signer, { to: lane, kind: "donate", fields }, { idempotencyKey: key, now: T0 }), beside: {} } }; };
   const send = (key: string) => requests.send(key, meaningOf(fields), build(key), { notAfter });
   const again = (key: string) => requests.send(key, meaningOf(fields), async () => { throw new Error("must not sign"); }, { notAfter });
-  return { store, requests, script, calls, posted, send, again, builds: () => builds, phase: async (key: string) => (await requests.find(key))?.phase ?? null };
+  return { store, requests, ports, build, script, calls, posted, send, again, builds: () => builds, phase: async (key: string) => (await requests.find(key))?.phase ?? null };
 }
+
+const gate = () => {
+  let release!: () => void;
+  const wait = new Promise<void>((done) => { release = done; });
+  return { wait, release };
+};
 
 // Invariant: custody keeps the envelope before its one send, and each answer leaves the phase that is true.
 test("a request is kept before its one send, and each answer leaves the phase that is true", async () => {
@@ -100,6 +106,68 @@ test("Continue sends the exact kept envelope after a loss, and a failed write or
   broken.script.current = false;
   await expect(broken.again("k")).rejects.toThrow();
   expect([broken.posted.length, await broken.phase("k")]).toEqual([1, "unknown"]);
+});
+
+// Invariant: waiting for admission grants no authority to sign after the context ends.
+test("a context that ends while admission waits never invokes the signer or sends", async () => {
+  const b = bench(), entered = gate(), held = gate(), exclusive = b.store.exclusive;
+  b.store.exclusive = async (work) => { entered.release(); await held.wait; return exclusive(work); };
+  const sending = b.send("held admission");
+  const rejected = expect(sending).rejects.toThrow("no longer current");
+  await entered.wait;
+  b.script.current = false;
+  held.release();
+  await rejected;
+  expect([b.builds(), b.posted.length, await b.phase("held admission")]).toEqual([0, 0, null]);
+
+  // A signature already invoked cannot be undone. Its returned value starts no new work.
+  const started = bench(), signing = gate(), returned = gate();
+  const pending = started.requests.send("held signature", meaningOf({ name: "Sieve" }), async () => {
+    const built = await started.build("held signature")();
+    signing.release(); await returned.wait; return built;
+  }, { notAfter });
+  const discarded = expect(pending).rejects.toThrow("no longer current");
+  await signing.wait;
+  started.script.current = false;
+  returned.release();
+  await discarded;
+  expect([started.builds(), started.posted.length, await started.phase("held signature")]).toEqual([1, 0, null]);
+});
+
+// Invariant: a begun act retains uncertainty when its reply loses the context. No later proof or UI result follows.
+test("a context that ends during POST or receipt verification keeps the original unresolved", async () => {
+  for (const stage of ["post", "recorded"] as const) {
+    const b = bench(), entered = gate(), held = gate();
+    if (stage === "post") b.script.post = async (e) => { entered.release(); await held.wait; return { answer: "accepted", receipt: receiptOf(e.signed, 3) }; };
+    else b.ports.recorded = async () => { b.calls.push("recorded"); entered.release(); await held.wait; return true; };
+    const pending = b.send("original"), rejected = expect(pending).rejects.toThrow("no longer current");
+    await entered.wait;
+    const original = canonicalize((await b.requests.find("original"))!.envelope);
+    b.script.current = false;
+    held.release();
+    await rejected;
+    expect([b.builds(), b.posted, await b.phase("original"), b.calls.filter((call) => call === "recorded").length]).toEqual([1, [original], "unknown", stage === "post" ? 0 : 1]);
+  }
+});
+
+// Invariant: a read that loses its context proves neither absence nor acceptance.
+test("a context that ends during settlement cannot accept a receipt or close a signing", async () => {
+  for (const found of [false, true]) {
+    const b = bench();
+    b.script.post = found ? async () => { throw new Error("lost"); }
+      : async (): Promise<Answer> => ({ answer: "refused", reason: "expired", judgedAt: { seq: 1, hash: `sha256:${"b".repeat(64)}` } });
+    await b.send("original");
+    b.calls.length = 0;
+    const entered = gate(), held = gate();
+    b.ports.settle = async (envelope) => { b.calls.push("settle"); entered.release(); await held.wait; return found ? receiptOf(envelope.signed, 3) : null; };
+    const pending = b.requests.settle("original"), rejected = expect(pending).rejects.toThrow("no longer current");
+    await entered.wait;
+    b.script.current = false;
+    held.release();
+    await rejected;
+    const record = (await b.requests.find("original"))!;
+    expect([b.calls, record.phase, record.signings[0]!.closed, b.builds(), b.posted.length]).toEqual([["settle"], found ? "unknown" : "refused", undefined, 1, 1]);
+  }
 });
 
 // Invariant: signed text that a request carries survives a lost answer and a read-only recovery unchanged.

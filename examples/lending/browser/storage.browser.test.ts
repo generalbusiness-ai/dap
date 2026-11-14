@@ -1,6 +1,6 @@
 /** Real IndexedDB/Web Locks/WebCrypto witness; transport and recorded answers are STAND-INs.
  * No native membership, deployed room, public pages or audio is proved here. */
-import type { Answer, Receipt, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Receipt, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, scopeIdOf, textDigest, timeOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { browserRequests, meaningOf, requestKey, signedIntent, type BrowserRequestPorts, type Envelope } from "@generalbusiness/dap-client";
 import { LENDING_DEFINITION } from "../pin.ts";
@@ -53,7 +53,13 @@ export const storageWitness = {
       const request = (await kept(identity))!;
       const before = await hash(request.record.envelope);
       const ports: Partial<BrowserRequestPorts> = { current: () => current,
-        post: async envelope => { if (await hash(envelope) !== before) throw Error("Replacement envelope"); sends++; return { answer: "accepted", receipt: { intent: intentDigest(envelope.signed.intent) } as Receipt } as Answer; },
+        post: async envelope => {
+          if (await hash(envelope) !== before) throw Error("Replacement envelope");
+          sends++;
+          const receipt: Receipt = { fact: { at: identity.scope, seq: 1, hash: textDigest("PUBLIC TEST scripted acceptance") }, definition: identity.definition,
+            intent: intentDigest(envelope.signed.intent), effects: [], sends: [], epoch: 0 };
+          return { answer: "accepted", receipt };
+        },
         recorded: async (_receipt, envelope) => verifySignedIntent(envelope.signed) && await hash(envelope) === before };
       const result = await requests(identity, ports).send(request.key, request.record.meaning, async () => { throw Error("A kept request is never signed again"); }, { notAfter: timeOf(Date.now() + 60_000) }).catch(() => ({ status: "unknown" as const }));
       return { status: result.status, sends, envelopeHash: await hash((await requests(identity).find(request.key))!.envelope) };

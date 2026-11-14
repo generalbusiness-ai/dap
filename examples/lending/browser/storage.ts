@@ -29,12 +29,17 @@ const remembered = {
   /** Forget the device key and the seat. Kept requests are left as they are. */
   forget: () => remove("remembered"),
 };
-const joinStore: JoinStore = { load: () => get<KeptJoin>("join"), save: (value) => put("join", value), clear: async (outcome) => {
+const joinStore: JoinStore = { load: () => get<KeptJoin>("join"), save: (value) => put("join", value), clear: async (outcome, current = () => true) => {
+  const usable = () => { if (!current()) throw Error("This join context is no longer current."); };
+  usable();
   const held = await get<KeptJoin>("join");
+  usable();
   if (binding !== undefined && outcome === "joined" && held?.v === 2) {
-    const current = await remembered.load();
-    if (!current) throw Error("The enrolled browser key is unavailable.");
-    await remembered.save({ ...current, seat: held.seat });
+    const saved = await remembered.load();
+    usable();
+    if (!saved) throw Error("The enrolled browser key is unavailable.");
+    await remembered.save({ ...saved, seat: held.seat });
+    usable();
   }
   await remove("join");
 } };

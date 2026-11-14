@@ -24,8 +24,8 @@ export interface InvitationContext { origin: string; membershipDefinition: strin
 export type Invited = { ok: true; link: InvitationLink; seat: Seat } | { ok: false; reason: string };
 /** The join slot: the seat, and the key of the join's custody record. */
 export interface KeptJoin { v: 2; seat: Seat; key: string }
-/** `clear` names the outcome: a host keeps the seat of a join that took effect before the slot goes. */
-export interface JoinStore { load(): Promise<unknown>; save(value: KeptJoin): Promise<void>; clear(outcome: "joined" | "refused" | "unsigned" | "retired"): Promise<void> }
+/** `clear` keeps a verified seat before removing the pointer. An asynchronous host rechecks `current` after its awaits. */
+export interface JoinStore { load(): Promise<unknown>; save(value: KeptJoin): Promise<void>; clear(outcome: "joined" | "refused" | "unsigned" | "retired", current?: () => boolean): Promise<void> }
 export type JoinOutcome = { status: "joined"; seat: Seat } | { status: "refused"; reason: string }
   | { status: "unknown"; reason: string; seat?: Seat } | { status: "nothing-sent"; reason: string } | { status: "retired"; reason: string };
 export interface Joining {
@@ -88,13 +88,17 @@ export function browserJoining(signer: Signer, options: JoiningOptions): Joining
       current: usable,
       post: (envelope) => new ScopeHandle(transport(seat.origin, options.actFetch ?? options.fetch), seat.membership.scope, null).submit(envelope.signed, [], envelope.beside),
       recorded: async (receipt: Receipt, envelope: Envelope) => {
+        current();
         if (receipt.definition !== membershipDefinition || receipt.intent !== intentDigest(envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(seat.membership)) return false;
         // Reading the recorded entry needs a session. If the join took effect, this device is a member
         // and the room gives its key one; if the room gives none, the join is not verified.
         const asked = await signerSessionRequest(seat.membership, signer, timeOf(now() + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16))));
+        current();
         const session = await requestSession(seat.origin, seat.membership.scope, asked, options.fetch ? { fetch: options.fetch } : {});
+        current();
         if (!session.ok || session.session.claims.member !== seat.handle) return false;
         const followed = await new ScopeHandle(transport(seat.origin, options.fetch), seat.membership.scope, session.session.reader()).followReceipt(receipt);
+        current();
         return followed.ok && followed.entry.input.type === "act" && canonicalize(followed.entry.input.signed) === canonicalize(envelope.signed);
       },
       settle: async (envelope) => { const answer = await reads.settle(envelope.signed); return answer.ok ? answer.value : null; },
@@ -107,23 +111,27 @@ export function browserJoining(signer: Signer, options: JoiningOptions): Joining
     if (settled.status === "unknown") return unknown(held.seat);
     const latest = await options.store.load(); current();
     if (!validJoin(latest) || latest.key !== held.key) return { status: "unknown", seat: held.seat, reason: "The original join is kept. Check it." };
-    await options.store.clear(settled.status === "recorded" ? "joined" : "refused"); current();
+    await options.store.clear(settled.status === "recorded" ? "joined" : "refused", usable); current();
     return settled.status === "recorded" ? { status: "joined", seat: held.seat } : { status: "refused", reason: refusalWords(settled.reason) };
   };
   /** The slot as it is: null when empty, a retired slot removed, or the slot with its record. */
   const held = async (): Promise<null | JoinOutcome | { join: KeptJoin; record: CustodyRecord | null; requests: BrowserRequests }> => {
     current(); const value = await options.store.load(); current();
     if ((value ?? null) === null) return null;
-    if (retiredJoin(value)) { await options.store.clear("retired"); current(); return { status: "retired", reason: RETIRED_REQUEST }; }
+    if (retiredJoin(value)) { await options.store.clear("retired", usable); current(); return { status: "retired", reason: RETIRED_REQUEST }; }
     if (!validJoin(value)) return { status: "unknown", reason: "The kept join cannot be read. It stays in this browser." };
     const requests_ = requests(value.seat);
-    const record = await requests_.find(value.key); current();
+    let record: CustodyRecord | null;
+    try { record = await requests_.find(value.key); }
+    catch { current(); return { status: "unknown", seat: value.seat, reason: "The kept join cannot be read. It stays in this browser." }; }
+    current();
     if (record && !validRecord(record, value.seat)) return { status: "unknown", seat: value.seat, reason: "The kept join cannot be read. It stays in this browser." };
     return { join: value, record, requests: requests_ };
   };
   /** A slot with no record: the page wrote the slot and stopped before it signed. Nothing was signed or sent. */
   const unsigned = async (): Promise<JoinOutcome> => {
-    await options.store.clear("unsigned"); current();
+    current();
+    await options.store.clear("unsigned", usable); current();
     return { status: "nothing-sent", reason: "The join was not signed. Nothing was sent. Use the invitation again." };
   };
   return {
@@ -140,11 +148,11 @@ export function browserJoining(signer: Signer, options: JoiningOptions): Joining
       return options.lock.run(async (): Promise<JoinOutcome> => {
         current();
         const earlier = await options.store.load(); current();
-        if (retiredJoin(earlier)) { await options.store.clear("retired"); current(); return { status: "retired", reason: RETIRED_REQUEST }; }
+        if (retiredJoin(earlier)) { await options.store.clear("retired", usable); current(); return { status: "retired", reason: RETIRED_REQUEST }; }
         if ((earlier ?? null) !== null) return { status: "nothing-sent", reason: "An earlier join is kept. Check it first." };
         const join: KeptJoin = { v: 2, seat: originalSeat, key: requestKey() };
         try { await options.store.save(join); current(); }
-        catch { return { status: "nothing-sent", reason: "The join could not be kept. Nothing was sent." }; }
+        catch { current(); return { status: "nothing-sent", reason: "The join could not be kept. Nothing was sent." }; }
         const meaning = meaningOf({ kind: "join", membership: originalSeat.membership, invitation: originalLink.invitation, handle: originalSeat.handle });
         const build = async () => {
           const signed = await signedIntent(signer, { to: originalSeat.membership, kind: "join", fields: invitationRedemptionFields(membershipDefinition, originalSeat.membership, originalLink.invitation, signer.key, originalLink.secret), expected: {} }, { now: now(), idempotencyKey: join.key });
@@ -154,11 +162,15 @@ export function browserJoining(signer: Signer, options: JoiningOptions): Joining
         let settled: RequestSettled;
         try { settled = await requests(originalSeat).send(join.key, meaning, build, { notAfter: timeOf(now() + 60_000) }); }
         catch (error) {
+          current();
           if (!unsentError(error)) return unknown(originalSeat);
-          // Nothing left this browser. A record that custody kept stays for Check; with no record the slot goes.
-          const record = await requests(originalSeat).find(join.key).catch(() => null);
+          // Only a successful empty read proves that the slot has no custody record.
+          let record: CustodyRecord | null;
+          try { record = await requests(originalSeat).find(join.key); }
+          catch { current(); return unknown(originalSeat); }
+          current();
           if (record) return unknown(originalSeat);
-          await options.store.clear("unsigned").catch(() => undefined);
+          await options.store.clear("unsigned", usable); current();
           return { status: "nothing-sent", reason: "The join could not be signed and kept. Nothing was sent." };
         }
         return conclude(join, settled);
@@ -167,6 +179,7 @@ export function browserJoining(signer: Signer, options: JoiningOptions): Joining
     continueOriginal() {
       return options.lock.run(async () => {
         const found = await held();
+        current();
         if (found === null || "status" in found) return found;
         if (!found.record) return unsigned();
         const deadline = timeMs(found.record.envelope.signed.intent.notAfter);
@@ -174,7 +187,7 @@ export function browserJoining(signer: Signer, options: JoiningOptions): Joining
         const record = found.record;
         let settled: RequestSettled;
         try { settled = await found.requests.send(found.join.key, record.meaning, async () => { throw new Error("A kept join is never signed again."); }, { notAfter: timeOf(now() + 60_000) }); }
-        catch { return unknown(found.join.seat); }
+        catch { current(); return unknown(found.join.seat); }
         return conclude(found.join, settled);
       });
     },
@@ -182,7 +195,7 @@ export function browserJoining(signer: Signer, options: JoiningOptions): Joining
       return options.lock.run(async () => {
         current(); const value = await options.store.load(); current();
         if (!retiredJoin(value)) return null;
-        await options.store.clear("retired"); current();
+        await options.store.clear("retired", usable); current();
         return RETIRED_REQUEST;
       });
     },
@@ -190,10 +203,11 @@ export function browserJoining(signer: Signer, options: JoiningOptions): Joining
     check() {
       return options.lock.run(async () => {
         const found = await held();
+        current();
         if (found === null || "status" in found) return found;
         if (!found.record) return unsigned();
         let settled: RequestSettled | null;
-        try { settled = await found.requests.settle(found.join.key); } catch { return unknown(found.join.seat); }
+        try { settled = await found.requests.settle(found.join.key); } catch { current(); return unknown(found.join.seat); }
         return conclude(found.join, settled ?? { status: "unknown" });
       });
     },

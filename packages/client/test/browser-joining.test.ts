@@ -51,13 +51,20 @@ async function fixture(definition: Version = "platform:membership@6") {
     }
     throw new Error("Unexpected SCRIPTED route");
   };
-  const open = () => browserJoining(signer, { origin, membershipDefinition: definition, lock: { run: work => work() }, store, custody, now: () => now, fetch });
+  const context = { current: true }, fetcher = { call: fetch };
+  const open = () => browserJoining(signer, { origin, membershipDefinition: definition, lock: { run: work => work() }, store, custody, now: () => now, current: () => context.current, fetch: (url, init) => fetcher.call(url, init) });
   const record = (): CustodyRecord | null => { const texts = [...memory.records.values()]; return texts.length === 1 ? JSON.parse(texts[0]!) as CustodyRecord : null; };
-  return { api: open(), reload: open, link, seat: offered.seat, posts, settles, calls, key: signer.key, store, record, records: () => memory.records.size,
+  return { api: open(), reload: open, link, seat: offered.seat, posts, settles, calls, key: signer.key, signer, custody, context, fetcher, store, record, records: () => memory.records.size,
     kept: () => structuredClone(held) as BrowserKeptJoin | null, setHeld: (value: unknown) => { held = structuredClone(value); },
     clock: (time: number) => { now = time; }, saving: (fails: boolean) => { failSave = fails; },
     replies: (values: { lose?: boolean; found?: boolean; wrongSession?: boolean; wrongReceipt?: boolean }) => { lose = values.lose ?? lose; found = values.found ?? found; wrongSession = values.wrongSession ?? wrongSession; wrongReceipt = values.wrongReceipt ?? wrongReceipt; } };
 }
+
+const gate = () => {
+  let release!: () => void;
+  const wait = new Promise<void>((done) => { release = done; });
+  return { wait, release };
+};
 
 test("a kept browser join recovers by reads and checks its original receipt, member and exact recorded signature", async () => {
   for (const version of ["platform:membership@4", "platform:membership@6", "platform:membership@7", "platform:membership@8"] as const) {
@@ -134,4 +141,86 @@ test("a slot whose join was never signed clears on Check and says that nothing w
   const f = await fixture();
   f.setHeld({ v: 2, seat: f.seat, key: "TEST-unsigned-key" });
   expect(await f.api.check()).toMatchObject({ status: "nothing-sent" }); expect(f.kept()).toBeNull(); expect(f.posts).toHaveLength(0);
+});
+
+// Invariant: storage failure cannot prove that a saved join slot was never signed.
+test("an unreadable custody find keeps the join slot through join recovery and Check", async () => {
+  const f = await fixture();
+  let signs = 0;
+  const sign = f.signer.sign;
+  f.signer.sign = async (bytes) => { signs++; return sign(bytes); };
+  f.custody.read = async () => { throw new Error("SCRIPTED unreadable custody"); };
+  expect(await f.api.join(f.link, f.seat)).toMatchObject({ status: "unknown" });
+  const original = f.kept();
+  expect(original).not.toBeNull();
+  expect(await f.api.check()).toMatchObject({ status: "unknown" });
+  expect([f.kept(), signs, f.posts.length, f.calls.filter((call) => call.startsWith("clear"))]).toEqual([original, 0, 0, []]);
+});
+
+// Invariant: invalidating a join after one port begins prevents the next signer, session, proof, and slot clear.
+test("a join whose context ends during its act or session keeps the original without later authentication or proof", async () => {
+  for (const stage of ["act", "session-sign", "session", "entry"] as const) {
+    const f = await fixture(), entered = gate(), held = gate();
+    f.replies({ lose: false });
+    let signs = 0;
+    const sign = f.signer.sign;
+    f.signer.sign = async (bytes) => {
+      signs++;
+      if (stage === "session-sign" && signs === 2) { entered.release(); await held.wait; }
+      return sign(bytes);
+    };
+    const fetch = f.fetcher.call;
+    f.fetcher.call = async (url, init) => {
+      const path = new URL(url).pathname;
+      if (stage === "act" && path.endsWith("/acts") || stage === "session" && path.endsWith("/sessions") || stage === "entry" && path.endsWith("/entries/1")) {
+        entered.release(); await held.wait;
+      }
+      return fetch(url, init);
+    };
+    const pending = f.api.join(f.link, f.seat), rejected = expect(pending).rejects.toThrow("no longer current");
+    await entered.wait;
+    const original = f.kept();
+    f.context.current = false;
+    held.release();
+    await rejected;
+    expect([f.kept(), f.posts.length, f.record()!.phase, f.calls.filter((call) => call.startsWith("clear"))]).toEqual([original, 1, "unknown", []]);
+    expect(signs).toBe(stage === "act" ? 1 : 2);
+    expect(f.calls.filter((call) => call === "session").length).toBe(stage === "session" || stage === "entry" ? 1 : 0);
+    expect(f.calls.filter((call) => call === "entry").length).toBe(stage === "entry" ? 1 : 0);
+  }
+});
+
+// Invariant: a context that ends during unsigned recovery never clears its saved join pointer.
+test("a join context that ends during the recovery read retains its slot", async () => {
+  const f = await fixture(), entered = gate(), held = gate(), read = f.custody.read;
+  let reads = 0;
+  f.custody.read = async (id) => {
+    reads++;
+    if (reads === 2) { entered.release(); await held.wait; }
+    return read(id);
+  };
+  f.saving(true);
+  const pending = f.api.join(f.link, f.seat), rejected = expect(pending).rejects.toThrow("no longer current");
+  await entered.wait;
+  const original = f.kept();
+  f.context.current = false;
+  held.release();
+  await rejected;
+  expect([f.kept(), f.posts.length, f.calls.filter((call) => call.startsWith("clear"))]).toEqual([original, 0, []]);
+});
+
+// A host may await a verified-seat handoff before removing the pointer. It must retain the supplied current capability.
+test("an awaited host handoff keeps the join pointer when its clearing capability expires", async () => {
+  const f = await fixture(), entered = gate(), held = gate(), clear = f.store.clear;
+  f.replies({ lose: false });
+  f.store.clear = async (outcome, current) => {
+    entered.release(); await held.wait;
+    if (!current?.()) throw new Error("This join context is no longer current.");
+    await clear(outcome, current);
+  };
+  const pending = f.api.join(f.link, f.seat), rejected = expect(pending).rejects.toThrow("no longer current");
+  await entered.wait;
+  const original = f.kept();
+  f.context.current = false; held.release(); await rejected;
+  expect([f.kept(), f.record()!.phase, f.posts.length, f.calls.filter(call => call.startsWith("clear"))]).toEqual([original, "accepted", 1, []]);
 });

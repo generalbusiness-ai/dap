@@ -83,10 +83,10 @@ export function browserRequests(store: ClientCustodyStore, who: BrowserRequestTa
   const deliver = async (envelope: Envelope): Promise<Answer> => {
     current();
     let answer: Answer;
-    try { answer = await ports.post(envelope); } catch { throw new Lost(); }
+    try { answer = await ports.post(envelope); current(); } catch { throw new Lost(); }
     if (answer.answer === "accepted") {
       let sound = false;
-      try { sound = await ports.recorded(answer.receipt, envelope); } catch { sound = false; }
+      try { sound = await ports.recorded(answer.receipt, envelope); current(); } catch { sound = false; }
       if (!sound) throw new Lost();
     }
     return answer;
@@ -94,10 +94,10 @@ export function browserRequests(store: ClientCustodyStore, who: BrowserRequestTa
   const read = async (envelope: Envelope): Promise<Receipt | null> => {
     current();
     let receipt: Receipt | null;
-    try { receipt = await ports.settle(envelope); } catch { throw new Lost(); }
+    try { receipt = await ports.settle(envelope); current(); } catch { throw new Lost(); }
     if (!receipt) return null;
     let sound = false;
-    try { sound = await ports.recorded(receipt, envelope); } catch { throw new Lost(); }
+    try { sound = await ports.recorded(receipt, envelope); current(); } catch { throw new Lost(); }
     // A receipt the page cannot check settles nothing: the read is lost, and the signing stays open.
     if (!sound) throw new Lost();
     return receipt;
@@ -107,24 +107,34 @@ export function browserRequests(store: ClientCustodyStore, who: BrowserRequestTa
     identity,
     find: (key) => custody.find(identity(key)),
     async unresolved() {
+      current();
       const listed = await store.byTarget({ service: who.service, membership: who.membership, signer: who.signer, target: who.target });
+      current();
       const out: KeptRequest[] = [];
       for (const row of listed) {
         if (!UNRESOLVED.has(row.phase)) continue;
         const record = await custody.find(identity(row.key));
+        current();
         if (record && UNRESOLVED.has(record.phase)) out.push({ key: row.key, record, settled: { status: "unknown" } });
       }
       return out;
     },
     async send(key, meaning, build, options) {
-      // An ended context sends nothing, and custody marks nothing sent.
       current();
-      return settledOfSent(await custody.send(identity(key), meaning, build, deliver, { notAfter: options.notAfter, read, ...(options.resign ? { resign: true } : {}) }));
+      // Admission may wait for another tab. Recheck authority at the actual builder call.
+      const buildCurrent = async () => { current(); const built = await build(); current(); return built; };
+      const sent = await custody.send(identity(key), meaning, buildCurrent, deliver, { notAfter: options.notAfter, read, ...(options.resign ? { resign: true } : {}) });
+      current();
+      return settledOfSent(sent);
     },
     async settle(key) {
+      current();
       const settled = await custody.settle(identity(key), read);
+      current();
       if (!settled) return null;
-      return settledOf(custody, identity(key), settled.record);
+      const outcome = await settledOf(custody, identity(key), settled.record);
+      current();
+      return outcome;
     },
   };
 }

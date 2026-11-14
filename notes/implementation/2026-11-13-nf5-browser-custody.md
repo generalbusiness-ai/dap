@@ -9,6 +9,10 @@ store keeps.
 
 ## The browser store
 
+The [14 November source follow-up](2026-11-14-nf5-storage-follow-up.md)
+replaces the draft segment layout and close behavior described below. All
+follow-up compiler, browser, control, model and gate checks remain UNRUN.
+
 `browserCustodyStore` in `packages/client/src/browser-custody.ts` implements
 `CustodyStore` with `byTarget` and `observe`, so it is a `ClientCustodyStore`.
 
@@ -16,13 +20,14 @@ store keeps.
 |---|---|---|
 | Records | IndexedDB object store `records` | Holds each live record as its canonical text, with its phase and times. |
 | Archive | IndexedDB object store `archive` | Holds each archived terminal record. `read` finds it there. |
-| Segments | IndexedDB object store `segments` | Holds the outcomes that left a record's inline list. |
+| Outcomes | IndexedDB object store `outcomes` | Holds one row per spilled outcome position; `lengths` records each segment length. |
 | `lock` | Web Lock `<lock>:record:<id>`, `ifAvailable` | Gives the lock of one identity, or null while another tab holds it. A closed tab releases its locks. |
 | `exclusive` | Web Lock `<lock>:exclusive` | Runs the admission against the 256 unresolved records alone. |
 | `observe` | `BroadcastChannel` named `<lock>` | Calls each listener after a write in this tab and after a write in another tab. |
 
-`write` puts the record and reads it back in a second transaction. A text that
-differs throws. A browser with no IndexedDB or no Web Locks keeps no record:
+`write` checks its put's bytes within the write transaction and waits for
+completion. Custody also performs its generic separate readback, which
+refuses after retirement. A browser with no IndexedDB or no Web Locks keeps no record:
 each call rejects, and `Custody` signs nothing. A browser with no
 `BroadcastChannel` signals the writes of its own tab only.
 

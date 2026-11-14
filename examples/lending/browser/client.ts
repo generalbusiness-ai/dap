@@ -83,6 +83,7 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
 
   /** A read session from the room's membership, signed by this device. Null with the refusal's reason when there is none. */
   const signIn = async (): Promise<string | null> => {
+    current();
     const signed = await signerSessionRequest(identity.membership, signer, timeOf(now() + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16)))); current();
     const answer = await requestSession(identity.origin, identity.membership.scope, signed, options.fetch ? { fetch: options.fetch } : {}); current();
     if (!answer.ok) return answer.reason;
@@ -90,7 +91,7 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
     return null;
   };
   /** The reads that settle a kept request need a session; a reloaded page has none yet. */
-  const ready = async (): Promise<void> => { if (!session) await signIn(); };
+  const ready = async (): Promise<void> => { current(); if (!session) await signIn(); current(); };
 
   /** Existing authenticated membership summary route. A failed or incomplete read cannot retain old standing. */
   const readActions = async (): Promise<readonly string[] | null> => {
@@ -109,12 +110,13 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
     post: (envelope) => new ScopeHandle(httpTransport(identity.origin, { fetch: send as Fetch }), identity.scope.scope).submit(envelope.signed, [], envelope.beside),
     // An acceptance counts only when the scope's own record holds this exact signed request.
     recorded: async (receipt: Receipt, envelope: Envelope) => {
+      current();
       if (receipt.definition !== identity.definition || receipt.intent !== intentDigest(envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(identity.scope)) return false;
-      await ready();
-      const followed = await handle().followReceipt(receipt);
+      await ready(); current();
+      const followed = await handle().followReceipt(receipt); current();
       return followed.ok && followed.entry.input.type === "act" && canonicalize(followed.entry.input.signed) === canonicalize(envelope.signed);
     },
-    settle: async (envelope) => { await ready(); const answer = await handle().settle(envelope.signed); return answer.ok ? answer.value : null; },
+    settle: async (envelope) => { await ready(); current(); const answer = await handle().settle(envelope.signed); current(); return answer.ok ? answer.value : null; },
   }, now);
   /** A kept record is a lending act of this device to this scope; anything else is left as it is and never sent. */
   const lendingRecord = (record: CustodyRecord): boolean => {
@@ -261,7 +263,7 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
         if (!lendingRecord(request.record)) return false;
         const deadline = timeMs(request.record.envelope.signed.intent.notAfter);
         if (deadline === null || now() < deadline + SETTLED_AFTER_MS) return false;
-        await ready();
+        await ready(); current();
         const answer = await handle().settle(request.record.envelope.signed); current();
         if (answer.ok || answer.reason !== "not-found") return false;
         // Custody keeps the record unresolved: a later read can still settle it. The page stops showing it.
