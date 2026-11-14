@@ -33,26 +33,34 @@ The file now belongs to the gate's Node stage.
 
 No production MCP transport, session, custody, or lifecycle source changes.
 
-## Demo loader and pending receipt guard
+## Retire the unused demo creation path
 
-The plain Node stage cannot strip TypeScript parameter properties in the
-demo's client dependency graph. The owning test now loads that graph with
-the checkout's pinned `tsx/esm/api` loader and passes an explicit resolved
-`tsx` import to its CLI children. The gate needs no global loader or new
-dependency.
+Planner ruling `47c57403` answers request `39a9f638`: delete
+`scripts/demo-git-host.mjs` and `scripts/demo-git-host.test.mjs`, without a
+repair, Node-stage entry, or loader. The CLI's `dap install --plan`,
+`dap install --planned`, and `dap create` supply the supported path.
 
-The retained version 1 custody fixture still reopens its original bytes.
-Its scripted accepted receipt now uses `{scope, genesis}`, sequence zero,
-and a hash equal to that genesis. This modernizes the fixture without
-claiming that a real register accepted the install.
+Before deletion, `git grep -n 'demo-git-host' HEAD` ran at
+`2f2afca7e01c81c8f104c2437d921df77d47f602`. Its matches named the script,
+its test, the frozen version-question fixture, historical notes, and the
+stale exclusion in `scripts/test.mjs`. No active caller appeared.
+A broader search also looked for `buildCreation` and `postCreation`:
 
-The production demo helper still requires `fact.at.kind === "register"`
-after `isFactRef(fact)`. Modern exact scope references have no `kind`, so
-both conditions cannot hold. `postCreation` has the same obsolete check on
-the signed target. Planner request `39a9f638` asks for the exact guard
-replacement before production edits. The demo test's exclusion remains
-until that repair. Its loader and modern fixture alone do not fix the
-successful creation case.
+```sh
+git grep -n -E 'demo-git-host|buildCreation|postCreation' HEAD -- \
+  ':!scripts/demo-git-host.mjs' ':!scripts/demo-git-host.test.mjs' \
+  ':!packages/platform/test/fixtures/version-questions-86179b0c.json' \
+  ':!notes/**'
+```
+
+That search returned only the stale exclusion, which calls nothing. Both
+paths and the exclusion are now deleted. Deleting the whole test also
+removes the scoped loader and modern fixture drafted at `2f2afca7`. No
+demo test enters the Node inventory, and no replacement loader remains.
+The frozen fixture and the historical notes stay unchanged.
+
+The deletion delivers promise `e834dbb7` under ruling `47c57403`. It makes
+no claim about a repaired demo or a new executable result.
 
 ## Unused browser modules
 
@@ -74,8 +82,6 @@ After root grants a slot, run these targeted checks once:
 
 - The views two-process file under plain `node --test` with
   `ARTROOM_TEST_PHASE=node`.
-- The demo Git host file under the same command after the receipt ruling
-  and repair. It must pass without a caller-supplied `--import` flag.
 - The runner, phase, and selection tests for the changed Node inventory.
 - The platform version-question test against the unchanged frozen fixture.
 - The changed documentation checks and the HL-1 gate before review.
