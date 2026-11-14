@@ -1,0 +1,382 @@
+{
+  "qualification": "Focused C3 evidence, not a gate or review-ready head. Original owning run failed only its stale export allowlist: 56 tests passed, one failed, 151.16 s wall. Final compiler, entry, MCP no-send and inventory checks passed. Original untracked source lacks a pre-run copy; source-correspondence.txt qualifies final retained source and subsequent changes. Generated own-case duration was not retained by the default reporter. Actual AC Power and powermode 0 at start and end.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-c3-owner-attempt1",
+  "checkpoint": {
+    "commit": "398d55b41b836667a9cc24e4114f9fccabef40cd",
+    "tree": "967cde6adc20f50adef041c36c25149c662f6c47",
+    "qualification": "Final source checkpoint; owner/generated implementations unchanged since the original focused run. The document-only evidence commit follows this checkpoint."
+  },
+  "fileCount": 74,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 7140,
+      "sha256": "92868bfa2be980b1b0514d7e5ef70c714b099811fe53b6070a08d5b082714d71"
+    },
+    {
+      "path": "client-focused.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "client-focused.log",
+      "bytes": 1167,
+      "sha256": "2c8995e7f25efe50385352fe1a8b72833e3a996554fc38aeba8fdea1e00e6810"
+    },
+    {
+      "path": "client-running-sample-command.log",
+      "bytes": 267,
+      "sha256": "be4d2f4734c5bc26ff7b7777585a180445027eec32d902df2b86fe893034b44d"
+    },
+    {
+      "path": "client-running-sample.txt",
+      "bytes": 527829,
+      "sha256": "147dab516aa97d45c59e297fd2a9136d53ac5d3835b4931aee7541ab5c25236d"
+    },
+    {
+      "path": "client-tsconfig-followup.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "client-tsconfig-followup.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "client-tsconfig.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "client-tsconfig.log",
+      "bytes": 3244,
+      "sha256": "8378fa3743b325ce1fd89224b5d0bbabcb72dab6711bef70cad0454689fe790c"
+    },
+    {
+      "path": "client-tsconfig.node.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "client-tsconfig.node.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "client-tsconfig.test-followup.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "client-tsconfig.test-followup.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "client-tsconfig.test.json.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "client-tsconfig.test.json.log",
+      "bytes": 1523,
+      "sha256": "e7988c2c20b15e03b49b3e23d94f17ad0b88a22f9cdccf0e7451a0ba303a9d2b"
+    },
+    {
+      "path": "commands.txt",
+      "bytes": 1054,
+      "sha256": "00202ef50317c9fc75958818c125cda79fb7d999e73bdc04975280a58e76b1ed"
+    },
+    {
+      "path": "compat.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "compat.log",
+      "bytes": 361,
+      "sha256": "1c914288dc8cf28d3fae33bda34ef46fa301d99ae5b318cc4f816059909c8914"
+    },
+    {
+      "path": "dependency-view.txt",
+      "bytes": 381,
+      "sha256": "b96cf4447d144133802dd5638723b2736a201d2e18e111581593037a349a10b2"
+    },
+    {
+      "path": "entry-followup.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "entry-followup.log",
+      "bytes": 3843,
+      "sha256": "968e63473acbc5e2d80cca1ca00dcee7054d7bf332c519d7c3b90a59bc0165ad"
+    },
+    {
+      "path": "final-client-tsconfig.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "final-client-tsconfig.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "final-client-tsconfig.node.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "final-client-tsconfig.node.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "final-client-tsconfig.test.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "final-client-tsconfig.test.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "final-head.txt",
+      "bytes": 82,
+      "sha256": "89128232cd3f62449e08e9d08e20e594d191f007b3a7dba3cd28ad42c9e2be0b"
+    },
+    {
+      "path": "final-mcp-tsconfig.browser.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "final-mcp-tsconfig.browser.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "final-mcp-tsconfig.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "final-mcp-tsconfig.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "final-mcp-tsconfig.scope.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "final-mcp-tsconfig.scope.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "final-mcp-tsconfig.test.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "final-mcp-tsconfig.test.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "inventory.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "inventory.log",
+      "bytes": 1551,
+      "sha256": "4cf383ca14769d17be27a31f1079ba0fbdbf9b1b6ba4f7f0adf7da23cad3499b"
+    },
+    {
+      "path": "mcp-no-send.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "mcp-no-send.log",
+      "bytes": 3343,
+      "sha256": "ca3a52383ddd0ed995b417f6d6b1cb7c9696beee99b6d3e313616f60ad9ed458"
+    },
+    {
+      "path": "mcp-tsconfig.browser.json-final.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "mcp-tsconfig.browser.json-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "mcp-tsconfig.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "mcp-tsconfig.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "mcp-tsconfig.scope.json-final.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "mcp-tsconfig.scope.json-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "mcp-tsconfig.test-followup.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "mcp-tsconfig.test-followup.log",
+      "bytes": 31819,
+      "sha256": "a0e157efe5e40eaa237ffedb1f52ce4719b3724a97fd7302db83c2433d8f7514"
+    },
+    {
+      "path": "mcp-tsconfig.test-link-followup.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "mcp-tsconfig.test-link-followup.log",
+      "bytes": 127,
+      "sha256": "832f33620a06cbc19ddd999c946745d313cbc89e0ca1ad7a27069a70bfe35e98"
+    },
+    {
+      "path": "mcp-tsconfig.test.json-final.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "mcp-tsconfig.test.json-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "mcp-tsconfig.test.json.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "mcp-tsconfig.test.json.log",
+      "bytes": 31819,
+      "sha256": "a0e157efe5e40eaa237ffedb1f52ce4719b3724a97fd7302db83c2433d8f7514"
+    },
+    {
+      "path": "power-end.txt",
+      "bytes": 819,
+      "sha256": "605527cc4f439ffba8cbe6d03d6414d816d5702ab60711e626e6d7626991a8be"
+    },
+    {
+      "path": "power-start.txt",
+      "bytes": 818,
+      "sha256": "d65b3b63e2ba2c260e27ed498641569572f7209f82c4c2a225885ed03ad26124"
+    },
+    {
+      "path": "reviewed-seal-adoption.json",
+      "bytes": 415,
+      "sha256": "6c7c59c0fc78c3f6ab565dafff9fbc19f6b76899c31f8a51df99bc47a20d32e1"
+    },
+    {
+      "path": "source-correspondence.txt",
+      "bytes": 772,
+      "sha256": "e2986014fe33eecee00f1432629400d49f66937276459bbc2859ef56f1a6be37"
+    },
+    {
+      "path": "source-final/notes/2026-11-13-scope-client.md",
+      "bytes": 37266,
+      "sha256": "751d132c4cad5d19c04d8e1d2ae8470c443de43c2ce4226d266b00d878a6ca0a"
+    },
+    {
+      "path": "source-final/packages/client/src/install-request.ts",
+      "bytes": 21827,
+      "sha256": "de698926f0342311f7900d5620ae5e8215837f4c2b0ac5ccd55b6724584bc532"
+    },
+    {
+      "path": "source-final/packages/client/src/replica.ts",
+      "bytes": 14132,
+      "sha256": "2ffd6c64e19f8a75625c9c7514a7d68847194c6907857c194948c4068f5e3d64"
+    },
+    {
+      "path": "source-final/packages/client/src/request-status.ts",
+      "bytes": 3531,
+      "sha256": "fa3dcf94d58f001f7114b2a137b676974b5c86779405aeb391d8591280e1fb2a"
+    },
+    {
+      "path": "source-final/packages/client/src/scope-client.ts",
+      "bytes": 24170,
+      "sha256": "225999011a749941045e25c24a9653835b4d3ba9aa24952d6b83a5c0d6a7c68c"
+    },
+    {
+      "path": "source-final/packages/client/src/scope.ts",
+      "bytes": 1517,
+      "sha256": "410d02f19c278dfcd3e45af5b94b161b48c1f80bc5cf1995b0a81cdc2522bf71"
+    },
+    {
+      "path": "source-final/packages/client/test/replica.test.ts",
+      "bytes": 22161,
+      "sha256": "c249aea4aef3b0b979a51c8dd4143f493f9009fec65625d1845cfa7de22f27e8"
+    },
+    {
+      "path": "source-final/packages/client/test/request-status.test.ts",
+      "bytes": 5249,
+      "sha256": "f4d97573623a5062a539199cafd059fe19413f61842129cd003292a56d6b1a16"
+    },
+    {
+      "path": "source-final/packages/client/test/request-support.ts",
+      "bytes": 4728,
+      "sha256": "c966b40976c824b797b9c18e9b718fc0b5640977244b872229585eb7fbca081b"
+    },
+    {
+      "path": "source-final/packages/client/test/scope-client-generated.test.ts",
+      "bytes": 6640,
+      "sha256": "f7190004e576ec6ae3f9971500c0862b081f875d1101f5dd085aa1c2651423ec"
+    },
+    {
+      "path": "source-final/packages/client/test/scope-client.test.ts",
+      "bytes": 20903,
+      "sha256": "123776f3dcb2f7a19b4ac20f1653b9ec58ecd0242255ba12e9e855f6ff1d5ad8"
+    },
+    {
+      "path": "source-final/packages/mcp/src/hosted.ts",
+      "bytes": 150004,
+      "sha256": "bac34ad0c66fdcffffc7aed528f051e52ea0ac75a9fdd7b6ecee038439d9ecb4"
+    },
+    {
+      "path": "source-final/packages/mcp/src/service.ts",
+      "bytes": 154111,
+      "sha256": "5f6f4c66fd7b1acc80351fa0b231f0268500485a41aa73836b245615f6e06d98"
+    },
+    {
+      "path": "source-final/packages/mcp/test/errors.test.ts",
+      "bytes": 43537,
+      "sha256": "0030030c23d829960cec29565fd7918b54a372aa1cae6bb592acb4962e8de2dd"
+    },
+    {
+      "path": "source-final/scripts/security-entry-points.test.mjs",
+      "bytes": 70821,
+      "sha256": "02b547a77289f20bee9146a1bfab969462bf9dfc1350cdd1a32c36a149159311"
+    },
+    {
+      "path": "source.patch",
+      "bytes": 27225,
+      "sha256": "9df1756204f0f30f9b8e0e746cba0b7c1a3e450f233f4b783dd6d117a6f59c0c"
+    }
+  ]
+}
