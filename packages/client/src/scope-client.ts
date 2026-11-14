@@ -291,13 +291,19 @@ export class ScopeClient<D extends DeclaredDefinition> {
   #absent(proof: ReadProof): Promise<void> {
     if (!this.#absenceProof || proof.began >= this.#absenceProof.began) this.#absenceProof = proof;
     if (this.#ending) return this.#ending;
+    if (this.#closed) return Promise.resolve();
     this.#ending = (async () => {
-      while (this.#absenceProof && !this.#closed) {
-        const current = this.#absenceProof;
-        this.#absenceProof = null;
-        await this.#markAbsent(current);
+      try {
+        while (this.#absenceProof && !this.#closed) {
+          const current = this.#absenceProof;
+          this.#absenceProof = null;
+          await this.#markAbsent(current);
+        }
+      } finally {
+        // Release ownership with the final pending-proof decision, including errors and close.
+        this.#ending = null;
       }
-    })().finally(() => { this.#ending = null; });
+    })();
     return this.#ending;
   }
 

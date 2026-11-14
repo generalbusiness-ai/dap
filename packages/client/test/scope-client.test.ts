@@ -158,7 +158,7 @@ function gate() {
   return { started, release, wait: () => { entered(); return held; } };
 }
 
-// Invariant candidate (a5301b54, planner pending): a newer complete post-death proof cannot join a finished absence drain.
+// Invariant (ruling 83f24a4a): a newer complete post-death proof cannot join a finished absence drain.
 test("a post-death proof arriving at absence handoff ends the signing without another read", async () => {
   const s = requestScene(), store = memoryStore(), ending = gate(), draft = gate();
   let now = s.now(), blockDraft = false;
