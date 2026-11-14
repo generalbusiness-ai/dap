@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:48b96bcdfff48c6a38e64ccdf2f48e8d8f719bbe","text":"Merge retired a covered predecessor; the successor is at scripts/scale-runner.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4a1640dd583c53226411287a3fd9bfab35a669c4","text":"Merge retired a covered predecessor; the successor is at scripts/gate.sh."}
