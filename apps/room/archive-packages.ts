@@ -8,7 +8,7 @@ import type { ReviewedArchivePolicy } from "../../packages/scope/src/archive-inv
 import { forecastArchiveDeclarationValidation } from "../../packages/scope/src/archive-inventory-cost.ts";
 import { forecastArchivePackageProofFixed, forecastArchivePackageProofReply, forecastArchivePolicyTables, forecastArchiveTrustCheck, forecastArchiveTrustParse } from "./archive-setup-cost.ts";
 import { readApplicationTrust, type ApplicationTrust } from "../../packages/scope/src/applications/admission.ts";
-import { APPLICATION_ARCHIVE_PROOF_BYTES, readApplicationArchiveProof, type ApplicationArchiveProof } from "../../packages/scope/src/applications/archive-proof.ts";
+import { APPLICATION_ARCHIVE_PROOF_BYTES, isApplicationArchiveProofRefusal, readApplicationArchiveProof, type ApplicationArchiveProof, type ApplicationArchiveProofRefusal } from "../../packages/scope/src/applications/archive-proof.ts";
 import type { ApplicationBindings } from "../../packages/scope/src/applications/bindings.ts";
 import type { OutsideGiven } from "../../packages/scope/src/given.ts";
 import { namespace, type Binding } from "../../packages/scope/src/namespace.ts";
@@ -19,7 +19,8 @@ import { archiveInstallationIdentity, type ArchiveInstallationIdentity } from ".
 import { archivePackagePolicies } from "./archive-policy.ts";
 
 export const APPLICATION_ARCHIVE_REVOKED = "application-policy-revoked";
-type ProofPeer = { applicationArchiveProofBytes(directory: ScopeRef, item: number): Promise<string | null | RoomRetiredStop> };
+type ProofReply = string | ApplicationArchiveProofRefusal | null | RoomRetiredStop;
+type ProofPeer = { applicationArchiveProofBytes(directory: ScopeRef, item: number): Promise<ProofReply> };
 type Identity = Pick<ArchiveInstallationIdentity, "directory" | "rules" | "rulesNamed" | "item">;
 
 export function roomArchivePackages(_given: OutsideGiven, sql: Sql, binding: Binding, env: ApplicationBindings,
@@ -27,7 +28,7 @@ export function roomArchivePackages(_given: OutsideGiven, sql: Sql, binding: Bin
   let active: { at: SequenceRef; seed: Seed } | null = null, activeBudget: ArchiveBudget | null = null;
   let truth: { setting: string | undefined; rows: readonly ApplicationTrust[] } | null = null;
   const native = new Map(policies), releases = new Map<Digest, string>(), prepared = new Set<string>(), owned = new Set<string>();
-  const flights = new Map<string, Promise<string | null | RoomRetiredStop>>();
+  const flights = new Map<string, Promise<ProofReply>>();
   const trusts = (budget: ArchiveBudget): readonly ApplicationTrust[] => {
     const setting = env.APPLICATION_TRUST;
     // The existing parser rejects larger strings before JSON admission.
@@ -92,6 +93,12 @@ export function roomArchivePackages(_given: OutsideGiven, sql: Sql, binding: Bin
     const release = () => { if (flights.get(key) === task) flights.delete(key); };
     void task.then(release, release);
     const raw = await budget.wait(() => task);
+    if (isApplicationArchiveProofRefusal(raw)) {
+      // A refusal keeps the full reserved read charge. Active installation
+      // already retained its signed inputs; no archive repair owns them.
+      if (raw.reason === "installation-not-active") throw new ArchivePolicyPending();
+      throw new ArchivePolicyStopped("application-policy-unavailable", raw.reason);
+    }
     if (isRoomRetiredStop(raw) || typeof raw !== "string" || raw.length > APPLICATION_ARCHIVE_PROOF_BYTES) return null;
     const bytes = utf8(raw).length;
     if (bytes > APPLICATION_ARCHIVE_PROOF_BYTES) return null;

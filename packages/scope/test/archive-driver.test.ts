@@ -11,13 +11,14 @@ import { canonicalize, digestBytes, timeOf, utf8 } from "@generalbusiness/dap-by
 import { platform } from "@generalbusiness/dap-platform";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
-import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost, type ArchiveCapacityRefusal } from "../src/archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, ArchivePolicyPending, ArchivePolicyStopped, type ArchiveCost, type ArchiveCapacityRefusal } from "../src/archive-budget.ts";
 import { driver, ScriptedHost } from "./support/archive-driver.ts";
 import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import { archiveHostGate as gate } from "./support/archive-provider.ts";
 import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
 import { ArchiveDriver } from "../src/archive-driver.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
+import { archiveRowDiagnostic } from "../src/archive-operator.ts";
 import { planArchive, type ArchiveFixedFinish } from "../src/archive-build.ts";
 import { at, rita, una, type Lane } from "./fixtures-native.ts";
 import { createNativeArchiveLane, createNativeArchiveApplicationLane, archiveAuthorityBasis, archiveAuthorityPolicies } from "./support/archive-native-authority.ts";
@@ -49,6 +50,59 @@ async function alarmFixture(host: ScriptedHost, resolve = async () => { host.tar
   await lane.did(rita, "remark", { on: 0, fields: { text: "schedule the fixture archive" } });
   return lane;
 }
+
+test("policy proof retry and permanent metadata stop preserve the confirmed native row before provider work", async () => {
+  const host = new ScriptedHost("sha1"), lane = await createNativeArchiveLane({}, {}, archiveDefinition);
+  expect(await lane.inside(state => driver(lane, state, host).run())).toMatchObject({ state: "confirmed" });
+  const head = await lane.head(), confirmed = (await row(lane))!.confirmed!;
+  expect(confirmed.through).toEqual(head);
+  const before = await lane.inside(state => state.storage.sql.exec("SELECT v FROM meta WHERE k = 'archive-row-1'").toArray());
+  let ownerCalls = 0, targetCalls = 0, providerCalls = 0, pending = true;
+  // Only policy disposition is a TEST callback. The native fixture above
+  // actually wrote/confirmed SQLite through the real writer and driver.
+  // This case claims no signed-reader or native-installation authority.
+  const run = () => lane.inside(state => new ArchiveDriver({ production: "room-binding", sql: archiveSql(state),
+    current: () => ({ at: lane.at, head }), clock: () => lane.c.clock.now, bounds: PROPOSED_BOUNDS,
+    policies: { registry: archiveAuthorityPolicies(lane, archivePolicies) }, admit: () => true,
+    preparePolicies: async () => {
+      ownerCalls++;
+      if (pending) throw new ArchivePolicyPending();
+      throw new ArchivePolicyStopped("application-policy-unavailable", "metadata-limit");
+    },
+    target: { resolve: async () => { targetCalls++; throw Error("policy disposition must precede target resolution"); } },
+    provider: new Proxy(host, { get(target, key) {
+      const value: unknown = Reflect.get(target, key);
+      if (typeof value !== "function") return value;
+      return () => { providerCalls++; throw Error("policy disposition must precede provider work"); };
+    } }),
+  }).run());
+  const inspect = () => lane.inside(async state => {
+    const sql = archiveSql(state), rows = new ArchiveRows(sql, lane.at);
+    return { bytes: sql.exec("SELECT v FROM meta WHERE k = 'archive-row-1'").toArray(),
+      confirmed: rows.load()?.confirmed, terminal: rows.terminal(), wake: rows.storedWake(),
+      diagnostic: await archiveRowDiagnostic(sql, lane.name, () => state.storage.getAlarm()) };
+  });
+  const retry = await run(), afterRetry = await inspect();
+  expect(retry).toMatchObject({ state: "retry", reason: "unavailable" }); expect(retry.next).not.toBeNull();
+  expect(afterRetry.terminal).toBeNull(); expect(afterRetry.bytes).toEqual(before); expect(afterRetry.confirmed).toEqual(confirmed);
+  expect(ownerCalls).toBe(1); expect(targetCalls).toBe(0); expect(providerCalls).toBe(0);
+  pending = false;
+  expect(await run()).toMatchObject({ state: "stopped", reason: "application-policy-unavailable", next: null });
+  const stopped = await inspect();
+  expect(stopped.terminal).toEqual({ reason: "application-policy-unavailable", proofReason: "metadata-limit" });
+  expect(stopped.wake).toMatchObject({ pending: false, stopped: true, next: null });
+  expect(stopped.bytes).toEqual(before); expect(stopped.confirmed).toEqual(confirmed);
+  expect(stopped.diagnostic).toMatchObject({ phase: "stopped", reason: "application-policy-unavailable", proofReason: "metadata-limit",
+    confirmed: { commit: confirmed.commit, through: confirmed.through } });
+  expect(ownerCalls).toBe(2); expect(targetCalls).toBe(0); expect(providerCalls).toBe(0);
+  // run() constructs another driver: the persisted terminal precedes even
+  // the policy callback, without rewriting the original confirmed row.
+  expect(await run()).toMatchObject({ state: "stopped", reason: "application-policy-unavailable", next: null });
+  const reconstructed = await inspect();
+  expect(reconstructed.terminal).toEqual(stopped.terminal); expect(reconstructed.bytes).toEqual(before);
+  expect(reconstructed.confirmed).toEqual(confirmed); expect(ownerCalls).toBe(2);
+  expect(targetCalls).toBe(0); expect(providerCalls).toBe(0); expect(await lane.head()).toEqual(head);
+});
 
 // Native alarm owns the writer. Its host wait does not hold native turns,
 // and confirmation schedules the later prefix through the same alarm.

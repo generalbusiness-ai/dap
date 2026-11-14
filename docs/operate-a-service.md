@@ -390,8 +390,13 @@ scope stops scheduling retries; restoring trust alone does not clear its
 stored terminal state. `archive-pass-diagnostic-v1` and the activation's
 `archive-row-diagnostic-v1` report the named stop without payloads or tokens.
 `application-policy-unavailable` means the authenticated package has no
-supported runtime archive policy. Missing or temporarily unreadable proof
-retries without selecting archive payload; it grants no export permission.
+supported runtime archive policy or its proof cannot become usable through
+the pending installation. The diagnostic's `proofReason` distinguishes
+`retained-proof-missing`, `metadata-limit`, and `malformed-or-unsupported`.
+These states stop the wake and preserve confirmed coverage. An installation
+that is not active yet retries while its native creation result can arrive.
+An unreadable namespace reply also retries. Neither case selects archive
+payload or grants export permission.
 
 Use an independently enumerated and verified list of the room's expected
 public native and application scope references. Exclude private root

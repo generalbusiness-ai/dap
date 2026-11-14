@@ -24,8 +24,10 @@ a retained alias or the current maintained declaration establishes none
 of those facts. The signature authenticates the publisher; the reviewed
 closed runtime policy supplies export permission.
 
-The namespace-only `applicationArchiveProofBytes` read is the first item
-for the Security conclusion. Its sender selects an actual native pin
+The namespace-only `applicationArchiveProofBytes` read and its closed
+refusal list are the first item for the Security conclusion. Ruling
+`12115613` requires one signed text result or a reason-only refusal. Its
+sender selects an actual native pin
 through bounded archive metadata, without first-ingress dispatch, cold-pin
 repair or an HTTP route. It checks Rules/job record sizes against the
 existing preparation metadata bound before materializing either record,
@@ -55,8 +57,8 @@ archive row byte-for-byte, including its confirmed receipt, and stops its
 wake. Policy preparation precedes a potentially large pending-row read.
 The operator view overlays the terminal reason. Reconstruction returns that same
 state. An authenticated package outside supported runtime policy uses
-`application-policy-unavailable`. Missing or temporarily unreadable proof
-retries without selecting payload. Restoring a trust row alone does not
+`application-policy-unavailable`. A pending installation or unreadable
+namespace reply retries without selecting payload. Restoring a trust row alone does not
 clear a stored terminal state. Operator diagnostics expose the fixed reason,
 not packet contents, records or credentials.
 
@@ -80,6 +82,11 @@ The Base case creates a second real installation of the same definition:
 substituting the first install's genuine proof fails the second scope's
 authority check, while the second install's actual proof succeeds.
 Existing Grow scenarios remain. These are witness drafts, not passed runs.
+One additional native driver case starts from an actually confirmed
+fixture row. A labelled TEST policy callback produces a pending result and
+then a permanent metadata refusal. The witness checks row bytes, receipt,
+stopped wake, reconstruction, existing diagnostic and zero provider calls.
+The callback grants no signed-reader or installation-authority evidence.
 
 ## Policy setup costs and remaining proof work
 
@@ -132,11 +139,38 @@ existing bounds or a bounded size quote before that protocol grows. A
 complete cost proof must also state whether peer SQL calls belong in the
 caller call coordinate. No completed charge or cost proof is claimed here.
 
-Planner question `59c2e3cb` covers the proof refusal contract. The current
-text-or-null namespace reply does not distinguish pending installation
-from oversized sender metadata or invalid immutable proof. AE-1 treats a
-missing proof as transient. ARC-1 cannot infer a permanent structural stop
-from null without a further ruling. The draft keeps the wire unchanged.
+Ruling `12115613` resolves planner question `59c2e3cb` with this closed list.
+Each refusal has one `reason` property, no sender label or payload, and a
+fixed size bound. It keeps the original full read reservation. A reply that
+the receiver cannot read retains its former transient behavior. The
+terminal record and existing activation diagnostic expose the fixed
+`proofReason` beside `application-policy-unavailable`, without a new page
+or command. ARC-1 consumes this same result and adds no second proof seam.
+
+| Proof refusal | Later event and classification |
+|---|---|
+| `installation-not-active` | Retry. Creator confirmation can activate a provisional Rules scope; the native job open entry can make a future job available; `application-install-result` can activate its pending installation. |
+| `retained-proof-missing` | Stop. An active installation already committed its signed inputs in the native act transaction. No pending archive repair replenishes them. |
+| `metadata-limit` | Stop. AE-1 provides no transition that trims or resets these existing Rules/job records under the unchanged 64 KiB bound. |
+| `malformed-or-unsupported` | Stop. A fixed native pin, installation identity or signed digest cannot change through a pending installation event. |
+
+Native retention commits `valuesOf` beside the admitted draft
+(`packages/scope/src/core.ts`). The active transition follows the creation
+result (`packages/platform/src/application-install.ts`). Retained values
+use insert-on-conflict-do-nothing (`packages/scope/src/sqlite.ts`), so a
+later use never replaces a malformed value. A separate new installation
+could fill a missing key with the same immutable signed value, but AE-1
+adds no repair or resume trigger for the old terminal scope. Its confirmed
+receipt stays intact. No provider call follows a refusal during that
+scope's policy preparation.
+
+Planner question `0ee81c18` asks about native control-journal ordering.
+Rules/Directory candidate entries discover their package proof in source
+preparation, after the existing target, format or parent read. A refusal
+there prevents further provider work but does not undo those earlier
+reads. Moving candidate discovery ahead of every provider call needs a
+bounded scheduling decision. The draft makes no universal zero-call claim
+for that native candidate path and adds no whole-prefix preflight scan.
 
 ## Validation remains pending
 

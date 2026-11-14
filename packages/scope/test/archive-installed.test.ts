@@ -619,7 +619,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       const calls = providerCalls;
       const revoked = await run(rootScope, rootHead);
       expect(revoked.result).toMatchObject({ state: "stopped", reason: "application-policy-revoked", next: null });
-      expect(revoked.terminal).toBe("application-policy-revoked"); expect(revoked.confirmed).toEqual(confirmed);
+      expect(revoked.terminal).toEqual({ reason: "application-policy-revoked" }); expect(revoked.confirmed).toEqual(confirmed);
       const repeated = await run(rootScope, rootHead);
       expect(repeated.result).toMatchObject({ state: "stopped", reason: "application-policy-revoked", next: null });
       expect(repeated.confirmed).toEqual(confirmed); expect(providerCalls).toBe(calls);

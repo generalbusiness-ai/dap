@@ -14,7 +14,7 @@ export class ArchiveStopped extends Error {
 /** Trusted policy owner may stop before any repository has been selected.
  * It crosses wait() intact; it neither resets nor exhausts the budget. */
 export class ArchivePolicyStopped extends ArchiveStopped {
-  constructor(readonly policyReason: "application-policy-revoked" | "application-policy-unavailable") { super("unavailable"); }
+  constructor(readonly policyReason: "application-policy-revoked" | "application-policy-unavailable", readonly proofReason?: string) { super("unavailable"); }
 }
 /** Policy proof may lag native creation; it must remain a retry. */
 export class ArchivePolicyPending extends ArchiveStopped { constructor() { super("unavailable"); } }

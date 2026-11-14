@@ -4,7 +4,7 @@ import type { ScopeId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract
 import { canonicalize, digestBytes, isHead, isRecord, isScopeRef, natural, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_SCOPE_METADATA_BYTES } from "./archive-pin.ts";
-import { ArchiveRows, archiveRestartEligible, type ArchivedPosition, type ArchiveMark, type ArchiveStoredWake } from "./archive-row.ts";
+import { ArchiveRows, archiveRestartEligible, type ArchivedPosition, type ArchiveMark, type ArchiveStoredWake, type ArchiveTerminal } from "./archive-row.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import type { Sql } from "./sqlite.ts";
 
@@ -28,7 +28,7 @@ export interface ArchiveOperatorRow {
 export type ArchiveOperatorView = { readonly state: "absent" }
   | { readonly state: "unknown"; readonly reason: "scope" }
   | { readonly state: "read"; readonly row: Observation<ArchiveOperatorRow>;
-    readonly terminal?: Observation<{ readonly reason: ArchiveOperatorReason }>;
+    readonly terminal?: Observation<{ readonly reason: ArchiveOperatorReason; readonly proofReason?: ArchiveTerminal["proofReason"] }>;
     readonly storedWake: Observation<ArchiveStoredWake>;
     readonly platformAlarm: Observation<{ readonly at: number }> };
 const fields = (value: Record<string, unknown>, expected: string): boolean => Object.keys(value).sort().join(",") === expected;
@@ -62,8 +62,8 @@ export async function archiveOperatorState(sql: Pick<Sql, "exec">, name: ScopeId
   // load() owns the existing strict, canonical, bounded ArchiveRow decoder.
   // Its synchronous frame is read-only; never construct SqliteStore here.
   const rows = new ArchiveRows({ exec: sql.exec.bind(sql), transaction: read => read() }, at);
-  let terminal: Observation<{ readonly reason: ArchiveOperatorReason }> = { state: "absent" };
-  try { const reason = rows.terminal(budget); if (reason !== null) terminal = { state: "present", reason: (reasons as readonly string[]).includes(reason) ? reason as ArchiveOperatorReason : "unknown" }; }
+  let terminal: Observation<{ readonly reason: ArchiveOperatorReason; readonly proofReason?: ArchiveTerminal["proofReason"] }> = { state: "absent" };
+  try { const value = rows.terminal(budget); if (value !== null) terminal = { state: "present", reason: (reasons as readonly string[]).includes(value.reason) ? value.reason as ArchiveOperatorReason : "unknown", ...(value.proofReason ? { proofReason: value.proofReason } : {}) }; }
   catch { terminal = { state: "unknown" }; }
   let storedWake: Observation<ArchiveStoredWake>;
   try { const wake = rows.storedWake(budget); storedWake = wake === null ? { state: "absent" } : { state: "present", pending: wake.pending, stopped: wake.stopped, next: wake.next }; }
@@ -111,6 +111,7 @@ export async function archiveRowDiagnostic(sql: Pick<Sql, "exec">, name: ScopeId
   const row = view.row;
   return { scope: name, rowDigest: row.state === "present" ? row.rowDigest : row.state, restartGeneration: row.state === "present" ? row.restartGeneration : "unknown", state: view.terminal?.state === "present" ? "present" : row.state, phase: view.terminal?.state === "present" ? "stopped" : row.state === "present" ? row.phase : row.state,
     reason: view.terminal?.state === "present" ? view.terminal.reason : view.terminal?.state === "unknown" ? "unknown" : row.state === "present" ? row.reason : row.state === "unknown" ? "unknown" : null,
+    ...(view.terminal?.state === "present" && view.terminal.proofReason ? { proofReason: view.terminal.proofReason } : {}),
     confirmed: row.state === "present" ? row.confirmed === null ? "absent" : { commit: row.confirmed.commit, through: { ...row.confirmed.through } } : row.state,
     pendingMark: row.state === "present" ? row.pendingMark === null ? "absent" : { commit: row.pendingMark.commit, through: { ...row.pendingMark.through } } : row.state,
     storedWake: view.storedWake.state === "present" ? { pending: view.storedWake.pending, stopped: view.storedWake.stopped, next: view.storedWake.next } : view.storedWake.state,

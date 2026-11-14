@@ -65,7 +65,7 @@ import { ItemQueries } from "./item-queries.ts";
 import { ApplicationProjections } from "./applications/projection.ts";
 import { ApplicationActAdmission } from "./applications/act-admission.ts";
 import { APPLICATION_DECLARATION_BYTES, type ApplicationDeclarationSource } from "./applications/projection-source.ts";
-import { storedApplicationArchiveProof } from "./applications/archive-proof.ts";
+import { storedApplicationArchiveProof, type ApplicationArchiveProofResult } from "./applications/archive-proof.ts";
 import { readArchivePin } from "./archive-pin.ts";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
 import { ReadPreparation } from "./read-preparation.ts";
@@ -869,12 +869,12 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   }
   /** Namespace-only signed install proof. The caller must authenticate this
    * Rules birth, charge the bounded read and check current publisher trust. */
-  applicationArchiveProofBytes(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number): string | null | RoomRetiredStop {
+  applicationArchiveProofBytes(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number): ApplicationArchiveProofResult | RoomRetiredStop {
     if (this.#retired) return ROOM_RETIRED_STOP;
     // Neither first-ingress dispatch nor cold-pin index repair belongs to a proof read.
     const identity = this.#proofBytes.identity();
     const pin = identity ? readArchivePin(this.#readSql, identity.genesis.at) : null;
-    return pin ? storedApplicationArchiveProof(this.#store, pin.seed.definition, directory, item) : null;
+    return pin ? storedApplicationArchiveProof(this.#store, pin.seed.definition, directory, item) : { reason: "malformed-or-unsupported" };
   }
   applicationProjectionDeclaration(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number, name: string) {
     if (this.#retired) return ROOM_RETIRED_STOP;

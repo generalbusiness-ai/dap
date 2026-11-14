@@ -20,6 +20,8 @@ const KEY = "archive-row-1";
 const WAKE = "archive-wake-1";
 const RESTART = "archive-restart-1";
 const TERMINAL = "archive-terminal-1";
+const proofReasons = ["installation-not-active", "retained-proof-missing", "metadata-limit", "malformed-or-unsupported"] as const;
+export interface ArchiveTerminal { readonly reason: string; readonly proofReason?: typeof proofReasons[number] }
 interface ArchiveWake {
   readonly pending: boolean;
   readonly stopped: boolean;
@@ -320,23 +322,24 @@ export class ArchiveRows {
   }
   /** A policy stop needs no repository, provider format or fabricated row.
    * It preserves any existing confirmed receipt and prevents scheduling. */
-  terminal(budget = new ArchiveBudget()): string | null {
+  terminal(budget = new ArchiveBudget()): ArchiveTerminal | null {
     const rows = budget.native(this.#sql, archiveTerminalReadReservation).exec("SELECT v FROM meta WHERE k = ? AND typeof(v) = 'text' AND octet_length(v) <= 512 LIMIT 1", TERMINAL).toArray();
     if (!rows.length) return null;
     const bytes = rows[0]?.["v"];
     if (typeof bytes !== "string") return refuse("unavailable");
     const value: unknown = parseStrict(bytes);
-    if (!isRecord(value) || !fields(value, "at,reason,v") || value["v"] !== 1 || !same(value["at"], this.#at)
+    if (!isRecord(value) || !fields(value, Object.hasOwn(value, "proofReason") ? "at,proofReason,reason,v" : "at,reason,v") || value["v"] !== 1 || !same(value["at"], this.#at)
+      || Object.hasOwn(value, "proofReason") && !(proofReasons as readonly unknown[]).includes(value["proofReason"])
       || typeof value["reason"] !== "string" || !/^[a-z][a-z0-9-]{0,127}$/.test(value["reason"]) || canonicalize(value) !== bytes) return refuse("unavailable");
-    return value["reason"];
+    return { reason: value["reason"], ...(Object.hasOwn(value, "proofReason") ? { proofReason: value["proofReason"] as typeof proofReasons[number] } : {}) };
   }
-  halt(reason: string, budget = new ArchiveBudget()): void {
-    if (!/^[a-z][a-z0-9-]{0,127}$/.test(reason)) return refuse("unavailable");
+  halt(reason: string, budget = new ArchiveBudget(), proofReason?: string): void {
+    if (!/^[a-z][a-z0-9-]{0,127}$/.test(reason) || proofReason !== undefined && !(proofReasons as readonly string[]).includes(proofReason)) return refuse("unavailable");
     this.#sql.transaction(() => {
       // A potentially large pending row remains byte-for-byte untouched.
       // The scope-bound terminal overlay is sufficient to stop this owner.
       budget.spend(forecastArchiveTerminalWrite(512));
-      const value = canonicalize({ v: 1, at: this.#at, reason });
+      const value = canonicalize({ v: 1, at: this.#at, reason, ...(proofReason !== undefined ? { proofReason } : {}) });
       this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO NOTHING", TERMINAL, value).toArray();
       this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", WAKE, canonicalize({ pending: false, stopped: true, next: null })).toArray();
       budget.check();

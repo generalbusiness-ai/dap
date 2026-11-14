@@ -177,7 +177,7 @@ export class ArchiveDriver {
       const current = this.#options.current()!;
       const at = { ...current.at }, through = { ...current.head };
       const terminal = rows.terminal(budget);
-      if (terminal) return done({ state: "stopped", next: null, reason: terminal });
+      if (terminal) return done({ state: "stopped", next: null, reason: terminal.reason });
       let policySeed: Seed | null = null;
       if ("production" in this.#options && this.#options.preparePolicies) {
         // Policy denial must not depend on decoding a large old pending row.
@@ -475,7 +475,7 @@ export class ArchiveDriver {
     } catch (error) {
       if (error instanceof ArchivePolicyStopped) {
         const rows = this.#store();
-        if (rows) { rows.halt(error.policyReason, budget); return done({ state: "stopped", next: null, reason: error.policyReason }); }
+        if (rows) { rows.halt(error.policyReason, budget, error.proofReason); return done({ state: "stopped", next: null, reason: error.policyReason }); }
       }
       if (error instanceof ArchivePrefixStopped) sourceFailure = error.sourceFailure ?? null;
       // Preserve a terminal planner debit if a subsequent row stop encounters
