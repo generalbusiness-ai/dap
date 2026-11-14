@@ -13,7 +13,7 @@ import { OwnGit, ownHost } from "../../../../packages/scope/test/hosts.ts";
 import { artifactsOutside } from "../../../../packages/scope/src/artifacts-wiring.ts";
 import type { ArtifactsNamespace } from "../../../../packages/scope/src/artifacts-host.ts";
 import type { ClaimLocks } from "../src/claim.ts";
-import { FAILED_CLAIM_COHORT } from "@generalbusiness/dap-platform";
+import { BASE_COHORT } from "@generalbusiness/dap-platform";
 import { memoryPageKeys } from "./private-key-fixture.ts";
 const keys = memoryPageKeys();
 
@@ -51,7 +51,7 @@ async function registerFixture() {
     const secret = (await lifetime.wait(() => ctx.store.secret(config.key)))!;
     const session = { service: "https://scopes.test", secret, now: ctx.now! };
     const configured = await lifetime.wait(() => allowedClaim({ ...session, fetch }, config.register!));
-    expect(configured.definition).toBe(FAILED_CLAIM_COHORT.register);
+    expect(configured.definition).toBe(BASE_COHORT.register);
     return { config, configured, pause, fetch, secret, session, lifetime, done: lifetime.release };
   } catch (error) { lifetime.release(); throw error; }
 }

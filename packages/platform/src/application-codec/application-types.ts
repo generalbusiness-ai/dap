@@ -58,14 +58,14 @@ export interface ApplicationPackageInput {
 
 /** Public routing metadata of one native active installation. This is not a
  * grant or a read session and exposes no application item data. */
-export interface ApplicationRoom { readonly directory: import("@generalbusiness/dap-contract").ScopeRef; readonly rules: import("@generalbusiness/dap-contract").ScopeRef; readonly membershipDefinition?: "platform:membership@10" | "platform:membership@11" | "platform:membership@12" | "platform:membership@13" }
+export interface ApplicationRoom { readonly directory: import("@generalbusiness/dap-contract").ScopeRef; readonly rules: import("@generalbusiness/dap-contract").ScopeRef; readonly membershipDefinition?: "platform:membership@10" | "platform:membership@11" | "platform:membership@12" | "platform:membership@13" | "platform:membership@14" }
 export interface ApplicationInstallation extends Omit<ApplicationRoom, "membershipDefinition"> {
   /** Filled by current native routing metadata. Legacy metadata used M7. */
-  readonly membershipDefinition?: "platform:membership@7" | "platform:membership@8" | "platform:membership@9" | "platform:membership@10" | "platform:membership@11" | "platform:membership@12" | "platform:membership@13";
+  readonly membershipDefinition?: "platform:membership@7" | "platform:membership@8" | "platform:membership@9" | "platform:membership@10" | "platform:membership@11" | "platform:membership@12" | "platform:membership@13" | "platform:membership@14";
 
   readonly membership: import("@generalbusiness/dap-contract").ScopeRef;
   readonly destination: import("@generalbusiness/dap-contract").ScopeRef;
   readonly scope: import("@generalbusiness/dap-contract").ScopeRef;
   readonly item: number; readonly definition: Digest; readonly ids: ApplicationIds;
 }
-export interface ApplicationScreenContext extends ApplicationInstallation { readonly v: 1; readonly origin: string; readonly deployment: string; readonly membershipDefinition: "platform:membership@7" | "platform:membership@8" | "platform:membership@9" | "platform:membership@10" | "platform:membership@11" | "platform:membership@12" | "platform:membership@13" }
+export interface ApplicationScreenContext extends ApplicationInstallation { readonly v: 1; readonly origin: string; readonly deployment: string; readonly membershipDefinition: "platform:membership@7" | "platform:membership@8" | "platform:membership@9" | "platform:membership@10" | "platform:membership@11" | "platform:membership@12" | "platform:membership@13" | "platform:membership@14" }

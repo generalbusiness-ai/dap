@@ -13,7 +13,7 @@ import { Collection } from "../../../apps/views/src/reads.ts";
 import { memoryPageKeys } from "../../../apps/room/page/test/private-key-fixture.ts";
 import { demoCreationRoute } from "../../../apps/room/demo-creation.ts";
 import type { Binding } from "../src/namespace.ts";
-import { FAILED_CLAIM_COHORT as C } from "@generalbusiness/dap-platform";
+import { BASE_COHORT, FAILED_CLAIM_COHORT as C } from "@generalbusiness/dap-platform";
 import { artifactsOutside } from "../src/artifacts-wiring.ts";
 import type { ArtifactsNamespace } from "../src/artifacts-host.ts";
 import { rita, sam, routed } from "./repository.ts";
@@ -62,10 +62,11 @@ async function exhaust(life: Life, R: Node) {
 }
 
 // Invariant: terminal failed claims release the actual64-place item capacity without changing historical registers.
-test("failed claims release all64 places, and the returning host can serve a new claim", async () => {
+// CF-1: Register 28 of the base family carries the same repair.
+test.each([C.register, BASE_COHORT.register] as const)("failed claims release all64 places, and the returning host can serve a new claim (%s)", async pin => {
   const life = fixture();
   try {
-    const { R, control } = await installed(life);
+    const { R, control } = await installed(life, "keys", pin);
     for (let n = 0; n < 65; n++) {
       const answer = await found(life, R);
       expect(answer.answer, `claim ${n}`).toBe("accepted");

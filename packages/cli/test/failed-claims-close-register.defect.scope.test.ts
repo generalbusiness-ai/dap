@@ -21,7 +21,7 @@ import type { Answer, Entry, Intent, KeyId, PlatformDefinition, Read, ScopeId } 
 import { secretSigner, type Fetch } from "@generalbusiness/dap-client";
 import type { Item } from "@generalbusiness/dap-derive";
 import { keys } from "@generalbusiness/dap-derive/testing";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT as DEMO, ARCHIVE_DEVICE_PUBLICATION_COHORT as RETAINED, FAILED_CLAIM_COHORT, platform } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT as DEMO, ARCHIVE_DEVICE_PUBLICATION_COHORT as RETAINED, BASE_COHORT, FAILED_CLAIM_COHORT, platform } from "@generalbusiness/dap-platform";
 import { demoCreationRoute } from "../../../apps/room/demo-creation.ts";
 import type { ArtifactsNamespace } from "../../scope/src/artifacts-host.ts";
 import { artifactsOutside } from "../../scope/src/artifacts-wiring.ts";
@@ -388,7 +388,9 @@ test("DEFECT: on the public route, new keys fill the 64 places during an outage;
 }, 280_000);
 
 // Invariant: each historical register pin predating FAILED_CLAIM_COHORT behaves the same when it has a host: one founder fills `max`, and a second founder gets `type-full`.
-const PINS = [...new Set(CREATION_COHORTS.filter(cohort => cohort.register !== FAILED_CLAIM_COHORT.register).map(cohort => cohort.register))] as PlatformDefinition[];
+// Register 28 of the base family carries the failed-claim repair (CF-1), so it is not a historical pin here.
+const REPAIRED: readonly string[] = [FAILED_CLAIM_COHORT.register, BASE_COHORT.register];
+const PINS = [...new Set(CREATION_COHORTS.filter(cohort => !REPAIRED.includes(cohort.register)).map(cohort => cohort.register))] as PlatformDefinition[];
 test.each(PINS)("DEFECT: %s under policy keys and a failing GitHub host: one founder fills 64, the other founder gets type-full, and a stranger gets unauthorized", async (pin) => {
   const life = fixture(false);
   try {
