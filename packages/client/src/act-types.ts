@@ -1,5 +1,6 @@
 /** Pure act values and the stated inputs of exploration. None authorizes a send. */
-import type { DeclaredDefinition, Digest, FactRef, Head, KeyId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, Digest, Effect, FactRef, FieldValue, Head, Item, KeyId, RefusalReason, ScopeRef, Timestamp, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { RefusalClass } from "@generalbusiness/dap-bytes";
 import type { Kind, ValueOf } from "./declared.ts";
 
 /** One version of a step, within the same scope and owner. */
@@ -61,3 +62,53 @@ export interface IncompleteExploration<D extends DeclaredDefinition, K extends K
   readonly act: PartialAct<D, K>;
   readonly missing: readonly string[];
 }
+
+export interface ActRef {
+  readonly name: ItemName;
+  readonly seen: Revision;
+  readonly assumes: readonly Source[];
+}
+
+type ItemType<D extends DeclaredDefinition> = keyof D["items"] & string;
+type SlotValues<V> = { readonly [S in keyof V]: (V[S] extends { of: infer F } ? ValueOf<F> : FieldValue) | null };
+type RefValue<T> = T extends { type: "item" } ? ItemName
+  : T extends { type: "fact" } ? number | FactRef | SymbolicEntry
+  : ValueOf<T>;
+type SlotRefs<R> = { readonly [S in keyof R]: (R[S] extends { to: infer T } ? RefValue<T> : FieldValue | SymbolicEntry) | null };
+
+/** Public names replace internal item aliases and speculative revisions. */
+export type ActRow<D extends DeclaredDefinition, T extends ItemType<D> = ItemType<D>> = {
+  [U in T]: Omit<Item, "id" | "type" | "revision" | "refs" | "values"> & {
+    readonly type: U;
+    readonly ref: ActRef;
+    readonly recorded: ActRow<D, U> | null;
+    readonly refs: SlotRefs<D["items"][U]["refs"]>;
+    readonly values: SlotValues<D["items"][U]["values"]>;
+  }
+}[T];
+
+/** A hypothetical view retains the recorded head and names every assumed step. */
+export interface ActView<D extends DeclaredDefinition> {
+  readonly head: Head;
+  readonly assumes: readonly Source[];
+  rows<T extends ItemType<D>>(type: T): readonly ActRow<D, T>[];
+  row(name: ItemName): ActRow<D> | null;
+}
+
+type LocalEffect<E> = E extends { effect: "relation" } ? E
+  : E extends { effect: "ref" } ? Omit<E, "item" | "to"> & { readonly item: ItemName; readonly to: FieldValue | ItemName | SymbolicEntry | null }
+  : E extends { item: number } ? Omit<E, "item"> & { readonly item: ItemName }
+  : E;
+export type ActEffect = LocalEffect<Effect>;
+export type Lack = UnavailableReason | "intent" | "entry" | "source" | "due";
+
+export type Exploration<D extends DeclaredDefinition, K extends Kind<D>> =
+  | IncompleteExploration<D, K>
+  | { readonly is: "admitted"; readonly source: Source; readonly act: BoundAct<D, K>; readonly context: Context;
+      readonly bound: readonly string[]; readonly effects: readonly ActEffect[]; readonly sends: number;
+      readonly opens: ItemName | null; readonly judgesTime: boolean; readonly after: ActView<D> }
+  | { readonly is: "refused"; readonly act: BoundAct<D, K>; readonly context: Context; readonly bound: readonly string[];
+      readonly reason: RefusalReason; readonly class: RefusalClass;
+      /** Capability diagnostics need not appear in the act's declared guard names. */
+      readonly name?: Named<D, K> | (string & {}) }
+  | { readonly is: "unavailable"; readonly act: Act<D, K>; readonly context: Context; readonly lacks: readonly Lack[] };
