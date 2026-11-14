@@ -77,6 +77,7 @@
     }
   ],
   "vars": {
+    "INSTALLED_REGISTER_SCOPES": "[\"sc_wmtd3fkl2cwafzzredeicmrdhtdo2ics6n7kezy6ds4rxaqvaxoa\"]",
     // Recorded live mode; preserve enforced admission on deployment.
     "SCOPE_INDEX_MODE": "enforce",
     "PLATFORM_CREATION_PINS": "[\"platform:register@28\",\"platform:directory@27\",\"platform:membership@14\",\"platform:rules@15\",\"platform:destination@21\",\"platform:register@17\",\"platform:directory@16\",\"platform:membership@8\",\"platform:rules@10\",\"platform:destination@12\",\"platform:inbox@1\"]",
@@ -89,8 +90,8 @@
     "SERVING_READ_ADDRESS_PER_MINUTE": "600",
     "GROW_ARCHIVE_CONFIG": "{\"policy\":\"grow-room-archive-1\",\"release\":\"sha256:71e10ca9499e926a4de1d8294ed83a772051dff677d8b1687bbd8e28e61802fa\",\"directory\":\"sc_ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq\",\"repositoryName\":\"ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq-1\"}",
     "DEPLOYMENT": "dap-grow-v1",
-    "REGISTER_SCOPE": "sc_yatkl7kuktl2gauvjrt7b2zy7nr6nu55vkzorot2bm5n2umgpbnq",
-    "ARTIFACTS_CONFIG": "{\"registerScope\":\"sc_yatkl7kuktl2gauvjrt7b2zy7nr6nu55vkzorot2bm5n2umgpbnq\",\"namespace\":\"artroom-demo\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}",
+    "REGISTER_SCOPE": "sc_wmtd3fkl2cwafzzredeicmrdhtdo2ics6n7kezy6ds4rxaqvaxoa",
+    "ARTIFACTS_CONFIG": "{\"registerScope\":\"sc_wmtd3fkl2cwafzzredeicmrdhtdo2ics6n7kezy6ds4rxaqvaxoa\",\"namespace\":\"artroom-demo\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}",
     "APPLICATION_TRUST": "[{\"release\":\"sha256:71e10ca9499e926a4de1d8294ed83a772051dff677d8b1687bbd8e28e61802fa\",\"publisher\":\"key_gg4rXwy4v-kVqveN37_W_FW_-Wvsn3fgsal5z6gxfS0\",\"host\":\"github.com\"}]"
   }
 }
