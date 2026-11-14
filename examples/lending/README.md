@@ -68,6 +68,22 @@ hidden while the actions are loading or cannot be read. The native scope
 still refuses a nonstaff cancellation as `unauthorized`, including when a
 previously observed staff role has changed.
 
+## Reserve a tool for a day
+
+A member opens a reservation with `tool`, `day` and `until`. A slot is
+one tool and one day label. A held reservation makes another reservation
+for that exact slot fail with `tool-day-taken`. The lapse changes only
+the reservation to `lapsed`; it never changes the tool.
+
+Write day labels as `YYYY-MM-DD` in pages and agent requests. This is a
+convention, not a guard. The scope compares opaque text of at most ten
+bytes: two spellings of a calendar day are two different slots. It does
+not check a calendar, timezone or interval. The member supplies `until`
+explicitly, and the scope never checks that `until` falls on `day`.
+
+The definition and retained scenario expose reservation acts. The current
+browser screen keeps its circulation controls.
+
 ## What is here
 
 | File | What it is |
@@ -75,7 +91,7 @@ previously observed staff role has changed.
 | `definition.ts` | The `lending` definition: a `library` item that holds the destination and many `thing` items; `publish` refreshes a thing's page without changing it. |
 | `definition.json` | Readable declaration source; canonicalize its parsed value before `--value`. |
 | `pin.ts` | The digest of those bytes, `LENDING_DEFINITION`. |
-| `scripts/pin.mjs` | Writes `definition.json` and `pin.ts` from `definition.ts`. Run it after any change to the definition. |
+| `scripts/pin.mjs` | Historical literal-only authoring helper. It cannot read the current typed definition; use the typed authorship path to regenerate the declaration and pin. |
 | `shelf.ts` | The shelf page of one thing as markdown, with members' text made literal; and every thing, live or gone, read from the journal. |
 | `browser/publication.ts` | Reads a published page and compares its visible text with the page the journal implies, at one observed commit. |
 | `test-support.ts` | The in-memory scope, rules and stand-in destination that `definition.test.ts` uses. |

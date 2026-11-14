@@ -13,7 +13,7 @@ const wrote = (j: Awaited<ReturnType<typeof submit>>) => expect(j.result, JSON.s
 const donate = async (s: Ledger, who: typeof keys.rita, name: string, description = "Copper.") => { wrote(await submit(s, who, "donate", donation(s, name, description), room(s))); return s.last.seq; };
 const act = (s: Ledger, who: typeof keys.rita, kind: string, id: number, fields = {}) => submit(s, who, kind, over(s, id, fields), room(s));
 
-// R's prerequisite data stays in this test owner. The shipped declaration and pin do not change.
+// Retain R's prerequisite fixture independently of the production reservation forms.
 function reservationContract(where: readonly Where[] = [
  { equals: { a: { slot: "tool" }, b: { field: "tool" } } },
  { equals: { a: { slot: "day" }, b: { field: "day" } } },
@@ -103,15 +103,32 @@ test("reservation contract: same-head opens share no revision and the second los
  expect(s.replay().snapshot()).toBe(s.state.snapshot());
 });
 
-test("the publication declaration is its canonical bytes and pin, with one bounded tell per nongenesis act and no capability", () => {
+test("production reservation slots compare opaque day labels and lapse without changing their tool", async () => {
+ const s = make(), tool = await donate(s, keys.rita, "Drill"), before = structuredClone(s.item(tool));
+ for (const day of ["2026-11-14", "2026/11/14"]) {
+  wrote(await submit(s, keys.una, "reserve", reserve(tool, day), room(s)));
+  expect(s.item(s.last.seq)).toMatchObject({ state: "held", refs: { tool }, values: { day, until: t(30) } });
+ }
+ const count = s.entries.length;
+ expect(await submit(s, keys.vic, "reserve", reserve(tool), room(s))).toMatchObject({ result: "refused", reason: "guard-failed", name: "tool-day-taken" });
+ expect(s.entries).toHaveLength(count);
+ s.now = t(30);
+ expect(s.drain().map(judgment => judgment.result)).toEqual(["write", "write"]);
+ expect(s.item(tool)).toEqual(before);
+ wrote(await submit(s, keys.vic, "reserve", { expected: {}, fields: { tool, day: "2026-11-14", until: t(60) } }, room(s)));
+ expect(s.replay().snapshot()).toBe(s.state.snapshot());
+});
+
+test("the declaration is its canonical bytes and pin, with publication tells and a local reservation lapse", () => {
  const checked = validateDefinition(lending, PROPOSED_BOUNDS, RULE_PROFILES);
  expect(checked.ok ? [] : checked.problems).toEqual([]);
  expect(lendingClosure).toEqual([lending]);
  const bytes = readFileSync(new URL("./definition.json", import.meta.url));
  expect(canonicalize(parseStrict(bytes.toString("utf8")))).toBe(canonicalize(lending)); expect(parseStrict(bytes.toString("utf8"))).toEqual(lending);
  expect(definitionDigest(lending)).toBe(LENDING_DEFINITION);
- expect([lending.capabilities, lending.receives, lending.timed]).toEqual([[], {}, {}]);
- expect(Object.values(lending.acts).map(a => a.sends.length)).toEqual([0, 1, 1, 1, 1, 1]);
+ expect([lending.capabilities, lending.receives]).toEqual([[], {}]);
+ expect(Object.fromEntries(Object.entries(lending.acts).map(([kind, act]) => [kind, act.sends.length]))).toEqual({ establish: 0, donate: 1, borrow: 1, return: 1, cancel: 1, publish: 1, reserve: 0 });
+ expect(lending.timed).toEqual({ lapse: { on: "reservation", states: ["held"], deadline: "until", effects: [{ state: "lapsed" }], attention: [] } });
 });
 
 test("Nasruddin and the pot: nine steps, two refusals, every accepted act sends its stored page, and the record refolds", async () => {

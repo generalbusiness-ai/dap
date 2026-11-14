@@ -31,7 +31,7 @@ const SERVICE = "https://scopes.test";
 // text is forwarded as given; the real gateway below builds its own page text.
 // Its projection route is a labelled STAND-IN over authenticated native reads:
 // this older cohort has no declared application installation ownership record.
-test("the lending library on real scopes: Nasruddin and the pot, its refusals, another member's return, the 64-thing bound, and roles that keep their earlier actions", async () => {
+test("the lending library on real scopes: circulation, two-member reservation admission, the 64-thing bound, and roles that keep their earlier actions", async () => {
   const lifetime = siteFixtureLifetime();
   const settle = (...nodes: readonly Platform[]) => dispatchFixture(nodes, lifetime.wait);
   let releaseRegister = () => {};
@@ -221,6 +221,28 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     expect(await L.item(0)).toEqual(libraryBeforePublish);
     expect((await things()).some(thing => thing.id === big)).toBe(false);
     expect((await L.last()).sends).toMatchObject([{ to: await G.at(), message: { class: "request", type: "tell", body: { message: "publish-file", fields: { path, content: fixtureContent } } } }]);
+
+    // Both members sign against one head with no shared revision. The scope's
+    // availability guard decides admission; the second slot reverses the order.
+    const toolBeforeReservations = await L.item(fresh), until = soon(3600);
+    for (const [day, first, second] of [["2026-11-14", nasruddin, passerby], ["2026-11-15", passerby, nasruddin]] as const) {
+      const preparedAt = await head(), fields = { tool: fresh, day, until };
+      const firstIntent = await L.intent(first, "reserve", { expected: {}, fields });
+      const secondIntent = await L.intent(second, "reserve", { expected: {}, fields });
+      expect([firstIntent.intent.expected, secondIntent.intent.expected]).toEqual([{}, {}]);
+      expect(firstIntent.intent.actor).not.toBe(secondIntent.intent.actor);
+      expect(await head()).toEqual(preparedAt);
+      const accepted = await L.stub.submit(firstIntent, []);
+      expect(accepted.answer).toBe("accepted");
+      if (accepted.answer !== "accepted") return expect.fail("The first tool-day reservation must be accepted.");
+      expect(await L.item(accepted.receipt.fact.seq)).toMatchObject({ type: "reservation", state: "held", refs: { tool: fresh }, values: { day, until } });
+      expect((await L.entries())[accepted.receipt.fact.seq]).toMatchObject({ input: { type: "act", signed: firstIntent }, sends: [] });
+      const admittedAt = await head();
+      expect(await L.stub.submit(secondIntent, [])).toMatchObject({ answer: "refused", reason: "guard-failed", name: "tool-day-taken" });
+      expect(await head()).toEqual(admittedAt);
+      expect((await L.summary()).value.items.filter(item => item.type === "reservation" && item.values["day"] === day)).toHaveLength(1);
+      expect(await L.item(fresh)).toEqual(toolBeforeReservations);
+    }
 
     // Anyone may return a lent thing: the passer-by brings back what Nasruddin borrowed.
     await refused(async () => act(passerby, "return", await on(small)), "guard-failed");

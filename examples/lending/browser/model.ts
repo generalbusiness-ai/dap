@@ -12,10 +12,10 @@ import { lending, library as declaredLibrary, thing as declaredThing } from "../
 import { annotatedRefusal, proposalWords } from "./annotations.ts";
 
 type Definition = typeof lending;
-export type LendingAct = Kind<Definition>;
+export type LendingAct = Exclude<Kind<Definition>, "reserve">;
 type Fields<K extends LendingAct> = Members<Definition["acts"][K]["fields"]>;
 export type ProposalInput = Partial<Pick<Fields<"donate">, "name" | "description"> & Pick<Fields<"cancel">, "reason"> & Pick<Fields<"publish">, "thing">>;
-const actKinds = Object.keys(lending.acts).filter((kind): kind is LendingAct => kind !== lending.genesis && Object.hasOwn(lending.acts, kind));
+const actKinds = Object.keys(lending.acts).filter((kind): kind is LendingAct => kind !== lending.genesis && kind !== "reserve" && Object.hasOwn(lending.acts, kind));
 /** A thing with its retained revision; publish reads a gone thing without changing it. */
 export interface ShownThing extends Omit<Thing, "seq"> { /** Present only for the historical complete-record adapter. */ seq?: number }
 export interface LendingView {
