@@ -41,7 +41,7 @@ test("the canonical partition keeps inherited native configs out of the plain ph
     "../mcp/test/**/*.scope.test.ts",
   ]);
   assert.deepEqual(stories.test.exclude, ["test/**/*.test.ts", ...scopeScaleFiles]);
-  assert.deepEqual(native.find(project => project.test.name === "scope-scale").test.provide, scope.test.provide);
+  assert.deepEqual(native.projects.find(project => project.test.name === "scope-scale").test.provide, scope.test.provide);
   assert.equal(plain.maxWorkers, 4); assert.equal(native.maxWorkers, 4);
   assert.throws(() => testOptions("unknown"), /Unknown test phase/);
   // Exercise the actual selection guard, without importing or resolving an
