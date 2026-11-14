@@ -121,7 +121,8 @@ reports `live-platform` at `level`, and the separate outcome-send parser
 keeps its live no-send guard. These limits prevent the admitted grammar
 from implying an implemented live turn.
 
-The carried H1 fixture correction, originally `44b` and now
+The carried H1 fixture correction, originally
+`44b0dbd4680324ae3b4ee48d3c360263c81587a3` and now
 `6383a6303c84083c5e316efe02d1a5ba4c185bef`, tests unsupported live
 version 2 at runtime. Live version 1 now belongs among admitted forms, so
 it no longer serves as the unsupported-version fixture.
@@ -135,15 +136,23 @@ reference. The later live turn remains a platform service. This head
 changes neither Operations nor `markSent`, and advances no model result
 or formal coverage hash.
 
+Numbered corpus labels distinguish rows when Vitest truncates long names.
+They change no case, assertion, or deadline. The maintained driver stays
+unchanged.
+
 ## HL-1: selected owners and bounded fixture cleanup
 
-`scripts/test.mjs` selects the repo-in-ai hosted-loop owner in the plain
-`j5` stage. The original timing and selection decision belong to the
-historical HL-1 record. The combined head still owes a current whole-owner
-run and a gate.
+`vitest.projects.mjs` names the plain project `repo-in-ai` and extends
+`examples/repo-in-ai/vitest.config.ts`. That configuration selects
+`test/*.test.ts`, including the whole hosted-loop owner. The original
+timing and selection decision belong to the historical HL-1 record. The
+combined focused scope includes the whole hosted-loop owner; its current
+formal run and the gate remain UNRUN.
 
-The Node inventory now includes `apps/views/test/two-process.test.mjs`
-and the selection owner. `scripts/test-selection.test.mjs` compares
+The Node inventory in `scripts/test.mjs` adds
+`apps/views/test/j5.test.mjs`, `apps/views/test/two-process.test.mjs`, and
+`scripts/test-selection.test.mjs`. The combined focused scope includes
+the whole newly enrolled Node `j5` owner. The selection owner compares
 tracked test files with the maintained plain, Native, Node, counting, and
 gate selections. An unselected test file needs an explicit reason. Manual
 browser recorders remain explicit exclusions; the inventory does not
@@ -275,7 +284,7 @@ output digest exists in this note yet.
 | R1 reproduction | Whole normal reproduction owner against current combined source and the committed release identifiers | UNRUN |
 | HL-1 plain and inventory owners | Whole hosted-loop and selection owners, including the frozen version-questions boundary | UNRUN |
 | Native live creation | Whole live-creation owner, including live refusal without retained writes and the recorded comparison | UNRUN |
-| Node owners | Whole declared Node owners, including views startup and awaited cleanup, register values, security entry points, and all eight CTL-1 cases | UNRUN |
+| Node owners | Whole declared Node owners, including the newly enrolled views `j5`, views startup and awaited cleanup, register values, security entry points, and all eight CTL-1 cases | UNRUN |
 | CUT-A2 control | One missing-choice witness on exact baseline `0ad4aa9102fe5f75b692d3adb30c8b00a6914574`, with an actual invariant failure and preserved current source | UNRUN |
 | Generated assets | Current generator comparison against the combined tracked output | UNRUN |
 | Full gate | One maintained `npm run gate` on the frozen combined head, under the current workroom power and interval rules | UNRUN |
