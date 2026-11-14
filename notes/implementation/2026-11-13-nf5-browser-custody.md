@@ -10,8 +10,9 @@ store keeps.
 ## The browser store
 
 The [14 November source follow-up](2026-11-14-nf5-storage-follow-up.md)
-replaces the draft segment layout and close behavior described below. All
-follow-up compiler, browser, control, model and gate checks remain UNRUN.
+replaces the draft segment layout and close behavior described below. Its
+current evidence section records the completed checks and the gate and hosted
+Counter acceptance still owed.
 
 `browserCustodyStore` in `packages/client/src/browser-custody.ts` implements
 `CustodyStore` with `byTarget` and `observe`, so it is a `ClientCustodyStore`.
