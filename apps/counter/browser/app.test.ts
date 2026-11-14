@@ -1,19 +1,18 @@
 // DOM surface, gateway, memory custody and speech are fake. No browser/native/audio execution.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { DOMAINS } from "@generalbusiness/dap-contract";
 import type { ScopeKind } from "@generalbusiness/dap-contract";
-import { domainBytes, keyIdOfSecret, sign, textDigest } from "@generalbusiness/dap-bytes";
+import { keyIdOfSecret, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
 import type { Summary } from "@generalbusiness/dap-contract";
-import { secretSigner, type ObservationState } from "@generalbusiness/dap-client";
+import { Custody, memoryStore, meaningOf, requestKey, secretSigner, signedIntent, type ObservationState } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION as COUNTING_DEFINITION } from "../commitments-pin.ts";
 import { mountCountingStage } from "./app.ts";
 import { browserSpeech } from "./speech.ts";
 import { stageView, type StagePresentation } from "./view.ts";
-import { nativeGateway, type CommandStore, type StageGateway } from "./client.ts";
+import { nativeGateway, type StageGateway } from "./client.ts";
 import type { CountingView } from "./model.ts";
-import type { ActorIdentity, AudioStart, PendingReport, PreparedEnvelope } from "./voice-controller.ts";
+import type { ActorIdentity, AudioStart, PendingReport } from "./voice-controller.ts";
 class Element {
   constructor(readonly tag="div") {}
   href="";attrs:Record<string,string>={};
@@ -48,23 +47,22 @@ test("Roster removal leaves the identity-owned original Check report reachable w
   const ref=(kind:ScopeKind)=>(scriptedSequence({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`FAKE mount ${kind}`),ordinal:0},"2026-01-01T00:00:00Z",7).at);
   const scope=ref("lane"),membership=ref("membership"),member={membership,member:"@ada" as const},identity:ActorIdentity={origin:"https://fake-mount.test",deployment:"FAKE",scope,membership,member,definition:COUNTING_DEFINITION,publicKey:keyIdOfSecret(secret)};
   const turn={...identity,generation:0,serial:1,N:1,expiresAt:10_000};
-  const intent:PreparedEnvelope["signed"]["intent"]={v:1,to:scope,actor:identity.publicKey,kind:"fulfill",on:1,expected:{},fields:{generation:0,serial:1,n:1},idempotencyKey:"FAKE retained",notAfter:"2099-01-01T00:00:00Z"};
-  const envelope:PreparedEnvelope={signed:{intent,sig:sign(secret,domainBytes(DOMAINS.intent,intent))},grants:[],beside:{}};
-  let held:PendingReport|null={completion:{turn,voiceId:"fake",completedAt:100},envelope,outcome:"unknown",journal:{v:2,active:0,attempts:[{envelope,phase:"unknown"}]}};
-  let publish:((state:ObservationState<Summary>,view?:CountingView)=>void)|undefined,checks=0,prepares=0,posts=0,plays=0;
+  const key=requestKey();
+  let held:PendingReport|null={completion:{turn,voiceId:"fake",completedAt:100},key,outcome:"unknown",custody:{phase:"unknown",signings:1,envelopes:1}};
+  let publish:((state:ObservationState<Summary>,view?:CountingView)=>void)|undefined,checks=0,posts=0,plays=0;
   const observation={refresh(){},cancel(){},done:Promise.resolve()};
-  const gateway={observe(emit:typeof publish){publish=emit;return observation;},prepare:async()=>{prepares++;return envelope;},submit:async()=>{posts++;return{status:"unknown" as const};},reconcile:async(original:PreparedEnvelope)=>{assert.deepEqual(original,envelope);checks++;return{status:"unknown" as const};},command:async()=>({status:"unknown" as const}),checkCommand:async()=>null,resumeCommand:async()=>null,commandResumeReady:()=>false,pendingCommand:()=>null,restoreCommand:async()=>{},dispose(){}} as unknown as StageGateway;
+  const gateway={observe(emit:typeof publish){publish=emit;return observation;},submit:async()=>{posts++;return{status:"unknown" as const};},reconcile:async(original:PendingReport)=>{assert.equal(original.key,key);checks++;return{status:"unknown" as const};},command:async()=>({status:"unknown" as const}),checkCommand:async()=>null,resumeCommand:async()=>null,commandResumeReady:()=>false,pendingCommand:()=>null,restoreCommand:async()=>{},dispose(){}} as unknown as StageGateway;
   const speech={voices:()=>[{id:"fake",name:"Fake"}],play:()=>{plays++;return()=>{};}};
   const root=new Element(),app=mountCountingStage(root as unknown as HTMLElement,{speech,connect(){},now:()=>100,runner:{acquire:async()=>()=>{}}});
   try{
-    await app.attach({identity,speech,gateway,store:{load:async()=>held,save:async p=>{held=p;},clear:async()=>{held=null;}},lock:{run:async work=>work()},current:()=>true});
+    await app.attach({identity,speech,gateway,store:{load:async()=>held,save:async p=>{held={...p,outcome:"unknown"};},clear:async()=>{held=null;}},lock:{run:async work=>work()},current:()=>true});
     const summary={scope,status:"active",definition:COUNTING_DEFINITION,time:"2099-01-01T00:00:00Z",counts:[],items:[]} as Summary;
     const view:CountingView={snapshot:summary,configuration:{id:0,revision:1,target:3,controller:member},board:{id:1,revision:1,state:"paused",target:3,generation:0,serial:2,lastNumber:0,number:null,speaker:null,lastSpeaker:null,until:null,pledge:null,lastFulfilledAt:null},participants:[{id:2,revision:1,member,state:"active"}],pledge:null,pendingPromise:null};
     const state={status:"current",snapshot:{value:summary}} as unknown as ObservationState<Summary>;
     publish!(state,view);const button=elements(root).find(e=>e.textContent==="Check report")!;assert.equal(button.hidden,false);
     publish!(state,{...view,participants:[]});assert.equal(elements(root).find(e=>e.textContent==="Check report"),button);assert.equal(button.hidden,false);assert.equal(button.disabled,false);
     button.onclick!();await new Promise<void>(resolve=>setImmediate(resolve));
-    assert.equal(checks,1);assert.deepEqual([prepares,posts,plays],[0,0,0]);assert.deepEqual(held?.envelope,envelope);
+    assert.equal(checks,1);assert.deepEqual([posts,plays],[0,0]);assert.equal(held?.key,key);
   }finally{app.dispose();Object.assign(globalThis,{document:oldDocument,HTMLElement:oldHTMLElement,HTMLButtonElement:oldButton});}
 });
 
@@ -76,12 +74,12 @@ test("Explicit Resume command fences active playback before dispatch and display
   const ref=(kind:ScopeKind)=>(scriptedSequence({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`FAKE resume mount ${kind}`),ordinal:0},"2026-01-01T00:00:00Z",7).at);
   const scope=ref("lane"),membership=ref("membership"),member={membership,member:"@ada" as const},identity:ActorIdentity={origin:"https://fake-resume.test",deployment:"FAKE",scope,membership,member,definition:COUNTING_DEFINITION,publicKey:keyIdOfSecret(secret)};
   let audioStart:AudioStart|null=null;
-  let publish:((state:ObservationState<Summary>,view?:CountingView)=>void)|undefined,commandPending=false,cancelled=false,resumes=0,prepares=0,posts=0,plays=0,commands=0,end:(()=>void)|undefined;
+  let publish:((state:ObservationState<Summary>,view?:CountingView)=>void)|undefined,commandPending=false,cancelled=false,resumes=0,posts=0,plays=0,commands=0,end:(()=>void)|undefined;
   let audioResolved=false,voicesAvailable=true;const archivedStarts:AudioStart[]=[];
   let refreshes=0,settleRefresh:(()=>void)|undefined,releaseRefresh:(()=>void)|undefined;
   const observation={refresh(){refreshes++;releaseRefresh=settleRefresh;},cancel(){},done:Promise.resolve()};
   const refusal="guard-failed: running-state — the native service refused Pause";
-  const gateway={observe(emit:typeof publish){publish=emit;return observation;},prepare:async()=>{prepares++;throw new Error("stale playback must not prepare");},submit:async()=>{posts++;return{status:"unknown" as const};},reconcile:async()=>({status:"unknown" as const}),command:async()=>{commands++;return{status:"unknown" as const};},checkCommand:async()=>null,
+  const gateway={observe(emit:typeof publish){publish=emit;return observation;},submit:async()=>{posts++;return{status:"unknown" as const};},reconcile:async()=>({status:"unknown" as const}),command:async()=>{commands++;return{status:"unknown" as const};},checkCommand:async()=>null,
     resumeCommand:async()=>{assert.equal(cancelled,true,"old playback is fenced before the command gateway runs");resumes++;commandPending=false;end?.();return{status:"refused" as const,reason:refusal};},commandResumeReady:()=>commandPending,pendingCommand:()=>commandPending?"pause":null,restoreCommand:async()=>{},audioObsolete:()=>audioResolved,dispose(){}} as unknown as StageGateway;
   let playedVoice:string|undefined;
   const speech={voices:()=>voicesAvailable?[{id:"fake",name:"Fake"},{id:"alternate",name:"Alternate"}]:[],play:(_text:string,voiceId:string,callbacks:{end():void;error():void})=>{plays++;playedVoice=voiceId;end=callbacks.end;return()=>{cancelled=true;callbacks.end();callbacks.error();};}};
@@ -90,15 +88,16 @@ test("Explicit Resume command fences active playback before dispatch and display
     await app.attach({identity,speech,gateway,store:{load:async()=>null,loadStart:async()=>audioStart,saveStart:async marker=>{audioStart=structuredClone(marker);},archiveStart:async marker=>{assert.equal(audioResolved,true);assert.deepEqual(marker,audioStart);archivedStarts.push(structuredClone(marker));audioStart=null;},save:async()=>{throw new Error("no new report expected");},clear:async()=>{}},lock:{run:async work=>work()},current:()=>true});
     const summary={scope,status:"active",definition:COUNTING_DEFINITION,time:"2099-01-01T00:00:00Z",counts:[],items:[]} as Summary;
     const view:CountingView={snapshot:summary,configuration:{id:0,revision:1,target:3,controller:member},board:{id:1,revision:1,state:"open",target:3,generation:0,serial:1,lastNumber:0,number:1,speaker:member,lastSpeaker:null,until:10_000,pledge:3,lastFulfilledAt:null},participants:[{id:2,revision:1,member,state:"active"}],pledge:{id:3,revision:1,state:"pledged" as const,member,participant:2,admittedAt:3,generation:0,serial:1,n:1,until:10000,basis:[{id:2,member}]},pendingPromise:{id:3,revision:1,state:"pledged" as const,member,participant:2,admittedAt:3,generation:0,serial:1,n:1,until:10000,basis:[{id:2,member}]}};
-    // Production gateway restoration with bounded corrupt memory payloads;
+    // Production gateway restoration over memory custody that holds a record at this target which is not a Counter command;
     // observation, DOM and speech remain fake. Each original remains intact.
-    const intent:PreparedEnvelope["signed"]["intent"]={v:1,to:scope,actor:identity.publicKey,kind:"pause",on:1,expected:{on:1},fields:{},idempotencyKey:"FAKE malformed command",notAfter:"2099-01-01T00:00:00Z"};
-    const envelope:PreparedEnvelope={signed:{intent,sig:sign(secret,domainBytes(DOMAINS.intent,intent))},grants:[],beside:{}};
-    for(const missing of [true,false]){
-      const held:unknown=missing?{envelope}:{kind:"",envelope};const original=JSON.stringify(held);
-      let writes=0,clears=0,voiceWrites=0,controls=0,emit:typeof publish,blockedAudioStart:AudioStart|null=null;
-      const commandStore:CommandStore={load:async()=>held as Awaited<ReturnType<CommandStore["load"]>>,save:async()=>{writes++;},clear:async()=>{clears++;}};
-      const restored=nativeGateway(identity,secretSigner(secret),{current:()=>true,lock:{run:async work=>work()},voiceStore:{load:async()=>null,save:async()=>{voiceWrites++;},clear:async()=>{clears++;}},commandStore,fetch:async()=>{posts++;throw new Error("No malformed command transport");},actFetch:async()=>{posts++;throw new Error("No malformed command POST");}});
+    for(const kind of ["bogus","pause-all"]){
+      let clears=0,voiceWrites=0,controls=0,emit:typeof publish,blockedAudioStart:AudioStart|null=null;
+      const custody=memoryStore(),write=custody.write;let writes=0;custody.write=async(...args)=>{writes++;return write(...args);};
+      const key=requestKey(),signer=secretSigner(secret);
+      await new Custody(custody,()=>timeOf(Date.now())).keep({service:identity.origin,membership,signer:identity.publicKey,target:scope,key},meaningOf({kind}),
+        async()=>({binding:{definition:"counting",kind,declaration:null,pinned:COUNTING_DEFINITION},envelope:{signed:await signedIntent(signer,{to:scope,kind,fields:{}},{idempotencyKey:key}),beside:{}}}),timeOf(Date.now()+60_000));
+      writes=0;const original=JSON.stringify([...custody.records]);
+      const restored=nativeGateway(identity,secretSigner(secret),{current:()=>true,lock:{run:async work=>work()},voiceStore:{load:async()=>null,save:async()=>{voiceWrites++;},clear:async()=>{clears++;}},custody,fetch:async()=>{posts++;throw new Error("No malformed command transport");},actFetch:async()=>{posts++;throw new Error("No malformed command POST");}});
       const mountedGateway={...gateway,observe(callback:typeof publish){emit=callback;return observation;},command:async(...args:Parameters<StageGateway["command"]>)=>{controls++;return restored.command(...args);},checkCommand:()=>restored.checkCommand(),resumeCommand:()=>restored.resumeCommand(),commandResumeReady:()=>restored.commandResumeReady(),pendingCommand:()=>restored.pendingCommand(),restoreCommand:()=>restored.restoreCommand(),dispose:()=>restored.dispose()};
       const blockedRoot=new Element(),blocked=mountCountingStage(blockedRoot as unknown as HTMLElement,{speech,connect(){},now:()=>100,runner:{acquire:async()=>()=>{}}});
       try{
@@ -111,7 +110,7 @@ test("Explicit Resume command fences active playback before dispatch and display
         elements(blockedRoot).find(e=>e.textContent==="Check command")!.onclick!();await new Promise<void>(resolve=>setImmediate(resolve));
         assert.equal((await restored.resumeCommand())?.status,"blocked");blocked.repaint();emit!(current,view);
         elements(blockedRoot).find(e=>e.dataset["focusKey"]==="join")!.onclick!();blocked.repaint();await new Promise<void>(resolve=>setImmediate(resolve));
-        assert.equal(restored.pendingCommand(),"unknown");assert.equal(plays,0);assert.deepEqual([writes,clears,voiceWrites,controls,prepares,posts],[0,0,0,0,0,0]);assert.equal(JSON.stringify(held),original);
+        assert.equal(restored.pendingCommand(),"unknown");assert.equal(plays,0);assert.deepEqual([writes,clears,voiceWrites,controls,posts],[0,0,0,0,0]);assert.equal(JSON.stringify([...custody.records]),original);
       }finally{blocked.dispose();}
     }
     // Truly empty command custody still reaches the existing playback/refusal
@@ -125,13 +124,13 @@ test("Explicit Resume command fences active playback before dispatch and display
     select.value="alternate";select.onchange!();
     assert.equal(elements(root).find(e=>e.dataset["focusKey"]==="join")!.disabled,true,"selection waits for the requested native observation");
     await new Promise<void>(resolve=>setImmediate(resolve));
-    assert.deepEqual([plays,prepares,posts],[0,0,0]);assert.equal(audioStart,null,"no speech marker is saved before a fresh native observation");
+    assert.deepEqual([plays,posts],[0,0]);assert.equal(audioStart,null,"no speech marker is saved before a fresh native observation");
     assert.equal(refreshes,1);assert.equal(typeof releaseRefresh,"function");releaseRefresh!();
     assert.equal(elements(root).find(e=>e.dataset["focusKey"]==="join")!.disabled,false);assert.equal(plays,0,"fresh observation does not automatically Join");
     elements(root).find(e=>e.dataset["focusKey"]==="join")!.onclick!();await new Promise<void>(resolve=>setImmediate(resolve));assert.equal(plays,1);assert.equal(playedVoice,"alternate");assert.equal(cancelled,false);
     commandPending=true;app.repaint();const resume=elements(root).find(e=>e.textContent==="Resume original command")!;assert.equal(resume.hidden,false);resume.onclick!();
     await new Promise<void>(resolve=>setImmediate(resolve));
-    assert.equal(resumes,1);assert.deepEqual([prepares,posts,plays],[0,0,1]);assert.equal(elements(root).some(e=>e.className==="notice"&&e.textContent===refusal&&e.classes.has("refused")),true);
+    assert.equal(resumes,1);assert.deepEqual([posts,plays],[0,1]);assert.equal(elements(root).some(e=>e.className==="notice"&&e.textContent===refusal&&e.classes.has("refused")),true);
     // Actual controller recovery consumes the intact marker only after the
     // scripted current record proves its native pledge obsolete. No replay.
     const originalStart=structuredClone(audioStart);assert.ok(originalStart);assert.equal(app.joined(),true);
@@ -140,13 +139,13 @@ test("Explicit Resume command fences active playback before dispatch and display
     elements(root).find(e=>e.textContent==="Check report")!.onclick!();await new Promise<void>(resolve=>setImmediate(resolve));
     assert.deepEqual(archivedStarts,[originalStart]);assert.equal(audioStart,null);assert.equal(app.joined(),false);
     const rejoin=elements(root).find(e=>e.dataset["focusKey"]==="join")!;assert.equal(rejoin.hidden,false);assert.equal(rejoin.disabled,false,"resolved custody exposes a new explicit Join");
-    assert.deepEqual([prepares,posts,plays,commands],[0,0,1,0]);
+    assert.deepEqual([posts,plays,commands],[0,1,0]);
     await app.join("alternate");assert.equal(app.joined(),true);assert.equal(plays,1,"paused explicit Join never replays obsolete audio");
     // voiceschanged uses repaint. An absent armed URI must also fence a
     // later fresh eligible snapshot before the first automatic commit.
     voicesAvailable=false;app.repaint();assert.equal(app.joined(),false);assert.equal(elements(root).find(e=>e.dataset["focusKey"]==="join")!.hidden,false);
     publish!(current,{...resolved,board:{...resolved.board!,state:"open"}});await new Promise<void>(resolve=>setImmediate(resolve));
-    assert.deepEqual([prepares,posts,plays,commands],[0,0,1,0]);
+    assert.deepEqual([posts,plays,commands],[0,1,0]);
     voicesAvailable=true;app.repaint();assert.equal(elements(root).find(e=>e.dataset["focusKey"]==="join")!.disabled,false);assert.equal(app.joined(),false,"restored inventory still requires explicit Join");
 
   }finally{app.dispose();Object.assign(globalThis,{document:oldDocument,HTMLElement:oldHTMLElement,HTMLButtonElement:oldButton});}
@@ -215,7 +214,7 @@ async function journeyFixture() {
       if(commandResult==="blocked"||commandResult==="unsent"){if(replyObservation)emit();return{status:"blocked" as const,reason:"Local preparation stopped",...(commandResult==="unsent"?{definitelyUnsent:true as const}:{})};}
       if(kind==="participate")view={...view,participants:[{id:2,revision:1,member,state:"inactive"}]};
       if(kind==="activate"||kind==="deactivate")view={...view,participants:view.participants.map(p=>({...p,state:kind==="activate"?"active" as const:"inactive" as const,revision:p.revision+1}))};
-      emit();return{status:"recorded" as const};},prepare:async()=>{throw new Error("No fulfilled report in this fixture");},submit:async()=>({status:"unknown" as const}),reconcile:async()=>({status:"unknown" as const})} as StageGateway;
+      emit();return{status:"recorded" as const};},submit:async()=>({status:"unknown" as const}),reconcile:async()=>({status:"unknown" as const})} as StageGateway;
   const speech={voices:()=>speechAvailable?[{id:"us",name:"American · en-US"}]:[],play:()=>{plays++;return()=>{};}};
   const root=new Element(),app=mountCountingStage(root as unknown as HTMLElement,{speech,connect(){},now:()=>100,runner:{acquire:async()=>leaseAvailable?()=>{releases++;}:null}});
   const store={load:async()=>null,loadStart:async()=>null,save:async()=>{},clear:async()=>{}};

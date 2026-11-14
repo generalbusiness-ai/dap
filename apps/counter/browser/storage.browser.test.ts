@@ -8,7 +8,7 @@ import { signedIntent } from "@generalbusiness/dap-client";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import { deviceSigner, importLegacyDevice, type SavedDevice } from "./device-key.ts";
-import { browserLock, privateDeviceStore, privateCommandStore, privatePendingStore } from "./storage.ts";
+import { browserLock, counterCustody, privateDeviceStore, privatePendingStore } from "./storage.ts";
 import { nativeGateway } from "./client.ts";
 const custody=privateDeviceStore();
 let channel:BroadcastChannel|undefined,notifications=0;
@@ -40,7 +40,7 @@ export const durableForgetWitness={
     return {rejected:denied,signs,dispatches,plays};
   },
   async sessionActivity(){if(!held)throw Error("TEST mount absent");const lease=held;const base=await deviceSigner(lease.device);let requests=0;
-    const gateway=nativeGateway(lease.device.binding,{...base,sign:async bytes=>{signs++;return base.sign(bytes);}},{current:()=>true,lock:browserLock(lease.device.binding,lease.epoch),voiceStore:privatePendingStore(lease.device.binding),commandStore:privateCommandStore(lease.device.binding),fetch:async()=>{requests++;return Response.json({ok:false,reason:"unauthorized"});}});
+    const gateway=nativeGateway(lease.device.binding,{...base,sign:async bytes=>{signs++;return base.sign(bytes);}},{current:()=>true,lock:browserLock(lease.device.binding,lease.epoch),voiceStore:privatePendingStore(lease.device.binding,counterCustody()),custody:counterCustody(),fetch:async()=>{requests++;return Response.json({ok:false,reason:"unauthorized"});}});
     try{const failed=await new Promise<boolean>(resolve=>{gateway.observe(state=>{if(["error","unavailable","forbidden"].includes(state.status))resolve(true);});});return {rejected:failed,signs,requests};}finally{gateway.dispose();}
   },
   async state(){const saved=await custody.load();return {epoch:saved.epoch,devices:saved.devices.length,choice:saved.choice??null};},

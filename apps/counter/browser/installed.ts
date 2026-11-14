@@ -1,11 +1,10 @@
 /** The installed Counter enrolls a browser key through native membership. */
 import { canonicalize, isRecord } from "@generalbusiness/dap-bytes";
-import { applicationDeviceIdentity, browserCustodyStore, browserJoining, browserPrivateSlots, generateBrowserDeviceKey, readApplicationInvitation, storedWebCryptoSigner,
+import { applicationDeviceIdentity, browserJoining, browserPrivateSlots, generateBrowserDeviceKey, readApplicationInvitation, storedWebCryptoSigner,
   type ApplicationScreenContext, type BrowserKeptJoin, type BrowserJoinSeat, type Fetch } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import type { SavedDevice } from "./device-key.ts";
-/** The custody records of this origin's Counter requests: joins and acts. */
-export const counterCustody = () => browserCustodyStore({ database: "dap-counter-custody-1", lock: "dap-counter-custody" });
+import { counterCustody } from "./storage.ts";
 interface Device { publicKey: import("@generalbusiness/dap-contract").KeyId; pair: CryptoKeyPair }
 export function counterEnrollment(context: ApplicationScreenContext, current: () => boolean, fetch?: Fetch) {
   if (context.definition !== COUNTING_COMMITMENTS_DEFINITION) throw Error("This presentation does not match the installed Counter definition.");

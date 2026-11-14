@@ -1,17 +1,18 @@
-/** Actual SDK adapter. Bootstrap/enrollment belongs to F1/C4, never this stage. */
-import type { Receipt } from "@generalbusiness/dap-contract";
+/** Actual SDK adapter. Bootstrap/enrollment belongs to F1/C4, never this stage.
+ * Each command and each voice report is kept in the client's `Custody` before it is sent. */
+import type { Answer, Receipt } from "@generalbusiness/dap-contract";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
-import { b64url, canonicalize, intentDigest, isRecord, timeOf } from "@generalbusiness/dap-bytes";
-import { ScopeHandle, completeApplicationItems, httpTransport, observeScope, openHttpHeadStream, requestSession, signerSessionRequest, shapeDeclaredAct, signedIntent, type Fetch, type HeadStreamFetch, type Observation, type ObservationState, type Session, type Signer } from "@generalbusiness/dap-client";
+import { b64url, canonicalize, intentDigest, timeOf, type ByteStream } from "@generalbusiness/dap-bytes";
+import { RETIRED_REQUEST, ScopeHandle, browserRequests, completeApplicationItems, httpTransport, meaningOf, observeScope, openHttpHeadStream, requestKey, requestSession, signerSessionRequest, shapeDeclaredAct, signedIntent, unsentError,
+  type ClientCustodyStore, type CustodyRecord, type Envelope, type Fetch, type HeadStreamFetch, type Observation, type ObservationState, type RequestSettled, type Session, type Signer } from "@generalbusiness/dap-client";
 import { countingCommitments as counting } from "../commitments.ts";
 import { COUNTING_COMMITMENTS_DEFINITION as COUNTING_DEFINITION } from "../commitments-pin.ts";
 import { assignedTurn, countingView, ownedParticipant, proposal, same, type Control, type ProposalOptions, type CountingRead, type CountingView } from "./model.ts";
 import { counterStateProjection } from "./projection.ts";
-import { appendPrepared, activeAttempt, envelopeKey, fitsPending, resumableJournal, validEnvelope, validReport, validJournal, type AttemptJournal } from "./journal.ts";
-import { attemptDispatcher, type TrustedActFetch } from "./dispatcher.ts";
-import type { ActorIdentity, Completion, PreparedEnvelope, Reporter, ReportOutcome, CustodyLock, PendingStore } from "./voice-controller.ts";
+import { correctionRoom, refusedReport, unsentReport, validReport, type ActorIdentity, type Completion, type CustodyLock, type PendingReport, type PendingStore, type Reporter, type ReportOutcome } from "./voice-controller.ts";
 
-export interface CommandStore {load():Promise<{kind:string;envelope:PreparedEnvelope;journal?:AttemptJournal}|null>;save(value:{kind:string;envelope:PreparedEnvelope;journal?:AttemptJournal}):Promise<void>;clear():Promise<void>}
+/** The one trusted send of an act. The gateway checks that the response answers this exact request. */
+export type TrustedActFetch=(url:string,init:{method:"POST";headers:Record<string,string>;body:string;signal:AbortSignal;redirect:"error"})=>Promise<{status:number;body:ByteStream|null;headers:{get(name:string):string|null};url:string;redirected:boolean}>;
 export type CommandOutcome=ReportOutcome|{readonly status:"blocked";readonly reason:string;readonly definitelyUnsent?:true;readonly refreshing?:true};
 export interface StageGateway extends Reporter {
   observe(emit:(state:ObservationState<CountingRead>,view?:CountingView)=>void):Observation;
@@ -19,13 +20,22 @@ export interface StageGateway extends Reporter {
   checkCommand():Promise<ReportOutcome|null>;
   resumeCommand():Promise<ReportOutcome|null>;
   commandResumeReady():boolean;
-  /** A retained command is present even when its private kind is malformed.
-   * Only an explicitly empty slot returns null; unknown is a display label. */
+  /** A kept command is present even when its record is malformed.
+   * Only an empty target returns null; unknown is a display label. */
   pendingCommand():string|null;
   restoreCommand():Promise<void>;
+  /** Removes the slots of the retired format and gives the words that say so; null when there were none. */
+  retired?():Promise<string|null>;
   dispose():void;
 }
-export function nativeGateway(configured:ActorIdentity,signer:Signer,options:{current():boolean;lock:CustodyLock;voiceStore:PendingStore;commandStore:CommandStore;fetch?:Fetch;headFetch?:HeadStreamFetch;actFetch?:TrustedActFetch;application?:Pick<ApplicationInstallation,"scope"|"directory"|"item"|"definition">}):StageGateway {
+/** The acts a Counter command may sign. `fulfill` is the voice report's act. */
+export const COMMANDS:readonly string[]=["initialize","participate","activate","deactivate","force-deactivate","remove-participant","start","commit","fail","cancel","pause","reset"];
+const sameStatus=(answer:Answer,status:number):boolean=>status===(answer.answer==="accepted"?200:answer.answer==="archived"?410:answer.answer==="unavailable"?503:answer.answer==="mismatch"?409:answer.reason==="unauthorized"?403:422);
+const cancel=(body:ByteStream|null):void=>{try{void body?.getReader().cancel().catch(()=>undefined);}catch{ /* Disposal cannot restore knowledge. */ }};
+
+export function nativeGateway(configured:ActorIdentity,signer:Signer,options:{current():boolean;lock:CustodyLock;voiceStore:PendingStore;custody:ClientCustodyStore;
+  /** Removes slots of the retired format; true when one was there. */ retired?:()=>Promise<boolean>;
+  fetch?:Fetch;headFetch?:HeadStreamFetch;actFetch?:TrustedActFetch;application?:Pick<ApplicationInstallation,"scope"|"directory"|"item"|"definition">;now?:()=>number}):StageGateway {
   const identity=JSON.parse(JSON.stringify(configured)) as ActorIdentity;
   const application=options.application?JSON.parse(canonicalize(options.application)) as NonNullable<typeof options.application>:undefined;
   if(application&&(!same(application.scope,identity.scope)||application.definition!==identity.definition))throw new Error("The installed Counter does not match this device.");
@@ -33,57 +43,82 @@ export function nativeGateway(configured:ActorIdentity,signer:Signer,options:{cu
   if(identity.definition!==COUNTING_DEFINITION||signer.key!==identity.publicKey||!same(identity.member.membership,identity.membership))throw new Error("This enrolled device does not match the configured counting identity.");
   // The signer holds a browser key capability; no seed or token reaches a URL or view.
   const lifetime=new AbortController();let alive=true;
+  const now=options.now??(()=>Date.now());
   const transport=httpTransport(identity.origin,{fetch:options.fetch??((url,init)=>fetch(url,{...init,redirect:"error",signal:init?.signal?AbortSignal.any([init.signal,lifetime.signal]):lifetime.signal}))});
   let session:Session|null=null,view:CountingView|undefined,observer:Observation|undefined,pending:string|null=null,fresh=false,commandPrepared=false;
   const handle=()=>new ScopeHandle(transport,identity.scope.scope,session?.reader()??null);
   const usable=()=>alive&&options.current();
   const current=()=>{if(!usable())throw new Error("This device context is no longer current.");};
-  const exact=(envelope:PreparedEnvelope)=>{current();if(!validEnvelope(envelope,identity))throw new Error("The private request identity is unavailable.");};
-  const verified=async(receipt:Receipt,envelope:PreparedEnvelope):Promise<ReportOutcome>=>{
-    if(receipt.definition!==identity.definition||receipt.intent!==intentDigest(envelope.signed.intent)||!same(receipt.fact.at,identity.scope))return{status:"unknown",reason:"The acceptance did not match this request."};
-    const followed=await handle().followReceipt(receipt);current();
-    if(!followed.ok||followed.entry.input.type!=="act"||canonicalize(followed.entry.input.signed)!==canonicalize(envelope.signed))return{status:"unknown",reason:"The original recorded request could not be verified."};
-    observer?.refresh();return{status:"recorded"};
-  };
   const trusted:TrustedActFetch|undefined=options.actFetch??(options.fetch?undefined:typeof globalThis.fetch==="function"?((url,init)=>fetch(url,{...init,signal:AbortSignal.any([init.signal,lifetime.signal])})):undefined);
-  const dispatcher=attemptDispatcher({identity,current:usable,...(trusted?{fetch:trusted}:{}),accepted:verified,settle:async envelope=>{exact(envelope);const answer=await handle().settle(envelope.signed);current();return answer.ok?{ok:true,receipt:answer.value}:{ok:false};},refresh:()=>observer?.refresh()});
+  const actURL=`${identity.origin}/v1/scopes/${encodeURIComponent(identity.scope.scope)}/acts`;
+  /** The one send of an exact envelope, through the trusted fetch. A response that does not answer this request is a lost reply. */
+  const post=async(envelope:Envelope):Promise<Answer>=>{
+    if(!trusted)throw new Error("Trusted submit transport is unavailable.");
+    let used=false,responseStatus:number|undefined;
+    const exact=canonicalize(envelope.signed);
+    const sending=httpTransport(identity.origin,{fetch:async(request,init)=>{
+      current();
+      if(used||request!==actURL||init?.method!=="POST"||canonicalize(JSON.parse(init.body??"null")?.signed)!==exact||!init.signal)throw new Error("Private request correlation is unavailable.");used=true;
+      const response=await trusted(actURL,{method:"POST",headers:init.headers??{},body:init.body!,signal:init.signal as AbortSignal,redirect:"error"});
+      const type=typeof response.headers?.get==="function"?response.headers.get("content-type")?.split(";",1)[0]?.trim().toLowerCase():undefined;
+      if(!options.current()||(init.signal as {readonly aborted:boolean}).aborted||response.redirected||response.url!==actURL||type!=="application/json"){cancel(response.body);throw new Error("Submit response identity is unavailable.");}
+      responseStatus=response.status;return response;
+    }});
+    const answer=await new ScopeHandle(sending,identity.scope.scope).submit(envelope.signed,[],envelope.beside);current();
+    if(!used||responseStatus===undefined||!sameStatus(answer,responseStatus))throw new Error("Submit response status is unavailable.");
+    return answer;
+  };
+  /** An acceptance counts only when the scope's own record holds this exact signed request. */
+  const recorded=async(receipt:Receipt,envelope:Envelope):Promise<boolean>=>{
+    if(receipt.definition!==identity.definition||receipt.intent!==intentDigest(envelope.signed.intent)||!same(receipt.fact.at,identity.scope))return false;
+    const followed=await handle().followReceipt(receipt);current();
+    return followed.ok&&followed.entry.input.type==="act"&&canonicalize(followed.entry.input.signed)===canonicalize(envelope.signed);
+  };
+  const requests=browserRequests(options.custody,{service:identity.origin,membership:identity.membership,signer:identity.publicKey,target:identity.scope},{
+    current:usable,post,recorded,
+    settle:async envelope=>{current();const answer=await handle().settle(envelope.signed);current();return answer.ok?answer.value:null;},
+  },now);
+  /** A kept record is an act of this device to this scope. Anything else stays in custody, unsent. */
+  const ownAct=(record:CustodyRecord)=>{const intent=record.envelope.signed.intent;return intent.actor===identity.publicKey&&same(intent.to,identity.scope);};
+  const commandRecord=(record:CustodyRecord)=>ownAct(record)&&COMMANDS.includes(record.envelope.signed.intent.kind);
   const candidate=(kind:Control,completion?:Completion,details:ProposalOptions={})=>{if(!view||!fresh)throw new Error("A current counting snapshot is required.");const plan=proposal(view,identity,kind,completion,details),shaped=shapeDeclaredAct(counting,kind,{on:plan.on,fields:plan.fields});return{plan,shaped};};
-  const reservation=(report:import("./voice-controller.ts").PendingReport):boolean=>{
-    try{
-      current();if(!dispatcher.supported()||!report.journal||!validJournal(report.journal,identity,report.envelope)||activeAttempt(report.journal).phase!=="refused"||!["guard-failed","revision-moved"].includes(activeAttempt(report.journal).refusal!.answer.reason))return false;
-      const turn=view&&assignedTurn(view,identity);if(!turn||!same(turn,report.completion.turn))return false;
-      const {plan,shaped}=candidate("fulfill",report.completion);
-      // Actual SDK fields have fixed-size22-char operation IDs,86-char signatures and20-char timestamps.
-      const envelope:PreparedEnvelope={signed:{intent:{v:1,to:identity.scope,actor:identity.publicKey,kind:"fulfill",on:shaped.on??null,expected:plan.expected,fields:shaped.fields,idempotencyKey:"x".repeat(22),notAfter:"2099-01-01T00:00:00Z"},sig:"x".repeat(86)},grants:[],beside:shaped.beside};
-      const journal=appendPrepared(envelope,report.journal);
-      const next={...report,envelope,journal,outcome:"unknown" as const};
-      return fitsPending(identity,next);
-    }catch{return false;}
-  };
-  const prepare=async(kind:Control,completion?:Completion,details:ProposalOptions={}):Promise<PreparedEnvelope>=>{
-    current();if(!dispatcher.supported())throw new Error("Trusted submit transport is unavailable.");
+  /** The signing of one act under `key`, from a plan made now. */
+  const signing=(kind:Control,key:string,completion?:Completion,details:ProposalOptions={})=>{
     const {plan,shaped}=candidate(kind,completion,details);
-    const signed=await signedIntent(signer,{to:identity.scope,kind,on:shaped.on,fields:shaped.fields,expected:plan.expected});current();return{signed,grants:[],beside:shaped.beside};
+    const build=async()=>{const signed=await signedIntent(signer,{to:identity.scope,kind,on:shaped.on,fields:shaped.fields,expected:plan.expected},{now:now(),idempotencyKey:key});current();
+      return{binding:{definition:"counting",kind,declaration:null,pinned:identity.definition},envelope:{signed,beside:shaped.beside}};};
+    return{meaning:meaningOf({kind,on:shaped.on,fields:shaped.fields,expected:plan.expected}),build};
   };
-  const commandRecord=(held:unknown):held is NonNullable<Awaited<ReturnType<CommandStore["load"]>>>=>{
-    if(!isRecord(held)||Object.keys(held).some(k=>!["kind","envelope","journal"].includes(k))||!Object.hasOwn(held,"kind")||!Object.hasOwn(held,"envelope")||typeof held["kind"]!=="string"||!["initialize","participate","activate","deactivate","force-deactivate","remove-participant","start","commit","fail","cancel","pause","reset"].includes(held["kind"])||!validEnvelope(held["envelope"],identity)||held["envelope"].signed.intent.kind!==held["kind"]||!fitsPending(identity,held))return false;
-    return !Object.hasOwn(held,"journal")||validJournal(held["journal"] as AttemptJournal,identity,held["envelope"]);
+  const notAfter=()=>timeOf(now()+60_000);
+  const outcomeOf=(settled:RequestSettled):ReportOutcome=>{
+    if(settled.status==="recorded"){observer?.refresh();return{status:"recorded"};}
+    if(settled.status==="refused"){observer?.refresh();return{status:"refused",reason:`The service refused this request (${settled.reason}).`};}
+    return{status:"unknown",reason:"The exact original request remains unresolved."};
   };
-  const retainCommandPresence=(held:unknown)=>{
-    pending=held===null?null:"unknown";commandPrepared=false;
-    if(commandRecord(held)){pending=held.kind;commandPrepared=resumableJournal(held.journal,identity,held.envelope);}
+  /** The newest unresolved command at the target: its key and record, or null. */
+  const command=async()=>{const open=(await requests.unresolved()).filter(r=>r.record.envelope.signed.intent.kind!=="fulfill");current();return open.at(-1)??null;};
+  const retainCommandPresence=async()=>{
+    const held=await command();
+    pending=held===null?null:commandRecord(held.record)?held.record.envelope.signed.intent.kind:"unknown";
+    commandPrepared=!!held&&commandRecord(held.record)&&held.record.phase==="prepared";
+    return held;
   };
-  const clearCommand=async(envelope:PreparedEnvelope,result:ReportOutcome):Promise<ReportOutcome>=>{
-    if(result.status==="unknown"||result.status==="blocked")return result;
-    current();const retained=await options.commandStore.load();current();retainCommandPresence(retained);
-    if(!retained?.journal||!commandRecord(retained)||envelopeKey(retained.envelope)!==envelopeKey(envelope)||!validJournal(retained.journal,identity,envelope)||activeAttempt(retained.journal).phase!==result.status)return{status:"unknown",reason:"The exact terminal command could not be recovered."};
-    await options.commandStore.clear();current();retainCommandPresence(null);observer?.refresh();return result;
-  };
-  const dispatchReport=async(envelope:PreparedEnvelope,readOnly:boolean):Promise<ReportOutcome>=>options.lock.run(async()=>{
-    const result=await (readOnly?dispatcher.check(options.voiceStore,envelope):dispatcher.run(options.voiceStore,envelope));
+  const neverSigned=async()=>{throw new Error("A kept request is never signed again.");};
+  /** The voice slot as the store holds it now, with the post-operation custody, when it is still this report. */
+  const withCustody=async(report:PendingReport,result:ReportOutcome):Promise<ReportOutcome>=>{
     current();const held=await options.voiceStore.load();current();
-    return held&&validReport(held,identity)&&envelopeKey(held.envelope)===envelopeKey(envelope)?{...result,custody:structuredClone(held)}:result;
-  });
+    return held&&validReport(held,identity)&&held.key===report.key?{...result,custody:structuredClone(held)}:result;
+  };
+  const voiceRecord=async(report:PendingReport)=>{const record=await requests.find(report.key);current();if(record&&(!ownAct(record)||record.envelope.signed.intent.kind!=="fulfill"))throw new Error("The kept report is not this device's fulfillment.");return record;};
+  const sendReport=async(report:PendingReport,resign:boolean):Promise<ReportOutcome>=>{
+    let plan:ReturnType<typeof signing>|null=null;
+    const record=await voiceRecord(report);
+    // A kept record that is not refused is sent with its own bytes; a new signing needs a current plan.
+    if(!record||resign){try{plan=signing("fulfill",report.key,report.completion);}catch{return{status:"blocked",reason:"This report is unavailable locally. Nothing was submitted."};}}
+    try{return outcomeOf(await requests.send(report.key,plan?plan.meaning:record!.meaning,plan?plan.build:neverSigned,{notAfter:notAfter(),...(resign?{resign:true}:{})}));}
+    catch(error){return unsentError(error)?{status:"blocked",reason:"The report was not sent. Its custody record is kept unchanged."}:{status:"unknown",reason:"The exact original request remains unresolved."};}
+  };
+  const turnCurrent=(report:PendingReport)=>{const turn=view&&assignedTurn(view,identity);return !!turn&&same(turn,report.completion.turn);};
   return{
     observe(emit){
       observer=observeScope<CountingRead>({context:{origin:identity.origin,deployment:identity.deployment,scope:identity.scope,definition:identity.definition,membership:identity.membership,member:identity.member.member,key:identity.publicKey},current:usable,
@@ -96,21 +131,43 @@ export function nativeGateway(configured:ActorIdentity,signer:Signer,options:{cu
     },
     obsolete:completion=>{if(!usable()||!fresh||!view||!view.board)return false;const t=completion.turn,b=view.board,turn=assignedTurn(view,identity);return !ownedParticipant(view,identity)||b.generation!==t.generation||b.serial!==t.serial||b.lastNumber>=t.N||!view.pledge||!!turn&&(turn.N!==t.N||turn.expiresAt!==t.expiresAt);},
     audioObsolete:marker=>{if(!usable()||!fresh||!view||!view.board)return false;const p=view.pendingPromise,t=marker.turn;return !p||p.generation!==t.generation||p.serial!==t.serial||p.n!==t.N||!same(p.member,identity.member);},
-    resumeReady:report=>{const turn=view&&assignedTurn(view,identity);return usable()&&fresh&&!!view&&!!ownedParticipant(view,identity)&&!!turn&&Date.now()<turn.expiresAt&&same(turn,report.completion.turn)&&validReport(report,identity)&&resumableJournal(report.journal,identity,report.envelope);},
-    resume:envelope=>options.lock.run(async()=>{current();const held=await options.voiceStore.load();if(!fresh||!held||!validReport(held,identity)||!resumableJournal(held.journal,identity,envelope)||!view||!ownedParticipant(view,identity)||Date.now()>=held.completion.turn.expiresAt||!same(assignedTurn(view,identity),held.completion.turn))return{status:"blocked",reason:"The original report has no current definitely-unsent dispatch proof."};const result=await dispatcher.run(options.voiceStore,envelope);const after=await options.voiceStore.load();current();return after&&validReport(after,identity)&&envelopeKey(after.envelope)===envelopeKey(envelope)?{...result,custody:structuredClone(after)}:result;}),
-    correctionReady:reservation,refresh:()=>observer?.refresh(),
-    async prepare(completion){current();const commandHeld=await options.commandStore.load();current();retainCommandPresence(commandHeld);if(pending!==null)throw new Error("Another exact command remains pending.");const held=await options.voiceStore.load();if(held&&!reservation(held))throw new Error("Private correction capacity or a known refusal is unavailable.");const turn=view&&assignedTurn(view,identity);if(!turn||!same(turn,completion.turn))throw new Error("The completed turn is no longer current.");return prepare("fulfill",completion);},
-    submit:envelope=>dispatchReport(envelope,false),
-    reconcile:envelope=>dispatchReport(envelope,true),
-    async command(kind,details={}){return options.lock.run(async()=>{current();const existing=await options.commandStore.load();current();retainCommandPresence(existing);if(pending!==null||await options.voiceStore.load())return{status:"unknown",reason:"Check the retained request before another command."};let envelope:PreparedEnvelope;try{envelope=await prepare(kind,undefined,details);}catch{return{status:"blocked",definitelyUnsent:true,...(!fresh?{refreshing:true as const}:{}),reason:"This candidate is unavailable locally. Nothing was submitted."};}try{const journal=appendPrepared(envelope);const held={kind,envelope,journal};if(!fitsPending(identity,held))throw new Error();pending="unknown";commandPrepared=false;await options.commandStore.save(held);retainCommandPresence(held);}catch{try{const retained=await options.commandStore.load();current();retainCommandPresence(retained);}catch{pending="unknown";commandPrepared=false;}return{status:"blocked",reason:"Private command custody is unavailable. Nothing was submitted."};}current();const result=await dispatcher.run(options.commandStore,envelope);const retained=await options.commandStore.load();current();retainCommandPresence(retained);return clearCommand(envelope,result);});},
-    async checkCommand(){return options.lock.run(async()=>{current();const held=await options.commandStore.load();current();retainCommandPresence(held);if(held===null)return null;if(!commandRecord(held))return{status:"blocked",reason:"The malformed original command remains in private custody."};const result=await dispatcher.check(options.commandStore,held.envelope);return clearCommand(held.envelope,result);});},
-    async resumeCommand(){return options.lock.run(async()=>{current();const held=await options.commandStore.load();current();retainCommandPresence(held);if(held===null)return null;
-      const voiceHeld=await options.voiceStore.load();current();if(!fresh||voiceHeld||!commandRecord(held)||!resumableJournal(held.journal,identity,held.envelope)){commandPrepared=false;return{status:"blocked",reason:"The original command has no current definitely-unsent dispatch proof."};}
-      commandPrepared=false;const result=await dispatcher.run(options.commandStore,held.envelope);return clearCommand(held.envelope,result);
+    resumeReady:report=>usable()&&fresh&&!!view&&!!ownedParticipant(view,identity)&&turnCurrent(report)&&Date.now()<report.completion.turn.expiresAt&&validReport(report,identity)&&unsentReport(report),
+    resume:report=>options.lock.run(async()=>{current();const held=await options.voiceStore.load();
+      if(!fresh||!held||!validReport(held,identity)||held.key!==report.key||!unsentReport(held)||!view||!ownedParticipant(view,identity)||Date.now()>=held.completion.turn.expiresAt||!turnCurrent(held))return{status:"blocked",reason:"The original report has no current definitely-unsent dispatch proof."};
+      return withCustody(held,await sendReport(held,false));}),
+    // A correction signs again under the same key: the turn is current, custody holds a refusal that a new state can answer,
+    // and the record has room for one more signing.
+    correctionReady:report=>{try{current();if(!trusted||!refusedReport(report)||!correctionRoom(report)||!["guard-failed","revision-moved"].includes(report.custody?.reason??""))return false;if(!turnCurrent(report))return false;candidate("fulfill",report.completion);return true;}catch{return false;}},
+    refresh:()=>observer?.refresh(),
+    submit:(report,correcting)=>options.lock.run(async()=>{current();if(!trusted)return{status:"blocked",reason:"Trusted submit transport is unavailable. Nothing was submitted."};return withCustody(report,await sendReport(report,correcting));}),
+    reconcile:report=>options.lock.run(async()=>{current();let result:ReportOutcome;try{result=outcomeOf((await requests.settle(report.key))??{status:"unknown"});}catch{result={status:"unknown",reason:"The exact original request remains unresolved."};}return withCustody(report,result);}),
+    async command(kind,details={}){return options.lock.run(async():Promise<CommandOutcome>=>{
+      current();await retainCommandPresence();if(pending!==null||await options.voiceStore.load())return{status:"unknown",reason:"Check the retained request before another command."};
+      if(!trusted)return{status:"blocked",definitelyUnsent:true,reason:"Trusted submit transport is unavailable. Nothing was submitted."};
+      const key=requestKey();let plan:ReturnType<typeof signing>;
+      try{plan=signing(kind,key,undefined,details);}catch{return{status:"blocked",definitelyUnsent:true,...(!fresh?{refreshing:true as const}:{}),reason:"This candidate is unavailable locally. Nothing was submitted."};}
+      let settled:RequestSettled;
+      try{settled=await requests.send(key,plan.meaning,plan.build,{notAfter:notAfter()});}
+      catch(error){
+        const kept=await requests.find(key).catch(()=>undefined);await retainCommandPresence().catch(()=>{pending="unknown";commandPrepared=false;});
+        if(kept===null&&unsentError(error))return{status:"blocked",definitelyUnsent:true,reason:"Private command custody is unavailable. Nothing was submitted."};
+        return unsentError(error)?{status:"blocked",reason:"Private command custody is unavailable. The original command is kept; Check it."}:{status:"unknown",reason:"The exact original request remains unresolved."};
+      }
+      await retainCommandPresence();return outcomeOf(settled);
+    });},
+    async checkCommand(){return options.lock.run(async()=>{current();const held=await retainCommandPresence();if(held===null)return null;if(!commandRecord(held.record))return{status:"blocked",reason:"The malformed original command remains in private custody."};
+      let result:ReportOutcome;try{result=outcomeOf((await requests.settle(held.key))??{status:"unknown"});}catch{result={status:"unknown",reason:"The exact original request remains unresolved."};}
+      await retainCommandPresence();return result;});},
+    async resumeCommand(){return options.lock.run(async()=>{current();const held=await retainCommandPresence();if(held===null)return null;
+      const voiceHeld=await options.voiceStore.load();current();if(!fresh||voiceHeld||!commandRecord(held.record)||held.record.phase!=="prepared"){commandPrepared=false;return{status:"blocked",reason:"The original command has no current definitely-unsent dispatch proof."};}
+      commandPrepared=false;let result:ReportOutcome;
+      try{result=outcomeOf(await requests.send(held.key,held.record.meaning,neverSigned,{notAfter:notAfter()}));}catch{result={status:"unknown",reason:"The exact original request remains unresolved."};}
+      await retainCommandPresence();return result;
     });},
     commandResumeReady:()=>usable()&&fresh&&commandPrepared,
     pendingCommand:()=>pending,
-    async restoreCommand(){const held=await options.commandStore.load();current();retainCommandPresence(held);},
+    async restoreCommand(){await retainCommandPresence();},
+    async retired(){return options.retired&&await options.lock.run(()=>options.retired!())?RETIRED_REQUEST:null;},
     dispose(){alive=false;lifetime.abort();observer?.cancel();session=null;view=undefined;},
   };
 }

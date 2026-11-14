@@ -1,7 +1,7 @@
 /** Local media custody only. Observations and media callbacks do not decide a count. */
-import { b64url, canonicalize } from "@generalbusiness/dap-bytes";
-import type { Beside, Digest, Grant, KeyId, MemberRef, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { activeAttempt, appendPrepared, envelopeKey, resumableJournal, knownRefusal as validatedRefusal, terminalJournal, validEnvelope, validAudioStart, validReport as validatedReport, MAX_ATTEMPTS, type AttemptJournal } from "./journal.ts";
+import { b64url, canonicalize, isRecord } from "@generalbusiness/dap-bytes";
+import type { Digest, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import { ENVELOPES_MOST, SIGNINGS_MOST, requestKey, validKey, type Phase } from "@generalbusiness/dap-client";
 
 export interface ActorIdentity {
   readonly origin: string;
@@ -25,25 +25,31 @@ export interface SpeechPort {
 }
 export interface AudioStart { readonly turn: TurnToken; readonly voiceId: string; readonly audioId: string; readonly startedAt: number }
 export interface Completion { readonly turn: TurnToken; readonly voiceId: string; readonly completedAt: number }
-export interface PreparedEnvelope { readonly signed: SignedIntent; readonly grants: readonly Grant[]; readonly beside: Beside }
-export interface PendingReport {
+/** The voice slot: the completed turn and the custody key of its report. The slot is written before anything is signed. */
+export interface KeptReport {
   readonly completion: Completion;
-  readonly envelope: PreparedEnvelope;
-  readonly outcome: "unknown" | "refused";
-  readonly journal?: AttemptJournal;
+  readonly key: string;
   readonly audioStart?: AudioStart;
 }
+/** What custody holds under the key: the phase, how many signings and envelopes the record keeps, and a refusal's reason. */
+export interface ReportCustody { readonly phase: Phase; readonly signings: number; readonly envelopes: number; readonly reason?: string }
+/** The voice slot as the store loads it. `custody` and `outcome` come from the custody record and are never stored.
+ * No `custody`: nothing was signed under the key. */
+export interface PendingReport extends KeptReport {
+  readonly outcome: "unknown" | "refused";
+  readonly custody?: ReportCustody;
+}
 /** Bind this store to the frozen ActorIdentity externally. Use private durable custody.
- * save must finish before any POST. No keys or session tokens belong here. */
+ * save must finish before anything is signed. No keys or session tokens belong here. */
 export interface PendingStore {
   load(): Promise<PendingReport | null>;
   loadStart?(): Promise<AudioStart | null>;
   saveStart?(marker: AudioStart): Promise<void>;
   archiveStart?(marker: AudioStart): Promise<void>;
-  save(pending: PendingReport): Promise<void>;
+  save(pending: KeptReport): Promise<void>;
   clear(): Promise<void>;
-  /** Atomically preserve the complete resolved record under the existing quota, then remove its active pointer. */
-  archive?(pending: PendingReport, receiptConfirmed?: boolean): Promise<void>;
+  /** Atomically preserve the complete resolved slot under the existing quota, then remove its active pointer. */
+  archive?(pending: KeptReport, receiptConfirmed?: boolean): Promise<void>;
 }
 export interface ReportOutcome { readonly status: "recorded" | "refused" | "unknown" | "blocked"; readonly reason?: string;
   /** Exact post-operation custody captured by the gateway before releasing its lock. */
@@ -51,10 +57,13 @@ export interface ReportOutcome { readonly status: "recorded" | "refused" | "unkn
 }
 /** The caller verifies native receipts. A transport reply alone is not a known result. */
 export interface Reporter {
-  prepare(completion: Completion): Promise<PreparedEnvelope>;
-  submit(envelope: PreparedEnvelope): Promise<ReportOutcome>;
-  reconcile(envelope: PreparedEnvelope): Promise<ReportOutcome>;
-  resume?(envelope: PreparedEnvelope): Promise<ReportOutcome>;
+  /** Sign the completion's report under the slot's key, keep it in custody, then send it. `correcting` permits a new
+   * signing of a refused record under the same key. */
+  submit(report: PendingReport, correcting: boolean): Promise<ReportOutcome>;
+  /** Read the scope for the kept envelopes. It signs and sends nothing. */
+  reconcile(report: PendingReport): Promise<ReportOutcome>;
+  /** Send a report that is definitely unsent: a `prepared` record, or a slot whose key has no record yet. */
+  resume?(report: PendingReport): Promise<ReportOutcome>;
   resumeReady?(report: PendingReport): boolean;
   /** Reserve room for the next exact envelope before exposing or signing a correction. */
   correctionReady?(report: PendingReport): boolean;
@@ -109,6 +118,42 @@ function retained<T>(value: T): T {
   return copy;
 }
 
+const closed = (value: unknown, required: readonly string[], optional: readonly string[] = []): value is Record<string, unknown> =>
+  isRecord(value) && required.every(key => Object.hasOwn(value, key)) && Object.keys(value).every(key => required.includes(key) || optional.includes(key));
+/** The audio start of one turn, bound to the full device identity. */
+export function validAudioStart(value: unknown, identity: ActorIdentity): value is AudioStart {
+  try {
+    if (!closed(value, ["turn", "voiceId", "audioId", "startedAt"])) return false;
+    const t = value["turn"];
+    if (!closed(t, ["origin", "deployment", "scope", "definition", "membership", "member", "publicKey", "generation", "serial", "N", "expiresAt"])) return false;
+    const { generation, serial, N, expiresAt, ...context } = t;
+    return canonicalize(context as never) === canonicalize(identity as never) && [generation, serial, N, expiresAt, value["startedAt"]].every(v => typeof v === "number" && Number.isSafeInteger(v) && v >= 0) && (generation as number) <= 1000000 && (serial as number) >= 1 && (serial as number) <= 1000000 && (N as number) >= 1 && (N as number) <= 100 && (value["startedAt"] as number) < (expiresAt as number) && typeof value["voiceId"] === "string" && value["voiceId"].length > 0 && typeof value["audioId"] === "string" && /^[A-Za-z0-9_-]{22}$/.test(value["audioId"]);
+  } catch { return false; }
+}
+/** A voice slot of this identity: a completed turn, its custody key, and its audio start when one was kept. */
+export function validReport(value: unknown, identity: ActorIdentity): value is PendingReport {
+  try {
+    if (!closed(value, ["completion", "key"], ["audioStart", "outcome", "custody"]) || !validKey(value["key"]) || !closed(value["completion"], ["turn", "voiceId", "completedAt"])) return false;
+    const c = value["completion"], t = c["turn"];
+    if (typeof c["voiceId"] !== "string" || !c["voiceId"] || typeof c["completedAt"] !== "number" || !Number.isSafeInteger(c["completedAt"]) || c["completedAt"] < 0 || !closed(t, ["origin", "deployment", "scope", "definition", "membership", "member", "publicKey", "generation", "serial", "N", "expiresAt"])) return false;
+    const { generation, serial, N, expiresAt, ...context } = t;
+    if (canonicalize(context as never) !== canonicalize(identity as never) || ![generation, serial, N, expiresAt].every(v => typeof v === "number" && Number.isSafeInteger(v)) || (generation as number) < 0 || (serial as number) < 1 || (N as number) < 1 || (expiresAt as number) < 0) return false;
+    if (Object.hasOwn(value, "outcome") && !["unknown", "refused"].includes(value["outcome"] as string)) return false;
+    if (Object.hasOwn(value, "custody") && !closed(value["custody"], ["phase", "signings", "envelopes"], ["reason"])) return false;
+    return !Object.hasOwn(value, "audioStart") || (validAudioStart(value["audioStart"], identity) && canonicalize(value["audioStart"].turn as never) === canonicalize(t as never) && value["audioStart"].voiceId === c["voiceId"] && value["audioStart"].startedAt <= (c["completedAt"] as number));
+  } catch { return false; }
+}
+/** The slot as stored: the derived fields of a load are not written. */
+export const keptReport = (report: KeptReport): KeptReport => ({ completion: report.completion, key: report.key, ...(report.audioStart ? { audioStart: report.audioStart } : {}) });
+/** Definitely unsent: no envelope of the report left the browser. */
+export const unsentReport = (report: PendingReport): boolean => !report.custody || report.custody.phase === "prepared";
+/** A refusal that custody holds for the report. */
+export const refusedReport = (report: PendingReport): boolean => report.custody?.phase === "refused";
+/** A report that needs no further read: refused, or accepted when the caller confirmed the receipt. */
+export const terminalReport = (report: PendingReport, receiptConfirmed = false): boolean => refusedReport(report) || (receiptConfirmed && report.custody?.phase === "accepted");
+/** Room for one more signing under the record's bounds (ruling 72b1d654). */
+export const correctionRoom = (report: PendingReport): boolean => !!report.custody && report.custody.envelopes < ENVELOPES_MOST && report.custody.signings < SIGNINGS_MOST;
+
 export function createVoiceController(options: {
   identity: ActorIdentity;
   speech: SpeechPort;
@@ -156,17 +201,17 @@ export function createVoiceController(options: {
   const sameContext = (t: TurnToken): boolean => identityKey(t) === identityKey(identity);
   const usable = (t: TurnToken): boolean => current() && observation.fresh && observation.authorized &&
     !!observation.turn && sameContext(t) && turnKey(t) === turnKey(observation.turn) && now() < t.expiresAt;
-  const knownRefusal = (report: PendingReport): boolean => validatedRefusal(report.journal, identity, report.envelope);
-  const validReport = (report: PendingReport): boolean => validatedReport(report, identity);
-  const correctionReady = (): boolean => !!pending && !!pending.journal && pending.outcome === "refused" && validReport(pending) &&
-    pending.journal.attempts.length < MAX_ATTEMPTS && knownRefusal(pending) &&
+  const knownRefusal = (report: PendingReport): boolean => refusedReport(report);
+  const valid = (report: PendingReport): boolean => validReport(report, identity);
+  const correctionReady = (): boolean => !!pending && pending.outcome === "refused" && valid(pending) &&
+    correctionRoom(pending) && knownRefusal(pending) &&
     usable(pending.completion.turn) && options.reporter.correctionReady?.(pending) === true;
   const emit = (phase: VoiceState["phase"], message: string, turn?: TurnToken): void => {
     if (!current()) return;
     view = retained({ phase, message, armed: armedVoice !== null, ...(armedVoice ? { voiceId: armedVoice } : {}), ...(turn ? { turn } : {}),
-      ...(pending && validReport(pending) ? { turn: pending.completion.turn } : {}),
+      ...(pending && valid(pending) ? { turn: pending.completion.turn } : {}),
       ...(audioStart && custodyBlocked ? {audioUncertain:true} : {}),
-      ...(pending || custodyBlocked ? { pending: pending?.outcome ?? "unknown", correctionReady: custodyBlocked ? false : correctionReady(), resumeReady: !custodyBlocked && !!pending && validReport(pending) && resumableJournal(pending.journal,identity,pending.envelope) && options.reporter.resumeReady?.(pending)===true } : {}) });
+      ...(pending || custodyBlocked ? { pending: pending?.outcome ?? "unknown", correctionReady: custodyBlocked ? false : correctionReady(), resumeReady: !custodyBlocked && !!pending && valid(pending) && unsentReport(pending) && options.reporter.resumeReady?.(pending)===true } : {}) });
     for (const listener of listeners) { if (current()) listener(view); }
   };
   const stopAudio = (): void => {
@@ -191,47 +236,43 @@ export function createVoiceController(options: {
       const dispatch = await options.lock.run(work);
       if (typeof dispatch === "function" && current()) await dispatch();
     }
-    catch { blockCustody(); if (pending && !validReport(pending)) pending = retained({ ...pending, outcome: "unknown" }); emit("blocked", "Private custody operation failed; retain and check any signed attempt before continuing."); }
+    catch { blockCustody(); if (pending) pending = retained({ ...pending, outcome: "unknown" }); emit("blocked", "Private custody operation failed; retain and check any signed attempt before continuing."); }
     finally {
       busy = false;
       // CURRENT may have arrived during POST/reconciliation with no later notice.
       if (armedVoice) start(armedVoice);
     }
   };
-  const sameEnvelope = (a: PreparedEnvelope, b: PreparedEnvelope): boolean => envelopeKey(a) === envelopeKey(b);
+  const sameKey = (a: KeptReport, b: KeptReport): boolean => a.key === b.key;
   const sameCompletion = (a: Completion, b: Completion): boolean => turnKey(a.turn) === turnKey(b.turn) &&
     a.voiceId === b.voiceId && a.completedAt === b.completedAt;
   const normalizedPending = (report: PendingReport): PendingReport => {
-    if (!validReport(report)) throw new Error("Private report is malformed; keep the exact bytes blocked.");
-    if (!report.journal) return retained({ ...report, outcome: "unknown" });
-    const attempt = activeAttempt(report.journal);
-    if (!sameEnvelope(attempt.envelope, report.envelope)) throw new Error("active attempt envelope mismatch");
+    if (!valid(report)) throw new Error("Private report is malformed; keep the exact bytes blocked.");
     return retained({ ...report, outcome: knownRefusal(report) ? "refused" : "unknown" });
   };
   const reloadReport = async (report: PendingReport, expected?: PendingReport): Promise<PendingReport | null> => {
     const saved = await options.store.load();
     if (!current()) return null;
-    if (!saved || !validReport(saved) || expected&&canonicalize(expected)!==canonicalize(saved) || !sameEnvelope(saved.envelope, report.envelope) || !sameCompletion(saved.completion, report.completion)) {
+    if (!saved || !valid(saved) || expected&&canonicalize(expected as never)!==canonicalize(saved as never) || !sameKey(saved, report) || !sameCompletion(saved.completion, report.completion)) {
       blockCustody();
       if (pending) pending = retained({ ...pending, outcome: "unknown" });
       emit("blocked", "The exact signed attempt could not be recovered from private custody.");
       return null;
     }
-    // The dispatcher owns attempt phases and service proofs. Adopt its newest journal.
+    // Custody owns the phase and the service proofs. Adopt what it holds now.
     try { pending = normalizedPending(saved); } catch { blockCustody(); pending = retained({ ...saved, outcome: "unknown" }); emit("blocked", "The malformed original remains in private custody; no known refusal was verified."); return null; }
     return pending;
   };
   const settle = async (report: PendingReport, result: ReportOutcome): Promise<boolean> => {
     if (!current() || pending !== report) return false;
     if(result.status==="blocked"){blockCustody();emit("blocked",result.reason??"The original request remains blocked in private custody.");return false;}
-    const attempt = report.journal ? activeAttempt(report.journal) : null;
-    if (attempt?.phase === "recorded" && result.status === "recorded" && result.custody) {
+    if (report.custody?.phase === "accepted" && result.status === "recorded" && result.custody) {
       // A failed clear retains the exact attempt; reconcile it again, never re-sign.
       if(observation.fresh&&observation.authorized&&options.reporter.obsolete?.(report.completion)===true&&options.store.archive){
         // A verified completed report may release custody without ending the
         // explicit local Join. The attempted-token set still prevents replay;
         // only a fresh next own pledge may use the selected voice again.
-        await options.store.archive(result.custody,true);
+        await options.store.archive(keptReport(result.custody),true);
       }else await options.store.clear();
       if (!current()) return false;
       pending = null;
@@ -271,7 +312,7 @@ export function createVoiceController(options: {
       pending = retained({ ...stored, outcome: "unknown" });
       pending = normalizedPending(stored);
       remember(stored.completion.turn);
-      if (!sameContext(stored.completion.turn) || !validReport(stored)) { blockCustody(); emit("blocked", "Private custody belongs to another context."); return; }
+      if (!sameContext(stored.completion.turn) || !valid(stored)) { blockCustody(); emit("blocked", "Private custody belongs to another context."); return; }
     }
     const completed = correcting ? pending?.completion : completion;
     if (!current() || !loaded || !completed || !usable(completed.turn)) return;
@@ -279,44 +320,43 @@ export function createVoiceController(options: {
     const oldPending = pending;
     const generation = audioGeneration;
     emit("reporting", "Preparing the completed turn's native report.", completed.turn);
-    const envelope = retained(await options.reporter.prepare(completed));
-    if (!usable(completed.turn) || pending !== oldPending || generation !== audioGeneration) return;
-    if (!validEnvelope(envelope, identity)) {
-      emit("blocked", "The prepared report does not match this scope and public key.");
-      return;
-    }
-    const journal = appendPrepared(envelope, correcting ? oldPending?.journal : undefined);
     const marker = correcting ? oldPending?.audioStart : await options.store.loadStart?.();
     if (!current() || !marker || !validAudioStart(marker,identity) || turnKey(marker.turn)!==turnKey(completed.turn) || marker.voiceId!==completed.voiceId) throw new Error("The original audio-start marker is unavailable.");
-    const report = retained<PendingReport>({ completion: completed, envelope, outcome: "unknown", journal, audioStart: marker });
-    if (!validReport(report)) { emit("blocked", "The exact pending report is malformed or exceeds private custody limits."); return; }
-    // Nothing may be posted unless these exact signed bytes are privately retained.
-    await options.store.save(report);
-    const committed=await options.store.load();
-    if(!committed||canonicalize(committed)!==canonicalize(report))throw new Error("The exact completed report did not read back.");
+    if (!usable(completed.turn) || pending !== oldPending || generation !== audioGeneration) return;
+    let report: PendingReport;
+    if (correcting && oldPending) report = oldPending;
+    else {
+      // The slot names the key before anything is signed: a reload finds the record, or knows that nothing was signed.
+      const kept = retained<KeptReport>({ completion: completed, key: requestKey(), audioStart: marker });
+      if (!valid({ ...kept, outcome: "unknown" })) { emit("blocked", "The exact pending report is malformed or exceeds private custody limits."); return; }
+      await options.store.save(kept);
+      const committed=await options.store.load();
+      if(!committed||canonicalize(keptReport(committed) as never)!==canonicalize(kept as never))throw new Error("The exact completed report did not read back.");
+      report = retained<PendingReport>({ ...kept, outcome: "unknown" });
+    }
     pending = report;
-    // A successful exact transfer consumes the start into signed pending custody.
+    // A successful exact transfer consumes the start into the report's slot.
     // Clear only cancellation's audio-only block, never a storage/malformed block.
     if(audioOnlyBlock){custodyBlocked=false;audioOnlyBlock=false;}
     audioStart = null;
     completion = null;
     if (!usable(completed.turn) || generation !== audioGeneration) { emit("unknown", "The saved attempt awaits reconciliation after a context change."); return; }
-    // The dispatcher owns the identity lock for its transport phase. Never nest it.
+    // The gateway owns the identity lock for its transport phase. Never nest it.
     return async () => {
       if (!usable(completed.turn) || generation !== audioGeneration) return;
       let result: ReportOutcome;
-      try { result = await options.reporter.submit(report.envelope); }
+      try { result = await options.reporter.submit(report, correcting); }
       catch { result = { status: "unknown" }; }
       await finishReport(report, result);
     };
   });
   const archiveObsolete = async (): Promise<void> => guarded(async () => {
     if (!pending || !observation.fresh || !observation.authorized || usable(pending.completion.turn) || options.reporter.obsolete?.(pending.completion)!==true ||
-        !terminalJournal(pending.journal, identity, pending.envelope) || !options.store.archive) return;
+        !terminalReport(pending) || !options.store.archive) return;
     const saved = await options.store.load();
-    if (!current() || !saved || !validReport(saved) || !sameEnvelope(saved.envelope, pending.envelope) ||
-        !sameCompletion(saved.completion, pending.completion) || !terminalJournal(saved.journal, identity, saved.envelope)) return;
-    await options.store.archive(saved);
+    if (!current() || !saved || !valid(saved) || !sameKey(saved, pending) ||
+        !sameCompletion(saved.completion, pending.completion) || !terminalReport(saved)) return;
+    await options.store.archive(keptReport(saved));
     if (!current()) return;
     pending = null; completion = null; armedVoice = null;
     emit("idle", "The obsolete terminal report was archived intact. Arm a new turn explicitly.");
@@ -336,7 +376,7 @@ export function createVoiceController(options: {
         pending = retained({ ...saved, outcome: "unknown" });
         pending = normalizedPending(saved);
         remember(saved.completion.turn);
-        if (!sameContext(saved.completion.turn) || !validReport(saved)) {
+        if (!sameContext(saved.completion.turn) || !valid(saved)) {
           blockCustody();
           emit("blocked", "Private pending custody belongs to a different context; it was retained.");
           return;
@@ -445,7 +485,7 @@ export function createVoiceController(options: {
       // Observations never settle a pending request, including a snapshot that advanced.
       if (completion && usable(completion.turn) && !pending) void reportCompletion();
       else if (armedVoice) start(armedVoice);
-      if (!custodyBlocked && pending && validReport(pending) && terminalJournal(pending.journal,identity,pending.envelope) && observation.fresh && observation.authorized && options.reporter.obsolete?.(pending.completion)===true && !usable(pending.completion.turn)) void archiveObsolete();
+      if (!custodyBlocked && pending && valid(pending) && terminalReport(pending) && observation.fresh && observation.authorized && options.reporter.obsolete?.(pending.completion)===true && !usable(pending.completion.turn)) void archiveObsolete();
       if (!custodyBlocked && pending?.outcome === "unknown") emit("unknown", "The original report remains in private custody; Check reads only, Resume requires definitely-unsent proof.",pending.completion.turn);
       if (!custodyBlocked && pending?.outcome === "refused" && knownRefusal(pending)) emit("refused", "A known refusal is retained; correction needs a fresh matching turn and reserved custody room.", pending.completion.turn);
     },
@@ -472,14 +512,14 @@ export function createVoiceController(options: {
         pending = retained({ ...stored, outcome: "unknown" });
         pending = normalizedPending(stored);
         remember(stored.completion.turn);
-        if (!sameContext(stored.completion.turn) || !validReport(stored)) { blockCustody(); emit("blocked", "Private custody belongs to another context."); return; }
+        if (!sameContext(stored.completion.turn) || !valid(stored)) { blockCustody(); emit("blocked", "Private custody belongs to another context."); return; }
       }
       const report = pending;
       if (!loaded || !report || !sameContext(report.completion.turn) || !current()) return;
       return async () => {
         if (!current()) return;
         let result: ReportOutcome;
-        try { result = await options.reporter.reconcile(report.envelope); }
+        try { result = await options.reporter.reconcile(report); }
         catch { result = { status: "unknown" }; }
         await finishReport(report, result);
       };
@@ -487,9 +527,9 @@ export function createVoiceController(options: {
     },
     resumePending: () => guarded(async () => {
       const saved=await options.store.load();
-      if(!current()||!saved||!validReport(saved)||!resumableJournal(saved.journal,identity,saved.envelope)||options.reporter.resumeReady?.(saved)!==true||!options.reporter.resume)return;
+      if(!current()||!saved||!valid(saved)||!unsentReport(saved)||options.reporter.resumeReady?.(saved)!==true||!options.reporter.resume)return;
       pending=normalizedPending(saved);remember(saved.completion.turn);const report=pending;
-      return async()=>{if(!current())return;let result:ReportOutcome;try{result=await options.reporter.resume!(report.envelope);}catch{result={status:"unknown"};}await finishReport(report,result);};
+      return async()=>{if(!current())return;let result:ReportOutcome;try{result=await options.reporter.resume!(report);}catch{result={status:"unknown"};}await finishReport(report,result);};
     }),
     correctReport: () => reportCompletion(true),
     dispose() {

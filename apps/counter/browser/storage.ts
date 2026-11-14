@@ -1,8 +1,11 @@
-/** Origin-private pending custody and non-extractable demo device keys. Session tokens remain volatile. */
-import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
-import { terminalJournal, validAudioStart, validReport, type AttemptJournal } from "./journal.ts";
+/** Origin-private voice slots, the custody of Counter requests, and non-extractable demo device keys. Session tokens remain volatile. */
+import { canonicalize, digestBytes, isRecord, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { Custody, browserCustodyStore, envelopesOf, identityId, type ClientCustodyStore } from "@generalbusiness/dap-client";
 import { deviceSigner, type SavedDevice } from "./device-key.ts";
-import type { ActorIdentity, AudioStart, CustodyLock, PendingReport, PendingStore, PreparedEnvelope } from "./voice-controller.ts";
+import { keptReport, terminalReport, validAudioStart, validReport, type ActorIdentity, type AudioStart, type CustodyLock, type KeptReport, type PendingReport, type PendingStore, type ReportCustody } from "./voice-controller.ts";
+/** The custody records of this origin's Counter requests: joins, commands and voice reports. */
+let shared: ClientCustodyStore | undefined;
+export const counterCustody = (): ClientCustodyStore => shared ??= browserCustodyStore({ database: "dap-counter-custody-1", lock: "dap-counter-custody" });
 const MOST=64*1024, IDENTITIES=32;
 const identityStorageKey=(identity:ActorIdentity)=>digestBytes(utf8(canonicalize(identity)));
 const ORIGIN_LOCK = "artroom-counting-device-custody";
@@ -61,10 +64,10 @@ function privateSlot<T>(identity:ActorIdentity,purpose:"voice"|"command") {
   return{
     load:()=>transact<T|null>("readonly",(store,set,reject)=>{const request=store.get(key);request.onsuccess=()=>{const record=request.result as {identity?:ActorIdentity;pending?:T}|undefined;if(!record)return set(null);try{if(canonicalize(record.identity)!==canonicalize(identity)||!record.pending||utf8(canonicalize(record)).length>MOST)return reject(new Error("The private pending identity is unavailable."));set(record.pending);}catch{reject(new Error("The private pending identity is unavailable."));}};}),
     save:async (pending:T)=>{const record={identity,pending};if(utf8(canonicalize(record)).length>MOST)throw new Error("The private pending record exceeds its bound.");await transact<void>("readwrite",(store,set,reject)=>{const count=store.count();count.onsuccess=()=>{const current=store.getKey(key);current.onsuccess=()=>{if(current.result===undefined&&count.result>=IDENTITIES){reject(new Error("Private pending identity capacity is full."));return;}store.put(record,key);set(undefined);};};});},
-    archive:async(pending:T,receiptConfirmed=false,audioOnly=false)=>{
-      const candidate=pending as {envelope?:PreparedEnvelope;journal?:AttemptJournal};
+    /** `resolved`: the caller checked that custody holds a final outcome for this slot. */
+    archive:async(pending:T,resolved=false,audioOnly=false)=>{
       if(audioOnly){const record=pending as {audioStart?:unknown};if(Object.keys(record).length!==1||!validAudioStart(record.audioStart,identity))throw new Error("The audio-start history is malformed.");}
-      else if(!candidate.envelope||!terminalJournal(candidate.journal,identity,candidate.envelope,receiptConfirmed))throw new Error("Only a fully resolved history can be archived.");
+      else if(!resolved)throw new Error("Only a fully resolved history can be archived.");
       // Same object store and transaction: commit an intact record before removing its active pointer.
       await transact<void>("readwrite",(store,set,reject)=>{
         const read=store.get(key);read.onsuccess=()=>{
@@ -86,26 +89,51 @@ function privateSlot<T>(identity:ActorIdentity,purpose:"voice"|"command") {
   };
 }
 
-export function privatePendingStore(identity:ActorIdentity):PendingStore {
-  const slot=privateSlot<PendingReport|{audioStart:AudioStart}>(identity,"voice");
-  const marker=(value:PendingReport|{audioStart:AudioStart}|null):AudioStart|null=>{
-    if(value&&Object.keys(value).length===1&&"audioStart" in value){if(!validAudioStart(value.audioStart,identity))throw new Error("The original audio start is malformed.");return value.audioStart;}
+/** A voice slot or a command slot of the format before the identifier cutover: it held the signed envelope itself. */
+const retiredSlot=(value:unknown):boolean=>isRecord(value)&&(Object.hasOwn(value,"envelope")||Object.hasOwn(value,"journal"));
+/** What custody holds under a report's key, checked against its completion. Null: nothing was signed under the key. */
+async function reportCustody(custody:Custody,identity:ActorIdentity,report:KeptReport):Promise<ReportCustody|null>{
+  const record=await custody.find({service:identity.origin,membership:identity.membership,signer:identity.publicKey,target:identity.scope,key:report.key});
+  if(!record)return null;
+  const intent=record.envelope.signed.intent,t=report.completion.turn;
+  if(intent.kind!=="fulfill"||intent.actor!==identity.publicKey||canonicalize(intent.to)!==canonicalize(identity.scope)||intent.fields["generation"]!==t.generation||intent.fields["serial"]!==t.serial||intent.fields["n"]!==t.N)throw new Error("The kept report is not this completion's fulfillment.");
+  const decided=record.phase==="refused"?await custody.decided(identityId(record.identity),record):null;
+  const reason=decided?.answer?.answer==="refused"?decided.answer.reason:undefined;
+  return{phase:record.phase,signings:record.signings.length,envelopes:envelopesOf(record),...(reason?{reason}:{})};
+}
+export function privatePendingStore(identity:ActorIdentity,store:ClientCustodyStore):PendingStore {
+  const slot=privateSlot<KeptReport|{audioStart:AudioStart}>(identity,"voice");
+  const custody=new Custody(store,()=>timeOf(Date.now()));
+  const marker=(value:unknown):AudioStart|null=>{
+    if(isRecord(value)&&Object.keys(value).length===1&&"audioStart" in value){if(!validAudioStart(value["audioStart"],identity))throw new Error("The original audio start is malformed.");return value["audioStart"];}
     if(value&&!validReport(value,identity))throw new Error("The original voice record is malformed.");return null;
   };
+  const load=async():Promise<PendingReport|null>=>{
+    const value=await slot.load();if(marker(value)||value===null)return null;
+    const kept=keptReport(value as KeptReport),held=await reportCustody(custody,identity,kept);
+    return{...kept,outcome:held?.phase==="refused"?"refused":"unknown",...(held?{custody:held}:{})};
+  };
   return {
-    load:async()=>{const value=await slot.load();return marker(value)?null:value as PendingReport|null;},
+    load,
     loadStart:async()=>marker(await slot.load()),
     saveStart:async audioStart=>{if(!validAudioStart(audioStart,identity)||await slot.load())throw new Error("A voice record already exists or the start is invalid.");await slot.save({audioStart});},
-    save:async pending=>{if(!validReport(pending,identity))throw new Error("The exact completed voice report is invalid.");const value=await slot.load(),held=marker(value);
-      if(held&&(!pending.audioStart||canonicalize(pending.audioStart)!==canonicalize(held)))throw new Error("The original audio start must remain with its completion.");
-      if(value&&!held&&(!validReport(value,identity)||canonicalize(value.completion)!==canonicalize(pending.completion)))throw new Error("The prior voice completion must remain intact.");await slot.save(pending);},
+    save:async pending=>{const kept=keptReport(pending);if(!validReport(kept,identity))throw new Error("The exact completed voice report is invalid.");const value=await slot.load(),held=marker(value);
+      if(held&&(!kept.audioStart||canonicalize(kept.audioStart)!==canonicalize(held)))throw new Error("The original audio start must remain with its completion.");
+      if(value&&!held&&(!validReport(value,identity)||canonicalize((value as KeptReport).completion)!==canonicalize(kept.completion)||(value as KeptReport).key!==kept.key))throw new Error("The prior voice completion must remain intact.");await slot.save(kept);},
     clear:slot.clear,
-    archive:(pending,confirmed)=>slot.archive(pending,confirmed),
+    archive:async(pending,confirmed)=>{const held=await load();if(!held||held.key!==pending.key||!terminalReport(held,confirmed))throw new Error("Only a fully resolved history can be archived.");await slot.archive(keptReport(pending),true);},
     // Native obsolescence is checked by the current gateway/controller; this store owns only atomic custody.
     archiveStart:async audioStart=>{const value=await slot.load();if(!value||!marker(value)||canonicalize(marker(value))!==canonicalize(audioStart))throw new Error("The original audio start changed.");await slot.archive(value,false,true);},
   };
 }
-export function privateCommandStore(identity:ActorIdentity){return privateSlot<{kind:string;envelope:PreparedEnvelope;journal?:AttemptJournal}>(identity,"command");}
+/** Removes this identity's voice slot and command slot of the retired format. True when one was there. No record migrates. */
+export async function dropRetiredSlots(identity:ActorIdentity):Promise<boolean>{
+  const voice=privateSlot<unknown>(identity,"voice"),command=privateSlot<unknown>(identity,"command");
+  let dropped=false;
+  if(retiredSlot(await voice.load().catch(()=>null))){await voice.clear();dropped=true;}
+  if(await command.load().catch(()=>null)!==null){await command.clear();dropped=true;}
+  return dropped;
+}
 
 export interface DeviceChoice { publicKey: string; voiceId: string }
 export interface SavedDevices { epoch: string; devices: SavedDevice[]; choice?: DeviceChoice }
