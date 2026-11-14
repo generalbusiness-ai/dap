@@ -2,15 +2,21 @@
 
 GS-1 request `b29bd21ebda5346fd5e673cad8471b6e1cc0ec74` and promise
 `f3d79f874bd82a5b6d0b3d106912e8048bf1c16d` cover this head. This
-source checkpoint implements Parts A and B and the Part C case selection.
-All development checks and after-change timing remain unrun.
+head implements Parts A and B and the Part C case selection. Five affected
+compiler contexts, six Node owners (19 tests), the definition corpus (1413
+cases) and the 14 changed Native owners (54 passed, one optional recorder
+skipped) pass their development checks. The single notes-selection control
+distinguishes the intended mixed-change rule. The full gate remains UNRUN.
 
-The branch `builder/gs1-short-gate-20261114` starts from repaired combined
-head `1c80cef3c7749f1c6220fbdc77ed85491b4c6502` as a local, unlanded
-dependency. Main remains `189cf7b64a1501b307b9c73e96ee83641c3bd2de`.
-The running combined gate and its checkout receive no changes from this
-branch. Integration with the actual combined main remains owed before the
-GS-1 gate.
+The branch `builder/gs1-short-gate-20261114` preserves its original source
+from repaired combined head `1c80cef3c7749f1c6220fbdc77ed85491b4c6502`.
+Merge `6f67e604a2ab598e2ee3e8bf98482d12c32c8a62` takes the actual
+combined landing and planner note at main
+`270dc8c7a69a4506fc3d5525339f08a4adb2803f`. The merge changes only
+the two landed notes. The planner's note END `6818d989` and deployment END
+`3f4af41d` release integration and gate ordering. Development checks use
+source head `6784a5b55ccc09e984849c8fca8c67e2318e167f`; this note
+follow-up changes no executable input. Root grants the final gate separately.
 
 ## What changed
 
@@ -191,34 +197,62 @@ correspondence. The Effects model covers only its named dispatch functions
 and `markSent`; it does not prove the evidence ledger, dense proof
 residency, whole-room CLI verification or provider behavior. No model ran.
 
-## Evidence and remaining checks
+## Checks and remaining gate
 
-This checkpoint is source-only. No syntax, compiler, test, control,
-generator, build, model, or gate command ran for these changes. No package
-production source changes. The changed scripts remain unchecked until the
-execution slot permits their development checks. No after-change timing
-result or new evidence manifest accompanies this note.
+These are ordinary development checks, not a formal focused interval.
+The five compiler contexts are scope test (including its scale config),
+CLI scope, lane scope, lane plain test and derive test. Each passes once.
+No unrelated successful owner reran. The first phase-partition owner failed
+because its new assertion called `native.find` on the config object.
+Commit `6784a5b5` corrects that expression to `native.projects.find`;
+its one follow-up passes. The original failed output remains retained at
+`/private/tmp/artroom-gs1-dev-20261114/09-node.log`. The other successful
+compiler, Node and corpus checks did not rerun for this one-line correction.
 
-| Check | Command or boundary | Result |
-|---|---|---|
-| Selection owner | `node --test scripts/gate-test-selection.test.mjs` | UNRUN |
-| Note-size owner | `node --test scripts/check-notes.test.mjs` | UNRUN |
-| Existing gate owners | Whole test-runner and tracked-selection owners after integration | UNRUN |
-| Selection control | One named control must turn the notes-only decision into an incorrect skip for a docs or mixed change and fail the existing selection assertion | UNRUN |
-| Case selection and accounting | `node --test scripts/scale-selection.test.mjs scripts/test-phases.test.mjs` | UNRUN |
-| Native fixture type contexts | Scope test, CLI scope and lane scope/test contexts | UNRUN |
-| Part C | Exact 16-case movement, protected-path selection, ordinary/scale inventory and per-owner accounting | Source drafted; checks UNRUN |
-| Native baseline | R2 Grow gate log `/Users/hughpyle/play/artroom-evidence/2026-11-14-r2-grow-gate-attempt1/00-full-gate/stdout.log`, SHA-256 `147ff2effb1553e6edf6ba05d7ca16d5c7c944b083afca509bb7d433f88a3fa2` | Native wall 836.300133 s; after UNRUN |
-| Full gate | One `npm run gate` after integration with landed combined main and settled GS-1 scope | UNRUN |
-| Review | Architecture, Security, Simplification, and exact-head source and evidence correspondence | UNRUN |
+The changed Native body uses the maintained Native config, original worker
+limits and deadlines. Final JSON and maintained reporter records agree on
+14 owners and 55 unique cases: `scope` has 12 passes; `scope-stories` has
+26 passes and the optional demo recorder skip; `scope-scale` has 16 passes.
+The five ordinary owners retain all 39 registrations. Each of the nine
+moved scale owners appears only in `scope-scale`; none of the four unchanged
+scale owners runs in this development body. The body exits zero in
+423.29 seconds (Vitest reports 422.49 seconds). This is not the complete
+Native gate step and supplies no before/after speed comparison.
+
+The one control changes the unique `changedPaths.every(...)` predicate to
+`changedPaths.some(...)`. The actual two-case Node owner passes before the
+change. With the fault, both existing assertions fail with `ERR_ASSERTION`,
+actual `true`, expected `false`: the first names a mixed notes/source range;
+the second uses a real Git range containing notes and a docs change. The
+helper returns `DISTINGUISHES`, exit zero. Its external copy changes only
+the exit-cleanup line so the raw output remains. Runner, classifier and
+timeouts stay unchanged. Source bytes and mode restore exactly, and Git
+reports a clean checkout. No third green run is claimed.
+
+| Check | Result or retained record |
+|---|---|
+| Five affected compiler contexts | DEV PASS |
+| Six whole Node owners | DEV PASS: notes 3, gate selection 2, scale selection 6, phase partition 1, test runner 6, tracked selection 1; 19 final passes |
+| Whole definition corpus | DEV PASS: 1413 cases |
+| Changed Native owners | DEV PASS: 54 passed and one skipped in 14 files; exact ordinary/scale membership checked |
+| Control baseline | `/Users/hughpyle/play/artroom-evidence/2026-11-14-gs1-gate-attempt1/control/tmp/artroom-control-tYCQS4/before.tap` (SHA-256 `400a28c4354964a0e5fe95c13575832962b32fb655dd4fab1a0505ef2208dcf7`); two passed |
+| Control fault | `/Users/hughpyle/play/artroom-evidence/2026-11-14-gs1-gate-attempt1/control/tmp/artroom-control-tYCQS4/after.tap` (SHA-256 `7fe550c922373f1ccf11f52830616976d90255d95982ac91bea6a9ae97a2bcf3`); two actual assertion failures, zero passed, skipped or cancelled |
+| Control helper result | `/Users/hughpyle/play/artroom-evidence/2026-11-14-gs1-gate-attempt1/control/helper.stderr.log` (SHA-256 `61e51a622a8cbef212848cad4d6d27c60b922c5fef7aa10de125c03f596ee52c`); exit 0, DISTINGUISHES; original source restored |
+| Native baseline | R2 Grow full gate log `/Users/hughpyle/play/artroom-evidence/2026-11-14-r2-grow-gate-attempt1/00-full-gate/stdout.log`, SHA-256 `147ff2effb1553e6edf6ba05d7ca16d5c7c944b083afca509bb7d433f88a3fa2`; Native wall 836.300133 s at its earlier source |
+| GS-1 full gate | UNRUN; one clean-head `npm run gate` will write `/Users/hughpyle/play/artroom-evidence/2026-11-14-gs1-gate-attempt1/gate.log` after root's grant |
+| Review | Architecture, Security, Simplification and exact-head correspondence remain owed after the gate |
 
 ## Open limits
 
-GS-1 owns the remaining development checks, control, Part C disposition,
-gate, and review. The request permits splitting Part C if its audit holds
-Parts A and B for more than one hour. Part C changes tier membership and
-selection only. It changes no deadline, worker count or runtime assertion.
-It claims no faster gate or after-change Native wall time.
+GS-1 still owes its full gate and review. Part C stays in this head under
+planner ruling `50210e5c`, with original sole-case paths under `e8edea0d`.
+It changes tier membership and registration placement, not case bodies,
+assertions, deadlines or worker limits. The gate changes protected selection
+paths, so its actual selection must include all 22 scale cases. The note
+will compare the complete Native wall times from two real gate logs. The
+R2 baseline belongs to a different source head; a lower observed time would
+not establish a causal saving. No after-change full Native wall time or
+faster-gate claim exists before the GS-1 gate.
 
 The notes-only optimization skips only `npm test`. It does not skip
 dependency verification, whitespace, commit checks, citation checks, note
