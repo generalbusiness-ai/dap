@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7270990c9f58ba59125a908ae13c7cae9c463343","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/demo-config.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:76e8fcb5002d82f43ec9706e6100aa326dc3bdcf","text":"Merge retired a covered predecessor; the successor is at docs/security/trust-boundaries.md."}
