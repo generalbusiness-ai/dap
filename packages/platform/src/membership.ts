@@ -127,6 +127,7 @@ export const ROLE_TABLE: readonly (readonly [actions: readonly string[], roles: 
 export const ROLE_TABLE_OF: Readonly<Record<string, typeof ROLE_TABLE>> = { [MEMBERSHIP_1]: ROLE_TABLE_1, [MEMBERSHIP]: ROLE_TABLE, "platform:membership@4": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@5": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@6": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@7": [...ROLE_TABLE, [["application.install"], ["admin"]]], "platform:membership@8": [...ROLE_TABLE, [["application.install", "directory.archive"], ["admin"]]],
   "platform:membership@10": [...ROLE_TABLE, [["application.install", "directory.archive"], ["admin"]]],
   "platform:membership@13": [...ROLE_TABLE, [["application.install", "directory.archive", "destination.bind-repository"], ["admin"]], [["membership.own-agent"], ["admin", "maintainer", "member"]]],
+  "platform:membership@14": [...ROLE_TABLE, [["application.install", "directory.archive", "destination.bind-repository"], ["admin"]], [["membership.own-agent"], ["admin", "maintainer", "member"]]],
   "platform:membership@12": [...ROLE_TABLE, [["application.install", "directory.archive"], ["admin"]]],
 
   "platform:membership@11": [...ROLE_TABLE, [["application.install", "directory.archive", "destination.bind-repository"], ["admin"]]],
@@ -173,6 +174,7 @@ export const FIRST_ACTIONS: { readonly [role in Role]: readonly string[] } = {
 export const FIRST_ACTIONS_OF: Readonly<Record<string, typeof FIRST_ACTIONS>> = { [MEMBERSHIP_1]: FIRST_ACTIONS_1, [MEMBERSHIP]: FIRST_ACTIONS, "platform:membership@4": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@5": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@6": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@7": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install"] }, "platform:membership@8": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install", "directory.archive"] },
   "platform:membership@10": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install", "directory.archive"] },
   "platform:membership@13": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install", "directory.archive", "destination.bind-repository", "membership.own-agent"], maintainer: [...FIRST_ACTIONS.maintainer, "membership.own-agent"], member: [...FIRST_ACTIONS.member, "membership.own-agent"] },
+  "platform:membership@14": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install", "directory.archive", "destination.bind-repository", "membership.own-agent"], maintainer: [...FIRST_ACTIONS.maintainer, "membership.own-agent"], member: [...FIRST_ACTIONS.member, "membership.own-agent"] },
   "platform:membership@12": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install", "directory.archive"] },
 
   "platform:membership@11": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install", "directory.archive", "destination.bind-repository"] },
@@ -760,18 +762,28 @@ export const membershipRules: Rules = {
   "handle-form": handleForm("handle"),
   "last-admin-kept": {
     place: "guard", refusals: ["last-admin"],
-    run: (given) => {
-      if (given.input.type === "act" && given.input.grant === null) return { holds: true };
-      const on = given.resolved.subjects.get("on");
-      const member = on?.type === "key" ? given.resolved.subjects.get("also.member") : on;
-      if (!on || !member) throw new Error("this rule stands in a row whose primary item is a member or a key");
-      if (member.state !== "active" || member.values["role"] !== "admin" || otherAdmins(given.state, member.id).length > 0) return { holds: true };
-      if (on.type !== "key") return { holds: false, name: "last-admin" };
-      const others = [...itemsOf(given.state, "key", ["active"])].some((key) => key.id !== on.id && key.refs["member"] === member.id);
-      return on.state !== "active" || others ? { holds: true } : { holds: false, name: "last-admin" };
-    },
+    run: (given) => (given.input.type === "act" && given.input.grant === null ? { holds: true } : lastAdminKept(given)),
   },
 };
+
+/**
+ * Rows h and i without their exception: the member that the row removes is
+ * no active admin, or another admin stays active; for a key, the key is not
+ * active, or its member has another active key. Otherwise `last-admin`.
+ * Each version states its own exception before it asks this.
+ */
+export function lastAdminKept(given: RuleGiven): { holds: true } | { holds: false; name: "last-admin" } {
+  const on = given.resolved.subjects.get("on");
+  const member = on?.type === "key" ? given.resolved.subjects.get("also.member") : on;
+  if (!on || !member) throw new Error("this rule stands in a row whose primary item is a member or a key");
+  if (member.state !== "active" || member.values["role"] !== "admin" || otherAdmins(given.state, member.id).length > 0) return { holds: true };
+  if (on.type !== "key") return { holds: false, name: "last-admin" };
+  const others = [...itemsOf(given.state, "key", ["active"])].some((key) => key.id !== on.id && key.refs["member"] === member.id);
+  return on.state !== "active" || others ? { holds: true } : { holds: false, name: "last-admin" };
+}
+
+/** True when the key that signed the act is the roster's recovery key in the state before the act. */
+export const signedByRecovery = (given: RuleGiven): boolean => rosterOf(given.state)?.values["recoveryKey"] === signingKey(given);
 
 // ---------------------------------------------------------------- the answer to an observation
 

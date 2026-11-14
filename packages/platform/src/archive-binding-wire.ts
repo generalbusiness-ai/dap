@@ -1,5 +1,6 @@
 import { COMMONS_COHORT } from "./commons-cohort.ts";
 import { EVIDENCE_RULES_COHORT } from "./evidence-cohort.ts";
+import { BASE_COHORT } from "./base-cohort.ts";
 /** Explicit archive cohorts. Existing pins keep their shipped meaning. */
 export const ARCHIVE_APPLICATION_COHORT = Object.freeze({
   register: "platform:register@14", directory: "platform:directory@13", membership: "platform:membership@8",
@@ -35,4 +36,4 @@ export const UNPUBLISHED_COHORT = Object.freeze({
   register: "platform:register@21", directory: "platform:directory@20", membership: "platform:membership@8",
   rules: "platform:rules@10", destination: "platform:destination@16", inbox: "platform:inbox@1",
 } as const);
-export const archiveInstallPin = (pin: string): boolean => pin === COMMONS_COHORT.rules || pin === ARCHIVE_APPLICATION_COHORT.rules || pin === ARCHIVE_DECLARED_APPLICATION_COHORT.rules || pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || pin === ARCHIVE_CERTIFIED_RULES_COHORT.rules || pin === HARDENED_CERTIFIED_RULES_COHORT.rules || pin === EVIDENCE_RULES_COHORT.rules;
+export const archiveInstallPin = (pin: string): boolean => pin === COMMONS_COHORT.rules || pin === ARCHIVE_APPLICATION_COHORT.rules || pin === ARCHIVE_DECLARED_APPLICATION_COHORT.rules || pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || pin === ARCHIVE_CERTIFIED_RULES_COHORT.rules || pin === HARDENED_CERTIFIED_RULES_COHORT.rules || pin === EVIDENCE_RULES_COHORT.rules || pin === BASE_COHORT.rules;
