@@ -60,7 +60,7 @@ function vitestFixture(t, source) {
   assert.equal(JSON.parse(readFileSync(fileURLToPath(import.meta.resolve("vitest/package.json")), "utf8")).version, "4.1.12");
   const cli = join(dirname(fileURLToPath(import.meta.resolve("vitest/package.json"))), "vitest.mjs");
   const f = fixture(t, `import { expect, test } from ${JSON.stringify(vitest)};\nimport { wrong } from './state.mjs';\n${source}`, { filename: "check.test.ts", script: mixedScript });
-  writeFileSync(join(f.directory, "vitest.config.mjs"), "export default { test: { pool: 'threads', maxWorkers: 1 } };\n");
+  writeFileSync(join(f.directory, "vitest.config.mjs"), "export default { test: { pool: 'threads', maxWorkers: 1, chaiConfig: { truncateThreshold: 0 } } };\n");
   // Only npx resolution is a stand-in. The pinned local Vitest CLI runs both
   // real test bodies without installing a package in the scratch fixture.
   const bin = join(f.directory, "bin"), calls = join(f.directory, "runner.jsonl"), reports = join(f.directory, "vitest-children");
