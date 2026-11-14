@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6e441264ae9c0f477b8d1b5d157dd459960e2fcb","text":"Merge retired a covered predecessor; the successor is at scripts/test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6fa07a39c254faa6ec8b07a9b81fa789c0507be9","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/manifest-tree-scale.scope.test.ts."}
