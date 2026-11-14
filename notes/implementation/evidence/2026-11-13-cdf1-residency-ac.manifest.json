@@ -1,0 +1,54 @@
+{
+  "qualification": "Entire four-case native residency file passed once at the merged CDF-1 plus CF-2 comments head on actual escalated AC Power and powermode 0. Power sampled every two seconds, with zero violations. No name filter, deadline change, retry or gate.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-cdf1-residency-ac",
+  "checkpoint_commit": "7872d111b9afcff6bae73f39cc95db78a32cad8f",
+  "checkpoint_tree": "2b3386fa38ad3e6c02a2f8f171f924800edd13a4",
+  "file_count": 9,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 662,
+      "sha256": "760438bfce4b3fb2cfbbc2ae780a7d583fa26b11aa47ab6c640834076911df77"
+    },
+    {
+      "path": "dependency-clone.json",
+      "bytes": 2393,
+      "sha256": "fd07ccd56188a7dbe64e3206cee9e16bf4dcf1b7a29effbe0c5e299a7a199d1f"
+    },
+    {
+      "path": "native-file.log",
+      "bytes": 110,
+      "sha256": "f8c8008ed77953c327b005be427977dc694a6e475f2a3041ab3f268e9f03007d"
+    },
+    {
+      "path": "native-results.json",
+      "bytes": 1978,
+      "sha256": "528fa1acbb894e173e641b6cb0f1afc48b5e41b731e5159b4af88287d57ca6e5"
+    },
+    {
+      "path": "power-end.json",
+      "bytes": 947,
+      "sha256": "981a556eac5c9be36b0b064bec218f3e7ed2a966e36ce1fceee37e6466ba8820"
+    },
+    {
+      "path": "power-monitor.jsonl",
+      "bytes": 34669,
+      "sha256": "86db7feb449d28ef995d3e54e92cb4135bce94e5e00305d2f978406b2712bef5"
+    },
+    {
+      "path": "power-start.json",
+      "bytes": 947,
+      "sha256": "fa4e3af9f29eeb55bc9da44070837531548ccf6f2a3c6b91240439a4a567e193"
+    },
+    {
+      "path": "result.json",
+      "bytes": 195,
+      "sha256": "7cec15fa34b464b93c449d446d6e9f0b676bea416731cd19b176ab843c5cb787"
+    },
+    {
+      "path": "source.json",
+      "bytes": 1177,
+      "sha256": "4616260ef4a86efd6fb1d896d05f56cbccc791c9e2917d108936dc5c093725a8"
+    }
+  ]
+}
