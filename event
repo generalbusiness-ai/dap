@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:48f906f460280cd0d5fb3665f0bf52b1ca505949","text":"Merge retired a covered predecessor; the successor is at apps/room/worker.grow.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:54242868abbe3acb26be0ff8e24da7bf3902a3ef","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-r2-grow-gate.manifest.json."}
