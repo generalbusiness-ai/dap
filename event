@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c9f60452ba3925101311cbd72f1646c5df154087","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/publication-policy.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cb3fde959ed3f3639b861988a93dfef703d37990","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/test/prepare-project.test.mjs."}
