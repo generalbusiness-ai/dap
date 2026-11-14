@@ -4,13 +4,14 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { selectedJsonFiles } from "./format-json.mjs";
 
-test("tracked JSON formatting preserves the byte-compared Grow packet and retained evidence while selecting source", () => {
+test("tracked JSON formatting preserves both byte-compared Grow packets and retained evidence while selecting source", () => {
   const root = fileURLToPath(new URL("../", import.meta.url));
   const paths = execFileSync("git", ["ls-files", "-z", "--", "*.json"], { cwd: root, encoding: "utf8" }).split("\0").filter(Boolean);
-  const packet = "examples/grow/demo/application.dap.json";
-  assert.ok(paths.includes(packet), "The actual published byte-compared packet must exist");
   const selected = selectedJsonFiles(paths);
-  assert.equal(selected.includes(packet), false, "The canonical packet reader must receive the original bytes");
+  for (const packet of ["examples/grow/demo/application.dap.json", "examples/grow/fixtures/earlier-application.dap.json"]) {
+    assert.ok(paths.includes(packet), "Each actual byte-compared packet must exist");
+    assert.equal(selected.includes(packet), false, "The canonical packet reader must receive each packet's original bytes");
+  }
   for (const source of ["examples/grow/check/dap.application.json", "examples/grow/check/fault-scenario.json"]) {
     assert.ok(paths.includes(source), "The actual source with a byte-limited CLI read must exist");
     assert.equal(selected.includes(source), false, "Formatting must preserve the bounded source input");
