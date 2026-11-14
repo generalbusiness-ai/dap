@@ -180,14 +180,7 @@ export interface AtQuery { readonly cut: number; readonly items: Range }
  * resolved and whose commit entry it has not written. `cut-gone`: the
  * member keeps no cut copy for that cut. A reader that is not a joined
  * member of the same order scope is refused `forbidden`.
- *
- * TODO(H1, reason codes): `uncommitted` and `cut-gone` are answers of this
- * read only. Whether they join `ReadRefusal`, and the codes that the turn
- * of a sequenced act needs in `RefusalReason` and `UnavailableReason`
- * (`order-unavailable`, `not-a-member`, `order-forming`, `member-pending`,
- * `member-uncommitted`, `cut-gone`, `position-bound`, `not-open`,
- * `allocation-expired`, `holed`, `source-not-effective`), wait for the
- * planner's ruling on their RC-1 classes.
+
  */
 export type AtRead =
   | { ok: true; cut: number; entry: FactRef; items: readonly GroupRecord[] }

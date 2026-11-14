@@ -187,7 +187,7 @@ export type Operand =
   | { intent: true }                               // the digest of the intent being judged
   | { none: true }
   | { const: FieldValue }
-  | { read: string; part?: Part };                 // sequenced acts only: the list of records that a `reads` entry bound as of its cut
+  | { read: string };                 // sequenced acts only: the list of records that a `reads` entry bound as of its cut
 
 /** A part reads inside an entry that a fact reference names. */
 export type Part = EntryPart | { of: EntryPart; then: "scope" | "seq" };
