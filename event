@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d008fe759f0be610a31f9f2c1b4136131f1e9ca0","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-cut-r-r1-gate.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d01a4ec0c3bbb16226f12bd76ec2a0b56366a768","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/archive-native-authority.ts."}
