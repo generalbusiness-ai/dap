@@ -106,11 +106,73 @@
       "rawFileCount": 269,
       "checksumSha256": "191b6fc68553430a57380b57f72c32c8ba71d96b895015f7968530d2926d5a51",
       "allRawFilesVerified": true
+    },
+    {
+      "kind": "docs",
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-head-a-current-roots-doc-checks",
+      "rawFileCount": 11,
+      "checksumSha256": "26c734ffe84e5272f6f9a6f50da606c8e4b103a637cb49199ce084dfa80d6ad6",
+      "allRawFilesVerified": true
     }
   ],
-  "rawFileCount": 315,
-  "fileCount": 107,
+  "rawFileCount": 326,
+  "fileCount": 118,
   "files": [
+    {
+      "path": "2026-11-14-head-a-current-roots-doc-checks/SHA256SUMS",
+      "bytes": 831,
+      "sha256": "26c734ffe84e5272f6f9a6f50da606c8e4b103a637cb49199ce084dfa80d6ad6"
+    },
+    {
+      "path": "2026-11-14-head-a-current-roots-doc-checks/commit-messages.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-head-a-current-roots-doc-checks/commit-messages.stdout",
+      "bytes": 38,
+      "sha256": "8b64c7a412d0921e8f3c08e1c23ecbb1ca1092bff45a46a1aeeb30d2d35a0c5a"
+    },
+    {
+      "path": "2026-11-14-head-a-current-roots-doc-checks/doc-links.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-head-a-current-roots-doc-checks/doc-links.stdout",
+      "bytes": 36,
+      "sha256": "0b62886e12f396ee8cf60e4cfe3f4112ecc75879da8508427692a1367191bbc9"
+    },
+    {
+      "path": "2026-11-14-head-a-current-roots-doc-checks/notes.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-head-a-current-roots-doc-checks/notes.stdout",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "2026-11-14-head-a-current-roots-doc-checks/result.json",
+      "bytes": 1480,
+      "sha256": "a933d93bbe09d45fbdba8d3d904a70d8abd35953e4a6fce9037880705ccb6af8"
+    },
+    {
+      "path": "2026-11-14-head-a-current-roots-doc-checks/runner-source.py",
+      "bytes": 2167,
+      "sha256": "053d454ca8a30ad0d8aec3a20723e0d356fe99ed3b236347919db75668e31005"
+    },
+    {
+      "path": "2026-11-14-head-a-current-roots-doc-checks/whitespace.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-14-head-a-current-roots-doc-checks/whitespace.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
     {
       "path": "2026-11-14-head-a-current-roots-gate/SHA256SUMS",
       "bytes": 28109,
@@ -655,5 +717,61 @@
     "manifestSha256": "497aa347a3fe741bbfbae51fd00d395d82af1b9c2ac27e8437906f22e66d94f6",
     "qualification": "Passed-but-insufficient gate history; not current coverage and must not land."
   },
-  "verifiedAt": "2026-11-14T09:08:01.910370+00:00"
+  "verifiedAt": "2026-11-14T09:09:22.627279+00:00",
+  "docsFollowup": {
+    "checkpoint": {
+      "commit": "11dd5df8ae72e10025f5e74440405d1e9585cd53",
+      "tree": "bf19ccb81050578cde08a63ca5db4713f752bb58"
+    },
+    "commands": [
+      {
+        "name": "whitespace",
+        "argv": [
+          "git",
+          "diff",
+          "--check",
+          "0ad4aa9102fe5f75b692d3adb30c8b00a6914574",
+          "HEAD"
+        ],
+        "exit": 0,
+        "started": "2026-11-14T09:09:02.958423+00:00",
+        "wallSeconds": 0.009405290998984128
+      },
+      {
+        "name": "commit-messages",
+        "argv": [
+          "/opt/homebrew/bin/node",
+          "scripts/check-commit-messages.mjs",
+          "0ad4aa9102fe5f75b692d3adb30c8b00a6914574",
+          "HEAD"
+        ],
+        "exit": 0,
+        "started": "2026-11-14T09:09:02.968015+00:00",
+        "wallSeconds": 0.11074925004504621
+      },
+      {
+        "name": "doc-links",
+        "argv": [
+          "/opt/homebrew/bin/node",
+          "scripts/check-doc-links.mjs"
+        ],
+        "exit": 0,
+        "started": "2026-11-14T09:09:03.078852+00:00",
+        "wallSeconds": 0.1276923330151476
+      },
+      {
+        "name": "notes",
+        "argv": [
+          "/opt/homebrew/bin/node",
+          "scripts/check-notes.mjs",
+          "0ad4aa9102fe5f75b692d3adb30c8b00a6914574",
+          "HEAD"
+        ],
+        "exit": 0,
+        "started": "2026-11-14T09:09:03.206639+00:00",
+        "wallSeconds": 0.1183800830040127
+      }
+    ],
+    "qualification": "Only the implementation note and its manifest add these results afterward; production source and tests stay unchanged."
+  }
 }

@@ -116,9 +116,21 @@ The gate's 269 raw files live in
 `/Users/hughpyle/play/artroom-evidence/2026-11-14-head-a-current-roots-gate`.
 Its `SHA256SUMS` digest is
 `191b6fc68553430a57380b57f72c32c8ba71d96b895015f7968530d2926d5a51`.
-All 315 current script and gate raw files match their sealed checksums
-and have no write bits. The tracked manifest lists 107 files directly;
+All 326 current script, gate, and documentation raw files match their
+sealed checksums and have no write bits. The tracked manifest lists 118 files directly;
 the sealed gate manifest and checksum cover every periodic power file.
+Keep the three read-only raw directories for at least 30 days after landing.
+
+The cheap documentation and Git follow-up passed at notes checkpoint
+`11dd5df8ae72e10025f5e74440405d1e9585cd53`, tree
+`bf19ccb81050578cde08a63ca5db4713f752bb58`. It checked two commit
+messages with none flagged, 1,246 local links with none broken, note
+size and inventory with zero warnings, and diff whitespace. Only this
+note and its manifest add those results afterward. No compiler, test,
+or additional gate ran. The 11 raw follow-up files live in
+`/Users/hughpyle/play/artroom-evidence/2026-11-14-head-a-current-roots-doc-checks`;
+its `SHA256SUMS` digest is
+`26c734ffe84e5272f6f9a6f50da606c8e4b103a637cb49199ce084dfa80d6ad6`.
 
 The scripts used main `0ad4aa91`; the gate used source `259b5cb3`.
 All raw paths below are relative to `/Users/hughpyle/play/artroom-evidence/`.
@@ -130,6 +142,10 @@ All raw paths below are relative to `/Users/hughpyle/play/artroom-evidence/`.
 | Demo current root and offer | Full Demo command above | 0 | `2026-11-14-head-a-current-roots-script/demo.stdout`: `af2a11bf09a104f15266bce351c27da7899cf7580ff42d6640351142f18e3702` |
 | Production reader, full retired-root union, exact END values, and preserved settings | `node /private/tmp/artroom-head-a-current-roots-proof-20261114.mjs` | 0 | `2026-11-14-head-a-current-roots-script/current-roots-proof.json`: `e7c3b76af0d71c03c6fc62658e3c33a086690c3fa977768672c0b782792f033b` |
 | Corrected maintained full gate | `/usr/bin/time -p /opt/homebrew/bin/npm run gate` | 0 | `2026-11-14-head-a-current-roots-gate/gate.stdout`: `e0899a49a705879f4456c1da9bb15420dc748b96f70bb6fef5adbb7b6676ded0` |
+| Diff whitespace | `git diff --check 0ad4aa9102fe5f75b692d3adb30c8b00a6914574 HEAD` | 0 | `2026-11-14-head-a-current-roots-doc-checks/whitespace.stdout`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Commit messages | `node scripts/check-commit-messages.mjs 0ad4aa9102fe5f75b692d3adb30c8b00a6914574 HEAD` | 0 | `2026-11-14-head-a-current-roots-doc-checks/commit-messages.stdout`: `8b64c7a412d0921e8f3c08e1c23ecbb1ca1092bff45a46a1aeeb30d2d35a0c5a` |
+| Local documentation links | `node scripts/check-doc-links.mjs` | 0 | `2026-11-14-head-a-current-roots-doc-checks/doc-links.stdout`: `0b62886e12f396ee8cf60e4cfe3f4112ecc75879da8508427692a1367191bbc9` |
+| Note size and inventory | `node scripts/check-notes.mjs 0ad4aa9102fe5f75b692d3adb30c8b00a6914574 HEAD` | 0 | `2026-11-14-head-a-current-roots-doc-checks/notes.stdout`: `35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1` |
 
 The earlier branch remains at
 `f8c71ba2a83297051681b3031c04fab36a4d33ed`. Its first full gate
