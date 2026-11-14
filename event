@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:baccbb70569bac46a31abde39b512a5ea8ae0d76","text":"Merge retired a covered predecessor; the successor is at scripts/register-values.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c39f7afb7f547dfd0d0e452f9071b84e1da76e73","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-cut-a-doc-checks.manifest.json."}
