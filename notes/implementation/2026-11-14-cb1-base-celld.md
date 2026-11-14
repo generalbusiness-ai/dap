@@ -4,10 +4,12 @@
 
 CB-1 source follows request `b5f200f2`, accepted pre-code act `fd0f709e`,
 rulings `4ce94d7e` and `4d03ff1d`, and source promise `9b083032`.
-Branch `builder/cb1-base-celld-20261114` starts at reviewed main
+The original branch `builder/cb1-base-celld-20261114` starts at reviewed main
 `5b342ee9c484c0c653dc1a363b852be83ef1d77b`.
-This checkpoint contains source and unexecuted owning tests. Validation
-evidence remains owed.
+The source-only composition `builder/cb1-on-combined-source-20261114`
+starts at combined head `0eb5a1aaf4174b728745d331507900f759f64e00`.
+It carries the single CB-1 feature commit without dependency merges or
+conflict resolutions. Integration with the later main remains owed.
 
 The normal celld smoke plan now uses the CLI's `base` default.
 `celldPreparedNoHostRegister` admits Register 28 beside retained Registers
@@ -78,26 +80,41 @@ witness. The previously recorded Mac mini remains unavailable. This
 source lane makes no fleet connection, reads no private key or credential,
 runs no privileged step, and sends Hugh no prompt.
 
-## Evidence still owed
+## Development checks and evidence still owed
 
-The source drafts owning tests for the default base plan, both Register 28
+The source supplies owning tests for the default base plan, both Register 28
 version questions, retained old-family preparation, the exact paired
 application settings, and refusal of another added field. Filesystem
 staging tests use synthetic retained plans and public TEST trust rows.
 The drafted cases cover helper boundaries, not an installed room or object
 store.
 
-| Check | State | Evidence |
+| Check | Current state | Gate evidence |
 |---|---|---|
-| Changed version-question and smoke tests | Drafted, unexecuted | No run claimed |
-| Mac preparation and deployment-boundary tests | Drafted, unexecuted | No run claimed |
-| Compiler and documentation checks | Owed after root grants a slot | No run claimed |
-| Gate before source review | Owed after root grants a slot | No run claimed |
+| Changed version-question and smoke tests | DEV passed: 328 Vitest cases and 5 Node cases | Owed |
+| Mac preparation and deployment-boundary tests | DEV passed: 6 project-preparation, 9 GitHub-preparation, and 12 Python cases | Owed |
+| Platform compilers and helper syntax | DEV passed: both platform contexts and four production MJS syntax checks | Owed |
+| Documentation checks | UNRUN | Owed |
+| Gate before source review | UNRUN | Owed |
 | Persistent-fleet Counter witness | Deferred by `4d03ff1d` | No machine or public release selected yet |
 
-No test, compiler, build, install, deployment or fleet check ran for this
-source checkpoint. The source review must assess the Security boundary
-and state that the fleet witness remains owed.
+The first Python run completed 12 tests with one failed subtest: the
+negative hostname table expected the production parser to refuse `xn--`.
+One bounded probe through `application-settings.mjs --check-trust`
+accepted the exact public TEST row. The production grammar checks a
+canonical URL spelling; it does not add a DNS-label validity rule.
+The fixture now includes that row in positive acceptance and byte-preservation
+coverage. Its specimen indices identify rows even when diagnostic text
+truncates. No production parser changed.
+
+The whole Python owner then passed once, followed by the compatibility
+prerequisite and the whole version-question owner. Compatibility left its
+already patched bundle unchanged. The successful compilers, syntax checks
+and 20 Node cases did not rerun. These are ordinary development results,
+not gate evidence. The original failed output and separate successful
+outputs remain in scratch. No control, build, deployment or fleet check
+ran. Source review must assess the Security boundary and retain the fleet
+witness as an open obligation.
 
 ## Open limits
 

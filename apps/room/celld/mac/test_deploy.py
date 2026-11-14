@@ -90,9 +90,9 @@ class DeploymentSafety(unittest.TestCase):
         rows = [self.application_row(release="sha256:" + f"{index:064x}") for index in range(128)]
         settings = ["[]", " [\n] ", json.dumps(rows)]
         settings.extend(json.dumps([self.application_row(host=host)]) for host in (
-            "git.example", "localhost", "git.example.", "127.0.0.1", "[::1]", "xn--fa-hia.example"))
-        for raw in settings:
-            with self.subTest(setting=raw[:120]), tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+            "git.example", "localhost", "git.example.", "127.0.0.1", "[::1]", "xn--fa-hia.example", "xn--"))
+        for specimen, raw in enumerate(settings):
+            with self.subTest(specimen=specimen, setting=raw[:120]), tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
                 project, path, _ = self.application_project(Path(scratch), raw)
                 before = {name: (project / name).read_bytes() for name in ("worker.ts", "wrangler.json")}
                 self.assertEqual(deploy.prepared_project(project), project)
@@ -160,11 +160,11 @@ class DeploymentSafety(unittest.TestCase):
         for publisher in ("key_" + "A" * 42 + "B", "key_" + "A" * 43 + "=", "key_" + "A" * 42, None):
             settings.append(json.dumps([self.application_row(publisher=publisher)]))
         for host in ("GIT.example", "git.example:443", "user@git.example", "git.example/path",
-                     "git.example?x", "git.example#x", "%67it.example", "faß.example", "xn--",
+                     "git.example?x", "git.example#x", "%67it.example", "faß.example",
                      "127.1", "0177.0.0.1", "[0:0:0:0:0:0:0:1]", "[::A]", None):
             settings.append(json.dumps([self.application_row(host=host)]))
-        for raw in settings:
-            with self.subTest(setting=raw[:120]), tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+        for specimen, raw in enumerate(settings):
+            with self.subTest(specimen=specimen, setting=raw[:120]), tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
                 project, path, _ = self.application_project(Path(scratch), raw)
                 before = path.read_bytes()
                 with self.assertRaises(Refusal):
