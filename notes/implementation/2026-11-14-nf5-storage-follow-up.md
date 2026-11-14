@@ -68,7 +68,28 @@ import can change bundle bytes, so a normal canonical comparison remains
 owed before another gate. A real Counter or Lending presentation change
 must follow the existing retained-candidate path. A Grow change stops for
 planner disposition; its signed packet and earlier fixtures stay exact.
-The repaired owner, comparison, and next gate are UNRUN at this checkpoint.
+At repair checkpoint `cd68682c`, the owner, comparison, and next gate
+were UNRUN. The bounded follow-up then passed helpers, unchanged
+compatibility, the whole eight-case browser-custody owner, and the
+reviewed comparison once. END `80deeca3b0410e05394e1584d8593b9b3f4ea394`
+records that result. Grow identifiers and candidate bytes stayed exact.
+Only the Lending and Counter presentation identifiers changed.
+
+Root reviewed all retained pairs and applied their exact candidate bytes,
+then committed `91c4942579304ac319eef8b3d50166def4839a37`, tree
+`cb89f755639fc9c64f22547ece3366b5261a4af6`. Lending now has presentation
+`sha256:876219fa1e1bd6fadf9126332a6e9b25dacd42c14d35f60086f0de1742bc37fe`;
+Counter has presentation
+`sha256:6d24a928808a90cb25a64dcb0735864b4b572c2b9b319268212314e9791f3825`.
+Both stay at version 0.2.0, with entry, definitions, and semantic identifiers
+unchanged. No Grow packet, constant, or earlier fixture changed.
+
+The whole normal R1 reproduction owner then passed its one case at
+`91c49425` in 2.053530042 seconds. Commit messages, JSON format, section
+citations, document links, and note limits also passed once. END
+`1f77fdd386b1bf8179105cdc795954196e756f0e` retains those six results.
+This note-only follow-up changes no checked source, test, or identifier.
+Gate attempt 2 remains UNRUN; the first gate remains failed.
 
 The full pre-code proposal remains attached as `proposal` to builder request
 `2a65dcffc89bd43675bb3c07536dc30c41d6cacb`. It covers schema history,
@@ -468,6 +489,11 @@ reports. The retained records stay for at least 30 days after landing.
 `/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-browser-custody-full-gate-attempt1`.
 Its gate output, exact command, result record, and copied stage logs remain
 separate from the earlier precursor directory `E`.
+`D`, `C`, and `R` below resolve under `/Users/hughpyle/play/artroom-evidence/`
+to `2026-11-14-nf5-natural-development-attempt1`,
+`2026-11-14-nf5-natural-canonical-attempt1`, and
+`2026-11-14-nf5-natural-reproduction-attempt1`. Their command and result
+records retain the exact argv, working directories, exits, and process walls.
 
 The eight compiler roots were `packages/client/tsconfig.json`,
 `packages/client/tsconfig.node.json`, `packages/client/tsconfig.test.json`,
@@ -503,7 +529,13 @@ the current ordinary development rows do not turn it into a pass.
 | Voice copied worker | `N --disable-warning=ExperimentalWarning Q/tool/worker.ts Q/statechart-stage Q/Voice.tla Q/Voice.cfg Q/view.mjs`, exact environment in `voice-q/commands.txt` | 0; eight states, ten steps; chart seven states, seven arrows, three hidden steps; 1.29 s | `voice-q/statechart-stage/done/report.md` — `14ba0a2b9f2f6e49676e2795f44c1624cf1e94750bcb5af212e2b90ab76e08f7` |
 | Mermaid byte comparison | `cmp Q/statechart-stage/done/chart.mmd verification/state-machines/Voice/chart.mmd` | 0; exact equality; existing SVG retained, no renderer | `voice-q/statechart-stage/done/chart.mmd` — `3a6ca489929ec5b2ce030955b2c31ace921bad47530eeae81e5b16841c0a5fcd` |
 | Full NF5 gate attempt 1 at `e73ae334` | Exact argv in `F/command.json` | 1; 1.879321042 s; helpers failed; all runtime stages UNREACHED, zero cases | `F/gate.log` — `e10ec54aa8422eb4ad08d62b473e1d3e40c47d59f1a9442b51bb7e00bf68c407` |
-| Repaired owner, canonical comparison, and next gate | Root grant pending | **UNRUN** | No later result exists at this checkpoint |
+| Shared-helper repair at `cd68682c` | `N scripts/check-shared-helpers.mjs` | 0; 0.572299458 s | `D/01-helpers.stdout.log` — `57e77d32822dad832d49e3f80586983244932678940c6904dbbb9979173c8260` |
+| Compatibility after repair | `N scripts/cloudflare-pool-compat.mjs` | 0; 0.082051791 s; copied:false | `D/02-compatibility.stdout.log` — `55256fe795755a7ffc1df51359f8997d9b1b16f3afec4be07b331b5f379491db` |
+| Whole browser-custody after repair | Exact argv in `D/commands.json`; whole existing file, no filter | 0; 8 passed, no failed or pending; 1.295126833 s | `D/03-browser-custody.stdout.log` — `7192ef96e18c755a813ab82e82b2a9097b91ec07c9ea05dffaa641584e1a33d9` |
+| Normal canonical comparison after repair | Exact unmodified wrapper compare-only argv in `D/commands.json`; three normal preparations, public TEST signer | 0; 2.408427375 s; Grow unchanged, Counter/Lending presentation only; exact pairs in `C` | `D/04-canonical-compare.stdout.log` — `b6f34628409852adfe1b8d4f788c1b5d5e759cee368808c0f4ca69dcc744e687` |
+| Whole normal R1 reproduction at `91c49425` | Exact argv in `R/commands.json`; existing `application-release-reproduction.test.ts` | 0; 1 passed; 2.053530042 s | `R/01-reproduction.stdout.log` — `b20d032a3a1c0ec0e9447dede216eadc1fbd788f244767b0e1bd5bacfae903c3` |
+| Five pre-gate checks at `91c49425` | Exact commands in `R/commands.json` | All 0; per-command walls in result record | `R/results.json` — `d95a17e6d1b1c1600525921d570dcbcf259118ca7464769ee68a960e6f6cb045` |
+| Full NF5 gate attempt 2 | `npm run gate`, separate root grant pending | **UNRUN** | No attempt-2 result yet |
 
 The browser run used the established unchanged Playwright helper because the
 Browser plugin was not available. It made no visual or screenshot claim.
@@ -514,12 +546,13 @@ held POST proves a network wait cannot hold the retired connection or
 admission lock; its accepted reply remains a scripted answer. Private local
 owner/state files stay outside the evidence directory.
 
-The comparison and reproduction retain Grow 2.0.0 and Lending/Counter
+The earlier comparison and reproduction retained Grow 2.0.0 and Lending/Counter
 0.2.0. Lending presentation is
 `sha256:58db9ee90707a82d4cfc2614ad17ff4f44057c81e3295abd81124b619a0a4896`;
 Counter presentation is
 `sha256:413b4797990e405a182b65dbd1655b5d728e95679e87572349e9385c8a60c425`.
-Their entry, other-definition and semantic identifiers did not change.
+Those precursor presentation values precede the exact repair candidates
+above. Entry, other-definition and semantic identifiers did not change.
 Grow's published packet remains 139919 bytes, SHA256
 `5887cd2790563325c476672765545cad52dae349d4876bb95bf8419549320beb`.
 **NF5 Grow identifiers changed: false.** No public packet or real signing
