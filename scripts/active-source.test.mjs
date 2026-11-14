@@ -203,7 +203,7 @@ test("the checkers package uses Platform only at its exact evidence boundaries a
   assert.deepEqual(named.filter((f) => /dap-checkers/.test(text(f))), []);
   const reaches = files.filter((f) => source(f) && !packagePath(f).startsWith("packages/checkers/") && /(?:[.\/]\/|packages\/)checkers\//.test(text(f)));
   // The fixture records old predicate owners' source paths as provenance, and no code loads them.
-  assert.deepEqual(reaches, ["apps/room/lanes/test/checks.scope.test.ts", "apps/room/lanes/test/manifest-tree.scope.test.ts", "apps/room/lanes/test/support/container-runner.ts", "packages/platform/test/fixtures/version-questions-86179b0c.json", "packages/scope/test/evidence-rules-real-fixture.ts", "packages/scope/test/evidence-runner-case.ts"]);
+  assert.deepEqual(reaches, ["apps/room/lanes/test/checks.scope.test.ts", "apps/room/lanes/test/manifest-tree.scope.fixture.ts", "apps/room/lanes/test/support/container-runner.ts", "packages/platform/test/fixtures/version-questions-86179b0c.json", "packages/scope/test/evidence-rules-real-fixture.ts", "packages/scope/test/evidence-runner-case.ts"]);
 });
 
 // The MCP server derives every tool from definitions as data (plan 031): its source imports the contract, the bytes, the client,

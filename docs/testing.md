@@ -102,7 +102,8 @@ cannot read that name.
 
 The selection follows imports. A test that reads a file without importing
 it, such as a fixture or a document, is not selected when only that file
-changes. The gate runs everything.
+changes. The gate runs the full test step except for a nonempty
+notes-only change, as described below.
 
 `npm test` and `npm run test:changed` first apply the Cloudflare pool
 compatibility backport in `scripts/cloudflare-pool-compat.mjs`. Before
@@ -169,6 +170,11 @@ runs keep their JSON reports and separate stdout and stderr logs. Only
 attempted runs have files. Retain that directory with the control's other
 evidence. Conclusive results still remove the scratch directory.
 
+Keep each cited control's output in the gate's external evidence
+directory. Cite its path and SHA-256 in the implementation note. A
+formal focused interval is not required. The optional focused-plan tool
+can help with a fixed selection, but its records do not add a filing rule.
+
 There is no mutation sweep. Do not write one mutant per field or per
 condition, and do not run whole suites per mutant. One or two honest
 controls for each invariant you touch are the evidence. If a guard cannot
@@ -186,6 +192,22 @@ that base is unavailable.
 ```
 npm run gate
 ```
+
+File START with the clean head, tree, and current main. Keep the gate's
+output in one log in a new directory under `~/play/artroom-evidence/`.
+File END with the actual exit code, wall time, stage count lines, and log
+SHA-256. The note's one evidence table cites the log's path and SHA-256.
+[File test evidence](evidence-filing.md) describes review and the limited
+document-only follow-up. No power reading, sleep record, supervisor,
+formal focused run, committed manifest, checksum file, or read-only seal
+is required. Existing records stand.
+
+When every path in the nonempty merge-base diff is under `notes/`, the
+gate prints `test       skipped: only paths under notes/ changed` and skips
+its `npm test` step. An empty diff, a `docs/` change, or a mixed change
+runs that step. The other gate steps still run, including citation checks,
+note-size checks, and their owning tests. A rename exposes both its old
+and new paths, so moving source into `notes/` cannot hide the source change.
 
 `npm run gate -- --ci` reinstalls first. Keep `VITEST_MAX_WORKERS` unset
 for the gate, because that override also replaces the native projects'

@@ -6,6 +6,8 @@
  * two, two, one, one, and two. Each group uses separate runtimes.
  * The file-task limit does not cap child processes or overlapping teardown.
  */
+import { scopeScaleFiles } from "./packages/scope/vitest.scale-files.ts";
+
 const project = (name, dir, config, group, options = {}) =>
   ({ extends: `./${dir}/${config}`, test: { name, root: `./${dir}`, sequence: { groupOrder: group }, ...options } });
 
@@ -24,7 +26,7 @@ const scopeProvide = {
   demoRecord: process.env["DEMO_RECORD"] === "1",
 };
 
-export { scopeScaleFiles } from "./packages/scope/vitest.scale-files.ts";
+export { scopeScaleFiles, scopeScaleCaseCounts } from "./packages/scope/vitest.scale-files.ts";
 
 const projects = [
       project("bytes", "packages/bytes", "vitest.config.ts", 0),
@@ -39,12 +41,12 @@ const projects = [
       project("scope-stories", "packages/scope", "vitest.worker.config.ts", 2, {
         include: storyFiles,
         // Vite appends include arrays from the project to the inherited list.
-        exclude: ["test/**/*.test.ts"],
+        exclude: ["test/**/*.test.ts", ...scopeScaleFiles],
         provide: scopeProvide,
       }),
       project("scope-lending", "packages/scope", "vitest.lending.config.ts", 3),
       project("scope-denial", "packages/scope", "vitest.denial.config.ts", 4),
-      project("scope-scale", "packages/scope", "vitest.scale.config.ts", 5),
+      project("scope-scale", "packages/scope", "vitest.scale.config.ts", 5, { provide: scopeProvide }),
       project("lanes", "apps/room/lanes", "vitest.config.ts", 0),
       project("cli", "packages/cli", "vitest.config.ts", 0),
       project("page", "apps/room/page", "vitest.config.ts", 0),
