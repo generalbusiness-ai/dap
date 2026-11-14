@@ -1,0 +1,112 @@
+--- /tmp/artroom-nf5-compare-supervisor-20261114-v2.py	2026-11-14 07:13:39
++++ /tmp/artroom-nf5-compare-supervisor-20261114-v3.py	2026-11-14 07:24:48
+@@ -5,8 +5,10 @@
+ OUT = Path('/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-identifiers-attempt2')
+ NODE = Path('/opt/homebrew/bin/node')
+ WRAPPER = Path('/tmp/artroom-nf5-execution-plan-20261114/refresh-identifiers.mjs')
+-HEAD = '7fd5272b16bcdfa98a716037580b7d981b0795d1'
+-TREE = '97cdb304e687c7edc939d3f7f8dc4a0fd5c9f85d'
++HEAD = '37c1092133c2829a16688f1c595bb0983fc03b70'
++TREE = 'dd944b1a3736177809d91cd3e4a8596c0d376095'
++MAIN = '918ce5d73c215154d88005b74c2a97b58d61880a'
++MAIN_TREE = '411d30aca4e08bbc587af5f66a808a7ffc55396f'
+ LOCK = 'f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54'
+ NODE_HASH = 'a56388d53be92f39c69f60e25f18ef2d6c84b9692c67ac03fe4f9f208c40c208'
+ WRAPPER_HASH = '80712e3e5dde832f2b75413f6d5ed7f213054842ff8d34998db89b7c76b4d7ac'
+@@ -39,20 +41,31 @@
+     return {'ok':value == 0,'field':field,'value':value,'fields':fields}
+ 
+ def power(label):
+-    batt = command(['pmset','-g','batt']); custom = command(['pmset','-g','custom'])
+-    mode = active_ac_mode(custom)
+-    ok = "Now drawing from 'AC Power'" in batt and mode['ok']
+-    row = {'time':utc(),'label':label,'ok':ok,'activeAcMode':mode,'battery':batt,'custom':custom}
++    try:
++        batt = command(['pmset','-g','batt']); custom = command(['pmset','-g','custom'])
++        mode = active_ac_mode(custom)
++        ok = "Now drawing from 'AC Power'" in batt and mode['ok']
++        row = {'time':utc(),'label':label,'ok':ok,'activeAcMode':mode,'battery':batt,'custom':custom}
++    except BaseException as error:
++        ok = False
++        row = {'time':utc(),'label':label,'ok':False,'errorType':type(error).__name__,'error':str(error)}
+     with power_lock:
+         with (OUT/'power.jsonl').open('a') as stream: stream.write(json.dumps(row)+'\n')
+     if not ok: power_bad.set()
+ 
+ def sampling():
+-    while not stop.wait(15): power('interval15s')
++    try:
++        while not stop.wait(15): power('interval15s')
++    except BaseException as error:
++        power_bad.set()
++        save('monitor-failure.json', {'time':utc(),'type':type(error).__name__,'message':str(error)})
+ 
+ def snapshot():
+     assert command(['git','rev-parse','HEAD']).strip()==HEAD
+     assert command(['git','rev-parse','HEAD^{tree}']).strip()==TREE
++    main_fences = {ref:command(['git','rev-parse',ref]).strip() for ref in ['refs/heads/main','refs/remotes/origin/main']}
++    assert all(value==MAIN for value in main_fences.values())
++    assert command(['git','rev-parse','refs/heads/main^{tree}']).strip()==MAIN_TREE
+     assert command(['git','status','--porcelain','--untracked-files=all']).strip()==''
+     tracked = subprocess.check_output(['git','ls-files','-z'],cwd=ROOT).decode().split('\0')
+     sources = {}
+@@ -70,6 +83,20 @@
+         pkg=json.loads((path/'package.json').read_text()); assert pkg['name']==key[len('node_modules/'):]
+         bindings[key]={'link':os.readlink(path),'target':str(target),'name':pkg['name'],'exports':pkg.get('exports')}
+     assert len(bindings)==15
++    workspace_views = {}
++    workspace_dependencies = {}
++    for binding in bindings.values():
++        view = Path(binding['target'])/'node_modules'
++        if not view.exists() and not view.is_symlink(): continue
++        assert view.resolve().is_relative_to(ROOT)
++        workspace_views[str(view.relative_to(ROOT))] = {'target':str(view.resolve()),'link':os.readlink(view) if view.is_symlink() else None}
++        for directory, dirs, files in os.walk(view,followlinks=False):
++            for name in list(dirs)+files:
++                path=Path(directory)/name; key=str(path.relative_to(ROOT))
++                if path.is_symlink():
++                    assert path.resolve().is_relative_to(ROOT)
++                    workspace_dependencies[key]={'link':os.readlink(path),'target':str(path.resolve())}
++                elif path.is_file(): workspace_dependencies[key]={'sha256':sha(path),'bytes':path.stat().st_size}
+     dependencies={}
+     for directory, dirs, files in os.walk(modules,followlinks=False):
+         base=Path(directory)
+@@ -80,13 +107,15 @@
+                 dependencies[key]={'link':os.readlink(path),'target':str(path.resolve())}
+             elif path.is_file(): dependencies[key]={'sha256':sha(path),'bytes':path.stat().st_size}
+     assert sha(NODE)==NODE_HASH and sha(WRAPPER)==WRAPPER_HASH
+-    return {'time':utc(),'head':HEAD,'tree':TREE,'tracked':sources,'dependencies':dependencies,'workspaceBindings':bindings,
++    return {'time':utc(),'head':HEAD,'tree':TREE,'mainFences':main_fences,'mainTree':MAIN_TREE,'tracked':sources,'dependencies':dependencies,'workspaceBindings':bindings,
++      'workspaceDependencyViews':workspace_views,'workspaceDependencies':workspace_dependencies,
+       'tools':{'node':{'path':str(NODE),'resolved':str(NODE.resolve()),'sha256':sha(NODE)},'wrapper':{'path':str(WRAPPER),'sha256':sha(WRAPPER)},
+       'tsxManifest':json.loads((modules/'tsx/package.json').read_text()),'esbuildManifest':json.loads((modules/'esbuild/package.json').read_text())}}
+ 
+ power('before-preflight')
+ sampler=threading.Thread(target=sampling,daemon=True); sampler.start()
+ child=None
++terminal_sampled=False
+ try:
+     before=snapshot(); save('before-inputs.json',before)
+     (OUT/'processes-before.txt').write_text(command(['ps','-axo','pid=,ppid=,args=']))
+@@ -106,14 +135,18 @@
+     save('result.json',{'time':utc(),'exitCode':child.returncode,'wallSeconds':elapsed,'userSeconds':used.ru_utime-usage.ru_utime,'systemSeconds':used.ru_stime-usage.ru_stime})
+     power('after-invocation')
+     after=snapshot(); save('after-inputs.json',after)
+-    comparable=lambda value:{key:value[key] for key in ['head','tree','tracked','dependencies','workspaceBindings','tools']}
++    comparable=lambda value:{key:value[key] for key in ['head','tree','mainFences','mainTree','tracked','dependencies','workspaceBindings','workspaceDependencyViews','workspaceDependencies','tools']}
+     equal=comparable(before)==comparable(after)
+-    save('fence-result.json',{'time':utc(),'sourceToolDependencyFencesEqual':equal,'powerStayedACMode0':not power_bad.is_set()})
+     (OUT/'processes-after.txt').write_text(command(['ps','-axo','pid=,ppid=,args=']))
++    stop.set(); sampler.join(timeout=2)
++    if sampler.is_alive(): power_bad.set()
++    power('terminal'); terminal_sampled=True
++    save('fence-result.json',{'time':utc(),'sourceToolDependencyFencesEqual':equal,'powerStayedACMode0':not power_bad.is_set(),'monitorStopped':not sampler.is_alive()})
+     assert child.returncode==0 and equal and not power_bad.is_set()
+     print(json.dumps({'terminal':True,'exitCode':child.returncode,'wallSeconds':elapsed,'fencesEqual':equal,'evidence':str(OUT)}),flush=True)
+ except BaseException as error:
+     save('supervisor-failure.json',{'time':utc(),'type':type(error).__name__,'message':str(error)})
+     raise
+ finally:
+-    stop.set(); sampler.join(timeout=2); power('terminal')
++    stop.set(); sampler.join(timeout=2)
++    if not terminal_sampled: power('terminal-after-failure')
