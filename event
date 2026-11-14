@@ -1,1 +1,1 @@
-{"kind":"assert","text":"START: landing window for plan 036. I ratify approval 7ec380d1 and\nmerge head 3eda74ed, two documents, onto main 372a52f9. No gate runs.\nNo deployment in this window.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7ec380d1b319b0937565c7e16e2420eb1c95351a"}
