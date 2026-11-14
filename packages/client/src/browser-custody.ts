@@ -4,7 +4,7 @@
  * BroadcastChannel supplies optional invalidation hints, never write authority.
  * Version 2 is the first released layout (planner ruling 14609eb8).
  */
-import { canonicalize, digestBytes, isRecord, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, isRecord, natural, utf8 } from "@generalbusiness/dap-bytes";
 import { CustodyError, TERMINAL, identityId, readStoredCustodyRecord, readStoredOutcome,
   type ClientCustodyStore, type Identity, type Phase, type StoredCustodyRecord, type StoredOutcome } from "./custody.ts";
 
@@ -55,7 +55,6 @@ const RECORDS = "records", ARCHIVE = "archive", OUTCOMES = "outcomes", LENGTHS =
 const STORES = [RECORDS, ARCHIVE, OUTCOMES, LENGTHS];
 const unavailable = (): CustodyError => new CustodyError({ held: "unreadable" });
 const whoOf = (identity: Omit<Identity, "key">): string => digestBytes(utf8(canonicalize({ service: identity.service, membership: identity.membership, signer: identity.signer, target: identity.target })));
-const natural = (n: unknown): n is number => Number.isSafeInteger(n) && !Object.is(n, -0) && (n as number) >= 0;
 const byUpdated = (a: Row, b: Row): number => a.updated < b.updated ? -1 : a.updated > b.updated ? 1 : a.id.localeCompare(b.id);
 
 export function browserCustodyStore(options: BrowserCustodyOptions): ClientCustodyStore & { close(): void } {

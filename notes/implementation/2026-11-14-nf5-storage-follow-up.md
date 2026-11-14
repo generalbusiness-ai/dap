@@ -16,7 +16,7 @@ view in their original worktree. Clean merge
 local main `26d1e65cd9a6815abc70c832f1e61b893bb8b689` as parents.
 The merge had no conflicts. From common base `0166423a`, NF5's 44 paths
 and main's 20 paths do not overlap. All blobs and modes from both sides
-remain exact. This follow-up changes only the existing note.
+remain exact. The integration follow-up at `e73ae334` changed only this note.
 
 All 17 merged package metadata files match the authentic C2 donor at
 `.builder-worktrees/c2-lifecycle-repair-20261114`. One `cp -cR` copied its
@@ -42,12 +42,33 @@ presentation identifiers cited below, with unchanged entry and semantic
 identifiers. No canonical producer or runtime owner ran for this merge.
 
 The earlier development, browser, controls, canonical comparison, and
-C/Q results below remain dated to their named heads. Integrated-head
-runtime checks and the full NF5 gate remain UNRUN. Planner act
+C/Q results below remain dated to their named heads. At that integration
+checkpoint, runtime checks and the full NF5 gate were UNRUN. Planner act
 `1b0d2f10436d6c0d1cc42cc9661b8a7f7aba1fad` confirms actual `main` and
 `origin/main` at `26d1e65c` and releases NF5's next gate prerequisite.
 The maintained gate and selectors still use `origin/main`; no reference,
-base override, or gate copy changed. Execution still needs root's grant.
+base override, or gate copy changed.
+
+## First integrated gate and helper repair
+
+The full gate at `e73ae334`, tree `d3789f82`, failed with exit 1 after
+1.879321042 seconds. Whitespace, commit messages, and commit-test passed.
+The helpers stage refused the private `natural` predicate at
+`packages/client/src/browser-custody.ts:58` because bytes already owns it.
+Kernel, Node, Counting, Plain, and Native stages were UNREACHED, with zero
+observed cases. END `72a4b41434f80349bf6d6270f64e746515b4c8df` retains
+that failed verdict and the original raw output.
+
+The repair imports `natural` from `@generalbusiness/dap-bytes` and removes
+only the duplicate private predicate. Both accept nonnegative safe
+integers and reject negative zero and nonnumbers. The store's call sites,
+bounds, transaction behavior, and tests stay unchanged. No new control
+belongs to that equivalent predicate substitution. The shared browser
+import can change bundle bytes, so a normal canonical comparison remains
+owed before another gate. A real Counter or Lending presentation change
+must follow the existing retained-candidate path. A Grow change stops for
+planner disposition; its signed packet and earlier fixtures stay exact.
+The repaired owner, comparison, and next gate are UNRUN at this checkpoint.
 
 The full pre-code proposal remains attached as `proposal` to builder request
 `2a65dcffc89bd43675bb3c07536dc30c41d6cacb`. It covers schema history,
@@ -443,6 +464,10 @@ retained actual files, not new runs. Ordinary development rows describe
 readiness only. No formal focused result replaces the gate. Wall times come
 from `/usr/bin/time -p`; case counts come from actual JSON or Node terminal
 reports. The retained records stay for at least 30 days after landing.
+`F` is
+`/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-browser-custody-full-gate-attempt1`.
+Its gate output, exact command, result record, and copied stage logs remain
+separate from the earlier precursor directory `E`.
 
 The eight compiler roots were `packages/client/tsconfig.json`,
 `packages/client/tsconfig.node.json`, `packages/client/tsconfig.test.json`,
@@ -477,7 +502,8 @@ the current ordinary development rows do not turn it into a pass.
 | Voice Q model and source | `N verification/state-machines/check.mjs Voice`, existing pinned Java and TLC | 0; eight distinct model states, rules held; source case 1 passed; 1.68 s | `voice-q/check.stdout.log` — `229f08d6a8a6f3443ca9eb2949952fc0aa0d68070ca7d154c049a017357b8766` |
 | Voice copied worker | `N --disable-warning=ExperimentalWarning Q/tool/worker.ts Q/statechart-stage Q/Voice.tla Q/Voice.cfg Q/view.mjs`, exact environment in `voice-q/commands.txt` | 0; eight states, ten steps; chart seven states, seven arrows, three hidden steps; 1.29 s | `voice-q/statechart-stage/done/report.md` — `14ba0a2b9f2f6e49676e2795f44c1624cf1e94750bcb5af212e2b90ab76e08f7` |
 | Mermaid byte comparison | `cmp Q/statechart-stage/done/chart.mmd verification/state-machines/Voice/chart.mmd` | 0; exact equality; existing SVG retained, no renderer | `voice-q/statechart-stage/done/chart.mmd` — `3a6ca489929ec5b2ce030955b2c31ace921bad47530eeae81e5b16841c0a5fcd` |
-| Full NF5 gate | `npm run gate` | **UNRUN** | No NF5 gate log exists yet |
+| Full NF5 gate attempt 1 at `e73ae334` | Exact argv in `F/command.json` | 1; 1.879321042 s; helpers failed; all runtime stages UNREACHED, zero cases | `F/gate.log` — `e10ec54aa8422eb4ad08d62b473e1d3e40c47d59f1a9442b51bb7e00bf68c407` |
+| Repaired owner, canonical comparison, and next gate | Root grant pending | **UNRUN** | No later result exists at this checkpoint |
 
 The browser run used the established unchanged Playwright helper because the
 Browser plugin was not available. It made no visual or screenshot claim.
