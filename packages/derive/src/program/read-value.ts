@@ -1,7 +1,7 @@
 /** Execute admitted operand descriptors over the shared value and entry-history leaves. */
 import type { FactRef } from "@generalbusiness/dap-contract";
 import type { Judging } from "../guards.ts";
-import { copyFact, entryValue, equal, slotOf, type EntrySelection } from "../operand.ts";
+import { copyFact, entryValue, equal, readSlotValue, type EntrySelection } from "../operand.ts";
 import type { Item } from "../state.ts";
 import type { ElementIdentity } from "../validate/context.ts";
 import { isFactRef, isLocalId, isObject, own } from "../values.ts";
@@ -27,6 +27,11 @@ function executeRead(j: Judging, read: OperandRead, item: Item | null, elements:
     return entryValue(j, ref, typeof ref === "number" ? j.scope.at : ref.at, selected);
   };
   const part = (value: unknown, projection: PartRead): unknown => {
+    if (j.references?.isReference(value)) {
+      if (projection.op === "ref") return value;
+      if (projection.op === "scope") return j.scope.at;
+      value = j.references.expose(value);
+    }
     if (!isFactRef(value) && !isLocalId(value)) return null;
     if (projection.op !== "project") return entry(value, projection);
     const inner = entry(value, projection.of);
@@ -42,11 +47,11 @@ function executeRead(j: Judging, read: OperandRead, item: Item | null, elements:
     case "sender": value = j.sender ?? null; break;
     case "update": value = j.update?.[read.part] ?? null; break;
     case "result": value = j.result?.name ?? null; break;
-    case "item": value = subject(read.subject)?.id ?? null; break;
+    case "item": { const from = subject(read.subject); value = from ? j.references ? j.references.item(from) : from.id : null; break; }
     case "source": value = j.source ? part(copyFact(j.source), read.entry) : null; break;
-    case "field": value = own(j.fields, read.name) ?? null; break;
+    case "field": value = j.references ? j.references.field(j.fieldTypes, j.fields, read.name) : own(j.fields, read.name) ?? null; break;
     case "presented": value = own(j.presented, read.name) ?? null; break;
-    case "slot": { const from = subject(read.slot.subject); value = from ? slotOf(from, read.slot.name) : null; break; }
+    case "slot": { const from = subject(read.slot.subject); value = from ? readSlotValue(j, from, read.slot.name) : null; break; }
     case "element": {
       const binding = read.binding;
       if (binding.identity === null || !elements.has(binding.identity)) throw new TypeError("element has no value in its admitted lexical scope");

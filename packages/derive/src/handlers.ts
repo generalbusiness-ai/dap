@@ -7,6 +7,7 @@
  */
 
 import { nativeMark, nativeOutcomes } from "./program/native.ts";
+import type { BodyReferences } from "./body-references.ts";
 import type { ActType, Advisory, AlsoMark, AlsoRule, Bounds, Digest, Effect, EffectForm, Entry, FactRef, FactUse, FieldType, FieldValue, Input, PlatformReceive, Reason, ReceiveType, RefusalReason, Request, ResultClauses, ScopeRef, ScopeKind, SendForm, SendMark, Settles, UnavailableReason } from "@generalbusiness/dap-contract";
 import { entryHash, isScopeKind } from "@generalbusiness/dap-bytes";
 import { handlerBranch } from "./handler-branch.ts";
@@ -260,14 +261,14 @@ function ones(view: StateView, definition: ValidDefinition, type: string, before
  * key in an intent's `expected`.
  */
 export function alsoItems(view: StateView, definition: ValidDefinition, also: Readonly<Record<string, AlsoRule>>, fields: Readonly<Record<string, FieldValue>>, on: Item | null, before?: number,
-  select?: (mark: AlsoMark, bound: ReadonlyMap<string, Item>) => Item | null): { ok: true; items: [string, Item][]; marked: ReadonlySet<string> } | { ok: false; detail: string } {
+  select?: (mark: AlsoMark, bound: ReadonlyMap<string, Item>) => Item | null, references?: BodyReferences): { ok: true; items: [string, Item][]; marked: ReadonlySet<string> } | { ok: false; detail: string } {
   const marked = new Set<string>();
   /** The subjects that are bound when a rule is run: the primary item, and each name resolved before it. */
   const bound = (): Map<string, Item> => new Map([...(on ? [["on", on] as const] : []), ...[...matched].flatMap(([name, item]) => (item ? [[`also.${name}`, item] as const] : []))]);
   const matched = new Map<string, Item | null>();
   let refusal: string | null = null;
-  const typed = (name: string, type: string, id: unknown): Item | null => {
-    const item = isLocalId(id) ? view.item(id) : null;
+  const typed = (name: string, type: string, id: unknown, origin: Parameters<BodyReferences["lookup"]>[1]): Item | null => {
+    const item = references ? references.lookup(view, origin, id, { type: "item", of: type }) : isLocalId(id) ? view.item(id) : null;
     if (item?.type === type) return item;
     refusal ??= `${name} names no ${type}`;
     return null;
@@ -285,15 +286,16 @@ export function alsoItems(view: StateView, definition: ValidDefinition, also: Re
       item = select ? select(mark, bound()) : null;
     } else if ("by" in rule) {
       const id = own(fields, rule.by);
-      item = id === undefined ? null : typed(name, rule.item, id);
+      item = id === undefined ? null : typed(name, rule.item, id, references?.fieldOrigin([rule.by]) ?? { at: "untyped" });
     } else if ("via" in rule) {
       const from = rule.via.of === "on" ? on : resolve(rule.via.of.slice(5));
-      const id = from ? slotOf(from, rule.via.slot) : null;
-      item = id === null ? null : typed(name, rule.item, id);
+      const id = from ? references ? references.slot(from, "refs", rule.via.slot, { type: "item", of: rule.item }) : slotOf(from, rule.via.slot) : null;
+      item = id === null ? null : typed(name, rule.item, id, { at: "untyped" });
     } else {
       const all = ones(view, definition, rule.item, before);
       if (all.length > 1) refusal ??= `${name}: there is more than one ${rule.item}`;
       item = all.length === 1 ? all[0]! : null;
+      if (item && references) item = references.lookup(view, { at: "subject", name, binding: "one", item }, item.id, { type: "item", of: rule.item });
     }
     matched.set(name, item);
     return item;

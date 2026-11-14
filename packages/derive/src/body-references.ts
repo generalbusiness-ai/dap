@@ -28,10 +28,15 @@ export class BodyReferences {
   readonly #working = new WeakMap<Item, Map<string, unknown>>();
   readonly #emitted: EffectReference[] = [];
   readonly #opened = new WeakSet<Item>();
-  constructor(readonly classify: Provenance, readonly unavailable: () => never) {}
+  constructor(readonly classify: Provenance, readonly unavailable: () => never, readonly supplied: Readonly<Record<string, unknown>>) {}
 
   #identity(value: unknown): Identity | undefined {
     return value !== null && typeof value === "object" ? this.#atoms.get(value) : undefined;
+  }
+  isReference(value: unknown): boolean { return this.#identity(value) !== undefined; }
+  address(value: unknown): unknown {
+    const identity = this.#identity(value);
+    return identity?.is === "pending" ? identity.alias : identity?.id ?? value;
   }
   #atom(identity: Identity): object {
     const atom = Object.freeze(Object.defineProperty(Object.create(null), Symbol.toPrimitive, { value: this.unavailable }));
@@ -56,10 +61,19 @@ export class BodyReferences {
     return type?.type === "item" && (found?.is === "pending" || found?.is === "recorded") ? this.#atom(found) : value;
   }
   #at(origin: ReferenceOrigin, member: string | number): ReferenceOrigin {
-    return origin.at === "field" || origin.at === "slot" ? { ...origin, path: [...origin.path, member] } : origin;
+    const path = origin.at === "field" || origin.at === "slot" ? [...origin.path, member] : null;
+    return origin.at === "field" ? this.fieldOrigin(path!) : origin.at === "slot" ? { ...origin, path: path! } : origin;
   }
-  field(types: Readonly<Record<string, FieldType>>, fields: Readonly<Record<string, unknown>>, supplied: Readonly<Record<string, unknown>>, name: string): unknown {
-    return this.value({ at: "field", path: [name], provided: Object.hasOwn(supplied, name) }, types[name] ?? null, fields[name] ?? null);
+  fieldOrigin(path: Path): Extract<ReferenceOrigin, { at: "field" }> {
+    let value: unknown = this.supplied;
+    for (const part of path) {
+      if (value === null || typeof value !== "object" || !Object.hasOwn(value, part)) return { at: "field", path, provided: false };
+      value = Reflect.get(value, part);
+    }
+    return { at: "field", path, provided: true };
+  }
+  field(types: Readonly<Record<string, FieldType>>, fields: Readonly<Record<string, unknown>>, name: string): unknown {
+    return this.value(this.fieldOrigin([name]), types[name] ?? null, fields[name] ?? null);
   }
   item(item: Item): unknown {
     return this.value({ at: "item", item, currentOutput: this.#opened.has(item) }, { type: "item", of: item.type }, item.id);

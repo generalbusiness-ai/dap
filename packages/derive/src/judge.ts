@@ -236,7 +236,7 @@ export function judgeActBody(view: StateView, definition: ValidDefinition, body:
     missing ??= "entry";
     throw new RuleFault("the body needs an unsupported entry symbol");
   };
-  const references = context.provenance ? new BodyReferences(context.provenance, unavailableEntry) : undefined;
+  const references = context.provenance ? new BodyReferences(context.provenance, unavailableEntry, body.fields) : undefined;
   const answer = withinCounts(view, definition, unjudged(() => {
     const scope = view.scope();
     if (!scope) return { result: "unavailable", reason: "unavailable" } as const;
@@ -328,7 +328,7 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
   if (!read.ok) return refused("bad-field", read.detail);
   // Section 6.2: a fact that names this scope is a local fact. It is checked against this scope's own entry, and is then its `seq`.
   const local = { at: scope.at, own: context.own, texts: context.texts }; // Own.sequence is the held genesis admission, never scope.at alone.
-  const named = readJudgmentFacts(view, act.fields, read.fields, judgmentFacts(context), local);
+  const named = readJudgmentFacts(view, act.fields, read.fields, judgmentFacts(context), local, frame.references);
   if (named.result === "unavailable") return { result: "unavailable", reason: "dependency-unavailable" };
   if (named.result !== "read") return refused(named.result, named.detail);
   const { fields } = named;
@@ -355,6 +355,7 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
   const beside = definition.observing ? atHandByRows(context.values, places)
     : context.observed === undefined && context.values === undefined && places.length === 0 ? undefined : atHand(context.observed, context.values, places);
   const g = { ...giving(view, definition, context, scope, scope.head.seq + 1, judged, clocked, fields, facts), beside,
+    ...(frame.references ? { references: frame.references } : {}),
     ...(frame.unavailableIntent ? { unavailableIntent: frame.unavailableIntent } : {}) };
   // Check 7, with the fields: a place that names a value and has none at hand is refused `bad-field` (section 6.2, "The checks, in
   // the commit"). The value of each place is kept with the entry.
@@ -370,7 +371,8 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
   if (act.step === "open" || act.on === null) {
     if (intent.on !== null) return refused("bad-intent", "this act names no item in `on`");
   } else {
-    const item = intent.on === null ? null : view.item(intent.on);
+    const item = intent.on === null ? null : frame.references
+      ? frame.references.lookup(view, { at: "on" }, intent.on, { type: "item", of: act.on }) : view.item(intent.on);
     if (item?.type !== act.on) return refused("no-item", `on names no ${act.on}`);
     subjects.set("on", item);
     if (act.step === "transition") expects.push("on");
@@ -379,7 +381,7 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
   // `expected` has no key for it. A transition's primary item exists before the entry, so a `via` may read its slots.
   // Check 8: a name of `also` that a mark selects is resolved by the mark's rule, which gives one item or none. The signer named
   // no item, so such a name has no key in `expected`. The rule on aliases holds for it.
-  const also = alsoItems(view, definition, act.also, fields, act.step === "transition" ? (subjects.get("on") ?? null) : null, undefined, (mark, bound) => selectedBy({ ...g, subjects: bound }, mark));
+  const also = alsoItems(view, definition, act.also, fields, act.step === "transition" ? (subjects.get("on") ?? null) : null, undefined, (mark, bound) => selectedBy({ ...g, subjects: bound }, mark), frame.references);
   if (!also.ok) return refused("no-item", also.detail);
   for (const [name, item] of also.items) {
     subjects.set(`also.${name}`, item);
@@ -390,7 +392,8 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
   if (Object.keys(intent.expected).length !== expects.length || expects.some((k) => !Object.hasOwn(intent.expected, k))) return refused("bad-intent", `expected has one key for each of: ${expects.join(", ")}`);
   for (const key of expects) {
     const item = subjects.get(key === "on" ? "on" : `also.${key}`)!;
-    if (own(intent.expected, key) !== item.revision) return refused("revision-moved", `${key} is at revision ${item.revision}`);
+    if (frame.references ? !frame.references.basis(item, key, own(intent.expected, key), Object.hasOwn(intent.expected, key)) : own(intent.expected, key) !== item.revision)
+      return refused("revision-moved", `${key} is at revision ${item.revision}`);
   }
   // Section 6.3: an item in a final state refuses every transition. Comments are still allowed.
   const primary = subjects.get("on");
@@ -405,7 +408,8 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
   let list: Listed[] = [];
   if (rows.length > 0) {
     const reading: Judging = { view, definition, bounds, clock, scope, self: scope.head.seq + 1, kind: intent.kind, fields, fieldTypes: act.fields, subjects, signer: null, facts, prepared: [], used: [], own: context.own, intent: digest, presented: shownFacts.fields,
-      ...(frame.unavailableIntent ? { unavailableIntent: frame.unavailableIntent } : {}) };
+      ...(frame.unavailableIntent ? { unavailableIntent: frame.unavailableIntent } : {}),
+      ...(frame.references ? { references: frame.references } : {}) };
     const listed = listedBy(reading, rows, recorded);
     if (listed.foreign) return refused("bad-field", "a row of observes is given a member of another repository, or a value that is no member");
     const over = listed.rows.find((row) => row.over);
@@ -472,6 +476,7 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
     ...(frame.selfRefs ? { selfRef: (index: number) => { frame.selfRefs!.push(index); } } : {}),
     ...(frame.recordRefs ? { recordSelfRef: (effect: EmittedRecordSelfRef["effect"], path: EmittedRecordSelfRef["path"]) => { frame.recordRefs!.push({ effect, path }); } } : {}),
     ...(frame.unavailableEntry ? { unavailableEntry: frame.unavailableEntry } : {}),
+    ...(frame.references ? { references: frame.references } : {}),
   };
 
   // Guards, then effects, then sends, then the bound on the type it opens, as for a handler. The cause of a scope it creates is the intent's digest.

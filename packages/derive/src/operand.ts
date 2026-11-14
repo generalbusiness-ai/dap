@@ -17,6 +17,7 @@ import type { Item, StateView } from "./state.ts";
 import { byteOrder, isFactRef, isLocalId, isObject, memberOf, own, same } from "./values.ts";
 import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 import { archivedPosition } from "./floor.ts";
+import type { BodyReferences } from "./body-references.ts";
 import { RuleFault } from "./marks.ts";
 import type { Source, Delivered, DeliveryContext } from "./delivery.ts";
 import type { Creation, SignedCreation } from "./genesis.ts";
@@ -341,24 +342,24 @@ export function sentByCopy(copy: JudgmentCopy, delivered: Delivered): boolean {
 
 /** Shared field walk; the public readFacts wrapper supplies only verified arms. */
 type JudgmentFacts<C extends JudgmentCopy> = Exclude<Facts, { result: "read" }> | { result: "read"; fields: Record<string, FieldValue>; facts: Map<Digest, C>; uses: FactUse[] };
-function leaves(type: FieldType, value: FieldValue): [FieldType, FieldValue][] {
-  if (type.type === "list") return (value as readonly FieldValue[]).flatMap(member => leaves(type.of, member));
-  if (type.type !== "record") return [[type, value]];
+function leaves(type: FieldType, value: FieldValue, path: readonly (string | number)[] = []): [FieldType, FieldValue, readonly (string | number)[]][] {
+  if (type.type === "list") return (value as readonly FieldValue[]).flatMap((member, n) => leaves(type.of, member, [...path, n]));
+  if (type.type !== "record") return [[type, value, path]];
   return Object.entries(type.of).flatMap(([name, of]) => {
     const member = own(value as FieldRecord, name);
-    return member === undefined ? [] : leaves(of, member);
+    return member === undefined ? [] : leaves(of, member, [...path, name]);
   });
 }
 
-export function readJudgmentFacts<C extends JudgmentCopy>(view: StateView, types: ActType["fields"], fields: Readonly<Record<string, FieldValue>>, available: readonly C[], local: Local): JudgmentFacts<C> {
+export function readJudgmentFacts<C extends JudgmentCopy>(view: StateView, types: ActType["fields"], fields: Readonly<Record<string, FieldValue>>, available: readonly C[], local: Local, references?: BodyReferences): JudgmentFacts<C> {
   const facts = new Map<Digest, C>();
   const uses: FactUse[] = [];
   for (const name of Object.keys(fields).sort(byteOrder)) {
     // A field with no declared type, as a handler's message has, names no item and no fact here.
     const declared = own(types, name);
     if (!declared) continue;
-    for (const [type, value] of leaves(declared, fields[name]!)) {
-      if (type.type === "item" && view.item(value as number)?.type !== type.of) return { result: "no-item", detail: `${name} names no ${type.of}`, uses };
+    for (const [type, value, path] of leaves(declared, fields[name]!, [name])) {
+      if (type.type === "item" && (references ? references.lookup(view, references.fieldOrigin(path), value, type) : view.item(value as number))?.type !== type.of) return { result: "no-item", detail: `${name} names no ${type.of}`, uses };
       if (type.type === "text" && type.detached) {
         if (!local.texts) return { result: "unavailable" };
         const size = local.texts(value as Digest);
@@ -398,6 +399,16 @@ export function readJudgmentFacts<C extends JudgmentCopy>(view: StateView, types
 export function slotOf(item: Item, slot: string): FieldValue | null {
   const v = own(item.parties, slot) ?? own(item.refs, slot) ?? own(item.values, slot) ?? null;
   return Array.isArray(v) && v.length === 0 ? null : (v as FieldValue | null);
+}
+
+/** Both operand visitors preserve the same actual typed slot provenance. */
+export function readSlotValue(j: Judging, item: Item, slot: string): unknown {
+  if (!j.references) return slotOf(item, slot);
+  const type = own(declarationOf(j.definition).items, item.type);
+  const ref = own(type?.refs, slot), value = own(type?.values, slot);
+  const read = ref ? j.references.slot(item, "refs", slot, ref.to)
+    : value ? j.references.slot(item, "values", slot, value.of) : slotOf(item, slot);
+  return Array.isArray(read) && read.length === 0 ? null : read;
 }
 
 // ---------------------------------------------------------------- the kind of an entry (section 6.2)
@@ -602,6 +613,11 @@ function entryPart(j: Judging, ref: Held, at: ScopeRef | GenesisSelfRef, part: E
 
 /** A part of the entry that a fact reference names. Null when the value is not a fact reference, or the entry does not have the part. */
 function partOf(j: Judging, value: unknown, part: Part, item: Item | null): unknown {
+  if (j.references?.isReference(value)) {
+    if (part === "ref") return value;
+    if (part === "scope") return j.scope.at;
+    value = j.references.expose(value);
+  }
   const ref: Held | null = isFactRef(value) ? value : isLocalId(value) ? value : null;
   if (ref === null) return null;
   const at = typeof ref === "number" ? j.scope.at : ref.at;
@@ -628,17 +644,20 @@ export function operand(j: Judging, o: Operand, item: Item | null): unknown {
   if ("sender" in o) return j.sender ?? null;
   if ("update" in o) return j.update?.[o.update] ?? null;
   if ("result" in o) return j.result?.name ?? null;
-  if ("item" in o) return (o.item === "each" ? j.each : j.subjects.get(o.item))?.id ?? null;
+  if ("item" in o) {
+    const from = o.item === "each" ? j.each : j.subjects.get(o.item);
+    return from ? j.references ? j.references.item(from) : from.id : null;
+  }
   if ("source" in o) return j.source ? partOf(j, copyFact(j.source), o.source, item) : null;
   // The sequenced note, section 5.2. No judge derives a sequenced definition yet (`derivable`), so no page is given here.
   if ("read" in o) throw new TypeError("a group read has no page in this judgment");
   let value: unknown;
-  if ("field" in o) value = own(j.fields, o.field) ?? null;
+  if ("field" in o) value = j.references ? j.references.field(j.fieldTypes, j.fields, o.field) : own(j.fields, o.field) ?? null;
   else if ("presented" in o) value = own(j.presented, o.presented) ?? null;
   else if ("element" in o) value = memberOf((name) => j.elements?.get(name), o.element);
   else {
     const of = o.of === undefined ? item : o.of === "each" ? (j.each ?? null) : (j.subjects.get(o.of) ?? null);
-    value = of ? slotOf(of, o.slot) : null;
+    value = of ? readSlotValue(j, of, o.slot) : null;
   }
   return o.part === undefined ? value : partOf(j, value, o.part, item);
 }
@@ -666,5 +685,6 @@ export function normalValue(value: unknown, at: ScopeRef | GenesisSelfRef, hashO
 
 export function equal(j: Judging, a: unknown, b: unknown): boolean {
   const hashOf: HashOf = (seq) => j.own?.(seq)?.hash ?? null;
-  return same(normalValue(a, j.scope.at, hashOf), normalValue(b, j.scope.at, hashOf));
+  const ordinary = (a: unknown, b: unknown) => same(normalValue(a, j.scope.at, hashOf), normalValue(b, j.scope.at, hashOf));
+  return j.references ? j.references.same(a, b, ordinary) : ordinary(a, b);
 }
