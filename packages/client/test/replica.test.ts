@@ -392,5 +392,6 @@ describe("the catch sites of Own: a replica that lacks a held entry reads not-ju
 });
 
 test("the package entry exports no test seam", () => {
-  expect(Object.keys(entry).sort()).toEqual(["Replica", "UnheldEntry", "intentMeaning", "judged", "scopeReplica"]);
+  expect(Object.keys(entry).sort()).toEqual(["Replica", "UnheldEntry", "intentMeaning", "judged", "requestStatus", "scopeClient", "scopeReplica"]);
+  for (const internal of ["request", "clientReplica", "clientIdle", "ScopeClient"]) expect(entry).not.toHaveProperty(internal);
 });

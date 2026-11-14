@@ -91,10 +91,10 @@ test("archived submit and settlement stay explicit and terminal without inventin
 });
 
 // Real MCP custody and scripted transport only. The MCP service holds no replica, so it cannot project a fold that another
-// client of the same store made: it reads the record as unreadable, and sends and settles nothing.
-test("a store that holds a folded record gives the MCP service unreadable", async () => {
+// client of the same store made, or an absence ending: it reads the record as unreadable, and sends and settles nothing.
+test.each(["folded", "unsent"] as const)("a store that holds a %s record gives the MCP service unreadable", async ending => {
   const signer = fixedSigner(23), stand = new StandIn(signer.key), store = memoryStore();
-  const now = Date.parse("2099-01-01T00:00:00Z");
+  let now = Date.parse("2099-01-01T00:00:00Z");
   let posts = 0, settlements = 0;
   const service = new McpService({ service: SERVICE, signer, custody: store, now: () => now,
     config: { read: async () => stand.config(), addRoot: async () => { throw Error("must not grant a root"); } },
@@ -109,7 +109,11 @@ test("a store that holds a folded record gives the MCP service unreadable", asyn
   const [open] = await store.unresolved();
   const record = (await store.read(open!.id))!;
   const fact = { at: stand.destination, seq: 3, hash: head.hash };
-  await new Custody(store, () => timeOf(now)).folded(record.identity, { fact, intent: intentDigest(record.envelope.signed.intent) });
+  if (ending === "folded") await new Custody(store, () => timeOf(now)).folded(record.identity, { fact, intent: intentDigest(record.envelope.signed.intent) });
+  else {
+    now = Date.parse(record.envelope.signed.intent.notAfter) + 60_000;
+    await new Custody(store, () => timeOf(now)).absent(record.identity, 0, head);
+  }
   const counted = [posts, settlements];
   for (const [tool, given] of [["settle", { target: "destination", idempotencyKey: "folded-elsewhere" }], ["repository.read-token", args]] as const) {
     // A call that throws instead of giving a finding fails here by the assertion, not by the throw.

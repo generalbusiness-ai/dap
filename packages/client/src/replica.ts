@@ -111,7 +111,7 @@ export class Replica<D extends DeclaredDefinition> {
   #fault = false;
   /** The latest head that the feed or a caller named. */
   #target = -1;
-  #reading: Promise<void> | null = null;
+  #reading: Promise<boolean> | null = null;
   #again = false;
 
   constructor(handle: DeclaredHandle<D>, options: ReplicaOptions) {
@@ -136,11 +136,12 @@ export class Replica<D extends DeclaredDefinition> {
   /**
    * Read the journal to its head. `to`: a head that an answer names. Until
    * the replica holds it, the state is `behind`. A read while one runs
-   * joins it, and the running read reads again at its end.
+   * joins it, and the running read reads again at its end. True means the
+   * final read reached a complete verified head; a failed read returns false.
    */
-  read(to?: Head | number): Promise<void> {
+  read(to?: Head | number): Promise<boolean> {
     if (to !== undefined) this.#target = Math.max(this.#target, typeof to === "number" ? to : to.seq);
-    if (this.#stopped) return Promise.resolve();
+    if (this.#stopped) return Promise.resolve(false);
     if (this.#reading) { this.#again = true; return this.#reading; }
     this.#reading = this.#loop().finally(() => { this.#reading = null; });
     return this.#reading;
@@ -182,36 +183,39 @@ export class Replica<D extends DeclaredDefinition> {
 
   // ------------------------------------------------------------ reads and the fold
 
-  async #loop(): Promise<void> {
+  async #loop(): Promise<boolean> {
+    let complete = false;
     do {
       this.#again = false;
-      await this.#readOnce();
+      complete = await this.#readOnce();
     } while (this.#again && !this.#stopped);
+    return complete && !this.#stopped;
   }
 
-  async #readOnce(): Promise<void> {
+  async #readOnce(): Promise<boolean> {
     let cursor = this.#held.size === 0 ? undefined : String(this.#held.size);
     for (;;) {
       let reply: Awaited<ReturnType<DeclaredHandle<D>["scope"]["log"]>>;
       try { reply = await this.#handle.scope.log(cursor); }
-      catch { if (!this.#stopped) { this.#fault = true; this.#publish(); } return; }
-      if (this.#stopped) return;
+      catch { if (!this.#stopped) { this.#fault = true; this.#publish(); } return false; }
+      if (this.#stopped) return false;
       if (!reply.ok) {
         if (reply.reason === "archived") this.#stop({ by: "archived" });
         else if (reply.reason === "forbidden") this.#stop({ by: "forbidden" });
         else { this.#fault = true; this.#publish(); }
-        return;
+        return false;
       }
-      if (reply.coverage !== "whole") { this.#stop({ by: "forbidden" }); return; }
-      if (reply.value.definition !== this.#handle.digest) { this.#stop({ by: "definition" }); return; }
+      if (reply.coverage !== "whole") { this.#stop({ by: "forbidden" }); return false; }
+      if (reply.value.definition !== this.#handle.digest) { this.#stop({ by: "definition" }); return false; }
       this.#target = Math.max(this.#target, reply.at.seq);
-      for (const row of reply.value.entries) if (!this.#fold(row)) return;
+      for (const row of reply.value.entries) if (!this.#fold(row)) return false;
       if (reply.next === undefined) break;
       cursor = reply.next;
     }
     this.#fault = false;
     this.#folding = false;
     this.#publish();
+    return true;
   }
 
   /** Fold one row. False: the replica stopped, or it folds again from the genesis entry. */

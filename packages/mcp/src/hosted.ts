@@ -1535,8 +1535,8 @@ export class HostedAgent {
     if (sentAt === null || sentAt < admissionAt) return answer(503, { error: "temporarily_unavailable" });
     admissionAt = sentAt;
     if ("lost" in kept) return answer(503, { error: "unresolved", op });
-    // The hosted agent never folds a record: a folded record has no answer to give here.
-    if ("folded" in kept) return answer(503, { error: "custody", rule: "unreadable" });
+    // A folded or unsent record holds no answer for the hosted agent to return.
+    if ("folded" in kept || "unsent" in kept) return answer(503, { error: "custody", rule: "unreadable" });
     if ("archivedSettlement" in kept) return answer(410, { error: "archived", op, archived: kept.archivedSettlement.archived,
       ...(kept.archivedSettlement.fact ? { fact: kept.archivedSettlement.fact } : {}), next: "Verify the original enrollment in its archive clone before continuing; do not sign or send a replacement request." });
     if (kept.answer.answer === "archived") return answer(410, { error: "archived", op, archived: kept.answer.archived, fact: kept.answer.fact,
