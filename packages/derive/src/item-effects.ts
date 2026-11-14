@@ -1,5 +1,5 @@
 /** Shared item transformations for judgment, recorded fold and C1 projection. */
-import type { Digest, Entry, FieldValue, GenesisEffect, ItemType, MemberRef } from "@generalbusiness/dap-contract";
+import type { Digest, Effect, Entry, FieldValue, GenesisEffect, ItemType, MemberRef } from "@generalbusiness/dap-contract";
 import { withActing, withMembers, withPrincipal, type Signer } from "./attribution.ts";
 import { HOLDER, changeHold } from "./hold.ts";
 import type { Item, Party } from "./state.ts";
@@ -13,6 +13,18 @@ import { declarationOf } from "./program/declaration.ts";
  * (`resolvedEntryEffects`), and no later entry holds one.
  */
 export type ItemEffect = Extract<GenesisEffect, { effect: "state" | "party" | "ref" | "value" | "list" | "hold" }>;
+
+// One key for each kind of `ItemEffect`, and no other key: a kind added to or removed from the type, and not here, fails to compile.
+const ITEM_EFFECT_KINDS = { state: true, party: true, ref: true, value: true, list: true, hold: true } as const satisfies Record<ItemEffect["effect"], true>;
+
+/**
+ * Whether an effect changes one item, as `changeItem` takes it. It takes a
+ * genesis effect too, because `ItemEffect` holds the encoded self of a genesis
+ * draft and so is no subtype of `Effect`.
+ */
+export function isItemEffect(effect: Effect | GenesisEffect): effect is ItemEffect {
+  return Object.hasOwn(ITEM_EFFECT_KINDS, effect.effect);
+}
 
 /** The slot of a hold type whose member is the holder (section 6.8). */
 export { HOLDER };

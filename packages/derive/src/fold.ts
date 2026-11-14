@@ -12,13 +12,13 @@
  */
 
 import type { Digest, Effect, Entry, FactRef, GenesisEffect, OperationId, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
-import { intentDigest, isEffect, isScopeKind, resolveGenesisSelf, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
+import { intentDigest, isDigest, isEffect, isScopeKind, resolveGenesisSelf, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { UNDER, historyOf } from "./attribution.ts";
 import { drawsOf, released, type DrawOptions } from "./draws.ts";
 import { indexRows } from "./binding.ts";
 import { fixedRowsOf, rekeyFixed } from "./fixed-index.ts";
 import { changeItem, newItem, signerOf } from "./item-effects.ts";
-export { changeItem, newItem, signerOf, HOLDER, type ItemEffect } from "./item-effects.ts";
+export { changeItem, isItemEffect, newItem, signerOf, HOLDER, type ItemEffect } from "./item-effects.ts";
 import { attemptedBy, openedBy, operationId } from "./ledger.ts";
 import type { Item, ObservedHead, StateView, StateWriter, Status } from "./state.ts";
 import { isLocalId, isObject, isScopeRef, own, same } from "./values.ts";
@@ -81,6 +81,8 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
   const input = entry.input;
   const at: ScopeRef = input.type === "genesis" ? { scope: scopeIdOf(input.seed), genesis: hash } : scope?.at ?? (() => { throw new FoldError("a later entry has no sequence"); })();
   if (input.type !== "genesis" && (!("genesis" in entry) || entry.genesis !== at.genesis)) throw new FoldError("the entry names another sequence");
+  // Section 6.1: a scope pins the definition its seed names. The genesis judge refuses another one (`genesisJudged`); the fold refuses it too.
+  if (input.type === "genesis" && isDigest(input.seed.definition) && input.seed.definition !== definition.digest) throw new FoldError("the genesis seed names another definition");
   const effects = resolvedEntryEffects(writer, definition, entry, at);
   // This owned fold view never replaces the sealed bytes, copied seed, or message.
   const applied = { ...entry, effects };
