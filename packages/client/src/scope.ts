@@ -19,3 +19,9 @@ import type { Judged, Judging } from "./replica-judged.ts";
 export function judged<D extends DeclaredDefinition>(replica: Replica<D>, signed: SignedIntent, judging: Judging): Judged {
   return replica.judged(signed, judging);
 }
+
+export { scopeClient } from "./scope-client.ts";
+export type { ScopeClient, ClientOptions, ClientView, ClientRow, DraftRead, PresentRequest, RequestView, ScopeMember } from "./scope-client.ts";
+export { requestStatus } from "./request-status.ts";
+export type { RequestStatus, RequestStatusAt, Why } from "./request-status.ts";
+export type { ClientClock } from "./request-schedule.ts";

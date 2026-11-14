@@ -9,7 +9,7 @@ import type { SignedEntry } from "../src/replica.ts";
 import type { Judged } from "../src/replica-judged.ts";
 
 // Invariant: an entry wins over custody and the clock; answers wait for their heads; only this attempt's refusal returns a request.
-test("the six rules select one status from the replica, current attempt, prediction and clock", async () => {
+test("the seven rules select one status from the replica, current attempt, prediction and clock", async () => {
   const custody = new Custody(memoryStore(), () => new Date(T0).toISOString());
   const sent = await custody.send(identity("rules"), `sha256:${"c".repeat(64)}`, build("rules"), async () => refused, { notAfter });
   const record = sent.record, meaning = record.meaning;

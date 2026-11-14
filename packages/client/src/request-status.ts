@@ -1,4 +1,4 @@
-/** The six ordered request status rules, client note section 6. No store or transport call enters this function. */
+/** The seven ordered request status rules, client note section 6. No store or transport call enters this function. */
 import type { Digest, Head, RefusalReason } from "@generalbusiness/dap-contract";
 import { REFUSAL_CLASSES, type RefusalClass } from "@generalbusiness/dap-bytes";
 import type { CustodyRecord, CustodySigning, Outcome } from "./custody.ts";
@@ -36,12 +36,13 @@ export function requestStatus(at: RequestStatusAt): RequestStatus {
   const decision = decisive(at.outcomes, record.attempt);
   const answer = decision?.answer;
   const refusal = answer?.answer === "refused" ? answer : null;
-  if (refusal && (head === null || head.seq < refusal.judgedAt.seq)) return { status: "pending" }; // 4
+  if (refusal && REFUSAL_CLASSES[refusal.reason] === "protocol") return { status: "refused", why: { by: "scope", reason: refusal.reason, class: "protocol", ...(refusal.name === undefined ? {} : { name: refusal.name }) } }; // 4
+  if (refusal && (head === null || head.seq < refusal.judgedAt.seq)) return { status: "pending" }; // 5
   const latest = record.signings.at(-1)!;
-  if (!refusal && !decision?.unsent && !signingDead(latest, now)) return { status: "pending" }; // 6
+  if (!refusal && !decision?.unsent && !signingDead(latest, now)) return { status: "pending" }; // 7
   const why: Why = refusal ? { by: "scope", reason: refusal.reason, class: REFUSAL_CLASSES[refusal.reason],
     ...(refusal.name === undefined ? {} : { name: refusal.name }) } : { by: "client", reason: "unsent" };
-  // 5: a copy with no answer can still write. A refusal of a different copy does not settle it.
+  // 6: a copy with no answer can still write. A refusal of a different copy does not settle it.
   const inflight = record.signings.some((signing, index) => {
     if (signing.closed || signingDead(signing, now)) return false;
     const copy = at.outcomes.some(outcome => outcome.signing === index && unanswered(outcome))
