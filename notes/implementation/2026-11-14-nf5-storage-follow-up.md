@@ -6,6 +6,49 @@ sections below retain their original execution limits. The current evidence
 section records later checks and the remaining gate and hosted Counter work.
 No dependency view changed for the original source edits.
 
+## Actual C2 main integration
+
+Branch `builder/nf5-on-c2-main-20261114` preserves the original NF5
+head `b4a74424819fca33d98b7a2842e7c9ad95424c1e` and its f288 dependency
+view in their original worktree. Clean merge
+`b5b0e4b92261e98fe3f2972f13604532b9ca64f7`, tree
+`af4b3a843ca83f815162384269d382885d1ad671`, has that head and actual
+local main `26d1e65cd9a6815abc70c832f1e61b893bb8b689` as parents.
+The merge had no conflicts. From common base `0166423a`, NF5's 44 paths
+and main's 20 paths do not overlap. All blobs and modes from both sides
+remain exact. This follow-up changes only the existing note.
+
+All 17 merged package metadata files match the authentic C2 donor at
+`.builder-worktrees/c2-lifecycle-repair-20261114`. One `cp -cR` copied its
+owned dependency view into the new worktree's absent `node_modules`.
+The authentic lock and copied stamp are
+`8b2ae5f7108ce36cf84753d99d4248d59cc21251d5e01da3da37a111bb495e20`.
+The copied installed-lock bytes remain exact, SHA-256
+`c57a2bba140fe794a6ee108f0e570d41ebd6bff24c3f57f357615b7fb9380990`.
+Five private directory views are real and independently owned. All 15
+relative workspace bindings resolve within this checkout, and all 57
+declared source export leaves exist. The existing compatibility 0.22.0
+bundle remains `cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39`.
+No install, stamp rewrite, or compatibility command ran during setup.
+
+Voice's protected controller, owner test, and browser client retain the
+exact `bd023336` blobs. The controller keeps SHA-256
+`917d03ba09dbfd2910eb9605fc7bcafdc10c73a5a897d0b78ee4ccc759fbfe0a`.
+The C/Q coverage, control, skill, model, and chart records retain their
+NF5 bytes. The merge changes no application definition, manifest, role,
+version, canonical producer, reproduction helper, signed Grow packet,
+release constant, or identifier. Counter and Lending retain the two
+presentation identifiers cited below, with unchanged entry and semantic
+identifiers. No canonical producer or runtime owner ran for this merge.
+
+The earlier development, browser, controls, canonical comparison, and
+C/Q results below remain dated to their named heads. Integrated-head
+runtime checks and the full NF5 gate remain UNRUN. Planner act
+`1b0d2f10436d6c0d1cc42cc9661b8a7f7aba1fad` confirms actual `main` and
+`origin/main` at `26d1e65c` and releases NF5's next gate prerequisite.
+The maintained gate and selectors still use `origin/main`; no reference,
+base override, or gate copy changed. Execution still needs root's grant.
+
 The full pre-code proposal remains attached as `proposal` to builder request
 `2a65dcffc89bd43675bb3c07536dc30c41d6cacb`. It covers schema history,
 bounded segments, malformed rows, lifecycle, notifications, async authority,
@@ -389,8 +432,9 @@ inputs. Client controls, fresh browser acceptance and Voice C used
 `b4d6a7e9fe2720ed3d93c1204db4139a34342ada`, tree
 `e52b9c70dcddc04ca1b5d55c7e4ca84aa6f49964`. This documentation update changes
 no production source, tests, coverage, dependencies or model artifacts.
-Before the gate, NF5 still must integrate actual main after C2 lands unless
-the planner changes that order.
+The later source-only integration above takes actual main after C2's
+local landing. Its runtime graph has not run; the precursor results below
+do not become integrated-head results through that merge.
 
 In the table, `N` is `/opt/homebrew/bin/node` and `E` is
 `/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-browser-custody-gate-attempt1`.
