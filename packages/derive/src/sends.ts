@@ -89,7 +89,7 @@ interface NativeSend { readonly op: "native"; readonly mark: NativeSendMark; rea
 type SendInstruction = WrittenSend | NativeSend;
 
 /** Execute only the send instructions of this admitted body. */
-export function evaluateSends(j: Judging, body: BodyStructure, working: ReadonlyMap<string, Item>, cause: Digest, first = 0, recorded?: ScopeRef | null, opening = false): Sends {
+export function evaluateSends(j: Judging, body: BodyStructure, working: ReadonlyMap<string, Item>, cause: Digest | undefined, first = 0, recorded?: ScopeRef | null, opening = false): Sends {
   checkedBody(j.definition, body);
   const nodes = body.nodes.filter(node => node.category === "send");
   const instructions = nodes.map((owner): SendInstruction => {
@@ -106,7 +106,7 @@ export function joinReturnedSends(j: Judging, marks: readonly NativeSendMark[], 
   return executeSends(j, marks.map(mark => ({ op: "native", mark })), working, cause, first, recorded, opening);
 }
 
-function executeSends(j: Judging, instructions: readonly SendInstruction[], working: ReadonlyMap<string, Item>, cause: Digest, first: number, recorded: ScopeRef | null | undefined, opening: boolean): Sends {
+function executeSends(j: Judging, instructions: readonly SendInstruction[], working: ReadonlyMap<string, Item>, cause: Digest | undefined, first: number, recorded: ScopeRef | null | undefined, opening: boolean): Sends {
   const on = working.get("on") ?? null;
   let unresolved: string | null = null;
   /** A send reads each subject as the effects left it. `each`: the item of a fan-out send. */
@@ -228,6 +228,10 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
     if (instruction.op !== "written") throw new TypeError("Native send did not reach its execution leaf");
     const form = instruction.plan.code;
     if (form.op === "create") {
+      if (cause === undefined) {
+        j.unavailableIntent?.();
+        return { ok: false, unavailable: "unavailable" };
+      }
       // Section 7.2: the seed names this scope as creator, the input's cause, and which creation of that input this is.
       // Section 6.6: `self` is this scope's own pinned definition, which a definition cannot name by digest.
       const definition = form.definition === "self" ? j.definition.digest : form.definition;

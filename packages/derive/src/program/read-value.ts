@@ -38,7 +38,7 @@ function executeRead(j: Judging, read: OperandRead, item: Item | null, elements:
     case "none": value = null; break;
     case "signer": value = j.signer?.member ?? null; break;
     case "scope": value = j.scope.at; break;
-    case "intent": value = j.intent ?? null; break;
+    case "intent": value = j.intent ?? j.unavailableIntent?.() ?? null; break;
     case "sender": value = j.sender ?? null; break;
     case "update": value = j.update?.[read.part] ?? null; break;
     case "result": value = j.result?.name ?? null; break;

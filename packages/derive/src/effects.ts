@@ -419,6 +419,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
         const to = code.source.op === "clear" ? null : code.source.op === "self" ? j.self : fits(own(type.refs, slot)!.to, slot);
         if (to === undefined) return bad("the source is not a value of the slot's type");
         apply(subject, { effect: "ref", item: id, slot, to });
+        if (code.source.op === "self") j.selfRef?.(effects.length - 1);
         break;
       }
       case "value": {

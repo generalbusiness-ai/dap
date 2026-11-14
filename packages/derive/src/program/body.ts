@@ -28,7 +28,7 @@ export interface BodyOptions {
 }
 
 /** Guards, effects, sends, live-item bounds and settlement preserve their admitted order. */
-export function executeBody(j: Judging, structure: BodyStructure | null, cause: Digest, options: BodyOptions = {}): Ran {
+export function executeBody(j: Judging, structure: BodyStructure | null, cause: Digest | undefined, options: BodyOptions = {}): Ran {
   if (!structure) throw new TypeError("body was not captured by its validation");
   checkedBody(j.definition, structure);
   const row = structure.row;

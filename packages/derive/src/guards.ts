@@ -97,6 +97,10 @@ export interface Judging {
   own?: Own | undefined;                               // this scope's own history: a local fact, and a part of one
   snapshot?: Snapshots | undefined;                    // the snapshots of staged refs that this scope retains, by digest (section 16.4)
   intent?: Digest | undefined;                         // an act: the digest of the intent being judged
+  /** Keyless body judgment only: stop at a reached need for the absent signed input. */
+  unavailableIntent?: (() => never) | undefined;
+  /** Keyless body judgment only: indexes of actually emitted written `from: self` refs. */
+  selfRef?: ((index: number) => void) | undefined;
   sender?: ScopeRef | undefined;                       // a handler and a result clause: the envelope's source scope, as verified
   source?: JudgmentCopy | undefined;                  // a handler: its matched source evidence
   update?: { state: string; item: FactRef; revision: number } | undefined;   // a `relate` handler: the update being applied

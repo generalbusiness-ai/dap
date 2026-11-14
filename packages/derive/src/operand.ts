@@ -7,7 +7,7 @@
  * none, which is `null` here. A part is never an error.
  */
 
-import type { ActType, Digest, Entry, EntryPart, FactRef, FactUse, FieldRecord, FieldType, FieldValue, GenesisSelfRef, Operand, Part, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
+import type { ActType, Digest, Entry, EntryPart, FactRef, FactUse, FieldRecord, FieldType, FieldValue, GenesisSelfRef, Intent, KeyId, Operand, Part, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalBytes, canonicalize, digestBytes, intentDigest, isEntry, isEntryBodyOf, isScopeKind, isSequenceRef, messageDigest, parseStrict, platformName, scopeIdOf, isSeed, utf8 } from "@generalbusiness/dap-bytes";
 import { creationFields, isEntryOf, isLocalFact, useOf, type Facts, type Local, type Reading } from "./fields.ts";
 import { bound } from "./handlers.ts";
@@ -79,7 +79,8 @@ export function matchesCopy(copy: JudgmentCopy, fact: FactRef): boolean {
 }
 
 const EVIDENCE = Symbol("per-judgment-evidence");
-type RuntimeAsked = { act: SignedIntent } | { delivery: Delivered } | { genesis: Creation | SignedCreation };
+type RuntimeAsked = { act: SignedIntent } | { delivery: Delivered } | { genesis: Creation | SignedCreation }
+  | { body: Pick<Intent, "kind" | "on" | "fields" | "expected">; actor: KeyId };
 type EvidencePhase = "live-verified" | "live-result-pending" | "live-result-admitted" | "replay";
 interface EvidenceData {
   readonly phase: EvidencePhase;
@@ -623,7 +624,7 @@ export function operand(j: Judging, o: Operand, item: Item | null): unknown {
   if ("none" in o) return null;
   if ("signer" in o) return j.signer?.member ?? null;
   if ("scope" in o) return j.scope.at;
-  if ("intent" in o) return j.intent ?? null;
+  if ("intent" in o) return j.intent ?? j.unavailableIntent?.() ?? null;
   if ("sender" in o) return j.sender ?? null;
   if ("update" in o) return j.update?.[o.update] ?? null;
   if ("result" in o) return j.result?.name ?? null;

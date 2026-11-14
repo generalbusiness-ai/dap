@@ -303,7 +303,7 @@ export function alsoItems(view: StateView, definition: ValidDefinition, also: Re
 }
 
 /** The judge's rule input before body execution: no subjects at check 7, then the subjects bound at check 8. */
-export const giving = (view: StateView, definition: ValidDefinition, context: Reading, scope: Judging["scope"], self: number, judged: JudgedInput, ran: { clock: boolean }, fields: Readonly<Record<string, FieldValue>>, facts: ReadonlyMap<Digest, JudgmentCopy>, source?: JudgmentCopy): Giving =>
+export const giving = (view: StateView, definition: ValidDefinition, context: Reading, scope: Judging["scope"], self: number, judged: JudgedInput | undefined, ran: { clock: boolean }, fields: Readonly<Record<string, FieldValue>>, facts: ReadonlyMap<Digest, JudgmentCopy>, source?: JudgmentCopy): Giving =>
   ({ view, definition, clock: context.clock, bounds: context.bounds, scope, self, fields, subjects: new Map(), signer: null, facts, own: context.own, source, platform: context.platform, judged, ran });
 
 export interface ItemSettlement { item: number; form: Extract<Settles, { of: unknown }> }
