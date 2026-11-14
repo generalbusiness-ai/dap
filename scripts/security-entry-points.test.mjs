@@ -236,7 +236,7 @@ const namedOwners = {
     "packages/scope/src/core.ts:heldBy": "a66b415809db685c99cc8961ba592bd8bdcb8bda8f2f4ea1e73fe71c4b052fd1",
     "packages/scope/src/core.ts:told": "bc25d088d5c51694f6e3a813f11f2875144c7a3bdfaa8d124063dc1f65e2fe67",
     "packages/scope/src/core.ts:Observes": "9a0e37bc23db915ebdfd3ec4eef21172918f50fc3e19de840d2b03746efc3710",
-    "packages/scope/src/core.ts:Scope": "96c3b819105aaaf8eaed8d33839b57a1120dcd8503f37c7f4d01022ca422ba79" // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
+    "packages/scope/src/core.ts:Scope": "731b5a55a1b6cac490f61d20559600cc63b39a73d09976c6e190871c582fe2e5" // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
   }
 };
 
@@ -265,7 +265,7 @@ const seals = {
   "packages/scope/src/read-wait.ts": "d1f3f58f089f89164b270bac3263172c8d9bc0ece2cb3a375ca7b000b6507573", // DX-A2 reviewed minimum admission and wait owner; actual maintained AST value.
   "packages/scope/src/authority.ts": "8072e369fa879a6072fb0d546598962696d05df11f4b38fcf83469addbd0d5f9", // Token refusal: the commit of read-token asks whether a compromised notice named the key; maintained whole-AST value.
   "packages/scope/src/observation-cache.ts": "d43f96c5f634d188e1c989d39b75669c89fdf8a062ab2450b0f9b6621b227186", // Bounded reusable observation payload and FIFO owner; actual maintained parser output.
-  "packages/scope/src/turn.ts": "7edfc6d15a8b301558239ea4ad196ae6db31d7a573bb5d6a29461cb3e7b348ff", // R3 alarm-only timed drain; actual maintained parser output.
+  "packages/scope/src/turn.ts": "10286cfbc947638bb19ce35e6fad8281139da7f6efb14d79740c30bae6540a3e", // CDF-1 total retained bytes and fits settlement exemptions; queue and timed drain unchanged.
   "packages/platform/src/reservation-v17.ts": "ab6816b23c9e4edfd034b24d481e6a14b9baf065808b3cc26496bcd531b0cafc", // Reviewed retained-policy decoder; actual maintained parser output.
   "packages/platform/src/evidence.ts": "77da4fdc1cf2601ee64849d2051ecdba0e8391d6b93b6ce74d7e59df90033897", // Reviewed platform binding codec under ruling 1bc4f7fd; actual maintained parser output.
   "packages/git/src/checkout-snapshot.ts": "82f53717d419b70fe208801b6d0bf2fc0c947ac2beffb27b2e2d01898f48ee25", // Detached object identity and closure bounds; imports do not seal this implementation.

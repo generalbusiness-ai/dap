@@ -201,7 +201,7 @@ test("the opt-in rule-input writer ceiling accepts exact canonical bytes and ref
   }
 });
 
-test("logical bytes in real SQLite count UTF-8 payloads once across journal and retained domains, redact texts, and roll back retention", async () => {
+test("logical bytes and the stored retained total in real SQLite count new values, redact texts, and roll back retention", async () => {
   const s = await create();
   const sizes = await s.inside(async (state) => {
     // Raw storage-boundary writes. No payload here is offered as a judged
@@ -214,6 +214,9 @@ test("logical bytes in real SQLite count UTF-8 payloads once across journal and 
     const rawDigest = digestBytes(utf8(first.bytes)), rawBytes = utf8(first.bytes).length;
     expect(rawDigest).not.toBe(first.hash);
     expect(rawRetainedJSON(rawDigest, first.bytes)).toEqual(JSON.parse(first.bytes));
+    // Read both names so this witness also runs at CDF-1 head 5339ccc5.
+    const retainedTotal = () => state.storage.sql.exec<{ n: number }>("SELECT COALESCE(SUM(CAST(v AS INTEGER)), 0) AS n FROM meta WHERE k IN ('retained-bytes', 'retained-entry-bytes')").one().n;
+    const retainedBefore = retainedTotal();
     const before = store.logicalBytes();
     // The recorded size is a cache; the retained byte check reads actual
     // payload lengths, and excludes all folded-state/bookkeeping bytes.
@@ -226,7 +229,11 @@ test("logical bytes in real SQLite count UTF-8 payloads once across journal and 
     store.retain({ kind: "entry", digest: rawDigest, bytes: first.bytes, under: "fixture" });
     store.retain({ kind: "rule", digest: rawDigest, bytes: first.bytes });
     store.retain({ kind: "value", domain: DOMAINS.entry, digest: first.hash, bytes: first.bytes });
-    const duplicated = store.logicalBytes();
+    const duplicated = store.logicalBytes(), retainedDuplicated = retainedTotal();
+    // The value key is a separate retained row even when logicalBytes
+    // deduplicates its alias with a journal or another retained domain.
+    store.retain({ kind: "value", domain: DOMAINS.entry, digest: first.hash, bytes: first.bytes });
+    const retainedRepeated = retainedTotal();
     const text = canonicalize("é😀"), digest = textDigest("é😀");
     store.retain({ kind: "text", digest, bytes: text });
     store.retain({ kind: "text", digest, bytes: text });
@@ -240,7 +247,7 @@ test("logical bytes in real SQLite count UTF-8 payloads once across journal and 
     try {
       store.transaction(() => { store.retain({ kind: "text", digest: textDigest("q"), bytes: canonicalize("q") }); throw new Error("rollback byte probe"); });
     } catch (error) { rolledBack = error instanceof Error && error.message === "rollback byte probe"; }
-    const afterRollback = store.logicalBytes();
+    const afterRollback = store.logicalBytes(), retainedAfterRollback = retainedTotal();
     let rejectedConflict = false;
     try {
       store.transaction(() => {
@@ -251,13 +258,15 @@ test("logical bytes in real SQLite count UTF-8 payloads once across journal and 
       if (!(error instanceof AmountError)) throw error;
       rejectedConflict = true;
     }
-    return { initialBytes, rawBytes, before, afterMetadata, duplicated, withText, withRule, redacted, rolledBack, afterRollback, rejectedConflict, afterConflict: store.logicalBytes(), reopened: open().logicalBytes() };
+    return { retainedBefore, retainedDuplicated, retainedRepeated, retainedAfterRollback, initialBytes, rawBytes, before, afterMetadata, duplicated, withText, withRule, redacted, rolledBack, afterRollback, rejectedConflict, afterConflict: store.logicalBytes(), reopened: open().logicalBytes() };
   });
   expect([sizes.before, sizes.afterMetadata]).toEqual(Array(2).fill(sizes.initialBytes));
   expect(sizes.duplicated).toBe(sizes.initialBytes + sizes.rawBytes);
   // JSON string é😀 is 8 UTF-8 bytes; the rule's JSON record is 17.
   expect([sizes.withText, sizes.withRule]).toEqual([sizes.initialBytes + sizes.rawBytes + 8, sizes.initialBytes + sizes.rawBytes + 25]);
   expect([sizes.redacted, sizes.afterRollback, sizes.afterConflict, sizes.reopened]).toEqual(Array(4).fill(sizes.initialBytes + sizes.rawBytes + 17));
+  expect([sizes.retainedDuplicated, sizes.retainedRepeated]).toEqual(Array(2).fill(sizes.retainedBefore + 3 * sizes.rawBytes));
+  expect(sizes.retainedAfterRollback).toBe(sizes.retainedBefore + 3 * sizes.rawBytes + 17);
   expect([sizes.rolledBack, sizes.rejectedConflict]).toEqual([true, true]);
 });
 

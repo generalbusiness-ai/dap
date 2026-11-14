@@ -1,0 +1,51 @@
+{
+  "qualification": "Post-gate document checks at 9c64eeb7; the following evidence commit adds only note and manifest. Runtime evidence remains at 01bbd802.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cdf1-doc-checks",
+  "checkpoint": {
+    "commit": "9c64eeb7e2569549de212058238206b7f62e3236",
+    "tree": "431aeac7f9ab6a01faf4e6fec355a8c5eebe402b"
+  },
+  "fileCount": 8,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 564,
+      "sha256": "82c04909b8aac4cf36da35979b1283de499adb8aba26255627dc8226bc7c5c9f"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 685,
+      "sha256": "d2ad391d07465d0cea1fa6e381f3cb5feb026cb0c5a7a8e51a75739efdd2f831"
+    },
+    {
+      "path": "commit-messages.log",
+      "bytes": 38,
+      "sha256": "e961aa82d898e3425096da8901160f918cd74166d8c76fd918aaac9c3386377d"
+    },
+    {
+      "path": "correspondence.json",
+      "bytes": 505,
+      "sha256": "d158a46ca0eee2026b4d6e73f41241aeb83c2244dd433864a5a40cb22740c7c9"
+    },
+    {
+      "path": "doc-links.log",
+      "bytes": 36,
+      "sha256": "e738f746a19fabbb74101a21ca6e83400052cd0c46d58e10823059c8c7aa818b"
+    },
+    {
+      "path": "head.txt",
+      "bytes": 82,
+      "sha256": "914d84f3f0a02f1871fff3532cf79200d80103c7bcdf9fa4ea524c8e0fc0dd03"
+    },
+    {
+      "path": "notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
