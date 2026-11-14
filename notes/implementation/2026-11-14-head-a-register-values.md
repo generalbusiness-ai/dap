@@ -102,12 +102,16 @@ both under `notes/`. Production source and tests remain unchanged.
 
 The [evidence manifest](evidence/2026-11-14-head-a.manifest.json) records
 the checkpoint, tree proof, raw output sizes, and SHA256 values. All
-414 raw files matched their sealed checksums and had no write bits.
-The manifest lists 98 files directly, including every output below.
+425 raw files matched their sealed checksums and had no write bits.
+The manifest lists 109 files directly, including every output below.
 The sealed gate manifest and checksums cover the periodic power samples.
 
 The scripts ran from CUT-A `ce93a51c`; their output became source
 `04d556aa`. The gate used that source checkpoint.
+The cheap documentation and Git follow-up used notes checkpoint
+`fde018379f2939510db5e629f1198a3959f369fd`, tree
+`3756dde8a5a00d9143692b1dbb6c47d3533dece4`. Only this note and its
+manifest add those results afterward. No compiler or test ran again.
 
 | Check | Command | Exit | Raw output and SHA256 |
 |---|---|---:|---|
@@ -115,13 +119,19 @@ The scripts ran from CUT-A `ce93a51c`; their output became source
 | Grow register values | Full `node scripts/register-values.mjs grow` command above | 0 | `2026-11-14-head-a-script-attempt1/grow.stdout`: `30e9abb6875212d077f1aa2c59a99f26d4b6c566ad4447d64238a744b115dbe2` |
 | Demo register values | Full `node scripts/register-values.mjs demo` command above | 0 | `2026-11-14-head-a-script-attempt1/demo.stdout`: `af2a11bf09a104f15266bce351c27da7899cf7580ff42d6640351142f18e3702` |
 | Maintained full gate | `/usr/bin/time -p /opt/homebrew/bin/npm run gate` | 0 | `2026-11-14-head-a-gate-attempt1/gate.stdout`: `508e82c029ce3ffe359c9592c680fa4456d4ad1ae8dcd8302860c1c7dba8e259` |
+| Final diff whitespace | `git diff --check 0ad4aa9102fe5f75b692d3adb30c8b00a6914574 HEAD` | 0 | `2026-11-14-head-a-doc-checks/whitespace.stdout`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Commit messages | `node scripts/check-commit-messages.mjs 0ad4aa9102fe5f75b692d3adb30c8b00a6914574 HEAD` | 0 | `2026-11-14-head-a-doc-checks/commit-messages.stdout`: `fc8765466e4e267859aeefd91456d6d8c027c5b75f972ee69d76ef7d3d3dd256` |
+| Local documentation links | `node scripts/check-doc-links.mjs` | 0 | `2026-11-14-head-a-doc-checks/doc-links.stdout`: `0b62886e12f396ee8cf60e4cfe3f4112ecc75879da8508427692a1367191bbc9` |
+| Note size and inventory | `node scripts/check-notes.mjs 0ad4aa9102fe5f75b692d3adb30c8b00a6914574 HEAD` | 0 | `2026-11-14-head-a-doc-checks/notes.stdout`: `35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1` |
 
 Raw output stays under `/Users/hughpyle/play/artroom-evidence/`. The
 script directory contains 43 files; its `SHA256SUMS` digest is
 `ace0ac970a6731fbf4917394aba8addfab158978bb948bbbc4d4cd521bc16d5f`.
 The gate directory contains 371 files; its `SHA256SUMS` digest is
 `30b43c20644f92946d5c6bb3cbf620ff793b45e66579c2418606dd30e4e268d5`.
-Both directories are read-only. Keep them for at least 30 days after
+The documentation follow-up contains 11 files; its `SHA256SUMS` digest
+is `74ab959a7d9faa07b84ba3f8f99197872736266468f6e356abe00bae5e2060e3`.
+All three directories are read-only. Keep them for at least 30 days after
 landing, as [the evidence rule](../../docs/evidence-filing.md) requires.
 
 ## Open limits
