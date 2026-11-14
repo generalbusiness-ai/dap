@@ -14,7 +14,7 @@ export type Cursor = string;
 
 import type { Archived } from "./floor.ts";
 
-/** A minimum journal position in one exact scope incarnation. A full head also requires its recorded hash. */
+/** A minimum journal position in one scope at one exact genesis. A full head also requires its recorded hash. */
 export interface ReadMinimum { readonly at: ScopeRef; readonly head: number | Head }
 
 /** The authorized scope remained below the minimum when its bounded wait ended. */

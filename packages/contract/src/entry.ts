@@ -154,7 +154,7 @@ export interface Prepared { rule: string; input: Digest; result: boolean }
  */
 export interface SelfMark { self: true }
 
-/** A creation is addressed by a seed and names no incarnation (section 7.2). */
+/** A creation is addressed by a seed and names no genesis (section 7.2). */
 export interface Send { n: number; to: ScopeRef | Seed; message: Message }
 
 /**

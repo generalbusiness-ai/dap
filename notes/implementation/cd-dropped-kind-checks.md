@@ -338,8 +338,10 @@ writes nothing.
 An act or a delivery answers `refused`, reason `scope-full`, name
 `scopeBytes` (`core.ts`); an outcome records `unavailable`, reason
 `scope-full` (`operations.ts`); a timed turn writes nothing and records the
-bound on the turn. A scope without the opt-in checks only its entry count
-(`fits`) and never refuses for bytes.
+bound on the turn. A scope without the opt-in checks its entry count
+(`fits`) and, since CDF-1, the bytes of its retained births and copies
+against `scopeBytes`. The faults file gives that stop in
+[Retained births have a byte cap in every scope](cd-dropped-kind-checks-faults.md#retained-births-have-a-byte-cap-in-every-scope).
 
 ## Faults found after the composed head
 
