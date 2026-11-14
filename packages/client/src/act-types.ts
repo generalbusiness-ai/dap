@@ -46,6 +46,9 @@ export interface Context {
   readonly evidence: readonly Digest[];
 }
 
+/** An unavailable exploration can lack a recorded scope altogether. */
+export type UnavailableContext = Omit<Context, "head"> & { readonly head: null };
+
 type ReasonOf<G> = "reason" extends keyof G ? Extract<G["reason"], string> : never;
 type GuardNames<G> = G extends readonly (infer E)[] ? GuardNames<E>
   : string extends ReasonOf<G> ? string
@@ -111,4 +114,4 @@ export type Exploration<D extends DeclaredDefinition, K extends Kind<D>> =
       readonly reason: RefusalReason; readonly class: RefusalClass;
       /** Capability diagnostics need not appear in the act's declared guard names. */
       readonly name?: Named<D, K> | (string & {}) }
-  | { readonly is: "unavailable"; readonly act: Act<D, K>; readonly context: Context; readonly lacks: readonly Lack[] };
+  | { readonly is: "unavailable"; readonly act: Act<D, K>; readonly context: Context | UnavailableContext; readonly lacks: readonly Lack[] };
