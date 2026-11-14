@@ -42,6 +42,6 @@
     { "tag": "v3", "new_sqlite_classes": ["ScopeIndex"] }
   ],
   // Artifacts: one namespace, reached by the binding
-  // ARTIFACTS. It takes effect only with ARTIFACTS_CONFIG set as above.
+  // ARTIFACTS. It takes effect only with operator-set ARTIFACTS_CONFIG.
   "artifacts": [{ "binding": "ARTIFACTS", "namespace": "artroom-demo", "remote": true }]
 }

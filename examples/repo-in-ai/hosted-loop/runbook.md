@@ -59,12 +59,15 @@ these fields:
 | --- | --- |
 | `deploymentVersion` | The exact version in the deployment receipt. |
 | `deployment` | The deployment name in the same receipt. |
+| `register.scope` | The register scope ID in the reviewed receipt or its verified creation offer. |
+| `register.genesis` | The genesis digest of that same register reference. |
 | `home` | A new absolute path. No part of the path is `repo-in-ai`. |
 | `name` | A label that starts with `hosted-loop-`. |
 
 Check `service` and the full `register` reference against the receipt. A
 register with the `open` policy lets the new person's key claim a room. The
-example's version is a placeholder, so the example stops at `input`.
+example's version and register reference are placeholders, so the example
+stops at `input`.
 
 The script keeps two homes under `home`:
 

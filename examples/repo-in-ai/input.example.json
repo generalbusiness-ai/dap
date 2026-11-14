@@ -4,8 +4,8 @@
   "providerOrigin": "https://6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net",
   "deploymentVersion": "COPY-THE-REVIEWED-WORKER-VERSION",
   "register": {
-    "scope": "sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq",
-    "genesis": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    "scope": "COPY-THE-REVIEWED-REGISTER-SCOPE",
+    "genesis": "COPY-THE-REVIEWED-REGISTER-GENESIS"
   },
   "namespace": "dap-demo",
   "name": "repo-in-ai",

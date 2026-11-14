@@ -1,8 +1,7 @@
-// File-owned nonsecret ARTIFACTS_CONFIG binds the installed Register26 and the
-// dap-demo namespace; both installed roots stay available. No DEMO_START_CONFIG:
-// this Worker serves no start offer until the planner names the new register.
-// DEPLOYMENT and SESSION_SECRET remain
-// secrets; the deployment value is already public in /health.
+// File-owned register settings agree with the dap-demo Artifacts namespace.
+// register-values.mjs updates the primary and installed roots together. An
+// optional Start setting records the full reference and actual DEPLOYMENT.
+// SESSION_SECRET stays private. DEPLOYMENT is public in /health.
 // Planner preserves this Worker's private namespaces, enforced index and limits.
 {
   "name": "dap-demo",
