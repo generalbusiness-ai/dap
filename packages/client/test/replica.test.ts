@@ -129,6 +129,33 @@ describe("the states of the replica", () => {
     replica.close();
   });
 
+  test("a subscriber's next-head read at completion runs without a third trigger", async () => {
+    const s = laneScope();
+    const { replica, serving } = await started(s);
+    const from = s.head.seq + 1;
+    const reads = serving.reads.length;
+    let nextRead!: (read: Promise<void>) => void;
+    const completed = new Promise<void>((resolve) => { nextRead = resolve; });
+    const unsubscribe = replica.subscribe(() => {
+      unsubscribe();
+      // The first microtask precedes the loop's final continuation; the second
+      // follows it but precedes a separate Promise.finally ownership release.
+      queueMicrotask(() => {
+        queueMicrotask(() => {
+          s.did(una, "remark", { on: 0, fields: { text: "next head" } });
+          nextRead(replica.read(s.head));
+        });
+      });
+    });
+    s.did(una, "remark", { on: 0, fields: { text: "first head" } });
+    await replica.read();
+    await completed;
+    expect(serving.reads.slice(reads)).toEqual([from, from + 1]);
+    expect(replica.view).toMatchObject({ state: { is: "current" }, head: s.head });
+    expect(seamOf(replica).state().snapshot()).toBe(s.replay().snapshot());
+    replica.close();
+  });
+
   test("one fold failure: the replica folds again from the genesis entry, and is current", async () => {
     const s = laneScope();
     const { replica, feed, serving } = await started(s);
@@ -146,6 +173,22 @@ describe("the states of the replica", () => {
 });
 
 describe("each cause of stopped", () => {
+  test("forbidden before Observe returns cancels its returned observation once, including after close", async () => {
+    const s = laneScope();
+    const { handle, serving } = served(s, citing);
+    const cancelled = vi.fn();
+    const replica = scopeReplica(handle, { observe: (emit) => {
+      emit({ status: "forbidden", reason: "forbidden" });
+      return { refresh: () => {}, cancel: cancelled, done: Promise.resolve() };
+    } });
+    replica.close();
+    replica.close();
+    await replica.read();
+    expect(replica.view.state).toEqual({ is: "stopped", cause: { by: "forbidden" } });
+    expect(cancelled).toHaveBeenCalledTimes(1);
+    expect(serving.reads).toEqual([]);
+  });
+
   test("close: stopped, and the feed is cancelled one time", async () => {
     const { replica, feed } = await started(laneScope());
     replica.close();

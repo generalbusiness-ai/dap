@@ -121,7 +121,9 @@ export class Replica<D extends DeclaredDefinition> {
     this.#definition = checked.ok && checked.definition.digest === handle.digest ? checked.definition : null;
     this.#view = this.#compute({ is: "starting" }, null);
     if (!this.#definition) { this.#stop({ by: "definition" }); return; }
-    this.#observation = options.observe((state) => this.#observed(state));
+    const observation = options.observe((state) => this.#observed(state));
+    if (this.#stopped) observation.cancel();
+    else this.#observation = observation;
     void this.read();
   }
 
@@ -142,7 +144,7 @@ export class Replica<D extends DeclaredDefinition> {
     if (to !== undefined) this.#target = Math.max(this.#target, typeof to === "number" ? to : to.seq);
     if (this.#stopped) return Promise.resolve();
     if (this.#reading) { this.#again = true; return this.#reading; }
-    this.#reading = this.#loop().finally(() => { this.#reading = null; });
+    this.#reading = this.#loop();
     return this.#reading;
   }
 
@@ -183,10 +185,15 @@ export class Replica<D extends DeclaredDefinition> {
   // ------------------------------------------------------------ reads and the fold
 
   async #loop(): Promise<void> {
-    do {
-      this.#again = false;
-      await this.#readOnce();
-    } while (this.#again && !this.#stopped);
+    try {
+      do {
+        this.#again = false;
+        await this.#readOnce();
+      } while (this.#again && !this.#stopped);
+    } finally {
+      // Release ownership in the same continuation as the final pending-read check.
+      this.#reading = null;
+    }
   }
 
   async #readOnce(): Promise<void> {

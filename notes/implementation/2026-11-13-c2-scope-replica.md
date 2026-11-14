@@ -132,8 +132,8 @@ power, powermode 0.
 
 ## Tests
 
-`packages/client/test/replica.test.ts` (25 cases with
-`scope-entry.test.ts`):
+The earlier C2 checks covered `packages/client/test/replica.test.ts`
+(25 cases with `scope-entry.test.ts`):
 
 - Each change of state: `starting` to `current`, `behind` before the feed
   streams, `current` to `behind` and back, `behind` until an answer's
@@ -182,6 +182,52 @@ checkout root. The Vitest command ran from `packages/client`.
 | Client Node types | `node node_modules/typescript/bin/tsc -p packages/client/tsconfig.node.json` | 0 | `tsconfig.node.json.log`: `de3d1a92f879aeb251563c4e5d8c3bcc9cec1d0525ec9774f402079eca5e3b22` |
 | Client test types | `node node_modules/typescript/bin/tsc -p packages/client/tsconfig.test.json` | 0 | `tsconfig.test.json.log`: `aaf99757d7206ff4dfacc035019c92d80662116e319c54ada9a7c83a7f518798` |
 | Replica behavior | `node ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts test/replica.test.ts` | 0 | `replica.test.ts.log`: `7c4569849b33b27e9308d0b016dbddd38824a842cb419fc4d777b90a5b49ebdf` |
+
+## Lifecycle repair source checkpoint
+
+Ruling `bd699704` assigns both wrapper repairs from audit `2cadf894` to
+C2 before integration. Branch `builder/c2-lifecycle-repair-20261114`
+starts at published `0bce0973`. It preserves the original C2 branch, its
+four own commits and all earlier evidence. No dependency merge or
+rebase runs in this checkpoint.
+
+The replica now keeps the returned `Observation` locally until the
+factory returns. If a synchronous observation callback already stopped
+the replica, it cancels that returned observation. Otherwise it takes
+ownership. The stop cause stays unchanged, and later `close()` calls
+cannot cancel it again.
+
+The read loop now releases its active owner in the same synchronous
+continuation as its final pending-read decision. A caller after that
+decision starts a new read instead of joining a finished loop whose
+separate `finally` callback has not released ownership. The answer stays
+`Promise<void>`, and the replica adds no timer.
+
+Two new witnesses in the existing `replica.test.ts` exercise the real
+Replica against its scripted observation and log ports. One emits
+`forbidden` before the observation factory returns, then closes twice
+and checks one cancellation, the original stop cause and no log read.
+The other requests a newer head from a subscriber during read completion
+through deterministic microtasks. It checks the two log cursors, the
+newest published head and fold equality without a third trigger.
+
+**All validation for this repair checkpoint is UNRUN.** C1 holds the
+single validation slot. No compiler, test, formatter, model, control,
+build or generator ran, and no dependency changed. The earlier evidence
+above describes its recorded heads only. Later checks must cover the
+client compiler contexts, the whole replica owner, distinguishing
+controls and the maintained gate in the assigned slot.
+
+The Observation model covers neither repair. Its protected source is
+`observe.ts`: `RefreshCoordinator.check`, `RefreshCoordinator.read`,
+`ObservationConnection.cancel` and `ObservationConnection.emit`. The
+model checks obsolete painting for one read and cancellation; it does
+not cover Replica's factory ownership or its read-completion handoff.
+This checkpoint changes no protected function, API, model or seal.
+
+Integration still waits for PG-1 main. The later replay keeps all four
+own C2 commits and these repairs, dropping only the two local dependency
+merges. The C2 gate remains after C1 and NF-5.
 
 ## Limits
 
