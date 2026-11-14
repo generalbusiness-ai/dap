@@ -24,7 +24,7 @@ const held = (lane: Lane) => lane.inside(state => ({ total: total(state), rules:
 test("Native member rule-guard acts at the retained-byte cap refuse scope-full scopeBytes and write nothing", async () => {
   const under = variant(archiveDefinition.declared, scopeScaleChange());
   const lane = await create({}, {}, under);
-  const submit = (text: string) => lane.stub.submit(lane.intent(rita, "remark", { on: 0, fields: { text } }), [grantOf(rita, lane.at, ["remark"])]);
+  const submit = (text: string) => lane.stub.submit(lane.intent(rita, "remark", { on: 0, expected: { on: 1 }, fields: { text } }), [grantOf(rita, lane.at, ["remark"])]);
   expect(await submit("first")).toMatchObject({ answer: "accepted" });
   const before = await held(lane), head = await lane.head();
   expect(before.rules).toBe(1);
@@ -35,7 +35,7 @@ test("Native member rule-guard acts at the retained-byte cap refuse scope-full s
 });
 
 async function notes(): Promise<Lane> {
-  const signed = signIntent({ v: 1, to: null, actor: rita.key, kind: "start", on: null, expected: {}, fields: {}, idempotencyKey: crypto.randomUUID(), notAfter: at(60) }, rita.secret);
+  const signed = signIntent({ v: 1, to: null, actor: rita.key, kind: "found", on: null, expected: {}, fields: {}, idempotencyKey: crypto.randomUUID(), notAfter: at(60) }, rita.secret);
   const seed: Seed = { v: 1, kind: "directory", definition: notesDefinition.digest, creator: null, cause: intentDigest(signed.intent), ordinal: 0 };
   const name = scopeIdOf(seed), c = controls(name, START), answer = await stubOf(name).create(signed, notesDefinition.declared);
   if (answer.answer !== "accepted") throw new Error(`the notes scope must create: ${JSON.stringify(answer)}`);
