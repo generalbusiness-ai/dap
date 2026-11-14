@@ -4,8 +4,8 @@
   "deployment": "COPY-THE-DEPLOYMENT-NAME",
   "deploymentVersion": "COPY-THE-REVIEWED-WORKER-VERSION",
   "register": {
-    "scope": "sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq",
-    "genesis": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    "scope": "COPY-THE-REVIEWED-REGISTER-SCOPE",
+    "genesis": "COPY-THE-REVIEWED-REGISTER-GENESIS"
   },
   "name": "hosted-loop-scratch-1",
   "home": "/absolute/new/hosted-loop-scratch-1",

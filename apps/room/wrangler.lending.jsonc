@@ -15,6 +15,7 @@
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DeployedScope"] }, { "tag": "v2-scope-index", "new_sqlite_classes": ["ScopeIndex"] }],
   "artifacts": [{ "binding": "ARTIFACTS", "namespace": "dap-lending", "remote": true }],
   "vars": {
+    "INSTALLED_REGISTER_SCOPES": "[\"sc_psbin3zi4ld7kqxg4vdbmb2eudyca64e5mxarz3k4qmklrpyfokq\"]",
     // Recorded live mode; preserve enforced admission on deployment.
     "SCOPE_INDEX_MODE": "enforce",
     "PLATFORM_CREATION_PINS": "[\"platform:register@28\",\"platform:directory@27\",\"platform:membership@14\",\"platform:rules@15\",\"platform:destination@21\",\"platform:register@5\",\"platform:directory@5\",\"platform:membership@4\",\"platform:rules@3\",\"platform:destination@2\",\"platform:inbox@1\"]",
@@ -26,7 +27,7 @@
     "SERVING_READ_KEY_PER_MINUTE": "240",
     "SERVING_READ_ADDRESS_PER_MINUTE": "600",
     "ARTIFACTS_NAMESPACE": "dap-lending",
-    "REGISTER_SCOPE": "sc_c67lq575p5nfkfiwwbr7buodsv6t44i4u6ptcuuhmpcgcduljd7q",
-    "ARTIFACTS_CONFIG": "{\"registerScope\":\"sc_c67lq575p5nfkfiwwbr7buodsv6t44i4u6ptcuuhmpcgcduljd7q\",\"namespace\":\"dap-lending\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}"
+    "REGISTER_SCOPE": "sc_psbin3zi4ld7kqxg4vdbmb2eudyca64e5mxarz3k4qmklrpyfokq",
+    "ARTIFACTS_CONFIG": "{\"registerScope\":\"sc_psbin3zi4ld7kqxg4vdbmb2eudyca64e5mxarz3k4qmklrpyfokq\",\"namespace\":\"dap-lending\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}"
   }
 }

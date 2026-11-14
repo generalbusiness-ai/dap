@@ -98,14 +98,21 @@ test("invalid origin or offer context refuses before fetch and no input can over
   assert.equal(calls, 0);
 });
 
-test("the four tracked configs define no offer: the demo offer waits for the planner's new register", async () => {
-  const policies = [];
+test("tracked room smoke policies follow their own optional full-reference offers", async () => {
   for (const name of ["grow", "lending", "demo", "artroom-scope"]) {
     const source = await readFile(new URL(`../apps/room/wrangler.${name}.jsonc`, import.meta.url), "utf8");
-    policies.push(smokePolicy(parseConfig(source)));
+    const config = parseConfig(source), policy = smokePolicy(config);
+    assert.equal(policy.mcpStatus, 404);
+    const scriptedOffer = policy.offer ? { ...policy.offer, v: 2 } : offer;
+    const observed = scripted({ body: scriptedOffer, creation: policy.offer ? 200 : 404 });
+    assert.equal((await smokeWorker({ config, url: policy.offer?.origin ?? origin }, observed)).pass, true, name);
+    if (policy.offer) {
+      assert.deepEqual(policy.offer.register, JSON.parse(config.vars.DEMO_START_CONFIG).register);
+      assert.equal(policy.offer.register.scope, config.vars.REGISTER_SCOPE);
+      const wrong = structuredClone(config); wrong.vars.REGISTER_SCOPE = register.scope;
+      assert.throws(() => smokePolicy(wrong), /Invalid creation offer/);
+    }
   }
-  assert.deepEqual(policies.map(row => row.mcpStatus), [404, 404, 404, 404]);
-  assert.deepEqual(policies.map(row => row.offer !== null), [false, false, false, false]);
 });
 
 const screen = "https://test.inguz.space", room = "sc_" + "c".repeat(52);

@@ -299,8 +299,9 @@ room and its reader commit. Use that act to find the reader for an old link.
 The Worker does not read the inventory act at runtime. Do not seed the new
 index with retired rooms or old index rows.
 
-The final reader commit remains unbound until S4 lands and the actual last
-old `main` is known.
+The retired-format reader is commit
+`64112e4576b4c3c8fb668389786deb6b703da417`, named by
+[`RETIRED_ROOM_READER_COMMIT`](../packages/bytes/src/retired-room.ts).
 
 ## Roll back
 

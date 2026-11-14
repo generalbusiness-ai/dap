@@ -1,8 +1,8 @@
-// File-owned nonsecret ARTIFACTS_CONFIG binds the installed Register26 and the
-// dap-demo namespace; both installed roots stay available. No DEMO_START_CONFIG:
-// this Worker serves no start offer until the planner names the new register.
-// DEPLOYMENT and SESSION_SECRET remain
-// secrets; the deployment value is already public in /health.
+// File-owned register settings agree with the dap-demo Artifacts namespace.
+// register-values.mjs updates the primary and installed roots together. An
+// optional Start setting records the full reference and deployment identity.
+// DEPLOYMENT remains an operator-set secret binding, checked explicitly when
+// updating Start. SESSION_SECRET stays private.
 // Planner preserves this Worker's private namespaces, enforced index and limits.
 {
   "name": "dap-demo",
@@ -10,12 +10,13 @@
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
   "vars": {
+    "DEMO_START_CONFIG": "{\"v\":3,\"origin\":\"https://dap-demo.inguz.workers.dev\",\"deployment\":\"dap-demo\",\"definition\":\"platform:register@28\",\"register\":{\"scope\":\"sc_dtqcta4htibueaeycfficyanudk5cz3ssrsugho3qlznvrhw3jxq\",\"genesis\":\"sha256:e1d53ac5241fad1445bd8963abbaa6c844c2dcdeced0c2495d3778fa190870b0\"}}",
     "SCOPE_INDEX_MODE": "enforce",
     "PLATFORM_CREATION_PINS": "[\"platform:register@28\",\"platform:directory@27\",\"platform:membership@14\",\"platform:rules@15\",\"platform:destination@21\",\"platform:register@17\",\"platform:directory@16\",\"platform:membership@8\",\"platform:rules@10\",\"platform:destination@12\",\"platform:inbox@1\"]",
     "ARTIFACTS_NAMESPACE": "dap-demo",
-    "REGISTER_SCOPE": "sc_zm56yco5zyx7n3kx7e5jcxz55q5wp7y2lcuy2ialj7r7mzzcarjq",
-    "INSTALLED_REGISTER_SCOPES": "[\"sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq\",\"sc_zm56yco5zyx7n3kx7e5jcxz55q5wp7y2lcuy2ialj7r7mzzcarjq\"]",
-    "ARTIFACTS_CONFIG": "{\"registerScope\":\"sc_zm56yco5zyx7n3kx7e5jcxz55q5wp7y2lcuy2ialj7r7mzzcarjq\",\"namespace\":\"dap-demo\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}",
+    "REGISTER_SCOPE": "sc_dtqcta4htibueaeycfficyanudk5cz3ssrsugho3qlznvrhw3jxq",
+    "INSTALLED_REGISTER_SCOPES": "[\"sc_dtqcta4htibueaeycfficyanudk5cz3ssrsugho3qlznvrhw3jxq\"]",
+    "ARTIFACTS_CONFIG": "{\"registerScope\":\"sc_dtqcta4htibueaeycfficyanudk5cz3ssrsugho3qlznvrhw3jxq\",\"namespace\":\"dap-demo\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}",
     "APPLICATION_SCREEN_HOSTS": "[]",
     "APPLICATION_TRUST": "[{\"release\":\"sha256:71e10ca9499e926a4de1d8294ed83a772051dff677d8b1687bbd8e28e61802fa\",\"publisher\":\"key_gg4rXwy4v-kVqveN37_W_FW_-Wvsn3fgsal5z6gxfS0\",\"host\":\"github.com\"}]",
     "SERVING_CREATION_KEY_PER_HOUR": "10",

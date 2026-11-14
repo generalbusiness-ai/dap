@@ -1,0 +1,61 @@
+{
+  "qualification": "Cheap read-only documentation and Git checks after CUT-A gate/follow-up evidence filing. No compiler, test, gate, bundle or install ran. Final filing changes only the note and this manifest.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cut-a-doc-checks",
+  "checkpoint": {
+    "commit": "9b1a733ed5cd6c2e9dffb842016e7b095ddc8cc2",
+    "tree": "65300650861328a25497a537f2f1dc4609928bb8"
+  },
+  "fileCount": 10,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 728,
+      "sha256": "a4769a29628d23a6767c78db266f86ca7d09eebfa5142be2c39a24d836ff7ac0"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 587,
+      "sha256": "c0fb6ba877bce88f5a2efccb9576f49e2b579bdb25d6ab39840e332eef97e05f"
+    },
+    {
+      "path": "links.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "links.stdout",
+      "bytes": 36,
+      "sha256": "0b62886e12f396ee8cf60e4cfe3f4112ecc75879da8508427692a1367191bbc9"
+    },
+    {
+      "path": "messages.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "messages.stdout",
+      "bytes": 38,
+      "sha256": "2fe2fa15ac7bb6c4dbbe6ed404cb2d1a56d8c574b1f5ce311350bd0b24086f37"
+    },
+    {
+      "path": "notes.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "notes.stdout",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "whitespace.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "whitespace.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
