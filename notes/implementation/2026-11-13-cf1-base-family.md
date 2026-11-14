@@ -1,6 +1,6 @@
 # The base creation family
 
-CF-1 is plan `69fed843` v2, with the rulings `bccd8dd1` (Q1 to Q5), `68356c6c` (the seven choices), `7505fa96` (point 1), `710a5d76` (the ordinary version 2 package) and `96676b22` (celld, Commons and the archive rows). The head is cut from the cutover review head `9b583eb2`. Main is `64112e45`.
+CF-1 is plan `69fed843` v2, with the rulings `bccd8dd1` (Q1 to Q5), `68356c6c` (the seven choices), `7505fa96` (point 1), `710a5d76` (the ordinary version 2 package) and `96676b22` (celld, Commons and the archive rows). The head is cut from the cutover review head `9b583eb2`. The reviewed branch includes main `a200cd0a`. Gate attempt 3 ran at source checkpoint `4369fddf`; the later merge changes documents only.
 
 New rooms on every host now use one family, `base`:
 
@@ -69,3 +69,44 @@ The deliberate no answers:
 - The same file installs `apps/counter`, packed by `prepareApplicationDirectory` (the function behind `dap pack`), in a new base room. The root gets the version 1 marker, takes one `participate` act, and replays consistent with Rules, Directory, Destination and Membership.
 - `packages/scope/test/application-publication.test.ts` runs its device publication case on the base family, with the prefix `device/`.
 - `packages/scope/test/creation-versions.test.ts` checks the default policy with the base pins first.
+
+## Decisions after the source checkpoint
+
+TM-1 is the separate commit `51e88288e8`, carried from `e5ea09e2`. Planner ruling `67cafb4d` accepts list `59ea2b72` and three individual deadlines: residency 162 s, one thousand births `scaleDeadline(990000)`, and G15 capture 275 s. Shared timeouts and retry counts stay unchanged. The residency case needs 33 dense native births to fill 32 retained frames above 4 MiB, keep one physical read in flight, and reject the 33rd without more I/O. The thousand-birth case proves that a full Root funds all 1,000 native birth/seal handoffs across restarts and returns the final exhaustion refusal without creating child 1,001. A shorter successful sequence could retain the generic handoff invariant alongside the existing reservation and exhaustion witnesses, but would give up this exact production-cap claim. Any cut belongs to a separate request (`20d687fb`).
+
+Commit `3b3eb286` adopts twelve maintained parser seals: catalog vocabulary, version questions, version relations, scope demo creation, destination host, publication policy, client application install, CLI line, and command install's module, creation cohorts, selected register, and install selection.
+
+NF-7 ruling `bc826726` moves the Counter browser witness to NF-5 after CF-1 lands. CF-1 carries no NF-5 code or NF-7 witness. NF-5 must implement the Counter half, use the normal package installation path, and run all five NF-7 facts before its review.
+
+## Final evidence
+
+Gate attempt 3 passed at commit `4369fddf0d07f680c61a9dff12f557967545a3ce`, tree `da0bdbb8b4fe5721fe73a60dd314e6d7f7644501` (END `b5632597`). The [manifest](evidence/2026-11-13-cf1-base-family.manifest.json) lists all 43 sealed files in `~/play/artroom-evidence/2026-11-13-cf1-base-family-gate-attempt3`. `SHA256SUMS` has digest `cf8c9f21a96d7f006d407e88eec9f29f4c8bcc34f099ffc5a72c56ccea748e0a`. All 81 power samples report AC Power. START and END report power mode 0; the battery charges at END. No lane validation or landing overlaps the gate.
+
+All five test stages pass. Node: 173 passed. Counting: 56 passed. Plain: 399 files, 4,612 passed and one skipped. Native: 1,148 passed and two skipped. The raw-proof residency case takes 58.325 s, G15 capture 84.749 s, and one thousand births 251.260 s, from the final Native case records. Durations are observed case times, not worst-case guarantees.
+
+Attempts 1 and 2 remain failed records. Attempt 2 lost AC Power and supplies no evidence about the head (`72a74ae2`). Two later launch guards refused battery before npm started (`4879aaca`, `b24d0dab`); neither ran a gate. Attempt 3 is a fresh complete run.
+
+| Check | Command | Exit | Output and SHA256 |
+|---|---|---|---|
+| Gate | `npm run gate` | 0 | `gate.stdout`: `34991ebc50abebe8e3cc2424744d14afffbf6d3a07abb5634ea1cb795956fa1b` |
+| Whitespace | `git diff --check -B 6553a654` | 0 | `gate-internals/whitespace.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Commit messages | `node scripts/check-commit-messages.mjs 6553a654 HEAD` | 0 | `gate-internals/commit-messages.log`: `edec8687269239db614fab03a0ce2d5213e940359bb80591b0d8ad3835de6dcd` |
+| Commit-message witness | `node --test scripts/check-commit-messages.test.mjs` | 0 | `gate-internals/commit-test.log`: `1ee3c43b9138032bbd0f79ebba7cbec88cd0ddee4f98c49bbb386686c770985f` |
+| Shared helpers | `node scripts/check-shared-helpers.mjs` | 0 | `gate-internals/helpers.log`: `f8f462116d6bf13f12ca087aa4b16adf42075612a36e8aaa3439c49df97a2c37` |
+| Section citations | `node scripts/check-section-citations.mjs` | 0 | `gate-internals/citations.log`: `91f6403fb854808835422ac524889f1f1a0494ffc4fb66a52f9b42781e44d9ae` |
+| Citation witness | `node --test scripts/check-section-citations.test.mjs` | 0 | `gate-internals/cite-test.log`: `2ad630cb28efad8e2e2aa2103ac865d4177004fe38970be136c8626cb4e7911e` |
+| Document links | `node scripts/check-doc-links.mjs` | 0 | `gate-internals/doc-links.log`: `e738f746a19fabbb74101a21ca6e83400052cd0c46d58e10823059c8c7aa818b` |
+| Notes | `node scripts/check-notes.mjs 6553a654 HEAD` | 0 | `gate-internals/notes.log`: `35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1` |
+| Format | `npm run format:check` | 0 | `gate-internals/format.log`: `6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79` |
+| TypeScript | `npm run typecheck` | 0 | `gate-internals/typecheck.log`: `a9abf7e40e10fbda74447d08a5ea3b33733361ecd9ac199658065cfbc874936a` |
+| Definition pins | `node --import tsx scripts/check-definition-pins.mjs` | 0 | `gate-internals/def-pins.log`: `ea5a52da14bc57e92f814775df7b4b989b1ad5b930810625982942e19856f581` |
+| All test stages | `npm test -- --gate --defer-summary --evidence <gate-evidence>` | 0 | `gate-internals/test.log`: `3e0eb72efab9e7ce2aed85d67bb60ceddf3a7fde6a31ab1d31f358ac9d23071d` |
+
+The post-gate merge `8cd68d3e9b` has tree `bf166bf065d22f0e3c21b6e49235f7f4a333d1dd`. Its diff from the source checkpoint contains only 25 Markdown paths. It combines the base-family CLI wording with main's scope-ID and genesis corrections. Source, tests, configuration and dependencies match the gate checkpoint. The evidence commit adds only this note and its manifest. Reproduce the correspondence with `git diff --name-only 4369fddf HEAD`.
+
+## Open limits
+
+- NF-7 (`13ff61c7`, amended by `bc826726`) belongs to NF-5 after CF-1, including the real Counter browser witness.
+- Celld keeps its existing families and their Directory 20 archive fault. Rulings `96676b22` and `9658ed88` assign its move to base to later work.
+- The three extra Destination 21 archive value places remain as ruled in `9658ed88`; CF-1 rewrites no historical pin.
+- CDF-1 (`27cb5f60`, ruling `bb6cf92b`) must land before the cutover deployment. RB-1 (`0ce66e16`) owns the later item and rule-row ceilings and does not hold that deployment.
