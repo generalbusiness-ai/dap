@@ -1,0 +1,189 @@
+{
+  "qualification": "Only five root-granted cheap pre-gate checks; no tests/compiler/control/repro/generator/install/fullgate. Checked source b1d3b502; later note/manifest filing does not change runtime/test/config/dependency files. No full-gate result.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-c1-pre-gate-docs-attempt1",
+  "head": "b1d3b502e03b698c3d388108ce8825136b5a583d",
+  "tree": "39242a34d887e225388440cafc94c6b4d2f82840",
+  "file_count": 36,
+  "files": [
+    {
+      "path": "00-git-diff-check/command.json",
+      "bytes": 708,
+      "sha256": "d0218596523b88d9ca0494ab8557fe99e8ffd6dc1fa6a0b42d5f4bea66b4e889"
+    },
+    {
+      "path": "00-git-diff-check/result.json",
+      "bytes": 298,
+      "sha256": "f64fd638362a24b4d212ca61c7ebf781e38a461d8d783c6d7dc3677833bd3059"
+    },
+    {
+      "path": "00-git-diff-check/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "00-git-diff-check/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "00-git-diff-check/time.txt",
+      "bytes": 29,
+      "sha256": "e321fd66e43908c3ec255c752ac518d47c383da51140731add2e65b0adc7930d"
+    },
+    {
+      "path": "01-commit-messages/command.json",
+      "bytes": 739,
+      "sha256": "6a909dd2fc93d096060a02fac0df8b3456c6f40b7f91ac55ed87b4a530f13cf3"
+    },
+    {
+      "path": "01-commit-messages/result.json",
+      "bytes": 298,
+      "sha256": "cc891c83623f27709c072fbed989a8dc56a31e8673ccedfaed0a9c65126f9460"
+    },
+    {
+      "path": "01-commit-messages/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "01-commit-messages/stdout.log",
+      "bytes": 39,
+      "sha256": "4444466e8b15a91bb14a83c987a807c9fd40e5c3a788a23db225866d21aa0e94"
+    },
+    {
+      "path": "01-commit-messages/time.txt",
+      "bytes": 29,
+      "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e"
+    },
+    {
+      "path": "02-doc-links/command.json",
+      "bytes": 601,
+      "sha256": "1f108a7d5fcf6d1a132b3332d0079a2d8298d3c171d6bbe06374d8d9e100943d"
+    },
+    {
+      "path": "02-doc-links/result.json",
+      "bytes": 292,
+      "sha256": "094dae9f27fa641d03b204ef20b5b2141440309a516aa1f8d11fa8a9d8d6887f"
+    },
+    {
+      "path": "02-doc-links/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "02-doc-links/stdout.log",
+      "bytes": 36,
+      "sha256": "0b62886e12f396ee8cf60e4cfe3f4112ecc75879da8508427692a1367191bbc9"
+    },
+    {
+      "path": "02-doc-links/time.txt",
+      "bytes": 29,
+      "sha256": "42bbd5f82f23d8630fd588bd0df2d18199f7d8ab9f1215d1a9e3e4e5f855b59f"
+    },
+    {
+      "path": "03-note-inventory/command.json",
+      "bytes": 718,
+      "sha256": "157896352ab3f1b1d62e3a6bf0257fccf20012d773860d07e6b3ac540d1b8917"
+    },
+    {
+      "path": "03-note-inventory/result.json",
+      "bytes": 297,
+      "sha256": "65c9278f0e162967ee4279c9cf97f0e3b4b72f71d0f40502e95dbbfbda2bc482"
+    },
+    {
+      "path": "03-note-inventory/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "03-note-inventory/stdout.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "03-note-inventory/time.txt",
+      "bytes": 29,
+      "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
+    },
+    {
+      "path": "04-json-readonly/command.json",
+      "bytes": 597,
+      "sha256": "6851b8d7558222c96bcce3bfbe34a6a5b472b4163b67ffc71c10b9f06ae33433"
+    },
+    {
+      "path": "04-json-readonly/result.json",
+      "bytes": 288,
+      "sha256": "72c66fe83007b30a98443c4d5efabfdea0a001836dc68cb19a834327db93221b"
+    },
+    {
+      "path": "04-json-readonly/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "04-json-readonly/stdout.log",
+      "bytes": 66,
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    },
+    {
+      "path": "04-json-readonly/time.txt",
+      "bytes": 29,
+      "sha256": "ad6c358d4d4f604542a7d209182668a194e09324b0324709072baf28a286d4a5"
+    },
+    {
+      "path": "guards.jsonl",
+      "bytes": 2781,
+      "sha256": "987d0b8c2e8e507d80dbd6bff595088abb96af46b9e5e30b0b90047528c1f5d2"
+    },
+    {
+      "path": "idle-after.txt",
+      "bytes": 79824,
+      "sha256": "cf6209b0e4f4d31a64b9cd1725dc1c709c62deab4cab972057fb058c8a14cc18"
+    },
+    {
+      "path": "idle-before.txt",
+      "bytes": 79548,
+      "sha256": "21622e194813201bbb3a1a297547038116f8d2096464cbadc4585f61722c9f21"
+    },
+    {
+      "path": "init.json",
+      "bytes": 333,
+      "sha256": "0901d3df791ed88209b7855591f3d77a42e8f139c657540d0015c945cc13c559"
+    },
+    {
+      "path": "interval-result.json",
+      "bytes": 2385,
+      "sha256": "0fe194c19b5d5ebee5572c3cf5013b28fa20cbe6af06832ac039b9fda1b29e39"
+    },
+    {
+      "path": "power.jsonl",
+      "bytes": 11661,
+      "sha256": "7c24071eed28c30ef63ca79e4c8a406e9248da104996629a1ef850157acf0f6c"
+    },
+    {
+      "path": "reviewed-plan/commands.json",
+      "bytes": 1265,
+      "sha256": "df3a828570c330c2fcadfb216a587b3358d41e30929bcd03d6baab02aa024259"
+    },
+    {
+      "path": "reviewed-plan/focused-plan.json",
+      "bytes": 1001920,
+      "sha256": "d7a322d73a66cc2a707f600839b45d79449ea6d9474a88b74b00c6663b8e2c79"
+    },
+    {
+      "path": "supervisor.py",
+      "bytes": 5471,
+      "sha256": "86d53ffdf8f2e41b7e857c8e8dda95444757fcb74b9076cf8b743c98574e9296"
+    },
+    {
+      "path": "interval.manifest.json",
+      "bytes": 5750,
+      "sha256": "71646e0374716f07f17bcf757853b669fb453e6143d8ac84dc64d7f036cf2397"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 3199,
+      "sha256": "a8b72ffc79c06ec273bfaccd67009b459f7a717e6fda781014d6b29e7378811d"
+    }
+  ]
+}

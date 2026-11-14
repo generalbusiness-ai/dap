@@ -35,7 +35,7 @@ import type { ControlAction, ControlRequest, Digest, Head, KeyId, MemberId, Scop
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, isHead, isKeyId, isSequenceRef, keyIdOfSecret, parseStrict, scopeIdOf, sign, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/dap-bytes";
 import { TransportError, agentKeyInvitationOf, httpTransport, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
-import { CustodyError, Lost, identityId, meaningOf, type Envelope, type Identity, type CustodyRecord } from "@generalbusiness/dap-client";
+import { CustodyError, Lost, identityId, meaningOf, type Envelope, type Identity, type StoredCustodyRecord } from "@generalbusiness/dap-client";
 import { enrolledKeyItem, retirementBody } from "./hosted-retirement.ts";
 import { HttpGeneration, McpHttp, SESSIONS_MOST, SessionFull, type SessionRow } from "./http.ts";
 import type { McpConfig, Root } from "./inventory.ts";
@@ -1535,6 +1535,8 @@ export class HostedAgent {
     if (sentAt === null || sentAt < admissionAt) return answer(503, { error: "temporarily_unavailable" });
     admissionAt = sentAt;
     if ("lost" in kept) return answer(503, { error: "unresolved", op });
+    // The hosted agent never folds a record: a folded record has no answer to give here.
+    if ("folded" in kept) return answer(503, { error: "custody", rule: "unreadable" });
     if ("archivedSettlement" in kept) return answer(410, { error: "archived", op, archived: kept.archivedSettlement.archived,
       ...(kept.archivedSettlement.fact ? { fact: kept.archivedSettlement.fact } : {}), next: "Verify the original enrollment in its archive clone before continuing; do not sign or send a replacement request." });
     if (kept.answer.answer === "archived") return answer(410, { error: "archived", op, archived: kept.answer.archived, fact: kept.answer.fact,
@@ -1774,7 +1776,7 @@ export class HostedAgent {
           const revoke = parseStrict(kept) as SignedIntent;
           const identity: Identity = { service: row.config.service, membership: row.membership, signer: row.key, target: row.membership, key: `enrol:${row.op}` };
           if (!current()) return this.#cleanupStopped();
-          let record: CustodyRecord | null = null, unreadable = false;
+          let record: StoredCustodyRecord | null = null, unreadable = false;
           try { record = await sqliteStore(this.sql, this.ports.custodyBounds, this.ports.now).read(identityId(identity)); }
           catch { unreadable = true; reason = "revoke-unresolved"; }
           if (!current()) return this.#cleanupStopped();

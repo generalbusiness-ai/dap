@@ -290,6 +290,8 @@ export async function installApplication(handle: InstallHandle, custody: Custody
   }
   if ("lost" in kept) return refused({ refused: "lost", scope });
   if ("archivedSettlement" in kept) return { outcome: "archived", rules: room.rules, archivedSettlement: kept.archivedSettlement };
+  // An install never folds a record. A record that another client folded has no answer to project here.
+  if ("folded" in kept) throw new CustodyError({ held: "unreadable" });
   if (kept.answer.answer !== "accepted") return { outcome: "answered", rules: room.rules, answer: kept.answer, retained: kept.retained, phase: kept.record.phase };
   const receipt = kept.answer.receipt;
   if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return refused({ refused: "receipt" });
