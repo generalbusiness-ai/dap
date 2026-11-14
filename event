@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/derive/test/item-effects.test.ts","body":{"commit":"694a8c7f83deedb4e8d34706c51203029726121a","path":"packages/derive/test/item-effects.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:01af183f1fd462ece996760281d760bfe03a427c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-ie1-fg1-gate.manifest.json."}
