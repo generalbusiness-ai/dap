@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6e4fcc38d716cb66575117f270eef9088e9116ad","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-c1-post-gate-docs.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:843f07383d8ebd36c0f05c07f64b1d422c39480f","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/service.ts."}
