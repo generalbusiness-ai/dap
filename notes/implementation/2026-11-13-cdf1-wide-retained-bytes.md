@@ -138,3 +138,14 @@ these document changes.
 | Typecheck | `npm run typecheck` | 0 | `a9abf7e40e10fbda74447d08a5ea3b33733361ecd9ac199658065cfbc874936a` |
 | Definition pins | `node --import tsx scripts/check-definition-pins.mjs` | 0 | `bd28555b9a9732edeacecee13a09ed72181232fd1fe7359692cc19b8df544672` |
 | Tests | `npm test -- --gate --defer-summary --evidence "$test_evidence"` | 0 | `574182faa9111a2598456c8635b59f83b1f5b624364fd8310e59e2d546bb0489` |
+
+## Post-gate document checks
+
+The historical-audit qualification and gate evidence at `9c64eeb7` change three paths under `notes/`. All source, tests, configuration and dependencies equal gate checkpoint `01bbd802`. The [document-check manifest](evidence/2026-11-14-cdf1-doc-checks.manifest.json) seals these checks. This final commit adds only this note and that manifest.
+
+| Check | Command | Exit | Output SHA256 |
+|---|---|---|---|
+| whitespace | `git diff --check 01bbd802 9c64eeb7e2569549de212058238206b7f62e3236` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| doc-links | `node scripts/check-doc-links.mjs` | 0 | `e738f746a19fabbb74101a21ca6e83400052cd0c46d58e10823059c8c7aa818b` |
+| notes | `node scripts/check-notes.mjs 4cef11d2 9c64eeb7e2569549de212058238206b7f62e3236` | 0 | `35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1` |
+| commit-messages | `node scripts/check-commit-messages.mjs 01bbd802 9c64eeb7e2569549de212058238206b7f62e3236` | 0 | `e961aa82d898e3425096da8901160f918cd74166d8c76fd918aaac9c3386377d` |
