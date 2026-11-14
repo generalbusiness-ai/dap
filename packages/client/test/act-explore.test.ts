@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { DEVICE_COMMAND, type Effect, type ScopeRef } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Effect, type ScopeRef } from "@generalbusiness/dap-contract";
 import { textDigest } from "@generalbusiness/dap-bytes";
 import { bindActBasis } from "../src/act-basis.ts";
 import { actVersion } from "../src/act-version.ts";
@@ -7,6 +7,8 @@ import type { Act, Source } from "../src/act-types.ts";
 import { ActRecords } from "../src/act-records.ts";
 import { lowerActBasis, lowerActNames, type ActSymbols } from "../src/act-symbols.ts";
 import { shapeFieldsOf } from "../src/declared.ts";
+import { copyActState } from "../src/act-state.ts";
+import { fixedRowsOf, MemoryState, newItem, validateDefinition } from "@generalbusiness/dap-derive";
 import { clientNotes as notes } from "./definition-corpus-data.ts";
 
 test("binding preserves written text and symbolic names while capturing only missing subject revisions", () => {
@@ -41,6 +43,36 @@ test("binding preserves written text and symbolic names while capturing only mis
   expect(captured.act.expected).toEqual({ on: 3 });
   expect(captured.bound).toEqual([]);
   expect(lowerActBasis(notes.acts.write, subjects, lowered.on, lowered.fields, at, captured.act.expected, symbols)).toEqual({ on: 3 });
+});
+
+test("a private state copy rebuilds fixed equality and retains only recorded hash knowledge", () => {
+  const declaration = { ...notes, items: { note: { ...notes.items.note,
+    values: { ...notes.items.note.values, code: { fixed: true, required: false, default: 0, of: { type: "int", min: 0, max: 1 } } },
+  } } } as const satisfies DeclaredDefinition;
+  const checked = validateDefinition(declaration, PROPOSED_BOUNDS);
+  if (!checked.ok) throw new Error("the state-copy fixture definition is invalid");
+  const definition = checked.definition;
+  const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
+  const head = { seq: 3, hash: `sha256:${"b".repeat(64)}` as const };
+  // This component fixture supplies a state; real submission parity is a
+  // separate invariant. It creates no journal or signature for the copy.
+  const base = new MemoryState();
+  base.setScope({ at, kind: "lane", creator: null, status: "active", head, time: "2026-11-14T12:00:00Z",
+    genesis: { hash: at.genesis, source: null, n: null }, held: [] });
+  const item = newItem({ effect: "open", item: 3, type: "note", state: "kept" }, declaration.items.note, head.hash);
+  base.putItem(item);
+  base.addCount("note", "kept", 1);
+  base.putFixedHash(3, head.hash);
+  for (const fixed of fixedRowsOf(definition, item, at, seq => base.fixedHash(seq))) base.putFixed(fixed.row, fixed.dependencies);
+  base.finishFixed(definition.digest, at, head);
+  const copy = copyActState(base, definition);
+  expect(copy.view.fixedCount("note", "code", "0", ["kept"], "raw")).toBe(1);
+  expect(copy.view.fixedCount("note", "code", "0", ["kept"], "normalized")).toBe(1);
+  expect(copy.view.fixedReady(definition.digest, at, head)).toBe(true);
+  expect([copy.view.fixedHash(3), copy.view.fixedHash(4)]).toEqual([head.hash, null]);
+  copy.writer.putItem({ ...item, revision: 2 });
+  expect([base.item(3)?.revision, copy.view.item(3)?.revision]).toEqual([1, 2]);
+  expect(copy.view.scope()?.head).toEqual(head);
 });
 
 test("pending command records retain exact counts and guard only marked entry values", () => {
