@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0ade89aa7b9b0675751974629572df103ea372e0","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-13-state-seed.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:14e0efa835418ccd2ad620aa03ba43cc41863e04","text":"Merge retired a covered predecessor; the successor is at packages/client/test/scope-entry.test.ts."}
