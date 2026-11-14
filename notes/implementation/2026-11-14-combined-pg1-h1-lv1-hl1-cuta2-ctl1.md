@@ -1,9 +1,9 @@
 # Combined PG-1, H1, LV1, HL-1, CUT-A2, and CTL-1
 
 This note describes the current combined source and its remaining review
-obligations. The source checkpoint is
-`b6b746ef5c9b2190e6b9edf6bdf0637ce144d432`, tree
-`d0abc05189c9a5c6dde2e8832d87d7e8d04e7eae`, on
+obligations. The standing focused and failed attempt-1 checkpoint is
+`256673de947ae5c20dbeeb1ea388b1fc9111fe35`, tree
+`3fd950edc9de8d0a8cd037267a072aa3c30f0173`, on
 `builder/combined-pg1-h1-lv1-hl1-cuta2-ctl1-20261114`.
 The combined head starts from landed R2 main
 `189cf7b64a1501b307b9c73e96ee83641c3bd2de`.
@@ -11,8 +11,18 @@ The combined head starts from landed R2 main
 The integration carries 20 feature commits and excludes nine dependency
 merges from the part branches. Two later integration commits regenerate
 page assets and update unsigned presentation identifiers. This note adds
-documentation only. Formal validation of the combined source remains
-UNRUN. Development runs and scratch comparisons supply no evidence here.
+documentation only. The combined focused interval passed once. The first
+full gate failed; the repaired head passed the second gate.
+Exact-head review remains UNRUN. Development runs and scratch
+comparisons supply no evidence here.
+
+The repaired source checkpoint is
+`1c80cef3c7749f1c6220fbdc77ed85491b4c6502`, tree
+`9ed79ccfa477eb8d706c03e8b75f6bc6563816f6`. Gate attempt 2 passed
+at that clean checkpoint. The final documentation commit changes only
+this note. The filing act names its final commit and tree; the outside-notes
+diff from the gated checkpoint is empty. The standing focused pass and
+failed first gate remain separate records at the earlier checkpoint.
 
 ## Requests and promises
 
@@ -146,8 +156,9 @@ unchanged.
 `examples/repo-in-ai/vitest.config.ts`. That configuration selects
 `test/*.test.ts`, including the whole hosted-loop owner. The original
 timing and selection decision belong to the historical HL-1 record. The
-combined focused scope includes the whole hosted-loop owner; its current
-formal run and the gate remain UNRUN.
+combined focused scope includes the whole hosted-loop owner. Its focused
+run passed at that checkpoint. The first full gate failed, and the
+repaired combined head passed the second full gate.
 
 The Node inventory in `scripts/test.mjs` adds
 `apps/views/test/j5.test.mjs`, `apps/views/test/two-process.test.mjs`, and
@@ -170,7 +181,7 @@ escape cleanup. Pipe failure or early exit rejects pending requests,
 clears their timers, and retains bounded stderr diagnostics. The shared
 cleanup awaits both child closes before it closes HTTP or removes the
 home. This is a source change, not a claim that a run observed a leak or
-hang. The current whole Node owner remains UNRUN.
+hang. The current whole Node owner passed in the focused interval.
 
 Ruling `47c57403` chooses deletion of the unsupported demo Git host path.
 The head removes `scripts/demo-git-host.mjs`, its test, and its exclusion.
@@ -213,10 +224,11 @@ The owner covers missing, contradictory, repeated, and helper-only invalid
 choices; both modes with and without an installed list; file modes; and
 the existing validation and race refusals. The decisive old-default
 witness uses valid ordinary rotation arguments without either flag and
-expects refusal with no tracked change. One control must run that exact
+expects refusal with no tracked change. One control ran that exact
 witness against baseline `0ad4aa9102fe5f75b692d3adb30c8b00a6914574`.
-Its expected failure must reach the old widening behavior, rather than an
-import, compiler, or fixture error. That control remains UNRUN.
+The control reached the old widening behavior: the helper returned 0
+where the selected case required refusal exit 1. The exact baseline
+produced an ERR_ASSERTION, and the current source and mode were restored.
 
 ## CTL-1: promise assertions before display truncation
 
@@ -233,12 +245,12 @@ display limit. The owner also covers an ordinary thrown error, exact
 retention of inconclusive child output, Node assertion diagnostics, and a
 malformed diagnostic that cannot borrow the next failure's fields.
 These are helper-boundary witnesses, not Native evidence. All eight
-current Node cases remain formal obligations.
+current Node cases passed in the focused whole-owner run.
 
-Ruling `550d5ede05a0e33cc00f35e95fa167ce1e4662bf` holds CTL-1
-publication pending Hugh's permission. Local focused validation and the
-combined gate may proceed. No lane push may disable hooks, and this note
-does not authorize a retry or another route around the publication hold.
+Ruling `f45b355a8d4f2668412c28b6d32fdf13239b70cf` ends the CTL-1
+publication hold of `550d5ede`. Hugh answered, “Yes, builder can push.”
+Pushes still run with hooks enabled. This permission supplies no checker
+approval or landing decision.
 
 ## Integration with C1 and R2
 
@@ -251,17 +263,18 @@ test result.
 
 The integration resolved two generated-asset conflicts, then regenerated
 once after the source settled. Commit `b255df02d8` records the output of
-`node apps/room/page/scripts/assets.mjs`. The checker still owes the
-current generated-assets comparison. The earlier part generators and
-their manifests do not establish current correspondence.
+`node apps/room/page/scripts/assets.mjs`. The current assets owner passed
+in the focused interval. Exact-head checker review remains owed. The
+earlier part generators and their manifests do not establish current
+correspondence.
 
 Commit `b6b746ef5c9b2190e6b9edf6bdf0637ce144d432` changes only the
 presentation identifier in each unsigned 0.2 release-identifier file:
 `apps/counter/release-identifiers.json` and
 `examples/lending/release-identifiers.json`. The source decision follows
 the normal producer comparison. The scratch comparison is not formal
-reproduction evidence. The current R1 reproduction owner still owes an
-exact comparison of the combined source and committed identifiers.
+reproduction evidence. The current whole R1 reproduction owner passed
+its comparison of the combined source and committed identifiers.
 
 The current Grow subtree remains unchanged from landed R2 main. This
 combined head supplies no new packet, signature, publisher, deployment,
@@ -270,25 +283,111 @@ through R2 still follows NF-5 and the planner's release order.
 
 ## Current evidence and review obligations
 
-All rows below concern the current combined source. Earlier part notes
-and manifests remain historical at their named checkpoints. They do not
-turn any row here into a pass. This note records formal evidence once,
-after the combined interval, using actual commands, outputs, exits,
-source correspondence, and retained records. No current manifest or
-output digest exists in this note yet.
+Ruling `f45b355a8d4f2668412c28b6d32fdf13239b70cf` preserves the
+existing focused pass and replaces the filing requirements for this head.
+This note cites existing focused records directly. It adds no committed
+focused manifest, supervisor plan, seal, sleep supplement, or landing
+record. The old part records remain unchanged.
 
-| Obligation | Required boundary | Current result |
-|---|---|---|
-| Compiler closure | All 21 declared compiler contexts for the combined changes | UNRUN |
-| Plain owners | PG-1 prediction, H1 and LV1 forms and corpus, define builders, fold and replay, and other declared affected owners | UNRUN |
-| R1 reproduction | Whole normal reproduction owner against current combined source and the committed release identifiers | UNRUN |
-| HL-1 plain and inventory owners | Whole hosted-loop and selection owners, including the frozen version-questions boundary | UNRUN |
-| Native live creation | Whole live-creation owner, including live refusal without retained writes and the recorded comparison | UNRUN |
-| Node owners | Whole declared Node owners, including the newly enrolled views `j5`, views startup and awaited cleanup, register values, security entry points, and all eight CTL-1 cases | UNRUN |
-| CUT-A2 control | One missing-choice witness on exact baseline `0ad4aa9102fe5f75b692d3adb30c8b00a6914574`, with an actual invariant failure and preserved current source | UNRUN |
-| Generated assets | Current generator comparison against the combined tracked output | UNRUN |
-| Full gate | One maintained `npm run gate` on the frozen combined head, under the current workroom power and interval rules | UNRUN |
-| Exact-head review | Architecture, Security, Simplification, and the PG-1, H1, and LV1 kernel amendments, with gated-to-final source correspondence | UNRUN |
+`F` names `/Users/hughpyle/play/artroom-evidence/2026-11-14-combined-batch-focused-attempt1`.
+Focused START `4004a0fd448970dfcb3f063f73dc9d10781d803d` began at
+2026-11-14 15:13:54 UTC. END
+`d5e931269bb3841269558200915a6682843b4036` records 15:18:55 UTC.
+The five phases passed once, with the source restored after the control.
+Their existing raw histories stand under the new ruling.
+
+The first direct gate ran at the same clean source checkpoint under START
+`b904b1d1a1f69200a5973a7e423253d989aea02f`. END
+`b2128c8c9e004e8f46ac544de18b3b25f5fcf7d0` records exit 1 and
+250.89 seconds wall time. Its unchanged log is
+`/Users/hughpyle/play/artroom-evidence/2026-11-14-combined-batch-gate-attempt1/gate.log`.
+It records Node 197 pass, counting 56 pass, plain 2 fail with 4,713 pass
+and 1 skip, and Native unreached. The failed gate does not change the
+standing focused result or supply a full-gate pass.
+
+The failures are replay's unsupported-durability fixture and MCP's
+generated-module freshness comparison. LV1 intentionally admits the
+fixture's live version 1, so replay reaches `acts.tell.sends.0` instead of
+the old level refusal. H1's added order and input vocabulary also changes
+the MCP presentation generator's output.
+
+Rulings `a7e9e523b0cab38c85e713d5b0b59eb9d2a1eeda` and
+`0e2a40569856819d39c8d0dad66f8f8cbc0592d9` retain H1 and LV1 in
+the combined head. They authorize version 2 for both live and sequenced
+in the replay fixture, with the same title, case count, and exact genesis
+refusal assertions. They also authorize one run of `node packages/mcp/scripts/views.mjs` and its
+`packages/mcp/src/views/generated.ts` output. Commit
+`1c80cef3c7749f1c6220fbdc77ed85491b4c6502` contains exactly those
+two source changes. Four affected compiler contexts and both whole
+failed owners passed in development: 59 cases across two files. This
+development result supplies no full-gate verdict. START
+`f5f84996ac28ef3a768df047a115f78ff3f2b93e` began attempt 2 at
+2026-11-14 15:53:50 UTC. END
+`7460ab2208249b39c79debc60b78d6e611b31125` records actual exit 0
+and measured wall time 1,800.26 seconds. The shell returned timing
+separately, so the log ends with the actual gate-passed verdict. Attempt 2
+uses a new directory and does not overwrite or relabel attempt 1.
+
+`G` names `/Users/hughpyle/play/artroom-evidence/2026-11-14-combined-batch-gate-attempt2`.
+Its 7,156-byte `gate.log` starts with the tested head and tree and zero
+changed files. Kernel passed; Node passed 197; counting passed 56; plain
+passed 4,715 with 1 skip; Native passed 1,156 with 2 skips. The Native
+stage includes the existing scale tier. Its observed wall time was
+1,539,874.44 ms. All four terminal evidence states are complete and
+observed; the summary reports 129 unknown/suite observations and zero
+contradictory records. Each cited control output below is an exact copy
+of the standing focused output beside this gate log; the originals remain
+unchanged. No control was rerun for filing.
+
+Power is no condition of the gate or later runs under `f45b355a`.
+
+| Check | Command or retained command ledger | Result | Retained record | Record SHA-256 |
+|---|---|---|---|---|
+| Compatibility prerequisite | Recorded argv in `F/00-compatibility/command.json` | exit 0, verification 0 | `F/00-compatibility/stdout.log` | `e3e690aaacb7bd0d83c3ad86b3c01b488e3cf41e04e210d27ff5a5bcfb578272` |
+| 23 compiler contexts | Exact contexts and argv in `F/plain-owners/plan.json` and `result.json`; individual logs `compiler-00.log` through `compiler-22.log` | 23 exits 0 | `F/plain-owners/result.json` | `1db7813d4e7c04d304bec67258c16f022a9916ac9ad18d3f9369917f92f12d35` |
+| 14 whole plain owners | Recorded body argv in `F/plain-owners/result.json` | 2,094 pass; exact expected and observed identities agree | `F/plain-owners/coverage-ledger.json` | `fec032a218220030b440d059e22fce05d4967588d1ff98056b111bbfbe0f03b0` |
+| Native live-creation owner | Recorded body argv in `F/native-owner/result.json` | 1 pass; exact identity observed once | `F/native-owner/coverage-ledger.json` | `2aad83106d871dd27a105ae6e649bf28100d382b3b6e3d8320d645fe393e5c73` |
+| 8 whole Node owners | Recorded argv in `F/03-node-owners/command.json` | 48 actual runtime identities pass | `F/03-node-owners/node-case-check.json` | `8d573a601cbce6b9f4d159363b617f4cb99ca65fb0e9375e2ba903a521e14042` |
+| CUT-A2 exact-baseline control | Recorded argv in `F/04-cuta2-control/command.json` | DISTINGUISHES; helper exit 0; source and mode restored | `G/cuta2-control-result.json` | `caf84817a9b70b3875112646dc0b107a850b1a4349944844e30e31d71359a5e1` |
+| Control before | Existing retained child TAP | 1 selected case passes; total 1, skips 0 | `G/cuta2-before.tap` | `c5e992a879ac03a54f1b0035a8ad6e05dab2cd336d43cb0def9ce21e90f4cfca` |
+| Control exact baseline | Existing retained child TAP | 1 selected case fails by ERR_ASSERTION; actual 0, expected 1; total 1, skips 0 | `G/cuta2-baseline.tap` | `8825131554646a71a10f17907e77f6ade3c48078bb88bddc13f9647ca4146b21` |
+| Control helper output | Existing retained stderr | helper reports the named control and restored source | `G/cuta2-stderr.log` | `b7638a18ff7e429f25d3d857b873c1f6bf4224de8676f382046dfa992a298895` |
+| Focused outer interval | Five ordered commands and phase results in the retained record | all five actual exits 0 and verifications 0 | `F/interval-result.json` | `b09e76a05f8bc33ede264d01be2300d56765be43e109db11055ba655b1a88b6a` |
+| Gate attempt 1 | Direct `npm run gate` at `256673de` | FAILED: exit 1; wall 250.89 s; Node 197 pass; counting 56 pass; plain 2 fail, 4,713 pass, 1 skip; Native unreached | `/Users/hughpyle/play/artroom-evidence/2026-11-14-combined-batch-gate-attempt1/gate.log` | `1e868d3e98b87984b2f7f00c833628ad2057767cfba1a5a68000252cb4e1e0d4` |
+| Gate attempt 2 | Direct `npm run gate` at `1c80cef3` after the authorized repair | PASS: exit 0; wall 1,800.26 s; Node 197 pass; counting 56 pass; plain 4,715 pass, 1 skip; Native 1,156 pass, 2 skips | `G/gate.log` | `84a48c9147d2f004e9fbaf08e29dce94b6e3d071786ec5661c3aa2fb46ec7988` |
+| Exact-head review | Architecture, Security, Simplification, kernel amendments, and final source correspondence | UNRUN | No checker verdict | No digest |
+
+The plain whole-owner set includes R1's
+`packages/cli/test/application-release-reproduction.test.ts`, HL-1's
+`examples/repo-in-ai/test/hosted-loop.test.ts`, the frozen
+`packages/platform/test/version-questions.test.ts` boundary, and the
+current `apps/room/page/test/assets.test.ts` comparison. It also includes
+the PG-1, H1, LV1, define, program-structure, validator, and replay owners
+listed in the retained plan. The 2,094 count belongs to this focused set,
+not to a full gate.
+
+The Node runtime identities come from eight whole owners: views `j5` (6),
+views two-process (3), control (8), register values (11), security entry
+points (12), test phases (1), test selection (1), and test runner (6).
+Fixture-child CLI cases remain separate from those 48 public owner
+identities. All three views two-process cases and all eight CTL-1 cases
+passed. The control helper's ordinary thrown-error refusal remains part
+of that owning file.
+
+The one CUT-A2 control selects “no choice refuses a valid rotation and
+names both explicit choices.” The current implementation passes the
+single selected case. Exact baseline
+`0ad4aa9102fe5f75b692d3adb30c8b00a6914574` fails its actual assertion:
+returned exit 0, expected refusal exit 1. Before and after totals are both
+one, with zero skips. The retained cleanup-only helper preserves both
+child TAP streams. The original script, its mode, and clean Git status
+return after the comparison. This is one named control, not a sweep.
+
+Earlier part notes and manifests remain historical at their own source
+checkpoints. They supply no additional current pass claim. Development
+runs and scratch identifier comparisons remain outside formal evidence.
+The attempt-1 row records failure; attempt 2 records the repaired head
+and its actual full-gate pass. Exact-head review remains UNRUN.
 
 ## Open limits
 
@@ -305,10 +404,12 @@ rename requires an idle file and does not establish deployment. The
 control helper's classification does not by itself establish that any
 product test distinguishes its fault.
 
-Formal focused checks, the one baseline control, the full gate, generated
-asset correspondence, and exact-head checker review remain owed. A
-development checkpoint supplies none of those results. CTL-1 publication
-still needs Hugh's permission under `550d5ede`. Landing and any later
+The focused checks and the one baseline control passed at the named
+checkpoint. The first full gate failed. The narrow repair and its affected
+development checks passed, then the repaired head passed the second full
+gate. Exact-head checker review remains owed. The development checkpoint
+supplies no full-gate or review verdict. Hugh's
+push permission ends the CTL-1 publication hold. Landing and any later
 deployment remain planner decisions.
 
 ## Historical part records
