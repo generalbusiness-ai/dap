@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a43ef5b67cf3dfe7959b315c9cfbf697606aba46","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-ie1-fg1-postgate.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:beaebd0063d3bf9fa8aa9e6a3cd15c1104bddc1c","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/fold.ts."}
