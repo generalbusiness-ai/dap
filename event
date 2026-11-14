@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0cc3def6d43060b67f8ca66269631c9488c31f22","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/base-membership.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0e4c724d8633b6813963ba75f5c9481ce6fefb21","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-cdf1-doc-checks.manifest.json."}
