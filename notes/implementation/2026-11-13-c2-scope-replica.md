@@ -50,11 +50,11 @@ leaving the failed attempt and its controls intact. Planner ruling
 | --- | --- | --- |
 | Full gate attempt 2 | Exit 0; real 862.96 s; all stages passed | `~/play/artroom-evidence/2026-11-14-c2-lifecycle-gate-attempt2/gate.log`; `bb6aca159bb1d82b4d7450e3c782fa1cc5006f5c4c3f558e2b56a3efa333782e` |
 | Full gate attempt 1 | Exit 1; real 13.17 s; formatting failed, runtime stages unreached | `~/play/artroom-evidence/2026-11-14-c2-lifecycle-gate-attempt1/gate.log`; `4e46b896f97f32ec909c4c5a52f261f04fbcef4e8f97c6047adfe465409d365d` |
-| Client neutral, Node and test compiler contexts | Three exits 0 in prior ordinary DEV | `/private/tmp/artroom-c2-ordinary-dev-20261114/client-neutral.log`, `client-node.log`, `client-test.log`; each empty log has `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
-| Whole replica owner | 26 passed in prior ordinary DEV | `/private/tmp/artroom-c2-ordinary-dev-20261114/replica.log`; `44ef30701616490a36653ea66c9caf5cfc65be6219c33484708399c579d10743` |
-| Root-entry isolation owner | 1 passed in prior ordinary DEV | `/private/tmp/artroom-c2-ordinary-dev-20261114/scope-entry.log`; `963e1d2b70b70e980e4b064837a8898e3c436301f5e93e16f028708a298ac90b` |
-| Whole generated replica owner | 1 passed: all 400 fixed seeds of 80 steps; test body 17.51 s, Vitest total 18.65 s | `/private/tmp/artroom-c2-ordinary-dev-20261114/replica-generated.log`; `8c2c908952332f6f184d844d8be05dda45bdadcd7f1838224d06070493d85340` |
-| Whole public-release module owner | 5 passed in prior ordinary DEV | `/private/tmp/artroom-c2-ordinary-dev-20261114/public-release-modules.log`; `2fb32c274687e83df8cf510495e50fde0a5b6b76d8a985d7702a636dc925f0b2` |
+| Client neutral, Node and test compiler contexts | Three exits 0 in prior ordinary DEV | `~/play/artroom-evidence/2026-11-14-c2-lifecycle-gate-attempt2/dev/client-neutral.log`, `client-node.log`, `client-test.log`; each empty log has `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Whole replica owner | 26 passed in prior ordinary DEV | `~/play/artroom-evidence/2026-11-14-c2-lifecycle-gate-attempt2/dev/replica.log`; `44ef30701616490a36653ea66c9caf5cfc65be6219c33484708399c579d10743` |
+| Root-entry isolation owner | 1 passed in prior ordinary DEV | `~/play/artroom-evidence/2026-11-14-c2-lifecycle-gate-attempt2/dev/scope-entry.log`; `963e1d2b70b70e980e4b064837a8898e3c436301f5e93e16f028708a298ac90b` |
+| Whole generated replica owner | 1 passed: all 400 fixed seeds of 80 steps; test body 17.51 s, Vitest total 18.65 s | `~/play/artroom-evidence/2026-11-14-c2-lifecycle-gate-attempt2/dev/replica-generated.log`; `8c2c908952332f6f184d844d8be05dda45bdadcd7f1838224d06070493d85340` |
+| Whole public-release module owner | 5 passed in prior ordinary DEV | `~/play/artroom-evidence/2026-11-14-c2-lifecycle-gate-attempt2/dev/public-release-modules.log`; `2fb32c274687e83df8cf510495e50fde0a5b6b76d8a985d7702a636dc925f0b2` |
 | Synchronous observation ownership control | Baseline 26 passed; mutant 25 passed and 1 direct assertion failed; helper exit 0, real 3.12 s | `~/play/artroom-evidence/2026-11-14-c2-lifecycle-gate-attempt2/controls/observation-cancellation/helper.stderr`; `45f30a4f82646e277140c348fc0df048c4be41e8fb426ff89dd117edbeaf9f84` |
 | Read-owner handoff control | Baseline 26 passed; mutant 25 passed and 1 direct assertion failed; helper exit 0, real 5.28 s | `~/play/artroom-evidence/2026-11-14-c2-lifecycle-gate-attempt2/controls/read-handoff/helper.stderr`; `d88655ebf92dff3d38f80f3983cbaeb75a4b0bebcf5e6f4a4d0b2ee91cb58f78` |
 
@@ -106,6 +106,10 @@ the checkout was clean. Checkpoint `5c45c148` records the results.
 The attempt 2 control copy preserves all 1102 retained actual files and
 their modes byte-for-byte, including the cited logs and their unchanged
 hashes. The copy reruns nothing and adds no manifest or seal.
+The current table's DEV outputs are exact byte-and-mode copies of the
+eight original files from `/private/tmp/artroom-c2-ordinary-dev-20261114`,
+including compatibility output. The originals remain intact. Retention
+does not change their historical source, duration or result.
 
 Compatibility ran once before the controls. It reported `copied: false`
 and the same bundle hash before and after, `cd50d18a`; raw output is in
