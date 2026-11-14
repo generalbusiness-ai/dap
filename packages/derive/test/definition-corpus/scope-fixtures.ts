@@ -104,7 +104,7 @@ export const scopeFixtureDefinitions: readonly DefinitionCorpusRow[] = [
   ...native("Scope/compose whole desk", ["packages/scope/test/compose.test.ts#directory whole-scope"],
     () => scopeData(desk, composeWholeDeskChange({ digest: definitionDigest(ticket) }, { digest: definitionDigest(wholeTicket()) }))),
   ...([
-    ["kept commitment5000", "floor-kept.test.ts#definition", floorKeptChange],
+    ["kept commitment5000", "floor-kept-scale.test.ts#definition", floorKeptChange],
     ["monotonic references", "floor-monotonic.test.ts#definition", floorMonotonicChange],
     ["request receiver", "floor-requests.test.ts#receiverDefinition at both request witnesses", floorReceiverChange],
     ["request sender", "floor-requests.test.ts#senderDefinition at both request witnesses", floorSenderChange],
@@ -125,7 +125,7 @@ export const scopeFixtureDefinitions: readonly DefinitionCorpusRow[] = [
   ...native("Scope/declared publisher change", ["packages/scope/test/application-publication.test.ts#publisher"], () => structuredClone(scopePublisher)),
   ...native("Scope/publisher container", ["packages/scope/test/application-publication.test.ts#container"], () => publisherContainerData(definitionDigest(scopePublisher))),
   ...native("Scope/owned child", ["packages/scope/test/support/application-owned-scopes-fixture.ts#child", "packages/scope/test/creation-lineage.test.ts#ordinary child"], () => ownedScopeDefinition("test-owned-child")),
-  ...native("Scope/owned root", ["packages/scope/test/support/application-owned-scopes-fixture.ts#root label=test-owned-root version1 and version2", "packages/scope/test/application-owned-scopes.test.ts", "packages/scope/test/archive-installed.test.ts", "packages/scope/test/archive-mcp.test.ts", "packages/scope/test/creation-lineage.test.ts#ordinary root"],
+  ...native("Scope/owned root", ["packages/scope/test/support/application-owned-scopes-fixture.ts#root label=test-owned-root version1 and version2", "packages/scope/test/application-owned-scopes.test.ts", "packages/scope/test/archive-installed.fixture.ts", "packages/scope/test/archive-mcp.test.ts", "packages/scope/test/creation-lineage.test.ts#ordinary root"],
     () => ownedScopeDefinition("test-owned-root", definitionDigest(ownedScopeDefinition("test-owned-child")))),
   ...native("Scope/lineage device root", ["packages/scope/test/creation-lineage.test.ts#17-cohort root"], () => lineageDeviceRoot({ childId: definitionDigest(ownedScopeDefinition("test-owned-child")) })),
   ...lineageBudgetDefinitions(ownedScopeDefinition("test-owned-child")).flatMap((definition, index) => native(`Scope/lineage budget body ${index}`,

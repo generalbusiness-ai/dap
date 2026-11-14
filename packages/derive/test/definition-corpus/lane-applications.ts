@@ -14,7 +14,7 @@ const sourceDefinitions = [
   ["changeDemo", changeDemo, DEMO_DIGESTS.change], ["issueDemo", issueDemo, DEMO_DIGESTS.issue],
   ["change3", change3, MANIFEST_DIGESTS.change], ["changeDemo3", changeDemo3, MANIFEST_DIGESTS.demo],
 ] as const;
-const directoryOrigins = ["directory-partition-capacity.scope.test.ts", "directory-partition-success-capacity.scope.test.ts", "directory-partition-handoff.scope.test.ts"];
+const directoryOrigins = ["directory-partition-capacity-scale.scope.test.ts", "directory-partition-success-capacity.scope.test.ts", "directory-partition-handoff.scope.test.ts"];
 export const laneApplicationDefinitions: readonly DefinitionCorpusRow[] = [
   ...(["issue", "change"] as const).flatMap(name => Object.entries(laneShapeBounds[name]).map(([bound, value]) => ({
     name: `lanes/shape-bound/${name}/${bound}=${value}`,
@@ -30,7 +30,7 @@ export const laneApplicationDefinitions: readonly DefinitionCorpusRow[] = [
     declaration: () => structuredClone(declaration), bounds: PROPOSED_BOUNDS, expectedDigest })),
   { name: "lanes/fixture/office", origins: ["apps/room/lanes/test/support/graph.ts#officeDefinition"], declaration: () => structuredClone(officeDefinition), bounds: PROPOSED_BOUNDS },
   ...["cli-proposal-outcomes.test.ts", "manifest-tree.scope.test.ts"].map(file => ({ name: `lanes/custom-required/${file}`,
-    origins: [`apps/room/lanes/test/${file}#custom`], declaration: customRequiredChangeData, bounds: PROPOSED_BOUNDS })),
+    origins: [`apps/room/lanes/test/${file === "manifest-tree.scope.test.ts" ? "manifest-tree.scope.fixture.ts" : file}#custom`], declaration: customRequiredChangeData, bounds: PROPOSED_BOUNDS })),
   { name: "lanes/foreign-hold-change", origins: ["apps/room/lanes/test/support/foreign-hold-change.ts#experimentalForeignHoldChange", "apps/room/lanes/test/directory-partition-change.scope.test.ts#foreignChange"], declaration: () => structuredClone(experimentalForeignHoldChange), bounds: PROPOSED_BOUNDS },
   ...directoryOrigins.map(file => ({ name: `lanes/native-root/${file}`,
     origins: [`apps/room/lanes/test/${file}#validateDefinition`], declaration: () => structuredClone(platform(PARTITION_COHORT.directory)!.data),

@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 import { scopeScaleFiles } from "./vitest.scale-files.ts";
 import { scaleDeadlineFactor } from "./test/support/archive-scale-deadline.ts";
 
-// The four complete scale owners retain the original Worker, setup and limits.
+// All scale owners retain the original Worker, setup and limits.
 export default defineConfig({
   define: { __ARTROOM_SCALE_DEADLINE_FACTOR__: String(scaleDeadlineFactor(process.env["ARTROOM_SCALE_DEADLINE_FACTOR"])) },
   plugins: [cloudflareTest({ main: "./test/worker.ts", wrangler: { configPath: "./wrangler.test.jsonc" } })],

@@ -437,7 +437,7 @@ The `scope-scale` project follows `scope-denial` in its own Worker runtime.
 It keeps the original Scope Worker, wrangler configuration, both global setup
 entries, `isolate: false`, two-worker ceiling and thirty-second default.
 Every case keeps its real bounds and original explicit deadline locally.
-Its four complete owners contain six cases:
+The four original owners retain six cases:
 
 - `packages/scope/test/floor-archive.test.ts` (three cases, including the
   ten-input measurement that supplies no acceptance witness)
@@ -445,7 +445,31 @@ Its four complete owners contain six cases:
 - `packages/scope/test/archive-cadence.test.ts`
 - `apps/room/lanes/test/directory-partition-success-capacity.scope.test.ts`
 
-`npm test` includes all four native projects. `npm run test:scale` selects
+GS-1 adds exactly these sixteen cases in nine scale owners. The original
+mixed owners keep their other 39 cases ordinary. The shared
+`scopeScaleCaseCounts` inventory lists 13 owners and 22 cases; the scale
+report checks every owner's count and the complete total.
+
+| Scale owner | Cases | Boundary |
+|---|---:|---|
+| `packages/cli/test/fixed-slot-membership-scale.scope.test.ts` | 1 | Real 2000-member shipped-default whole-room verification |
+| `packages/scope/test/floor-kept-scale.test.ts` | 1 | Actual 4096-kept ceiling and refusal after it |
+| `apps/room/lanes/test/directory-partition-capacity-scale.scope.test.ts` | 1 | 1000 real generations and 3000 standing entries |
+| `apps/room/lanes/test/certified-rules-hardening-budget-scale.scope.test.ts` | 1 | Maximal capture and 32 actual proofs |
+| `packages/scope/test/archive-installed-scale.test.ts` | 2 | Linked production Grow producer and public archive-command follower |
+| `packages/scope/test/evidence-rules-real-scale.test.ts` | 4 | Landing reuse, published holds, actual TIME recovery and outcome ordering |
+| `apps/room/lanes/test/directory-partition-lanes-scale.scope.test.ts` | 2 | Dense 32-frame residency and cross-root/deep lineage |
+| `apps/room/lanes/test/manifest-tree-scale.scope.test.ts` | 2 | Both two-file reservation creation families |
+| `apps/room/lanes/test/demo-scale.scope.test.ts` | 2 | Optional manifest rehearsal on both provider stands |
+
+The [GS-1 note](../notes/implementation/2026-11-14-gs1-short-gate.md#native-cases-in-the-scale-tier)
+lists every exact case, measured R2 duration, smaller ordinary counterpart,
+and protected production path beside its tier. Existing smaller pure and
+Native witnesses retain their original boundaries; they do not become
+claims of full scale acceptance. The Grow producer/follower retain shared
+handoff state and order.
+
+`npm test` includes all five native projects. `npm run test:scale` selects
 only `scope-scale`. The review gate passes `--gate` to the fixed test owner,
 which reads the actual head, `origin/main`, their merge base and the complete
 changed-path list. Main always includes scale. A review includes it when a
@@ -475,21 +499,30 @@ outside these paths reports `scope-scale` as `omitted-by-gate`, with unknown
 duration, rather than as a passed, skipped or missing test project. Observed
 scale modules that contradict an omission fail the summary.
 
-The trigger list leaves out these shared inputs:
-`fixtures-native.ts`, `test/worker.ts`, `test/outside.ts`, the room test
-support, `sqlite.ts` and the rest of derive. The
-[main scale workflow](../.github/workflows/scale-tests.yml) runs the complete
-scale project after every push to main, including each landing, and catches
-changes through those shared inputs. A review outside the listed paths
-therefore establishes no scale result. The unchanged witness bodies retain
-their earlier acceptance meanings.
+GS-1 also selects the exact membership/CLI, SQLite/Operations, proof,
+capture/evidence, publication/checker and optional-demo production paths
+listed with the cases in the GS-1 note. The moved owners, their five
+shared fixtures and actual Native fixture paths select scale too. The
+Grow archive pair also selects its current Site/Room source declarations,
+exact check/demo input files, maintained application setup and package
+reader/codec; the note traces that actual TEST package boundary. Source
+selection witnesses retain unrelated-path omission and detect a protected
+path missing from this selection. These additions supersede the earlier
+omission of SQLite and the shared fixture paths now protected by a moved
+case.
+
+The [main scale workflow](../.github/workflows/scale-tests.yml) runs the
+complete scale project after every push to main. A review outside the
+listed paths establishes no scale result. The builder also starts one
+scale run when the slot is idle each sprint day and reports it in one act.
+No cadence run is claimed by this source checkpoint.
 
 The main scale workflow gives the slower GitHub runner a deadline factor
-of three. Only the main scale workflow sets
-`ARTROOM_SCALE_DEADLINE_FACTOR=3`; the local and review gates leave it
-unset and retain the original deadlines. The factor changes each case's
-harness allowance, including the thirty-second measurement. It changes
-no test body, entry count, bound, or assertion. The workflow allows ninety
+of three for the original archive owners that read `scaleDeadline`. Only
+the main scale workflow sets `ARTROOM_SCALE_DEADLINE_FACTOR=3`; local and
+review gates leave it unset. The newly moved cases retain their original
+explicit deadlines. The factor changes no test body, entry count, bound,
+or assertion. The workflow allows ninety
 minutes for the complete job.
 
 `scripts/scale-runner.mjs` writes full stdout, stderr, and the Vitest JSON
