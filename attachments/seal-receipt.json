@@ -1,0 +1,13 @@
+{
+  "sealedAt": "2026-11-14T12:31:38.465831+00:00",
+  "retainUntil": "2026-12-14T12:31:38.465831+00:00",
+  "minimumRetentionDays": 30,
+  "evidenceDirectory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-identifiers-attempt2",
+  "originalManifestSha256": "11f3f3381aa1df4b4f2be6e3d7fc9fb64d4585f159ab996c0464ba8d3ce1c18f",
+  "sha256SumsSha256": "4746b8d78256fa43b153e49d96dc0dd8f7ce2f554b405665dcf1ff2fde3c4ffd",
+  "payloadAndManifestFiles": 32,
+  "allEvidenceFilesIncludingSums": 33,
+  "qualification": "Preserve all attempt1 and attempt2 evidence; do not mutate sealed comparison records for later apply",
+  "verifiedReadOnlyFiles": 33,
+  "verifiedReadOnlyDirectories": 3
+}
