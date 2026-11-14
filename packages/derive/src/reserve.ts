@@ -106,7 +106,7 @@ export function heldReserved(view: StateView, definition: ValidDefinition): Amou
  * operations, which declare the closure of an outcome. With none, no
  * outcome is judged, so none has a closure.
  */
-export function owed(view: StateView, definition: ValidDefinition, head: Input, owners?: Owners | null): number {
+export function owed(view: StateView, definition: ValidDefinition, head: Pick<Input, "type">, owners?: Owners | null): number {
   return reserved(view, definition, head, owners).entries;
 }
 
@@ -115,7 +115,7 @@ export function owed(view: StateView, definition: ValidDefinition, head: Input, 
  * opted-in scopes keep the Amount components already declared by each task.
  * Complete producer terms and admission are separate from this projection.
  */
-export function reserved(view: StateView, definition: ValidDefinition, head: Input, owners?: Owners | null): Amount {
+export function reserved(view: StateView, definition: ValidDefinition, head: Pick<Input, "type">, owners?: Owners | null): Amount {
   const scope = view.scope();
   if (!scope) return NOTHING;
   const whole = definition.declared.capacity?.name === "whole-scope";

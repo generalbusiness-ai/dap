@@ -430,7 +430,9 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
     const pin = local ? pinOf(given.view, given.scope.at, given.intent) : pinOf(given.view, args["consumer"], args["intent"]);
     if (!pin || (local && (pin.state !== "provisional" || pin.values["commit"] !== args["commit"]))) return [];
     const admitted = pin.values["admitted"] ?? (local ? given.self : (args["manifest"] ?? null));
-    return [moved(pin, pin.state === "provisional" ? "held" : pin.state, { admitted })];
+    const record = moved(pin, pin.state === "provisional" ? "held" : pin.state, { admitted });
+    if (pin.values["admitted"] == null && local) given.markSelf?.(record, ["values", "admitted"]);
+    return [record];
   }
 
   /**
@@ -456,7 +458,10 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
     }
     const item = own(given.from ?? {}, "commit");
     const mine = item === undefined ? [] : records(given.view, "pin", ["held"], "commit", args["commit"]).filter((pin) => same(pin.key[0], given.scope.at) && pin.values["admitted"] === item);
-    return mine.length === 1 ? [moved(mine[0]!, "released", { released: "unpinned", by: given.self })] : [];
+    if (mine.length !== 1) return [];
+    const record = moved(mine[0]!, "released", { released: "unpinned", by: given.self });
+    given.markSelf?.(record, ["values", "by"]);
+    return [record];
   }
 
   /**

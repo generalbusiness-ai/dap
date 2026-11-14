@@ -520,6 +520,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
     const listed = new Set(declarationOf(j.definition).capabilities.map(c => `${c.name}@${c.version}`));
     const most = j.capabilities.maxima?.filter((m) => m.form === "workspace" && listed.has(m.capability)).reduce((n, m) => n + m.effects, 0);
     if (most !== undefined && derived.length > holds.length * most) throw new Error(`the workspace of ${holds.length} holds declares at most ${holds.length * most} effects, and it returned ${derived.length}`);
+    if (j.unavailableEntry && derived.some(effect => effect.effect === "record" || effect.effect === "operation")) j.unavailableEntry();
     effects.push(...derived);
     // The count of `counted` holds before an entry is derived. An entry that would still pass the bound is refused, by the
     // bound's name, and nothing is cut short. An entry that cannot be refused never reaches this: its opening was refused.

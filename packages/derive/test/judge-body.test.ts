@@ -1,7 +1,7 @@
 /** Real in-memory body/runtime judges. Fixture grants and platform rules are
  * explicit stand-ins; no native commit, membership service or transport runs. */
 import { expect, test } from "vitest";
-import type { ActType, Intent } from "@generalbusiness/dap-contract";
+import type { ActType, Effect, Intent } from "@generalbusiness/dap-contract";
 import { judgeActBody, type Capabilities } from "../src/index.ts";
 import { Scope, created, deskDefinition, grantOf, keys, laneDefinition, on, otherLane, t, valid, variant } from "./fixtures.ts";
 import { gateRules, gateWith } from "./fixtures-marks.ts";
@@ -92,6 +92,35 @@ test("a reached scope creation needs the real cause and returns no partial openi
   const before = scope.state.snapshot();
   expect(judgeActBody(scope.state, scope.definition, body, { ...scope.context(), actor: rita.key }))
     .toEqual({ result: "unavailable", reason: "unavailable", lacks: ["intent"] });
+  expect(scope.state.snapshot()).toBe(before);
+});
+
+test("item-only holds and empty workspaces remain supported while reached workspace records or operations stop the body", () => {
+  const scope = new Scope(laneDefinition);
+  const offered = scope.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
+  scope.did(rita, "assign", { ...on(scope, offered.seq), fields: { performer: keys.una.member } });
+  const body = { kind: "take-hold", on: null, fields: { commitment: offered.seq }, expected: { commitment: scope.item(offered.seq).revision } };
+  const context = { ...scope.context(), actor: keys.una.key }, before = scope.state.snapshot();
+  const itemOnly = judgeActBody(scope.state, scope.definition, body, context);
+  expect(itemOnly.result).toBe("write");
+  if (itemOnly.result !== "write") return expect.fail("the item hold must admit without a workspace");
+  const held = itemOnly.draft.effects.find(effect => effect.effect === "hold");
+  expect(held?.effect).toBe("hold");
+  if (!held || held.effect !== "hold") return expect.fail("the item hold must be derived");
+  let derived: readonly Effect[] = [];
+  // Scripted workspace output witnesses the real emission/admission boundary,
+  // not operation identifiers, external execution or workspace authority.
+  const capabilities: Capabilities = { implements: () => true, guard: () => true, effect: () => [], workspace: () => derived };
+  const withWorkspace = { ...context, capabilities };
+  const empty = judgeActBody(scope.state, scope.definition, body, withWorkspace);
+  expect(empty.result === "write" && empty.draft.effects).toEqual(itemOnly.draft.effects);
+  derived = [{ effect: "record", capability: "hold@1", kind: "fork", key: [held.item], state: "creating", values: {} }];
+  expect(judgeActBody(scope.state, scope.definition, body, withWorkspace)).toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
+  derived = [
+    { effect: "operation", k: 0, owner: "hold@1", kind: "fork", attempts: 1 },
+    { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null },
+  ];
+  expect(judgeActBody(scope.state, scope.definition, body, withWorkspace)).toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
   expect(scope.state.snapshot()).toBe(before);
 });
 

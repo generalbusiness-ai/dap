@@ -16,6 +16,8 @@ import type { Digest, Entry, FactRef, FactUse, Grant, Head, Input, Intent, KeyId
 import { intentDigest, isEffect, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import { withinCounts, type Drawn } from "./draws.ts";
+import { requestReservation } from "./request-duties.ts";
+import type { Amount } from "./held.ts";
 import { namedBody } from "./program/structure.ts";
 import { executeBody } from "./program/body.ts";
 import { declarationOf } from "./program/declaration.ts";
@@ -192,13 +194,15 @@ export function judgeActForReplay(view: StateView, definition: ValidDefinition, 
 }
 
 type ActBody = Pick<Intent, "kind" | "on" | "fields" | "expected">;
+type RecordSelfRef = { effect: number; path: readonly (string | number)[] };
+type EmittedRecordSelfRef = { effect: Extract<Draft["effects"][number], { effect: "record" }>; path: readonly (string | number)[] };
 type BodyJudgment = Refused | Unjudged | { result: "due"; next: Due }
-  | { result: "unavailable"; reason: "unavailable"; lacks: readonly ["intent"] }
+  | { result: "unavailable"; reason: "unavailable"; lacks: readonly ["intent" | "entry"] }
   | { result: "write"; draft: Omit<Draft, "input">; authority: readonly Grant[];
       presented: Readonly<Record<string, FactRef>>; observed: readonly ObservationUse[];
-      signer: Signer | null; selfRefs: readonly number[] };
+      signer: Signer | null; selfRefs: readonly number[]; recordRefs: readonly RecordSelfRef[] };
 type ExploredBodyJudgment = Exclude<BodyJudgment, { result: "write" }>
-  | (Extract<BodyJudgment, { result: "write" }> & { drawn: Drawn });
+  | (Extract<BodyJudgment, { result: "write" }> & { drawn: Drawn; requestReservations: ReadonlyMap<number, Amount> });
 interface ActBodyFrame {
   actor: KeyId;
   signed?: SignedIntent;
@@ -206,29 +210,40 @@ interface ActBodyFrame {
   plan: boolean;
   unavailableIntent?: () => never;
   selfRefs?: number[];
+  recordRefs?: EmittedRecordSelfRef[];
+  unavailableEntry?: () => never;
 }
 
 /** The same body as a recorded act, without signature, key or lifetime checks.
  * A reached need for its absent signed input leaves no partial consequences. */
 export function judgeActBody(view: StateView, definition: ValidDefinition, body: Pick<Intent, "kind" | "on" | "fields" | "expected">, context: JudgeContext & { actor: KeyId }): ExploredBodyJudgment {
-  let missingIntent = false;
+  let missing: "intent" | "entry" | null = null;
   const selfRefs: number[] = [];
+  const recordRefs: EmittedRecordSelfRef[] = [];
   let drawn: Drawn | undefined;
   const unavailableIntent = (): never => {
-    missingIntent = true;
+    missing ??= "intent";
     throw new RuleFault("the body needs its absent signed intent");
+  };
+  const unavailableEntry = (): never => {
+    missing ??= "entry";
+    throw new RuleFault("the body needs an unsupported entry symbol");
   };
   const answer = withinCounts(view, definition, unjudged(() => {
     const scope = view.scope();
     if (!scope) return { result: "unavailable", reason: "unavailable" } as const;
     const verified = verifiedContext(context, { body, actor: context.actor });
     return actBodyJudged(view, definition, body, verified, scope,
-      { actor: context.actor, plan: false, unavailableIntent, selfRefs });
+      { actor: context.actor, plan: false, unavailableIntent, selfRefs, recordRefs, unavailableEntry });
   }), body, counts => { drawn = counts; });
-  if (missingIntent) return { result: "unavailable", reason: "unavailable", lacks: ["intent"] };
+  if (missing) return { result: "unavailable", reason: "unavailable", lacks: [missing] };
   if (answer.result === "write") {
     if (!drawn) throw new TypeError("the admitted body has no derived count result");
-    return { ...answer, drawn };
+    const requestReservations = new Map<number, Amount>();
+    if (definition.declared.capacity?.name === "whole-scope") for (const send of answer.draft.sends) {
+      if (send.message.class === "request") requestReservations.set(send.n, requestReservation(definition, { body, sends: answer.draft.sends }, send.n));
+    }
+    return { ...answer, drawn, requestReservations };
   }
   return answer;
 }
@@ -447,6 +462,8 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
     platform: context.platform, judged: judged ? { ...judged, grant: granted } : undefined, ran: clocked, beside,
     ...(frame.unavailableIntent ? { unavailableIntent: frame.unavailableIntent } : {}),
     ...(frame.selfRefs ? { selfRef: (index: number) => { frame.selfRefs!.push(index); } } : {}),
+    ...(frame.recordRefs ? { recordSelfRef: (effect: EmittedRecordSelfRef["effect"], path: EmittedRecordSelfRef["path"]) => { frame.recordRefs!.push({ effect, path }); } } : {}),
+    ...(frame.unavailableEntry ? { unavailableEntry: frame.unavailableEntry } : {}),
   };
 
   // Guards, then effects, then sends, then the bound on the type it opens, as for a handler. The cause of a scope it creates is the intent's digest.
@@ -464,9 +481,14 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
   // ascending order of `read.n`, and the member is left out when it retains none. Section 6.2: a value that a rule read is kept
   // with the entry, and is in no entry.
   const retained = retainedOf(beside);
+  const recordRefs = (frame.recordRefs ?? []).map(mark => {
+    const effect = ran.effects.indexOf(mark.effect);
+    if (effect < 0) throw new TypeError("the marked capability record was not emitted");
+    return { effect, path: mark.path };
+  });
   return { result: "write", draft: { uses, prepared: ran.prepared, effects: ran.effects, sends: ran.sends, judgesTime, settles: ran.settles, ...(retained.values.length > 0 ? { values: retained.values } : {}), ...(settled ? { rows: settled } : {}) },
     authority: granted ? [granted] : [], presented: shown.fields as Record<string, FactRef>, observed: retained.observed,
-    signer, selfRefs: frame.selfRefs ?? [] };
+    signer, selfRefs: frame.selfRefs ?? [], recordRefs };
 }
 
 /**

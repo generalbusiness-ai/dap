@@ -15,7 +15,7 @@
  * cannot derive does not judge the input.
  */
 
-import { CAPABILITIES } from "@generalbusiness/dap-contract";
+import { CAPABILITIES, DEVICE_COMMAND } from "@generalbusiness/dap-contract";
 import type { Bounds, Capability, CapabilityName, DeclaredDefinition, Effect, FieldValue, Guard, Digest, ScopeKind, ScopeRef, SequenceRef, UnavailableReason } from "@generalbusiness/dap-contract";
 import type { Fetched, GuardResult, Judging } from "./guards.ts";
 import type { Underived } from "./validate/capability.ts";
@@ -73,6 +73,8 @@ export type CapabilityGiven = Pick<Judging, "view" | "definition" | "scope" | "s
   from?: Readonly<Record<string, number>>;
   /** Bound slot subjects as preceding ordinary effects left them. */
   fromItems?: Readonly<Record<string, Item>>;
+  /** Internal body-only marker for a returned record position written from `self`. */
+  markSelf?: ((record: Recorded, path: readonly (string | number)[]) => void) | undefined;
 };
 
 /**
@@ -299,6 +301,8 @@ export function capabilityEffect(j: Judging, plan: CapabilityEffectPlan, item: I
   const reading: CapabilityGiven = j.unavailableIntent
     ? Object.assign(Object.create(Object.getPrototypeOf(base), Object.getOwnPropertyDescriptors(base)), details)
     : { ...base, ...details };
+  const selfMarks: { record: Recorded; path: readonly (string | number)[] }[] = [];
+  if (j.recordSelfRef) reading.markSelf = (record, path) => { selfMarks.push({ record, path: [...path] }); };
   const made = matched.rules.deriveEffect ? observeCapabilityCall(j.definition, "deriveEffect", matched.version, plan.action, () => matched.rules.deriveEffect!(matched.version, plan.action, args, reading))
     : observeCapabilityCall(j.definition, "effect", matched.version, plan.action, () => matched.rules.effect(matched.version, plan.action, args, reading));
   if ("unavailable" in made) return "unavailable";
@@ -310,7 +314,15 @@ export function capabilityEffect(j: Judging, plan: CapabilityEffectPlan, item: I
   const recorded = records.map((r): Extract<Effect, { effect: "record" }> => {
     const kind = own(matched.declared.records, r.kind);
     if (!kind?.states.includes(r.state)) throw new Error(`${matched.version} declares no record ${r.kind} with the state ${r.state}`);
-    return { effect: "record", capability: matched.version, kind: r.kind, key: r.key, state: r.state, values: r.values };
+    const effect: Extract<Effect, { effect: "record" }> = { effect: "record", capability: matched.version, kind: r.kind, key: r.key, state: r.state, values: r.values };
+    for (const mark of selfMarks) if (mark.record === r) {
+      if (matched.version !== DEVICE_COMMAND) {
+        j.unavailableEntry?.();
+        throw new TypeError("the body cannot symbolize this capability's record");
+      }
+      j.recordSelfRef?.(effect, mark.path);
+    }
+    return effect;
   });
   return [...recorded, ...capabilityItemEffects(j.view, j.definition, matched.version, items, j.self, j.kind, j.bounds)];
 }
