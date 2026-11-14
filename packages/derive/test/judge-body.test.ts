@@ -2,7 +2,7 @@
  * explicit stand-ins; no native commit, membership service or transport runs. */
 import { expect, test } from "vitest";
 import type { ActType, Intent } from "@generalbusiness/dap-contract";
-import { judgeActBody } from "../src/index.ts";
+import { judgeActBody, type Capabilities } from "../src/index.ts";
 import { Scope, created, deskDefinition, grantOf, keys, laneDefinition, on, otherLane, t, valid, variant } from "./fixtures.ts";
 import { gateRules, gateWith } from "./fixtures-marks.ts";
 import { Works, changed, works } from "./fixtures-holds.ts";
@@ -53,6 +53,37 @@ test("only a reached intent read stops a body and exposes no earlier partial eff
   expect(skipped.draft.effects).toEqual([{ effect: "value", item: 0, slot: "marker", value: 1 }]);
   expect(judgeActBody(scope.state, definition, { ...body, fields: { run: true } }, context))
     .toEqual({ result: "unavailable", reason: "unavailable", lacks: ["intent"] });
+  expect(scope.state.snapshot()).toBe(before);
+});
+
+test("primitive capability intent stays lazy through the effect context copy and stops only on the reached read", () => {
+  const definition = variant(deskDefinition.declared, data => {
+    data.capabilities = [{ name: "device-command", version: 1 }];
+    data.acts.probe = act({ step: "transition", on: "repo",
+      guards: [{ capability: { name: "device-command", guard: "allowed", with: { kind: { const: "fan" } } } }],
+      effects: [{ capability: { name: "device-command", do: "open", with: { device: { const: "fan" } } } }],
+    });
+  });
+  const scope = created(definition), before = scope.state.snapshot();
+  const body = { kind: "probe", on: 0, fields: {}, expected: { on: scope.item(0).revision } };
+  let readAt: "none" | "guard" | "effect" = "none";
+  const visited: string[] = [];
+  // Scripted primitive rules witness the actual given/copy boundary, not
+  // device-command authority or command records.
+  const capabilities: Capabilities = {
+    implements: () => true,
+    guard(_capability, _guard, _args, given) { visited.push("guard"); if (readAt === "guard") void given.intent; return true; },
+    effect(_capability, _effect, _args, given) { visited.push("effect"); if (readAt === "effect") void given.intent; return []; },
+  };
+  const context = { ...scope.context(), actor: rita.key, capabilities };
+  expect(judgeActBody(scope.state, definition, body, context).result).toBe("write");
+  expect(visited.splice(0)).toEqual(["guard", "effect"]);
+  readAt = "guard";
+  expect(judgeActBody(scope.state, definition, body, context)).toEqual({ result: "unavailable", reason: "unavailable", lacks: ["intent"] });
+  expect(visited.splice(0)).toEqual(["guard"]);
+  readAt = "effect";
+  expect(judgeActBody(scope.state, definition, body, context)).toEqual({ result: "unavailable", reason: "unavailable", lacks: ["intent"] });
+  expect(visited).toEqual(["guard", "effect"]);
   expect(scope.state.snapshot()).toBe(before);
 });
 

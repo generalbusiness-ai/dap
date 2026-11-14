@@ -192,7 +192,7 @@ export function counted(definition: ValidDefinition, capabilities: Capabilities 
   return null;
 }
 
-const given = ({ view, definition, scope, self, kind, fields, signer, intent, facts, source, own, snapshot, clock, judged }: Judging): CapabilityGiven => {
+const given = ({ view, definition, scope, self, kind, fields, signer, intent, facts, source, own, snapshot, clock, judged, unavailableIntent }: Judging): CapabilityGiven => {
   const verified = new Map<Digest, Fetched>();
   for (const [hash, copy] of facts) if (copy.mode === "verified" && matchesCopy(copy, copyFact(copy))) verified.set(hash, copy.value);
   const verifiedSource = source?.mode === "verified" && matchesCopy(source, copyFact(source)) ? source.value : undefined;
@@ -200,7 +200,11 @@ const given = ({ view, definition, scope, self, kind, fields, signer, intent, fa
   const sourceKind = judged?.type === "delivery" || judged?.type === "genesis" ? judged.sourceKind : null;
   const kindContext = Object.freeze({ source: fact && sourceKind ? Object.freeze({ at: Object.freeze({ ...fact.at }), kind: sourceKind }) : null,
     declared: Object.freeze({}) });
-  return { view, definition, scope, self, kind, fields, signer, intent, facts: verified, source: verifiedSource, kindContext, own, snapshot, clock };
+  const value: CapabilityGiven = { view, definition, scope, self, kind, fields, signer, intent, facts: verified, source: verifiedSource, kindContext, own, snapshot, clock };
+  if (unavailableIntent) Object.defineProperty(value, "intent", {
+    enumerable: true, configurable: true, get: () => intent ?? unavailableIntent(),
+  });
+  return value;
 };
 
 /** What a capability version declares, or undefined for a version that the contract's tables do not have. */
@@ -289,7 +293,12 @@ export function capabilityEffect(j: Judging, plan: CapabilityEffectPlan, item: I
     read.op === "field" && read.projection === null && read.baseType.kind === "declared" && read.baseType.type.type === "scope"
       ? [[arg, read.baseType.type.kind]] : []) : []);
   const base = given(j);
-  const reading = { ...base, from, fromItems, kindContext: Object.freeze({ source: base.kindContext.source, declared: Object.freeze(declared) }) };
+  const details = { from, fromItems, kindContext: Object.freeze({ source: base.kindContext.source, declared: Object.freeze(declared) }) };
+  // Body-only intent stays lazy: spreading its getter would read it even
+  // when the capability's actual branch never needs the signed input.
+  const reading: CapabilityGiven = j.unavailableIntent
+    ? Object.assign(Object.create(Object.getPrototypeOf(base), Object.getOwnPropertyDescriptors(base)), details)
+    : { ...base, ...details };
   const made = matched.rules.deriveEffect ? observeCapabilityCall(j.definition, "deriveEffect", matched.version, plan.action, () => matched.rules.deriveEffect!(matched.version, plan.action, args, reading))
     : observeCapabilityCall(j.definition, "effect", matched.version, plan.action, () => matched.rules.effect(matched.version, plan.action, args, reading));
   if ("unavailable" in made) return "unavailable";
