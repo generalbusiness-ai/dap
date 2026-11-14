@@ -300,7 +300,10 @@ function deathIn(outcomes: readonly StoredOutcome[]): CustodySigning["dead"] {
       const answer = outcome["answer"];
       if (!isRecord(answer) || typeof answer["answer"] !== "string") throw new CustodyError({ held: "unreadable" });
       if (answer["answer"] === "refused") {
-        if (typeof answer["reason"] !== "string" || !isHead(answer["judgedAt"])) throw new CustodyError({ held: "unreadable" });
+        const named = Object.hasOwn(answer, "name");
+        const refusalShape = Object.keys(answer).length === (named ? 4 : 3) && ["answer", "reason", "judgedAt"].every(key => Object.hasOwn(answer, key))
+          && typeof answer["reason"] === "string" && isHead(answer["judgedAt"]) && (!named || typeof answer["name"] === "string");
+        if (!refusalShape) throw new CustodyError({ held: "unreadable" });
         const found = deathOf(answer as unknown as Answer);
         if (found) death = found;
       } else if (!["accepted", "archived", "unavailable", "mismatch"].includes(answer["answer"])) throw new CustodyError({ held: "unreadable" });

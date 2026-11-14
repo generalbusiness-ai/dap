@@ -67,16 +67,26 @@ describe("custody record version 2 holds the signings of one request", { timeout
     const v1 = JSON.parse(readFileSync(new URL("./fixtures/custody-record-v1.json.txt", import.meta.url), "utf8")) as CustodyRecordV1;
     const s = scene(), id = identityId(v1.identity);
     const loss = { at: v1.updated, attempt: 2, lost: true } as const;
-    const legacy: CustodyRecordV1 = { ...v1, phase: "unknown", attempt: 2, count: 66, outcomes: Array.from({ length: 64 }, () => ({ ...loss })) };
+    // This ordinary act has no preparation steps that independently forbid resigning.
+    const legacy: CustodyRecordV1 = { ...v1, steps: {}, phase: "unknown", attempt: 2, count: 130, outcomes: Array.from({ length: 64 }, () => ({ ...loss })) };
     s.store.records.set(id, canonicalize(legacy));
-    await s.store.segment(id, 0, [{ at: v1.created, attempt: 1, answer: refusedFor("scope-refused") }, loss]);
+    await s.store.segment(id, 0, [...Array.from({ length: 64 }, () => ({ at: v1.created, attempt: 1, lost: true as const })),
+      { at: v1.created, attempt: 1, answer: refusedFor("scope-refused") }, loss]);
+    const slices: [number, number][] = [];
+    const custody = new Custody({ ...s.store, segmented: (name, from, limit) => {
+      slices.push([from, limit]);
+      return s.store.segmented(name, from, limit);
+    } }, () => timeOf(s.at()));
     expect(Date.parse(v1.envelope.signed.intent.notAfter)).toBeGreaterThan(s.at());
 
-    const read = (await s.custody.find(v1.identity))!;
+    const read = (await custody.find(v1.identity))!;
+    expect(slices).toEqual([[0, 64], [64, 2]]);
     expect([read.signings[0]!.dead, s.custody.dead(read.signings[0]!), read.outcomes.every(o => "lost" in o)])
       .toEqual(["never", true, true]);
     expect(JSON.parse(s.store.records.get(id)!).v).toBe(1);
-    const next = await s.custody.send(v1.identity, meaningOf("replacement"), s.build(v1.identity.key, "replacement"), async e => {
+    // A valid optional guard name preserves the same death on the next read.
+    await s.store.segment(id, 64, [{ at: v1.created, attempt: 1, answer: { answer: "refused", reason: "scope-refused", judgedAt: head, name: "TEST legacy guard" } }, loss]);
+    const next = await custody.send(v1.identity, meaningOf("replacement"), s.build(v1.identity.key, "replacement"), async e => {
       s.sent.push(e.signed);
       return refusedFor("scope-refused");
     }, { notAfter, resign: true });
@@ -99,6 +109,47 @@ describe("custody record version 2 holds the signings of one request", { timeout
         throw Error("must not send");
       }, { notAfter, resign: true })).rejects.toMatchObject({ why: { held: "unreadable" } });
       expect([s.builds(), s.sent.length, s.store.records.get(id)]).toEqual([0, 0, canonicalize(legacy)]);
+    }
+  });
+
+  test("a version 1 truncated final outcome slice refuses a new signing", async () => {
+    const v1 = JSON.parse(readFileSync(new URL("./fixtures/custody-record-v1.json.txt", import.meta.url), "utf8")) as CustodyRecordV1;
+    const s = scene(), id = identityId(v1.identity), slices: [number, number][] = [];
+    const loss = { at: v1.updated, attempt: 2, lost: true } as const;
+    const legacy: CustodyRecordV1 = { ...v1, steps: {}, phase: "unknown", attempt: 2, count: 130, outcomes: Array.from({ length: 64 }, () => ({ ...loss })) };
+    const stored = canonicalize(legacy);
+    s.store.records.set(id, stored);
+    const custody = new Custody({ ...s.store, segmented: async (_name, from, limit) => {
+      slices.push([from, limit]);
+      return from === 0 ? Array.from({ length: 64 }, () => ({ at: v1.created, attempt: 1, lost: true as const }))
+        : [{ at: v1.created, attempt: 1, answer: refusedFor("scope-refused") }];
+    } }, () => timeOf(s.at()));
+    await expect(custody.send(v1.identity, meaningOf("replacement"), s.build(v1.identity.key, "replacement"), async e => {
+      s.sent.push(e.signed);
+      return refusedFor("scope-refused");
+    }, { notAfter, resign: true })).rejects.toMatchObject({ why: { held: "unreadable" } });
+    expect(slices).toEqual([[0, 64], [64, 2]]);
+    expect([s.builds(), s.sent.length, s.store.records.get(id)]).toEqual([0, 0, stored]);
+  });
+
+  test("a version 1 malformed refusal cannot authorize a replacement signing", async () => {
+    const v1 = JSON.parse(readFileSync(new URL("./fixtures/custody-record-v1.json.txt", import.meta.url), "utf8")) as CustodyRecordV1;
+    for (const extra of [{ name: 123 }, { unexpected: true }, { name: undefined }]) {
+      const s = scene(), id = identityId(v1.identity);
+      const loss = { at: v1.updated, attempt: 2, lost: true } as const;
+      const legacy: CustodyRecordV1 = { ...v1, steps: {}, phase: "unknown", attempt: 2, count: 2, outcomes: [loss] };
+      const stored = canonicalize(legacy);
+      s.store.records.set(id, stored);
+      // This store read supplies malformed data, including an own undefined
+      // optional field that canonical storage itself cannot write.
+      const custody = new Custody({ ...s.store, segmented: async () => [{ at: v1.created, attempt: 1,
+        answer: { ...refusedFor("scope-refused"), ...extra } } as never] }, () => timeOf(s.at()));
+      expect(Date.parse(v1.envelope.signed.intent.notAfter)).toBeGreaterThan(s.at());
+      await expect(custody.send(v1.identity, meaningOf("replacement"), s.build(v1.identity.key, "replacement"), async e => {
+        s.sent.push(e.signed);
+        return refusedFor("scope-refused");
+      }, { notAfter, resign: true })).rejects.toMatchObject({ why: { held: "unreadable" } });
+      expect([s.builds(), s.sent.length, s.store.records.get(id)]).toEqual([0, 0, stored]);
     }
   });
 
