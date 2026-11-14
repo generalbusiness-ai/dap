@@ -1,0 +1,29 @@
+{
+  "qualification": "Source-only correspondence; no check rerun. Original failed interval44b25ceb stays failed.",
+  "head": "421b0931448d3b3d3c6dfa859139269218c0f006",
+  "tree": "8e92c5261d5a82c584aec993532cb73413a1cfb6",
+  "previousHead": "0012cdf93d4bc8d7b3a0212f5ec9c74cbaa33f87",
+  "previousTree": "009a3609359a809013967225f0f5e470375d13d6",
+  "onlyChangedPath": "packages/client/test/browser-request.test.ts",
+  "oldTestSha256": "de6e39b9c7e24f623c0dc02a31d2c666b67d7ee0f6d343db0fc45d131a2fa174",
+  "newTestSha256": "03a5ff35a123b3f13801b7a32a6f15a166905647d797ba630d7eac1e8357146d",
+  "change": "Import FieldRecord; type bench fields FieldRecord; valid unavailable reason and remove unsafe Answer cast. Every test title/deadline/assertion/other body unchanged.",
+  "retainedCompilerPasses": [
+    {
+      "config": "packages/client/tsconfig.json",
+      "exitCode": 0,
+      "wallSeconds": 0.27,
+      "cpuSeconds": 1.02
+    },
+    {
+      "config": "packages/client/tsconfig.node.json",
+      "exitCode": 0,
+      "wallSeconds": 0.27,
+      "cpuSeconds": 1.12
+    }
+  ],
+  "sourceReason": "Neutral config includes src only and excludes node/store-format; Node config roots are src/node.ts and src/store-format.ts, with shared custody src import. No source imports browser-request.test.ts. All other tracked bytes/configs/package exports/dependencies remain exactly equal.",
+  "retainedR1": "END2cc9c9e6 passed at0012. Normal preparation reads configured package inputs, browser entry import graphs and client src export; this test file is not imported or a package source input. No reproduction body or pack repeats.",
+  "continuation": "Failed client-test compiler then five unreached configs, then83 previously unrun cases. Required compatibility once before this direct Vitest interval; no successful compiler repeats.",
+  "failedEvidenceManifestSha256": "81deccc841fbcdd6eaf892c4c524642737f3bdc43c0f7cd30800a2116b3387db"
+}
