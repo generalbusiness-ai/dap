@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fc9bcbcbf046dc65482d789528931d9b3daa1a84","text":"Merge retired a covered predecessor; the successor is at apps/room/page/assets.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fd67cd25111dfde854001b59a0ba23b733f9aa0d","text":"Merge retired a covered predecessor; the successor is at scripts/celld-smoke.mjs."}
