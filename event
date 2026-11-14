@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Planner writes the amendment of the client note for 43de81ee: the end of a custody record whose latest signing is dead and absent.","body":{"branch":"planner/client-note-custody-end-20261113"}}
+{"kind":"artifact","text":"notes/2026-11-13-scope-client.md at exact d5ab1e5a9e447bd4aedbc39d2a4b29948c49c186 on planner/client-note-custody-end-20261113, under promise git:sha1…819efb0 on request git:sha1…8f781cc","body":{"commit":"d5ab1e5a9e447bd4aedbc39d2a4b29948c49c186","path":"notes/2026-11-13-scope-client.md"}}
