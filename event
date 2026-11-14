@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:54242868abbe3acb26be0ff8e24da7bf3902a3ef","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-14-r2-grow-gate.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:593b8bb2006684e5dc1343c62ef8f65efc4a5c15","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/grow-archive.test.ts."}
