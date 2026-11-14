@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:38c10bd0bbfb85d23edf1b11dbc22f4b72c6ce37","text":"Merge retired a covered predecessor; the successor is at packages/client/src/custody.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3f0f7dcdda4be6290d9162330987d364727b13df","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-13-c1-custody-v2.md."}
