@@ -10,8 +10,8 @@ export interface ExplorationContext extends JudgeContext {
   readonly actor: KeyId;
   readonly scope: ScopeRef;
   readonly evidence: readonly Digest[];
-  /** The same producer code the actual scope uses for pending reservations. */
-  readonly owners?: Owners | null;
+  /** Actual pending-reservation producer code; null states checked absence. */
+  readonly owners: Owners | null;
 }
 
 export function actContext(definition: ValidDefinition, view: StateView, context: ExplorationContext,

@@ -118,7 +118,7 @@ type LocalEffect<E> = E extends { effect: "relation" } ? E
   : E extends { item: number } ? Omit<E, "item"> & { readonly item: ItemName }
   : E;
 export type ActEffect = LocalEffect<Effect>;
-export type Lack = UnavailableReason | "intent" | "entry" | "source" | "due" | "owners";
+export type Lack = UnavailableReason | "intent" | "entry" | "source" | "due";
 
 export type Exploration<D extends DeclaredDefinition, K extends Kind<D>> =
   | IncompleteExploration<D, K>
