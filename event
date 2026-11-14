@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d48e2336a3a48104a8d419a8322b6a1ec8a304cd","text":"Merge retired a covered predecessor; the successor is at examples/repo-in-ai/test/hosted-loop.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:da12ec23eae3463b3aa722f3b66acd6f3ac2038a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-14-cut-a-register-values.md."}
