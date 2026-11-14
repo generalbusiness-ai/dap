@@ -15,7 +15,7 @@ import { nativeMark } from "./program/native.ts";
 import type { Digest, Entry, FactRef, FactUse, Grant, Head, Input, Intent, KeyId, MismatchReason, ObservationUse, Prepared, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { intentDigest, isEffect, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
-import { withinCounts } from "./draws.ts";
+import { withinCounts, type Drawn } from "./draws.ts";
 import { namedBody } from "./program/structure.ts";
 import { executeBody } from "./program/body.ts";
 import { declarationOf } from "./program/declaration.ts";
@@ -197,6 +197,8 @@ type BodyJudgment = Refused | Unjudged | { result: "due"; next: Due }
   | { result: "write"; draft: Omit<Draft, "input">; authority: readonly Grant[];
       presented: Readonly<Record<string, FactRef>>; observed: readonly ObservationUse[];
       signer: Signer | null; selfRefs: readonly number[] };
+type ExploredBodyJudgment = Exclude<BodyJudgment, { result: "write" }>
+  | (Extract<BodyJudgment, { result: "write" }> & { drawn: Drawn });
 interface ActBodyFrame {
   actor: KeyId;
   signed?: SignedIntent;
@@ -208,9 +210,10 @@ interface ActBodyFrame {
 
 /** The same body as a recorded act, without signature, key or lifetime checks.
  * A reached need for its absent signed input leaves no partial consequences. */
-export function judgeActBody(view: StateView, definition: ValidDefinition, body: Pick<Intent, "kind" | "on" | "fields" | "expected">, context: JudgeContext & { actor: KeyId }): BodyJudgment {
+export function judgeActBody(view: StateView, definition: ValidDefinition, body: Pick<Intent, "kind" | "on" | "fields" | "expected">, context: JudgeContext & { actor: KeyId }): ExploredBodyJudgment {
   let missingIntent = false;
   const selfRefs: number[] = [];
+  let drawn: Drawn | undefined;
   const unavailableIntent = (): never => {
     missingIntent = true;
     throw new RuleFault("the body needs its absent signed intent");
@@ -221,8 +224,13 @@ export function judgeActBody(view: StateView, definition: ValidDefinition, body:
     const verified = verifiedContext(context, { body, actor: context.actor });
     return actBodyJudged(view, definition, body, verified, scope,
       { actor: context.actor, plan: false, unavailableIntent, selfRefs });
-  }), body);
-  return missingIntent ? { result: "unavailable", reason: "unavailable", lacks: ["intent"] } : answer;
+  }), body, counts => { drawn = counts; });
+  if (missingIntent) return { result: "unavailable", reason: "unavailable", lacks: ["intent"] };
+  if (answer.result === "write") {
+    if (!drawn) throw new TypeError("the admitted body has no derived count result");
+    return { ...answer, drawn };
+  }
+  return answer;
 }
 
 /**

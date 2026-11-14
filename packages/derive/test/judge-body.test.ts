@@ -109,6 +109,9 @@ test("the keyless body draws on the same holder account and stops when its reque
   const context = () => ({ ...scope.context(), platform: scope.rules, actor: rita.key });
   const allowed = judgeActBody(scope.state, definition, body(), context());
   expect(allowed.result).toBe("write");
+  if (allowed.result !== "write") return expect.fail("the holder starts with one request");
+  expect(allowed.drawn.holders.get(job)?.requests ?? 0).toBe(0);
+  expect(allowed.drawn.accounts).toEqual([{ seq: scope.head.seq + 1, n: 0, item: job }]);
   expect(scope.does("use", { ...on(scope, job), fields: { peer: otherLane } })).toBe("written");
   expect(scope.state.holder(job)?.requests ?? 0).toBe(0);
   expect(judgeActBody(scope.state, definition, body(), context())).toEqual({ result: "unavailable", reason: "unavailable" });

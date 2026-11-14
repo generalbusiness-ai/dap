@@ -184,7 +184,8 @@ function countedDrawing(view: StateView, definition: ValidDefinition, entry: Dra
  * The input is not judged and nothing is written: `unavailable`, as for
  * every fault of a rule (section 6.1). An outcome then stays offered.
  */
-export function withinCounts<J extends { result: string }>(view: StateView, definition: ValidDefinition, judged: J, body?: Pick<Intent, "kind" | "on">): J | { result: "unavailable"; reason: "unavailable" } {
+export function withinCounts<J extends { result: string }>(view: StateView, definition: ValidDefinition, judged: J,
+  body?: Pick<Intent, "kind" | "on">, drew?: (drawn: Drawn) => void): J | { result: "unavailable"; reason: "unavailable" } {
   if (judged.result !== "write" || !("draft" in judged)) return judged;
   const draft = judged.draft as Pick<Entry, "input" | "effects" | "sends"> & { bound?: { item: number; message: string } };
   if (definition.standing) {
@@ -197,7 +198,9 @@ export function withinCounts<J extends { result: string }>(view: StateView, defi
   const drawn = body
     ? countedDrawing(view, definition, { seq, body, effects: draft.effects, sends: draft.sends }, {}, draft.bound ?? null)
     : drawsOf(view, definition, { seq, input: draft.input, effects: draft.effects, sends: draft.sends }, {}, draft.bound ?? null);
-  return "fault" in drawn ? { result: "unavailable", reason: "unavailable" } : judged;
+  if ("fault" in drawn) return { result: "unavailable", reason: "unavailable" };
+  drew?.(drawn);
+  return judged;
 }
 
 /**
