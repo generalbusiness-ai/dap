@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c0de0b96c249e1a02e394dfa72ae4d5012f19705","text":"Merge retired a covered predecessor; the successor is at packages/client/src/replica-own.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c3b8c0a396b7871a0edda8ff1e71e025b6acb1ae","text":"Merge retired a covered predecessor; the successor is at packages/client/src/replica.ts."}
