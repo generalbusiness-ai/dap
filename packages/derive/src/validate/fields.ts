@@ -51,6 +51,7 @@ export function fieldType(d: Defining, v: unknown, path: string, extra: readonly
   if (!keys) return bad("shape", path, "must be a field type");
   const o = rec(v, path, ["type", ...keys], (v as Rec)["type"] === "text" ? [...extra, "detached"] : extra);
   if (!o) return null;
+  if (d.live && o["type"] === "fact") return bad("shape", path, "a live definition holds and reads no fact");
   switch (o["type"]) {
     case "text":
       if ((int(o["max"], at(path, "max")) ?? 0) > bounds.textBytes) bad("bound", at(path, "max"), `at most ${bounds.textBytes} bytes`);

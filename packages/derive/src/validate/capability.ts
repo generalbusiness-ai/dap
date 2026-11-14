@@ -40,6 +40,7 @@ export function capabilities(d: Defining, v: unknown): void {
   const { bad, rec, list } = d;
   list(v, "capabilities", 2).forEach((c, i) => {
     const p = at("capabilities", i);
+    if (d.live) { bad("shape", p, "a live definition declares no capability, hold or preparation"); return; }
     const o = rec(c, p, ["name", "version"]);
     if (!o) return;
     const version = `${String(o["name"])}@${String(o["version"])}`;

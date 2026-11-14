@@ -248,6 +248,7 @@ export function acts(d: Defining, v: unknown, timed: Readonly<Record<string, unk
     // compares it with. Nothing travels beside a creation, so the genesis act is presented none.
     const presented = new Map<string, FieldType>();
     if ("presents" in o) {
+      if (d.live) bad("shape", at(path, "presents"), "a live act presents no fact");
       if (name === top["genesis"]) bad("shape", at(path, "presents"), "the genesis act is presented no fact: nothing travels beside a creation");
       for (const [p, pv] of entries(o["presents"], at(path, "presents"), bounds.presents)) {
         const pp = at(at(path, "presents"), p);
@@ -293,6 +294,7 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
   const handled = new Set<string>();
   for (const [name, hv] of entries(v, "receives", bounds.receives)) withRow(d, "receive", name, at("receives", name), () => {
     const path = at("receives", name);
+    if (d.live) { bad("shape", path, "a live definition has no handler"); return; }
     const o = rec(hv, path, ["message", "class", "from", "fields", "opens", "also", "guards", "effects", "sends", "attention"], ["copies", "settles", "order", "late", "sequenced", "reads", ...(d.platform ? ["bound"] : [])]);
     if (!o) return;
     // The sequenced note, section 5.11: version 1 of the level marks acts only, and a delivery is judged as in a recorded scope.

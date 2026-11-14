@@ -159,6 +159,7 @@ export interface Defining extends Shapes {
   readonly bindings: Binding[];             // each handler that states `bound`, for the checks of `decisions` (section 17.2a, revision 21)
   observing: boolean;                       // section 16.1, revision 20: the data states rows of `observes`, or the `origin` of an outcome, somewhere
   readonly sequenced: boolean;              // the definition states the sequenced level, version 1 (sequenced note, section 5.11)
+  readonly live: boolean;                   // live note, section 3.2: no durable form beyond creation
 }
 
 /** One written `value` effect: the type and the slot that it sets, where it stands, and whether it sets the constant `true`. */

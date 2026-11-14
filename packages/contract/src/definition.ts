@@ -32,7 +32,8 @@ export interface DeclaredDefinition {
   format: "artroom-definition-1";
   /**
    * Absent means recorded. Explicit recorded has its own bytes and digest. The validator admits sequenced version 1 (sequenced
-   * note, section 5.11). No runtime derives a sequenced definition yet, so `derivable` is false for one. Live is not supported.
+   * note, section 5.11) and live version 1 (live note, section 3.2). No runtime derives a sequenced definition yet, so
+   * `derivable` is false for one. Live records only its creation and confirmation; its later turn belongs to the platform.
    */
   level?: DurabilityLevel;
   /** Omission keeps entries-only admission and replay. Whole-scope counts all five logical dimensions. */
