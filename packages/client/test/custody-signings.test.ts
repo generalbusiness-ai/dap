@@ -217,6 +217,45 @@ describe("custody record version 2 holds the signings of one request", { timeout
     expect([latest!.signings[1]!.closed, latest!.envelope.signed, latest!.phase]).toEqual([true, s.sent.at(-1), "refused"]);
   });
 
+  // Invariant (5.5): an absent latest dead signing ends its capacity charge, keeps its envelope, and sends nothing on retry.
+  test("a dead absent latest signing ends unsent, and send returns that same end without signing or sending", async () => {
+    const s = scene();
+    await s.submit("ended", "one", () => { throw new Lost(); });
+    const before = await s.record("ended");
+    expect((await s.custody.absent(identity("ended"), 0, head))!.phase).toBe("unknown");
+    s.advance(2 * MINUTE);
+    const ended = (await s.custody.absent(identity("ended"), 0, head))!;
+    expect([ended.phase, ended.envelope, ended.signings[0]!.envelope, ended.outcomes.at(-1)])
+      .toEqual(["refused", before.envelope, undefined, { at: timeOf(s.at()), unsent: head, attempt: 1, signing: 0 }]);
+    expect(await s.store.unresolved()).toEqual([]);
+    const builds = s.builds(), sends = s.sent.length;
+    const again = await s.custody.send(identity("ended"), meaningOf("one"), s.build("ended", "one"),
+      async () => { throw new Error("must not send"); }, { notAfter });
+    expect("unsent" in again && again.unsent).toEqual(head);
+    expect([s.builds(), s.sent.length]).toEqual([builds, sends]);
+    const fact = receiptOf(before.envelope.signed, 12).fact;
+    const late = await s.custody.folded(identity("ended"), { fact, intent: before.signings[0]!.intent });
+    expect(late!.phase).toBe("accepted");
+  });
+
+  // Invariant (5.5): abandonment after expiry cannot consume the 256 unresolved slots forever.
+  test("257 lost requests can end after a verified absent read, including a reload before the first send", async () => {
+    const s = scene();
+    for (let n = 0; n < 256; n++) await s.submit(`lost-${n}`, "one", () => { throw new Lost(); });
+    expect(await s.store.unresolved()).toHaveLength(256);
+    s.advance(2 * MINUTE);
+    // A settlement not-found names no journal head and ends no unresolved latest signing.
+    expect((await s.custody.settle(identity("lost-0"), async () => null))!.record.phase).toBe("unknown");
+    for (let n = 0; n < 256; n++) await s.custody.absent(identity(`lost-${n}`), 0, head);
+    await s.submit("lost-256", "one", () => { throw new Lost(); });
+    expect(s.builds()).toBe(257);
+    const prepared = await s.custody.keep(identity("prepared"), meaningOf("one"), s.build("prepared", "one"), notAfter);
+    s.advance(2 * MINUTE);
+    const reload = new Custody(s.store, () => timeOf(s.at()));
+    expect((await reload.absent(identity("prepared"), 0, head))!.phase).toBe("refused");
+    expect((await s.record("prepared")).envelope).toEqual(prepared.envelope);
+  });
+
   // Invariant: the memory store lists the live records of one signer at one target, whatever their phase, and signals each change.
   test("the memory store reads by target and signals each change", async () => {
     const s = scene();
