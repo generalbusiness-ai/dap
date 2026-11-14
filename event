@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at skills/dap-application/references/authoring.md","body":{"commit":"4cef11d2783efaa591fac197d9a2ba093004456e","path":"skills/dap-application/references/authoring.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:003802bea882e6c5c61885187bad460807f9b07f","text":"Merge retired a covered predecessor; the successor is at scripts/demo/rehearse.ts."}
