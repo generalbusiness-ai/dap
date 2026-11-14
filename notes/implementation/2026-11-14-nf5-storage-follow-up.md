@@ -338,3 +338,37 @@ No unrelated guide applied. The proposal used the primary
 and [Web Locks specification](https://w3c.github.io/web-locks/) for the close
 and callback boundaries. Complexity review supplied the history-cost
 comparison above. No scanner, model or validation tool ran.
+
+## Voice source correspondence after integration
+
+The preceding source checkpoints describe checks still unrun when those
+edits landed on this branch. Voice source checks now pass at clean commit
+`bd023336786186721240ec6e89998b01683469c4`. Its protected source has SHA256
+`917d03ba09dbfd2910eb9605fc7bcafdc10c73a5a897d0b78ee4ccc759fbfe0a`.
+
+The correspondence keeps durable audio-start write and exact readback before
+playback. Restart retains an uncertain start. The speaking notice can call
+subscribers synchronously, so `start` checks current ownership, generation
+and active turn again before playback. The report slot holds its shared
+custody key. Clearing or archiving requires exact accepted custody and the
+reporter's verified result. These boundaries still assume successful
+storage, serialized locks and trusted proof. They do not establish native
+IndexedDB atomicity, browser speech behavior or native pledge resolution.
+
+The maintained Voice control ran once with one case in each phase. Baseline
+and restored source passed. The broken restart guard failed with
+`a retained audio start must block rearming after restart`: actual `true`,
+expected `false`. The helper exited zero. Source bytes and mode `0644`
+restored exactly. The separate targeted command passed all three cases:
+unknown custody retains its slot, restored acceptance without receipt proof
+cannot clear, and disposal during the speaking notice retains the start
+without playback. No case failed, cancelled or skipped. The control took
+2.95 seconds; the targeted command took 0.72 seconds. Raw output remains in
+`/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-browser-custody-gate-attempt1/voice-c`.
+
+The coverage checkpoint pins that passing source and commit. The renewed
+Voice model check and copied-worker statechart remain **UNRUN**. The model,
+config, view, Mermaid chart and SVG keep their exact prior bytes. The next
+check uses an external stock-worker copy with only its cleanup line disabled.
+Equal generated Mermaid bytes retain the existing SVG. Any difference stops
+for review before rendering. No model check or gate ran for this pin.
