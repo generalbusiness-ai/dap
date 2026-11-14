@@ -63,8 +63,15 @@ is `baseline-native.json` in that manifest.
 | Baseline native controls | Command vector in `baseline-native.json` | 1 | `5df4d9d746ebc7ee7c9cfdf989308b77624e031eafa6331722d86d0c15bf8678` |
 | Offline reviewed result selection | Read original `native-results.json`; retain `passed` and `failed` statuses | 0 | `024fa0d05efaf1deb7f506a20170435452af2c157b9f58649f8652447300df16` |
 
-CDF-1 still owes the raw-proof residency check on AC and its gate after
-CF-1. The wider cap holds the cutover deployment. RB-1 (request 0ce66e16)
+Ruling bb6cf92b accepts the built head and withdraws the three overshoot
+numbers. The faults note records its three facts: shipped platform
+scopes have no rule guards; declared scopes retain whole subjects with
+uncapped attribution; and the pending-work bound limits settlement count
+but gives no constant on settlement bytes or retained-byte overshoot.
+
+CDF-1 still owes the entire native raw-proof residency file,
+`apps/room/lanes/test/directory-partition-lanes.scope.test.ts`, on AC,
+its gate in the first slot after CF-1, and the Security conclusion. The wider cap holds the cutover deployment. RB-1 (request 0ce66e16)
 accepts audit 7f6f6834's finding: no constant bounds one rule row or one
 item because whole subjects include uncapped attribution. There is no
 finite overshoot product to report. RB-1 owns the design for those

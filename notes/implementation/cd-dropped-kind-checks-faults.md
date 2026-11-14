@@ -193,17 +193,28 @@ floor that frees no retained bytes.
 
 ### The settlement exception needs a separate rule-row bound
 
-RB-1 (request 0ce66e16) accepts audit 7f6f6834's finding: no constant
-bounds one rule row or one item. `ruleInput` includes whole subjects
-(`derive/src/guards.ts:133-138`), including their attribution.
-`withMembers` (`derive/src/attribution.ts:16-19`) appends each new author
-or principal without a count check. `partyMembers` bounds the present
-party list, not that history. Floors preserve the item while they can
-reclaim journal capacity. The default `entryBytes` and `usesPerEntry`
-therefore give no constant largest rule row or finite overshoot product.
+Ruling bb6cf92b accepts the built head and withdraws the three requested
+numbers from 9753818f item b. The bound has these three facts:
 
-RB-1 owns the design for per-item and per-rule-row ceilings and matching
-replay checks. It starts after the client chain and H1, requires a planner
-ruling before code and a kernel review, and does not hold the cutover
-deployment. CDF-1's total stops each new act at `scopeBytes`. It claims no
-finite overshoot bound for exempt settlements.
+1. The shipped platform declarations hold no rule guard, so a platform
+   scope writes no `rule` row.
+2. In a declared scope, a rule row holds whole subjects
+   (`derive/src/guards.ts:133-138`). A subject holds `attributed`, and
+   `withMembers` (`derive/src/attribution.ts:16-19`) appends each new
+   author or principal without a count check. `partyMembers` bounds the
+   present party list, not that history.
+3. The total stops each new act, each birth and each other delivery at
+   `scopeBytes`. A settlement passes. A definition's pending work bounds
+   the count of settlements, but no constant bounds the bytes of one.
+   The retained bytes above `scopeBytes` therefore have no constant bound.
+
+RB-1 (request 0ce66e16) owns the design for per-item and per-rule-row
+ceilings and matching replay checks. It starts after the client chain
+and H1, requires a planner ruling before code and a kernel review, and
+does not hold the cutover deployment.
+
+CDF-1 keeps the first gate slot after CF-1. Before review it still needs
+the entire native raw-proof residency file
+`apps/room/lanes/test/directory-partition-lanes.scope.test.ts` on AC,
+the gate and the Security conclusion. The four failing-at-5339ccc5
+witnesses are filed in the wider-cap implementation note.
