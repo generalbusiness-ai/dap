@@ -1,0 +1,250 @@
+{
+  "qualification": "Corrected Head A script checkpoint only; fresh full gate remains owed. Exactly one call each, --only for all, followed by read-only production parser proof. No retired root from main full installed-root union remains. All three configs have mode 0644 before checkpoint. Old first gate passed but did not prove this changed configuration; its branch and 425 sealed files remain intact.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-head-a-current-roots-script",
+  "checkpoint": {
+    "commit": "0ad4aa9102fe5f75b692d3adb30c8b00a6914574",
+    "tree": "3c896af18ad1d9d012d231727f44c0ed487105b7",
+    "qualification": "Scripts ran from this clean main and wrote exactly the three configs; script-output.patch records their output."
+  },
+  "fileCount": 46,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 4445,
+      "sha256": "6347cdd1bd36aaff25387bc9d62114854d4881579d099e30657fd65955e6c92f"
+    },
+    {
+      "path": "changed-paths.json",
+      "bytes": 111,
+      "sha256": "ed4dc9602e8879c00d17200a828989d26d1a88bf1110edb610fa5cf5e7f87345"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 2023,
+      "sha256": "b7e66d86cfc088a317c7e790e9320f317893b03ddf61f3ae208eb9ad16cacda0"
+    },
+    {
+      "path": "current-roots-proof.json",
+      "bytes": 5491,
+      "sha256": "e7c3b76af0d71c03c6fc62658e3c33a086690c3fa977768672c0b782792f033b"
+    },
+    {
+      "path": "cutover-end.json",
+      "bytes": 3347,
+      "sha256": "6e107b6408fdd4663170c7dd54b46aac839f85100d7b2306eeaf2a76a343d8ef"
+    },
+    {
+      "path": "demo-after-actual-escalated-battery.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "demo-after-actual-escalated-battery.stdout",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "demo-after-actual-escalated-custom.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "demo-after-actual-escalated-custom.stdout",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "demo-before-actual-escalated-battery.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "demo-before-actual-escalated-battery.stdout",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "demo-before-actual-escalated-custom.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "demo-before-actual-escalated-custom.stdout",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "demo.stderr",
+      "bytes": 191,
+      "sha256": "3809c387d5fc7fe97e5044ec6f2b1c062f0165a06626544aed57e620394a990a"
+    },
+    {
+      "path": "demo.stdout",
+      "bytes": 2301,
+      "sha256": "af2a11bf09a104f15266bce351c27da7899cf7580ff42d6640351142f18e3702"
+    },
+    {
+      "path": "grow-after-actual-escalated-battery.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "grow-after-actual-escalated-battery.stdout",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "grow-after-actual-escalated-custom.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "grow-after-actual-escalated-custom.stdout",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "grow-before-actual-escalated-battery.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "grow-before-actual-escalated-battery.stdout",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "grow-before-actual-escalated-custom.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "grow-before-actual-escalated-custom.stdout",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "grow.stderr",
+      "bytes": 191,
+      "sha256": "20c2f5277970192852b4ba9335d17951b6ca30a2cee336640e31d87ee47f9719"
+    },
+    {
+      "path": "grow.stdout",
+      "bytes": 2084,
+      "sha256": "067c823d6617e84e25b669998e119c63c70541b763015291b3a089172c2a0ca8"
+    },
+    {
+      "path": "lending-after-actual-escalated-battery.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "lending-after-actual-escalated-battery.stdout",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "lending-after-actual-escalated-custom.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "lending-after-actual-escalated-custom.stdout",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "lending-before-actual-escalated-battery.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "lending-before-actual-escalated-battery.stdout",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "lending-before-actual-escalated-custom.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "lending-before-actual-escalated-custom.stdout",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "lending.stderr",
+      "bytes": 191,
+      "sha256": "6df736021b35357158c6a55b8773921b8adf8e3aebcfb63e4061a04422764bbb"
+    },
+    {
+      "path": "lending.stdout",
+      "bytes": 1843,
+      "sha256": "abac932900b8b8b534403c618678a7372f5034973c7a92ba04be263e69d6110e"
+    },
+    {
+      "path": "node-version.txt",
+      "bytes": 9,
+      "sha256": "417336d0f30f0481a3e337b10abf4da8263d1a181c639c757a2a68401935bdb6"
+    },
+    {
+      "path": "power-actual-escalated-battery.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "power-actual-escalated-battery.stdout",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "power-actual-escalated-custom.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "power-actual-escalated-custom.stdout",
+      "bytes": 712,
+      "sha256": "f0ba13a6fd7ce37ac03f1379e3912c5511ebcce6177cde31f5d6b2267e5b3d5e"
+    },
+    {
+      "path": "preflight-source.py",
+      "bytes": 3739,
+      "sha256": "0e76a09754ae1c6a7954774b1a8b0e8990ebe46bae60f29251d7c7b291c8b8db"
+    },
+    {
+      "path": "preflight.json",
+      "bytes": 8264,
+      "sha256": "11694755a61a2f0d66bb667471e11850c5bc7b67c17e2772b84a9f72c0c5ed2f"
+    },
+    {
+      "path": "proof-source.mjs",
+      "bytes": 4736,
+      "sha256": "e657d25cf12ee27e2a0eda603b004f1a1b577316f3a8b7b6b74f74b1feaa87e3"
+    },
+    {
+      "path": "runner-source.py",
+      "bytes": 3521,
+      "sha256": "5e2086c111f41354d2fd8c3578d0fec942babea71bbddde8e5a88810450e14ce"
+    },
+    {
+      "path": "script-output.patch",
+      "bytes": 6228,
+      "sha256": "4f4490740c877185e062a1de3980fc676fbf1e8ffcddd3e47bcf98a5f76747c4"
+    },
+    {
+      "path": "seal.json",
+      "bytes": 581,
+      "sha256": "f0e0bcfe4727f1f2f188a16b5ef93e2f3b51b20f1d8b7f7e37115aa4c3ac11dc"
+    }
+  ],
+  "priorHistory": {
+    "head": "f8c71ba2a83297051681b3031c04fab36a4d33ed",
+    "review": "56c48bc9162755df12aba2f516af2f5d5ea22472",
+    "verdict": "0ee19578375443187a21726a64fc527498b77c02",
+    "manifestPath": "notes/implementation/evidence/2026-11-14-head-a.manifest.json",
+    "manifestSha256": "497aa347a3fe741bbfbae51fd00d395d82af1b9c2ac27e8437906f22e66d94f6",
+    "qualification": "Passed-but-insufficient gate history; not current coverage and must not land."
+  }
+}
