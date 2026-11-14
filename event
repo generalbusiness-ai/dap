@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:eeb44c5023bba0cd5c008b7899c0c5a52ed3000a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-13-cf1-base-family.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f25d5e2b6eef1f9421b3e9c17827a6e7af3d0e04","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/turn.test.ts."}
