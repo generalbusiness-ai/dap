@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cdb65f5ce69bb9fb6d78658d135ad78baa036fff","text":"Merge retired a covered predecessor; the successor is at package-lock.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dc7afcd66a456ce4e02ecc1056479bf90ea4e9f2","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-13-scope-client.md."}
