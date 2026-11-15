@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c1a2ff5d68e73c439e82e7de5fbc0b249b43c080","text":"Merge retired a covered predecessor; the successor is at examples/lending/scripts/pin.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d5d52c0ada360682f0691a0e1f707a147582d8a4","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-install-reader.ts."}
