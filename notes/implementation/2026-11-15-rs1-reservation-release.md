@@ -66,7 +66,16 @@ The whole affected owners and two guard controls passed at
 `2146b1ea9e6c99c8d1bc33b3c43c3edeb25d822c`. Source merge `7ac3bfe9`
 integrated published main `fb7877d9` while preserving the authored RS1
 change. The earlier compiler and producer failures below remain FAIL.
-Final whole preflight, the full gate and independent review remain OWED.
+The final whole preflight and ordinary full gate passed at the combined
+head below. Independent review, landing and release remain OWED.
+
+The gate input is `3bedd5c8604ac03836108fb73043b5cf1e2832fc`, tree
+`87c399cc0178d44dc859a2afec9a864f2a1f726c`, against published main
+`fb7877d90c03ef3326baef179c10e1bf59b1af40`. Gate START is
+`7284ec912d9dd5c55d31a9d47441d52f9dc7a30a`; END is
+`54c0f829e32f69f85815f304f7a08464b8a77ca8`. The final source act will
+bind the actual documentation successor's head and tree after commit.
+The note update changes no source or test bytes from the gated head.
 
 Root composed RS1 and LS2 code at
 `f9c490ec0101238e63f1322821b31e713dfe2e1a`, tree
@@ -114,12 +123,23 @@ stream hashes, commands and source bindings.
 | `805d2fa9`: whole Native scope-lending owner | PASS; exit 0, 11.035064 s; 1 test in 1 file, unchanged maintained Worker runtime. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-whole-owners-attempt1/scope-lending-owner.stdout.log` (`5b9fcdb5b74c`) |
 | `805d2fa9`: whole Node Security owner | PASS; exit 0, 3.928938 s; 12 tests. No new RS1 seal row or seal refresh. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-whole-owners-attempt1/security-owner.stdout.log` (`475e8df12f27`) |
 | `805d2fa9`: whole owner interval | PASS; outer wall 24.798090 s; source clean and unchanged. All six command stderr files empty. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-whole-owners-attempt1/result.json` (`f1837cd4eb7e`) |
-| `805d2fa9`: remove holder guard | DISTINGUISHES; helper exit 0, 2.328762 s. Whole definition owner: baseline 9 passed; mutant 7 passed, 2 failed, child exit 1. Direct nonholder assertion failed at 134:72; original bytes and mode restored. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-guard-controls-attempt1/holder.stderr.log` (`cc8f836a6601`); child outputs in `artroom-control-9gEiYs` under that directory |
-| `805d2fa9`: change member count max 1 to 2 | DISTINGUISHES; helper exit 0, 2.047780 s. Whole definition owner: baseline 9 passed; mutant 7 passed, 2 failed, child exit 1. Direct third-hold assertion failed at 132:85; original bytes and mode restored. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-guard-controls-attempt1/member-count.stderr.log` (`8692287673c0`); child outputs in `artroom-control-KikBGe` under that directory |
+| `805d2fa9`: remove holder guard | DISTINGUISHES; helper exit 0, 2.328762 s. Whole definition owner: baseline 9 passed; mutant 7 passed, 2 failed, child exit 1. Direct nonholder assertion failed at 134:72; original bytes and mode restored. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-ls2-full-gate-attempt1/controls/rs1-holder/holder.stderr.log` (SHA-256 `cc8f836a66010bf916bedf8264fcda9d04db95e248aef84d5ff77e3b6598bd8c`); child outputs in `artroom-control-9gEiYs` under that directory |
+| `805d2fa9`: change member count max 1 to 2 | DISTINGUISHES; helper exit 0, 2.047780 s. Whole definition owner: baseline 9 passed; mutant 7 passed, 2 failed, child exit 1. Direct third-hold assertion failed at 132:85; original bytes and mode restored. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-ls2-full-gate-attempt1/controls/rs1-live-bound/member-count.stderr.log` (SHA-256 `8692287673c0cedfe7d11dd81a59f11c0b0492241a210268cbc3014a6c20a3fd`); child outputs in `artroom-control-KikBGe` under that directory |
 | `805d2fa9`: control interval | Both direct behavioral failures inspected; outer wall 4.428499 s. Source restored byte-exact, mode 0644 and clean. No third green. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-guard-controls-attempt1/result.json` (`d12d17b918f6`) |
 | `f9c490ec`: RS1 + LS2 code composition | Normal merge: exit 0, 0.116088 s; exact 17-path union. Code composition only; promises stay independent. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-ls2-source-dev-safe-attempt1/source-join/result.json` (`7a84ccf507d8`) |
 | Safe source/development retention | 40 explicitly selected files; retained bytes and hashes equal originals. No fixture, cache or private provider log copied. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-ls2-source-dev-safe-attempt1/retention-index.json` (`3f87c3905e1a`) |
-| Final exact-head preflight / full gate / review | OWED. No full-gate or review PASS follows from these development/controls results. | Actual future records not yet available |
+| `3bedd5c8`: final exact-head preflight | PASS. Fetch: exit 0, 0.387259 s; shared helpers: exit 0, 0.654108 s; whole typecheck: exit 0, 16.537624 s. Outer wall 17.769006 s; source clean, main unchanged. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-ls2-source-dev-safe-attempt1/final-preflight.result.json` (SHA-256 `37ad7a08a48b4fb5c81239abb5bedbd1f3d62f71a52e2b8e65c4623d4bca066e`) |
+| `3bedd5c8`: ordinary `npm run gate` | PASS; exit 0, verification exit 0. Child wall 911.406738 s; controller outer wall 911.674861 s; printed test-step duration 881.7 s. Node 204 passed; Counting 56 passed; Plain 4,860 passed, 1 skipped; Native 1,136 passed, 2 skipped. Natural Scale omitted: outside-scale-paths, 18 changed paths, all match sets empty; no Scale command or result. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-ls2-full-gate-attempt1/result.json` (SHA-256 `e67a5d4bce6831deeac667084b354c6895769c6de6e02af3504b668607cf274b`); `gate.log` in that directory (SHA-256 `a8948344aa9fe2af32a7b1adb8a9395a99a019fd584a21fe9acbb9fe63952e8f`) |
+| Independent review / landing / release | OWED. The final source act will bind the note-only successor after commit. | Actual future records not yet available |
+
+The retained stage timings are kernel 222.224625 ms, Node 129896.751 ms,
+Counting 491.962541 ms, Plain 173307.056875 ms and Native
+577424.5431659999 ms. These stage timings differ from the gate child and
+controller walls above. All four terminal case ledgers are complete.
+The summary retains 129 unknown suite observations and zero
+contradictions; scope-stories module timings remain partial. The raw
+directory retains the gate log, stage evidence and 22 control copies.
+Root confirmed session 31088 and child 28534 terminated and reaped.
 
 Both mutants also failed canonical-byte equality at definition.test.ts:153.
 That was not the sole evidence: removing holder identity admitted a
@@ -129,6 +149,10 @@ helper copy changed only one cleanup line; classifier, runner, selection
 and deadlines stayed exact. Actual before/after JSON and streams remain
 in the two child directories above. No model or new verification claim
 follows from these controls.
+
+The gate-colocated control copies retain the original bytes and full
+stderr hashes cited above. The original control interval remains at its
+earlier path; moving the citations does not change the controls' source.
 
 The staff-only positive path uses an explicit staff grant. This evidence
 does not include a separate member-only denial of the staff action.
@@ -151,7 +175,7 @@ No packets, signer, trust rows, Worker configuration, grants, Directory,
 Destination, receipt path, Counter source or browser controls change.
 Earlier question `a7f24240` concerned signed-presentation drift on the
 separate NF head. RS1 retains the approved open 0.4.0; planner owns signing
-after RS1 lands. Published-main integration and normal generated outputs
-are complete; final preflight, one full gate, review, landing and later
-release remain OWED. No protected lifecycle function or formal model
-changed, and no model run or coverage-pin advance is claimed.
+after RS1 lands. Published-main integration, normal generated outputs,
+final preflight and the ordinary full gate are complete. Review, landing
+and later release remain OWED. No protected lifecycle function
+or formal model changed, and no model run or coverage-pin advance is claimed.
