@@ -21,8 +21,8 @@
     "SCOPE_INDEX_MODE": "enforce",
     "PLATFORM_CREATION_PINS": "[\"platform:register@28\",\"platform:directory@27\",\"platform:membership@14\",\"platform:rules@15\",\"platform:destination@21\",\"platform:register@5\",\"platform:directory@5\",\"platform:membership@4\",\"platform:rules@3\",\"platform:destination@2\",\"platform:inbox@1\"]",
     // The planner creates this private content bucket before deployment.
-    // Screen hosts and install contexts follow under separate requests.
-    "APPLICATION_SCREEN_HOSTS": "[]",
+    // Lending's active 0.3.0 installation at item 2 serves this screen host.
+    "APPLICATION_SCREEN_HOSTS": "[{\"v\":1,\"screenOrigin\":\"https://lending.inguz.space\",\"roomOrigin\":\"https://dap-lending.inguz.workers.dev\",\"directory\":\"sc_5hagamavauu5lcejxqxqkd6xl3ol26bke2ipkhaiwxtxono2gujq\",\"item\":2,\"presentation\":\"sha256:7217583c00c0548755faa3a83ee9fef194a354624dd29dccf62a7c79cbfd48ef\"}]",
     "APPLICATION_TRUST": "[{\"release\":\"sha256:51f8afe2fd6728c121dfe18597808d529f642722634987144712bfedecfbb204\",\"publisher\":\"key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI\",\"host\":\"github.com\"},{\"release\":\"sha256:0b3e5038f96e69cfb7942c9d7fc3dbbb67d49a71ba737aaec9fcc129a1e619ed\",\"publisher\":\"key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI\",\"host\":\"github.com\"}]",
     "SERVING_CREATION_KEY_PER_HOUR": "10",
     "SERVING_CREATION_ADDRESS_PER_HOUR": "30",
