@@ -3,6 +3,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * *'
 permissions:
   contents: read
 jobs:
@@ -17,10 +19,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node --import tsx scripts/check-definition-pins.mjs
-      - name: Run every unchanged scale witness after the landing
+      - name: Run every unchanged scale witness
         env:
           ARTROOM_SCALE_DEADLINE_FACTOR: '3'
-        run: node scripts/scale-runner.mjs "$RUNNER_TEMP/artroom-scale"
+        run: node scripts/scale-runner.mjs "$RUNNER_TEMP/artroom-scale" all
       - name: Retain the full scale output and report
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

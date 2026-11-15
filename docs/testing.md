@@ -79,6 +79,34 @@ The harness's own deadlines are in
 
 ## Run the tests of what you changed
 
+Enable the tracked commit hooks once for this repository:
+
+```sh
+git config core.hooksPath .githooks
+```
+
+This setting is shared by its worktrees. The pre-commit hook runs
+`node scripts/format-json.mjs`. When formatting fails, it refuses the commit
+and prints `node scripts/format-json.mjs --write`. Run that command, review
+the repair, and stage it before committing. The hook never formats files
+for you. It also refuses unstaged differences in the formatter's selected
+JSON files, so the checked bytes match the staged bytes. It leaves partial
+staging intact and asks you to stage the formatted file. The commit-msg hook
+reads the actual UTF-8 message and reuses the
+subject and body rules in `scripts/check-commit-messages.mjs`.
+
+After formatting passes, the pre-commit hook runs
+`node scripts/check-shared-helpers.mjs`. It refuses a local implementation
+of a helper that `packages/bytes` exports. Import the existing helper, or
+give a different meaning a different name. The hook leaves the source and
+index unchanged. The slower citations check stays in the gate.
+
+The pre-commit hook fails closed when the checkout has no local Prettier,
+including a notes-only worktree. Set up its committed dependencies with
+`npm ci` before committing; do not install a separate formatter or borrow
+an unmatched dependency view. Formatting, shared helpers, and commit-message
+checks still run in the gate.
+
 Run the tests of what you changed while you work, not the repository.
 
 ```
@@ -116,6 +144,33 @@ The names on this page match the repository workspace manifests.
 Internal workspace test exports are not part of the public nine-package
 SDK. In particular, `@generalbusiness/dap-platform/testing` is available
 only in this checkout.
+
+### Scale selection in the review gate
+
+The gate reads the complete merge-base-to-head path list and records one
+of three answers:
+
+| Answer | Scale work |
+|---|---|
+| `omit` | No scale command or scale result. The summary marks the project omitted. |
+| `moved` | The sixteen cases that GS-1 moved, in their nine complete owners. |
+| `all` | All 22 cases in 13 complete owners, including the older six. |
+
+A path that selected scale at main `270dc8c7`, before GS-1, selects `all`.
+A path that only GS-1 protects selects `moved`; `packages/derive/src/judge.ts`
+alone takes this answer. When both rules match, `all` wins. Selector,
+scale configuration and count-inventory changes also select `all`.
+Main, ordinary `npm test`, and the daily run at 05:00 UTC select `all`.
+The [testing reference](testing-reference.md#scale-selection-in-the-review-gate)
+lists the families and owners.
+
+The configuration and runner take the selected owner list and case counts
+from the same two-group inventory. The runner rejects an unknown answer,
+missing or extra owners, and wrong per-owner or total counts. It never
+turns `omit` into a zero-case pass. Every case keeps its body, bounds and
+deadline; the Worker ceiling stays at two. The first gate that selects
+`moved` must report its actual Native wall time. Concurrent case-duration
+sums do not predict that wall time.
 
 ### Show that a test distinguishes
 
@@ -192,6 +247,15 @@ that base is unavailable.
 ```
 npm run gate
 ```
+
+Before every full-gate START, root runs `node scripts/check-shared-helpers.mjs`
+and `npm run typecheck` at the exact head in the executor slot, requires both
+to exit 0, and states both codes in START without a separate grant, evidence
+directory, or END.
+
+A head that changes a source of the page build also runs the whole
+`apps/room/page/test/assets.test.ts` owner before gate START. State its
+exit code and wall time. Report a wall time above 60 seconds to the planner.
 
 File START with the clean head, tree, and current main. Keep the gate's
 output in one log in a new directory under `~/play/artroom-evidence/`.
