@@ -1,4 +1,4 @@
-/** Complete maintained packages installed on the real declared cohort, with
+/** Complete maintained packages installed on their named real cohorts, with
  * issued sessions, native ownership, SQLite and the production browser read
  * adapters. Git/package HTTP host, clock, scheduler and private browser stores
  * are explicit fixtures. No browser, provider effect or deployment runs. */
@@ -6,7 +6,7 @@ import { env } from "cloudflare:test";
 import { expect, inject, onTestFinished, test } from "vitest";
 import { canonicalize, factRefOf, isRecord, isScopeRef, isSeed, same, scopeIdOf, unb64url } from "@generalbusiness/dap-bytes";
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
-import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
+import { BASE_COHORT, DECLARED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { ScopeHandle, httpTransport, memoryStore as memoryCustodyStore, requestSession, secretSigner, sessionRequest, type Fetch, type Observation } from "@generalbusiness/dap-client";
 import nativeWorker from "../../../apps/room/worker.ts";
@@ -26,12 +26,16 @@ const readContext = (phase: string, state: { status: string; reason?: string }):
     ? { reason: state.reason.slice(0, 512), reasonTruncated: state.reason.length > 512 } : {}),
 });
 
-test.each(["counter", "lending"] as const)("maintained %s package installs and its browser adapter reads native declared state", async name => {
+test.each([
+  { name: "counter", family: "declared", cohort: DECLARED_APPLICATION_COHORT },
+  { name: "counter", family: "base", cohort: BASE_COHORT },
+  { name: "lending", family: "base", cohort: BASE_COHORT },
+] as const)("maintained $name package on $family ($cohort.register) installs and its browser adapter reads native declared state", async ({ name, cohort }) => {
   const captured = inject("maintainedApplications")[name], bytes = unb64url(captured.bytes);
   if (!bytes) throw Error("The maintained source packet was not captured.");
   const packet = readPublishedApplicationPackage2(bytes, captured.release);
-  const room = await sessionRoom(C.register), { life, R, D, children } = room, [M, A, G] = children;
-  if (!M || !A || !G) throw Error("The declared cohort needs its three siblings.");
+  const room = await sessionRoom(cohort.register), { life, R, D, children } = room, [M, A, G] = children;
+  if (!M || !A || !G) throw Error("The named cohort needs its three siblings.");
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
   const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX);
   life.applicationTrust(() => bindings.APPLICATION_TRUST);

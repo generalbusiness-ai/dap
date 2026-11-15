@@ -94,6 +94,24 @@ test("new native pin retains exact v2 proof and projection while Rules5 refuses 
   })).toMatchObject({ result: "refused", reason: "bad-field", name: "invalid-application-package" });
 });
 
+test("declared Rules6 refuses a capability package and admits the same package without that capability", async () => {
+  const { input, signer, packet, fields, values, texts } = await fixture();
+  const capable = await packApplication2({ ...input, semantic: { ...input.semantic,
+    capabilities: [{ name: "publication-paths@1", bounds: { prefixes: ["shelf/"] } }],
+  } }, signer);
+  expect(readApplicationPackage2(capable.bytes, capable.ids.release).ids).toEqual(capable.ids);
+  expect({ ...capable.package.semantic, capabilities: [] }).toEqual(packet.package.semantic);
+  const declared = new Rulebook(true, membership.scope, DECLARED_APPLICATION_RULES);
+  const unchanged = declared.state.snapshot();
+  expect(declared.act(keys.rita, "install-application", { fields: { ...fields,
+    semantic: capable.ids.semantic, release: capable.ids.release,
+  } }, { values: [canonicalize(capable.package.semantic), canonicalize(capable.package.release)], texts }))
+    .toMatchObject({ result: "refused", reason: "bad-field", name: "invalid-application-package" });
+  expect(declared.state.snapshot()).toEqual(unchanged);
+  expect(declared.act(keys.rita, "install-application", { fields }, { values, texts })).toMatchObject({ result: "write" });
+  expect(declared.item(declared.head.seq)).toMatchObject({ state: "pending", values: { semantic: packet.ids.semantic } });
+});
+
 test.each([
   { name: "declared", cohort: DECLARED_APPLICATION_COHORT, origin: declaredApplicationPublicationOrigin, other: archiveDeclaredApplicationPublicationOrigin,
     pins: ["platform:register@13", "platform:directory@12", "platform:membership@7", "platform:rules@6", "platform:destination@8"] },
