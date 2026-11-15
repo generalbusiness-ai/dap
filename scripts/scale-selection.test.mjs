@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { gateScaleSelection, scaleGateDecision } from "./scale-selection.mjs";
 import { runScale, scaleResults } from "./scale-runner.mjs";
 import { scaleDeadline, scaleDeadlineFactor } from "../packages/scope/test/support/archive-scale-deadline.ts";
-import { scopeScaleFiles, scopeScaleCaseCounts } from "../packages/scope/vitest.scale-files.ts";
+import { scopeScaleFiles, scopeScaleCaseCounts, scopeScaleGroup } from "../packages/scope/vitest.scale-files.ts";
 import { readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
@@ -28,7 +28,21 @@ test("the scale capture retains full process output and failures; its summary re
   const repository = resolve(fileURLToPath(new URL("..", import.meta.url))), scratch = mkdtempSync(join(tmpdir(), "scale-capture-"));
   const modules = scopeScaleFiles.map((file, i) => ({ name: resolve(repository, "packages/scope", file), status: "passed", assertionResults: Array.from({ length: scopeScaleCaseCounts[file] }, (_, n) => ({ fullName: `TEST witness ${i}:${n}`, status: "passed", duration: 1000 + i + n })) }));
   const report = { testResults: modules, numTotalTests: 22, numPassedTests: 22, numFailedTests: 0, numPendingTests: 0, numTodoTests: 0, success: true };
+  const moved = scopeScaleGroup("moved"), movedPaths = new Set(moved.files.map(file => resolve(repository, "packages/scope", file)));
+  const movedReport = { ...report, testResults: modules.filter(module => movedPaths.has(module.name)), numTotalTests: 16, numPassedTests: 16 };
   assert.equal(scaleResults(report, repository).complete, true);
+  assert.equal(scaleResults(movedReport, repository, "moved").complete, true);
+  assert.equal(scaleResults(report, repository, "moved").complete, false, "moved cannot accept the old six as extras");
+  assert.equal(scaleResults(movedReport, repository).complete, false, "all cannot accept a moved-only report");
+  assert.equal(scaleResults({ ...movedReport, testResults: movedReport.testResults.slice(1) }, repository, "moved").complete, false);
+  const unknownOwner = structuredClone(movedReport);
+  unknownOwner.testResults[0].name = resolve(repository, "unexpected-owner.test.ts");
+  assert.equal(scaleResults(unknownOwner, repository, "moved").complete, false);
+  const movedRedistributed = structuredClone(movedReport);
+  movedRedistributed.testResults[1].assertionResults.push(movedRedistributed.testResults[0].assertionResults.pop());
+  assert.equal(scaleResults(movedRedistributed, repository, "moved").complete, false, "sixteen cases in the wrong owners cannot pass");
+  assert.throws(() => scaleResults(report, repository, "unknown"), /omit, moved or all/);
+  assert.throws(() => scaleResults(report, repository, "omit"), /no case result/);
   assert.equal(scaleResults({ ...report, testResults: modules.slice(1) }, repository).complete, false);
   assert.equal(scaleResults({ ...report, testResults: [...modules, modules[0]] }, repository).complete, false);
   // The global total stays 22: a case moved to the wrong owner must still fail.
@@ -44,17 +58,25 @@ test("the scale capture retains full process output and failures; its summary re
   const failedResult = scaleResults(failed, repository);
   assert.deepEqual([failedResult.complete, failedResult.passed, failedResult.failed, failedResult.cases[1].durationMs], [true, 21, 1, 600_000]);
   const command = join(scratch, "scripted-runner.mjs");
-  writeFileSync(command, `import { writeFileSync } from 'node:fs';\nprocess.stdout.write('x'.repeat(3*1024*1024));\nprocess.stderr.write('TEST retained stderr\\n');\nwriteFileSync(process.argv.find(v=>v.startsWith('--outputFile=')).slice('--outputFile='.length), ${JSON.stringify(JSON.stringify(report))});\nprocess.exitCode=1;\n`);
-  const output = join(scratch, "output"), result = runScale(output, { command: [process.execPath, command], repository });
+  writeFileSync(command, `import { writeFileSync } from 'node:fs';\nconst reports=${JSON.stringify({ all: report, moved: movedReport })};\nconst mode=process.env.ARTROOM_SCALE_MODE;\nif(!Object.hasOwn(reports,mode))throw new Error('Unexpected inherited mode');\nprocess.stdout.write('x'.repeat(3*1024*1024));\nprocess.stderr.write('TEST retained stderr\\n');\nwriteFileSync(process.argv.find(v=>v.startsWith('--outputFile=')).slice('--outputFile='.length), JSON.stringify(reports[mode]));\nprocess.exitCode=mode==='all'?1:0;\n`);
+  const output = join(scratch, "output"), result = runScale(output, { command: [process.execPath, command], repository, environment: { ...process.env, ARTROOM_SCALE_MODE: "omit" } });
   assert.deepEqual([result.childExit, result.exitCode, result.passed, result.complete], [1, 1, 22, true]);
   assert.equal(statSync(join(output, "scale.stdout.log")).size, 3 * 1024 * 1024);
   assert.equal(readFileSync(join(output, "scale.stderr.log"), "utf8"), "TEST retained stderr\n");
   assert.equal(readFileSync(join(output, "scale.exit"), "utf8"), "exit 1\n");
+  const movedOutput = join(scratch, "moved"), movedResult = runScale(movedOutput, { command: [process.execPath, command], repository, mode: "moved", environment: { ...process.env, ARTROOM_SCALE_MODE: "all" } });
+  assert.deepEqual([movedResult.exitCode, movedResult.mode, movedResult.expectedCases, movedResult.passed, movedResult.expectedOwners.length], [0, "moved", 16, 16, 9]);
+  assert.equal(JSON.parse(readFileSync(join(movedOutput, "command.json"), "utf8")).mode, "moved");
+  const omittedOutput = join(scratch, "omitted");
+  assert.equal(runScale(omittedOutput, { mode: "omit", command: [join(scratch, "must-not-run")] }), null);
+  assert.throws(() => statSync(omittedOutput), { code: "ENOENT" });
+  assert.throws(() => runScale(join(scratch, "unknown"), { mode: "unknown" }), /omit, moved or all/);
 });
 test("main always selects scale; a review outside the ruled families records its omission", () => {
-  assert.equal(scaleGateDecision({ head: main, main, changedPaths: [] }).include, true);
+  assert.equal(scaleGateDecision({ head: main, main, changedPaths: [] }).mode, "all");
   const decision = scaleGateDecision({ head, main, changedPaths: ["docs/testing.md", "notes/archive-finding.md"] });
   assert.equal(decision.include, false);
+  assert.equal(decision.mode, "omit");
   assert.equal(decision.reason, "outside-scale-paths");
   assert.deepEqual(decision.matchedPaths, []);
   assert.deepEqual(decision.changedPaths, ["docs/testing.md", "notes/archive-finding.md"]);
@@ -74,6 +96,7 @@ test("runtime families and their test owners select scale with literal full path
     "scripts/test.mjs", "scripts/gate.sh", "package.json", ".github/workflows/scale-tests.yml"]) {
     const decision = scaleGateDecision({ head, main, changedPaths: [path] });
     assert.equal(decision.include, true, path);
+    assert.equal(decision.mode, "all", path);
     assert.deepEqual(decision.matchedPaths, [path]);
   }
   // GS1 includes shared Native state and fixtures; unrelated paths still omit.
@@ -84,7 +107,20 @@ test("runtime families and their test owners select scale with literal full path
   assert.throws(() => scaleGateDecision({ head, main, changedPaths: [null] }), /complete changed-path/);
 });
 
-test("GS1 moved Native cases, their fixtures and actual production boundaries select scale", () => {
+test("GS1-only paths select moved while an original path wins over the moved group", () => {
+  assert.equal(scaleGateDecision({ head, main, changedPaths: ["packages/derive/src/judge.ts"] }).mode, "moved");
+  assert.equal(scaleGateDecision({ head, main, changedPaths: ["packages/derive/src/judge.ts", "packages/scope/src/archive-driver.ts"] }).mode, "all");
+  for (const path of ["scripts/scale-runner.mjs", "packages/scope/vitest.scale-files.ts", "scripts/scale-selection.mjs", "packages/scope/vitest.scale.config.ts"]) {
+    assert.equal(scaleGateDecision({ head, main, changedPaths: [path] }).mode, "all", path);
+  }
+  const originalPaths = new Set([
+    "packages/scope/test/floor-kept.test.ts",
+    "apps/room/lanes/test/directory-partition-capacity.scope.test.ts",
+    "packages/scope/test/archive-installed-scale.test.ts",
+    "apps/room/lanes/test/directory-partition-lanes-scale.scope.test.ts",
+    "packages/scope/test/archive-installed.fixture.ts",
+    "apps/room/lanes/test/directory-partition-lanes.scope.fixture.ts",
+  ]);
   for (const path of [
     "packages/contract/src/bounds.ts",
     "packages/cli/test/fixed-slot-membership.scope.test.ts", "packages/scope/test/floor-kept.test.ts",
@@ -150,6 +186,7 @@ test("GS1 moved Native cases, their fixtures and actual production boundaries se
   ]) {
     const decision = scaleGateDecision({ head, main, changedPaths: [path] });
     assert.equal(decision.include, true, path);
+    assert.equal(decision.mode, originalPaths.has(path) ? "all" : "moved", path);
     assert.deepEqual(decision.matchedPaths, [path]);
   }
 });
@@ -177,6 +214,7 @@ test("the real Git comparison keeps a removed scale path when a rename moves it 
   git("add", "-A"); git("-c", "commit.gpgsign=false", "commit", "-m", "Move the scale fixture outside its family");
   const selected = gateScaleSelection(root);
   assert.equal(selected.include, true);
+  assert.equal(selected.mode, "all");
   assert.deepEqual(selected.matchedPaths, [original]);
   assert(selected.changedPaths.includes("docs/moved fixture.ts"));
 });

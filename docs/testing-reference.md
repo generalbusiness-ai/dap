@@ -447,8 +447,9 @@ The four original owners retain six cases:
 
 GS-1 adds exactly these sixteen cases in nine scale owners. The original
 mixed owners keep their other 39 cases ordinary. The shared
-`scopeScaleCaseCounts` inventory lists 13 owners and 22 cases; the scale
-report checks every owner's count and the complete total.
+two-group inventory lists four original owners with six cases and nine
+moved owners with sixteen cases. `scopeScaleCaseCounts` combines them;
+the scale report checks the chosen group's owners and complete count.
 
 | Scale owner | Cases | Boundary |
 |---|---:|---|
@@ -472,8 +473,9 @@ handoff state and order.
 `npm test` includes all five native projects. `npm run test:scale` selects
 only `scope-scale`. The review gate passes `--gate` to the fixed test owner,
 which reads the actual head, `origin/main`, their merge base and the complete
-changed-path list. Main always includes scale. A review includes it when a
-path matches one of these ruled families or files:
+changed-path list. The answer is `omit`, `moved` or `all`. Main always
+selects `all`. These pre-GS1 families and files from main `270dc8c7`
+select `all`, even when a moved owner also matches:
 
 - `packages/scope/src/archive*` and `packages/scope/test/archive*`
 - `packages/git/src/journal*` and `packages/git/test/journal*`
@@ -488,34 +490,40 @@ path matches one of these ruled families or files:
   `vitest.projects.mjs`,
   `vitest.native.config.ts`, `vitest.scale.config.ts`, `scripts/gate.sh`,
   `scripts/test.mjs`, `scripts/scale-selection.mjs`,
-  `scripts/scale-selection.test.mjs`, `scripts/test-phases.test.mjs`,
+  `scripts/scale-selection.test.mjs`, `scripts/scale-runner.mjs`, `scripts/test-phases.test.mjs`,
   `package.json` and `.github/workflows/scale-tests.yml`
 
 The diff disables rename detection and separates paths with NUL. A move out
 of a scale family still selects the removed source path. Missing Git context
 refuses the selection. The test owner's `scale-selection.json` and native
 stage ledger retain the decision, its reason and the changed paths. A gate
-outside these paths reports `scope-scale` as `omitted-by-gate`, with unknown
+outside all protected paths reports `scope-scale` as `omitted-by-gate`, with unknown
 duration, rather than as a passed, skipped or missing test project. Observed
-scale modules that contradict an omission fail the summary.
+scale modules that contradict an omission fail the summary. Selector,
+configuration and count-inventory changes select `all`, including the
+GS1-added scale runner listed above.
 
-GS-1 also selects the exact membership/CLI, SQLite/Operations, proof,
+GS-1's additional paths select `moved` when no `all` path matches. They
+cover the exact membership/CLI, SQLite/Operations, proof,
 capture/evidence, publication/checker and optional-demo production paths
 listed with the cases in the GS-1 note. The moved owners, their five
-shared fixtures and actual Native fixture paths select scale too. The
+shared fixtures and actual Native fixture paths keep their protected status. The
 Grow archive pair also selects its current Site/Room source declarations,
 exact check/demo input files, maintained application setup and package
 reader/codec; the note traces that actual TEST package boundary. Source
 selection witnesses retain unrelated-path omission and detect a protected
-path missing from this selection. These additions supersede the earlier
-omission of SQLite and the shared fixture paths now protected by a moved
-case.
+path missing from this selection. For example, `judge.ts` alone selects
+the moved sixteen; an archive-driver path selects all 22. This is a
+two-group policy, not a dependency map for each owner.
 
 The [main scale workflow](../.github/workflows/scale-tests.yml) runs the
-complete scale project after every push to main. A review outside the
-listed paths establishes no scale result. The builder also starts one
-scale run when the slot is idle each sprint day and reports it in one act.
-No cadence run is claimed by this source checkpoint.
+complete scale project after every push to main, on manual dispatch, and
+daily at 05:00 UTC. It explicitly requests `all`; the standalone runner
+also defaults to `all` and replaces any inherited selection mode in its
+child environment. The runner accepts `moved` for its nine owners and
+sixteen cases, or `omit` to run nothing and write no scale result. A review
+outside the protected paths establishes no scale result. No cadence run
+or first moved-gate wall time is claimed by this source checkpoint.
 
 The main scale workflow gives the slower GitHub runner a deadline factor
 of three for the original archive owners that read `scaleDeadline`. Only
