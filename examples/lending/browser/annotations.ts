@@ -18,6 +18,7 @@ export const refusalAnnotations = {
   return: { ...common, "guard-failed": "That thing is not lent." },
   cancel: { ...common, unauthorized: "Only staff can cancel a thing." },
   publish: common,
+  reserve: { ...common, "tool-day-taken": "Someone reserved that tool for that day." },
 } satisfies Record<Kind<typeof lending>, Readonly<Record<string, string>>>;
 
 export function annotatedRefusal(kind: Kind<typeof lending>, reason: string): string {
@@ -43,6 +44,7 @@ const proposal = {
 export const proposalAnnotations = {
   donate: proposal, borrow: proposal, return: proposal, cancel: proposal,
   publish: proposal,
+  reserve: proposal,
 } satisfies Record<Kind<typeof lending>, typeof proposal>;
 
 export function proposalWords(kind: Kind<typeof lending>, reason: keyof typeof proposal): string {

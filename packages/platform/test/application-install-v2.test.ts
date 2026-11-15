@@ -2,7 +2,7 @@ import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 /** Real native v2 proof admission and fold in memory. Rulebook's registrar,
  * authority, host answers and declaration-text availability are labelled
  * fixtures. No object storage, network, driver or browser runs here; the
- * second case creates native siblings and the declared application in memory. */
+ * cohort cases create native siblings and the declared application in memory. */
 import { expect, test } from "vitest";
 import { canonicalize, definitionDigest, keyIdOfSecret, sign, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { packApplication } from "../src/application-codec/application.ts";
@@ -20,6 +20,7 @@ import { ARCHIVE_DECLARED_APPLICATION_COHORT } from "../src/archive-binding-wire
 import { declaredApplicationPublicationOrigin, installedApplicationPublicationOrigin, archiveDeclaredApplicationPublicationOrigin } from "../src/publishing-provenance.ts";
 import { applicationAnnouncement } from "../src/application-install-creation.ts";
 import { applicationProjectionDeclaration } from "../src/application-projection-reader.ts";
+import { VERSIONS } from "../src/native-catalog.ts";
 
 async function fixture(requireArchive = false, definition: DeclaredDefinition = countingCommitments) {
   const id = definitionDigest(definition), declaration = canonicalize(definition);
@@ -94,12 +95,31 @@ test("new native pin retains exact v2 proof and projection while Rules5 refuses 
   })).toMatchObject({ result: "refused", reason: "bad-field", name: "invalid-application-package" });
 });
 
-test.each([
+test("declared Rules6 refuses a capability package and admits the same package without that capability", async () => {
+  const { input, signer, packet, fields, values, texts } = await fixture();
+  const capable = await packApplication2({ ...input, semantic: { ...input.semantic,
+    capabilities: [{ name: "publication-paths@1", bounds: { prefixes: ["shelf/"] } }],
+  } }, signer);
+  expect(readApplicationPackage2(capable.bytes, capable.ids.release).ids).toEqual(capable.ids);
+  expect({ ...capable.package.semantic, capabilities: [] }).toEqual(packet.package.semantic);
+  const declared = new Rulebook(true, membership.scope, DECLARED_APPLICATION_RULES);
+  const unchanged = declared.state.snapshot();
+  expect(declared.act(keys.rita, "install-application", { fields: { ...fields,
+    semantic: capable.ids.semantic, release: capable.ids.release,
+  } }, { values: [canonicalize(capable.package.semantic), canonicalize(capable.package.release)], texts }))
+    .toMatchObject({ result: "refused", reason: "bad-field", name: "invalid-application-package" });
+  expect(declared.state.snapshot()).toEqual(unchanged);
+  expect(declared.act(keys.rita, "install-application", { fields }, { values, texts })).toMatchObject({ result: "write" });
+  expect(declared.item(declared.head.seq)).toMatchObject({ state: "pending", values: { semantic: packet.ids.semantic } });
+});
+
+const projectionCohorts = [
   { name: "declared", cohort: DECLARED_APPLICATION_COHORT, origin: declaredApplicationPublicationOrigin, other: archiveDeclaredApplicationPublicationOrigin,
     pins: ["platform:register@13", "platform:directory@12", "platform:membership@7", "platform:rules@6", "platform:destination@8"] },
   { name: "archive declared", cohort: ARCHIVE_DECLARED_APPLICATION_COHORT, origin: archiveDeclaredApplicationPublicationOrigin, other: declaredApplicationPublicationOrigin,
     pins: ["platform:register@15", "platform:directory@14", "platform:membership@8", "platform:rules@8", "platform:destination@10"] },
-])("$name cohort creates its exact native siblings and routes selected role additions", async ({ cohort, origin, other, pins }) => {
+] as const;
+async function completeProjectionInstall({ cohort, origin, other, pins }: (typeof projectionCohorts)[number]) {
   const { installGraph } = await import("./support-application-install.ts");
   const { R, D, M, A, G, send } = installGraph(cohort);
   expect([R.named, D.named, M.named, A.named, G.named]).toEqual(pins);
@@ -158,6 +178,42 @@ test.each([
   expect(applicationProjectionDeclaration(A.state, APPLICATION_INSTALL_RULES, D.at, job, "board", retained)).toBeNull();
   expect(applicationProjectionDeclaration(A.state, A.named, D.at, job, "board", () => undefined)).toBeNull();
   for (const node of nodes) expect(node.replay().snapshot()).toEqual(node.state.snapshot());
+  return { A, D, job, packet, retained };
+}
+
+test.each(projectionCohorts)("$name cohort creates its exact native siblings and routes selected role additions", async row => {
+  await completeProjectionInstall(row);
+});
+
+// This checks the pure reader's named-pin boundary against a real completed
+// proof, not genesis or Membership authority under every historical cohort.
+test("every catalog Rules pin has an explicit projection-declaration answer", async () => {
+  const answers: Readonly<Record<string, boolean>> = {
+    "platform:rules@1": false,
+    "platform:rules@2": false,
+    "platform:rules@3": false,
+    "platform:rules@4": false,
+    "platform:rules@5": false,
+    "platform:rules@6": true,
+    "platform:rules@7": false,
+    "platform:rules@8": true,
+    "platform:rules@9": true,
+    "platform:rules@10": true,
+    "platform:rules@11": false,
+    "platform:rules@12": false,
+    "platform:rules@13": false,
+    "platform:rules@14": true,
+    "platform:rules@15": true,
+  };
+  expect(Object.keys(answers).sort()).toEqual(Object.keys(VERSIONS).filter(named => named.startsWith("platform:rules@")).sort());
+  const completed = await completeProjectionInstall(projectionCohorts[0]);
+  if (!completed) throw Error("The projection catalog needs the completed declared installation.");
+  const { A, D, job, packet, retained } = completed;
+  for (const [named, answersDeclaration] of Object.entries(answers)) {
+    const declared = applicationProjectionDeclaration(A.state, named, D.at, job, "board", retained);
+    if (answersDeclaration) expect(declared, named).toMatchObject({ v: 1, name: "board", projection: packet.package.semantic.projections["board"], definition: packet.package.semantic.definitions[0] });
+    else expect(declared, named).toBeNull();
+  }
 });
 
 // Invariant: only the explicit archive pin admits a signed archive requirement.

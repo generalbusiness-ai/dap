@@ -52,6 +52,11 @@ the library tells its destination to publish it at the thing's path,
 The scope does not check a page's text against the thing; the journal
 shows who stated it, and the next act on the thing rewrites the page.
 
+The package declares `publication-paths@1` with the single directory prefix
+`shelf/`. This permits the Library to publish donated tools' pages and
+refresh them after circulation or an explicit `publish` act. The declaration
+covers files under `shelf/` at the Library's destination, not other paths.
+
 [Build a lending library](../../docs/build-a-lending-library.md) is the
 planner's four-step tutorial for the first definition without publication.
 
@@ -68,6 +73,22 @@ hidden while the actions are loading or cannot be read. The native scope
 still refuses a nonstaff cancellation as `unauthorized`, including when a
 previously observed staff role has changed.
 
+## Reserve a tool for a day
+
+A member opens a reservation with `tool`, `day` and `until`. A slot is
+one tool and one day label. A held reservation makes another reservation
+for that exact slot fail with `tool-day-taken`. The lapse changes only
+the reservation to `lapsed`; it never changes the tool.
+
+Write day labels as `YYYY-MM-DD` in pages and agent requests. This is a
+convention, not a guard. The scope compares opaque text of at most ten
+bytes: two spellings of a calendar day are two different slots. It does
+not check a calendar, timezone or interval. The member supplies `until`
+explicitly, and the scope never checks that `until` falls on `day`.
+
+The definition and retained scenario expose reservation acts. The current
+browser screen keeps its circulation controls.
+
 ## What is here
 
 | File | What it is |
@@ -75,7 +96,7 @@ previously observed staff role has changed.
 | `definition.ts` | The `lending` definition: a `library` item that holds the destination and many `thing` items; `publish` refreshes a thing's page without changing it. |
 | `definition.json` | Readable declaration source; canonicalize its parsed value before `--value`. |
 | `pin.ts` | The digest of those bytes, `LENDING_DEFINITION`. |
-| `scripts/pin.mjs` | Writes `definition.json` and `pin.ts` from `definition.ts`. Run it after any change to the definition. |
+| `scripts/pin.mjs` | Compiles the typed definition and judges its story, then writes the declaration JSON, pin and retained scenario. |
 | `shelf.ts` | The shelf page of one thing as markdown, with members' text made literal; and every thing, live or gone, read from the journal. |
 | `browser/publication.ts` | Reads a published page and compares its visible text with the page the journal implies, at one observed commit. |
 | `test-support.ts` | The in-memory scope, rules and stand-in destination that `definition.test.ts` uses. |
@@ -91,6 +112,19 @@ previously observed staff role has changed.
 | `demo-script.md` | The script for the recording. |
 | `definition.test.ts` | Plain-function tests: the bytes and the pin, the story of Nasruddin and the pot with the page each act sends, shelf paths, and the bounds. Grants are scripted. |
 | `shelf.test.ts` | Tests of the shelf page: members' text made literal, and things that are gone read from the journal. |
+
+From the repository root, regenerate those three files with:
+
+```sh
+node --import tsx examples/lending/scripts/pin.mjs
+```
+
+The helper writes only `definition.json`, `pin.ts` and
+`scenarios/application.json` in this directory. It compiles the complete
+typed definition and judges the story with its public TEST actors before
+writing any output. The story signs fixture intents with TEST keys; it
+uses no release or operator signer. The helper changes no application
+manifest, version, release identifiers or signatures.
 
 The scenario on real scopes is
 `packages/scope/test/lending.test.ts`. It installs the application-publication cohort
