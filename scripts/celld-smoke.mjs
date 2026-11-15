@@ -51,11 +51,33 @@ const installDetail = outcome => {
   for (const [detail, matches] of installDetails) if (matches(outcome.code, line)) return detail;
 };
 
+export const celldSmokeStatusClass = status => Number.isInteger(status) && status >= 100 && status <= 599
+  ? `${Math.floor(status / 100)}xx` : status === null ? "none" : "invalid";
+const transportKinds = new Set(["no-reply", "reply-not-answer", "reply-too-large", "deadline", "missing-fetch", "unclassified"]);
+const statusClasses = new Set(["none", "1xx", "2xx", "3xx", "4xx", "5xx", "invalid"]);
+function installTransport(outcome) {
+  if (installDetail(outcome) !== "transport-no-answer") return null;
+  const line = outcome.lines[0];
+  let kind = "unclassified", status = "none";
+  if (line.startsWith("No answer: no reply: ")) kind = "no-reply";
+  else if (line === "No answer: this runtime has no fetch; nothing was sent") kind = "missing-fetch";
+  else if (line.startsWith("No answer: no whole reply within 30 seconds; the request was aborted.")) kind = "deadline";
+  else {
+    const reply = /^No answer: the reply, status ([0-9]{3}), (is not an answer of create|is longer than 4194304 bytes and was not read)\./.exec(line);
+    if (reply) {
+      status = celldSmokeStatusClass(Number(reply[1]));
+      kind = reply[2] === "is not an answer of create" ? "reply-not-answer" : "reply-too-large";
+    }
+  }
+  return Object.freeze({ kind, status });
+}
+
 export class CelldSmokeError extends Error {
   constructor(stage, outcome) {
     super(`celld smoke failed: ${stage}; retain the private DAP_HOME for inspection`);
     this.stage = stage;
     this.detail = stage === "install" ? installDetail(outcome) : null;
+    this.transport = stage === "install" ? installTransport(outcome) : null;
   }
 }
 const fail = (stage, outcome) => { throw new CelldSmokeError(stage, outcome); };
@@ -73,6 +95,12 @@ export function celldSmokeOperation(error) {
 }
 export function celldSmokeDetail(error) {
   return error instanceof CelldSmokeError && error.stage === "install" && installDetails.has(error.detail) ? error.detail : null;
+}
+export function celldSmokeTransport(error) {
+  if (!(error instanceof CelldSmokeError) || celldSmokeDetail(error) !== "transport-no-answer") return null;
+  const value = error.transport;
+  return value && transportKinds.has(value.kind) && statusClasses.has(value.status)
+    ? { kind: value.kind, status: value.status } : null;
 }
 const loopback = hostname => hostname === "[::1]" || /^127(?:\.(?:0|[1-9][0-9]{0,2})){3}$/.test(hostname);
 
