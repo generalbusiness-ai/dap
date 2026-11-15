@@ -82,7 +82,7 @@ Root retained the reviewed safe development files at the permanent paths
 in the table; full Card request/display dumps remain private.
 The earlier RS1/LS2 gate tested its earlier source, not these new words.
 The joined CE2 gate, required Card workflow, review and landing remain
-OWED. RS1 and LS2 landed locally at `ce6f02ba` with normal receipt
+OWED. RS1 and LS2 landed and published at `ce6f02ba` with normal receipt
 `fdb8fbee`. The [CE2 note](2026-11-15-ce2-expired-custody.md) records that
 baseline and the remaining gate order. Planner owns signing Lending and
 Counter 0.4 from main that carries the joined head.

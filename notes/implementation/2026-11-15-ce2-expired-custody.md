@@ -156,11 +156,17 @@ semantic identifier. Whole reproduction passed at `38fec867`.
 Exact-head preflight, one joined gate, maintained Card browser workflow
 and review remain OWED. The earlier RS1/LS2 gate does not discharge them.
 
-RS1 and LS2 landed in local main at `ce6f02ba164982dce9ead6b85c9e482ca1829f07`,
-with the reviewed tree `04cd7584658e2e0874344b391cb2aeb045a88c29` and normal
+RS1 and LS2 landed at `ce6f02ba164982dce9ead6b85c9e482ca1829f07`,
+with reviewed tree `04cd7584658e2e0874344b391cb2aeb045a88c29` and normal
 receipt `fdb8fbee7c175e3896360898ec76f65d32708fc6`. Both original promises
-are satisfied. The builder made no push. Planner owns publication and the
-CE2 gate baseline under request `59e270363035d3d83c5d4b6532856f1e94e9d11c`.
-Ruling `ee53f773f4` permits the gate and review before publication when its
-source conditions hold. Planner owns later 0.4 signing from main that
-carries the joined head.
+are satisfied. Checker `f2af19af` found the landing clean, and planner
+origin act `6b7b421e` published that exact main. Planner reported that
+each dry-run Worker bundle equals its deployed bundle, so no deployment
+followed. The builder made no push or deployment.
+
+The private integration at `7eeef11e32bfc7a8b7abe7b0475a669b5c720d7a`
+preserved its full tree `4f60bede997e90fed310cd53615a989f2450ab45`.
+That is the implementation checkpoint plus the two evidence notes.
+Rulings `df8040e5` and `6b7b421e` end the pre-origin gate allowance
+and release one gate for the head that contains published main.
+Planner owns later 0.4 signing from main that carries the joined head.
