@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:60f154eb4b68dee19ca477524917b5c7c3888228","text":"Merge retired a covered predecessor; the successor is at examples/lending/release-identifiers.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:61062db2e16b75ce2371e282e790120f575342b4","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-projection-reader.ts."}
