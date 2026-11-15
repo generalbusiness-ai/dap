@@ -36,5 +36,5 @@ export function applicationInstallation(state: StateView, named: string, directo
     || !["definition", "release", "semantic", "presentation"].every(key => isDigest(job.values[key]))) return null;
   return { directory: room.refs["directory"], rules: scope.at, membership, destination, scope: application, item, definition: job.values["definition"] as Digest,
     ids: { release: job.values["release"] as Digest, semantic: job.values["semantic"] as Digest, presentation: job.values["presentation"] as Digest },
-    membershipDefinition: named === CC.rules ? CC.membership : named === AC.rules || named === AC2.rules || named === ADC.rules || named === ACR.rules || named === HCR.rules || named === ERC.rules ? AC.membership : C.membership };
+    membershipDefinition: named === BC.rules ? BC.membership : named === CC.rules ? CC.membership : named === AC.rules || named === AC2.rules || named === ADC.rules || named === ACR.rules || named === HCR.rules || named === ERC.rules ? AC.membership : C.membership };
 }

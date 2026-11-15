@@ -3,6 +3,7 @@
  * adapters. Git/package HTTP host, clock, scheduler and private browser stores
  * are explicit fixtures. No browser, provider effect or deployment runs. */
 import { env } from "cloudflare:test";
+import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { expect, inject, onTestFinished, test } from "vitest";
 import { canonicalize, factRefOf, isRecord, isScopeRef, isSeed, same, scopeIdOf, unb64url } from "@generalbusiness/dap-bytes";
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
@@ -14,7 +15,7 @@ import { nativeGateway } from "../../../apps/counter/browser/client.ts";
 import { lendingGateway } from "../../../examples/lending/browser/client.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, applicationWorkerBindings } from "./fixtures-native.ts";
-import { rita, routed } from "./repository.ts";
+import { rita, routed, vic } from "./repository.ts";
 import { soon } from "./net.ts";
 import { TEST_DEPLOYMENT } from "./worker.ts";
 import type {} from "./support/maintained-applications.ts";
@@ -63,6 +64,10 @@ test.each([
     const app = life.platform(scopeIdOf(create.to)); await driveFixture([R, D, M, A, G, app], life.wait);
     const scope = await life.wait(() => app.at());
     expect(await life.wait(() => A.item(job))).toMatchObject({ state: "active", refs: { scope } });
+    if (cohort.rules === BASE_COHORT.rules) {
+      const metadata = await life.wait(() => (A.object as unknown as { applicationInstallation(directory: ScopeRef, item: number): Promise<unknown> }).applicationInstallation(directory, job));
+      expect(metadata).toMatchObject({ membershipDefinition: "platform:membership@14" });
+    }
     const installation = { scope, directory, item: job, definition: packet.package.semantic.entry };
     const identity = { origin: "https://scopes.test", deployment: TEST_DEPLOYMENT, scope, definition: installation.definition, membership, member: { membership, member: "@rita" as const }, publicKey: rita.key };
     const paths: string[] = [];
@@ -75,6 +80,14 @@ test.each([
     if (!issued.ok) throw Error("The actual membership must issue a read session.");
     const handle = new ScopeHandle(httpTransport(identity.origin, { fetch }), app.name, issued.session.reader());
     const query = { v: 1 as const, scope, directory, install: job, projection: "state", items: {} };
+    if (name === "lending" && cohort.rules === BASE_COHORT.rules) {
+      // Vic has no standing in this actual Base Membership. No session is
+      // fabricated, and the same installed projection remains protected.
+      const refused = await life.owner.required(() => requestSession(identity.origin, M.name, sessionRequest(membership, vic.secret, soon(60), crypto.randomUUID()), { fetch }));
+      expect(refused).toEqual({ ok: false, reason: "unauthorized" });
+      const withoutSession = new ScopeHandle(httpTransport(identity.origin, { fetch }), app.name);
+      expect(await life.owner.required(() => withoutSession.applicationProjection(query))).toEqual({ ok: false, reason: "forbidden" });
+    }
     if (name === "counter") await life.wait(() => app.did(rita, "initialize", { expected: { configuration: 1 } }));
     const first = await life.owner.required(() => handle.applicationProjection(query));
     expect(first.ok, first.ok ? undefined : first.reason).toBe(true); if (!first.ok) throw Error(`The declared state refused: ${first.reason}`);
