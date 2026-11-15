@@ -3,13 +3,15 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { ActType, Effect, Intent } from "@generalbusiness/dap-contract";
-import { judgeActBody, validateDefinition, type Capabilities } from "../src/index.ts";
+import { judgeActBody, validateDefinition, RuleFault, type Capabilities, type CapabilityGiven } from "../src/index.ts";
 import { Scope, created, deskDefinition, directory, grantOf, keys, laneDefinition, on, otherLane, t, valid, variant } from "./fixtures.ts";
 import { gateRules, gateWith } from "./fixtures-marks.ts";
 import { Works, changed, works } from "./fixtures-holds.ts";
 import { deviceCommandFixture } from "./fixtures-device-command.ts";
 import { M } from "./definition-corpus/forms-settles-data.ts";
 import { settlesChanges } from "./definition-corpus/settles-variants.ts";
+import { receiverPinData, PIN_BOUNDS } from "./definition-corpus/receiver-pins-data.ts";
+import { holdCapability } from "../src/capability/hold.ts";
 
 const { rita } = keys;
 const act = (over: Partial<ActType> & Pick<ActType, "step" | "on">): ActType => ({
@@ -347,11 +349,14 @@ test("numeric absence changes only when the actual current opening becomes looku
 });
 
 test("opaque snapshots and descriptors preserve the runtime cut while working subjects show earlier effects", () => {
-  const definition = valid(validateDefinition(deviceCommandFixture, PROPOSED_BOUNDS));
+  const definition = variant(deviceCommandFixture, data => {
+    data.acts["descriptor-open"] = structuredClone(data.acts.commission);
+    data.acts["descriptor-open"].effects.push({ capability: { name: "device-command", do: "open", with: { device: { slot: "kind" } } } });
+  });
   const scope = created(definition, {}, "TEST opaque snapshot cut");
   const device = scope.did(rita, "commission", { fields: { kind: "fan" } }).seq;
   const row = scope.item(device), before = scope.state.snapshot();
-  let read: "state" | "direct" | "descriptor" | "enumeration" = "state";
+  let read: "state" | "direct" | "descriptor" | "enumeration" | "current" = "state";
   const seen: unknown[] = [];
   const provenance: NonNullable<Parameters<typeof judgeActBody>[3]["provenance"]> = ({ origin }) =>
     origin.at === "item" && origin.item === row ? { is: "entry" } : null;
@@ -361,13 +366,14 @@ test("opaque snapshots and descriptors preserve the runtime cut while working su
     implements: () => true, guard: () => true,
     effect(_capability, _effect, _args, given) {
       const snapshot = given.view.all();
-      expect(Array.isArray(Object.getOwnPropertyDescriptor(snapshot, "items")?.get?.())).toBe(true);
+      expect(Array.isArray(Object.getOwnPropertyDescriptor(snapshot, "items")?.value)).toBe(true);
       const deviceRow = snapshot.items.find(item => item.type === "device");
       if (!deviceRow) throw new Error("the recorded device is missing");
       seen.push([given.fromItems?.["device"]?.values["level"], deviceRow.values["level"]]);
       if (read === "direct") void deviceRow.id;
-      if (read === "descriptor") Object.getOwnPropertyDescriptor(deviceRow, "id")?.get?.();
+      if (read === "descriptor") Object.getOwnPropertyDescriptor(deviceRow, "id")?.value;
       if (read === "enumeration") Object.assign({}, deviceRow);
+      if (read === "current") Object.getOwnPropertyDescriptor(given.fromItems!["device"]!, "id");
       return [];
     },
   };
@@ -380,5 +386,188 @@ test("opaque snapshots and descriptors preserve the runtime cut while working su
     expect(judgeActBody(scope.state, definition, body, context))
       .toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
   }
+  read = "current";
+  // Omit the optional SDK provenance port. Core still knows this actual
+  // opening's object identity and must not expose its unrecorded id.
+  expect(judgeActBody(scope.state, definition,
+    { kind: "descriptor-open", on: null, fields: { kind: "heater" }, expected: {} },
+    { ...scope.context(), actor: rita.key, capabilities }))
+    .toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
   expect(scope.state.snapshot()).toBe(before);
+});
+
+/** Scripted rules reach the real public-context boundary. They attest no
+ * deployed capability authority or identical signed/unsigned entry hash. */
+function descriptorJudgments(probe: (given: CapabilityGiven, phase: "runtime" | "body") => true | string | void,
+  pending = false, at: "guard" | "effect" = "guard") {
+  const definition = variant(deviceCommandFixture, data => {
+    data.acts.command.fields.peer = { type: "item", of: "device", required: false };
+  });
+  const scope = created(definition, {}, "TEST truthful descriptors");
+  const device = scope.did(rita, "commission", { fields: { kind: "fan" } }).seq;
+  const row = scope.item(device);
+  Object.freeze(row); // Exercise a real frozen data descriptor, not a fabricated wrapper shape.
+  const signed = scope.intent(rita, "command", { on: device,
+    fields: { target: "on", level: 1, ...(pending ? { peer: device } : {}) }, expected: { on: row.revision } });
+  let phase: "runtime" | "body" = "runtime";
+  const capabilities: Capabilities = {
+    implements: () => true,
+    guard(_capability, _guard, _args, given) { return at === "guard" ? probe(given, phase) ?? true : true; },
+    effect(_capability, _effect, _args, given) { if (at === "effect") probe(given, phase); return []; },
+  };
+  const runtime = scope.judge(signed, { capabilities });
+  phase = "body";
+  const token = {};
+  const provenance: NonNullable<Parameters<typeof judgeActBody>[3]["provenance"]> = ({ origin }) => {
+    if (pending && origin.at === "field" && origin.path[0] === "peer") return { is: "pending", token, item: row, alias: device };
+    return pending && origin.at === "item" && origin.item === row ? { is: "entry" } : null;
+  };
+  const body = judgeActBody(scope.state, definition, bodyOf(signed.intent), { ...scope.context(), actor: rita.key, capabilities, provenance });
+  return { runtime, body };
+}
+
+test("a represented descriptor preserves runtime kind value and all three attributes", () => {
+  const observed: PropertyDescriptor[] = [];
+  const { runtime, body } = descriptorJudgments(given => {
+    const row = given.view.page("device", ["active"], null, 1).items[0];
+    if (!row) throw new Error("the admitted recorded device is missing");
+    const descriptor = Object.getOwnPropertyDescriptor(row, "id");
+    if (!descriptor) throw new Error("the real row has no id descriptor");
+    observed.push(descriptor);
+    expect(Object.isFrozen(row)).toBe(true);
+    expect(row.id).toBe(descriptor.value);
+    // Restoring the old accessor changes this actual guard's answer.
+    return descriptor.value === undefined && descriptor.get !== undefined ? true : "device-kind-ungranted";
+  });
+  expect(observed).toHaveLength(2);
+  expect(observed[1]).toEqual(observed[0]);
+  expect(observed[0]).toMatchObject({ writable: false, enumerable: true, configurable: false });
+  expect(Object.hasOwn(observed[1]!, "value")).toBe(true);
+  expect(Object.hasOwn(observed[1]!, "get")).toBe(false);
+  expect(runtime.result).toBe("refused");
+  expect(body.result).toBe(runtime.result);
+});
+
+test("a descriptor of an unrepresented property is unavailable before a value escapes", () => {
+  const { runtime, body } = descriptorJudgments(given => {
+    const row = given.view.page("device", ["active"], null, 1).items[0];
+    if (!row) throw new Error("the admitted device is missing");
+    void Object.getOwnPropertyDescriptor(row, "id");
+  }, true);
+  expect(runtime.result).toBe("write");
+  expect(body).toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
+});
+
+test("Object.keys on a row with an unrepresented property is unavailable", () => {
+  const { runtime, body } = descriptorJudgments(given => {
+    const row = given.view.page("device", ["active"], null, 1).items[0];
+    if (!row) throw new Error("the admitted device is missing");
+    void Object.keys(row);
+  }, true);
+  expect(runtime.result).toBe("write");
+  expect(body).toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
+});
+
+test("Object.keys on represented data equals the runtime keys", () => {
+  const keys: string[][] = [];
+  const { runtime, body } = descriptorJudgments(given => {
+    const row = given.view.page("device", ["active"], null, 1).items[0];
+    if (!row) throw new Error("the admitted device is missing");
+    keys.push(Object.keys(row));
+  });
+  expect(keys).toHaveLength(2);
+  expect(keys[1]).toEqual(keys[0]);
+  expect([runtime.result, body.result]).toEqual(["write", "write"]);
+});
+
+test("Reflect.ownKeys and in equal runtime without reading represented or unknown values", () => {
+  for (const pending of [false, true]) {
+    const keys: (readonly PropertyKey[])[] = [], present: boolean[] = [];
+    const { runtime, body } = descriptorJudgments(given => {
+      const row = given.view.page("device", ["active"], null, 1).items[0];
+      if (!row) throw new Error("the admitted device is missing");
+      keys.push(Reflect.ownKeys(row));
+      present.push("id" in row, "absent" in row, "from" in given);
+    }, pending);
+    expect(keys).toHaveLength(2);
+    expect(keys[1]).toEqual(keys[0]);
+    expect(present).toEqual([true, false, false, true, false, false]);
+    expect([runtime.result, body.result]).toEqual(["write", "write"]);
+  }
+});
+
+test("skipping intent performs zero lazy intent reads and equals the runtime answer", () => {
+  let reads = 0;
+  const { runtime, body } = descriptorJudgments(given => {
+    const watched = new Proxy(given, { get(target, key) {
+      if (key === "intent") reads++;
+      return Reflect.get(target, key, target);
+    } });
+    expect(watched.fields["target"]).toBe("on");
+  }, false, "effect");
+  expect(reads).toBe(0);
+  // Any private lazy intent read also throws and makes this body unavailable.
+  expect([runtime.result, body.result]).toEqual(["write", "write"]);
+  if (runtime.result !== "write" || body.result !== "write") return expect.fail("both actual paths must write");
+  expect(runtime.draft).toEqual({ input: runtime.draft.input, ...body.draft, judgesTime: true });
+});
+
+test("a public context walk preserves represented descriptors and stops every unknown surface", () => {
+  const represented = new Map<string, PropertyDescriptor>();
+  const missing: string[] = [];
+  let runtimeKeys: readonly PropertyKey[] = [];
+  const { runtime, body } = descriptorJudgments((given, phase) => {
+    const keys = Reflect.ownKeys(given);
+    if (phase === "runtime") runtimeKeys = keys;
+    else expect(keys).toEqual(runtimeKeys);
+    for (const key of keys) {
+      if (typeof key !== "string") throw new Error("this actual context has no symbol field");
+      try {
+        const descriptor = Object.getOwnPropertyDescriptor(given, key)!;
+        if (phase === "runtime") represented.set(key, descriptor);
+        else {
+          const actual = represented.get(key)!;
+          expect([Object.hasOwn(descriptor, "value"), descriptor.writable, descriptor.enumerable, descriptor.configurable])
+            .toEqual([Object.hasOwn(actual, "value"), actual.writable, actual.enumerable, actual.configurable]);
+          if (descriptor.value === null || !["object", "function"].includes(typeof descriptor.value)) expect(descriptor.value).toBe(actual.value);
+        }
+      } catch (error) { if (phase !== "body" || !(error instanceof RuleFault)) throw error; missing.push(key); }
+    }
+    if (phase === "body") {
+      for (const [name, read] of [
+        ["fields.peer", () => Object.getOwnPropertyDescriptor(given.fields, "peer")],
+        ["from.device", () => Object.getOwnPropertyDescriptor(given.from!, "device")],
+        ["fromItems.device.id", () => Object.getOwnPropertyDescriptor(given.fromItems!["device"]!, "id")],
+        ["view.item.id", () => Object.getOwnPropertyDescriptor(given.view.page("device", ["active"], null, 1).items[0]!, "id")],
+      ] as const) {
+        try { read(); } catch (error) { if (!(error instanceof RuleFault)) throw error; missing.push(name); }
+      }
+      expect(Object.getOwnPropertyDescriptor(given.fields, "level")).toEqual({ value: 1, writable: true, enumerable: true, configurable: true });
+    }
+  }, true, "effect");
+  expect(runtime.result).toBe("write");
+  expect(body).toEqual({ result: "unavailable", reason: "unavailable", lacks: ["intent"] });
+  expect(missing).toEqual(["intent", "fields.peer", "from.device", "fromItems.device.id", "view.item.id"]);
+
+  // Existing receiver-pin ACT fixture: the kind is declared syntax, not
+  // invented checked evidence. Exercise the actual closed producer too.
+  const definition = valid(validateDefinition(receiverPinData(), PIN_BOUNDS));
+  const scope = created(definition, { title: "A lane", opener: rita.member }, "TEST represented kind context");
+  scope.bounds = PIN_BOUNDS;
+  const owner = holdCapability({ tokensPerHold: 2, rootRetentionSeconds: 600 });
+  const declared: PropertyDescriptorMap[] = [];
+  const capabilities: Capabilities = { ...owner, effect(capability, effect, args, given) {
+    declared.push(Object.getOwnPropertyDescriptors(given.kindContext.declared));
+    return owner.effect(capability, effect, args, given);
+  } };
+  const signed = scope.intent(rita, "license", { on: 0, expected: { on: scope.item(0).revision }, fields: { peer: otherLane } });
+  const actual = scope.judge(signed, { capabilities });
+  const explored = judgeActBody(scope.state, definition, bodyOf(signed.intent), { ...scope.context(), actor: rita.key, capabilities });
+  expect([actual.result, explored.result]).toEqual(["write", "write"]);
+  expect(declared).toHaveLength(2);
+  expect(declared[1]).toEqual(declared[0]);
+  expect(declared[0]?.["from"]).toEqual({ value: "task", writable: false, enumerable: true, configurable: false });
+  if (actual.result !== "write" || explored.result !== "write") return expect.fail("both actual receiver-pin paths must write");
+  expect(explored.draft.effects).toEqual(actual.draft.effects);
+
 });

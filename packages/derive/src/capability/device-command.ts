@@ -1,5 +1,6 @@
 /** Local command facts, shared by production and replay. Performs no device write. */
 import { DEVICE_COMMAND, type DeviceCommandGrant, type DeviceCommandOutcome, type FactRef, type Intent } from "@generalbusiness/dap-contract";
+import { recordSelfReference } from "../capability-self.ts";
 import { isFactRef, isLocalId, utf8 } from "@generalbusiness/dap-bytes";
 import type { Capabilities, CapabilityDerived, CapabilityGiven, CapabilityItemEffect, Recorded } from "../capability.ts";
 import { creationContextOf } from "../creation-context.ts";
@@ -44,8 +45,8 @@ function open(args: Readonly<Record<string, unknown>>, given: CapabilityGiven): 
     || typeof level !== "number" || !Number.isSafeInteger(level) || level < 0 || level > 100) throw new Error(`${DEVICE_COMMAND}: invalid target`);
   const command: Recorded = { kind: "command", key: [given.self], state: "open",
     values: { device: device.id, kind: device.values["kind"], target, level, targetAt: given.self, owner: grant.owner, decided: 0 } };
-  given.markSelf?.(command, ["key", 0]);
-  given.markSelf?.(command, ["values", "targetAt"]);
+  recordSelfReference(command, ["key", 0]);
+  recordSelfReference(command, ["values", "targetAt"]);
   return { records: [command], itemEffects: [
     { effect: "value", item: device.id, slot: "outcome", value: null },
     { effect: "ref", item: device.id, slot: "outcomeAt", to: null },

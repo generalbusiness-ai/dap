@@ -2,6 +2,7 @@
 import type { FieldType } from "@generalbusiness/dap-contract";
 import type { Item, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
+import { guardObject } from "./opaque-object.ts";
 
 type Path = readonly (string | number)[];
 export type ReferenceOrigin =
@@ -178,32 +179,28 @@ export class BodyReferences {
     if (data?.is === "entry" || data?.is === "after" || data?.is === "pending") return this.unavailable();
     return item[member];
   }
-  /** Accessor descriptors keep reflection on the same guarded read path. */
-  #reading<T extends object>(value: T, read: (key: PropertyKey) => unknown): T {
-    const copy = Array.isArray(value) ? [] : Object.create(Object.getPrototypeOf(value));
-    for (const key of Reflect.ownKeys(value)) {
-      const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
-      Object.defineProperty(copy, key, { ...descriptor, configurable: !(Array.isArray(value) && key === "length") });
-    }
-    return new Proxy(copy, {
-      get: (_target, key) => read(key),
-      getOwnPropertyDescriptor: (target, key) => {
-        const descriptor = Reflect.getOwnPropertyDescriptor(target, key);
-        return !descriptor || !descriptor.configurable ? descriptor
-          : { configurable: true, enumerable: descriptor.enumerable ?? false, get: () => read(key) };
-      },
-    }) as T;
-  }
   opaque<T>(value: T): T {
     if (this.#identity(value) || value === this.#entry) return this.expose(value) as T;
     if (value === null || typeof value !== "object") return value;
-    return this.#reading(value, key => this.opaque(Reflect.get(value, key)));
+    return guardObject(value, key => this.opaque(Reflect.get(value, key)));
+  }
+  opaqueFields<T extends Readonly<Record<string, unknown>>>(fields: T, types: Readonly<Record<string, FieldType>>): T {
+    return guardObject(fields, name => typeof name === "string" && Object.hasOwn(fields, name)
+      ? this.opaque(this.field(types, fields, name)) : Reflect.get(fields, name));
+  }
+  opaqueFrom(from: Readonly<Record<string, number>>, items: Readonly<Record<string, Item>>): Readonly<Record<string, number>> {
+    return guardObject(from, name => typeof name === "string" && items[name]
+      ? this.metadata(items[name]!, "id") : Reflect.get(from, name));
+  }
+  opaqueFromItems(items: Readonly<Record<string, Item>>, definition: ValidDefinition, currentDeviceCommand: boolean): Readonly<Record<string, Item>> {
+    return guardObject(items, name => typeof name === "string" && items[name]
+      ? this.opaqueItem(items[name]!, definition, currentDeviceCommand) : Reflect.get(items, name));
   }
   opaqueItem(item: Item, definition: ValidDefinition, currentDeviceCommand = false): Item {
     const declaration = definition.declared.items[item.type];
-    return this.#reading(item, key => {
+    return guardObject(item, key => {
       if (key === "id" || key === "revision" || key === "opened") return this.metadata(item, key);
-      if (key === "refs" || key === "values") return this.#reading(item[key], name => {
+      if (key === "refs" || key === "values") return guardObject(item[key], name => {
         if (typeof name !== "string" || !Object.hasOwn(item[key], name)) return Reflect.get(item[key], name);
         if (currentDeviceCommand && key === "refs" && name === "targetAt"
           && this.#working.get(item)?.get(JSON.stringify(["refs", "targetAt"])) === this.#entry) return item.refs["targetAt"];
@@ -214,7 +211,7 @@ export class BodyReferences {
     });
   }
   opaqueView(view: StateView, definition: ValidDefinition): StateView {
-    return this.#reading(view, key => {
+    return guardObject(view, key => {
       const target = view;
       if (key === "item") return (id: number) => {
         const item = this.lookup(view, { at: "untyped" }, id, null);
@@ -227,7 +224,7 @@ export class BodyReferences {
       };
       if (key === "all") return () => {
         const snapshot = target.all();
-        return this.#reading(snapshot, member => member === "items"
+        return guardObject(snapshot, member => member === "items"
           ? snapshot.items.map(item => this.opaqueItem(item, definition)) : Reflect.get(snapshot, member));
       };
       const value: unknown = Reflect.get(target, key);

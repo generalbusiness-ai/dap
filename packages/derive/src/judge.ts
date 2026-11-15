@@ -236,7 +236,9 @@ export function judgeActBody(view: StateView, definition: ValidDefinition, body:
     missing ??= "entry";
     throw new RuleFault("the body needs an unsupported entry symbol");
   };
-  const references = context.provenance ? new BodyReferences(context.provenance, unavailableEntry, body.fields) : undefined;
+  const provenance: Provenance = context.provenance ?? (({ origin }) =>
+    (origin.at === "item" || origin.at === "revision" || origin.at === "opened") && origin.currentOutput ? { is: "entry" } : null);
+  const references = new BodyReferences(provenance, unavailableEntry, body.fields);
   const answer = withinCounts(view, definition, unjudged(() => {
     const scope = view.scope();
     if (!scope) return { result: "unavailable", reason: "unavailable" } as const;

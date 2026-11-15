@@ -28,6 +28,7 @@
  */
 
 import type { CapabilityName, Digest, Effect, Evidence, FieldValue, Intent, OperationId, ScopeKind, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import { recordSelfReference } from "../capability-self.ts";
 import { isDigest, isEntryOf, isFactRef, isLocalId, isRecord, isScopeKind, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { Capabilities, CapabilityGiven, Maximum, Recorded } from "../capability.ts";
 import { WINDOWS, type Window } from "../grant.ts";
@@ -431,7 +432,7 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
     if (!pin || (local && (pin.state !== "provisional" || pin.values["commit"] !== args["commit"]))) return [];
     const admitted = pin.values["admitted"] ?? (local ? given.self : (args["manifest"] ?? null));
     const record = moved(pin, pin.state === "provisional" ? "held" : pin.state, { admitted });
-    if (pin.values["admitted"] == null && local) given.markSelf?.(record, ["values", "admitted"]);
+    if (pin.values["admitted"] == null && local) recordSelfReference(record, ["values", "admitted"]);
     return [record];
   }
 
@@ -460,7 +461,7 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
     const mine = item === undefined ? [] : records(given.view, "pin", ["held"], "commit", args["commit"]).filter((pin) => same(pin.key[0], given.scope.at) && pin.values["admitted"] === item);
     if (mine.length !== 1) return [];
     const record = moved(mine[0]!, "released", { released: "unpinned", by: given.self });
-    given.markSelf?.(record, ["values", "by"]);
+    recordSelfReference(record, ["values", "by"]);
     return [record];
   }
 
