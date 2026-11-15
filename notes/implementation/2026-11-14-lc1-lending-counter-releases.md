@@ -93,6 +93,9 @@ equal the donor bytes. No install, restamp or preserved-view mutation ran.
 | Exact-head preflight: whole typecheck | `/opt/homebrew/bin/npm run typecheck` | Exit 0; 17.468887916 s at the same head | `P/whole-typecheck.stdout.log` — `a9abf7e40e10fbda74447d08a5ea3b33733361ecd9ac199658065cfbc874936a` |
 | Full gate at `faece658` | `/opt/homebrew/bin/npm run gate` | Exit 0; outer wall 870.297345083 s. Node 195; Counting 55; Plain 4,760 passed/1 skipped; Native 1,134 passed/2 skipped. Scale omitted as `outside-scale-paths` | `G/gate.log` — `0ad7621fac3b17b864702b773561bc0bd6a41f968f49997264010d080a2ab268` |
 | Checker review and local artifacts | Not run | OWED under the LC1 request | No result claimed |
+| LC2 required configuration owners | Whole application-release-reproduction, demo-config, format-json and security-entry-points owners | UNRUN at the LC2 source | None |
+| LC2 missing-packet row and equal-version guard REDs | Two scratch faults, each using the whole existing reproduction owner | UNRUN; intended direct assertions only, baseline correspondence required | None |
+| LC2 pre-START closure and gate | Whole application-examples, pinned-0.3 test audit, helpers/whole typecheck, combined gate and review | UNRUN | None |
 
 The stderr files `E/cli-test-compiler.stderr.log`,
 `E/formatter-owner.stderr.log`, `E/compatibility.stderr.log` and
@@ -168,3 +171,75 @@ head; none occurred in these checks. NF7's hosted Counter installation and
 witness remain held under its own request. R retains reservation source and
 its later signing boundary. Passing the gate makes no deployment, installed
 release or hosted acceptance claim.
+
+
+## LC2 source continuation, 15 November
+
+LC2 request `46072a190cf7cc6be55036b0e62c7ddda6c821f9` and promise
+`d59fe799976cf95b91c5dbb1ce8f6d7dcd3f6870` govern this successor. LC1's
+results above retain their dated heads. Ruling
+`c168799e37d1052a7199d29506e57649d6c5c2bd` puts LC2 on the waiting
+NF6/NF8/FH2/SD1 head. No LC2 check has run at this source proposal.
+
+Signing END `37119ff2f86cc48f0b4d8190f3cd24dd4b1a5775` records the two
+0.3.0 packets signed from main
+`c6711b53a368d24c1fad2830ea5634c045999ce1`. They come byte-for-byte from
+carrier `5cb79ddd812b222c469069201c50df53d21b19e2`:
+
+- Lending: `examples/lending/releases/0.3.0/application.dap.json`, Git blob
+  `d083d5b16d5731563fbec6921d75dadf755bfcdc`, 2,504,735 bytes,
+  SHA-256 `84f8e5f8738a1fd27fc7abe2cdf7b82a1ccd701d9edfeccd970631c3d4b3c039`.
+  Release: `sha256:51f8afe2fd6728c121dfe18597808d529f642722634987144712bfedecfbb204`.
+- Counter: `apps/counter/releases/0.3.0/application.dap.json`, Git blob
+  `d77f239ffa4a9a80dfa8ca46b1dab8e4f0bc081d`, 2,593,092 bytes,
+  SHA-256 `81b59b8cd3b8b109f3485116c5a570833fc6bb0ced222291b959b1b2a42a32e1`.
+  Release: `sha256:0b3e5038f96e69cfb7942c9d7fc3dbbb67d49a71ba737aaec9fcc129a1e619ed`.
+
+These packet hashes and sizes come from the signing END, not a new builder
+calculation or signature check. Both rows retain publisher
+`key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI` and host `github.com`.
+`APPLICATION_TRUST` contains exactly those two rows. The old 0.2.0 packets and
+rows are removed because no installation uses them; Git history retains them.
+The content bucket, installed registers, serving settings and empty screen-host
+list stay unchanged. The formatter excludes the two new canonical paths and
+keeps both Grow packet exclusions.
+
+The side head changes both presentations after the 0.3.0 signing, so c168799e
+opens authored Lending and Counter 0.4.0. Its normal comparison/application is
+root-owned and separate from this LC2 proposal. Signed 0.3.0 stays immutable.
+The reproduction owner keeps its version conditional: it compares a packet
+with current source only when their versions match. On authored 0.4.0 it still
+validates each signed 0.3.0 packet's release, publisher, host, application name
+and manifest version against the exact configuration row. It still reproduces
+all three current source tuples. It does not substitute 0.4.0 screen bytes for
+the installed 0.3.0 packet's own presentation.
+
+Two named RED witnesses remain UNRUN. One scratch row names a valid digest
+with no committed packet and must fail the existing exact trust-release-set
+assertion. The other restores both authored Lending versions to 0.3.0 and
+uses its already measured NF 0.3.0 identifier candidate from
+`/Users/hughpyle/play/artroom-evidence/2026-11-15-nf-canonical-compare-only-attempt1/preparation/lending.candidate.json`.
+That candidate's presentation is
+`sha256:f99dce241076cc0d8a2b6eac1c84dff60f1f7858b5882ae5065ba7c914229b63`;
+its entry, definition and semantic identifiers stay exact. This consistency
+input matters because the browser imports the descriptor: changing only the
+version changes its bundle and would fail the earlier source assertion. With
+the retained measured tuple, that first assertion can pass, then the signed
+0.3.0 presentation 7217583c differs and the existing “Raise the version”
+assertion must fail. Counter stays at current 0.4.0. Both controls use the
+unchanged whole reproduction owner. One current-0.4.0 baseline may serve both
+only with actual frozen-source correspondence. All scratch fault inputs must
+restore exact bytes and modes. No new producer, synthetic baseline, packet
+change, weakened assertion or third green run is proposed. A failure before
+the intended assertion, setup failure or timeout proves neither guard.
+
+The LC2 rows in the existing evidence table are UNRUN. Before gate START, root
+also runs the whole application-examples owner and audits tests for pinned
+0.3.0 assertions under c168799e. Required helpers, whole typecheck, combined
+gate and independent review remain owed at the eventual reviewed head. No
+project import, compiler, parser, AST, producer, codec, control, dependency setup,
+network, CI, deployment or installation accompanied this source preparation.
+After landing, the planner owns dap-lending deployment, Lending 0.3.0
+installation in lending-library, and later screen-host rows with the actual
+installation item. RS1 continues within open 0.4.0 without another version;
+planner signing follows RS1. This successor claims none of those outcomes.
