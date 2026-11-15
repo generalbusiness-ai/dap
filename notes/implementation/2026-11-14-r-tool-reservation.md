@@ -175,6 +175,84 @@ main `17a917cd` without R. Diagnosis act
 not a refusal reason exposed by the log. This note-only successor changes none of
 the source or tests checked at `53aba95f`.
 
+## Current post-E1 route: R, LP1 and BP1
+
+The earlier gate and isolated follow-up remain FAIL at their recorded heads.
+This new route does not relabel either run or infer the old omitted refusal
+reason. BP1 request `dce57e0dd2c029a99cba583c4e34d560b9e32d60`, promise
+`aedda13b6d272754dac9d51a11c87667db867dc5`, adds the Base projection reader
+and metadata repair after a separate, actual named RED. Its distinct report is
+[BP1: Base application projections](2026-11-15-bp1-base-application-projections.md).
+
+E1 actual main `d1585bda558c2bcea13ca6cc7c162be1e47b9127` was published
+under `0e5663cbeaf225097ef4284cfa688183ff53f22f`. Planner deployment END
+`8debe803d4072048e96f3f41189dc77f7dd9c836` records Linux Page run
+43698774419 PASS and the three Room Workers/sandbox deployed at that E1 head.
+Those are E1 results, not hosted R/BP1 acceptance.
+
+Normal merge `1b09111112549e57f62e022175f71afe6fb71374`, tree
+`7db3fa847a6b8f1a65011318b579f08391a286d2`, takes that actual main into R.
+The sole conflict retained the whole R Lending identifier tuple from 53aba95f,
+as planner `b07d5516ea1e2712e22784f8ef3ae34b1e718680` required. The merge
+body states no one had measured the combined source. Its full tree preserved
+all 21 R changed entries and 56 incoming-only E1 entries; every other entry matched.
+
+Then normal comparison/application END
+`91867fca7fc1a276b1b6adbe9e7cbdec55e70edb` measured the combined source.
+Comparison exited 0 in 2.210679125 s and apply exited 0 in 0.251210375 s retained Grow 2.0.0 and
+Counter 0.3.0 exactly. Only Lending presentation changed to
+`sha256:7217583c00c0548755faa3a83ee9fef194a354624dd29dccf62a7c79cbfd48ef`.
+R entry/sole definition 25366d11 and semantic 6910aa45 stayed exact. The one-field
+apply committed `f18dfbc587dc84c097135817fb657ef9e153ed27`, tree
+`afb62a494628a97d63750743d9da39854302a9f7`, with no other source/version/
+signature/trust change. Public TEST signer 254 is not publisher custody.
+
+Named RED END `e7bdf3196d96c499ebc1c2bfc7dfaedeab6a5ece` then bound f18.
+The exact Lending/Base/Register 28 case reached real installation/active state,
+then failed first projection assertion 80:59 with public `query-not-ready`.
+It was a direct contract assertion, not setup/timeout: 1 FAIL, 2 Counter rows
+SKIP, case 3036 ms versus child 10.092601375 s and outer 12.660211000 s. All 7
+guards passed, errors 0, all children reaped. Scope compiler and compatibility
+passed first; compatibility copied=false/cd50 unchanged. Later SDK/MCP/browser
+adapter/data assertions did not run in that RED. This precedes every BP1
+production change.
+
+Source `55b041a585cd80741c740d7426a24c3b50fe5b66`, tree
+`f126f30e70e5df285b7f5fbf81a9dfbd073745ea`, changes only two Platform
+readers and two R-owned tests. Existing proof checks now admit Base Rules 15;
+metadata reports Membership 14. Definitions/pins/replay/types/IDs/seals stay
+exact. The Plain matrix uses a valid completed proof, not fifteen historical
+genesis/authority flows. Native keeps all three rows/assertions/deadlines;
+both Base rows check real metadata 14. ONLY Lending Base adds Vic's actual
+session refusal unauthorized and the same projection without session forbidden,
+with Rita's issued-session positive. Counter Base has no negative control;
+issued claims still retain expiry semantics, not immediate revocation.
+
+GREEN END `0c825126862fc06986735cb055089b6067e52e24` records all 8 commands
+at 55b041 passing: Platform/Scope test compilers, compatibility, whole CLI 3,
+Platform 6, Page assets 1, Native 3 and Security 12. All 17 guards pass, errors 0,
+all stderr empty, no failure/skip/todo/signal/interruption. Native case times
+are 3689 ms Counter declared, 3642 ms Counter Base, 3735 ms Lending Base; child
+wall 18.158350083 s differs from those case durations. The Page owner ran the maintained write:false producer: assets stayed
+unchanged; no separate producer/write ran. Current 23 source paths match 0 Page/0 Card
+workflow filters; adding these notes creates no match. A later assets repair
+would owe four Page scripts. Security 12 passed with no expectation update or
+separate AST calculation; independent review/Security conclusion remains owed.
+
+Post-BP1 END `6b6c7a92e188880c5da926a6c49698349601f844` records one
+whole release-reproduction PASS at 55b041. It checks all three actual source
+packet tuples plus published Grow/immutable 0.2 trust, so Lending's measured
+7217583c presentation remains current. The table gives child/case durations;
+no compare/apply rerun, ID/signature/trust change or publisher custody followed.
+
+The table adds exact dated records below. These source/owner results do not
+claim a passing full gate. Final exact-head helper/whole-typecheck preflight,
+ONE gate and three-promise review remain UNRUN. This drafting changes no source,
+test or ID from 55b041; root binds any final note-only head/tree in its source act.
+Lending signing waits the combined R/LP1/BP1 head. Counter retains 0fcc's E1
+order; no statement here reopens a signed Counter version. Packet/installation/
+provisioning/physical-room/provider/frontend acceptance remains outside these runs.
+
 ## Definition and witnesses
 
 The production definition adds up to eight live reservations. Each
@@ -287,6 +365,17 @@ original dated invocation root; `C` output citations do not claim a rerun.
 Originals remain unchanged. Retain the copies for at least 30 days after
 landing. The unrelated Node compile cache was not copied.
 
+
+`J1` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-bp1-identifiers-compare-attempt1`.
+`B1` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-bp1-lending-base-red-attempt1`.
+`G1` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-bp1-green-owners-attempt1`.
+`RR` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-bp1-release-reproduction-attempt1`.
+Current result.json files retain exact argv/cwd/exit/wall/streams; H1/T1 below
+are the full 1b091111/7db3fa84 values above, not the older H/T aliases.
+Named RED uses the exact anchored quoted title retained in B1/result.json.
+The whole CLI, Platform and Native owners retain their configs, Native case
+allowance and worker limits. Page and Security also run whole. No case-name filter runs in GREEN. Final gate/preflight UNRUN.
+
 | Check | Command | Exit and actual result | Output and SHA-256 |
 |---|---|---|---|
 | Four compiler contexts | `N node_modules/typescript/bin/tsc -p CONFIG`; configs are `examples/lending/tsconfig.json`, `examples/lending/browser/tsconfig.json`, `packages/define/tsconfig.test.json` and `packages/scope/tsconfig.test.json`, sequentially once | All four 0; stdout and stderr empty | `compiler-1.stdout.log` through `compiler-4.stdout.log` and matching stderr files, each `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
@@ -317,6 +406,19 @@ landing. The unrelated Node compile cache was not copied.
 | Previously unreached Native phase at `53aba95f` | `ARTROOM_TEST_PHASE=native ARTROOM_TEST_TIMING=U/native.jsonl ARTROOM_SCALE_MODE=omit /opt/homebrew/Cellar/node/26.13.1/bin/node ROOT/node_modules/vitest/vitest.mjs run --config ROOT/vitest.native.config.ts` | 1; Native wall 508.723583167 s, controller 508.877585583 s; 1134 passed, one failed, two skipped (1137); files 286 passed, one failed, one skipped (288); natural Scale omit/outside-scale-paths | `U/native.log` — `064450464b6c7fd922c08d26d2e0fa182003499db5ea1eedc9e691af63f45c5f`; `U/native.jsonl` — `bc04d2d9b68b178a00fb728c1ff7f34685ac4a86b94753eb490ff7c2831d9ab8`; `U/native-result.json` — `e998af1a0eaae87635fedb382a4e3511bda91d3ef047df03a50276b0f13267e6`; actual argv/env in `U/native-descriptor.json` |
 | Isolated follow-up aggregate | Compiler, whole CLI owner, then maintained Native descriptor above, sequentially once | 1; outer 515.584793499962 s; END `aa2c014f5cc8f773baa0d316b316c913853efe37`; source and status unchanged | `U/result.json` — `76b03f7d7ef68f6f96ef3a493360b06badbfe08d7438dd00f7d4b2404a7f54ba` |
 | Review, artifact filing and landing under this route | Not run | UNRUN; route ends on the Native failure; E1 next without R | None |
+| Post-E1 normal comparison at 1b091111 | `N --import tsx IDTOOL compare ROOT J1/preparation H1 T1` | 0; 2.210679125 s; Grow/Counter exact; Lending presentation only | `J1/result.json` — `51ac040602df50459363aaa3256b5f7aa76dc1c524dae03a543c8f89300dc8f6`; `J1/preparation/comparison.json` — `b6196f16fbe3fb8de1f59c87d63f4e435461f538ab5527c5d38d8b1340d16902` |
+| Post-E1 retained apply, one commit f18 | `N --import tsx IDTOOL apply ROOT J1/preparation H1 T1` | 0; 0.251210375 s; one presentation line; no packet/signing | `J1/apply-result.json` — `0847b841785acf2767bcd3f460e7d924f13f7d2cf39981307faeca9b9542ddf7`; `J1/preparation/applied.json` — `b3b5f60e6a783cc704b3d64200fa969ccebb43c00be9f17f94d0e72f3480d696` |
+| BP1 named-RED preparation at f18 | Scope test compiler, then compatibility; exact argv in `B1/result.json` | Both 0; 0.947298125/0.081532542 s; no copy/cd50 unchanged | `B1/result.json` — `0fd3d284eabb8ba72450075c4ceedc452c0454846d4d657f81b4367da2f562f7` |
+| BP1 named Lending Base RED | Whole file path with exact single-case pattern in `B1/result.json`; no inferred reason | 1;query-not-ready at 80:59; 1 FAIL/2Counter SKIP; child 10.092601375 s,case 3036 ms,outer 12.660211000 s; 7 guards/0 errors | `B1/lending-base-red.json` — `eae36b2f5b516f56370dc047a94421d39282c7e6ea03b28fa17903954bae8fba`; stdout `c76ad5df576141ccf3302748637b8d60223a7b7958402e47259494b23e9ca4f8`; stderr `743b15002dee6640b9d3101d7c96ccfabbf2d120438ed91889d3b7e8952b81d8` |
+| GREEN compilers/compat at 55b041 | Platform test, Scope test, compatibility; exact argv in `G1/result.json` | All 0; 0.392792541/0.902403125/0.079725958 s; no copy/cd50 unchanged | `G1/result.json` — `0ac31728aa7b59154d165832e17e2d19355623c11c435241ab549c2875eda423` |
+| GREEN whole CLI owner | `packages/cli/test/application-examples.test.ts`; actual argv in result | 0; 3 PASS/6.452862417 s | `G1/cli-application-examples.json` — `3deb537cf3f01ff1b4b8fc80efb971ccde6d0faadceef8ab4f365121c9d45fda` |
+| GREEN whole Platform owner | `packages/platform/test/application-install-v2.test.ts`; actual argv in result | 0; 6 PASS/1.550388917 s; 15-pin matrix is one case, not 15 cases | `G1/platform-application-install-v2.json` — `077264faad670d923d87616bb9409ee200152add400d4c3d9ed57817a1127880` |
+| GREEN whole Page assets owner | `apps/room/page/test/assets.test.ts`; actual argv in result | 0; 1 PASS/0.733151083 s; maintained write:false producer correspondence; assets unchanged; no separate producer/write | `G1/page-assets.json` — `b3cb3c9bf6edeecea2fc089fd7fe913aa7769c3ae829370b24bda00149e487fc` |
+| GREEN whole Native owner | `packages/scope/test/maintained-application-projections.test.ts`,scope project; actual argv in result | 0; 3 PASS/18.158350083 s; both Base metadata assertions pass; negative controls ONLY Lending Base | `G1/scope-maintained-application-projections.json` — `08aef481b6793cabb9eb9700038e9f833714db0a112002e217588a80e70585cf` |
+| GREEN whole Security owner/aggregate | `N --test scripts/security-entry-points.test.mjs`; eight commands sequentially once | 0; 12 PASS/3.994228458 s; outer 33.146512875s; 17 guards/0 errors; no failures/skips/todo/signal/interruption; all stderr empty | `G1/security-entry-points.stdout.log` — `f55e2a77f2ededd760e53dd52b251ea62416e3ad0fe14044647d9fdfb2fe5b9f`; aggregate result hash above |
+| Post-BP1 whole release-reproduction owner at 55b041 | Whole existing CLI release-reproduction owner; exact argv in `RR/result.json` | 0; 1 PASS/2.794627542 s; case 1734.553875 ms; 0 fail/skip/todo,stderr empty; current three tuples/Grow/immutable 0.2 trust correspond | `RR/result.json` — `7705f469c12f0ca993916c2203f2a630f71ecc4f90934b03c6a9a4035aff2cdf`; `RR/reproduction.json` — `e3055aa74967446ac4a207a61982229a40b999b0cf937b52b93ce94b25620f0b` |
+| Current final preflight, full gate, review and publication | Not run | UNRUN; whole helpers/typecheck, ONE gate, independent three-promise review and planner release disposition remain owed | None |
+
 
 Both plain runs and the Native run had empty stderr. The producer's only
 stderr was the Node `DEP0205` deprecation warning. The dedicated Native
