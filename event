@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:092d107ef142f5d6a0ac874e4d6437883c24ef86","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-14-sh1-screen-hosts.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1323cf65d61c1859440aec2001462517e29632fd","text":"Merge retired a covered predecessor; the successor is at apps/sandbox/wrangler.rollout.jsonc."}
