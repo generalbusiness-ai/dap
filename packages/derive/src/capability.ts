@@ -16,6 +16,8 @@
  */
 
 import { CAPABILITIES, DEVICE_COMMAND } from "@generalbusiness/dap-contract";
+import { guardObject } from "./opaque-object.ts";
+import { withCapabilityRecords } from "./capability-self.ts";
 import type { Bounds, Capability, CapabilityName, DeclaredDefinition, Effect, FieldValue, Guard, Digest, ScopeKind, ScopeRef, SequenceRef, UnavailableReason } from "@generalbusiness/dap-contract";
 import type { Fetched, GuardResult, Judging } from "./guards.ts";
 import type { Underived } from "./validate/capability.ts";
@@ -73,8 +75,6 @@ export type CapabilityGiven = Pick<Judging, "view" | "definition" | "scope" | "s
   from?: Readonly<Record<string, number>>;
   /** Bound slot subjects as preceding ordinary effects left them. */
   fromItems?: Readonly<Record<string, Item>>;
-  /** Internal body-only marker for a returned record position written from `self`. */
-  markSelf?: ((record: Recorded, path: readonly (string | number)[]) => void) | undefined;
 };
 
 /**
@@ -194,7 +194,7 @@ export function counted(definition: ValidDefinition, capabilities: Capabilities 
   return null;
 }
 
-const given = ({ view, definition, scope, self, kind, fields, fieldTypes, signer, intent, facts, source, own, snapshot, clock, judged, unavailableIntent, references }: Judging): CapabilityGiven => {
+const given = ({ view, definition, scope, self, kind, fields, signer, intent, facts, source, own, snapshot, clock, judged }: Judging): CapabilityGiven => {
   const verified = new Map<Digest, Fetched>();
   for (const [hash, copy] of facts) if (copy.mode === "verified" && matchesCopy(copy, copyFact(copy))) verified.set(hash, copy.value);
   const verifiedSource = source?.mode === "verified" && matchesCopy(source, copyFact(source)) ? source.value : undefined;
@@ -202,15 +202,33 @@ const given = ({ view, definition, scope, self, kind, fields, fieldTypes, signer
   const sourceKind = judged?.type === "delivery" || judged?.type === "genesis" ? judged.sourceKind : null;
   const kindContext = Object.freeze({ source: fact && sourceKind ? Object.freeze({ at: Object.freeze({ ...fact.at }), kind: sourceKind }) : null,
     declared: Object.freeze({}) });
-  const value: CapabilityGiven = { view: references ? references.opaqueView(view, definition) : view, definition, scope, self, kind,
-    fields: references ? new Proxy(fields, { get: (target, name) => typeof name === "string" && Object.hasOwn(target, name)
-      ? references.opaque(references.field(fieldTypes, fields, name)) : Reflect.get(target, name) }) : fields,
+  const value: CapabilityGiven = { view, definition, scope, self, kind,
+    fields,
     signer, intent, facts: verified, source: verifiedSource, kindContext, own, snapshot, clock };
-  if (unavailableIntent) Object.defineProperty(value, "intent", {
-    enumerable: true, configurable: true, get: () => intent ?? unavailableIntent(),
-  });
   return value;
 };
+
+/** Private assembly precedes this one public guard; runtime builds none. */
+function publicGiven(j: Judging, value: CapabilityGiven, currentDeviceCommand = false): CapabilityGiven {
+  if (!j.unavailableIntent) return value;
+  const known = <T>(data: T): T => {
+    if (data === null || typeof data !== "object" || data instanceof Map || data instanceof Set) return data;
+    return guardObject(data, key => known(Reflect.get(data, key)));
+  };
+  return guardObject(value, key => {
+    if (key === "intent") return value.intent ?? j.unavailableIntent!();
+    // Only the existing device-command/open code may compare this body's
+    // intrinsic self with its exactly marked working targetAt (ruling 042).
+    if (key === "self" && !currentDeviceCommand && j.unavailableEntry) return j.unavailableEntry();
+    if (key === "fields") return j.references ? j.references.opaqueFields(value.fields, j.fieldTypes) : known(value.fields);
+    if (key === "view") return j.references ? j.references.opaqueView(value.view, j.definition) : value.view;
+    if (key === "from" && value.from && value.fromItems) return j.references
+      ? j.references.opaqueFrom(value.from, value.fromItems) : known(value.from);
+    if (key === "fromItems" && value.fromItems) return j.references
+      ? j.references.opaqueFromItems(value.fromItems, j.definition, currentDeviceCommand) : known(value.fromItems);
+    return known(Reflect.get(value, key));
+  });
+}
 
 /** What a capability version declares, or undefined for a version that the contract's tables do not have. */
 export const declaredBy = (capability: string): Capability | undefined => own(CAPABILITIES as Readonly<Record<string, Capability>>, capability);
@@ -267,7 +285,7 @@ export function capabilityGuard(j: Judging, plan: CapabilityGuardPlan, item: Ite
     } else args.push([arg, readValue(j, from.read, item, elements)]);
   }
   const argumentsValue = Object.fromEntries(args);
-  const answer = observeCapabilityCall(j.definition, "guard", matched.version, guard, () => matched.rules.guard(matched.version, guard, j.references ? j.references.opaque(argumentsValue) : argumentsValue, given(j)));
+  const answer = observeCapabilityCall(j.definition, "guard", matched.version, guard, () => withCapabilityRecords(undefined, () => matched.rules.guard(matched.version, guard, j.references ? j.references.opaque(argumentsValue) : argumentsValue, publicGiven(j, given(j)))));
   if (answer === true) return "pass";
   if (typeof answer !== "string") return "unavailable";
   if (!own(matched.declared.guards, guard)?.refusals.includes(answer)) throw new Error(`${matched.version} declares no refusal ${answer} for its guard ${guard}`);
@@ -296,25 +314,22 @@ export function capabilityEffect(j: Judging, plan: CapabilityEffectPlan, item: I
     return read ? [[arg, read]] : [];
   }));
   // Only the actual admitted direct ACT field can supply an expectation.
-  const declared = Object.fromEntries(j.judged?.type === "act" ? plan.arguments.flatMap(([arg, { read }]): [string, ScopeKind][] =>
+  const declared = Object.fromEntries(j.judged?.type === "act" || j.unavailableIntent ? plan.arguments.flatMap(([arg, { read }]): [string, ScopeKind][] =>
     read.op === "field" && read.projection === null && read.baseType.kind === "declared" && read.baseType.type.type === "scope"
       ? [[arg, read.baseType.type.kind]] : []) : []);
   const base = given(j);
-  const details = { from: j.references ? new Proxy(from, { get: (target, name) => typeof name === "string" && fromItems[name]
-      ? j.references!.metadata(fromItems[name]!, "id") : Reflect.get(target, name) }) : from,
-    fromItems: j.references ? Object.fromEntries(Object.entries(fromItems).map(([name, item]) => [name,
-      j.references!.opaqueItem(item, j.definition, matched.version === DEVICE_COMMAND && plan.action === "open")])) : fromItems,
+  const details = { from, fromItems,
     kindContext: Object.freeze({ source: base.kindContext.source, declared: Object.freeze(declared) }) };
-  // Body-only intent stays lazy: spreading its getter would read it even
-  // when the capability's actual branch never needs the signed input.
+  // Assemble only private data descriptors. No copy calls an unknown getter.
   const reading: CapabilityGiven = j.unavailableIntent
-    ? Object.assign(Object.create(Object.getPrototypeOf(base), Object.getOwnPropertyDescriptors(base)), details)
+    ? Object.defineProperties(Object.create(Object.getPrototypeOf(base), Object.getOwnPropertyDescriptors(base)), Object.getOwnPropertyDescriptors(details))
     : { ...base, ...details };
   const selfMarks: { record: Recorded; path: readonly (string | number)[] }[] = [];
-  if (j.recordSelfRef) reading.markSelf = (record, path) => { selfMarks.push({ record, path: [...path] }); };
+  const collect = j.recordSelfRef ? (record: Recorded, path: readonly (string | number)[]) => { selfMarks.push({ record, path: [...path] }); } : undefined;
   const argumentsValue = j.references ? j.references.opaque(args) : args;
-  const made = matched.rules.deriveEffect ? observeCapabilityCall(j.definition, "deriveEffect", matched.version, plan.action, () => matched.rules.deriveEffect!(matched.version, plan.action, argumentsValue, reading))
-    : observeCapabilityCall(j.definition, "effect", matched.version, plan.action, () => matched.rules.effect(matched.version, plan.action, argumentsValue, reading));
+  const exposed = publicGiven(j, reading, matched.version === DEVICE_COMMAND && plan.action === "open");
+  const made = matched.rules.deriveEffect ? observeCapabilityCall(j.definition, "deriveEffect", matched.version, plan.action, () => withCapabilityRecords(collect, () => matched.rules.deriveEffect!(matched.version, plan.action, argumentsValue, exposed)))
+    : observeCapabilityCall(j.definition, "effect", matched.version, plan.action, () => withCapabilityRecords(collect, () => matched.rules.effect(matched.version, plan.action, argumentsValue, exposed)));
   if ("unavailable" in made) return "unavailable";
   const records = "records" in made ? made.records : made;
   const items = "records" in made ? (made.itemEffects ?? []) : [];

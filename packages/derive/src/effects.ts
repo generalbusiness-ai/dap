@@ -266,8 +266,8 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
         if (j.bound) throw outside(mark, "an opening, in a delivery that is bound");
         if (opens !== null || byRule || !type || effect.item !== j.self || effect.state !== type.initial || j.definition.holdTypes.includes(effect.type)) throw outside(mark, "an opening that its entry cannot make");
         byRule = newItem(effect, type, null);
-        j.references?.opened(byRule);
         others.set(effect.item, byRule);
+        j.references?.opened(byRule);
         changed?.set(effect.item, byRule);
         effects.push(effect);
         continue;
@@ -553,7 +553,10 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
   const holds = effects.filter((effect): effect is HoldEffect => effect.effect === "hold");
   if (holds.length > 0 && j.capabilities?.workspace) {
     const k = effects.filter((effect) => effect.effect === "operation").length;
-    const derived = observeCapabilityCall(j.definition, "workspace", null, "hold effects", () => j.capabilities!.workspace!(j.view, j.definition, j.self, k, holds, (id) => [...working.values()].find((held) => held.id === id) ?? null));
+    const derived = observeCapabilityCall(j.definition, "workspace", null, "hold effects", () => j.capabilities!.workspace!(j.references ? j.references.opaqueView(j.view, j.definition) : j.view, j.definition, j.self, k, holds, (id) => {
+      const item = [...working.values()].find((held) => held.id === id) ?? null;
+      return item && j.references ? j.references.opaqueItem(item, j.definition) : item;
+    }));
     // Section 6.1, "In the commit": code that returns more than it declared has a fault, and the input is not judged.
     const listed = new Set(declarationOf(j.definition).capabilities.map(c => `${c.name}@${c.version}`));
     const most = j.capabilities.maxima?.filter((m) => m.form === "workspace" && listed.has(m.capability)).reduce((n, m) => n + m.effects, 0);
