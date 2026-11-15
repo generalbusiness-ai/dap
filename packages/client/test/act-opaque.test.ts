@@ -43,7 +43,7 @@ test("opaque request selections stop before alias lookup while shared reservatio
   expect(() => view.all().accounts).toThrow(UnavailableEntryValue);
   expect(view.request(ledger.head.seq, 0)).toBeNull();
   expect(() => view.all().requests).toThrow(UnavailableEntryValue);
-  expect(() => Object.getOwnPropertyDescriptor(view.all(), "requests")?.get?.()).toThrow(UnavailableEntryValue);
+  expect(() => Object.getOwnPropertyDescriptor(view.all(), "requests")?.value).toThrow(UnavailableEntryValue);
   expect(() => JSON.stringify(view.all())).toThrow(UnavailableEntryValue);
   let calls = 0;
   const owners: Owners = { rules: () => null, reserves(actual) { calls++; return actual.pendingRequests()[0]!.seq; } };
@@ -68,7 +68,7 @@ test("unknown record keys cannot select an alias or reveal a guessed first state
   expect(singleton.records(DEVICE_COMMAND, "command")[0]?.state).toBe("open");
   expect(() => singleton.record(DEVICE_COMMAND, "command", [17])).toThrow("the entry is not recorded");
   const row = singleton.records(DEVICE_COMMAND, "command")[0]!;
-  expect(() => Object.getOwnPropertyDescriptor(row, "key")?.get?.()[0]).toThrow("the entry is not recorded");
+  expect(() => Object.getOwnPropertyDescriptor(row, "key")?.value?.[0]).toThrow("the entry is not recorded");
   expect(() => Object.assign({}, row)).toThrow("the entry is not recorded");
   expect(() => singleton.records(DEVICE_COMMAND, "command", { member: "targetAt", value: 17 })).toThrow("the entry is not recorded");
   const recorded = new ActRecords([{ capability: DEVICE_COMMAND, kind: "command", key: [2], state: "confirmed", values: {}, seq: 2 }]);
@@ -132,7 +132,7 @@ test("actual Owners see guarded rows without changing shared bookkeeping or comp
     const row = view.all().items.at(-1);
     if (!row) throw new Error("the actual projected opening is absent");
     if (read === "state") return row.state === "kept" ? 0 : 1;
-    if (read === "descriptor") { Object.getOwnPropertyDescriptor(row, "id")?.get?.(); return 0; }
+    if (read === "descriptor") { Object.getOwnPropertyDescriptor(row, "id")?.value; return 0; }
     void row[read];
     return 0;
   } };

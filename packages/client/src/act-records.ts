@@ -3,6 +3,7 @@ import { DEVICE_COMMAND, type Effect, type FieldValue } from "@generalbusiness/d
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { byteOrder, type RecordState, type StateView, type StateWriter } from "@generalbusiness/dap-derive";
 import type { Source } from "./act-types.ts";
+import { guardObject } from "./act-object.ts";
 
 export interface RecordRef { readonly effect: number; readonly path: readonly (string | number)[] }
 interface PendingRecord { readonly source: Source; readonly paths: readonly (readonly (string | number)[])[] }
@@ -74,25 +75,13 @@ export class ActRecords {
       if (!marked) return row;
       const paths = new Set(marked.paths.map(path => canonicalize(path.map(String))));
       const wrap = <T extends object>(value: T, path: readonly string[]): T => {
-        const copy = Array.isArray(value) ? [] : Object.create(Object.getPrototypeOf(value));
-        for (const key of Reflect.ownKeys(value)) {
-          const descriptor = Reflect.getOwnPropertyDescriptor(value, key)!;
-          Object.defineProperty(copy, key, { ...descriptor, configurable: !(Array.isArray(value) && key === "length") });
-        }
         const read = (key: PropertyKey): unknown => {
           const nextPath = [...path, String(key)];
           if (paths.has(canonicalize(nextPath))) return missing(marked.source);
           const next: unknown = Reflect.get(value, key);
           return typeof next === "object" && next !== null ? wrap(next, nextPath) : next;
         };
-        return new Proxy(copy, {
-          get: (_target, key) => read(key),
-          getOwnPropertyDescriptor: (target, key) => {
-            const descriptor = Reflect.getOwnPropertyDescriptor(target, key);
-            return !descriptor || !descriptor.configurable ? descriptor
-              : { configurable: true, enumerable: descriptor.enumerable ?? false, get: () => read(key) };
-          },
-        }) as T;
+        return guardObject(value, read);
       };
       return wrap(row, []);
     };

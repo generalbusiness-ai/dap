@@ -3,6 +3,7 @@ import type { FieldType } from "@generalbusiness/dap-contract";
 import type { Capabilities, CapabilityGiven, Item, Owners, OwnRequest, StateSnapshot, StateView } from "@generalbusiness/dap-derive";
 import type { ActProjection } from "./act-projection.ts";
 import type { Source } from "./act-types.ts";
+import { guardObject } from "./act-object.ts";
 
 const requests = new WeakMap<OwnRequest, Source>();
 
@@ -10,23 +11,6 @@ const requests = new WeakMap<OwnRequest, Source>();
 export function markPendingRequest(request: OwnRequest, source: Source): OwnRequest {
   requests.set(request, source);
   return request;
-}
-
-/** Reflection returns guarded accessors, so descriptors cannot disclose raw values. */
-function reading<T extends object>(value: T, read: (key: PropertyKey) => unknown): T {
-  const copy = Array.isArray(value) ? [] : Object.create(Object.getPrototypeOf(value));
-  for (const key of Reflect.ownKeys(value)) {
-    const descriptor = Reflect.getOwnPropertyDescriptor(value, key)!;
-    Object.defineProperty(copy, key, { ...descriptor, configurable: !(Array.isArray(value) && key === "length") });
-  }
-  return new Proxy(copy, {
-    get: (_target, key) => read(key),
-    getOwnPropertyDescriptor: (target, key) => {
-      const descriptor = Reflect.getOwnPropertyDescriptor(target, key);
-      return !descriptor || !descriptor.configurable ? descriptor
-        : { configurable: true, enumerable: descriptor.enumerable ?? false, get: () => read(key) };
-    },
-  }) as T;
 }
 
 export class ActOpaque {
@@ -63,17 +47,17 @@ export class ActOpaque {
       if (type?.type === "item" && typeof value === "number" && !this.projection.recorded.item(value)
         && this.projection.raw.all().items.some(row => this.#pending(row))) return this.#stop();
       if (value === null || typeof value !== "object") return value;
-      return reading(value, key => {
+      return guardObject(value, key => {
         const index = Array.isArray(value) && typeof key === "string" && /^\d+$/.test(key);
         const next = type?.type === "list" && index ? type.of : type?.type === "record" ? type.of[String(key)] ?? null : null;
         return leaf(Reflect.get(value, key), next, [...path, Array.isArray(value) && typeof key === "string" && /^\d+$/.test(key) ? Number(key) : String(key)], space);
       });
     };
-    return reading(item, key => {
+    return guardObject(item, key => {
       if (key === "id" && typeof identity.name !== "number") return this.#stop(identity.name.output);
       if (key === "revision" && typeof identity.seen !== "number") return this.#stop(identity.seen.after);
       if (key === "opened" && typeof identity.name !== "number") return this.#stop(identity.name.output);
-      if (key === "refs" || key === "values") return reading(item[key], name => {
+      if (key === "refs" || key === "values") return guardObject(item[key], name => {
         const type = key === "refs" ? declaration?.refs[String(name)]?.to : declaration?.values[String(name)]?.of;
         return leaf(Reflect.get(item[key], name), type ?? null, [String(name)], key);
       });
@@ -114,7 +98,7 @@ export class ActOpaque {
     const raw = this.projection.raw;
     const snapshot = (): StateSnapshot => {
       const state = view.all();
-      return reading(state, key => {
+      return guardObject(state, key => {
         if (key === "items") return owner ? raw.all().items.map(item => this.#ownerItem(item)) : state.items;
         if (key === "records" && Object.hasOwn(state, key)) {
           const groups = new Map<string, { capability: NonNullable<StateSnapshot["records"]>[number]["capability"]; kind: string }>();
@@ -212,7 +196,7 @@ export class ActOpaque {
       fixedReady: (definition, at, head) => this.#marked(undefined, undefined, true) ? this.#stop() : view.fixedReady(definition, at, head),
     };
     if (!view.heldEntryCount) delete overrides.heldEntryCount;
-    return reading(view, key => {
+    return guardObject(view, key => {
       const owner = Object.hasOwn(overrides, key) ? overrides : view;
       const value: unknown = Reflect.get(owner, key, owner);
       return typeof value === "function" ? value.bind(owner) : value;
@@ -221,9 +205,10 @@ export class ActOpaque {
 
   capabilities(capabilities: Capabilities): Capabilities {
     const given = (value: CapabilityGiven): CapabilityGiven => {
-      const descriptors = Object.getOwnPropertyDescriptors(value);
-      descriptors.view = { configurable: true, enumerable: true, writable: true, value: this.view(value.view) };
-      return Object.create(Object.getPrototypeOf(value), descriptors) as CapabilityGiven;
+      let view: StateView | undefined;
+      // Forward the completed public context. Constructing this facade reads
+      // only own keys, never the intent descriptor or its lazy resolver.
+      return guardObject(value, key => key === "view" ? (view ??= this.view(value.view)) : Reflect.get(value, key, value));
     };
     const overrides: Partial<Capabilities> = {
       guard: (capability, name, args, value) => capabilities.guard(capability, name, args, given(value)),
@@ -231,7 +216,7 @@ export class ActOpaque {
       ...(capabilities.deriveEffect ? { deriveEffect: (capability, name, args, value) => capabilities.deriveEffect!(capability, name, args, given(value)) } satisfies Pick<Capabilities, "deriveEffect"> : {}),
       ...(capabilities.workspace ? { workspace: (view, definition, self, k, holds, working) => capabilities.workspace!(this.view(view), definition, self, k, holds, working) } satisfies Pick<Capabilities, "workspace"> : {}),
     };
-    return reading(capabilities, key => {
+    return guardObject(capabilities, key => {
       const owner = Object.hasOwn(overrides, key) ? overrides : capabilities;
       const value: unknown = Reflect.get(owner, key, owner);
       return typeof value === "function" ? value.bind(owner) : value;
@@ -244,7 +229,7 @@ export class ActOpaque {
       ...(owners.reserves ? { reserves: (view, definition) => owners.reserves!(this.view(view, true), definition) } satisfies Pick<Owners, "reserves"> : {}),
       ...(owners.reservations ? { reservations: (view, definition) => owners.reservations!(this.view(view, true), definition) } satisfies Pick<Owners, "reservations"> : {}),
     };
-    return reading(owners, key => {
+    return guardObject(owners, key => {
       const owner = Object.hasOwn(overrides, key) ? overrides : owners;
       const value: unknown = Reflect.get(owner, key, owner);
       return typeof value === "function" ? value.bind(owner) : value;
