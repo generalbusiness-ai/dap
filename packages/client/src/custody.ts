@@ -31,7 +31,8 @@
  * - **What resolves `unknown`**: a receipt from settlement, or a definitive
  *   `accepted`, `refused` or `mismatch` from the same scope and incarnation.
  *   Never `unavailable`, never `not-found` from settlement, and never the
- *   passing of `notAfter`.
+ *   passing of `notAfter`. A verified journal read after the latest signing dies may state `absent`; that ends an
+ *   unresolved record as `refused` with a client `unsent` outcome (client note section 5.5).
  * - **Preparation steps**: each under its own identity (the intent's
  *   digest, the resource and its incarnation, the capability and the step),
  *   with its own phase and answer, apart from the act's phase. A step's
@@ -116,17 +117,20 @@ export const TERMINAL: ReadonlySet<Phase> = new Set(["accepted", "archived", "re
 export type ArchivedSettlement = Extract<Settlement, { reason: "archived" }>;
 /** A caller's statement that a verified journal entry holds the key with this intent. It is not a receipt. */
 export interface Folded { fact: FactRef; intent: Digest }
-export type Decided = { at: string; answer: Answer; archivedSettlement?: never; folded?: never }
-  | { at: string; archivedSettlement: ArchivedSettlement; answer?: never; folded?: never }
-  | { at: string; folded: Folded; answer?: never; archivedSettlement?: never };
+export type Decided = { at: string; answer: Answer; archivedSettlement?: never; folded?: never; unsent?: never }
+  | { at: string; archivedSettlement: ArchivedSettlement; answer?: never; folded?: never; unsent?: never }
+  | { at: string; folded: Folded; answer?: never; archivedSettlement?: never; unsent?: never }
+  | { at: string; unsent: Head; answer?: never; archivedSettlement?: never; folded?: never };
 type Sending = { at: string; answer: Answer } | { at: string; lost: true } | { at: string; settled: Receipt } | { at: string; archivedSettlement: ArchivedSettlement };
 /**
  * One outcome of one sending, in its attempt, for the signing at index `signing`. `lost`: no answer could be read. `folded`: the
- * caller's journal holds the key; `signing` is null when the journal's intent is no signing of the record.
+ * caller's journal holds the key; `signing` is null when the journal's intent is no signing of the record. `unsent`: a read
+ * after the latest signing died does not hold the key, ending the unresolved record without a scope refusal.
  */
-export type Outcome = (Sending & { attempt: number; signing: number }) | { at: string; folded: Folded; attempt: number; signing: number | null };
+export type Outcome = (Sending & { attempt: number; signing: number }) | { at: string; folded: Folded; attempt: number; signing: number | null }
+  | { at: string; unsent: Head; attempt: number; signing: number };
 /** An outcome as a store holds it. A version 1 outcome has no `signing`, and reads as signing 0. */
-export type StoredOutcome = (Sending & { attempt: number; signing?: number }) | Extract<Outcome, { folded: Folded }>;
+export type StoredOutcome = (Sending & { attempt: number; signing?: number }) | Extract<Outcome, { folded: Folded } | { unsent: Head }>;
 
 export interface Step {
   intent: Digest;
@@ -192,12 +196,13 @@ export interface CustodyStore {
   /** The records not yet terminal, oldest first: their identity digests and keys. */
   unresolved(): Promise<{ id: string; key: string; created: string }[]>;
   /**
-   * A store that accounts capacity reserves a new identity's completion need here, under the exclusive admission, before the
+   * A store that accounts capacity reserves an identity's completion need here, under the exclusive admission, before the
    * envelope is built and signed; it throws its own `full` when the need cannot be reserved. `bytes` is the caller's account
-   * of what the envelope will carry. A store without a budget leaves this out.
+   * of what the envelope will carry. Its `admit` for an existing identity is safe to repeat.
+   * A store without a budget leaves this out.
    */
   admit?(id: string, bytes: number): Promise<void>;
-  /** Release what `admit` reserved for an identity whose preparation did not come to a record. */
+  /** Release what `admit` reserved for a new identity whose preparation did not come to a record. */
   unadmit?(id: string): Promise<void>;
   /**
    * Put outcomes in the record's segment at position `at` (the count the segment holds by the record's account), in order.
@@ -254,13 +259,15 @@ export function readStoredOutcome(value: unknown): StoredOutcome {
   const natural = (n: unknown): n is number => Number.isSafeInteger(n) && !Object.is(n, -0) && (n as number) >= 0;
   if (!isRecord(value) || typeof value["at"] !== "string" || timeMs(value["at"]) === null || !natural(value["attempt"]) || value["attempt"] < 1 ||
     (value["signing"] !== undefined && value["signing"] !== null && !natural(value["signing"]))) throw new CustodyError({ held: "unreadable" });
-  const kinds = ["lost", "answer", "settled", "archivedSettlement", "folded"].filter((key) => Object.hasOwn(value, key));
-  if (kinds.length !== 1 || (value["signing"] === null && kinds[0] !== "folded")) throw new CustodyError({ held: "unreadable" });
+  const kinds = ["lost", "answer", "settled", "archivedSettlement", "folded", "unsent"].filter((key) => Object.hasOwn(value, key));
+  if (kinds.length !== 1 || (value["signing"] === null && kinds[0] !== "folded") ||
+    (kinds[0] === "unsent" && (!Object.hasOwn(value, "signing") || !natural(value["signing"])))) throw new CustodyError({ held: "unreadable" });
   const body = value[kinds[0]!];
   if (kinds[0] === "lost" ? body !== true : !isRecord(body)) throw new CustodyError({ held: "unreadable" });
   if ((kinds[0] === "answer" && !ANSWERS.submit(body)) || (kinds[0] === "settled" && !isReceipt(body)) ||
     (kinds[0] === "archivedSettlement" && (!ANSWERS.settle(body) || body.ok || body.reason !== "archived")) ||
-    (kinds[0] === "folded" && (!isRecord(body) || !isFactRef(body["fact"]) || !isDigest(body["intent"])))) throw new CustodyError({ held: "unreadable" });
+    (kinds[0] === "folded" && (!isRecord(body) || !isFactRef(body["fact"]) || !isDigest(body["intent"]))) ||
+    (kinds[0] === "unsent" && !isHead(body))) throw new CustodyError({ held: "unreadable" });
   return value as unknown as StoredOutcome;
 }
 
@@ -302,6 +309,7 @@ export function readStoredCustodyRecord(value: unknown): StoredCustodyRecord {
 export type Sent = { record: CustodyRecord; answer: Answer; retained: boolean }
   | { record: CustodyRecord; archivedSettlement: ArchivedSettlement; retained: true }
   | { record: CustodyRecord; folded: Folded; retained: true }
+  | { record: CustodyRecord; unsent: Head; retained: true }
   | { record: CustodyRecord; lost: true };
 
 /** Bytes a record keeps beside its envelope: identity, binding, phase, times, and room for its first outcome. */
@@ -324,13 +332,14 @@ function decidedBy(o: Outcome): Decided | null {
   if ("settled" in o) return { at: o.at, answer: { answer: "accepted", receipt: o.settled } };
   if ("archivedSettlement" in o) return { at: o.at, archivedSettlement: o.archivedSettlement };
   if ("folded" in o) return { at: o.at, folded: o.folded };
+  if ("unsent" in o) return { at: o.at, unsent: o.unsent };
   if ("answer" in o && o.answer.answer !== "unavailable") return { at: o.at, answer: o.answer };
   return null;
 }
 
 /** What a kept decision gives a caller of `send`. */
 const sentOf = (record: CustodyRecord, last: Decided): Sent => last.archivedSettlement ? { record, archivedSettlement: last.archivedSettlement, retained: true }
-  : last.folded ? { record, folded: last.folded, retained: true } : { record, answer: last.answer, retained: true };
+  : last.folded ? { record, folded: last.folded, retained: true } : last.unsent ? { record, unsent: last.unsent, retained: true } : { record, answer: last.answer, retained: true };
 
 /** The phases that end a record for good. A `refused` record is terminal for capacity and for sending, and not here. */
 const FINAL: ReadonlySet<Phase> = new Set(["accepted", "archived", "settled"]);
@@ -608,8 +617,13 @@ export class Custody {
       await this.#write(id, next, true, record.phase);
       return next;
     };
-    // A refused record becomes unresolved again: it is admitted against the capacity under the shared lease, as a resubmission is.
-    return record.phase === "refused" ? this.store.exclusive(async () => { await this.#admitted(); return sign(); }) : sign();
+    return this.store.exclusive(async () => {
+      // Only a refused record takes another count slot; an unresolved record already occupies one.
+      if (record.phase === "refused") await this.#admitted();
+      await this.store.admit?.(id, bytes + RECORD_OVERHEAD);
+      // A failed rebuild leaves the earlier record and its completion reservation intact.
+      return sign();
+    });
   }
 
   /**
@@ -721,7 +735,7 @@ export class Custody {
     return { receipt: null, archived: null };
   }
 
-  /** Close signing `index`: it cannot hold the key. Its envelope goes, unless it is the latest signing's. */
+  /** Close signing `index` and remove its indexed envelope. The latest envelope remains in record.envelope. */
   #close(record: CustodyRecord, index: number): void {
     const signing = record.signings[index]!;
     signing.closed = true;
@@ -781,9 +795,10 @@ export class Custody {
   /**
    * The caller states that a verified journal, read to `head` after signing `index` died, does not hold the key. A dead
    * signing closes, and drops its envelope unless it is the latest. A signing that is not dead by this clock does not change:
-   * the scope can still seal it. `head` names the read; custody keeps no copy of it.
+   * the scope can still seal it. For the latest signing of an unresolved record, the head is kept as an `unsent` outcome and
+   * the phase becomes `refused`, ending its capacity charge without inventing a refusal from the scope.
    */
-  async absent(identity: Identity, index: number, _head: Head): Promise<CustodyRecord | null> {
+  async absent(identity: Identity, index: number, head: Head): Promise<CustodyRecord | null> {
     const id = identityId(identity);
     const record = await this.#read(id);
     if (!record) return null;
@@ -791,9 +806,14 @@ export class Custody {
       const fresh = (await this.#read(id))!;
       const signing = fresh.signings[index];
       if (FINAL.has(fresh.phase) || !signing || signing.closed || !this.dead(signing)) return fresh;
+      const previous = fresh.phase;
       this.#close(fresh, index);
+      if (index === fresh.signings.length - 1 && UNRESOLVED.has(fresh.phase)) {
+        await this.#outcome(id, fresh, { at: this.now(), unsent: head, attempt: fresh.attempt, signing: index });
+        fresh.phase = "refused";
+      }
       fresh.updated = this.now();
-      await this.#write(id, fresh, false, undefined);
+      await this.#write(id, fresh, false, fresh.phase === previous ? undefined : previous);
       return fresh;
     });
   }

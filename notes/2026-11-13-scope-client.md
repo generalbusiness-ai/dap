@@ -145,10 +145,18 @@ The confirmed table has 6 reasons of class `never`, 5 of class
 4. A request ends when the record holds its key, or when the member
    discards its draft. The next draft in that slot takes a new key.
 5. At each submit the client builds the intent from the draft's values
-   at the replica's head. If a live signing equals the built intent
-   apart from `notAfter`, the client sends that signing's bytes again.
+   at the replica's head. If the latest signing is
+   live and equals the built intent apart from `notAfter`, the client
+   sends that signing's bytes again.
 6. In each other case the client signs the built intent under the same
    key. The values can be the same or changed.
+
+The client does not send an earlier signing again, because `Custody`
+sends only the latest signing. When the built intent equals an earlier
+live signing, the client signs it again. Both signings have one meaning.
+If the scope seals the earlier one, the later one gets `mismatch`, section
+5.3 finds the receipt of the earlier envelope, and rule 1 of section 6
+reads `recorded`.
 
 The scope's rule is at `packages/derive/src/judge.ts:225-229`. The first
 sealed intent of an actor under a key holds the key. The same bytes get
@@ -328,7 +336,7 @@ digest of each signing. When the replica folds the entry, the client
 calls `folded`, and the record moves from `refused` to `accepted`. The
 status of section 6 reads the replica, so the request shows `recorded`.
 
-**The member's view.** Nothing changes in section 6. Rule 5 already
+**The member's view.** Nothing changes in section 6. Rule 6 already
 returns a request whose latest signing is dead, with the cause
 `unsent`. Nothing changes in section 8. `dismiss` and `discard` change
 no custody record: a dismissed request leaves the list, and its record
@@ -363,13 +371,16 @@ holds.
    The present values continue as a new draft.
 3. Custody holds an acceptance or a `mismatch` for the request:
    `pending`. The replica is behind that answer.
-4. The current attempt has a refusal, and the replica does not hold the
-   head of that refusal: `pending`.
-5. The current attempt has a refusal, or the latest signing is dead. The
+4. The current attempt has a refusal of class `protocol`. The request
+   returns `refused` with its reason. No head barrier or withdrawn branch
+   applies.
+5. The current attempt has a refusal of class `never` or `head`, and the
+   replica does not hold the head of that refusal: `pending`.
+6. The current attempt has a refusal, or the latest signing is dead. The
    request is **returned**. It is `withdrawn` when a copy of it is in
    flight and the judge at the replica's head does not refuse that
    copy's bytes. In each other case it is `refused`.
-6. In each other case: `pending`.
+7. In each other case: `pending`.
 
 | Status | The member sees |
 |---|---|
@@ -407,7 +418,7 @@ from the sealed intent when a request ends, the same rule applies.
 
 An answer names a head: `judgedAt` for a refusal and the sequence of the
 receipt's fact for an acceptance. The client keeps each answer in the
-custody record at once. Rules 3 and 4 hold the request at `pending`
+custody record at once. Rules 3 and 5 hold the request at `pending`
 until the replica reaches that head.
 
 An answer is also a reason to read. The client reads the journal to the
@@ -431,9 +442,14 @@ refused once the replica holds its entry.
 
 `misaddressed`, `unknown-act`, `unknown-message`, `wrong-pin` and
 `unsupported-definition` mean that the client and the scope disagree on
-the address or the definition. The request returns with its reason. The
-client's state becomes `stopped`, and it sends nothing more to the
-scope.
+the address or the definition. The client reads the journal to the refusal's head one time, then stops,
+whether or not the read reaches that head. The request returns with its
+reason under rule 4, without a head barrier. Rules 1 and 2 still win if
+the read holds the request.
+
+Each other request keeps its last status in the stopped view. The client
+sends nothing and holds no timer. Custody and the draft store keep the
+values, and a new client continues them.
 
 ## 7. Times of a send
 
@@ -571,6 +587,7 @@ interface RequestView<D> {
 }
 type Stopped =
   | { by: "close" }
+  | { by: "log" }               // the handle rejected a log page
   | { by: "protocol"; reason: RefusalReason }
   | { by: "definition" }        // digest or genesis check failed
   | { by: "forbidden" }         // the member has no read access
@@ -589,6 +606,13 @@ page that selects a new place by its key keeps its selection.
 replica is at the feed's head. `behind`: the feed is down, or an answer
 names a later head. `folding`: the client folds again from the genesis
 entry after one fold failure. `stopped` is final.
+
+A failed first network read leaves the replica `starting`: it still holds
+no genesis entry. The page cannot distinguish that failure from a slow
+start. After a head exists, a network failure leaves the replica `behind`
+and the next existing trigger reads again. A page that the handle rejects
+locally stops the replica with `{ by: "log" }`. The handle checks every
+row before returning a page; the replica adds no second row hash.
 
 The client folds from the genesis entry. A scope with an archive floor
 is outside its range and stops it. A kept replica and a start from a
