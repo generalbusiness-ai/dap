@@ -136,8 +136,10 @@ export interface ManifestSpec<D extends DeclaredDefinition, P extends Readonly<R
   readonly scenarios: readonly string[];
   readonly browser: { readonly entry: string; readonly html: string; readonly script: string };
   readonly assets?: readonly Asset[];
+  /** Application metadata; omission retains the entry definition's capabilities. */
+  readonly capabilities?: readonly { readonly name: string; readonly bounds: Readonly<Record<string, unknown>> }[];
 }
-/** Derive the package fields that its entry definition already states. */
+/** Derive package fields, with an optional application capability declaration. */
 export function manifest<const D extends DeclaredDefinition, const P extends Readonly<Record<string, Projection>>, const R extends Roles, const V extends Readonly<Record<string, ViewData>>>(spec: ManifestSpec<D, P, R, V> & { readonly views: CheckedViews<NoInfer<D>, NoInfer<P>, V> } & ([MissingGrant<NoInfer<D>, NoInfer<R>>] extends [never] ? unknown : { readonly missingGrants: MissingGrant<NoInfer<D>, NoInfer<R>> })) {
   const definition = spec.definition.value, held = new Set<string>(Object.values(spec.roles).flat());
   for (const [kind, act] of Object.entries(definition.acts)) if (!held.has(act.grant)) throw new Error(`no role holds ${act.grant}, which ${kind} needs`);
@@ -147,7 +149,7 @@ export function manifest<const D extends DeclaredDefinition, const P extends Rea
   return {
     v: 2, name: spec.name, version: spec.version, entry: spec.definition.path, definitions: [spec.definition.path],
     host: { execution: "recorded-do", profiles: [`${definition.profile.name}@${definition.profile.version}`] },
-    capabilities: definition.capabilities.map(capability => `${capability.name}@${capability.version}`),
+    capabilities: spec.capabilities ?? definition.capabilities.map(capability => `${capability.name}@${capability.version}`),
     projections: spec.projections, roles: spec.roles, predecessor: null,
     presentation: { entry: "index.html", assets: spec.assets ?? [], descriptions: {}, browser: spec.browser, resources: {}, views: spec.views },
     scenarios: spec.scenarios, connections, rights: {}, exercises: [], groups: [], order: [], derivation: {}, parameters: {},

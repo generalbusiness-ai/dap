@@ -19,6 +19,8 @@ function reservationContract(where: readonly Where[] = [
  { equals: { a: { slot: "day" }, b: { field: "day" } } },
 ]): DeclaredDefinition {
  const base = structuredClone(lending);
+ delete base.acts["release"];
+ delete base.acts["release-by-staff"];
  return {
   ...base, name: "lending-reservation-contract",
   items: { ...base.items, reservation: {
@@ -119,6 +121,29 @@ test("production reservation slots compare opaque day labels and lapse without c
  expect(s.replay().snapshot()).toBe(s.state.snapshot());
 });
 
+test("two live holds per member: holder or staff release frees a slot without changing its tool", async () => {
+ const s = make(), tool = await donate(s, keys.rita, "Drill"), before = structuredClone(s.item(tool));
+ wrote(await submit(s, keys.una, "reserve", reserve(tool, "2026-11-14"), room(s)));
+ const first = s.last.seq;
+ wrote(await submit(s, keys.una, "reserve", reserve(tool, "2026-11-15"), room(s)));
+ const second = s.last.seq, count = s.entries.length;
+ expect(s.item(first).parties["holder"]).toEqual(keys.una.member);
+ expect(await submit(s, keys.una, "reserve", reserve(tool, "2026-11-16"), room(s))).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.1" });
+ const release = (id: number) => ({ on: id, expected: { on: s.item(id).revision }, fields: {} });
+ expect(await submit(s, keys.vic, "release", release(first), room(s))).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.1" });
+ expect(s.entries).toHaveLength(count);
+ wrote(await submit(s, keys.una, "release", release(first), room(s)));
+ expect(s.item(first).state).toBe("released");
+ wrote(await submit(s, keys.vic, "reserve", reserve(tool, "2026-11-14"), room(s)));
+ expect(s.item(s.last.seq)).toMatchObject({ state: "held", parties: { holder: keys.vic.member } });
+ // This grant has staff authority alone: the alternate act does not require membership authority.
+ wrote(await submit(s, keys.rita, "release-by-staff", release(second), { grants: [{ grant: grantOf(keys.rita, s.at, ["lending.staff"]), current: true }] }));
+ expect(s.item(second).state).toBe("released");
+ for (const day of ["2026-11-15", "2026-11-16"]) wrote(await submit(s, keys.una, "reserve", reserve(tool, day), room(s)));
+ expect(s.item(tool)).toEqual(before);
+ expect(s.replay().snapshot()).toBe(s.state.snapshot());
+});
+
 test("the declaration is its canonical bytes and pin, with publication tells and a local reservation lapse", () => {
  const checked = validateDefinition(lending, PROPOSED_BOUNDS, RULE_PROFILES);
  expect(checked.ok ? [] : checked.problems).toEqual([]);
@@ -127,7 +152,7 @@ test("the declaration is its canonical bytes and pin, with publication tells and
  expect(canonicalize(parseStrict(bytes.toString("utf8")))).toBe(canonicalize(lending)); expect(parseStrict(bytes.toString("utf8"))).toEqual(lending);
  expect(definitionDigest(lending)).toBe(LENDING_DEFINITION);
  expect([lending.capabilities, lending.receives]).toEqual([[], {}]);
- expect(Object.fromEntries(Object.entries(lending.acts).map(([kind, act]) => [kind, act.sends.length]))).toEqual({ establish: 0, donate: 1, borrow: 1, return: 1, cancel: 1, publish: 1, reserve: 0 });
+ expect(Object.fromEntries(Object.entries(lending.acts).map(([kind, act]) => [kind, act.sends.length]))).toEqual({ establish: 0, donate: 1, borrow: 1, return: 1, cancel: 1, publish: 1, reserve: 0, release: 0, "release-by-staff": 0 });
  expect(lending.timed).toEqual({ lapse: { on: "reservation", states: ["held"], deadline: "until", effects: [{ state: "lapsed" }], attention: [] } });
 });
 

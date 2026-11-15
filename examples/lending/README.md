@@ -77,14 +77,24 @@ previously observed staff role has changed.
 
 A member opens a reservation with `tool`, `day` and `until`. A slot is
 one tool and one day label. A held reservation makes another reservation
-for that exact slot fail with `tool-day-taken`. The lapse changes only
-the reservation to `lapsed`; it never changes the tool.
+for that exact slot fail with `tool-day-taken`. Each reservation fixes its
+holder to the member who signs `reserve`. A member may hold at most two
+live reservations, and the library may hold at most eight in total. Two is
+this example's policy; it does not allocate a fair share of the eight to
+every member or prevent one member from repeatedly taking a freed slot.
+
+The holder can use `release` under `lending.member`. Staff can use
+`release-by-staff` under `lending.staff` to release another member's hold.
+Both acts change a held reservation to the final state `released`, freeing
+its tool/day slot and its place in both live-hold limits. The existing
+lapse changes it to `lapsed`. Neither release nor lapse changes the tool.
 
 Write day labels as `YYYY-MM-DD` in pages and agent requests. This is a
 convention, not a guard. The scope compares opaque text of at most ten
 bytes: two spellings of a calendar day are two different slots. It does
 not check a calendar, timezone or interval. The member supplies `until`
-explicitly, and the scope never checks that `until` falls on `day`.
+explicitly, and the scope never checks that `until` falls on `day`. The
+application sets no maximum duration for `until`.
 
 The definition and retained scenario expose reservation acts. The current
 browser screen keeps its circulation controls.
