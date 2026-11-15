@@ -19,8 +19,9 @@ function reservationContract(where: readonly Where[] = [
  { equals: { a: { slot: "day" }, b: { field: "day" } } },
 ]): DeclaredDefinition {
  const base = structuredClone(lending);
- delete base.acts["release"];
- delete base.acts["release-by-staff"];
+ const acts = Object.fromEntries(
+  Object.entries(base.acts).filter(([kind]) => kind !== "release" && kind !== "release-by-staff"),
+ );
  return {
   ...base, name: "lending-reservation-contract",
   items: { ...base.items, reservation: {
@@ -31,7 +32,7 @@ function reservationContract(where: readonly Where[] = [
     until: { fixed: true, required: true, of: { type: "time" } },
    },
   } },
-  acts: { ...base.acts, reserve: {
+  acts: { ...acts, reserve: {
    step: "open", on: "reservation", also: {}, grant: "lending.member",
    fields: { tool: { type: "item", of: "thing", required: true }, day: { type: "text", max: 10, required: true }, until: { type: "time", required: true } },
    guards: [{ none: { type: "reservation", states: ["held"], where }, reason: "tool-day-taken" }],

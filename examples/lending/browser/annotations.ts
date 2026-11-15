@@ -19,6 +19,19 @@ export const refusalAnnotations = {
   cancel: { ...common, unauthorized: "Only staff can cancel a thing." },
   publish: common,
   reserve: { ...common, "tool-day-taken": "Someone reserved that tool for that day." },
+  release: {
+    ...common,
+    "guard-failed": "Only its holder can release a held reservation.",
+    "revision-moved": "Someone changed that reservation first. Look again, then decide.",
+    final: "That reservation has ended.",
+  },
+  "release-by-staff": {
+    ...common,
+    unauthorized: "Only staff can release a reservation.",
+    "guard-failed": "Only a held reservation can be released.",
+    "revision-moved": "Someone changed that reservation first. Look again, then decide.",
+    final: "That reservation has ended.",
+  },
 } satisfies Record<Kind<typeof lending>, Readonly<Record<string, string>>>;
 
 export function annotatedRefusal(kind: Kind<typeof lending>, reason: string): string {
@@ -45,6 +58,8 @@ export const proposalAnnotations = {
   donate: proposal, borrow: proposal, return: proposal, cancel: proposal,
   publish: proposal,
   reserve: proposal,
+  release: proposal,
+  "release-by-staff": proposal,
 } satisfies Record<Kind<typeof lending>, typeof proposal>;
 
 export function proposalWords(kind: Kind<typeof lending>, reason: keyof typeof proposal): string {
