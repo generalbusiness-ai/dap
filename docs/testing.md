@@ -259,20 +259,8 @@ and `npm run typecheck` at the exact head in the executor slot, requires both
 to exit 0, and states both codes in START without a separate grant, evidence
 directory, or END.
 
-A head that changes a source of the page build also runs the whole
-`apps/room/page/test/assets.test.ts` owner before gate START. State its
-exit code and wall time. Report a wall time above 60 seconds to the planner.
-
-A head that changes an example application's definition or scenario runs the
-whole `packages/cli/test/application-examples.test.ts` owner before gate START.
-
-A head that changes any file under `packages/*/src` runs the whole
-`scripts/security-entry-points.test.mjs` owner before gate START and states
-its result.
-
-Before gate START, a head that changes a file under `packages/*/src` or example
-source runs the whole `packages/cli/test/application-release-reproduction.test.ts`
-owner and states its result.
+Before gate START, run `npm run pins` at the exact head, require exit 0
+within 60 seconds, and state its exit code and wall time.
 
 File START with the clean head, tree, and current main. Keep the gate's
 output in one log in a new directory under `~/play/artroom-evidence/`.
