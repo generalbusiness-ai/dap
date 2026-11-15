@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4ef1769574e80c72a89c38f012a8a48770248971","text":"Merge retired a covered predecessor; the successor is at apps/counter/release-identifiers.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:502c25096a6e3440f02eb274e868b8a565b6fb66","text":"Merge retired a covered predecessor; the successor is at packages/client/test/act-explore.test.ts."}
