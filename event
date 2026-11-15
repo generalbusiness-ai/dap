@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:62ba6bd652aeb9605f4ba0cebc3ea2873cc13d32","text":"Merge retired a covered predecessor; the successor is at packages/client/test/act-opaque.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:64666b2db6615330761ae761d925d6a12f537dbb","text":"Merge retired a covered predecessor; the successor is at packages/client/src/act-records.ts."}
