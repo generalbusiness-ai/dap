@@ -52,7 +52,12 @@ async function call(ctx: Context, store: CustodyStore, applicationFetch: ((reque
         send: (...sent) => custody.send(...sent), packageBytes: (address, limit) => packageBytes(address, limit, applicationFetch),
       });
       switch (installed.outcome) {
-        case "refused": return { code: 1, lines: [installRefused(installed.refusal), ...(early(installed.refusal) ? await earlier(store, config.service, signer.key, args["idempotencyKey"]) : [])] };
+        case "refused": return { code: 1, lines: [
+          ...(installed.refusal.refused === "recovery" && installed.refusal.state !== "absent"
+            ? [installRefused({ refused: "lost", scope: config.repository.rules })] : []),
+          installRefused(installed.refusal),
+          ...(early(installed.refusal) ? await earlier(store, config.service, signer.key, args["idempotencyKey"]) : []),
+        ] };
         case "archived": return { code: 1, lines: ["Install request: archived. The exact original is retained."] };
         case "answered": return { code: 1, lines: [`Install request: ${installed.answer.answer}${"reason" in installed.answer ? ` (${installed.answer.reason})` : ""}. The exact original is retained.`] };
         case "accepted": return { code: 0, lines: [`Install request recorded: item ${installed.item}.`, `Read its result with: dap application ${installed.item}`, "Acceptance records the request. Native fetch, admission, grants and creation may still be pending or refused."] };
@@ -85,7 +90,7 @@ function roomRefused(refusal: Extract<InstallRefusal, { refused: "unconfigured" 
 
 /** A refusal before this command signed: an earlier request under the same key can still be open. */
 function early(refusal: InstallRefusal): boolean {
-  return !["stopped", "lost", "receipt", "accepted-unread", "entry-unread", "entry", "recovery", "unsent"].includes(refusal.refused);
+  return !["stopped", "lost", "receipt", "accepted-unread", "entry-unread", "entry", "recovery", "unsent", "not-found"].includes(refusal.refused);
 }
 
 /** What request custody holds under this key for this key holder and service, read with no lock, as MCP states it. */
@@ -104,6 +109,7 @@ async function earlier(store: CustodyStore, service: string, signer: string, key
 
 function installRefused(refusal: InstallRefusal): string {
   switch (refusal.refused) {
+    case "not-found": return "No install request is kept under this key. This command signed and submitted no ACT. Keep the original request key and arguments.";
     case "unsent": return "Custody keeps an absence proof for this expired install request. It retains the original envelope. This command signed and submitted no ACT. Do not resend the expired envelope. Use a new request key only for a new request.";
     case "recovery":
       if (refusal.state === "absent") return installRefused({ refused: "unsent" });

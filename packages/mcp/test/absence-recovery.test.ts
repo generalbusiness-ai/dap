@@ -9,7 +9,7 @@ import { expect, test, vi } from "vitest";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
 import { DOMAINS, SESSION_DOMAINS } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isRecord, timeOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { CustodyError, EXPIRY_MARGIN_MS, identityId, type CustodyStore, type Identity } from "@generalbusiness/dap-client";
+import { CustodyError, EXPIRY_MARGIN_MS, Lost, identityId, memoryStore, type AbsenceRecovery, type CustodyStore, type Identity } from "@generalbusiness/dap-client";
 import { sqliteStore, SQLITE_CUSTODY_BOUNDS, type Sql, type SqlValue } from "../src/sqlite-custody.ts";
 import { McpService } from "../src/service.ts";
 import { fixedSigner } from "./fixtures.ts";
@@ -36,6 +36,139 @@ function nodeSql(): Sql & { db: DatabaseSync } {
     },
   };
 }
+
+// These small cases script the shared proof result to check NF2 projection.
+// The separate default-256 case runs the real helper and journal proof.
+async function projectionScene() {
+  let now = Date.parse("2099-01-01T00:00:00Z"), dispatches = 0, drop = true;
+  const signer = fixedSigner(25), stand = new StandIn(signer.key), store = memoryStore();
+  const service = new McpService({ service: SERVICE, signer, custody: store, now: () => now,
+    config: { read: async () => stand.config(), addRoot: async () => { throw Error("No new root"); } },
+    fetch: (url, init) => {
+      if ((init?.method ?? "GET") === "POST" && new URL(url).pathname === `/v1/scopes/${stand.destination.scope}/acts`) {
+        dispatches++;
+        if (drop) throw Error("SCRIPTED request lost before acceptance");
+      }
+      return stand.fetch(url, init);
+    } });
+  await service.page();
+  const identity: Identity = { service: SERVICE, membership: stand.membership, signer: signer.key, target: stand.destination, key: "ce2-projection" };
+  const repeat = () => service.call("repository.read-token", { on: 0, fields: { hours: 1 }, idempotencyKey: identity.key });
+  const settle = () => service.call("settle", { target: "destination", idempotencyKey: identity.key });
+  await repeat();
+  const record = await service.custody.find(identity);
+  if (!record) expect.fail("The lost request must remain under custody.");
+  now = Date.parse(record.envelope.signed.intent.notAfter) + EXPIRY_MARGIN_MS + 1;
+  stand.sessionEnds = timeOf(now + 600_000);
+  return { service, stand, store, identity, record, repeat, settle, resume: () => { drop = false; }, dispatches: () => dispatches };
+}
+
+test("non-ending absence diagnostics retain the unknown report and both deliberate recovery routes", async () => {
+  const { service, stand, identity, record, settle, dispatches } = await projectionScene();
+  const original = canonicalize(record), target = stand.scopes.get(stand.destination.scope)!;
+  const outcomes: AbsenceRecovery[] = [
+    { state: "unproved", record, why: { kind: "no-session" } },
+    { state: "unproved", record, why: { kind: "read", reason: "forbidden" } },
+    { state: "unproved", record, why: { kind: "protocol" } },
+    { state: "present", record, found: { fact: { at: stand.destination, ...stand.head(target) }, intent: record.signings[0]!.intent } },
+  ];
+  const recovery = vi.spyOn(service.reads, "recoverAbsent");
+  try {
+    for (const outcome of outcomes) {
+      recovery.mockResolvedValueOnce(outcome);
+      const result = await settle();
+      expect(result.isError).toBe(false);
+      expect(result.structuredContent).toMatchObject({ answer: "unknown", phase: record.phase, steps: [], outcomes: record.count, attempt: record.attempt, last: null });
+      expect(result.structuredContent).not.toHaveProperty("error");
+      expect(result.structuredContent).not.toHaveProperty("fact");
+      const sentence = String(result.structuredContent["sentence"]);
+      if (outcome.state === "unproved") expect(sentence).toContain(outcome.why.kind === "read" ? "read: forbidden" : outcome.why.kind);
+      else expect(sentence).toContain("journal holds this actor and idempotencyKey");
+      expect(result.structuredContent["next"]).toContain("original tool again with the same key to resend the same envelope");
+      expect(result.structuredContent["next"]).toContain("settle after the scope records a later entry");
+      expect(canonicalize(await service.custody.find(identity))).toBe(original);
+      expect(dispatches()).toBe(1);
+    }
+    expect(recovery).toHaveBeenCalledTimes(outcomes.length);
+  } finally { recovery.mockRestore(); }
+});
+
+test("a changed unresolved record reports its fresh outcome count without a second proof", async () => {
+  for (const state of ["changed", "unproved"] as const) {
+    const { service, identity, record, settle, dispatches } = await projectionScene();
+    const recovery = vi.spyOn(service.reads, "recoverAbsent").mockImplementationOnce(async () => {
+      // A concurrent caller loses another delivery through the real custody port.
+      await service.custody.send(identity, record.meaning, async () => { throw Error("A retained envelope must not rebuild"); }, async () => { throw new Lost(); }, { notAfter: record.envelope.signed.intent.notAfter });
+      return state === "changed" ? { state, record: await service.custody.find(identity) }
+        : { state, record, why: { kind: "head-before-expiry" } };
+    });
+    try {
+      const result = await settle(), fresh = await service.custody.find(identity);
+      if (!fresh) expect.fail("The concurrent delivery must retain its record.");
+      expect(fresh.count).toBeGreaterThan(record.count);
+      expect(result.isError).toBe(false);
+      expect(result.structuredContent).toMatchObject({ answer: "unknown", phase: fresh.phase, steps: [], outcomes: fresh.count, attempt: fresh.attempt, last: null });
+      expect(result.structuredContent["sentence"]).toContain("record changed before absence recovery completed");
+      expect(result.structuredContent["sentence"]).not.toContain("journal has no entry at or past this request's expiry");
+      expect(result.structuredContent["next"]).toContain("Call settle again to read the current record");
+      expect(result.structuredContent).not.toHaveProperty("fact");
+      expect(recovery).toHaveBeenCalledTimes(1);
+      expect(dispatches()).toBe(1);
+    } finally { recovery.mockRestore(); }
+  }
+});
+
+test("a changed terminal record reports the genuine kept answer just like the next settle", async () => {
+  for (const phase of ["accepted", "refused"] as const) for (const state of ["changed", "unproved", "present"] as const) {
+    const { service, stand, identity, record, repeat, settle, resume, dispatches } = await projectionScene();
+    if (phase === "refused") stand.answers.set("read-token", () => ({ answer: "refused", reason: "expired", judgedAt: stand.head(stand.scopes.get(stand.destination.scope)!) }));
+    const recovery = vi.spyOn(service.reads, "recoverAbsent").mockImplementationOnce(async () => {
+      // A different ordinary caller obtains and keeps the scripted scope's answer.
+      resume();
+      await repeat();
+      const fresh = await service.custody.find(identity);
+      expect(fresh?.phase).toBe(phase);
+      if (state === "changed") return { state, record: fresh };
+      // A proof read can finish with its old snapshot after that settlement.
+      if (state === "unproved") return { state, record, why: { kind: "protocol" } };
+      return { state, record, found: { fact: { at: stand.destination, ...stand.head(stand.scopes.get(stand.destination.scope)!) }, intent: record.signings[0]!.intent } };
+    });
+    try {
+      const result = await settle();
+      expect(result.isError).toBe(false);
+      expect(result.structuredContent).toMatchObject({ answer: phase, phase });
+      expect(result.structuredContent["sentence"]).not.toContain("outcome stays unknown");
+      expect(result.structuredContent["next"]).toBe("Nothing more is needed.");
+      const fresh = await service.custody.find(identity);
+      if (!fresh) expect.fail("The concurrent answer must retain its record.");
+      const decided = await service.custody.decided(identityId(identity), fresh);
+      expect(decided?.answer?.answer).toBe(phase);
+      if (decided?.answer?.answer === "accepted") expect(result.structuredContent["fact"]).toEqual(decided.answer.receipt.fact);
+      else expect(result.structuredContent).not.toHaveProperty("fact");
+      expect(fresh.envelope).toEqual(record.envelope);
+      expect((await settle()).structuredContent).toEqual(result.structuredContent);
+      expect(recovery).toHaveBeenCalledTimes(1);
+      expect(dispatches()).toBe(2);
+    } finally { recovery.mockRestore(); }
+  }
+});
+
+test("a removed record returns ordinary not-found without the stale recovery snapshot", async () => {
+  const { service, store, identity, settle, dispatches } = await projectionScene();
+  const recovery = vi.spyOn(service.reads, "recoverAbsent").mockImplementationOnce(async () => {
+    store.records.delete(identityId(identity));
+    return { state: "changed", record: null };
+  });
+  try {
+    const result = await settle();
+    expect(result.isError).toBe(false);
+    expect(result.structuredContent).toMatchObject({ answer: "not-found" });
+    for (const field of ["phase", "steps", "outcomes", "attempt", "last", "fact"]) expect(result.structuredContent).not.toHaveProperty(field);
+    expect((await settle()).structuredContent).toEqual(result.structuredContent);
+    expect(recovery).toHaveBeenCalledTimes(1);
+    expect(dispatches()).toBe(1);
+  } finally { recovery.mockRestore(); }
+});
 
 test("a full real SQLite custody population frees one slot only after a valid other-signer head reaches the latest signing expiry", async () => {
   const setupStarted = performance.now();
@@ -170,12 +303,20 @@ test("a full real SQLite custody population frees one slot only after a valid ot
       expect([actSignatures, dispatches]).toEqual(before);
       await blocked();
     });
-    async function publicSettle() {
+    async function publicSettle(unsent = false) {
       const before = [actSignatures, dispatches];
       const result = await service.call("settle", { target: "destination", idempotencyKey: identity.key });
-      expect(result.isError).toBe(true);
-      expect(result.structuredContent["error"]).toBe("custody");
-      for (const field of ["answer", "receipt", "refused"]) expect(result.structuredContent).not.toHaveProperty(field);
+      expect(result.isError).toBe(unsent);
+      if (unsent) {
+        expect(result.structuredContent["error"]).toBe("custody");
+        for (const field of ["answer", "receipt", "refused"]) expect(result.structuredContent).not.toHaveProperty(field);
+      } else {
+        const held = await current(identity);
+        expect(result.structuredContent).toMatchObject({ answer: "unknown", phase: held.phase, steps: [], outcomes: held.count, attempt: held.attempt });
+        expect(result.structuredContent).not.toHaveProperty("error");
+        expect(result.structuredContent["next"]).toContain("original tool again with the same key to resend the same envelope");
+        expect(result.structuredContent["next"]).toContain("settle after the scope records a later entry");
+      }
       expect([actSignatures, dispatches]).toEqual(before);
       return result;
     }
@@ -190,7 +331,7 @@ test("a full real SQLite custody population frees one slot only after a valid ot
       expect(pair.sealed.hash).toBe(entryHash(pair.sealed.entry));
       expect(Date.parse(pair.sealed.entry.time)).toBe(expiry - 1);
       const early = await publicSettle();
-      expect(early.structuredContent["message"]).toContain("The verified scope journal has no entry at or past this request's expiry.");
+      expect(early.structuredContent["sentence"]).toContain("The verified scope journal has no entry at or past this request's expiry.");
       expect(early.structuredContent["next"]).toContain("after the scope records a later entry at or past the request's expiry");
       expect(canonicalize(await current(identity))).toBe(original);
       expect(store.identity(id)).toEqual(originalIdentityCharge);
@@ -208,7 +349,7 @@ test("a full real SQLite custody population frees one slot only after a valid ot
       expect(pair.sealed.hash).not.toBe(pair.previous.hash);
       expect(pair.sealed.hash).toBe(entryHash(pair.sealed.entry));
       expect(Date.parse(pair.sealed.entry.time)).toBe(expiry);
-      await publicSettle();
+      await publicSettle(true);
       const ended = await current(identity);
       expect(ended.phase).toBe("refused");
       expect(ended.signings[index]!.closed).toBe(true);

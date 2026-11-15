@@ -145,6 +145,7 @@ test.each(["absent", "landed"] as const)("a repeated install reopens file custod
   let nativeJudgment: ReturnType<typeof A.submit> | undefined, nativeThrown: unknown;
   let originalText = "", recordPath = "", packageWants = 0, terminalText = "";
   const initialHead = { ...A.head }, initialHistory = canonicalize(A.entries);
+  const unknownLine = `The reply from ${A.at.scope} was lost, so the outcome is unknown. The request is under custody. Repeat the same command to settle it.`;
   const unsent = "Custody keeps an absence proof for this expired install request. It retains the original envelope. This command signed and submitted no ACT. Do not resend the expired envelope. Use a new request key only for a new request.";
 
   const steps = mode === "absent" ? ["lost", "earlier-head", "proved", "terminal-repeat"] as const
@@ -196,7 +197,7 @@ test.each(["absent", "landed"] as const)("a repeated install reopens file custod
       }
       expect(init?.headers?.["authorization"]).toBe(`Session ${sessionToken}`);
       if (mode === "landed" && receipt !== null && path === `/v1/scopes/${A.at.scope}/entries/${receipt.fact.seq}`) {
-        expect(step).toBe("terminal-repeat");
+        expect(["native-settle", "terminal-repeat"]).toContain(step);
         return Response.json({ ok: true, at: A.head, complete: true, value: A.entries[receipt!.fact.seq] });
       }
       const node = [D, A].find(node => path === `/v1/scopes/${node.at.scope}`);
@@ -229,12 +230,12 @@ test.each(["absent", "landed"] as const)("a repeated install reopens file custod
       expect({ judgment: nativeJudgment, thrown }, JSON.stringify({ judgment: nativeJudgment, thrown }))
         .toMatchObject({ judgment: { result: "write" }, thrown: undefined });
     }
-    expect(outcome.code).toBe(mode === "landed" && step === "terminal-repeat" ? 0 : 1);
+    expect(outcome.code).toBe(mode === "landed" && step !== "lost" ? 0 : 1);
     expect(routes.slice(0, 3)).toEqual([`POST /v1/scopes/${M.at.scope}/sessions`, `GET /v1/scopes/${D.at.scope}`, `GET /v1/scopes/${A.at.scope}`]);
     expect([actSignatures, submissions]).toEqual([1, 1]);
     expect(A.entries.filter(({ entry }) => entry.input.type === "act" && entry.input.signed.intent.idempotencyKey === requestKey)).toHaveLength(mode === "landed" ? 1 : 0);
     if (step === "lost") {
-      expect(outcome.lines).toEqual([`The reply from ${A.at.scope} was lost, so the outcome is unknown. The request is under custody. Repeat the same command to settle it.`]);
+      expect(outcome.lines).toEqual([unknownLine]);
       expect(routes.slice(3)).toEqual([`GET /v1/scopes/${D.at.scope}`, `POST /v1/scopes/${A.at.scope}/acts`]);
       const records = readdirSync(join(custodyHome, "records"));
       expect(records).toHaveLength(1);
@@ -254,18 +255,17 @@ test.each(["absent", "landed"] as const)("a repeated install reopens file custod
         expect(ended.signings).toHaveLength(1);
         expect(ended.outcomes.at(-1)).toMatchObject({ settled: receipt, signing: 0 });
         expect(ended.outcomes.some(held => "unsent" in held)).toBe(false);
+        expect(outcome.lines).toEqual([`Install request recorded: item ${receipt!.fact.seq}.`, `Read its result with: dap application ${receipt!.fact.seq}`,
+          "Acceptance records the request. Native fetch, admission, grants and creation may still be pending or refused."]);
         if (step === "native-settle") {
-          expect(outcome.lines).toEqual(["The custody record changed before absence recovery completed. This command signed and submitted no ACT and claims no new outcome. Keep the original request key and arguments. Repeat the command to read the current record."]);
-          expect(routes.slice(3)).toEqual([`POST /v1/scopes/${A.at.scope}/settle`]);
+          expect(routes.slice(3)).toEqual([`POST /v1/scopes/${A.at.scope}/settle`, `GET /v1/scopes/${A.at.scope}/entries/${receipt!.fact.seq}`]);
           terminalText = readFileSync(recordPath, "utf8");
         } else {
-          expect(outcome.lines).toEqual([`Install request recorded: item ${receipt!.fact.seq}.`, `Read its result with: dap application ${receipt!.fact.seq}`,
-            "Acceptance records the request. Native fetch, admission, grants and creation may still be pending or refused."]);
           expect(routes.slice(3)).toEqual([`GET /v1/scopes/${A.at.scope}/entries/${receipt!.fact.seq}`]);
           expect(readFileSync(recordPath, "utf8")).toBe(terminalText);
         }
       } else if (step === "earlier-head") {
-        expect(outcome.lines).toEqual(["The verified scope journal has no entry at or past this install request's expiry. Custody keeps the original record and its capacity charge. This command signed and submitted no ACT. Keep the original request key and arguments. Repeat the command after the scope records a later entry at or past the request's expiry."]);
+        expect(outcome.lines).toEqual([unknownLine, "The verified scope journal has no entry at or past this install request's expiry. Custody keeps the original record and its capacity charge. This command signed and submitted no ACT. Keep the original request key and arguments. Repeat the command after the scope records a later entry at or past the request's expiry."]);
         expect(readFileSync(recordPath, "utf8")).toBe(originalText);
         expect(A.head).toEqual(initialHead);
       } else {

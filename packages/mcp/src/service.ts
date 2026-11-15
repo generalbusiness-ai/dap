@@ -24,7 +24,7 @@ import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
 import { SendStop, applicationInstallation, applicationRoom, installApplication, type InstallHandle, type InstallRefusal, type InstallRoom, type InstallRoomConfig, type PackageBytes, type RoomRefusal } from "@generalbusiness/dap-client/install";
 import { actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
-import { Custody, CustodyError, Lost, TERMINAL, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity, type Sent } from "@generalbusiness/dap-client";
+import { Custody, CustodyError, Lost, TERMINAL, identityId, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity, type Sent } from "@generalbusiness/dap-client";
 import { StoreFormatError, effectiveFields, expectedOf, finalStates, viaLeft } from "@generalbusiness/dap-client";
 import { describeAct } from "./describe.ts";
 import { grantAction, onOf, type ActLike, type DefinitionLike } from "@generalbusiness/dap-client";
@@ -204,17 +204,17 @@ function unsentRequest(): Failure {
   return failed({ error: "custody", sentence: "Custody keeps an absence proof for this expired request. It retains the original envelope. This call signed and submitted no ACT. It has no Native answer or receipt to show.", next: "Do not resend the expired envelope. Use a new idempotencyKey only for a new request." });
 }
 
-function absenceRecovery(recovered: AbsenceRecovery): Failure {
-  if (recovered.state === "absent") return unsentRequest();
+function absenceRecovery(recovered: Exclude<AbsenceRecovery, { state: "absent" }>): Said {
+  const next = "Keep the original idempotencyKey and exact arguments. Deliberately call the original tool again with the same key to resend the same envelope and get the scope's answer, or call settle after the scope records a later entry at or past the request's expiry.";
   if (recovered.state === "unproved" && recovered.why.kind === "head-before-expiry")
-    return failed({ error: "custody", sentence: "The verified scope journal has no entry at or past this request's expiry. The outcome stays unknown, and custody keeps the original record and its capacity charge. This call signed and submitted no ACT.", next: "Keep the original key and arguments. Call settle after the scope records a later entry at or past the request's expiry." });
+    return { sentence: "The verified scope journal has no entry at or past this request's expiry. The outcome stays unknown, and custody keeps the original record and its capacity charge. This call signed and submitted no ACT.", next };
   if (recovered.state === "present")
-    return failed({ error: "custody", sentence: "The checked scope journal holds this actor and idempotencyKey, but the scope supplied no settlement for the exact kept envelope. Custody keeps the original record. This call signed and submitted no ACT.", next: "Keep the original key and arguments. Call settle again to ask the scope for the original outcome." });
+    return { sentence: "The checked scope journal holds this actor and idempotencyKey, but the scope supplied no settlement for the exact kept envelope. Custody keeps the original record. This call signed and submitted no ACT.", next };
   if (recovered.state === "unproved") {
     const why = recovered.why.kind === "read" ? `read: ${recovered.why.reason}` : recovered.why.kind;
-    return failed({ error: "custody", sentence: `This server could not prove this expired request absent (${why}). The outcome stays unknown, and custody keeps the original record and its capacity charge. This call signed and submitted no ACT.`, next: "Keep the original key and arguments. Restore complete session-authorized journal reads, then call settle again." });
+    return { sentence: `This server could not prove this expired request absent (${why}). The outcome stays unknown, and custody keeps the original record and its capacity charge. This call signed and submitted no ACT.`, next };
   }
-  return failed({ error: "custody", sentence: "The custody record changed before absence recovery completed. This call signed and submitted no ACT and claims no new outcome.", next: "Keep the original key and arguments. Call settle again to read the current record." });
+  return { sentence: "The custody record changed before absence recovery completed. This call signed and submitted no ACT and claims no new outcome.", next: "Keep the original idempotencyKey. Call settle again to read the current record." };
 }
 
 const configDigest = (config: McpConfig): Digest => digestBytes(utf8(canonicalize(config as never)));
@@ -1306,8 +1306,9 @@ export class McpService {
         return read.ok ? read.value : read.reason === "archived" ? read : null;
       } catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
     });
-    if (!settled) return ok<CustodyReport>({ answer: "not-found", sentence: `This server keeps no record under key ${String(key)} for that target.`, next: "That does not show that the act was not sent: another server or custody home can hold it. Ask the server that signed it." });
-    const record = settled.record;
+    const notFound = () => ok<CustodyReport>({ answer: "not-found", sentence: `This server keeps no record under key ${String(key)} for that target.`, next: "That does not show that the act was not sent: another server or custody home can hold it. Ask the server that signed it." });
+    if (!settled) return notFound();
+    let record = settled.record, last = settled.decided, readReceipt = settled.receipt;
     const expiry = timeMs(record.envelope.signed.intent.notAfter)! + EXPIRY_MARGIN_MS;
     const expired = expiry <= this.#now();
     if (card?.resendExpired && expired && scope !== null && !TERMINAL.has(record.phase) && !record.standalone) {
@@ -1319,16 +1320,25 @@ export class McpService {
       }, { notAfter: timeOf(this.#now() + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000) });
       return this.#settle(args, { resendExpired: false }, dispatch);
     }
+    let recoveryWords: Said | null = null;
     // Cards recover only through their Native answer path, including the recursive check above.
     if (card === undefined && expired && !TERMINAL.has(record.phase) && !record.standalone && scope !== null) {
-      return absenceRecovery(await this.#reads.recoverAbsent(this.custody, identity));
+      const recovered = await this.#reads.recoverAbsent(this.custody, identity);
+      if (recovered.state === "absent") return this.#withSigner(unsentRequest(), recovered.record, s);
+      // Even a failed proof can overlap another caller's completed settlement.
+      const fresh = await this.custody.find(identity);
+      if (fresh === null) return notFound();
+      record = fresh;
+      last = await this.custody.decided(identityId(identity), record);
+      readReceipt = null;
+      if (!TERMINAL.has(record.phase)) recoveryWords = absenceRecovery(canonicalize(record) === canonicalize(recovered.record)
+        ? recovered : { state: "changed", record });
     }
-    const last = settled.decided;
     if (last?.unsent) return this.#withSigner(unsentRequest(), record, s);
     // A folded record holds no Native answer for this caller.
     if (last?.folded) throw new CustodyError({ held: "unreadable" });
     if (last && scope !== null && membership !== null && !record.standalone && this.#keepsOriginals(s, membership)) await this.#endAnswered(membership, scope, record.envelope.signed, last.answer ?? null);
-    const receipt: Receipt | null = settled.receipt ?? (last?.answer?.answer === "accepted" ? last.answer.receipt : null);
+    const receipt: Receipt | null = readReceipt ?? (last?.answer?.answer === "accepted" ? last.answer.receipt : null);
     const archived: ArchivedSettlement | null = last?.archivedSettlement ?? (last?.answer?.answer === "archived"
       ? { ok: false, reason: "archived", archived: last.answer.archived, fact: last.answer.fact } : null);
     if (record.phase === "archived" && !archived) throw new CustodyError({ held: "unreadable" });
@@ -1340,15 +1350,15 @@ export class McpService {
     const fromStep = fromCursor<{ i: number }>(args["cursor"])?.i ?? 0;
     const { page: steps, next: nextStep } = pageBy(allSteps, fromStep, pageOf(BOUNDS.act) - 1536);
     const answer: CustodyReport["answer"] = record.phase === "archived" ? "archived" : record.phase === "accepted" ? "accepted" : record.phase === "refused" ? "refused" : record.phase === "mismatch" ? "mismatch" : record.phase === "settled" ? "settled" : "unknown";
-    const sentence = answer === "settled" ? `Under key ${String(key)}, every capability step is decided; no act is kept under this key.`
+    const sentence = recoveryWords?.sentence ?? (answer === "settled" ? `Under key ${String(key)}, every capability step is decided; no act is kept under this key.`
       : answer === "accepted" ? `The act under key ${String(key)} was accepted: entry ${receipt?.fact.seq}.`
       : answer === "refused" ? `The act under key ${String(key)} was refused; the refusal is kept.`
       : answer === "mismatch" ? `The key ${String(key)} is on another intent of your key at that scope.`
-      : `The outcome under key ${String(key)} is unknown: the scope gave no receipt for the exact envelope. The record stays unknown.`;
+      : `The outcome under key ${String(key)} is unknown: the scope gave no receipt for the exact envelope. The record stays unknown.`);
     const unknownNext = !card ? "Call the same tool again with the same idempotencyKey: it resends the same envelope."
       : expired ? "The scope gave no answer. Check the original request again." : `Check the original request again after ${timeOf(expiry)}. The scope then answers for good.`;
     const refusal = card && last?.answer?.answer === "refused" ? { reason: last.answer.reason, ...(last.answer.name ? { name: last.answer.name } : {}) } : {};
-    const result = ok({ answer, phase: record.phase, sentence, next: answer === "unknown" ? unknownNext : "Nothing more is needed.", ...refusal,
+    const result = ok({ answer, phase: record.phase, sentence, next: recoveryWords?.next ?? (answer === "unknown" ? unknownNext : "Nothing more is needed."), ...refusal,
       ...(card && answer === "unknown" && !expired ? { checkAfter: timeOf(expiry) } : {}),
       ...(archived ? { ...archivedAnswer(archived.archived, archived.fact), archived: archived.archived, ...(archived.fact ? { fact: archived.fact } : {}) } : {}),
       ...(receipt ? { fact: receipt.fact, outboxIds: receipt.sends } : {}), outcomes: record.count, attempt: record.attempt,
@@ -1513,6 +1523,7 @@ export class McpService {
   #refusedInstall(refusal: InstallRefusal): Failure {
     switch (refusal.refused) {
       case "unsent": return unsentRequest();
+      case "not-found": return failed({ error: "custody", sentence: "No install request is kept under this key. This call signed and submitted no ACT.", next: "Keep the original request key and arguments. A missing local record does not show that the request was never sent; ask the server that signed it." });
       case "recovery": return failed({ error: "custody", sentence: "This install call stopped while reconciling the original custody record. It signed and submitted no ACT.", next: "Keep the original request key and arguments. Repeat the command to read the current record." });
       case "unconfigured": case "read": case "room-siblings": case "rules-sibling": case "commons-membership": return this.#refusedRoom(refusal);
       case "key": return failed({ error: "shape", field: "idempotencyKey", what: "is missing or invalid", declared: "a key you choose and keep" });

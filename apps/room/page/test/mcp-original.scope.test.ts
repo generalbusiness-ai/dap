@@ -401,13 +401,15 @@ test("a page that answered first leaves custody to the scope's answer", async ()
     expect(kept?.phase).toBe("unknown");
     expect(unresolved.map(record => record.id)).toContain(id);
     const settled = await restarted.call("settle", { target: s.lane, idempotencyKey: "never-1" });
-    expect(settled.isError).toBe(true);
+    expect(settled.isError).toBe(false);
+    expect([said(settled).answer, said(settled).phase]).toEqual(["unknown", "unknown"]);
     expect(said(settled)).toMatchObject({
-      error: "custody",
-      message: "The verified scope journal has no entry at or past this request's expiry. The outcome stays unknown, and custody keeps the original record and its capacity charge. This call signed and submitted no ACT.",
-      next: "Keep the original key and arguments. Call settle after the scope records a later entry at or past the request's expiry.",
+      sentence: "The verified scope journal has no entry at or past this request's expiry. The outcome stays unknown, and custody keeps the original record and its capacity charge. This call signed and submitted no ACT.",
+      steps: [], outcomes: kept?.count, attempt: kept?.attempt,
     });
-    expect([said(settled).answer, said(settled).phase, said(settled).fact]).toEqual([undefined, undefined, undefined]);
+    expect(said(settled).next).toContain("original tool again with the same key to resend the same envelope");
+    expect(said(settled).next).toContain("settle after the scope records a later entry");
+    expect(said(settled).fact).toBeUndefined();
     expect(await store.read(id)).toEqual(kept);
     expect(await store.unresolved()).toEqual(unresolved);
     expect(s.wire.acts).toHaveLength(phoneSends + 1);

@@ -10,7 +10,7 @@ import { timeOf } from "@generalbusiness/dap-bytes";
 import { BASE_COHORT, VERSIONS, mcpApplicationRoomCohort, platform } from "@generalbusiness/dap-platform";
 import type { DefinitionLike } from "../src/describe.ts";
 import { declarationDigest, installApplication, type InstallArguments, type InstallHandle, type InstallOptions, type InstallReader } from "../src/install-request.ts";
-import { Custody, meaningOf, memoryStore, type Identity } from "../src/custody.ts";
+import { Custody, identityId, meaningOf, memoryStore, type Identity } from "../src/custody.ts";
 import { httpTransport } from "../src/http.ts";
 import { signedIntent } from "../src/intent.ts";
 import type { AbsenceRecovery } from "../src/reads.ts";
@@ -80,7 +80,7 @@ async function repeatedInstall(existing = true) {
   };
 }
 
-test("repeated dead installs recover only by opt-in and every recovery result stops without sending", async () => {
+test("repeated dead installs recover only by opt-in and report current unresolved custody without sending", async () => {
   const s = await repeatedInstall();
   s.dead();
   expect(await s.install()).toMatchObject({ outcome: "refused", refusal: { refused: "lost" } });
@@ -99,7 +99,7 @@ test("repeated dead installs recover only by opt-in and every recovery result st
     expect(await s.install({ recoverAbsent: async identity => { recovered.push(identity); return reply; } })).toEqual({
       outcome: "refused", refusal: reply.state === "unproved"
         ? { refused: "recovery", state: reply.state, why: reply.why }
-        : { refused: "recovery", state: reply.state },
+        : { refused: "recovery", state: reply.state === "present" ? "present" : "changed" },
     });
     expect(s.counts()).toEqual({ sends: 1, submissions: 1, packageReads: 0 });
   }
@@ -124,7 +124,7 @@ test("missing or live installs skip recovery, and a different meaning retains Cu
   expect(proofs).toBe(0);
 });
 
-test("a recovery race stops this invocation and an already unsent install remains a local result without a Native answer", async () => {
+test("recovery races project current terminal or missing custody without sending or a Native answer", async () => {
   const s = await repeatedInstall();
   s.dead();
   const answer = await s.install({ recoverAbsent: async identity => {
@@ -132,9 +132,19 @@ test("a recovery race stops this invocation and an already unsent install remain
     const record = await s.custody.absent(identity, 0, s.head);
     return { state: "changed", record };
   } });
-  expect(answer).toEqual({ outcome: "refused", refusal: { refused: "recovery", state: "changed" } });
+  expect(answer).toEqual({ outcome: "refused", refusal: { refused: "unsent" } });
   expect(s.counts()).toEqual({ sends: 0, submissions: 0, packageReads: 0 });
   expect(await s.install({ recoverAbsent: async () => { throw Error("A final record needs no proof"); } })).toEqual({ outcome: "refused", refusal: { refused: "unsent" } });
   expect(s.counts()).toEqual({ sends: 1, submissions: 0, packageReads: 0 });
   expect((await s.custody.find(s.identity))!.signings[0]!.closed).toBe(true);
+
+  const missing = await repeatedInstall(); missing.dead();
+  const before = (await missing.custody.find(missing.identity))!;
+  expect(await missing.install({ recoverAbsent: async identity => {
+    // Return a stale port snapshot after another owner removes the actual custody record.
+    missing.store.records.delete(identityId(identity));
+    return { state: "unproved", record: before, why: { kind: "head-before-expiry" } };
+  } })).toEqual({ outcome: "refused", refusal: { refused: "not-found" } });
+  expect(await missing.custody.find(missing.identity)).toBeNull();
+  expect(missing.counts()).toEqual({ sends: 0, submissions: 0, packageReads: 0 });
 });
