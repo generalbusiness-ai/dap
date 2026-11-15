@@ -75,10 +75,28 @@ Library publishes and where. Every test and assertion stays unchanged, as do
 Directory, Destination, grants, and receipt code. Lending stays `0.3.0`;
 Counter and both immutable `0.2.0` packets stay unchanged.
 
-Validation of this descriptor repair is **UNRUN**. The same whole owner must
-show GREEN before later identifier work. Normal reproduction, current
-identifiers, the full gate, and review remain owed. This RED establishes no
-successful page publication, release, signing, or deployment.
+The same whole base installation owner then passed all three cases at
+`eb6d6a30a4f3686aa389f131abc854ea66f0a7dd`, tree
+`7c0dd8a70dc6c680b8c240f1c0fd97cae5ca4d63`: exit 0 in 17.385805792 s.
+The actual Destination Result, published page, and receipt assertions all
+passed. This GREEN does not establish a release, signing, or deployment.
+
+Remaining development checks stopped at the retained-package correspondence
+assertion. END `c8defd372a022ead123bf49fc2fa368f54650d32` records all eight
+Lending definition cases passing, then ten passes and one assertion failure
+in the whole Define story/package invocation. `package.test.ts:10` showed
+that authored `lendingPackage` still emitted `capabilities: []` while the
+retained descriptor declared `shelf/`. All six story cases passed. The
+Native Lending owner remained unreached.
+
+The source follow-up overrides only the Lending-local `manifest(...)`
+result's package capability with the exact reviewed declaration. The typed
+manifest spec has no package-capability option; the shared helper and schema
+stay unchanged. The descriptor bytes, equality assertion, all other tests,
+versions, and Counter stay unchanged. Validation of this authored-package
+repair is **UNRUN**. Package correspondence must pass before canonical
+identifier work. Native Lending, normal reproduction, current identifiers,
+the full gate, and review remain owed.
 
 ## Definition and witnesses
 
@@ -161,6 +179,10 @@ match them byte-for-byte. This table records development, not a gate.
 Its JSON results retain each exact argv, working directory, exit, wall time,
 and stream hashes. LP1 rows below bind the clean `4f213e9d` head, not the
 unrun descriptor repair.
+`G` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-green-attempt1`.
+`M` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-remaining-development-attempt1`.
+The later GREEN and remaining-owner rows bind `eb6d6a30a4`; neither validates
+the authored-package follow-up.
 
 The generated outputs and development note then committed at
 `321f09ab9e7f3a060812170e55b273597e487ab7`, tree
@@ -191,7 +213,10 @@ classification, fault, test assertions, runner and deadlines stayed unchanged.
 | LP1 four compiler contexts | `N node_modules/typescript/bin/tsc -p CONFIG`; the same four configs listed above, in that order | All 0; 0.653721667, 0.306571792, 0.318671334, and 0.860577166 s | `L/validate-result.json` — `95a568897223f546ccc1a1daa45d31a14328b8ecd148eb11ecc56bb11f61135c`; all compiler stdout and stderr empty |
 | LP1 compatibility prerequisite | `N scripts/cloudflare-pool-compat.mjs` | 0; 0.086807833 s; accepted bundle unchanged, `copied:false` | `L/compat.stdout.log` — `94d712b506adaa3b784ef817d13532e78b3fc2679a33a7252aa608bb4aa1d526` |
 | LP1 whole base installation owner, actual RED | From `packages/scope`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts --project scope test/base-ordinary-install.test.ts --reporter=default --reporter=json --outputFile=L/lp1-whole-owner.json` (expand `L`) | 1; 18.676032917 s; two passed, one assertion failed, zero skipped; exact Destination refusal above | `L/lp1-whole-owner.json` — `1489edd416a9cc1ded882eaa2566738296851e68cf495139005d685d0cfe2937`; `L/lp1-whole-owner.stdout.log` — `95f2c49d620c6999098a26e52fdef993337a52e47289525fe47ebf97dceaa955`; `L/lp1-whole-owner.stderr.log` — `0f6ab0dc630ba969805682fb3802e262fe735504201aa3507ad3a953c067c666` |
-| LP1 descriptor repair and later release checks | Not run | Same-owner GREEN, normal reproduction and identifiers, gate, and review UNRUN | None |
+| LP1 same whole base installation owner, GREEN | From `packages/scope`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts --project scope test/base-ordinary-install.test.ts --reporter=default --reporter=json --outputFile=G/lp1-whole-owner.json` (expand `G`) | 0; 17.385805792 s; all three passed | `G/result.json` — `029cd64837dabee9e6683386e2168f40bf3e3c0a3ed51db91ce59c9356334265`; `G/lp1-whole-owner.json` — `0f9e5dde77710a4a306a203d6799a3d1728200d65af835a38cf84bfbeb148baf` |
+| Remaining whole Lending definition owner | From `examples/lending`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts definition.test.ts --reporter=default --reporter=json --outputFile.json=M/lending-definition.json` (expand `M`) | 0; 0.770942542 s; eight passed | `M/result.json` — `23eb955d53dcd598fc0e6a53b87c6d39c4d1d7952857fbf22bc448cb5f027789`; `M/lending-definition.stdout.log` — `30235936995bd21b8456b3b224062bb5d2e1853adf77ce9e6a7f35b0cd628365` |
+| Remaining whole Define story and package owners | From `packages/define`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts test/story.test.ts test/package.test.ts --reporter=default --reporter=json --outputFile.json=M/define-story-package.json` (expand `M`) | 1; 0.652760750 s; ten passed, one direct assertion failure at `package.test.ts:10`; Native Lending unreached | `M/result.json` — digest above; `M/define-story-package.stdout.log` — `014074d87e77535b47f5bf6505e696085ae51dfb266e1a854940f570474358f9`; `M/define-story-package.stderr.log` — `e15c937ac29fbbaaf40d4358993465840d416b4f4772a16ecec36b43252375f1` |
+| LP1 authored-package repair and later release checks | Not run | Compiler and package correspondence UNRUN; no canonical IDs before correspondence passes; Native Lending, reproduction, gate, and review owed | None |
 
 Both plain runs and the Native run had empty stderr. The producer's only
 stderr was the Node `DEP0205` deprecation warning. The dedicated Native
@@ -215,9 +240,11 @@ occurred. Source bytes restored exactly to SHA256
 and mode `0644`. No third green run or generated pin rewrite occurred.
 
 The original R results above bind their historical heads. The later LP1
-rows record the producer, four compilers, and actual publication RED at
-`4f213e9d`. They do not validate the descriptor repair. Its GREEN owner,
-release reproduction, identifiers, full gate, and review remain **UNRUN**.
+rows retain the producer, four compilers, and publication RED at `4f213e9d`,
+then actual GREEN and the package-correspondence failure at `eb6d6a30a4`.
+They do not validate the authored-package follow-up. Its compiler and
+correspondence check, plus the unreached Native owner, remain **UNRUN**.
+Release reproduction, identifiers, full gate, and review remain owed.
 
 ## Release boundary
 
