@@ -46,6 +46,18 @@ records that result. This note-only follow-up preserves the checked source.
 The other development results below retain their original scope. Actual
 post-C2 main integration, the gate, fleet and CB-2 obligations remain open.
 
+## LS-1 source continuation, 15 November
+
+Branch `builder/cb1-ls1-source-20261115` preserves this branch at
+`8a5880b6716dab2691a2115498125d06f347d15b` and merges actual main
+`4b198d0fc980327d87347b05a3817106974bf8d7` without conflicts.
+The new [LS-1 note](2026-11-15-ls1-current-smoke-reference.md) describes
+its separate request `3bacbc5e` and promise `630a37a0`.
+CB-1's promise remains `9b083032`; LS-1 does not replace its fleet,
+Security review, public Counter, actual machine, or CB-2 obligations.
+All results above and below retain their dated source boundaries.
+The merged CB-1 and LS-1 runtime checks and gate remain UNRUN.
+
 ## Base-family source changes
 
 The normal celld smoke plan now uses the CLI's `base` default.

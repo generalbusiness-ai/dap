@@ -4,7 +4,7 @@ import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { configOf } from "./security-settings.mjs";
-import { contextForCelldSmoke, runCelldSmoke, smokeSettings } from "./celld-smoke.mjs";
+import { CelldSmokeError, celldReference, celldSmokeOperation, contextForCelldSmoke, runCelldSmoke, sameCelldReference, smokeSettings } from "./celld-smoke.mjs";
 import { matchesCelldVersion } from "./test-celld-proxy.mjs";
 
 test("the proxy compares the maintained celld pin as a whole version token without a hidden release literal", async () => {
@@ -133,4 +133,37 @@ test("smoke keeps proxy identity separate from the explicit local no-proxy addre
       assert.throws(() => smokeSettings({ phase: "plan", base, home }), /base/);
     assert.throws(() => smokeSettings({ phase: "plan", base: "https://localhost:9877", home, localAddress: "127.0.0.1" }), /local-address/);
   } finally { await rm(home, { recursive: true, force: true }); }
+});
+
+// These are codec/comparison boundaries used by the real smoke, not a Worker stand-in.
+test("smoke emits current scope references and compares the complete membership history", async () => {
+  const at = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"1".repeat(64)}` };
+  const otherGenesis = { ...at, genesis: `sha256:${"2".repeat(64)}` };
+  assert.deepEqual(await celldReference(at), at);
+  assert.equal(await sameCelldReference(at, { genesis: at.genesis, scope: at.scope }), true);
+  assert.equal(await sameCelldReference(at, otherGenesis), false, "The same scope with another genesis is not the invited membership");
+  assert.equal(await sameCelldReference(at, { ...at, scope: `sc_b${"a".repeat(51)}` }), false);
+  for (const invalid of [null, undefined, [], at.scope, { scope: at.scope },
+    { scope: at.scope, inc: `in_${"a".repeat(26)}`, kind: "membership" },
+    { ...at, kind: "membership" }, { ...at, genesis: "not-a-digest" },
+    { ...at, private: "Private retained state sentinel" }]) {
+    assert.equal(await celldReference(invalid), null);
+    assert.equal(await sameCelldReference(invalid, at), false);
+    assert.equal(await sameCelldReference(at, invalid), false);
+  }
+});
+
+test("proxy errors expose only a maintained smoke operation and never arbitrary private error state", () => {
+  const sentinel = "Private invitation signing key and home sentinel";
+  const error = new CelldSmokeError("install-identity");
+  error.message = sentinel;
+  error.stack = sentinel;
+  error.cause = { private: sentinel };
+  error.invitation = sentinel;
+  const report = { operation: celldSmokeOperation(error) };
+  assert.deepEqual(report, { operation: "install-identity" });
+  assert.equal(JSON.stringify(report).includes(sentinel), false);
+  for (const foreign of [new CelldSmokeError(sentinel), new Error(sentinel),
+    { stage: "install-identity", message: sentinel }, null, undefined])
+    assert.equal(celldSmokeOperation(foreign), null);
 });
