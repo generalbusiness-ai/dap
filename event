@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:549a8b0cc3d5223e1f7bed2cd31c053fa98c7614","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/application-install-custody.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:559e0291d14681fac029cd94fb831f71a839bef4","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/http-idle.test.ts."}
