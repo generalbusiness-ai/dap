@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:01398835fc6e13b50269b51084c1c0799851d1c4","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/sends.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:014066b077103ffcd11313c8061696c73d758d0c","text":"Merge retired a covered predecessor; the successor is at examples/lending/release-identifiers.json."}
