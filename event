@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d3af3b613fd7ea360019e3a3bc2772394d00f1c9","text":"Merge retired a covered predecessor; the successor is at .github/workflows/scale-tests.yml."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d4382ad6823e8a34e6ae322fdf9dea0beebef280","text":"Merge retired a covered predecessor; the successor is at scripts/test-phases.test.mjs."}
