@@ -266,6 +266,10 @@ exit code and wall time. Report a wall time above 60 seconds to the planner.
 A head that changes an example application's definition or scenario runs the
 whole `packages/cli/test/application-examples.test.ts` owner before gate START.
 
+A head that changes any file under `packages/*/src` runs the whole
+`scripts/security-entry-points.test.mjs` owner before gate START and states
+its result.
+
 File START with the clean head, tree, and current main. Keep the gate's
 output in one log in a new directory under `~/play/artroom-evidence/`.
 File END with the actual exit code, wall time, stage count lines, and log
