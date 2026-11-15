@@ -46,7 +46,7 @@ export function presentActRows<D extends DeclaredDefinition>(definition: D, item
   });
   const byName = new Map(rows.map(row => [canonicalize(row.ref.name), row]));
   return {
-    rows: type => rows.filter(row => row.type === type) as readonly ActRow<D, typeof type>[],
+    rows: type => rows.filter((row): row is ActRow<D> & ActRow<D, typeof type> => row.type === type),
     row: name => byName.get(canonicalize(name)) ?? null,
   };
 }
