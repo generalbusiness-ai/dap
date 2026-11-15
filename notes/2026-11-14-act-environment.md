@@ -86,7 +86,7 @@ constructed, and a member can authorize it there.
 | Service | In dap today | Missing |
 |---|---|---|
 | Describe | `describe.ts` renders each act, field and guard. `forms.ts` gives `formFor`, `slotsFor` and `actsOn`. MCP has the tool `actions` | The names that the guards of one act declare, as a type |
-| Observe | `observeScope`, `ScopeHandle.log`, the summary and `items`. MCP has `inspect`, `items`, `steps` and `wait`. D12 step C2 adds the replica and typed rows | C2 is not built |
+| Observe | `observeScope`, `ScopeHandle.log`, the summary and `items`. MCP has `inspect`, `items`, `steps` and `wait`. D12 step C2 built the replica and its typed rows in the client (`scopeReplica`, main `26d1e65c`) | A replica in the agent host, which step E2 adds |
 | Explore | Nothing for a caller. `judgeAct` takes a signed intent and checks its signature first (`judge.ts:184`, `:219`) | The whole service |
 | Compose | Nothing. The ID of an opened item is the sequence number of its entry (`effects.ts:330`), so no caller can name the item before the entry | The whole service |
 | Submit | `declaredHandle.submit`, `Custody`, the MCP act tools. D12 steps C3 and C4 | Work that an authority gave and that no one can sign yet |
@@ -855,7 +855,8 @@ A small model also runs to a bound over every order of its steps.
 | A | Decision A: the admission of a subject, in the definition, the validator and the judge | E1 to E6, and its own design with the carrier and the kernel ruling (section 16) |
 
 E1 needs no replica. Invariant 9 tests it against the in-memory scope.
-E2 and E3 need C2. The pinboard and the map move after E5.
+E2 and E3 build on C2, which landed as main `26d1e65c`. The pinboard
+and the map move after E5.
 
 One part is held and has no step: the method `explore` on `ScopeApi`,
 with its route. A review after E3 takes it up again (section 16).
