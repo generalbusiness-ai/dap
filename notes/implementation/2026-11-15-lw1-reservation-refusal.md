@@ -23,8 +23,17 @@ on it; the two promises remain independent.
 The joined implementation checkpoint is
 `38fec867b7c6034bf1319ddb23783ba73d445123`, tree
 `b569f041c290f56f1f0be601e0aa0eb6a25ce228`, with the two permitted
-measured presentation fields applied once. Actual gated head and tree and
-gate outcome remain OWED.
+measured presentation fields applied once. Gate attempt 1 ran at
+`31d337778ea5275f6d338f1f1198fe022f7355f1`, tree
+`5cbfba863564b669d70b94bfcaee604c4d7c7c17`, against published main
+`ce6f02ba164982dce9ead6b85c9e482ca1829f07`. END
+`f67e825bb021934e0995e2c80a7ba0c922f96ed4` records FAIL on one stale
+inventory documentation assertion. Native was unreached in gate 1.
+The later document-owner and Native route also failed at `d1beb6f0`,
+tree `1771e678e35ec771bba651bf9de6e69cf7c8fb95`, under END
+`3743d64a20e3ab8a0a25de4f34a10d2fc9c710fb`. The production repair at `b59fca7541b3809c08768f93b5b1681792e1afbc`,
+tree `27a37e0fa18db79e9e5009600cb2731d00c33809`, follows rulings
+`206d7d21` and `41b4ba66`. Its validation and new full gate remain owed.
 
 The tool/day guard has the existing name `tool-day-taken`; the count
 guard is unnamed. These are not two authored guard names. The current
@@ -58,7 +67,10 @@ shared Client API.
 | `38fec867`: permitted presentation apply | PASS. Apply: exit 0, 0.266111 s; normal commit with formatting hooks: exit 0, 1.216504 s. Only the two measured presentation fields changed; source clean. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-dev-attempt1/artroom-ce2-lw1-id-adoption-attempt1-20261115/result.json` (`4c1dcee01470991cb47cd3692dc3569dc9b55768b50d55b67c2e03e8e84516af`); END `de371b383e5a807e63eed01c106c4797f96c5009`. Actual argv: `results[*].argv` in that record. |
 | `38fec867`: whole CLI examples/reproduction owners | PASS: examples 3 and reproduction 1, all 4 passed; exit 0, 7.245860 s, empty stderr. END `eee6f777083cd17a9d595a3a839de32e2b5ac273`. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-dev-attempt1/artroom-ce2-lw1-reproduction-attempt1-20261115/result.json`, SHA-256 `9d66bd799434f9f6634e85bdf1f98995ff2a69da72fd9b6136cfb546484d3049`; actual argv: `results[*].argv`. |
 | Permanent safe development retention | 61 explicitly reviewed files across the joined work; no full Card request/display dump copied. Metadata record, not a test command. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-dev-attempt1/retention-index.json`, SHA-256 `06bb9e468eb9aff6dbaf213b16689a5bdc13df69291d88cef325d520c2caf3b2`. |
-| Final preflight, joined gate and review | OWED. No gated head and tree or gate PASS is claimed. | Future records not yet available. |
+| `31d33777`: joined full gate attempt 1 | FAIL; child exit 1, verification exit 1, reaped. Child wall 344.323734 s; outer wall 344.617307 s. Preliminary checks passed; Node 204 and Counting 56 passed. Plain 4,872 passed, 1 failed, 1 skipped. Sole failure: inventory.test.ts:98, stale generic settle description. Native UNREACHED; natural Scale has no executed result or wall. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-full-gate-attempt1/result.json`, SHA-256 `ab99da9b708d412f8ae0fc0ff43aa4af11f1ec25af87bd003fa750100dbb9fb1`; actual argv: `step.argv`. Public gate.log in that directory, SHA-256 `765324afcc13b99f820054aae9be253abba15501bf281c47067ecc1dd990d94e`. |
+| `d1beb6f0`: document-owner and Native follow-up | FAIL. Inventory 5 passed, exit 0, 1481.329417 ms. Native 1,135 passed, 1 failed, 2 skipped; exit 1, 610313.331375 ms. Outer wall 612237.832375 ms; all children reaped. Original gate remains FAIL. END `3743d64a20e3ab8a0a25de4f34a10d2fc9c710fb`. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-doc-native-followup-attempt1/result.json`, SHA-256 `a906559499e2df3101e42029f193687352e7fdffe2e1b63d8127c2dda9772050`; exact argv: `controllerArgv` and `commands[*].argv`. |
+| Preserved Native acceptance and summary | The old page-first assertion expected unknown answer and phase; CE2 returned neither. Ruling `206d7d21` preserves that assertion. Summary exit 0, zero unknown/suite observations and contradictions. Natural Scale omitted outside scale paths; no Scale result. | Safe failure excerpt `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-doc-native-followup-attempt1/native-final-failure.safe.txt`, SHA-256 `1c3b97c10a1099c5cffd03ee5b522545b7e0f4383df79f33e47adcba9eaf423c`; summary.log beside it, SHA-256 `087fbdb4532c6658920a580f2fbd3c260406e28cac3831124d7953a8b791f954`. |
+| New production repair, full gate, Card workflow and review | OWED. The reported 19-case test-only `01d` pass is superseded as the wrong contract. The production checkpoint is authored but unvalidated; no gate PASS is assumed. | Ruling `206d7d21f7dbb7836cd8cd5f90937559defa3aee`; the CE2 note records the required unknown-report shape and private-raw limits. |
 
 The once-only comparison binds clean joined source `8a08f2a5`, tree
 `7ec4d8b42bd456b30d07428e821d329598257c4f`. Its Counter drift stopped
@@ -81,8 +93,15 @@ and fold under scripted grants; it proves no hosted authority, installed screen 
 Root retained the reviewed safe development files at the permanent paths
 in the table; full Card request/display dumps remain private.
 The earlier RS1/LS2 gate tested its earlier source, not these new words.
-The joined CE2 gate, required Card workflow, review and landing remain
-OWED. RS1 and LS2 landed and published at `ce6f02ba` with normal receipt
+The joined CE2 gate attempt failed on the coupled settle documentation
+snapshots. The unchanged inventory owner then passed, but its Native
+follow-up failed on an existing unknown-answer acceptance assertion.
+Both failures stand. Ruling `206d7d21` requires a production answer
+repair and one new full gate, followed by the required Card workflow and
+review. Those results and landing remain OWED. The CE2 note retains the
+eight actual safe recovery metric rows without treating either failed
+route as a PASS. Full Native request output stays private. RS1 and LS2
+landed and published at `ce6f02ba` with normal receipt
 `fdb8fbee`. The [CE2 note](2026-11-15-ce2-expired-custody.md) records that
 baseline and the remaining gate order. Planner owns signing Lending and
 Counter 0.4 from main that carries the joined head.

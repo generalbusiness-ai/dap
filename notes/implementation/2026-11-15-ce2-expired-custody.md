@@ -24,8 +24,22 @@ and four-case pass remain distinct from its earlier three-case pass.
 The joined implementation checkpoint is
 `38fec867b7c6034bf1319ddb23783ba73d445123`, tree
 `b569f041c290f56f1f0be601e0aa0eb6a25ce228`, parent `8a08f2a5`. It
-adds only the two permitted measured presentation fields. Actual gated
-head and tree and gate outcome remain OWED.
+adds only the two permitted measured presentation fields.
+
+Gate attempt 1 ran at `31d337778ea5275f6d338f1f1198fe022f7355f1`, tree
+`5cbfba863564b669d70b94bfcaee604c4d7c7c17`, against published main
+`ce6f02ba164982dce9ead6b85c9e482ca1829f07`. START was
+`f8a3720988a203c39147394f674ea7b974ec8c55`; END
+`f67e825bb021934e0995e2c80a7ba0c922f96ed4` records FAIL. The sole
+failure is the inventory owner's stale generic settle description in
+the documentation. Native was unreached in that gate. The document-owner
+and Native follow-up also failed, at `d1beb6f05988100a3f9321d1eb34f69a10c25f08`,
+tree `1771e678e35ec771bba651bf9de6e69cf7c8fb95`, under END
+`3743d64a20e3ab8a0a25de4f34a10d2fc9c710fb`. Neither route supplies a
+gate PASS. The production repair is committed at
+`b59fca7541b3809c08768f93b5b1681792e1afbc`, tree
+`27a37e0fa18db79e9e5009600cb2731d00c33809`. Its behavioral validation
+and new full gate remain owed.
 
 `Reads.recoverAbsent` uses the caller's session and the existing checked
 log reader. It checks the complete continuous chain from genesis to one
@@ -49,8 +63,40 @@ actual Native settlement first, so a landed original does not loop on a
 mere journal-present result. MCP install does not opt in; public MCP
 `settle` is its recovery entry. A later tool call on an already-unsent
 record returns a truthful custody diagnostic without another proof or
-ACT. NF-2 keeps its existing `{error,message,next}` failure shape: local
-absence supplies no Native answer, receipt or new success tag.
+ACT. Only proved absence uses NF-2's existing `{error,message,next}`
+custody failure with the `unsent` wording. Local absence supplies no Native
+answer, receipt or new success tag.
+
+Rulings `206d7d21f7dbb7836cd8cd5f90937559defa3aee` and
+`41b4ba66ad115fd82713696bfd06f069ef5e4d58` preserve the ordinary
+NF-2 report. After non-ending recovery, MCP reads custody once more and
+reports that current record. An unresolved record keeps the `ok` shape,
+`answer: "unknown"`, phase, steps, `outcomes` and `attempt`; the reason
+belongs in `sentence`. A replaced snapshot receives changed-record
+wording. A terminal record supplies its actual kept outcome through the
+ordinary report builder, and a missing record supplies `not-found`.
+No second absence proof runs.
+
+For unchanged unresolved proof results, `next` names both deliberate
+routes: call the original tool with the same key to resend the same
+envelope, or call `settle` after a later journal entry. A changed
+unresolved record directs a later `settle`.
+
+The repeated CLI install keeps its unknown first line and exit code 1
+only while custody remains unresolved, then adds the reason. A recovered
+terminal answer uses the existing receipt and entry verifier in the same
+invocation. A missing record gets truthful not-found wording. Every
+recovery branch returns before build or send; no new ACT or package
+preparation follows recovery. MCP install still omits this opt-in hook.
+
+The original Native assertion of `answer: "unknown"` and
+`phase: "unknown"` remains an acceptance fact. The test-only `01d`
+repair's reported 19-case pass accepted the wrong contract and is
+superseded. It supplies no acceptance evidence. The production repair restores that old assertion and adds the reason,
+unchanged record, capacity and exact-envelope retry assertions beside it.
+The default-256 witness and the proof at 1 ms before expiry must also
+expect the unknown report with its reason. Their earlier passes and
+measurements do not validate the required repaired report shape.
 
 Ruling `d41b97c3` extends the existing Native Card case without adding a
 case or deadline. It restarts McpService on the same custody, loses a late
@@ -64,11 +110,13 @@ signature.
 
 ## Evidence
 
-All results below are ordinary development or controls, not a full-gate
-result. Walls measure the actual commands, rounded to six decimals.
+The table separates development, controls, the failed full gate and its
+measured recovery phases. Walls measure the actual commands, rounded to
+six decimals. Phase rows keep their reported milliseconds; they are not
+independent commands or a sum that replaces gate wall time.
 The table gives full SHA-256 values and the actual argv location in each
 record. Root retained the reviewed safe development files permanently.
-The three control destinations below await their gate-colocated copies.
+The control rows cite their actual safe gate-colocated copies.
 
 | Check and source | Actual result and wall | Raw record, full SHA-256 and argv location |
 |---|---|---|
@@ -83,12 +131,27 @@ The three control destinations below await their gate-colocated copies.
 | Page freshness and Security | Page assets owner: 1 passed, exit 0, 0.769151 s; no asset changed. Whole Security owner: 12 passed, exit 0, 3.885271 s. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-dev-attempt1/artroom-ce2-page-security-attempt1-20261115/result.json` (`6ed960873853f7ab699cd2b9ab7a02c05d3706748a824e65d1bdee2bd1d886ff`). Actual argv: `results[*].argv` in that record. |
 | Reviewed MCP source seals | One maintained calculation: exit 0, 0.212509 s; complete 39-record inventory. Four changed/new records: module, McpService, unsentRequest and absenceRecovery. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-dev-attempt1/artroom-ce2-mcp-seals-20261115/result.json` (`928876fd39cfb0b23411f03c10e5ea59cb1ceddc2342d762e7f072b00155dcf0`), with execution.json beside it; service source SHA-256 `65f74e018bcdeec72c466c725d299e9d632855492a7b0e70a5fb061f897630b8`. Actual argv: execution.json in that directory, SHA-256 `a967c88970129a73363ce9148268a346209e9edbaa9dc5ec435ec507c4efb7d8`. |
 | Native-settlement-first CLI extension | All three CLI compiler contexts passed. Extended owner: 3 passed, 1 failed, exit 1, 4.759609 s. The new landed-original fixture omitted required Counter target 7; the prior three-case pass remains historical. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-dev-attempt1/artroom-ce2-cli-liveness-dev-attempt1-20261115/result.json` (`f1d1f11d20e6301310c0235acdee1594096deb2b8832b8871b8ee44eb14b7158`). Actual argv: `results[*].argv` in that record. |
-| Corrected landed-original fixture | Fixture supplies the required `--values` target and asserts actual judged acceptance. Affected CLI test compiler passed; whole CLI owner: 4 passed, exit 0, 4.393699 s, empty stderr. Source and scope compiler passes stand on the unchanged final runtime source. END `0b3d46ff`. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-dev-attempt1/artroom-ce2-cli-liveness-dev-attempt2-20261115/result.json` (`a759850fe766b3351899e6e7b073814ed3f1e265f1d9215106cde5694e9423db`). Actual argv: `results[*].argv` in that record. |
+| Corrected landed-original fixture | Fixture supplies the required `--values` target and asserts actual judged acceptance. Affected CLI test compiler passed; whole CLI owner: 4 passed, exit 0, 4.393699 s, empty stderr. Source and scope compiler passes cover that historical runtime source. END `0b3d46ff`. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-dev-attempt1/artroom-ce2-cli-liveness-dev-attempt2-20261115/result.json` (`a759850fe766b3351899e6e7b073814ed3f1e265f1d9215106cde5694e9423db`). Actual argv: `results[*].argv` in that record. |
 | `8a08f2a5`: once-only normal three-way comparison | PASS, exit 0, 1.888492 s. Grow 2.0 exact; all entries, definition lists and semantic IDs exact. Only Lending and Counter 0.4 presentations changed. END `b7f7ded2` initially stopped adoption for planner disposition. Stderr retains DEP0205. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-dev-attempt1/artroom-ce2-lw1-id-compare-attempt1-20261115/comparison/comparison.json` (`8f61f97b3d4768aa6ce4505ec49e95f75bb8b42cbfdde52d26a5af684a2868f9`), with execution.json in its parent directory. Actual argv: ../execution.json, SHA-256 `00c9eac0da06aa58de1183d650a9f9049cbe612563b49eba4d97638197dd2ed3`. |
 | `38fec867`: permitted identifier apply | PASS. Normal apply: exit 0, 0.266111 s; only Lending and Counter presentation fields changed. Normal formatting hooks and commit passed in 1.216504 s; source clean. END `de371b383e5a807e63eed01c106c4797f96c5009`. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-dev-attempt1/artroom-ce2-lw1-id-adoption-attempt1-20261115/result.json` (`4c1dcee01470991cb47cd3692dc3569dc9b55768b50d55b67c2e03e8e84516af`); actual command and commit streams beside it. Actual argv: `results[*].argv` in that record. |
 | `38fec867`: whole CLI examples and release reproduction owners | PASS: examples 3 plus reproduction 1, all 4 passed; exit 0, 7.245860 s, empty stderr. Normal preparation reproduces all three committed tuples. Compatibility passed. END `eee6f777083cd17a9d595a3a839de32e2b5ac273`. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-dev-attempt1/artroom-ce2-lw1-reproduction-attempt1-20261115/result.json`, SHA-256 `9d66bd799434f9f6634e85bdf1f98995ff2a69da72fd9b6136cfb546484d3049`; actual argv: `results[*].argv`. |
 | Permanent safe development retention | 61 explicitly reviewed files; no full Card request/display dump copied. Metadata record, not a test command. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-dev-attempt1/retention-index.json`, SHA-256 `06bb9e468eb9aff6dbaf213b16689a5bdc13df69291d88cef325d520c2caf3b2`. |
-| Final preflight, joined gate, Card workflow and review | OWED. No gated head and tree, gate PASS or browser PASS is claimed. | Future records not yet available. |
+| `31d33777`: ordinary `npm run gate`, attempt 1 | FAIL; child exit 1, verification exit 1, signal null, reaped. Child wall 344.323734 s; outer wall 344.617307 s; printed test step 314.6 s. Preliminary checks passed. Kernel passed; Node 204 passed; Counting 56 passed; Plain 4,872 passed, 1 failed, 1 skipped across 418 passed files and 1 failed file. Sole failure: `packages/mcp/test/inventory.test.ts:98`, stale `settle` prose. Native UNREACHED; natural Scale has no executed result or wall. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-full-gate-attempt1/result.json`, SHA-256 `ab99da9b708d412f8ae0fc0ff43aa4af11f1ec25af87bd003fa750100dbb9fb1`; actual argv: `step.argv`. Public gate.log in that directory, SHA-256 `765324afcc13b99f820054aae9be253abba15501bf281c47067ecc1dd990d94e`. |
+| Gate 1 stage observations | Kernel 242.606334 ms; Node 132401.136542 ms; Counting 488.039458 ms; Plain 181086.245958 ms; Native status unreached, exit/wall null. Node and Counting terminal evidence complete; Plain partial; 129 unknown/suite observations, zero contradictions. Concurrent module/case sums are not stage walls. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-full-gate-attempt1/stage-status-summary.json`, SHA-256 `69930be7f134c5200dfab23537bbb367661c39ce7b2fe1fb11ab96f7a94fa8f2`; same gate `step.argv`. |
+| Gate 1 numeric-phase source | All eight closed numeric/route-count objects retained byte-exact from the private log; no request body or assertion dump exported. No witness rerun. The next eight rows summarize those objects. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-full-gate-attempt1/ce2-phase-metrics.jsonl`, SHA-256 `5d200fe643d67864e72f230a03641346451dc24a206109340c982d22bd8fcb66`; index in the same directory, `ce2-phase-metrics-index.json`, SHA-256 `db3fb52b9145c04dd25629c3a1f96347d1186fe5f914ad245f1f8769c4b6e4ba`. Same gate `step.argv`; phase rows are not separate runs. |
+| CE2 phase 1: SQLite and real destination setup | 22.741375 ms; target entries 4; `used` 0 B, `reserved` 0 B. This setup object reports no RPC/signature counters. | Same safe metric stream, row 1; index `rows[0]`. |
+| CE2 phase 2: initialization | 8.284708 ms; ACT signatures 0, session signatures 1, dispatches 0, helper calls 0. Requests: POST sessions 1, GET summary 3; log rows/bytes 0. Target entries 4, unresolved 0; `used` 0 B, `reserved` 0 B. | Same safe metric stream, row 2; index `rows[1]`. |
+| CE2 phase 3: one real 256 load | 880.850625 ms; ACT signatures 256, session signatures 0, dispatches 256, helper calls 0. Requests: GET summary 1,024, POST acts 256; log rows/bytes 0. Target entries 4, unresolved 256; `used` 507,648 B, `reserved` 670,720,256 B. | Same safe metric stream, row 3; index `rows[2]`. |
+| CE2 phase 4: not-found-only remains full | 4.892500 ms; ACT signatures 0, dispatches 0, helper calls 0. Requests: GET summary 4, POST settle 1, POST acts 0; log rows/bytes 0. Target entries 4, unresolved 256; `used` 507,648 B, `reserved` 670,720,256 B. | Same safe metric stream, row 4; index `rows[3]`. |
+| CE2 phase 5: verified head before expiry | 19.314334 ms; ACT signatures 0, dispatches 0, helper calls 1. Requests: GET summary 6, POST settle 1, GET log 1; served 5 log rows, 11,843 B. Target entries 5, unresolved 256; `used` 507,648 B, `reserved` 670,720,256 B. | Same safe metric stream, row 5; index `rows[4]`. |
+| CE2 phase 6: verified head at expiry | 13.792500 ms; ACT signatures 0, dispatches 0, helper calls 1. Requests: GET summary 2, POST settle 1, GET log 1; served 6 log rows, 14,185 B. Target entries 6, unresolved 255; `used` 507,824 B, `reserved` 668,100,255 B. | Same safe metric stream, row 6; index `rows[5]`. |
+| CE2 phase 7: retained proof reused | 4.484916 ms; ACT signatures 0, dispatches 0, helper calls 0. Requests: GET summary 5, POST settle 0, GET log 0; log rows/bytes 0. Target entries 6, unresolved 255; `used` 507,824 B, `reserved` 668,100,255 B. | Same safe metric stream, row 7; index `rows[6]`. |
+| CE2 phase 8: fresh 257th signs and dispatches | 6.253458 ms; ACT signatures 1, dispatches 1, helper calls 0. Requests: GET summary 4, POST acts 1, POST settle 0, GET log 0; log rows/bytes 0. Target entries 6, unresolved 256; `used` 509,819 B, `reserved` 670,720,244 B. | Same safe metric stream, row 8; index `rows[7]`. |
+| `d1beb6f0`: document-owner and Native follow-up | FAIL under authority `8dfbb11d3f060f434b5929655ed1b09b3e14bbd9`. Compatibility exit 0, 81.831834 ms; whole unchanged inventory owner 5 passed, exit 0, 1481.329417 ms. Native exit 1, 610313.331375 ms: 1,135 passed, 1 failed, 2 skipped; files 286 passed, 1 failed, 1 skipped. Outer wall 612237.832375 ms. All children reaped, no signal or spawn error. END `3743d64a20e3ab8a0a25de4f34a10d2fc9c710fb`. Original gate remains FAIL. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-doc-native-followup-attempt1/result.json`, SHA-256 `a906559499e2df3101e42029f193687352e7fdffe2e1b63d8127c2dda9772050`; exact argv: `controllerArgv` and `commands[*].argv`. |
+| Follow-up Native acceptance failure | The existing page-first case at `apps/room/page/test/mcp-original.scope.test.ts:401` expected `['unknown','unknown']` and received `[undefined,undefined]`. Ruling `206d7d21` preserves that assertion and requires a production answer repair. The old assertion did not become stale. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-doc-native-followup-attempt1/native-final-failure.safe.txt`, SHA-256 `1c3b97c10a1099c5cffd03ee5b522545b7e0f4383df79f33e47adcba9eaf423c`. Exact inspected 1,118-byte assertion/count excerpt. Full Native log WITHHELD privately. |
+| Follow-up summary and natural Scale | Summary exit 0, 88.024583 ms; Native terminal evidence partial, zero unknown/suite observations and zero contradictions. Other phases were unreached in this follow-up, not repeated passes. Natural Scale `omit`, reason `outside-scale-paths`, all match sets empty. No Scale command or result ran. Concurrent duration sums are not wall time. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-doc-native-followup-attempt1/summary.log`, SHA-256 `087fbdb4532c6658920a580f2fbd3c260406e28cac3831124d7953a8b791f954`; actual selection and summary argv in the same public `result.json`. |
+| Superseded test-only `01d` repair | Historical whole owner: exit 0, 19 passed, 25.386832 s. Ruling `206d7d21` supersedes its changed expectation as the wrong contract; no acceptance or gate PASS follows. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-nf2-repair-dev-attempt1/2026-11-15-ce2-page-original-owner-attempt1/result.json`, SHA-256 `4ef8ee45d712ccae48946dd021969b9fb50fc027833e9bfb123269e318541e1b`; actual argv `commands[*].argv`. Raw fixture output stays private. |
+| `b59fca75`: current-record production repair | Authored, not behaviorally validated. Normal commit hooks exited 0, 0.928933 s. Only the module, absenceRecovery and McpService seals changed in the maintained 39-selector calculation; calculation exit 0, 0.232031 s, experimental type-stripping warning retained. No tool description changed. New full gate, Card workflow and review remain owed. | Commit metadata `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-nf2-repair-dev-attempt1/artroom-ce2-nf2-current-record-commit-20261115/result.json`, SHA-256 `0bf8109432f754fbdff2ad7aeaf81dfcf0361946ab71df92784789f5dfc66d2a`; seal execution `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-nf2-repair-dev-attempt1/artroom-ce2-mcp-seals-ruling206-20261115/execution.json`, SHA-256 `0e2315973bdb774f7f02660948b3057039564238a6d0ac6614a63ca56aa24d12`, actual argv in both records. |
 
 Each control changed only its named guard and restored exact source bytes
 and mode 0644. No third green ran. The retained helper changed only its
@@ -114,6 +177,13 @@ copy is authorized. Full gate stages likewise stay private; root must
 inspect gate.log before any release and retain safe numeric CE-phase
 records separately.
 
+The failed follow-up's full Native log exceeds 4 MB and stays private at
+`/Users/hughpyle/play/artroom-private-evidence/2026-11-15-ce2-lw1-doc-native-followup-attempt1/native.log`
+(SHA-256 `3f7f19179b5a204b8efa35e92d9791c8d672609f8ef49670cf6cf33ded62db4f`).
+Its timing rows and inventory report also stay private. Public evidence
+contains only the safe result metadata, summary and exact inspected
+1,118-byte final assertion/count excerpt. Root retained the complete private original separately.
+
 ## Limits and remaining work
 
 The default-256 witness uses real SQLite custody, real signatures and
@@ -123,11 +193,15 @@ HTTP authority remain scripted. This is not a hosted-service, Native
 Worker or sealed-floor acceptance proof. Rejecting floor-shaped history
 and the source audit do not supply such runtime evidence.
 
-The initial reporter hid the default-256 case's cost log. Recovery RPC,
-page, entry, prefix and byte costs therefore remain UNMEASURED. Retain
-actual cost observations from the ordinary owed gate's verbose/progress
-output; do not rerun the 256 population just to complete this note. The
-owner PASS establishes its assertions, not an invented runtime cost.
+The initial development reporter hid the default-256 cost log; those
+earlier costs remain unmeasured. Gate 1 supplied all eight actual phase
+objects above during its ordinary Plain run. The 256 lost requests are
+custody records, not 256 journal entries: the target starts with four
+entries, and the two checked proofs serve five and six rows. The successful
+expiry proof frees one unresolved count slot while retained bytes remain
+charged. Its byte counters do not prove recovery of an arbitrary aggregate
+budget. These are fixture measurements, not remote SQL prices or a bound
+for larger journals. No separate load rerun supplied them.
 
 The CLI recovery rows reopen real file custody through the runtime
 callback; they create no new process. They do not prove Native Worker
@@ -153,8 +227,15 @@ Counter's is
 `sha256:52378055c218a42c6808af21fea097b69e42b9cc52877f3cec12ad432df8ff9e`.
 The stop rule still covers Grow and every entry, definition list and
 semantic identifier. Whole reproduction passed at `38fec867`.
-Exact-head preflight, one joined gate, maintained Card browser workflow
-and review remain OWED. The earlier RS1/LS2 gate does not discharge them.
+Gate 1 remains FAIL on the stale documentation assertion. Its two coupled
+snapshots, `docs/mcp.md` and `docs/mcp-tools.json`, changed under the
+document-reader route. The unchanged inventory owner then passed, but
+Native failed on the preserved unknown-answer acceptance assertion.
+Ruling `206d7d21` ends that route and requires a production repair and one
+new full gate. The production checkpoint is authored; its tests and new
+full gate remain owed. No full-gate PASS is assumed.
+Card browser workflow and review remain OWED. Earlier RS1/LS2 results
+discharge none of those obligations.
 
 RS1 and LS2 landed at `ce6f02ba164982dce9ead6b85c9e482ca1829f07`,
 with reviewed tree `04cd7584658e2e0874344b391cb2aeb045a88c29` and normal
