@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a98aeae77d5e8ad6303f9acd5d2566c83651aaff","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/shape.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a98dabac0d44a278dfd2359b41d0400241e40bc1","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/fixtures/judge-answers.json."}
