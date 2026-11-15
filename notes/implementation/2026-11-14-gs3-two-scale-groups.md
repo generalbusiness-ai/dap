@@ -164,3 +164,16 @@ sums supplies a saving forecast. The first moved-gate wall remains
 source, tests, configuration and dependencies remain exactly as checked
 at `6f3b556e`. The full tooling gate and review remain **UNRUN**. No
 landing, push, hook activation or deployment occurred here.
+
+## Assets preflight documentation
+
+Ruling `ed983431f7ed36d2a29a6b8cf3cb7a0f27625204` extends `7fe68ffe`:
+a head changing a source of the page build runs the whole assets owner before
+START, reports exit and wall time, and tells the planner if it exceeds
+60 seconds. `docs/testing.md` now states that requirement beside the two
+existing preflight checks.
+
+This documentation follow-up is **UNVALIDATED**. It changes only the testing
+guide and this note. No compiler, test, build, control, parser, AST or browser
+ran. All failed and passed tooling records above retain their original
+heads and limits; the full tooling gate and review remain **UNRUN**.
