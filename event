@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9d703d43551757f61d02c7f6b7f219b05d271926","text":"Merge retired a covered predecessor; the successor is at scripts/pre-commit.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9e84e71b895aac0edab612f7d8bf5e416c8cf7e7","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/creation-lineage.test.ts."}
