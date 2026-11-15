@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1df8cfc539da0ba4e7ed83aaf945dd74ca1b4a9b","text":"Merge retired a covered predecessor; the successor is at scripts/test-celld-proxy.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1e2c164c262ab15d3e90f391202df68bbf6fa59b","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/test/prepare-github.test.mjs."}
