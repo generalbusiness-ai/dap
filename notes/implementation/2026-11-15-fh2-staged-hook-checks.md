@@ -46,4 +46,15 @@ source; that inventory is not a runtime result.
 
 No project import, parser, compiler, test, control, dependency setup,
 installation, network operation, activation, publication, or push accompanies
-this source checkpoint. Root has not merged FH-2 into NF6/NF8.
+the original source checkpoint.
+
+## NF6/NF8 composition, still UNRUN
+
+Normal merge `16cf270d3b3566f8d90add8e644323f9b1ca8f59` carries the reviewed
+FH-2 source onto `builder/nf6-nf8-on-c3-sh1-source-20261115`, after that lane
+merges actual published tooling main `17a917cd73b0528dcf8d2610707c1b3f24afbeaa`.
+The merge has no conflict and preserves all six FH-2 blobs and modes before
+this note-only follow-up. The existing owned 8b2 dependency view remains;
+no new dependency setup accompanies the composition. Combined source,
+helper checks, Git-hook cases, gate, and review remain UNRUN. This does not
+activate hooks or give FH-2 a separate gate position.

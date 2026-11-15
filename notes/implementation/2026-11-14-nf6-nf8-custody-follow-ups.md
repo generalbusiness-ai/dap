@@ -24,6 +24,28 @@ checks, browser checks, and gate remain owed at root's permitted slot.
 No dependency copy, import, AST computation, or project check accompanies
 this integration. No release identifier or packet changes.
 
+## Published tooling and FH-2 source composition
+
+Origin act `8995ec247402c4c504fcdbf580a6e9171b5d5547` names published main
+`17a917cd73b0528dcf8d2610707c1b3f24afbeaa`. Normal merge
+`62205ca2193a9c6ec23579dfc5ae236b5712f52d` takes that actual main on
+preserved NF6/NF8 source `1bd8a2c76eaaef18686ba592163b8474d2de5cef`.
+Normal merge `16cf270d3b3566f8d90add8e644323f9b1ca8f59` then takes reviewed
+FH-2 source `2ccff00a418494b0a85e9215cfab235b302293cd`.
+Neither merge has a conflict. The 61 NF paths overlap neither the 22 incoming
+tooling paths nor the six FH-2 paths. FH-2 starts at that tooling main and
+keeps its intended conditional-check changes.
+
+FH-2 request `efdebe55` and promise `8d8c4c3f` ride this combined head;
+[its note](2026-11-15-fh2-staged-hook-checks.md) retains the source boundary.
+All three requests keep their separate promises. The existing authentic
+8b2 dependency view stays in place; all 17 package/lock metadata files
+retain their setup bytes. This composition copies or installs nothing.
+The MCP index expectation remains untouched and its computation/adoption
+remains UNRUN. All combined development checks, canonical comparison,
+browser checks, gate, and review remain UNRUN. Hook activation stays with
+the planner after landing.
+
 ## One home for the custody names
 
 NF6 removes the 35 obsolete NF3 names: 16 root values, 12 root types,
