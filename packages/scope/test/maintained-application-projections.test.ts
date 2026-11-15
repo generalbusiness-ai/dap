@@ -77,7 +77,7 @@ test.each([
     const query = { v: 1 as const, scope, directory, install: job, projection: "state", items: {} };
     if (name === "counter") await life.wait(() => app.did(rita, "initialize", { expected: { configuration: 1 } }));
     const first = await life.owner.required(() => handle.applicationProjection(query));
-    expect(first.ok).toBe(true); if (!first.ok) throw Error(`The declared state refused: ${first.reason}`);
+    expect(first.ok, first.ok ? undefined : first.reason).toBe(true); if (!first.ok) throw Error(`The declared state refused: ${first.reason}`);
     const sdk = first.value;
     const views = new McpService({ ...port, custody: memoryStore(), declaredViews: { bytes: packet.bytes, release: packet.ids.release, item: job } });
     const opening = name === "counter" ? "board" : "shelf";
