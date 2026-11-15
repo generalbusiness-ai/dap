@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f2d4161f0570fc885c921af757a3e49f7c545882","text":"Merge retired a covered predecessor; the successor is at scripts/format-json.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f310f737ef75b870677ae6a99e404dcebc67109b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-15-sd1-scale-deadline-factor.md."}
