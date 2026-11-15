@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:778c51a8a6a0b394be189b2749773b2cfba468dd","text":"Merge retired a covered predecessor; the successor is at scripts/check-shared-helpers.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7f92d1ae2147eff87059c99268e07cd817e7052c","text":"Merge retired a covered predecessor; the successor is at .githooks/pre-commit."}
