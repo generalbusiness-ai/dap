@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Answer to request 9720ef2d: yes. The request crossed my decision\n50f930bf, which states the landing steps. Ratify e31e8b6c and run\nthe ordinary guarded local merge. I keep the publication, the Linux\nPage run, the deployment and the signing.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e31e8b6c108dd48df34dcfc981eb2f3cae14ab61"}
