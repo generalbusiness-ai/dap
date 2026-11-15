@@ -1,6 +1,6 @@
 /** The lending library authored with typed helpers. The JSON file and pin remain the byte witness. */
 import type { DeclaredDefinition, Operand } from "@generalbusiness/dap-contract";
-import { by, define, normalize, equals, final, item, live, member, none, one, open, party, ref, required, rule, scope, signer, tell, text, transition, value, type ItemDef, type Of } from "@generalbusiness/dap-define";
+import { by, define, normalize, equals, final, item, itemOf, live, member, none, one, open, party, reasons, ref, require, required, rule, scope, signer, tell, text, time, timed, transition, value, type ItemDef, type Of } from "@generalbusiness/dap-define";
 import { lendingRoles } from "./roles.ts";
 
 export const lendingGrants = { establish: lendingRoles.grant("lending.establish"), member: lendingRoles.grant("lending.member"), staff: lendingRoles.grant("lending.staff") } as const;
@@ -16,6 +16,15 @@ export const thing = item("thing", {
   parties: { donor: party.fixed, borrower: party.optional },
   values: { name: value.fixed(text(80)), description: value.fixed(text(1000)), reason: value.optional(text(280)), page: value.fixed(text(1024)) },
 });
+
+/** A slot is one tool and an opaque day label; until is the member's explicit expiry. */
+export const reservation = item("reservation", {
+  many: 8,
+  initial: "held", states: { held: live, lapsed: final },
+  refs: { tool: ref.fixed(itemOf(thing)) },
+  values: { day: value.fixed(text(10)), until: value.fixed(time) },
+});
+export const lendingReasons = reasons({ toolDayTaken: "tool-day-taken" });
 
 // ---------------------------------------------------------------- combinators
 
@@ -62,8 +71,19 @@ function circulation(libraryItem: typeof library, thingItem: typeof thing, permi
 }
 
 export const lendingSource = define({
-  name: "lending", genesis: "establish", grants: lendingGrants,
-  items: [library, thing], acts: circulation(library, thing, lendingGrants),
+  name: "lending", genesis: "establish", grants: lendingGrants, reasons: lendingReasons,
+  items: [library, thing, reservation], acts: {
+    ...circulation(library, thing, lendingGrants),
+    reserve: open(reservation, lendingGrants.member, { fields: {
+      tool: required(itemOf(thing)), day: required(text(10)), until: required(time),
+    } }, ({ f, on }) => ({
+      guards: [require(none(reservation, ["held"], held => [
+        equals(held.slot("tool"), f.tool), equals(held.slot("day"), f.day),
+      ]), lendingReasons.toolDayTaken)],
+      effects: on.take(f, "tool", "day", "until"),
+    })),
+  },
+  timed: { lapse: timed(reservation, { states: ["held"], deadline: "until", effects: on => [on.to("lapsed")] }) },
 });
 
 /** Canonical declaration data consumed by the application. */

@@ -30,7 +30,7 @@ function current(definition: ValidDefinition, item: Item): ItemDuty[] {
 }
 
 /** Only the form's pre-entry binding and its actual transition release it. */
-function settled(definition: ValidDefinition, entry: Entry, before: Item | null, after: Item, binding: ItemSettlement | null): string | null {
+function settled(definition: ValidDefinition, entry: { input: Entry["input"] | { type: "act" } }, before: Item | null, after: Item, binding: ItemSettlement | null): string | null {
   if (!before) return null;
   const input = entry.input;
   if (input.type === "timed" && input.item === after.id) {
@@ -41,7 +41,7 @@ function settled(definition: ValidDefinition, entry: Entry, before: Item | null,
   return key({ kind: "sets" in binding.form ? "mark" : "state", slot: "sets" in binding.form ? binding.form.sets : null });
 }
 
-export function updateItemDuties(writer: StateWriter, definition: ValidDefinition, entry: Entry, before: Item | null, after: Item, binding: ItemSettlement | null): void {
+export function updateItemDuties(writer: Pick<StateWriter, "itemDuties" | "putItemDuties">, definition: ValidDefinition, entry: { input: Entry["input"] | { type: "act" } }, before: Item | null, after: Item, binding: ItemSettlement | null): void {
   if (definition.declared.capacity?.name !== "whole-scope") return;
   const { largest } = amountMath(true);
   const released = settled(definition, entry, before, after, binding);

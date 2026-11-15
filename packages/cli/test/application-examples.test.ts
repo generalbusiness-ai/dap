@@ -26,7 +26,7 @@ test("the bundled authoring starter passes actual dap check with its declaration
 test("maintained Counter and Lending packages bind their current browser definition and own all screen resources", async () => {
   for (const [config, pin, steps, through] of [
     ["apps/counter/dap.application.json", COUNTING_COMMITMENTS_DEFINITION, 18, 10],
-    ["examples/lending/dap.application.json", LENDING_DEFINITION, 14, 4],
+    ["examples/lending/dap.application.json", LENDING_DEFINITION, 25, 8],
   ] as const) {
     const checked = await checkCommand(["check", ".", "--config", config], root);
     expect(checked.code, checked.lines.join("\n")).toBe(0);

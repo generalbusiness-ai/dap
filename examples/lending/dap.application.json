@@ -8,7 +8,14 @@
     "execution": "recorded-do",
     "profiles": ["restricted@1"]
   },
-  "capabilities": [],
+  "capabilities": [
+    {
+      "name": "publication-paths@1",
+      "bounds": {
+        "prefixes": ["shelf/"]
+      }
+    }
+  ],
   "projections": {
     "state": {
       "v": 1,

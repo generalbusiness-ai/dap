@@ -165,6 +165,19 @@ depends on it. The level is designed and not built. The
 [live note](../notes/2026-11-10-live-level.md), section 4, gives the
 review and the sentences that promises 1, 7 and 11 gain.
 
+The E1 body-judgment export is permitted under ruling
+`12dff54944f19657d5fb3c68174772ed5336149b`, from Hugh's decision of
+14 November 2026. The exception covers one export from `packages/derive`:
+the judgment of an intent body under a stated context, split from
+`actJudged`. Promise 9 requires one body of code for the runtime, replay
+and exploration. The condition binds the E1 head: the runtime and replay
+judgments must give the same answers as the pre-split corpus. The
+[E1 implementation note](../notes/implementation/2026-11-14-e1-explore.md)
+records its baseline and the comparison status. The export closes no K
+item and adds no scope kind, platform name, capability name, field type
+or reason code. Decision A needs its own ruling. `ScopeApi.explore` and
+its route remain held.
+
 A head adds to the kernel when it does any of these:
 
 - adds a file or an export to `packages/contract`, `packages/derive`, or
@@ -241,6 +254,10 @@ These do not wait:
 - the first version of the live level, by the owner's decision of 10
   November 2026 and ruling `4b5e0ec2`. It closes no K item, and it adds
   nothing to K1's count or to K4's list.
+- the one E1 body-judgment export, by the owner's decision of 14 November
+  2026 and ruling `12dff549`. The exception covers that export only and
+  closes no K item. The E1 head must show unchanged answers on its
+  pre-split runtime and replay corpus, as section 7 records.
 
 A head that adds to the kernel names the K item that it closes, or the
 planner holds it.

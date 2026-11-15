@@ -7,6 +7,7 @@
 
 import type { CheckedSequence } from "@generalbusiness/dap-bytes";
 import { declarationOf } from "./program/declaration.ts";
+import type { BodyReferences } from "./body-references.ts";
 import type { Bounds, Entry, FactRef, FieldType, FieldValue, Guard, MemberRef, Prepared, Reason, ScopeRef, GenesisSelfRef, ScopeKind, UnavailableReason, Digest, ScopeId, SequenceRef, PlatformDefinition, Sealed } from "@generalbusiness/dap-contract";
 import { canonicalBytes, digestBytes } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
@@ -97,6 +98,16 @@ export interface Judging {
   own?: Own | undefined;                               // this scope's own history: a local fact, and a part of one
   snapshot?: Snapshots | undefined;                    // the snapshots of staged refs that this scope retains, by digest (section 16.4)
   intent?: Digest | undefined;                         // an act: the digest of the intent being judged
+  /** Keyless body judgment only: stop at a reached need for the absent signed input. */
+  unavailableIntent?: (() => never) | undefined;
+  /** Keyless body judgment only: indexes of actually emitted written `from: self` refs. */
+  selfRef?: ((index: number) => void) | undefined;
+  /** Body-only capability record provenance, before mapping the emitted effect's index. */
+  recordSelfRef?: ((effect: Extract<import("@generalbusiness/dap-contract").Effect, { effect: "record" }>, path: readonly (string | number)[]) => void) | undefined;
+  /** A reached record write needs an entry symbol outside the admitted capability cohort. */
+  unavailableEntry?: (() => never) | undefined;
+  /** Unsigned body only: actual position provenance, never inferred from a private numeric address. */
+  references?: BodyReferences | undefined;
   sender?: ScopeRef | undefined;                       // a handler and a result clause: the envelope's source scope, as verified
   source?: JudgmentCopy | undefined;                  // a handler: its matched source evidence
   update?: { state: string; item: FactRef; revision: number } | undefined;   // a `relate` handler: the update being applied
@@ -131,6 +142,15 @@ export const members = (party: Party | undefined): readonly MemberRef[] => (part
  * fact. No clock and no other item.
  */
 export function ruleInput(j: Judging): unknown {
+  if (j.references) {
+    for (const name of Object.keys(j.fields)) j.references.expose(j.references.field(j.fieldTypes, j.fields, name));
+    for (const item of j.subjects.values()) {
+      for (const member of ["id", "revision", "opened"] as const) j.references.metadata(item, member);
+      const type = own(declarationOf(j.definition).items, item.type)!;
+      for (const [slot, ref] of Object.entries(type.refs)) j.references.expose(j.references.slot(item, "refs", slot, ref.to));
+      for (const [slot, value] of Object.entries(type.values)) j.references.expose(j.references.slot(item, "values", slot, value.of));
+    }
+  }
   return {
     kind: j.kind, fields: j.fields, signer: j.signer?.member ?? null,
     subjects: Object.fromEntries(j.subjects), facts: [...j.facts.values()].map(copyEntry),

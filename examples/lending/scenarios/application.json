@@ -8,6 +8,11 @@
       "member": "@member",
       "actions": ["lending.member"]
     },
+    "neighbour": {
+      "seed": "2525252525252525252525252525252525252525252525252525252525252525",
+      "member": "@neighbour",
+      "actions": ["lending.member"]
+    },
     "staff": {
       "seed": "2323232323232323232323232323232323232323232323232323232323232323",
       "member": "@staff",
@@ -73,6 +78,103 @@
       "retry": "donation",
       "expect": {
         "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "member",
+        "kind": "reserve",
+        "expected": {},
+        "fields": {
+          "tool": 1,
+          "day": "2026-10-18",
+          "until": "2026-10-18T13:00:00Z"
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "neighbour",
+        "kind": "reserve",
+        "expected": {},
+        "fields": {
+          "tool": 1,
+          "day": "2026-10-18",
+          "until": "2026-10-18T13:00:00Z"
+        }
+      },
+      "expect": {
+        "answer": "refused",
+        "reason": "guard-failed",
+        "name": "tool-day-taken"
+      }
+    },
+    {
+      "act": {
+        "actor": "neighbour",
+        "kind": "reserve",
+        "expected": {},
+        "fields": {
+          "tool": 1,
+          "day": "2026-10-19",
+          "until": "2026-10-18T13:00:00Z"
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "member",
+        "kind": "reserve",
+        "expected": {},
+        "fields": {
+          "tool": 1,
+          "day": "2026-10-19",
+          "until": "2026-10-18T13:00:00Z"
+        }
+      },
+      "expect": {
+        "answer": "refused",
+        "reason": "guard-failed",
+        "name": "tool-day-taken"
+      }
+    },
+    {
+      "assert": {
+        "item": 1,
+        "state": "available",
+        "revision": 1
+      }
+    },
+    {
+      "assert": {
+        "item": 2,
+        "state": "held",
+        "refs": {
+          "tool": 1
+        },
+        "values": {
+          "day": "2026-10-18",
+          "until": "2026-10-18T13:00:00Z"
+        }
+      }
+    },
+    {
+      "assert": {
+        "item": 3,
+        "state": "held",
+        "refs": {
+          "tool": 1
+        },
+        "values": {
+          "day": "2026-10-19",
+          "until": "2026-10-18T13:00:00Z"
+        }
       }
     },
     {
@@ -253,7 +355,7 @@
           ]
         },
         "at": {
-          "seq": 4
+          "seq": 6
         }
       }
     },
@@ -261,7 +363,7 @@
       "projection": {
         "name": "activity",
         "at": {
-          "seq": 4
+          "seq": 6
         },
         "sources": {
           "events": [
@@ -271,21 +373,45 @@
               "state": "sealed"
             },
             {
-              "id": 2,
+              "id": 4,
               "type": "borrow",
               "state": "sealed"
             },
             {
-              "id": 3,
+              "id": 5,
               "type": "return",
               "state": "sealed"
             },
             {
-              "id": 4,
+              "id": 6,
               "type": "cancel",
               "state": "sealed"
             }
           ]
+        }
+      }
+    },
+    {
+      "advance": "2026-10-18T13:00:00Z"
+    },
+    {
+      "assert": {
+        "item": 2,
+        "state": "lapsed"
+      }
+    },
+    {
+      "assert": {
+        "item": 3,
+        "state": "lapsed"
+      }
+    },
+    {
+      "assert": {
+        "item": 1,
+        "state": "gone",
+        "values": {
+          "reason": "Retired fixture"
         }
       }
     }

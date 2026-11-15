@@ -12,6 +12,7 @@ export const lendingStorySpec = {
   name: "lending-package", time: "2026-10-18T12:00:00Z", definition: lending, projections: lendingPackage.projections,
   actors: {
     member: { seed: "22".repeat(32), actions: ["lending.member"] },
+    neighbour: { seed: "25".repeat(32), actions: ["lending.member"] },
     staff: { seed: "23".repeat(32), actions: ["lending.staff"] },
     visitor: { seed: "24".repeat(32), actions: [] },
   },
@@ -33,6 +34,21 @@ export const lendingStory = () => tell(lendingStorySpec, story => {
     { effect: "value", item: 1, slot: "page", value: page },
   ], "A signed fixture page"), "donation");
   story.retry(donation, accepted, writesNothing);
+  const until = "2026-10-18T13:00:00Z";
+  const held = (item: number, day: string): OutcomeAssertion => ({ entries: [{ input: { type: "act", kind: "reserve" }, effects: [
+    { effect: "open", item, type: "reservation", state: "held" },
+    { effect: "ref", item, slot: "tool", to: 1 },
+    { effect: "value", item, slot: "day", value: day },
+    { effect: "value", item, slot: "until", value: until },
+  ], sends: [] }] });
+  story.act("member", "reserve", { fields: { tool: 1, day: "2026-10-18", until } }, accepted, held(2, "2026-10-18"));
+  story.act("neighbour", "reserve", { fields: { tool: 1, day: "2026-10-18", until } }, refused("guard-failed", "tool-day-taken"), writesNothing);
+  // The second slot reverses admission order. Its expiry need not fall on its day label.
+  story.act("neighbour", "reserve", { fields: { tool: 1, day: "2026-10-19", until } }, accepted, held(3, "2026-10-19"));
+  story.act("member", "reserve", { fields: { tool: 1, day: "2026-10-19", until } }, refused("guard-failed", "tool-day-taken"), writesNothing);
+  story.assert(1, { state: "available", revision: 1 });
+  story.assert(2, { state: "held", refs: { tool: 1 }, values: { day: "2026-10-18", until } });
+  story.assert(3, { state: "held", refs: { tool: 1 }, values: { day: "2026-10-19", until } });
   story.act("visitor", "borrow", { on: 1, fields: { content: "No membership" } }, refused("unauthorized"), writesNothing);
   story.act("member", "borrow", { on: 1, fields: { content: "Borrowed in the local fixture" } }, accepted, entry("borrow", [
     { effect: "state", item: 1, state: "lent" }, { effect: "party", item: 1, slot: "borrower", member: member("member") },
@@ -52,4 +68,8 @@ export const lendingStory = () => tell(lendingStorySpec, story => {
   story.assert(1, { state: "gone", values: { reason: "Retired fixture" } });
   story.projection("state", { sources: ["library", "thing"], fields: { thing: ["name", "reason"] } });
   story.projection("activity", { at: "head", sources: ["events"] });
+  story.advance(until, { entries: [2, 3].map(item => ({ input: { type: "timed", item, rule: "lapse", due: until }, effects: [{ effect: "state", item, state: "lapsed" }], sends: [] })) });
+  story.assert(2, { state: "lapsed" });
+  story.assert(3, { state: "lapsed" });
+  story.assert(1, { state: "gone", values: { reason: "Retired fixture" } });
 });
