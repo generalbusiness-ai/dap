@@ -62,7 +62,8 @@ Development END `ccb3ec32809ac87b0f35cc157e0348aad5b4d732` records a
 PASS at clean source `547ef30c96c3549820c29db191c957eed440e68b`, tree
 `5428593a2a94a0391ad237f20004f59c6363fd83`. That source builds on NF5
 main `57f887ce`; it has not integrated C3. The checks below establish
-bounded development readiness at that source, not a gate or deployment.
+bounded development readiness at that source. The later exact-head preflight
+and gate below establish their own results, without a deployment claim.
 
 `W` is `/Users/hughpyle/play/artroom/.builder-worktrees/lc1-lending-counter-releases-20261114`.
 `D` is the authentic owned C3 donor at
@@ -70,6 +71,9 @@ bounded development readiness at that source, not a gate or deployment.
 `E` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-lc1-development-attempt1`.
 `N` is `/opt/homebrew/bin/node`. Commands run from `W` except the two
 CLI owners, which run together from `W/packages/cli`.
+`P` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-lc1-gate-preflight-attempt1`.
+`G` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-lc1-full-gate-attempt1`.
+The later preflight and gate commands also ran from `W`.
 
 The setup rechecked all 17 current and committed metadata inputs before
 one copy into the absent target. The copied stamp matches lock
@@ -85,8 +89,10 @@ equal the donor bytes. No install, restamp or preserved-view mutation ran.
 | Whole canonical packet formatter owner | `N --test scripts/format-json.test.mjs` | Exit 0; one passed, zero failed, cancelled, skipped or todo; 0.185423458 s | `E/formatter-owner.stdout.log` — `b46b6c452b64f62b7100c3d6553032ca7c1eff0decf386f03f55bfeab3facbff` |
 | Maintained compatibility prerequisite | `N scripts/cloudflare-pool-compat.mjs` | Exit 0; `copied:false`, accepted bundle unchanged; 0.089407000 s | `E/compatibility.stdout.log` — `4bbde52e48a6ebcd8e993840da6a340a4cd78571c1fff0ef83f5991e5cde6f62` |
 | Whole canonical reproduction and configuration owners | `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts test/application-release-reproduction.test.ts test/demo-config.test.ts --reporter=default --reporter=json --outputFile.json=E/cli-owners.report.json` | Exit 0; one reproduction and six configuration cases passed, zero failed, pending or todo; 3.427555959 s | `E/cli-owners.report.json` — `b96c94f65bab97b2e40fee6b9c55b60f133e2f5bf5ce1bfa5fc86318b15a7e5f`; `E/cli-owners.stdout.log` — `a40b80112bcd8c5df0cbfbe37d78badb4dc7e3fd14776d51bd08b915290cd8f1` |
-| Current-head preflight and conditional main integration | Run both checks of `7fe68ffe`; if C3 lands first, merge actual new main cleanly, repeat both checks and gate at that head | OWED | No result claimed |
-| Gate and checker review | `npm run gate` at the final authorized head, then review | UNRUN | No result claimed |
+| Exact-head preflight: shared helpers | `N scripts/check-shared-helpers.mjs` | Exit 0; 0.664896375 s at `faece658` | `P/shared-helpers.stdout.log` — `57e77d32822dad832d49e3f80586983244932678940c6904dbbb9979173c8260` |
+| Exact-head preflight: whole typecheck | `/opt/homebrew/bin/npm run typecheck` | Exit 0; 17.468887916 s at the same head | `P/whole-typecheck.stdout.log` — `a9abf7e40e10fbda74447d08a5ea3b33733361ecd9ac199658065cfbc874936a` |
+| Full gate at `faece658` | `/opt/homebrew/bin/npm run gate` | Exit 0; outer wall 870.297345083 s. Node 195; Counting 55; Plain 4,760 passed/1 skipped; Native 1,134 passed/2 skipped. Scale omitted as `outside-scale-paths` | `G/gate.log` — `0ad7621fac3b17b864702b773561bc0bd6a41f968f49997264010d080a2ab268` |
+| Checker review and local artifacts | Not run | OWED under the LC1 request | No result claimed |
 
 The stderr files `E/cli-test-compiler.stderr.log`,
 `E/formatter-owner.stderr.log`, `E/compatibility.stderr.log` and
@@ -100,17 +106,65 @@ The measured development outer wall was 4.635378250 s, excluding the
 separately timed dependency copy.
 
 At this NF5 base, the actual signed 0.2.0 packets passed the row,
-publisher and equal-version identifier checks. The packets and rows
-remain exact. This run does not establish post-C3 reproduction or gate
-readiness. Ruling `500885533dfe8ed370cc7c627f0ae3501142cff0` permits
-LC1 to gate first after both current-head checks of `7fe68ffe` pass. If
-C3 lands first, LC1 must merge actual new main, stop if the merge is not
-clean, repeat both checks and gate at that head.
+publisher and equal-version identifier checks. The packets and rows remain
+exact. The development result establishes no post-C3 reproduction.
 
-LC1 owns no provisioning, installation, signing, deployment, screen host
-or install context. NF7's hosted Counter witness remains held under its
-own request. R retains reservation source and its later signing boundary.
-Between LC1 and C3, the first ready head gates. The second head to land
-must merge actual new main cleanly, repeat both preflight checks and gate
-again. No other development runs beside an active gate. After both heads,
-the tooling head precedes E1. Further execution needs a later root grant.
+## Gated source and documentation successor
+
+Preflight END `c1001f7750df97c936d5f14722607e49a2e8a6e4` records both
+required checks at clean head
+`faece6583c7d761a844637f40f6a13ff228cf585`, tree
+`1f9227af71298a52b02dfb95b9d0cee27218ce68`. Its outer wall was
+18.134091541 s. `P/commands.json` retains exact argv;
+`P/result.json` has SHA-256
+`08a17c958e71438dda344c88a377cf573711b7dbb6de4e284f06d2221ee7781d`.
+No commit or dependency change intervened before the gate.
+
+Gate END `1186e84b74586535e091954d2955be2f5fb0b28e` records the same
+head/tree, with main/origin still `57f887ce`. The gate ran from
+2026-11-15 02:20:14.255660 to 02:34:44.554604 UTC. Initial and final
+source were clean and unchanged. `G/command.json` retains the exact command
+and absent test/worker/scale overrides. `G/result.json` has SHA-256
+`d62046e09520a3681306fed03c6a51f63de438d1ba4405aefd22b82757ea1c59`.
+The log starts with that head/tree and zero changed files and ends with
+`gate passed`.
+
+All maintained checks passed, including kernel, typecheck and every
+pre-test step. Notes reported zero warnings. Installation skipped because
+the owned dependency stamp matched the actual lock. The count lines in the
+one evidence table are terminal results, with their original skips. Scale's
+natural selector omitted its project as `outside-scale-paths`; LC1 claims
+no Scale acceptance. Terminal evidence for all four executed test stages
+is complete. Module observations still qualify scope-stories as partial,
+with 126 unknown/suite observations and no contradictory records. Concurrent
+module/case duration sums are neither wall nor CPU time.
+
+The gate created its stage logs in
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.VnMhZzFJbd`;
+`G/stage-logs` retains their complete copy. The combined `G/gate.log`
+remains the cited gate output.
+
+This documentation-only successor changes only this implementation note.
+Its final commit/tree belong to the source checkpoint, not the gated tree
+above. Source, configuration, tests, packet bytes and dependencies remain
+unchanged from the gate. The six non-note LC1 blobs retain their gated
+identities. Under `docs/evidence-filing.md`'s follow-up rule, this filing
+needs no second gate. No project check ran for the documentation update.
+
+## Open limits
+
+LC1 gated first under ruling `500885533dfe8ed370cc7c627f0ae3501142cff0`
+after the two checks required by `7fe68ffe`. It still has not integrated C3;
+the matching donor dependency view does not imply C3 source composition.
+The second head to land must merge actual new main cleanly, repeat both
+preflight checks and gate again. After both heads, the tooling head precedes
+E1. No other development runs beside an active gate.
+
+LC1 request `91829f2e` still owes exact local artifacts, checker review and
+landing authorization. The planner still owns bucket creation before
+deployment and its recorded operation. Provisioning, installation, signing,
+deployment, screen hosts and install context remain outside this builder
+head; none occurred in these checks. NF7's hosted Counter installation and
+witness remain held under its own request. R retains reservation source and
+its later signing boundary. Passing the gate makes no deployment, installed
+release or hosted acceptance claim.
