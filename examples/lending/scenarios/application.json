@@ -414,6 +414,191 @@
           "reason": "Retired fixture"
         }
       }
+    },
+    {
+      "act": {
+        "actor": "member",
+        "kind": "donate",
+        "expected": {
+          "library": {
+            "$revision": 0
+          }
+        },
+        "fields": {
+          "name": "Garden fork",
+          "description": "A release fixture",
+          "page": "shelf/fedcba9876543210.md",
+          "content": "Available for reservations"
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "member",
+        "kind": "reserve",
+        "expected": {},
+        "fields": {
+          "tool": 9,
+          "day": "2026-10-18",
+          "until": "2026-10-18T14:00:00Z"
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "member",
+        "kind": "reserve",
+        "expected": {},
+        "fields": {
+          "tool": 9,
+          "day": "2026-10-19",
+          "until": "2026-10-18T14:00:00Z"
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "member",
+        "kind": "reserve",
+        "expected": {},
+        "fields": {
+          "tool": 9,
+          "day": "2026-10-20",
+          "until": "2026-10-18T14:00:00Z"
+        }
+      },
+      "expect": {
+        "answer": "refused",
+        "reason": "guard-failed"
+      }
+    },
+    {
+      "act": {
+        "actor": "neighbour",
+        "kind": "release",
+        "on": 10,
+        "expected": {
+          "on": {
+            "$revision": 10
+          }
+        },
+        "fields": {}
+      },
+      "expect": {
+        "answer": "refused",
+        "reason": "guard-failed"
+      }
+    },
+    {
+      "act": {
+        "actor": "member",
+        "kind": "release",
+        "on": 10,
+        "expected": {
+          "on": {
+            "$revision": 10
+          }
+        },
+        "fields": {}
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "neighbour",
+        "kind": "reserve",
+        "expected": {},
+        "fields": {
+          "tool": 9,
+          "day": "2026-10-18",
+          "until": "2026-10-18T14:00:00Z"
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "assert": {
+        "item": 10,
+        "state": "released",
+        "parties": {
+          "holder": {
+            "$member": "member"
+          }
+        }
+      }
+    },
+    {
+      "assert": {
+        "item": 13,
+        "state": "held",
+        "parties": {
+          "holder": {
+            "$member": "neighbour"
+          }
+        }
+      }
+    },
+    {
+      "act": {
+        "actor": "staff",
+        "kind": "release-by-staff",
+        "on": 11,
+        "expected": {
+          "on": {
+            "$revision": 11
+          }
+        },
+        "fields": {}
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "neighbour",
+        "kind": "reserve",
+        "expected": {},
+        "fields": {
+          "tool": 9,
+          "day": "2026-10-19",
+          "until": "2026-10-18T14:00:00Z"
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "assert": {
+        "item": 11,
+        "state": "released",
+        "parties": {
+          "holder": {
+            "$member": "member"
+          }
+        }
+      }
+    },
+    {
+      "assert": {
+        "item": 9,
+        "state": "available",
+        "revision": 1
+      }
     }
   ]
 }

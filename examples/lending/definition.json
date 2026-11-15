@@ -153,10 +153,33 @@
       ],
       "step": "transition"
     },
+    "release": {
+      "also": {},
+      "attention": [],
+      "effects": [{ "state": "released" }],
+      "fields": {},
+      "grant": "lending.member",
+      "guards": [{ "state": ["held"] }, { "signer": ["holder"] }],
+      "on": "reservation",
+      "sends": [],
+      "step": "transition"
+    },
+    "release-by-staff": {
+      "also": {},
+      "attention": [],
+      "effects": [{ "state": "released" }],
+      "fields": {},
+      "grant": "lending.staff",
+      "guards": [{ "state": ["held"] }],
+      "on": "reservation",
+      "sends": [],
+      "step": "transition"
+    },
     "reserve": {
       "also": {},
       "attention": [],
       "effects": [
+        { "party": { "from": { "signer": true }, "slot": "holder" } },
         { "ref": { "from": { "field": "tool" }, "slot": "tool" } },
         { "value": { "from": { "field": "day" }, "slot": "day" } },
         { "value": { "from": { "field": "until" }, "slot": "until" } }
@@ -180,6 +203,18 @@
             ]
           },
           "reason": "tool-day-taken"
+        },
+        {
+          "count": {
+            "max": 1,
+            "states": ["held"],
+            "type": "reservation",
+            "where": [
+              {
+                "equals": { "a": { "slot": "holder" }, "b": { "signer": true } }
+              }
+            ]
+          }
         }
       ],
       "on": "reservation",
@@ -245,7 +280,14 @@
       "initial": "held",
       "many": true,
       "max": 8,
-      "parties": {},
+      "parties": {
+        "holder": {
+          "author": false,
+          "fixed": true,
+          "list": false,
+          "required": true
+        }
+      },
       "refs": {
         "tool": {
           "fixed": true,
@@ -253,7 +295,11 @@
           "to": { "of": "thing", "type": "item" }
         }
       },
-      "states": { "held": { "final": false }, "lapsed": { "final": true } },
+      "states": {
+        "held": { "final": false },
+        "lapsed": { "final": true },
+        "released": { "final": true }
+      },
       "values": {
         "day": {
           "fixed": true,

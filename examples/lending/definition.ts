@@ -1,6 +1,6 @@
 /** The lending library authored with typed helpers. The JSON file and pin remain the byte witness. */
 import type { DeclaredDefinition, Operand } from "@generalbusiness/dap-contract";
-import { by, define, normalize, equals, final, item, itemOf, live, member, none, one, open, party, reasons, ref, require, required, rule, scope, signer, tell, text, time, timed, transition, value, type ItemDef, type Of } from "@generalbusiness/dap-define";
+import { by, count, define, normalize, equals, final, item, itemOf, live, member, none, one, open, party, range, reasons, ref, require, required, rule, scope, signer, tell, text, time, timed, transition, value, type ItemDef, type Of } from "@generalbusiness/dap-define";
 import { lendingRoles } from "./roles.ts";
 
 export const lendingGrants = { establish: lendingRoles.grant("lending.establish"), member: lendingRoles.grant("lending.member"), staff: lendingRoles.grant("lending.staff") } as const;
@@ -20,7 +20,8 @@ export const thing = item("thing", {
 /** A slot is one tool and an opaque day label; until is the member's explicit expiry. */
 export const reservation = item("reservation", {
   many: 8,
-  initial: "held", states: { held: live, lapsed: final },
+  initial: "held", states: { held: live, lapsed: final, released: final },
+  parties: { holder: party.fixed },
   refs: { tool: ref.fixed(itemOf(thing)) },
   values: { day: value.fixed(text(10)), until: value.fixed(time) },
 });
@@ -79,8 +80,18 @@ export const lendingSource = define({
     } }, ({ f, on }) => ({
       guards: [require(none(reservation, ["held"], held => [
         equals(held.slot("tool"), f.tool), equals(held.slot("day"), f.day),
-      ]), lendingReasons.toolDayTaken)],
-      effects: on.take(f, "tool", "day", "until"),
+      ]), lendingReasons.toolDayTaken), count(range(reservation, ["held"], { where: held => [
+        equals(held.slot("holder"), signer),
+      ] }), { max: 1 })],
+      effects: [on.party("holder", signer), ...on.take(f, "tool", "day", "until")],
+    })),
+    release: transition(reservation, lendingGrants.member, {}, ({ on }) => ({
+      guards: [on.in("held"), on.signer("holder")],
+      effects: [on.to("released")],
+    })),
+    "release-by-staff": transition(reservation, lendingGrants.staff, {}, ({ on }) => ({
+      guards: [on.in("held")],
+      effects: [on.to("released")],
     })),
   },
   timed: { lapse: timed(reservation, { states: ["held"], deadline: "until", effects: on => [on.to("lapsed")] }) },

@@ -20,11 +20,12 @@ const presentation = {
   activity: view.log("activity", "events", ({ row, text }) => ({ actor: "actor", display: "fullscreen", back: "shelf", title: "type", facts: ["time"], context: text`Recent entry ${row.id}: ${row.type}`, fallback: text`Recent entry ${row.id}: ${row.type}` })),
 };
 
-export const lendingPackage = { ...manifest({
+export const lendingPackage = manifest({
   name: "ai.generalbusiness.lending", version: "0.4.0", definition: { path, value: lending },
   projections: { state, activity }, views: presentation,
   roles: lendingRoles.roles,
   scenarios: ["examples/lending/scenarios/application.json"],
   browser: { entry: "examples/lending/browser/main.ts", html: "examples/lending/browser/application.html", script: "lending.js" },
   assets: applicationBrandAssets,
-}), capabilities: [{ name: "publication-paths@1", bounds: { prefixes: ["shelf/"] } }] };
+  capabilities: [{ name: "publication-paths@1", bounds: { prefixes: ["shelf/"] } }],
+});

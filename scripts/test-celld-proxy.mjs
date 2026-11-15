@@ -17,7 +17,7 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
-import { celldSmokeOperation, contextForCelldSmoke, runCelldSmoke } from "./celld-smoke.mjs";
+import { celldSmokeDetail, celldSmokeOperation, contextForCelldSmoke, runCelldSmoke } from "./celld-smoke.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const failureMetadata = { stage: "preflight", scratch: null, signal: null };
@@ -369,7 +369,7 @@ async function run() {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const failed = error => {
-    process.stderr.write(JSON.stringify({ error: "celld-proxy-witness-failed", ...failureMetadata, operation: celldSmokeOperation(error), qualification: "Private TEST state retained; no automatic operation retry." }) + "\n");
+    process.stderr.write(JSON.stringify({ error: "celld-proxy-witness-failed", ...failureMetadata, operation: celldSmokeOperation(error), detail: celldSmokeDetail(error), qualification: "Private TEST state retained; no automatic operation retry." }) + "\n");
     process.exitCode = 1;
   };
   run().then(result => { if (failureMetadata.signal !== null) failed(); else process.stdout.write(JSON.stringify(result) + "\n"); }, failed);

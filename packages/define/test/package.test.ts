@@ -23,6 +23,14 @@ const definition = define({ name: "package-example", genesis: "establish", items
 const projected = projection(definition, "definition.json", { roots: items(root, ["editors", "title", "note"]) });
 const spec = { name: "example.package", version: "1.0.0", definition: { path: "definition.json", value: definition }, projections: { state: projected }, views: {}, roles: roles.roles, scenarios: ["scenario.json"], browser: { entry: "main.ts", html: "index.html", script: "main.js" } } as const;
 
+test("manifest application capabilities can override the inferred runtime defaults", () => {
+  const runtime = { ...definition, capabilities: [{ name: "hold", version: 1 }] } as const;
+  const given = { ...spec, definition: { ...spec.definition, value: runtime } };
+  expect(manifest(given).capabilities).toEqual(["hold@1"]);
+  const capabilities = [{ name: "publication-paths@1", bounds: { prefixes: ["shelf/"] } }] as const;
+  expect(manifest({ ...given, capabilities }).capabilities).toEqual(capabilities);
+});
+
 test("projection fields retain party-list bounds and slot nullability", () => {
   expect(projected.sources.roots).toEqual({ item: "root", read: "many", states: ["ready"], limit: 1, fields: {
     editors: { from: { kind: "party", name: "editors" }, of: { type: "list", of: { type: "member" }, max: 3 }, nullable: true },
