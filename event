@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8f4dfd0a0ebfb3b8045b8e20e97e4450aa438325","text":"Merge retired a covered predecessor; the successor is at packages/client/src/browser-request.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:90e1323a3a2884228cffe17b01b386fda2429a0a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-14-nf6-nf8-custody-follow-ups.md."}
