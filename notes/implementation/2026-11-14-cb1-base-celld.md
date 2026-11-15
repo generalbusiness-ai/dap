@@ -53,8 +53,9 @@ Branch `builder/cb1-ls1-source-20261115` preserves this branch at
 `4b198d0fc980327d87347b05a3817106974bf8d7` without conflicts.
 The new [LS-1 note](2026-11-15-ls1-current-smoke-reference.md) describes
 its separate request `3bacbc5e` and promise `630a37a0`.
-CB-1's promise remains `9b083032`; LS-1 does not replace its fleet,
-Security review, public Counter, actual machine, or CB-2 obligations.
+CB-1's promise remains `9b083032`. The later lifecycle ruling below moves
+the fleet witness to a distinct request and preserves the Security review
+and CB-2 boundary.
 All results above and below retain their dated source boundaries.
 The merged CB-1 and LS-1 runtime checks and gate remain UNRUN.
 
@@ -64,11 +65,16 @@ and the receipt closes them. No real local Worker run stands behind this
 head. The LS-1 note records only the bounded binary search. After publication,
 the planner checks the actual main branch's **Local Worker smoke** workflow;
 a red run opens a new repair request and reopens neither promise.
-Before gate START, the builder owes a one-line answer naming any CB-1
-obligation that blocks landing after a passing gate and review, or stating
-that none does. That answer and the planner's disposition remain owed.
-CB-1's fleet, Security conclusion, public Counter, and CB-2 obligations remain
-separate. This amendment changes none of the UNRUN validation above.
+Later ruling `841b79030689a4b6d3c9d8f4092905c790dbc7ce` removes the fleet
+witness as a joint landing condition. The planner files its distinct
+request at CB-1 landing; it waits for Hugh's machine and privileged-step
+operator selection. CB-1 and LS-1 may land after a passing gate and a review
+with the Security conclusion on the closed application settings. The future
+gate START answer is: no CB-1 fleet obligation blocks landing after that
+passing gate and Security review. This changes none of the UNRUN results.
+
+As of 15 November 2026, no persistent fleet run stands behind the `base`
+family yet.
 
 ## Base-family source changes
 
@@ -132,10 +138,11 @@ prefixes, but publication and `bind-archive` refuse `no-repository`.
 A repository binding alone would supply no celld archive provider.
 CB-1 introduces no GitHub archive mint or replacement provider.
 
-Ruling `4d03ff1d` splits source and fleet evidence in time. No public
-Counter packet exists yet. The later witness must install the exact
-planner-signed release and publisher that CUT-R records in R2 after
-publication. Neither a TEST packet nor Grow can substitute for it.
+Ruling `4d03ff1d` originally split source and fleet evidence in time, when
+no public Counter packet existed. Counter `0.2.0` is now signed and on main
+since `863ca6b2`. This head selects no operator release. The distinct fleet
+witness must use the exact approved public release and publisher; neither
+a TEST packet nor Grow can substitute for it.
 Hugh has selected no machine or operator, and no fleet exists for the
 witness. The previously recorded Mac mini remains unavailable. This
 source lane makes no fleet connection, reads no private key or credential,
@@ -158,7 +165,7 @@ store.
 | Whole security-entry-point owner at `20609219` | 12 passed; exit 0; process wall 4.404171417 s | DEV only; raw `2026-11-14-cb1-attestation-development-attempt1/stdout.log`; SHA-256 `6aa8b99c86f2aa241fe307c043ca0d5a31cccea19bd3f4267b5c2527c9a56de4` |
 | Documentation checks | UNRUN | Owed |
 | Gate before source review | UNRUN | Owed |
-| Persistent-fleet Counter witness | Deferred by `4d03ff1d` | No machine or public release selected yet |
+| Persistent-fleet Counter witness | Moved to a distinct request by `841b7903` | Planner files it at CB-1 landing; Hugh's machine/operator choice remains owed; this head selects no release |
 
 The security-owner path above resolves under
 `/Users/hughpyle/play/artroom-evidence/`. Its `command.json` and `result.json`
@@ -183,15 +190,16 @@ already patched bundle unchanged. The successful compilers, syntax checks
 and 20 Node cases did not rerun. These are ordinary development results,
 not gate evidence. The original failed output and separate successful
 outputs remain in scratch. No control, build, deployment or fleet check
-ran. Source review must assess the Security boundary and retain the fleet
-witness as an open obligation.
+ran. Source review must assess the Security boundary and state the distinct
+fleet witness's remaining scope.
 
 ## Open limits
 
-CB-1 stays open until its later fleet witness runs. That witness needs
-the public Counter release recorded by CUT-R R2 and Hugh's actual machine
-and privileged-step operator selection. It uses normal helpers and CLI
-to prepare and deploy the base plan, finish installation, create a room,
+Ruling `841b7903` replaces the earlier condition that kept CB-1 open until
+the fleet witness. The distinct request needs an approved public Counter
+release and Hugh's actual machine and privileged-step operator selection.
+It uses normal helpers and CLI to prepare and deploy the base plan, finish
+installation, create a room,
 join a member, and record an active Counter installation with a verified
 application journal. A fleet restart must load the stored package bytes
 again. The witness also checks declared-prefix reservation and the two
@@ -199,4 +207,6 @@ again. The witness also checks declared-prefix reservation and the two
 
 The retained old-family preparation check belongs to the source tests.
 CB-2 owns the archive-provider design and the later room-to-repository
-archive scene. Source approval does not close either deferred witness.
+archive scene. The fleet witness and CB-2 remain distinct from joint source
+landing. The planner's post-publication Local Worker smoke check stays as
+defined above.

@@ -6,10 +6,12 @@ journals stay in the local store. Keep the installation prefix, with its
 store and celld working directory, when you stop or remove the services.
 
 The source supports the `base` family and package storage on a persistent
-fleet. The fleet package witness remains due. It waits for the public Counter
-release in CUT-R R2 and Hugh's selection of a machine and operator. No fleet
-is currently available for that witness. The previously recorded Mac mini
-is unavailable.
+fleet. As of 15 November 2026, no persistent fleet run stands behind the
+`base` family yet. The planner files the fleet package witness as a distinct
+request at CB-1 landing. It does not block joint CB-1/LS-1 landing after a
+passing gate and Security review. It waits for Hugh's selection of a machine
+and privileged-step operator. No fleet is currently available for that
+witness. The previously recorded Mac mini is unavailable.
 
 ## Prerequisites
 
@@ -240,12 +242,15 @@ The helpers retain private output and never overwrite an existing project.
 Set the same `APPLICATION_TRUST` value for the CLI that installs the packet.
 
 Follow [Install an application package](cli.md#install-an-application-package)
-with the public immutable Git URI and its exact release. CB-1's later fleet
-witness installs only the planner-signed Counter packet recorded in CUT-R
-R2 after publication. The source work has no public Counter packet to
-install yet. A TEST packet or the Grow demo cannot replace it. The recorded
-active install, journal verification, restart and stored-byte reload remain
-owed on Hugh's selected machine.
+with the public immutable Git URI and its exact release. When CB-1 source
+work began on 14 November 2026, no public Counter packet existed. Counter
+`0.2.0` is now signed and on main since `863ca6b2`; this head selects no
+operator release. The distinct fleet witness installs only the approved
+planner-signed public Counter packet. A TEST packet or the Grow demo cannot
+replace it. The recorded active install, journal verification, restart,
+stored-byte reload, prefix reservation and no-repository checks remain owed
+on Hugh's selected machine. Archive-provider work remains in CB-2. The
+planner checks the Local Worker smoke workflow on main after publication.
 
 ## Bind a new room to GitHub
 
