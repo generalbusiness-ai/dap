@@ -30,6 +30,9 @@ export class TransportError extends Error {
   override readonly name = "TransportError";
 }
 
+/** A locally rejected log page, after the transport returned. Internal to the handle and replica modules. */
+export class LogProtocolError extends TransportError {}
+
 /**
  * The entry a receipt names, checked against the whole fact reference: scope,
  * genesis, position and hash. `wrong-genesis`: the entry at
@@ -149,7 +152,7 @@ export class ScopeHandle {
   /**
    * One page of the journal as the scope stores it, checked. The page must name this scope's reference and definition, as its
    * summary gives them. Each entry's bytes must hash to its hash and hold its seq and this scope. The seqs must rise, from the
-   * cursor up to the head. A page that fails a check rejects with `TransportError`.
+   * cursor up to the head. A page that fails a local check rejects with `LogProtocolError`.
    *
    * The coverage is `whole` only when this handle read with a session and the seqs run without a gap from the cursor to the
    * page's `next`, or to the head when it has none. A signed read keeps only some rows, while the scope reports `complete` and
@@ -168,28 +171,32 @@ export class ScopeHandle {
     const own = this.#own;
     if (required && !sameRef(required.at, own.scope)) throw new TransportError("the read minimum names another scope");
     const reply = await this.#transport.log(this.scope, this.#reader, cursor);
-    if (!reply.ok) return reply;
-    reached(reply.at, required);
-    const page = reply.value;
-    if (!sameRef(page.scope, own.scope) || page.definition !== own.definition) throw new TransportError("the log page is of another scope or definition");
-    const from = cursor === undefined ? 0 : /^(0|[1-9][0-9]{0,15})$/.test(cursor) ? Number(cursor) : null;
-    let previous = from === null ? -1 : from - 1, gap = from === null;
-    for (const row of page.entries) {
-      if (digestBytes(utf8(`${DOMAINS.entry}\n${row.bytes}`)) !== row.hash) throw new TransportError(`log entry ${row.seq} does not hash to its hash`);
-      let entry: Entry;
-      try { entry = parseStrict(row.bytes) as Entry; } catch { throw new TransportError(`log entry ${row.seq} is not canonical`); }
-      // A genesis names its scope by its seed and its hash; every later entry names the genesis it follows.
-      const input: unknown = (entry as { input?: unknown }).input;
-      const born = typeof input === "object" && input !== null && (input as { type?: unknown }).type === "genesis" ? entry.input as Extract<Entry["input"], { type: "genesis" }> : null;
-      const ours = born ? scopeIdOf(born.seed) === own.scope.scope && row.hash === own.scope.genesis : "genesis" in entry && entry.genesis === own.scope.genesis;
-      if (entry.seq !== row.seq || !ours) throw new TransportError(`log entry ${row.seq} is not this scope's entry at that seq`);
-      if (row.seq <= previous || row.seq > reply.at.seq) throw new TransportError("the log page's seqs do not rise from the cursor to the head");
-      if (row.seq !== previous + 1) gap = true;
-      previous = row.seq;
+    try {
+      if (!reply.ok) return reply;
+      reached(reply.at, required);
+      const page = reply.value;
+      if (!sameRef(page.scope, own.scope) || page.definition !== own.definition) throw new TransportError("the log page is of another scope or definition");
+      const from = cursor === undefined ? 0 : /^(0|[1-9][0-9]{0,15})$/.test(cursor) ? Number(cursor) : null;
+      let previous = from === null ? -1 : from - 1, gap = from === null;
+      for (const row of page.entries) {
+        if (digestBytes(utf8(`${DOMAINS.entry}\n${row.bytes}`)) !== row.hash) throw new TransportError(`log entry ${row.seq} does not hash to its hash`);
+        let entry: Entry;
+        try { entry = parseStrict(row.bytes) as Entry; } catch { throw new TransportError(`log entry ${row.seq} is not canonical`); }
+        // A genesis names its scope by its seed and its hash; every later entry names the genesis it follows.
+        const input: unknown = (entry as { input?: unknown }).input;
+        const born = typeof input === "object" && input !== null && (input as { type?: unknown }).type === "genesis" ? entry.input as Extract<Entry["input"], { type: "genesis" }> : null;
+        const ours = born ? scopeIdOf(born.seed) === own.scope.scope && row.hash === own.scope.genesis : "genesis" in entry && entry.genesis === own.scope.genesis;
+        if (entry.seq !== row.seq || !ours) throw new TransportError(`log entry ${row.seq} is not this scope's entry at that seq`);
+        if (row.seq <= previous || row.seq > reply.at.seq) throw new TransportError("the log page's seqs do not rise from the cursor to the head");
+        if (row.seq !== previous + 1) gap = true;
+        previous = row.seq;
+      }
+      const end = reply.next === undefined ? reply.at.seq + 1 : /^(0|[1-9][0-9]{0,15})$/.test(reply.next) ? Number(reply.next) : null;
+      const whole = typeof this.#reader === "string" && this.#reader.startsWith(SESSION) && !gap && end !== null && previous + 1 === end;
+      return { ...reply, coverage: whole ? "whole" : "filtered" };
+    } catch (error) {
+      throw new LogProtocolError(error instanceof Error ? error.message : "the log page is invalid");
     }
-    const end = reply.next === undefined ? reply.at.seq + 1 : /^(0|[1-9][0-9]{0,15})$/.test(reply.next) ? Number(reply.next) : null;
-    const whole = typeof this.#reader === "string" && this.#reader.startsWith(SESSION) && !gap && end !== null && previous + 1 === end;
-    return { ...reply, coverage: whole ? "whole" : "filtered" };
   }
   outbox(cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return this.#transport.outbox(this.scope, this.#reader, cursor); }
 

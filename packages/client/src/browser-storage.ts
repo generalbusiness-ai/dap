@@ -1,7 +1,8 @@
 /** Private browser slots. These are trusted-host primitives, not an origin
  * isolation boundary. Callers admit identity/values and hold the lock around
  * read/compare/write sequences. No session or credential is inferred here. */
-import type { CustodyLock } from "./request-custody.ts";
+/** Excludes every other user of one identity's requests, other tabs included. */
+export interface BrowserCustodyLock { run<T>(work: () => Promise<T>): Promise<T> }
 type Handler = (() => void) | null;
 interface Request<T> { result: T; onsuccess: Handler; onerror: Handler }
 interface Store { get(key: string): Request<unknown>; put(value: unknown, key: string): unknown; delete(key: string): unknown }
@@ -13,7 +14,7 @@ interface Platform {
   navigator?: { locks?: { request<T>(name: string, work: () => Promise<T>): Promise<T> } };
   structuredClone<T>(value: T): T;
 }
-export interface BrowserPrivateSlots extends CustodyLock {
+export interface BrowserPrivateSlots extends BrowserCustodyLock {
   load(key: string): Promise<unknown | null>;
   save(key: string, value: unknown): Promise<void>;
   remove(key: string): Promise<void>;

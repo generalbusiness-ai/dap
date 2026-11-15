@@ -116,8 +116,8 @@ test("SDK module references preserve genuine imports and rewrite declarations wi
     const clientStage = join(dir, "client-production"); mkdirSync(join(clientStage, "dist/src"), { recursive: true });
     const clientManifest = JSON.parse(readFileSync(new URL("packages/client/package.json", root), "utf8"));
     writeFileSync(join(clientStage, "package.json"), JSON.stringify(publishManifest(client, clientManifest, "0.1.0-dev.2")));
-    for (const name of ["index", "application", "custody"]) for (const extension of ["js", "d.ts"]) writeFileSync(join(clientStage, `dist/src/${name}.${extension}`), "export {};\n");
-    assert.equal(outputClosure(clientStage, client, "0.1.0-dev.2").length, 7);
+    for (const name of ["index", "application", "scope", "custody"]) for (const extension of ["js", "d.ts"]) writeFileSync(join(clientStage, `dist/src/${name}.${extension}`), "export {};\n");
+    assert.equal(outputClosure(clientStage, client, "0.1.0-dev.2").length, 9);
     for (const extension of ["js", "d.ts"]) {
       const file = join(clientStage, `dist/src/node.${extension}`); writeFileSync(file, "export {};\n");
       assert.throws(() => outputClosure(clientStage, client, "0.1.0-dev.2"), /excluded-output/);
@@ -292,7 +292,7 @@ test("SDK published manifests match the actual supported workspace manifests", (
   assert.deepEqual(publishManifest(graph, graphManifest, "0.1.0-dev.2").dependencies, { "@generalbusiness/dap-contract": "0.1.0-dev.2", "@generalbusiness/dap-derive": "0.1.0-dev.2" });
   const client = PLAN.packages.find(spec => spec.dir === "client");
   const clientManifest = JSON.parse(readFileSync(new URL("packages/client/package.json", root), "utf8"));
-  assert.deepEqual(Object.keys(publishManifest(client, clientManifest, "0.1.0-dev.2").exports), [".", "./application"]);
+  assert.deepEqual(Object.keys(publishManifest(client, clientManifest, "0.1.0-dev.2").exports), [".", "./application", "./scope"]);
   assert.equal(publishManifest(client, clientManifest, "0.1.0-dev.2").dependencies["@generalbusiness/dap-platform"], "0.1.0-dev.2");
   assert.deepEqual(client.excludedSourceExports, { "./node": "./src/node.ts", "./install": "./src/install-request.ts" });
   assert.throws(() => publishManifest({ ...client, excludedSourceExports: {} }, clientManifest, "0.1.0-dev.2"), /source-export-exclusions/);

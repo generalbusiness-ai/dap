@@ -1,0 +1,87 @@
+{
+  "qualification": "Partial C3 focused evidence. The run checked six dirty source and test files, retained exactly under source/. It proves no complete C3 client, public interface, broader typecheck or gate. Actual Battery Power, powermode 0, no timeout.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-c3-focused-attempt1",
+  "checkpoint": {
+    "commit": "d34cbd1fba05408278f1dec45a8df307cc7f3f63",
+    "tree": "5712cccd45d5cf9287946e73e6569e2a7127d975",
+    "qualification": "Dirty working source at this dependency merge. source.patch records tracked changes; source/ records all six checked files, including additions."
+  },
+  "fileCount": 15,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1307,
+      "sha256": "fbe011d71453438eee4439eed0b73b47f0aee5f45c490260969526335a09c09a"
+    },
+    {
+      "path": "compat.log",
+      "bytes": 361,
+      "sha256": "1c914288dc8cf28d3fae33bda34ef46fa301d99ae5b318cc4f816059909c8914"
+    },
+    {
+      "path": "head.txt",
+      "bytes": 41,
+      "sha256": "891d944db5f4116a23b4d0eb789ca530444f102ea12a53c9941943305abc83a9"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 1321,
+      "sha256": "b6b9b288d693dc1656536ac7c72d445aad2c6115786f4f6c35696f1452049602"
+    },
+    {
+      "path": "power-end.txt",
+      "bytes": 114,
+      "sha256": "29452ad9a92e5dc0bf77971408dc7540b14edb54e3fada4198d33f53350b0b0f"
+    },
+    {
+      "path": "power-start.txt",
+      "bytes": 826,
+      "sha256": "35694dc273e2b24b10c56aec74f7ea1fbd5a73709d4509fae7270739d8f461e8"
+    },
+    {
+      "path": "source/packages/client/src/custody.ts",
+      "bytes": 48044,
+      "sha256": "b94ebf67aac5f30b20a6d3591d35e9ce53fcfcc79723b431f7748f3e44e98215"
+    },
+    {
+      "path": "source/packages/client/src/request-schedule.ts",
+      "bytes": 2620,
+      "sha256": "e458a1f2ef5a9e5665056d7a43bbf7720caa6b615b08bcf8867ea313e3454627"
+    },
+    {
+      "path": "source/packages/client/src/request-status.ts",
+      "bytes": 3301,
+      "sha256": "bdb6e07cc7832acea740adce1970ba8936819b0063ca4bda3b30cc9f56634423"
+    },
+    {
+      "path": "source/packages/client/test/custody-signings.test.ts",
+      "bytes": 20083,
+      "sha256": "987f261bcdab306647e0b29838ccbc48da2745ff910d7740b021ee456bae0410"
+    },
+    {
+      "path": "source/packages/client/test/request-schedule.test.ts",
+      "bytes": 2548,
+      "sha256": "5cd86955e0d679022266d5082eaf1a582808b40126af28dbcf6b1397e2571645"
+    },
+    {
+      "path": "source/packages/client/test/request-status.test.ts",
+      "bytes": 5247,
+      "sha256": "982bc3a016a58019ed771413a2ca92e357f2b89b1295d4867197564450deccef"
+    },
+    {
+      "path": "source.patch",
+      "bytes": 10610,
+      "sha256": "faafe06c8aa4c54f682f6cd7a084a40c5ae611cc11cb6723e03eb59e5d52526c"
+    },
+    {
+      "path": "test.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "test.log",
+      "bytes": 271,
+      "sha256": "a9de410e12d1f87593ce56b9b9bd6854acf11c132fb5afa761a5b59a0a8c8e1b"
+    }
+  ]
+}
