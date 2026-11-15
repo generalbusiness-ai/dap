@@ -240,6 +240,31 @@ test("proxy errors expose only a maintained smoke operation and never arbitrary 
   for (const line of [...quoted.stdout.lines, ...quoted.stderr.lines]) assert.ok(Buffer.byteLength(line.text) <= BACKEND_TAIL_LINE_BYTES);
   assert.equal(JSON.stringify(quoted.stdout).includes(sentinel), false, "older stdout lines leave the fixed tail");
   assert.equal(JSON.stringify(quoted.stderr).includes(sentinel), true, "backend-only output quotes text without interpreting it");
+  // Both run secrets can cross chunks and exceed the raw byte limit together.
+  const sessionSecret = "TEST-session-secret-known-only-to-this-run-0123456789";
+  const operatorSecret = Buffer.from("0123456789abcdef0123456789abcdef");
+  const secrets = [sessionSecret, ...["base64url", "base64", "hex"].map(encoding => operatorSecret.toString(encoding))];
+  const prefix = "\u{1f642}".repeat(87) + "x".repeat(12);
+  const raw = Buffer.from(prefix + secrets.slice(0, 3).map(secret => ` value=${secret}`).join("") + `\nvalue=${secrets[3]}`);
+  const hidden = { stdout: backendTail(secrets), stderr: backendTail(secrets) };
+  const padding = raw.indexOf(Buffer.from(secrets[2])) + secrets[2].length - 1;
+  for (let from = 0; from < padding; from += 11) hidden.stdout.add(raw.subarray(from, Math.min(padding, from + 11)));
+  const preview = backendOutputFor("celldbackend", hidden);
+  for (const secret of secrets) assert.equal(JSON.stringify(preview).includes(secret), false, "a snapshot must hide complete known values without consuming their carry");
+  hidden.stdout.add(raw.subarray(padding));
+  hidden.stderr.add(raw); hidden.stderr.end();
+  const safe = backendOutputFor("celldbackend", hidden);
+  assert.equal(safe.stdout.lines[0].text.includes("[run secret redacted]"), true, "known run secrets must be replaced in the backend tail");
+  for (const secret of secrets) assert.equal(JSON.stringify(safe).includes(secret), false, "neither run secret nor a held encoding may reach the printed tail");
+  assert.ok(raw.indexOf(10) > BACKEND_TAIL_LINE_BYTES);
+  assert.equal(safe.stdout.lines[0].truncated, false, "replacement precedes the byte limit");
+  assert.equal(safe.stdout.lines.map(line => line.text).join("\n").match(/\[run secret redacted\]/g)?.length, secrets.length);
+  assert.equal(safe.stdout.lines[0].text, prefix + " value=[run secret redacted]".repeat(3));
+  assert.deepEqual(safe.stdout.lines, safe.stderr.lines, "replacement and UTF-8 limits do not depend on chunk boundaries");
+  assert.equal(safe.stdout.complete, false);
+  assert.equal(safe.stderr.complete, true);
+  hidden.stdout.end();
+  assert.equal(backendOutputFor("celldbackend", hidden).stdout.complete, true);
   assert.equal(backendOutputFor("proxy", output), null);
   for (const owner of ["clientadapter", "proxy", sentinel, null, undefined]) {
     assert.equal(backendOutputFor(owner, { get stdout() { throw Error(sentinel); }, get stderr() { throw Error(sentinel); } }), null);
