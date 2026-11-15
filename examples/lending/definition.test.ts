@@ -8,6 +8,7 @@ import { created, grantOf, keys, t, valid, type Ledger } from "@generalbusiness/
 import { lending, lendingClosure } from "./definition.ts";
 import { LENDING_DEFINITION } from "./pin.ts";
 import { destination, donation, make, over, submit } from "./test-support.ts";
+import { annotatedRefusal } from "./browser/annotations.ts";
 const room = (s: Ledger) => ({ grants: [keys.rita, keys.una, keys.vic].map((who) => ({ grant: grantOf(who, s.at, who === keys.rita ? ["lending.member", "lending.staff"] : ["lending.member"]), current: true })) });
 const wrote = (j: Awaited<ReturnType<typeof submit>>) => expect(j.result, JSON.stringify(j)).toBe("write");
 const donate = async (s: Ledger, who: typeof keys.rita, name: string, description = "Copper.") => { wrote(await submit(s, who, "donate", donation(s, name, description), room(s))); return s.last.seq; };
@@ -129,7 +130,10 @@ test("two live holds per member: holder or staff release frees a slot without ch
  wrote(await submit(s, keys.una, "reserve", reserve(tool, "2026-11-15"), room(s)));
  const second = s.last.seq, count = s.entries.length;
  expect(s.item(first).parties["holder"]).toEqual(keys.una.member);
- expect(await submit(s, keys.una, "reserve", reserve(tool, "2026-11-16"), room(s))).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.1" });
+ const third = await submit(s, keys.una, "reserve", reserve(tool, "2026-11-16"), room(s));
+ expect(third).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.1" });
+ if (third.result !== "refused") expect.fail("Expected the third reservation to be refused.");
+ expect(annotatedRefusal("reserve", third.reason)).toBe("You can hold at most two reservations at once. The tool must also be free for that day. (guard-failed)");
  const release = (id: number) => ({ on: id, expected: { on: s.item(id).revision }, fields: {} });
  expect(await submit(s, keys.vic, "release", release(first), room(s))).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.1" });
  expect(s.entries).toHaveLength(count);

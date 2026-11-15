@@ -4,21 +4,30 @@ import { lending } from "../definition.ts";
 
 const common = {
   unauthorized: "Your seat in this room does not allow that.",
-  "guard-failed": "That thing cannot be cancelled now.",
+  "guard-failed": "The library cannot accept that action in the current state.",
   "revision-moved": "Someone changed that thing first. Look again, then decide.",
   "type-full": `The library is full: it holds ${lending.items.thing.max} things. Staff can cancel one to make room.`,
   final: "That thing is gone.",
-  "bad-field": "The library did not accept that text.",
+  "bad-field": "The library did not accept those fields.",
 };
 
 /** Reason keys stay open until DX-B1 supplies typed native refusal names. */
 export const refusalAnnotations = {
-  donate: common,
+  donate: {
+    ...common,
+    "guard-failed": "That shelf page is invalid or already used.",
+    "revision-moved": "Someone changed the library first. Look again, then decide.",
+  },
   borrow: { ...common, "guard-failed": "That thing is already lent." },
   return: { ...common, "guard-failed": "That thing is not lent." },
-  cancel: { ...common, unauthorized: "Only staff can cancel a thing." },
-  publish: common,
-  reserve: { ...common, "tool-day-taken": "Someone reserved that tool for that day." },
+  cancel: { ...common, unauthorized: "Only staff can cancel a thing.", "guard-failed": "That thing cannot be cancelled now." },
+  publish: { ...common, "revision-moved": "Someone changed the library or that thing first. Look again, then decide." },
+  reserve: {
+    ...common,
+    "guard-failed": "You can hold at most two reservations at once. The tool must also be free for that day.",
+    "tool-day-taken": "Someone reserved that tool for that day.",
+    "type-full": `The library already has ${lending.items.reservation.max} held reservations. Wait for one to end.`,
+  },
   release: {
     ...common,
     "guard-failed": "Only its holder can release a held reservation.",
