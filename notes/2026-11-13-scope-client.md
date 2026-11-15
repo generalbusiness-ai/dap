@@ -601,10 +601,12 @@ The client exports the function that computes it.
 type Judged =
   | { is: "recorded"; fact: FactRef }
   | { is: "write"; effects: readonly Effect[] }
-  | { is: "refused-here"; reason: RefusalReason; class: RefusalClass }
-  | { is: "never"; reason: RefusalReason }
+  | { is: "refused-here"; reason: RefusalReason; name?: string; class: Exclude<RefusalClass, "never"> }
+  | { is: "never"; reason: RefusalReason; name?: string }
   | { is: "not-judged" }
 ```
+
+`name` holds the guard's name from the judge's `refused` answer, when present.
 
 The function calls `judgeAct` of `packages/derive` and reads the class
 from RC-1's table. It lives in `packages/client`. It adds nothing to
@@ -636,6 +638,14 @@ The client is a new entry of `packages/client`,
 entry does not import it, so a page that uses only the root entry keeps
 its size. `packages/derive` has no Node import. The first build step
 that adds the import measures the entry's bundle and states the bytes.
+
+C2 measured them. Minified, the `scope` entry is 360,833 bytes, and
+123,212 bytes with gzip. `packages/derive` is 294,706 bytes of it. The
+root entry already holds `packages/derive` through
+`@generalbusiness/dap-platform`, and is 1,082,096 bytes. A replica of
+20,000 entries held 92,738,360 bytes of heap in Node and 65,073,016
+bytes in headless Chrome
+([the C2 note](implementation/2026-11-13-c2-scope-replica.md)).
 
 An adapter for a UI framework holds four things: a Model field for the
 `ClientView`, one Message that carries a new view, one Subscription to

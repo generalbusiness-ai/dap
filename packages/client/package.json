@@ -9,7 +9,8 @@
     ".": "./src/index.ts",
     "./application": "./src/application.ts",
     "./node": "./src/node.ts",
-    "./install": "./src/install-request.ts"
+    "./install": "./src/install-request.ts",
+    "./scope": "./src/scope.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json && tsc -p tsconfig.test.json",
@@ -18,6 +19,7 @@
   "dependencies": {
     "@generalbusiness/dap-bytes": "0.1.0-dev.1",
     "@generalbusiness/dap-contract": "0.1.0-dev.1",
+    "@generalbusiness/dap-derive": "0.1.0-dev.1",
     "@generalbusiness/dap-platform": "0.1.0-dev.1"
   },
   "devDependencies": {

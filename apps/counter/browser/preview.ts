@@ -4,12 +4,12 @@ import "../../../brand/fonts.css";
 import type { Entry, Item, MemberRef, Receipt, ScopeKind, ScopeRef, SignedIntent, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, intentDigest, keyIdOfSecret, textDigest } from "@generalbusiness/dap-bytes";
 import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
-import { secretSigner, type Fetch, type HeadStreamFetch } from "@generalbusiness/dap-client";
+import { memoryStore, secretSigner, type Fetch, type HeadStreamFetch } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION as COUNTING_DEFINITION } from "../commitments-pin.ts";
 import { nativeGateway } from "./client.ts";
 import { scriptedCounterProjection } from "./projection-fixture.ts";
 import { mountCountingStage } from "./app.ts";
-import { privateCommandStore, privatePendingStore } from "./storage.ts";
+import { privatePendingStore } from "./storage.ts";
 import type { ActorIdentity, CustodyLock, SpeechPort } from "./voice-controller.ts";
 const NOW=Date.now(),DEPLOYMENT="fake-u1",ORIGIN="https://counting-fake.test";
 // Each fake scope is a scripted sequence: a real genesis that admitSequenceGenesis admits, so its reference holds that genesis hash.
@@ -57,7 +57,8 @@ const speech:SpeechPort={voices:()=>[{id:"fake-1",name:"Fake voice 1 · en-US"},
 const identity:ActorIdentity={origin:ORIGIN,deployment:DEPLOYMENT,scope:S,definition:COUNTING_DEFINITION,membership:M,member:members[0]!,publicKey:keyIdOfSecret(keys[0]!)};
 // SCRIPTED preview lock; no mounted real credential or durable lease claim.
 const previewLock:CustodyLock={run:async work=>work()};
-const store=privatePendingStore(identity),lock=previewLock,commands=privateCommandStore(identity),gateway=nativeGateway(identity,secretSigner(keys[0]!),{application:{scope:S,directory:sequenceOf("directory","directory").at,item:7,definition:COUNTING_DEFINITION},current:()=>active,lock,voiceStore:store,commandStore:commands,fetch:fakeFetch,headFetch:fakeHeads,actFetch:async(url,init)=>{const response=await fakeFetch(url,{...init,signal:init.signal as never});return{status:response.status,body:response.body,headers:new Headers({"content-type":"application/json"}),url,redirected:false};}});
+// SCRIPTED custody in memory: the preview keeps no request across a reload.
+const custody=memoryStore(),store=privatePendingStore(identity,custody),lock=previewLock,gateway=nativeGateway(identity,secretSigner(keys[0]!),{application:{scope:S,directory:sequenceOf("directory","directory").at,item:7,definition:COUNTING_DEFINITION},current:()=>active,lock,voiceStore:store,custody,fetch:fakeFetch,headFetch:fakeHeads,actFetch:async(url,init)=>{const response=await fakeFetch(url,{...init,signal:init.signal as never});return{status:response.status,body:response.body,headers:new Headers({"content-type":"application/json"}),url,redirected:false};}});
 const app=mountCountingStage(document.querySelector<HTMLElement>("#counting")!,{speech,connect:()=>{},fake:true,now:()=>NOW});
 // The Vite preview reads source assets; installed packets carry their own brand/ files.
 const lightMark=document.querySelector<HTMLImageElement>(".wordmark-light"),darkMark=document.querySelector<HTMLImageElement>(".wordmark-dark");

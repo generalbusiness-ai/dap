@@ -148,9 +148,11 @@ export function mountCountingStage(root:HTMLElement,options:CountingStageOptions
   render();
   return{
     async attach(next:MountedDevice){disconnect();const at=epoch;device=next;connection="Connecting";
+      // A slot of the retired format goes before the controller reads custody; the person is told that its room retired.
+      const retired=await next.gateway.retired?.().catch(()=>null)??null;if(at!==epoch||!next.current())return;
       voice=createVoiceController({identity:next.identity,speech:next.speech,reporter:next.gateway,store:next.store,lock:next.lock,current:()=>at===epoch&&next.current(),...(options.now?{now:options.now}:{})});
       unsubscribe=voice.subscribe(state=>{if(at!==epoch||!next.current())return;voiceState=state;reconcileRunner();render();wake();claim();});
-      await voice.ready;if(at!==epoch||!next.current())return;await next.gateway.restoreCommand();if(at!==epoch||!next.current())return;if(next.gateway.pendingCommand()){command="Command unknown. Check its original request.";commandOutcome="unknown";}
+      await voice.ready;if(at!==epoch||!next.current())return;await next.gateway.restoreCommand();if(at!==epoch||!next.current())return;if(next.gateway.pendingCommand()){command="Command unknown. Check its original request.";commandOutcome="unknown";}else if(retired)command=retired;
       observation=next.gateway.observe((state:ObservationState<CountingRead>,given?:CountingView)=>{
         if(at!==epoch||!next.current())return;
         fresh=state.status==="current";
