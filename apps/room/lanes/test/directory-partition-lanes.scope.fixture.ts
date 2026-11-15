@@ -1,3 +1,4 @@
+import { scaleDeadline } from "../../../../packages/scope/test/support/archive-scale-deadline.ts";
 import { net as sourceNet } from "../../../../packages/scope/src/testing.ts";
 import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
@@ -390,6 +391,6 @@ test("native raw proof residency stays at thirty-two dense frames with one physi
   } finally { delete diagnostic.__ARTROOM_PARTITION_MEMORY__; life.release(); }
   // Three times the measured run: 53,811 ms in cutover gate attempt 10.
   // Dispatch of the 33 dense births takes most of that time.
-}, 162_000);
+}, scaleDeadline(162_000));
 
 }

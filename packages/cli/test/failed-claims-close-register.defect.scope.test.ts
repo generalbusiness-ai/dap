@@ -36,7 +36,8 @@ import { beginSessionFixture } from "../../scope/test/session-settings.ts";
 import { reader as inspector } from "../../scope/test/support.ts";
 import { soon } from "../../scope/test/net.ts";
 import { checkClaim, command, memoryStore, type Context } from "../src/index.ts";
-import { McpService, memoryStore as mcpCustody, type McpConfig } from "../../mcp/src/index.ts";
+import { memoryStore as mcpCustody } from "@generalbusiness/dap-client";
+import { McpService, type McpConfig } from "../../mcp/src/index.ts";
 
 const { paul } = keys;
 const SERVICE = "https://dap-demo.inguz.workers.dev";

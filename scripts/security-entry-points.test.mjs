@@ -333,7 +333,7 @@ const seals = {
   "packages/mcp/src/oauth-resource.ts": "895d3a1b241e5fe0d5228febff46fe6c921899110fef99056dd1b53199d341ae", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/oauth-access.ts": "96679465b97286aa2babe6e3b670bf51b202427300cea836e9be9da744884b78", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/oauth-http.ts": "6a2668b96a105b077cd07528897b0ed6f6d7aec8cec619a26a535bcb5adb6707", // O1 resource discovery and grant transport boundary.
-  "packages/mcp/src/index.ts": "4b7c10621b87ff3d8ca88e046e9d8e15fd52affd8e0479460c24c39ccf434b8a", // O1 resource discovery and grant transport boundary; NF-4 reader aliases from the client.
+  "packages/mcp/src/index.ts": "95ab1f1ddd97466f7de1322a5cb1fbbef4172dd4b281bc7ce9b1a58e8e5e3f36", // O1 resource discovery and grant transport boundary; NF-4 reader aliases from the client.
   "packages/mcp/src/hosted.ts": "3b1805bd2091a83a66e2d3d0a5d90d9ceaa93469ca805f88530613014e26e179",
   "packages/mcp/src/hosted-retirement.ts": "ca631baf28f180b8d64e988ab7c5e5583ce0c96e0b374be1acee7c8723ef2a8d", // R15 caller-envelope and verified enrollment target owner.
   "packages/mcp/src/views/remote-origins.ts": "81c7e7a044690df7c00a30691ddc5e0da11531fabad2a9143d2d389ff8c0a1b1", // Exact remote presentation URL policy; no authority selection.

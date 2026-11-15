@@ -4,7 +4,8 @@
  * only the service's public calls, so the same module runs against any MCP revision with that call surface.
  */
 import { TransportError } from "@generalbusiness/dap-client";
-import { McpService, memoryStore } from "../../src/index.ts";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { McpService } from "../../src/index.ts";
 import type { ServerPort as McpServerPort } from "../../src/service.ts";
 import { fixedSigner } from "../fixtures.ts";
 import { installRoom, type InstallRoom } from "./install-room.ts";

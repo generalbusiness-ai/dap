@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
-import { McpService, memoryStore } from "../src/index.ts";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { McpService } from "../src/index.ts";
 import { McpHttp, SESSION_IDLE_MS, LIFETIME_RECHECK_MS, type HttpPort, type SessionRow } from "../src/http.ts";
 import { LEGACY, MODERN, PROTOCOL_META, CAPABILITIES_META, Wire } from "../src/wire.ts";
 import { SERVICE, StandIn } from "./support/standin.ts";

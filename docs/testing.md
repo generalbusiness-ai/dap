@@ -85,27 +85,33 @@ Enable the tracked commit hooks once for this repository:
 git config core.hooksPath .githooks
 ```
 
-This setting is shared by its worktrees. The pre-commit hook runs
+This setting is shared by its worktrees. Each worktree runs its checked-out
+hook scripts. The pre-commit hook reads the staged paths before it requires
+local check tools. When the formatter selects a staged file, the hook runs
 `node scripts/format-json.mjs`. When formatting fails, it refuses the commit
 and prints `node scripts/format-json.mjs --write`. Run that command, review
 the repair, and stage it before committing. The hook never formats files
 for you. It also refuses unstaged differences in the formatter's selected
 JSON files, so the checked bytes match the staged bytes. It leaves partial
-staging intact and asks you to stage the formatted file. The commit-msg hook
-reads the actual UTF-8 message and reuses the
-subject and body rules in `scripts/check-commit-messages.mjs`.
+staging intact and asks you to stage the formatted file.
 
-After formatting passes, the pre-commit hook runs
-`node scripts/check-shared-helpers.mjs`. It refuses a local implementation
-of a helper that `packages/bytes` exports. Import the existing helper, or
-give a different meaning a different name. The hook leaves the source and
-index unchanged. The slower citations check stays in the gate.
+When a staged path belongs to the shared-helper scan, the pre-commit hook
+also runs `node scripts/check-shared-helpers.mjs`. It refuses a local
+implementation of a helper that `packages/bytes` exports. Import the
+existing helper, or give a different meaning a different name. The hook
+leaves the source and index unchanged. The slower citations check stays
+in the gate.
 
-The pre-commit hook fails closed when the checkout has no local Prettier,
-including a notes-only worktree. Set up its committed dependencies with
-`npm ci` before committing; do not install a separate formatter or borrow
-an unmatched dependency view. Formatting, shared helpers, and commit-message
-checks still run in the gate.
+A Markdown-only commit needs neither Prettier nor the shared-helper parser.
+A selected JSON file still needs local Prettier, and selected helper source
+still needs the checker's committed dependencies. Missing tools refuse the
+required check. Set up the committed dependency view; do not install a
+separate formatter or borrow an unmatched dependency view.
+
+The unchanged commit-msg hook always reads the actual UTF-8 message and
+reuses the subject and body rules in `scripts/check-commit-messages.mjs`.
+It needs Node and that tracked module, but no `node_modules`. Formatting,
+shared helpers, and commit-message checks still run in the gate.
 
 Run the tests of what you changed while you work, not the repository.
 
@@ -256,6 +262,13 @@ directory, or END.
 A head that changes a source of the page build also runs the whole
 `apps/room/page/test/assets.test.ts` owner before gate START. State its
 exit code and wall time. Report a wall time above 60 seconds to the planner.
+
+A head that changes an example application's definition or scenario runs the
+whole `packages/cli/test/application-examples.test.ts` owner before gate START.
+
+A head that changes any file under `packages/*/src` runs the whole
+`scripts/security-entry-points.test.mjs` owner before gate START and states
+its result.
 
 File START with the clean head, tree, and current main. Keep the gate's
 output in one log in a new directory under `~/play/artroom-evidence/`.

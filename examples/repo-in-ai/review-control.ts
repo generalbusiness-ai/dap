@@ -5,7 +5,8 @@ import { canonicalize, intentDigest, isLocalId, isScopeRef, same, timeOf, utf8, 
 import { expectedOf, httpTransport, signedIntent, TransportError } from "@generalbusiness/dap-client";
 import type { Answer, FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { Custody, Lost, TERMINAL, declarationDigest, identityId, meaningOf, projectAnswer, type BindingRecord, type CustodyRecord, type Identity } from "@generalbusiness/dap-mcp";
+import { Custody, Lost, TERMINAL, identityId, meaningOf, type BindingRecord, type CustodyRecord, type Identity } from "@generalbusiness/dap-client";
+import { declarationDigest, projectAnswer } from "@generalbusiness/dap-mcp";
 import { changeJ4 } from "../../apps/room/lanes/src/j4.ts";
 import { J4_DIGESTS } from "../../apps/room/lanes/src/digests-j4.ts";
 import { storedSigner } from "../../packages/cli/src/store-signer.ts";

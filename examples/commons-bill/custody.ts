@@ -2,8 +2,8 @@
 import { closeSync, constants, fstatSync, fsyncSync, lstatSync, openSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { canonicalize } from "@generalbusiness/dap-bytes";
-import { fileStore } from "@generalbusiness/dap-mcp/node";
-import type { CustodyStore } from "@generalbusiness/dap-mcp";
+import { fileStore } from "@generalbusiness/dap-client/node";
+import type { CustodyStore } from "@generalbusiness/dap-client";
 
 export function noLinks(path: string): void {
   if (resolve(path) !== path) throw Error("W1 path must be absolute and canonical.");

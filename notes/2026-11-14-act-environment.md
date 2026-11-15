@@ -2,9 +2,13 @@
 
 Status: current. Hugh asked for this note on 14 November 2026, decided
 each item of section 17 and ratified the note on that day. It landed as
-main `270dc8c7` for request `98f450a1`. Nothing here is built. Section
-13 lists the build steps and their requests. Section 18 lists the
-rulings of step E1 that changed sections 3, 5 and 8.
+main `270dc8c7` for request `98f450a1`. Steps E1 and R are built. E1
+landed as main `d1585bda` on 15 November 2026. The runtime and the
+replay judge through the shared body, and no production module calls
+Explore yet. R landed as main `c6711b53` on the same day, and Lending
+0.3.0 holds the reservation definition. No other step is built.
+Section 13 lists the build steps and their requests. Section 18 lists
+the rulings of step E1 that changed sections 3, 5 and 8.
 
 A dap application has more than one interface. A member acts through a
 page, an agent acts through MCP tools, and an operator acts through the
@@ -306,7 +310,7 @@ key gets the names that it explored.
 
 ### 5.4 Explore invents no input
 
-Explore answers `unavailable`, with what it lacks, in four cases:
+Explore answers `unavailable`, with what it lacks, in five cases:
 
 - No grant is at hand. The judge answers `authority-unavailable`
   today, and Explore passes that answer on.
@@ -319,6 +323,8 @@ Explore answers `unavailable`, with what it lacks, in four cases:
   `create-room` of the Grow site.
 - A hold workspace would write a derived record or an operation. Its
   identifier comes from the entry.
+- A reached comparison or operation needs the number of a pending
+  output. The entry gives that number, so the answer lacks `entry`.
 
 Three inputs come only from the commit, and Explore handles each in a
 stated way:
@@ -341,6 +347,21 @@ entry that opens it. Those positions take the same name,
 `{ entry: Source }`. The hypothetical view gives the exact count of
 records and the exact reservations after the act. So `set-fan`,
 `set-heater`, `set-vent` and `authorize` of the Grow room are judged.
+
+A pending output has no number in an exploration. Three identity
+comparisons between typed references stay determinate:
+
+- The same source equals itself.
+- Two different sources differ.
+- A pending output differs from each recorded item of the view.
+
+Every other use of the number is `unavailable`: a comparison with a
+constant or with a value that is not a typed reference, an order,
+arithmetic, a text form, a hash and a record key. A reference to a
+pending output is not `unavailable` by itself. Only a reached
+operation answers. A finer rule is possible. A constant that equals
+the ID of a recorded item could be judged as different, but that
+judgment needs the allocation rule in Explore.
 
 The rule of the third row is coarse by choice. A later act that only
 copies the slot could be judged, but that finer rule needs a record of
@@ -972,7 +993,7 @@ Hugh ratified the note on 14 November 2026, after its review.
 
 ## 18. Rulings of step E1
 
-The build of step E1 found five points that this note did not settle.
+The build of step E1 found six points that this note did not settle.
 The planner ruled on each on 14 November 2026, and the sections above
 hold the results.
 
@@ -983,6 +1004,7 @@ hold the results.
 | `04218678` | A command record of `device-command` takes the name `{ entry }` | 5.4 |
 | `18a41f8f` | A hold workspace that writes a derived record or an operation is `unavailable` | 5.4 |
 | `99506fe3` | Explore does not predict the capacity check of the turn | 5.1 |
+| `1bdf9467` | A pending output has no number. Three identity comparisons stay determinate | 5.4 |
 
 The requests of the build steps: E1 `d35ebede`, E2 `a102d847`, E3
 `17e075b3`, E4 `afe0a437`, E5 `b1c6aad6`, E6 `edc09d8b`, R `5b5b6896`

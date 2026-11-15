@@ -8,7 +8,10 @@
  * - `settle-hang`: settle `key`, whose reading never answers; prints `reading` and waits to be killed.
  * - `resubmit`: resubmit the refused record under `key`, whose reply is lost; prints `admitted` or why it was held back.
  * - `lease`: take the lock file at `path`; prints `entered` and holds it for 300 ms, or `refused`.
+ * - `hold-capacity`: enter the real capacity lease, print `capacity-held <pid>`, and wait for `release` on stdin.
  */
+import { once } from "node:events";
+import { createInterface } from "node:readline";
 import { timeOf } from "@generalbusiness/dap-bytes";
 import { Custody, CustodyError, Lost, meaningOf } from "../../src/index.ts";
 import { fileStore, releaseLock, takeLock } from "../../src/node.ts";
@@ -43,4 +46,14 @@ else if (asked.op === "resubmit") {
     releaseLock(held);
     console.log(`entered ${entered} ${leaving}`);
   }
+} else if (asked.op === "hold-capacity") {
+  const lines = createInterface({ input: process.stdin, crlfDelay: Infinity });
+  try {
+    await store.exclusive(async () => {
+      console.log(`capacity-held ${process.pid}`);
+      const [line] = await once(lines, "line");
+      if (line !== "release") throw new Error("the capacity holder received no release command");
+    });
+    console.log("capacity-released");
+  } finally { lines.close(); }
 }

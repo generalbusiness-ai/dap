@@ -23,7 +23,7 @@
     // The planner creates this private content bucket before deployment.
     // Screen hosts and install contexts follow under separate requests.
     "APPLICATION_SCREEN_HOSTS": "[]",
-    "APPLICATION_TRUST": "[{\"release\":\"sha256:93819e267db04a8615dc63c202e39622fbca47cb2ca4aee58d221fd9cb679824\",\"publisher\":\"key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI\",\"host\":\"github.com\"},{\"release\":\"sha256:f681c1b5615139d76ee8612a1d253b6d314f200cb8dd0686c18cd6bf399aef0c\",\"publisher\":\"key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI\",\"host\":\"github.com\"}]",
+    "APPLICATION_TRUST": "[{\"release\":\"sha256:51f8afe2fd6728c121dfe18597808d529f642722634987144712bfedecfbb204\",\"publisher\":\"key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI\",\"host\":\"github.com\"},{\"release\":\"sha256:0b3e5038f96e69cfb7942c9d7fc3dbbb67d49a71ba737aaec9fcc129a1e619ed\",\"publisher\":\"key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI\",\"host\":\"github.com\"}]",
     "SERVING_CREATION_KEY_PER_HOUR": "10",
     "SERVING_CREATION_ADDRESS_PER_HOUR": "30",
     "SERVING_READ_KEY_PER_MINUTE": "240",

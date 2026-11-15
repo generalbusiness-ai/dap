@@ -24,7 +24,8 @@ import { beginSessionFixture } from "../../../scope/test/session-settings.ts";
 import { reader } from "../../../scope/test/support.ts";
 import { driveFixture, nativeFixtureLifetime } from "../../../scope/test/support/native-fixture-lifetime.ts";
 import { Host } from "../../../../apps/room/lanes/test/support/graph.ts";
-import { McpService, memoryStore, type CallResult, type McpConfig, type Mode, type Root, type ViewSource } from "../../src/index.ts";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { McpService, type CallResult, type McpConfig, type Mode, type Root, type ViewSource } from "../../src/index.ts";
 import type { McpMetricOptions } from "../../src/metrics.ts";
 
 export const SERVICE = "https://scopes.test";

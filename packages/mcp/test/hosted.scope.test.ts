@@ -14,7 +14,8 @@ import { DEMO_DIGESTS, QUESTION_DIGESTS, changeDemo, issueDemo, issueQuestions }
 import { counting } from "../../../apps/counter/definition.ts";
 import { COUNTING_DEFINITION } from "../../../apps/counter/pin.ts";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
-import { McpService, memoryStore, OAuthClients, OAuthError } from "../src/index.ts";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { McpService, OAuthClients, OAuthError } from "../src/index.ts";
 import { MCP_REQUEST_WINDOW_CALLS, MCP_REQUEST_WINDOW_IDENTITIES, MCP_REQUEST_WINDOW_MS } from "../src/request-window.ts";
 import worker from "../../../apps/room/worker.ts";
 import { creationTest, hostedRegistries, hostedTest, platformNet, type PlatformMcpAgent, type PlatformScope } from "../../scope/test/worker.ts";
