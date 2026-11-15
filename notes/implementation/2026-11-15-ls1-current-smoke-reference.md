@@ -54,9 +54,24 @@ Metadata-only inspection on 15 November found `CELLD_BIN` unset and no
 request, installer, or project import ran during this source work.
 This search does not claim that no celld binary exists elsewhere.
 
+Lifecycle amendment `3f739d53d5f1aebf98bfd37c2afd5f6c66f37c06`, answering
+`6edeb797`, closes LS-1 at normal joint landing with CB-1. One verdict names
+both promises, and the landing receipt closes them. No real local Worker
+run stands behind this head. The Node owner and combined gate remain UNRUN
+and owed before review.
+
+After publication, the planner checks the actual main branch's **Local
+Worker smoke** workflow and cites its result in the origin act. A red run
+opens a new repair request with the inner error. It reopens neither promise.
+Before the eventual gate START, the builder owes a one-line answer stating
+whether any CB-1 obligation blocks landing after a passing gate and review.
+If one does, the answer must name it for the planner's disposition. This
+note makes no blocking decision. The joint head takes no gate position
+before R, E1, and NF-6.
+
 | Boundary | Current result | Remaining obligation |
 | --- | --- | --- |
 | Existing Node owner and its two new cases | UNRUN | Run with the combined CB-1 and LS-1 gate. |
 | Shared-codec loader and current combined source | UNRUN | Required preflight and gate at the reviewed head. No AST expectation refresh occurred. |
-| Actual local Worker and TLS proxy | UNRUN; no binary at the inspected paths | If no reviewed binary becomes available, the post-publication Local Worker smoke workflow on main supplies this witness. LS-1 stays open until that workflow passes. |
+| Actual local Worker and TLS proxy | UNRUN; no binary at the inspected paths; no real local Worker witness | LS-1 closes at joint landing. The planner checks the post-publication workflow on actual main; red opens a new repair request. |
 | CB-1 fleet and Security scope | Prior results retain their original heads | Fleet machine, public Counter release, Security review, and CB-2 remain separately owed. No operator or privileged step ran. |

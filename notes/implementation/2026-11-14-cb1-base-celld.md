@@ -58,6 +58,18 @@ Security review, public Counter, actual machine, or CB-2 obligations.
 All results above and below retain their dated source boundaries.
 The merged CB-1 and LS-1 runtime checks and gate remain UNRUN.
 
+Lifecycle amendment `3f739d53d5f1aebf98bfd37c2afd5f6c66f37c06` closes
+LS-1 at normal joint landing with CB-1: one verdict names both promises,
+and the receipt closes them. No real local Worker run stands behind this
+head. The LS-1 note records only the bounded binary search. After publication,
+the planner checks the actual main branch's **Local Worker smoke** workflow;
+a red run opens a new repair request and reopens neither promise.
+Before gate START, the builder owes a one-line answer naming any CB-1
+obligation that blocks landing after a passing gate and review, or stating
+that none does. That answer and the planner's disposition remain owed.
+CB-1's fleet, Security conclusion, public Counter, and CB-2 obligations remain
+separate. This amendment changes none of the UNRUN validation above.
+
 ## Base-family source changes
 
 The normal celld smoke plan now uses the CLI's `base` default.
