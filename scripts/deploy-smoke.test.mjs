@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { smokeWorker, smokeSandbox, deploySmokeMain, BROWSER_USER_AGENT } from "./deploy-smoke.mjs";
 import { parseConfig, sandboxScreenOrigins, smokePolicy } from "./deploy-config.mjs";
 
@@ -153,4 +153,23 @@ test("sandbox smoke refuses an untracked host or an invalid room before fetch an
   assert.equal(calls, 0);
   const tracked = await readFile(new URL("../apps/sandbox/wrangler.rollout.jsonc", import.meta.url), "utf8");
   assert.deepEqual(sandboxScreenOrigins(parseConfig(tracked)), ["https://grow.inguz.space"]);
+});
+
+test("room screen descriptors and sandbox mappings agree in both directions on the matching Worker service", async () => {
+  const sandbox = parseConfig(await readFile(new URL("../apps/sandbox/wrangler.rollout.jsonc", import.meta.url), "utf8"));
+  const mapped = JSON.parse(sandbox.vars.SCREEN_HOSTS), expected = [];
+  const roomFiles = (await readdir(new URL("../apps/room/", import.meta.url)))
+    .filter(name => /^wrangler(?:\..+)?\.jsonc$/.test(name)).sort();
+  for (const file of roomFiles) {
+    const room = parseConfig(await readFile(new URL(`../apps/room/${file}`, import.meta.url), "utf8"));
+    const hosts = JSON.parse(room.vars.APPLICATION_SCREEN_HOSTS ?? "[]");
+    assert.ok(Array.isArray(hosts), file);
+    for (const host of hosts) {
+      const services = sandbox.services.filter(row => row.service === room.name && row.entrypoint === "ApplicationScreenService");
+      assert.equal(services.length, 1, `${file} must have one matching sandbox Worker service`);
+      expected.push({ host, service: services[0].binding });
+    }
+  }
+  const byHost = (a, b) => a.host.screenOrigin.localeCompare(b.host.screenOrigin) || a.service.localeCompare(b.service);
+  assert.deepEqual(mapped.sort(byHost), expected.sort(byHost), "room and sandbox screen descriptors must match, with no row on one side alone");
 });
