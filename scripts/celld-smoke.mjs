@@ -26,10 +26,39 @@ async function cli() {
   })();
 }
 
+// CLI output stays private. Only these maintained result forms select a public name.
+const installDetails = new Map([
+  ["plan-missing", (code, line) => code === 2 && line === "No install is planned here. Run: dap install --plan <base-url>."],
+  ["plan-mismatch", (code, line) => code === 1 && line.startsWith("Refused: plan-mismatch. ")],
+  ["plan-expired", (code, line) => code === 1 && line.startsWith("Refused: plan-expired. ")],
+  ["retired-cohort", (code, line) => code === 1 && line.startsWith("Refused: retired-cohort. ")],
+  ["unsupported-provenance", (code, line) => code === 1 && line.startsWith("Unsupported install provenance: ")],
+  ["custody-verification", (code, line) => code === 1 && (line === "Held: storage of the exact selected install plan failed. No request was sent by this run; keep the original request."
+    || line === "Held: storage of the exact selected install plan could not be verified. No request was sent by this run; keep the original request.")],
+  ["transport-untrusted", (code, line) => code === 1 && line.startsWith("Held: this injected transport has no configured-service acknowledgement trust. The plan is kept. ")],
+  ["transport-no-answer", (code, line) => code === 1 && line.startsWith("No answer: ")],
+  ["creation-unavailable", (code, line) => code === 1 && line.startsWith("Unavailable: ")],
+  ["creation-refused", (code, line) => code === 1 && /^Refused: [a-z][a-z0-9-]*\. The request was refused\.$/.test(line)],
+  ["acknowledgement-mismatch", (code, line) => code === 1 && (line === "Held: the retained install acknowledgement does not match the original plan. The plan is kept."
+    || line === "Held: the install acknowledgement does not match the planned register's exact identity. The plan is kept.")],
+  ["acknowledgement-conflict", (code, line) => code === 1 && line === "Held: the install acknowledgement conflicts with the retained accepted fact. The plan is kept."],
+  ["cli-usage", (code) => code === 2],
+  ["unclassified-outcome", () => true],
+]);
+const installDetail = outcome => {
+  if (outcome === null || typeof outcome !== "object" || ![1, 2, 3].includes(outcome.code)) return null;
+  const line = Array.isArray(outcome.lines) && typeof outcome.lines[0] === "string" ? outcome.lines[0] : "";
+  for (const [detail, matches] of installDetails) if (matches(outcome.code, line)) return detail;
+};
+
 export class CelldSmokeError extends Error {
-  constructor(stage) { super(`celld smoke failed: ${stage}; retain the private DAP_HOME for inspection`); this.stage = stage; }
+  constructor(stage, outcome) {
+    super(`celld smoke failed: ${stage}; retain the private DAP_HOME for inspection`);
+    this.stage = stage;
+    this.detail = stage === "install" ? installDetail(outcome) : null;
+  }
 }
-const fail = stage => { throw new CelldSmokeError(stage); };
+const fail = (stage, outcome) => { throw new CelldSmokeError(stage, outcome); };
 // Only these maintained operation names may cross the proxy's public error boundary.
 const operations = new Set([
   "phase", "base", "home", "local-address", "home-permissions", "request-origin",
@@ -41,6 +70,9 @@ const operations = new Set([
 export function celldSmokeOperation(error) {
   const operation = error instanceof CelldSmokeError ? error.stage : null;
   return operations.has(operation) ? operation : null;
+}
+export function celldSmokeDetail(error) {
+  return error instanceof CelldSmokeError && error.stage === "install" && installDetails.has(error.detail) ? error.detail : null;
 }
 const loopback = hostname => hostname === "[::1]" || /^127(?:\.(?:0|[1-9][0-9]{0,2})){3}$/.test(hostname);
 
@@ -85,7 +117,7 @@ export async function contextForCelldSmoke({ base, home, localAddress, fetch: fe
 
 const command = async (ctx, args, stage) => {
   const result = await (await cli()).command(ctx, args);
-  if (result.code !== 0) fail(stage); // Never echo arbitrary or secret-bearing CLI lines.
+  if (result.code !== 0) fail(stage, result); // Never echo arbitrary or secret-bearing CLI lines.
   return result;
 };
 const scope = value => typeof value === "string" && /^sc_[a-z2-7]{52}$/.test(value);
