@@ -551,6 +551,14 @@ Publisher: <key>
 Pass the printed release to `dap install <git+https-uri> --release`.
 Validation refusals print the same findings table as `dap check`.
 
+Lending and Counter record entry, definition, semantic and presentation
+IDs in `release-identifiers.json`. Signed versions keep those IDs fixed:
+the first identifier change after signing raises the next minor. An
+unsigned version stays open; later heads can update its IDs without
+another raise. Sign it when a request's conditions or an install needs
+the release, then raise the version on the next identifier change. Keep
+earlier signed packets and their installed presentations unchanged.
+
 ### `dap create`
 
 ```

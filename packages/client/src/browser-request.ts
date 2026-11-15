@@ -65,11 +65,13 @@ async function settledOf(custody: Custody, identity: Identity, record: CustodyRe
   if (record.phase === "accepted") return { status: "recorded" };
   if (record.phase !== "refused") return { status: "unknown" };
   const decided = await custody.decided(identityId(identity), record);
+  if (decided?.unsent) return { status: "unknown" };
   return { status: "refused", reason: decided?.answer?.answer === "refused" ? decided.answer.reason : "refused" };
 }
 
 const settledOfSent = (sent: Sent): RequestSettled => {
-  if ("lost" in sent || "archivedSettlement" in sent || "folded" in sent) return { status: "unknown" };
+  if ("folded" in sent && sent.record.phase === "accepted") return { status: "recorded" };
+  if ("lost" in sent || "archivedSettlement" in sent || "folded" in sent || "unsent" in sent) return { status: "unknown" };
   if (sent.answer.answer === "accepted") return { status: "recorded" };
   if (sent.answer.answer === "refused") return { status: "refused", reason: sent.answer.reason };
   return { status: "unknown" };

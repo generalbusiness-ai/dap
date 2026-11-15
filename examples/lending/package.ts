@@ -21,7 +21,7 @@ const presentation = {
 };
 
 export const lendingPackage = manifest({
-  name: "ai.generalbusiness.lending", version: "0.2.0", definition: { path, value: lending },
+  name: "ai.generalbusiness.lending", version: "0.3.0", definition: { path, value: lending },
   projections: { state, activity }, views: presentation,
   roles: lendingRoles.roles,
   scenarios: ["examples/lending/scenarios/application.json"],
