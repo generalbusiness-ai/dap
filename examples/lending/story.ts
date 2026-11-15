@@ -93,6 +93,6 @@ export const lendingStory = () => tell(lendingStorySpec, story => {
   story.act("staff", "release-by-staff", { on: 11, fields: {} }, accepted, { entries: [{ input: { type: "act", kind: "release-by-staff" }, effects: [{ effect: "state", item: 11, state: "released" }], sends: [] }] });
   story.act("neighbour", "reserve", { fields: { tool: 9, day: "2026-10-19", until: later } }, accepted, held(15, "2026-10-19", "neighbour", 9, later));
   story.assert(11, { state: "released", parties: { holder: member("member") } });
-  story.assert(9, { state: "available", revision: 9 });
+  story.assert(9, { state: "available", revision: 1 });
 
 });
