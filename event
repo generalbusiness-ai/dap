@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b5dbd3d9258868c348e6b019bf634e8d2116b3ac","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-11-nf3-client-custody.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b73d45accb45fa6cfb3034ac92c59069c73f2d5d","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/errors.test.ts."}
