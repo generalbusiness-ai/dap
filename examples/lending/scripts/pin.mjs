@@ -1,34 +1,21 @@
-// Byte authoring only. This does not validate a declaration or run its rules.
-// The literal TypeScript value is JSON; no TS/compiler/config import is needed.
-import { readFileSync, writeFileSync } from "node:fs";
-import { createHash } from "node:crypto";
+// Run from the repository root: node --import tsx examples/lending/scripts/pin.mjs
+// The story uses public TEST actors, not a release or operator signer.
+import { writeFileSync } from "node:fs";
 import { format } from "prettier";
+import { canonicalize } from "@generalbusiness/dap-bytes";
+import { compile } from "@generalbusiness/dap-define";
+import { lendingSource } from "../definition.ts";
+import { lendingStory } from "../story.ts";
+
 const root = new URL("../", import.meta.url);
-const source = readFileSync(new URL("definition.ts", root), "utf8");
-const prefix = "export const lending: DeclaredDefinition = ";
-const end = ";\n\n/** No create sends:";
-const start = source.indexOf(prefix);
-const finish = source.indexOf(end, start);
-if (start < 0 || finish < 0) throw new Error("Expected the lending JSON literal");
-const value = JSON.parse(source.slice(start + prefix.length, finish));
-function canonical(value, depth = 0) {
-  if (value === null || typeof value === "boolean") return JSON.stringify(value);
-  if (typeof value === "number") {
-    if (!Number.isSafeInteger(value) || Object.is(value, -0)) throw new Error("Expected safe integer");
-    return String(value);
-  }
-  // This authoring tool deliberately supports only the declaration's ASCII text.
-  if (typeof value === "string") {
-    if (/[^\x00-\x7f]/.test(value)) throw new Error("Non-ASCII source needs the shared canonical implementation");
-    return JSON.stringify(value);
-  }
-  if (depth >= 64) throw new Error("Nesting exceeds the canonical profile");
-  if (Array.isArray(value)) return `[${value.map(v => canonical(v, depth + 1)).join(",")}]`;
-  if (typeof value !== "object" || Object.getPrototypeOf(value) !== Object.prototype) throw new Error("Expected a plain JSON object");
-  return `{${Object.keys(value).sort().map(k => `${canonical(k)}:${canonical(value[k], depth + 1)}`).join(",")}}`;
-}
-const bytes = canonical(value);
-const pin = `sha256:${createHash("sha256").update("artroom-definition-1\n").update(bytes, "utf8").digest("hex")}`;
-writeFileSync(new URL("definition.json", root), await format(bytes, { parser: "json" }));
-writeFileSync(new URL("pin.ts", root), `/** Canonical-byte digest of definition.ts; definition.test.ts checks it against the shared implementation. */\nexport const LENDING_DEFINITION = "${pin}" as const;\n`);
-process.stdout.write(`${pin}\n`);
+const { definition, digest } = compile(lendingSource);
+const scenario = await lendingStory();
+const outputs = [
+  ["definition.json", await format(canonicalize(definition), { parser: "json" })],
+  ["pin.ts", `/** Canonical-byte digest of definition.ts; definition.test.ts checks it against the shared implementation. */\nexport const LENDING_DEFINITION = "${digest}" as const;\n`],
+  ["scenarios/application.json", await format(JSON.stringify(scenario, null, 2), { parser: "json" })],
+];
+
+// Compile, judge and format every output before changing any retained file.
+for (const [path, bytes] of outputs) writeFileSync(new URL(path, root), bytes);
+process.stdout.write(`${digest}\n`);

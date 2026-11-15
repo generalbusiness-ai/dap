@@ -11,7 +11,7 @@ import { isDigest, isSend, resolveGenesisSelf, scopeIdOf } from "@generalbusines
 import { creationContextOf, type CreationContext } from "./creation-context.ts";
 import type { Derived } from "./effects.ts";
 import { isLocalFact } from "./fields.ts";
-import { slotOf, type Judging } from "./guards.ts";
+import type { Judging } from "./guards.ts";
 import { coveredItems } from "./lists.ts";
 import { judgeCondition } from "./program/condition-value.ts";
 import { readValue } from "./program/read-value.ts";
@@ -20,6 +20,7 @@ import { checkedBody, sendPlan, type BodyStructure, type SendNode } from "./prog
 import { givenTo, outside, ruleFor, run } from "./marks.ts";
 import { observeNativeCall } from "./program/native-trace.ts";
 import { sendValue } from "./send-value.ts";
+import { readSlotValue } from "./operand.ts";
 import type { Item } from "./state.ts";
 import { isFactRef, isLocalId, isObject, isScopeRef, same } from "./values.ts";
 import { enterProgramInstruction } from "./program/observe.ts";
@@ -89,7 +90,7 @@ interface NativeSend { readonly op: "native"; readonly mark: NativeSendMark; rea
 type SendInstruction = WrittenSend | NativeSend;
 
 /** Execute only the send instructions of this admitted body. */
-export function evaluateSends(j: Judging, body: BodyStructure, working: ReadonlyMap<string, Item>, cause: Digest, first = 0, recorded?: ScopeRef | null, opening = false): Sends {
+export function evaluateSends(j: Judging, body: BodyStructure, working: ReadonlyMap<string, Item>, cause: Digest | undefined, first = 0, recorded?: ScopeRef | null, opening = false): Sends {
   checkedBody(j.definition, body);
   const nodes = body.nodes.filter(node => node.category === "send");
   const instructions = nodes.map((owner): SendInstruction => {
@@ -106,7 +107,7 @@ export function joinReturnedSends(j: Judging, marks: readonly NativeSendMark[], 
   return executeSends(j, marks.map(mark => ({ op: "native", mark })), working, cause, first, recorded, opening);
 }
 
-function executeSends(j: Judging, instructions: readonly SendInstruction[], working: ReadonlyMap<string, Item>, cause: Digest, first: number, recorded: ScopeRef | null | undefined, opening: boolean): Sends {
+function executeSends(j: Judging, instructions: readonly SendInstruction[], working: ReadonlyMap<string, Item>, cause: Digest | undefined, first: number, recorded: ScopeRef | null | undefined, opening: boolean): Sends {
   const on = working.get("on") ?? null;
   let unresolved: string | null = null;
   /** A send reads each subject as the effects left it. `each`: the item of a fan-out send. */
@@ -153,8 +154,8 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
   };
 
   /** Shared reference encoding keeps production and prototype sends on one leaf. */
-  const wire = (value: unknown, type: FieldType | null): unknown => {
-    const sent = sendValue(j, value, type);
+  const wire = (value: unknown, type: FieldType | null, explicitSelf = false): unknown => {
+    const sent = sendValue(j, value, type, explicitSelf);
     if (sent.unresolved !== null) unresolved = sent.unresolved;
     return sent.value;
   };
@@ -164,13 +165,14 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
   /** Every payload source reads the working state through its admitted descriptor. */
   const sent = (source: SendSourcePlan, each: Item | null): unknown => {
     switch (source.op) {
-      case "self": return local(j.self);
+      case "self": return wire(j.self, { type: "item", of: "" }, true);
       case "read": return wire(readValue(reading(each), source.read, on), sendReadType(source.read));
       case "collect": {
         const all = coveredItems(reading(each), source.range);
         if (!all) incomplete = true;
+        if (j.references) for (const item of all ?? []) j.references.expose(j.references.item(item));
         return (all ?? []).map(item => Object.fromEntries(source.fields.map(([name, member]) => [name,
-          member.op === "item" ? local(item.id) : member.op === "state" ? item.state : wire(slotOf(item, member.slot.name), sendSlotType(member.slot))
+          member.op === "item" ? local(j.references ? j.references.item(item) : item.id) : member.op === "state" ? item.state : wire(readSlotValue(j, item, member.slot.name), sendSlotType(member.slot))
         ] as const).filter(([, value]) => value !== null)));
       }
       default: return exhaustive(source);
@@ -228,6 +230,10 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
     if (instruction.op !== "written") throw new TypeError("Native send did not reach its execution leaf");
     const form = instruction.plan.code;
     if (form.op === "create") {
+      if (cause === undefined) {
+        j.unavailableIntent?.();
+        return { ok: false, unavailable: "unavailable" };
+      }
       // Section 7.2: the seed names this scope as creator, the input's cause, and which creation of that input this is.
       // Section 6.6: `self` is this scope's own pinned definition, which a definition cannot name by digest.
       const definition = form.definition === "self" ? j.definition.digest : form.definition;
@@ -270,11 +276,12 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
       const all = relate.each ? coveredItems(reading(null), relate.each) : [null];
       if (!all) return { ok: false, unavailable: "guard-incomplete" };
       for (const each of all) {
+        if (each && j.references) j.references.expose(j.references.item(each));
         const made = judgeCondition(each ? { ...j, each } : j, instruction.body, instruction.node);
         if (typeof made === "string") return { ok: false, unavailable: made };
         if (!made) continue;
         const to = relate.to.op === "self" ? null : address(relate.to, each);
-        const item = address(relate.item, each);
+        const loaded = address(relate.item, each), item = j.references ? j.references.expose(loaded) : loaded;
         if (!isScopeRef(to)) return refuse("the target is not a scope");
         if (!isLocalId(item)) return refuse("the item is not a local item");
         // Section 6.4: the key is the target by its scope ID, the item by its local ID, and the name as written.

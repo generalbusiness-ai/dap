@@ -37,13 +37,13 @@ test("captured revisions preserve values and exact subject coverage", () => {
     step: "transition", on: "shelf", fields: {},
     also: { only: { item: "jar", one: true }, chosen: { item: "label", by: "label" }, linked: { item: "lid", via: { of: "only", slot: "lid" } }, missing: { item: "absent", one: true }, selected: { code: "rule-selects" }, ...JSON.parse('{"__proto__":{"item":"label","by":"other"}}') },
   } as unknown as ActLike;
-  const state = [
+  const state: Parameters<typeof expectedOf<ActLike>>[1] = [
     { id: 0, type: "shelf", revision: 4, refs: {} },
     { id: 2, type: "jar", revision: 7, refs: { lid: 6 } },
     { id: 3, type: "label", revision: 8, refs: {} },
     { id: 6, type: "lid", revision: 9, refs: {} },
     { id: 8, type: "label", revision: 10, refs: {} },
-  ] as unknown as Parameters<typeof expectedOf>[1];
+  ];
   const fresh = expectedOf(declaration, state, 0, { label: 3, other: 8 });
   expect(fresh).toEqual(JSON.parse('{"on":4,"only":7,"chosen":8,"linked":9,"__proto__":10}'));
   const given = JSON.parse('{"on":0,"only":1,"chosen":2,"linked":3,"__proto__":4}');

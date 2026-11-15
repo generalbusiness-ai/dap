@@ -24,6 +24,16 @@ staff action and a donation outside `shelf/`, and lets staff retire the thing.
 The native journal replays consistently. Publication requests stay queued to a
 labelled destination reference stand-in. No Git provider receives a page.
 
+The reservation scenario opens the same tool-day slot from two members
+and checks the named `tool-day-taken` refusal, then reverses admission
+order for another slot. Its lapse changes only each reservation.
+
+Write `day` as `YYYY-MM-DD`. This convention does not add a guard:
+the scope compares opaque day text of at most ten bytes. Two spellings
+of one calendar day are two slots. The member supplies `until`
+explicitly; the scope never checks that it falls on `day`, and it
+enforces no calendar, timezone or interval rule.
+
 `dev` serves the screen and a native fixture inspection panel. The local
 screen does not enroll a TEST actor.
 
