@@ -81,9 +81,9 @@
     // Recorded live mode; preserve enforced admission on deployment.
     "SCOPE_INDEX_MODE": "enforce",
     "PLATFORM_CREATION_PINS": "[\"platform:register@28\",\"platform:directory@27\",\"platform:membership@14\",\"platform:rules@15\",\"platform:destination@21\",\"platform:register@17\",\"platform:directory@16\",\"platform:membership@8\",\"platform:rules@10\",\"platform:destination@12\",\"platform:inbox@1\"]",
-    // Planner-confirmed item 2 and release. This serves the unchanged
-    // placeholder at its sandbox origin, not a standalone Grow UI.
-    "APPLICATION_SCREEN_HOSTS": "[{\"v\":1,\"screenOrigin\":\"https://grow.inguz.space\",\"roomOrigin\":\"https://dap-grow.inguz.workers.dev\",\"directory\":\"sc_ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq\",\"item\":2,\"presentation\":\"sha256:5bd818a796771c0b6bdd6eac7d5b0fe6ed70358ddc2c33dec82bfd11cd558cf4\"}]",
+    // Planner-confirmed Grow 2.0.0 item 2 and presentation, served
+    // at its sandbox screen origin.
+    "APPLICATION_SCREEN_HOSTS": "[{\"v\":1,\"screenOrigin\":\"https://grow.inguz.space\",\"roomOrigin\":\"https://dap-grow.inguz.workers.dev\",\"directory\":\"sc_cu5bjlh3rt4jvcffbxoyu4wye4ckwdf6nyxlpo4adihughrr4ztq\",\"item\":2,\"presentation\":\"sha256:2a3adecf80d11e4734d1b63fc43121e7e73197ee16c3448782cec15e586ef78c\"}]",
     "SERVING_CREATION_KEY_PER_HOUR": "10",
     "SERVING_CREATION_ADDRESS_PER_HOUR": "30",
     "SERVING_READ_KEY_PER_MINUTE": "240",
