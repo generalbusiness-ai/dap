@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8d03442c995184d1c149cc640c97495931e1a1a1","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/client.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8d130314c989e00a66f98237cb6b2fbb269e0614","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/custody-witness.mjs."}
