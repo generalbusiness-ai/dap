@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:af8450db33896b241e2ab43b7f9bc4f4f3a3c0d7","text":"Merge retired a covered predecessor; the successor is at examples/lending/releases/0.3.0/application.dap.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b439ab9739f272d8ff581b1c7637c0fad65518e2","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/agent-wait.scope.test.ts."}
