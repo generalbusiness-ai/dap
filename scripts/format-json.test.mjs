@@ -4,11 +4,16 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { selectedJsonFiles } from "./format-json.mjs";
 
-test("tracked JSON formatting preserves both byte-compared Grow packets and retained evidence while selecting source", () => {
+test("tracked JSON formatting preserves signed application packets and retained evidence while selecting source", () => {
   const root = fileURLToPath(new URL("../", import.meta.url));
   const paths = execFileSync("git", ["ls-files", "-z", "--", "*.json"], { cwd: root, encoding: "utf8" }).split("\0").filter(Boolean);
   const selected = selectedJsonFiles(paths);
-  for (const packet of ["examples/grow/demo/application.dap.json", "examples/grow/fixtures/earlier-application.dap.json"]) {
+  for (const packet of [
+    "examples/grow/demo/application.dap.json",
+    "examples/grow/fixtures/earlier-application.dap.json",
+    "examples/lending/releases/0.2.0/application.dap.json",
+    "apps/counter/releases/0.2.0/application.dap.json",
+  ]) {
     assert.ok(paths.includes(packet), "Each actual byte-compared packet must exist");
     assert.equal(selected.includes(packet), false, "The canonical packet reader must receive each packet's original bytes");
   }

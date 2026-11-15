@@ -8,11 +8,10 @@ import { canonicalize, factRefOf, isRecord, isScopeRef, isSeed, same, scopeIdOf,
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
-import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest, type Fetch, type Observation } from "@generalbusiness/dap-client";
+import { ScopeHandle, httpTransport, memoryStore as memoryCustodyStore, requestSession, secretSigner, sessionRequest, type Fetch, type Observation } from "@generalbusiness/dap-client";
 import nativeWorker from "../../../apps/room/worker.ts";
-import { nativeGateway, type CommandStore } from "../../../apps/counter/browser/client.ts";
+import { nativeGateway } from "../../../apps/counter/browser/client.ts";
 import { lendingGateway } from "../../../examples/lending/browser/client.ts";
-import type { Kept } from "../../../examples/lending/browser/custody.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, applicationWorkerBindings } from "./fixtures-native.ts";
 import { rita, routed } from "./repository.ts";
@@ -84,10 +83,9 @@ test.each(["counter", "lending"] as const)("maintained %s package installs and i
     expect(canonicalize(display.data ?? display.card?.declared?.data)).toBe(canonicalize(sdk));
     const lock = { run: <T>(work: () => Promise<T>) => work() };
     if (name === "counter") {
-      let held: Awaited<ReturnType<CommandStore["load"]>> = null;
       const gateway = nativeGateway(identity, secretSigner(rita.secret), { application: installation, current: () => true, lock, fetch,
         voiceStore: { load: async () => null, save: async () => { throw Error("No media witness here."); }, clear: async () => {} },
-        commandStore: { load: async () => held, save: async value => { held = value; }, clear: async () => { held = null; } },
+        custody: memoryCustodyStore(),
         // The direct Worker route follows no redirect. Workerd Request accepts
         // manual, whereas the browser-facing port must request redirect:error.
         headFetch: async (url, init) => { expect(init.redirect).toBe("error"); const response = await nativeWorker.fetch(new Request(url, { ...init, redirect: "manual" }), bindings); return { status: response.status, body: response.body, headers: response.headers, url, redirected: false }; },
@@ -127,9 +125,9 @@ test.each(["counter", "lending"] as const)("maintained %s package installs and i
         });
         expect(results.length, `${kind}: native result binds the exact request fact, ordinal and target`).toBe(1);
       };
-      let held: Kept | null = null;
+      const custody = memoryCustodyStore(), givenUp = new Set<string>();
       const gateway = lendingGateway(identity, secretSigner(rita.secret), { application: installation, current: () => true, lock, fetch, now: life.now,
-        store: { load: async () => held, save: async value => { held = value; }, clear: async () => { held = null; } } });
+        custody, requests: { givenUp: async () => [...givenUp], giveUp: async (key: string) => { givenUp.add(key); }, dropRetired: async () => false } });
       dispose = () => gateway.dispose();
       expect(await life.owner.required(() => gateway.look())).toMatchObject({ status: "current", view: { things: [] } });
       expect(await life.owner.required(() => gateway.act("donate", { name: "Native kettle", description: "A maintained package donation." }))).toEqual({ status: "recorded" });
@@ -146,6 +144,7 @@ test.each(["counter", "lending"] as const)("maintained %s package installs and i
       const gone = await life.owner.required(() => gateway.look());
       expect(gone, readContext("after cancel", gone)).toMatchObject({ status: "current", view: { things: [{ id: thing.id, revision: 3, state: "gone", reason: "Native retained final row" }] },
         activity: [{ kind: "donate" }, { kind: "borrow", what: `Native kettle (thing ${thing.id})` }, { kind: "cancel", what: `Native kettle (thing ${thing.id}): Native retained final row` }] });
+      const held = (await custody.unresolved()).at(-1) ?? null;
       expect(held).toBeNull();
     }
     expect(paths).toContain(`/v1/scopes/${app.name}/application-projection`);

@@ -1,7 +1,8 @@
 # Plan 036: deploy the identifier cutover to the hosted Workers
 
-Status: proposed. Nothing in this plan has run. The window runs after the
-checker approves this note and CDF-1 is on main.
+Status: landed. The window ran from 01:17 to 01:22 EST on 14 November 2026
+at main `5b342ee9` and passed. The sprint report of 14 November states
+the versions and what followed.
 
 Planned against main `4cef11d2783efaa591fac197d9a2ba093004456e` on
 2026-11-14. The planner runs each step. The builder deploys nothing.

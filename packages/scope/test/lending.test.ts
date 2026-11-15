@@ -4,13 +4,12 @@ import { runDurableObjectAlarm } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import type { Entry, Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, entryHash, intentDigest, isSeed, scopeIdOf, seedDigest, textDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
-import { INVITATION_LINK, ScopeHandle, bindingTransport, declaredHandle, requestSession, secretSigner, sessionRequest, type AskedOf, type Fetch, type Kind } from "@generalbusiness/dap-client";
+import { INVITATION_LINK, ScopeHandle, bindingTransport, declaredHandle, envelopeOf, identityId, memoryStore as memoryCustodyStore, requestSession, secretSigner, sessionRequest, type AskedOf, type CustodyRecord, type Fetch, type Kind } from "@generalbusiness/dap-client";
 import { command, memoryStore, type Context } from "../../cli/src/index.ts";
 import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import { FILE_PUBLICATION_COHORT, FIRST_ACTIONS_OF, platform, repositoryName } from "@generalbusiness/dap-platform";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { lendingGateway, SETTLED_AFTER_MS } from "../../../examples/lending/browser/client.ts";
-import type { Kept, KeptStore } from "../../../examples/lending/browser/custody.ts";
 import { findLending, joining, newDeviceKey, readInvitation, ROOM_MEMBERSHIP, type JoinStore, type KeptJoin } from "../../../examples/lending/browser/join.ts";
 import { lending } from "../../../examples/lending/definition.ts";
 import { LENDING_DEFINITION } from "../../../examples/lending/pin.ts";
@@ -238,7 +237,8 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
       "application-projection-incomplete", "application-projection-stale", "application-projection-unavailable",
     ]);
     const browser = (who: Actor, handle: `@${string}`, lose: { reply: boolean } = { reply: false }, readFetch: Fetch = fetch, current: () => boolean = () => true) => {
-      let slot: string | null = null, posts = 0;
+      let posts = 0;
+      const store = memoryCustodyStore(), givenUp = new Set<string>();
       const envelopes: string[] = [];
       const projectionErrors: string[] = [];
       const projection = legacyLendingProjection(SERVICE, application, readFetch);
@@ -252,15 +252,19 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
         if (label !== null && projectionErrors.length < 3) projectionErrors.push(label);
         throw error;
       });
-      const store: KeptStore = { load: async () => slot === null ? null : JSON.parse(slot) as Kept, save: async (value) => { slot = JSON.stringify(value); }, clear: async () => { slot = null; } };
+      const requests = { givenUp: async () => [...givenUp], giveUp: async (key: string) => { givenUp.add(key); }, dropRetired: async () => false };
+      const kept = async (): Promise<string | null> => {
+        const held = (await store.unresolved()).filter(row => !givenUp.has(row.key)).at(-1);
+        return held ? store.records.get(held.id) ?? null : null;
+      };
       let chain: Promise<unknown> = Promise.resolve();
       const lock = { run: <T>(work: () => Promise<T>): Promise<T> => { const next = chain.then(work, work); chain = next.catch(() => undefined); return next; } };
       const open = (): ReturnType<typeof lendingGateway> => lendingGateway(
         { origin: SERVICE, deployment: "lending-fixture", scope: scopeOfLending, definition: LENDING_DEFINITION, membership, member: { membership, member: handle }, publicKey: who.key },
         { key: who.key, sign: async (bytes: Uint8Array) => (await import("@generalbusiness/dap-client")).secretSigner(who.secret).sign(bytes) },
-        { current, lock, store, application, fetch: projectedFetch, now: () => timeMs(soon(0))! + skew.ms,
+        { current, lock, custody: store, requests, application, fetch: projectedFetch, now: () => timeMs(soon(0))! + skew.ms,
           actFetch: async (url, init) => { posts++; envelopes.push(String(init?.body)); const response = await fetch(url, init); if (lose.reply) throw new Error("the reply was lost"); return response as never; } });
-      return { open, store, posts: () => posts, kept: () => slot, envelopes, projectionErrors: () => [...projectionErrors] };
+      return { open, store, posts: () => posts, kept, envelopes, projectionErrors: () => [...projectionErrors] };
     };
     const scopeOfLending = await L.at(), skew = { ms: 0 };
     const application = { scope: scopeOfLending, directory: await D.at(), item: 0, definition: LENDING_DEFINITION };
@@ -285,10 +289,10 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     expect(seenAgain, JSON.stringify({ projectionErrors: his.projectionErrors(), read: seenAgain }).slice(0, 1000)).toMatchObject({ status: "current", view: { things: [{ id: big, state: "gone", reason: "Nasruddin says the pot died", revision: lent + 1 }, { id: small, state: "available" }, { id: fresh, state: "available" }] } });
     // A proposal the view rules out signs and sends nothing.
     expect(await g.act("return", { thing: small })).toEqual({ status: "nothing-sent", reason: "That thing is not lent." });
-    expect([his.posts(), his.kept()]).toEqual([0, null]);
+    expect([his.posts(), await his.kept()]).toEqual([0, null]);
     // An act that takes effect: kept before it is sent, verified in the record, then released.
     expect(await g.act("donate", { name: "Kettle", description: "Whistles." })).toEqual({ status: "recorded" });
-    expect([his.posts(), his.kept(), await countThings()]).toEqual([1, null, 3]);
+    expect([his.posts(), await his.kept(), await countThings()]).toEqual([1, null, 3]);
     // Drain the donation's publication replies before the multi-read projection.
     // A current list is the precondition for testing an authorization refusal.
     await settle(L, G);
@@ -296,12 +300,12 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     // A refusal is final, in plain words with the scope's reason, and changes nothing.
     const beforeRefusal = await head();
     expect(await g.act("cancel", { thing: small, reason: "The pot died" })).toEqual({ status: "refused", reason: "Only staff can cancel a thing. (unauthorized)" });
-    expect([his.kept(), await head()]).toEqual([null, beforeRefusal]);
+    expect([await his.kept(), await head()]).toEqual([null, beforeRefusal]);
 
     // A lost reply. The donation took effect, the browser does not know, and it keeps the original.
     const lossy = { reply: true }, hers = browser(passerby, "@passerby", lossy), lost = hers.open();
     const lostView = await lost.look();
-    const beforeLostAct = { posts: hers.posts(), kept: hers.kept() !== null };
+    const beforeLostAct = { posts: hers.posts(), kept: (await hers.kept()) !== null };
     const lostDonation = await lost.act("donate", { name: "Sieve", description: "Fine mesh." });
     // Fixed presentation labels only: do not print custody, envelopes, tokens,
     // complete projections or arbitrary transport exception messages.
@@ -321,17 +325,20 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     const fixedReason = (value: unknown): string => typeof value === "string" && knownLostReasons.has(value) ? value : "other";
     const lostDiagnostic = { look: { status: lostView.status, reason: "reason" in lostView ? fixedReason(lostView.reason) : null,
       libraryPresent: lostView.status === "current" ? lostView.view.library !== null : null },
-      beforeAct: beforeLostAct, afterAct: { posts: hers.posts(), kept: hers.kept() !== null },
+      beforeAct: beforeLostAct, afterAct: { posts: hers.posts(), kept: (await hers.kept()) !== null },
       act: { status: lostDonation.status, reason: "reason" in lostDonation ? fixedReason(lostDonation.reason) : null }, projectionErrors: hers.projectionErrors() };
     expect(lostDonation, JSON.stringify(lostDiagnostic)).toMatchObject({ status: "unknown" });
     expect([hers.posts(), await countThings()]).toEqual([1, 4]);
     expect(await lost.pending()).toMatchObject({ kind: "donate", name: "Sieve", unsent: false });
-    const retainedDonation = JSON.parse(hers.kept()!) as Kept;
-    const retainedFields = retainedDonation.envelope.signed.intent.fields;
+    const retainedDonation = JSON.parse((await hers.kept())!) as CustodyRecord;
+    const retainedEnvelope = envelopeOf(retainedDonation, retainedDonation.signings.length - 1);
+    expect(retainedEnvelope).not.toBeNull();
+    if (!retainedEnvelope) throw new Error("The original donation must retain its latest signing envelope.");
+    const retainedFields = retainedEnvelope.signed.intent.fields;
     expect(retainedFields["page"]).toMatch(/^shelf\/[0-9a-f]{16}\.md$/);
     expect(retainedFields["content"]).toContain(`lending scope ${scopeOfLending.scope}, genesis ${scopeOfLending.genesis}`);
     expect(retainedFields["content"]).not.toMatch(/entry [0-9]+, hash/);
-    const originalEntries = (await L.entries()).filter(entry => entry.input.type === "act" && canonicalize(entry.input.signed) === canonicalize(retainedDonation.envelope.signed));
+    const originalEntries = (await L.entries()).filter(entry => entry.input.type === "act" && canonicalize(entry.input.signed) === canonicalize(retainedEnvelope.signed));
     expect(originalEntries).toHaveLength(1);
     expect(originalEntries[0]!.sends).toMatchObject([{ n: 0, to: await G.at(), message: { class: "request", type: "tell", body: { message: "publish-file", fields: { path: retainedFields["page"], content: retainedFields["content"] } } } }]);
     // No second act is signed while the original is kept; ordinary recovery does not send it again.
@@ -348,15 +355,15 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     const reloaded = hers.open();
     expect(await reloaded.pending()).toMatchObject({ kind: "donate", name: "Sieve" });
     expect(await reloaded.check()).toEqual({ status: "recorded" });
-    expect([hers.posts(), hers.kept(), await countThings()]).toEqual([1, null, 4]);
+    expect([hers.posts(), await hers.kept(), await countThings()]).toEqual([1, null, 4]);
     expect((await things()).filter((thing) => thing.values["name"] === "Sieve")).toHaveLength(1);
     expect(await reloaded.pending()).toBeNull();
     // The original is deliberately retained again to exercise explicit same-envelope continuation against native idempotency.
     await settle(L, G);
     const beforeContinue = await head();
-    await hers.store.save(retainedDonation);
+    await hers.store.write(identityId(retainedDonation.identity), retainedDonation);
     expect(await reloaded.continueOriginal()).toEqual({ status: "recorded" });
-    expect([hers.posts(), hers.kept(), await countThings()]).toEqual([2, null, 4]);
+    expect([hers.posts(), await hers.kept(), await countThings()]).toEqual([2, null, 4]);
     expect(hers.envelopes[1]).toBe(hers.envelopes[0]);
     expect(await head()).toEqual(beforeContinue);
     reloaded.dispose(); g.dispose();
@@ -407,7 +414,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
       });
       sameView = false;
       await expect(reader.act("donate", { name: "Old view", description: "Must not be sent." })).rejects.toThrow("no longer current");
-      expect([fenced.posts(), fenced.kept()]).toEqual([0, null]);
+      expect([fenced.posts(), await fenced.kept()]).toEqual([0, null]);
     } finally { releaseSummary(); reader.dispose(); }
 
     // A visitor joins from a browser with an invitation link, under the application cohort's
@@ -428,13 +435,18 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     const device = await newDeviceKey(), clock = () => timeMs(soon(0))!;
     let joinSlot: string | null = null, joinPosts = 0, loseJoin = true;
     const joinStore: JoinStore = { load: async () => joinSlot === null ? null : JSON.parse(joinSlot) as KeptJoin, save: async (value) => { joinSlot = JSON.stringify(value); }, clear: async () => { joinSlot = null; } };
+    const joinCustody = memoryCustodyStore();
     const serial = { run: <T>(work: () => Promise<T>): Promise<T> => work() };
-    const door = () => joining(device, { origin: SERVICE, lock: serial, store: joinStore, now: clock, fetch,
+    const door = () => joining(device, { origin: SERVICE, lock: serial, store: joinStore, custody: joinCustody, now: clock, fetch,
       actFetch: async (url, init) => { joinPosts++; const response = await fetch(url, init); if (loseJoin) throw new Error("the reply was lost"); return response; } });
     const membersBefore = (await M.summary()).at;
     expect(await door().join(read.link, read.seat)).toMatchObject({ status: "unknown", seat: { handle: "@visitor" } });
     expect((await M.summary()).at.seq).toBe(membersBefore.seq + 1);
     const retainedJoin = JSON.parse(joinSlot!) as KeptJoin;
+    const joinId = identityId({ service: SERVICE, membership: null, signer: device.publicKey, target: read.seat.membership, key: retainedJoin.key });
+    const retainedJoinRecord = await joinCustody.read(joinId);
+    expect(retainedJoinRecord).not.toBeNull();
+    if (!retainedJoinRecord) throw new Error("The lost join must retain its original custody record.");
     // The join is kept. A second use of the invitation signs nothing; after a reload, Check settles the original by a read.
     expect(await door().join(read.link, read.seat)).toMatchObject({ status: "nothing-sent" });
     loseJoin = false;
@@ -444,19 +456,21 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     const joinsOf = async (key: string) => (await M.entries()).filter((entry) => entry.input.type === "act" && entry.input.signed.intent.kind === "join" && entry.input.signed.intent.actor === key).length;
     expect([joinPosts, joinSlot, await joinsOf(device.publicKey)]).toEqual([1, null, 1]);
     // Explicit Continue reuses the original M4 join after a reload, never another enrollment.
+    // Restore the same unresolved profile: v2 keeps its envelope in custody, separate from the join pointer.
+    await joinCustody.write(joinId, retainedJoinRecord);
     await joinStore.save(retainedJoin);
     expect(await reopened.continueOriginal()).toEqual({ status: "joined", seat: read.seat });
     expect([joinPosts, joinSlot, await joinsOf(device.publicKey)]).toEqual([2, null, 1]);
     // A used invitation is refused in plain words, and nothing stays kept.
     const second = await newDeviceKey();
-    expect(await joining(second, { origin: SERVICE, lock: serial, store: joinStore, now: clock, fetch }).join(read.link, read.seat)).toMatchObject({ status: "refused" });
+    expect(await joining(second, { origin: SERVICE, lock: serial, store: joinStore, custody: joinCustody, now: clock, fetch }).join(read.link, read.seat)).toMatchObject({ status: "refused" });
     expect([joinSlot, await joinsOf(second.publicKey)]).toEqual([null, 0]);
     // The advertised handle is not identity evidence. The visitor's own
     // authenticated membership read must still identify this key as @visitor.
     const matched = await findLending({ ...read.seat, handle: "@not-visitor" }, device, { now: clock, fetch });
     if (!matched.ok) throw new Error(matched.reason);
     expect(matched.identity).toMatchObject({ scope: scopeOfLending, member: { member: "@visitor" }, publicKey: device.publicKey });
-    let visitorSlot: string | null = null;
+    const visitorCustody = memoryCustodyStore(), visitorGivenUp = new Set<string>();
     const knownLookReasons = new Set([
       "application-projection-invalid", "application-projection-limit", "application-projection-binding",
       "application-projection-incomplete", "application-projection-stale", "application-projection-unavailable",
@@ -477,7 +491,8 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
       }
     };
     const visitor = lendingGateway(matched.identity, (await import("../../../examples/lending/browser/join.ts")).deviceSigner(device), { current: () => true, lock: serial, now: clock, application, fetch: visitorFetch,
-      store: { load: async () => visitorSlot === null ? null : JSON.parse(visitorSlot) as Kept, save: async (value) => { visitorSlot = JSON.stringify(value); }, clear: async () => { visitorSlot = null; } } });
+      custody: visitorCustody,
+      requests: { givenUp: async () => [...visitorGivenUp], giveUp: async (key: string) => { visitorGivenUp.add(key); }, dropRetired: async () => false } });
     const visitorSeen = await visitor.look();
     const visitorReason = visitorSeen.status === "behind"
       ? knownLookReasons.has(visitorSeen.reason) ? visitorSeen.reason
