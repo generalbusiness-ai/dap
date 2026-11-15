@@ -23,7 +23,7 @@
  * opens, other than the holder itself.
  */
 
-import type { Bounds, Entry, GenesisEffect, Held } from "@generalbusiness/dap-contract";
+import type { Bounds, Entry, GenesisEffect, Held, Intent } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition } from "@generalbusiness/dap-bytes";
 import { operationSettled } from "./ledger.ts";
@@ -73,23 +73,31 @@ const heldOf = (counts: Counts): Held | null => {
 };
 
 type Drawing = Pick<Entry, "seq" | "input" | "effects" | "sends"> & Partial<Pick<Entry, "time" | "clamped">>;
+type BodyDrawing = Pick<Entry, "seq" | "effects" | "sends"> & { body: Pick<Intent, "kind" | "on"> };
 /** Pinned rules and bounds, needed only when a binding selector is derived. */
 export interface DrawOptions extends Partial<Pick<Reading, "facts" | "own" | "texts" | "snapshot">> { bounds?: Bounds | undefined; platform?: PlatformRules | undefined; values?: readonly string[] | undefined }
 
 /** What that entry does to the counts of the holders, on the state before it; or the fault of an entry that draws past a count, or opens a held operation with no holder. */
 export function drawsOf(view: StateView, definition: ValidDefinition, entry: Drawing, options: DrawOptions = {}, binding?: { item: number; message: string } | null): Drawn | DrawFault {
+  return countedDrawing(view, definition, entry, options, binding);
+}
+
+/** The body arm carries kind/on, never an invented signed entry input. */
+function countedDrawing(view: StateView, definition: ValidDefinition, entry: Drawing | BodyDrawing, options: DrawOptions, binding: { item: number; message: string } | null | undefined): Drawn | DrawFault {
   const r = definition.reserving;
   const effects: readonly GenesisEffect[] = entry.effects;
   const operations = effects.filter((effect): effect is Extract<GenesisEffect, { effect: "operation" }> => effect.effect === "operation");
   if ((!r || (Object.keys(r.holders).length === 0)) && operations.every((effect) => effect.for === undefined)) return NO_DRAW;
   const fault = (name: DrawFault["fault"], detail: string): DrawFault => ({ fault: name, detail });
-  const input = entry.input;
+  const recorded = "input" in entry ? entry : null;
+  const input = recorded?.input;
+  const act = "body" in entry ? entry.body : input?.type === "act" ? input.signed.intent : null;
   const scope = view.scope();
-  const deciding = input.type === "delivery" && input.message.class === "request" && input.message.type === "tell";
-  const decided = binding === undefined && deciding && scope ? decisionBinding(view, definition, entry, {
+  const deciding = input?.type === "delivery" && input.message.class === "request" && input.message.type === "tell";
+  const decided = binding === undefined && deciding && scope && recorded ? decisionBinding(view, definition, recorded, {
     ...options, bounds: options.bounds ?? PROPOSED_BOUNDS, platform: options.platform, facts: options.facts ?? [], prepared: [],
     own: options.own ? Object.assign((seq: number) => seq < entry.seq ? options.own!(seq) : null, { sequence: () => options.own!.sequence() }) : undefined,
-    clock: { reading: entry.time ?? scope.time, asOf: entry.time ?? scope.time, behind: entry.clamped === true },
+    clock: { reading: recorded.time ?? scope.time, asOf: recorded.time ?? scope.time, behind: recorded.clamped === true },
   }) : binding ?? null;
   const working = new Map<number, Counts>();
   /** The counts of that item, as the entry has moved them so far. Null: the item is no holder. */
@@ -110,12 +118,12 @@ export function drawsOf(view: StateView, definition: ValidDefinition, entry: Dra
   if (opening?.effect === "open" && taken) {
     working.set(opening.item, countsOf(taken.holds));
     account = opening.item;
-  } else if (input.type === "act" && own(r?.adds, input.signed.intent.kind)) {
-    const added = own(r?.adds, input.signed.intent.kind)!;
-    const on = input.signed.intent.on;
+  } else if (act && own(r?.adds, act.kind)) {
+    const added = own(r?.adds, act.kind)!;
+    const on = act.on;
     const item = isLocalId(on) ? view.item(on) : null;
     const held = item && item.type === added.on && !own(own(definition.declared.items, item.type)?.states, item.state)?.final ? counts(item.id) : null;
-    if (!held) return fault("no-holder", `the act ${input.signed.intent.kind} adds to a holder, and it is on none that is not final`);
+    if (!held) return fault("no-holder", `the act ${act.kind} adds to a holder, and it is on none that is not final`);
     add(held, added.adds);
     account = item!.id;
   } else if (decided) {
@@ -125,9 +133,9 @@ export function drawsOf(view: StateView, definition: ValidDefinition, entry: Dra
     const left = of.decisions.get(decided.message) ?? 0;
     if (left < 1) return fault("past-count", `item ${account} holds no decision for ${decided.message}`);
     of.decisions.set(decided.message, left - 1);
-  } else if (input.type === "outcome") account = view.operation(input.operation)?.for ?? null;
-  else if (input.type === "delivery" && "clause" in input) account = view.account(input.message.of.from.seq, input.message.of.n);
-  else if (input.type === "diagnosis") account = view.account(input.of.seq, input.of.n);
+  } else if (input?.type === "outcome") account = view.operation(input.operation)?.for ?? null;
+  else if (input?.type === "delivery" && "clause" in input) account = view.account(input.message.of.from.seq, input.message.of.n);
+  else if (input?.type === "diagnosis") account = view.account(input.of.seq, input.of.n);
 
   // Each held operation draws on the holder that it is for. A final holder's counts serve its own account's pending work only:
   // another entry cannot draw on them, even when one of its own unfinished tasks keeps a positive count alive.
@@ -176,7 +184,8 @@ export function drawsOf(view: StateView, definition: ValidDefinition, entry: Dra
  * The input is not judged and nothing is written: `unavailable`, as for
  * every fault of a rule (section 6.1). An outcome then stays offered.
  */
-export function withinCounts<J extends { result: string }>(view: StateView, definition: ValidDefinition, judged: J): J | { result: "unavailable"; reason: "unavailable" } {
+export function withinCounts<J extends { result: string }>(view: StateView, definition: ValidDefinition, judged: J,
+  body?: Pick<Intent, "kind" | "on">, drew?: (drawn: Drawn) => void): J | { result: "unavailable"; reason: "unavailable" } {
   if (judged.result !== "write" || !("draft" in judged)) return judged;
   const draft = judged.draft as Pick<Entry, "input" | "effects" | "sends"> & { bound?: { item: number; message: string } };
   if (definition.standing) {
@@ -185,8 +194,13 @@ export function withinCounts<J extends { result: string }>(view: StateView, defi
   }
   // The judge has just derived this binding. The fold and replay derive it
   // from the recorded message instead, never from a Draft.
-  const drawn = drawsOf(view, definition, { seq: (view.scope()?.head.seq ?? -1) + 1, input: draft.input, effects: draft.effects, sends: draft.sends }, {}, draft.bound ?? null);
-  return "fault" in drawn ? { result: "unavailable", reason: "unavailable" } : judged;
+  const seq = (view.scope()?.head.seq ?? -1) + 1;
+  const drawn = body
+    ? countedDrawing(view, definition, { seq, body, effects: draft.effects, sends: draft.sends }, {}, draft.bound ?? null)
+    : drawsOf(view, definition, { seq, input: draft.input, effects: draft.effects, sends: draft.sends }, {}, draft.bound ?? null);
+  if ("fault" in drawn) return { result: "unavailable", reason: "unavailable" };
+  drew?.(drawn);
+  return judged;
 }
 
 /**

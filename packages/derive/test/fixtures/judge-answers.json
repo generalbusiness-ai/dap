@@ -1,0 +1,3323 @@
+{
+  "format": 1,
+  "base": "270dc8c7a69a4506fc3d5525339f08a4adb2803f",
+  "harness": "7db0b87f0eb4a8cbac0b60bbe5c3359d2d5ee2f8",
+  "owners": [
+    "packages/derive/test/judge.test.ts",
+    "packages/replay/test/archive-anchor-ranges.test.ts",
+    "packages/replay/test/archive-command.test.ts",
+    "packages/replay/test/archive-git.test.ts",
+    "packages/replay/test/archive.test.ts",
+    "packages/replay/test/capacity.test.ts",
+    "packages/replay/test/child-definitions.test.ts",
+    "packages/replay/test/cli.test.ts",
+    "packages/replay/test/decisions.test.ts",
+    "packages/replay/test/definition-format.test.ts",
+    "packages/replay/test/floor.test.ts",
+    "packages/replay/test/genesis-bodies.test.ts",
+    "packages/replay/test/late.test.ts",
+    "packages/replay/test/recovered-bytes.test.ts",
+    "packages/replay/test/room-recovery.test.ts",
+    "packages/replay/test/room-verification.test.ts",
+    "packages/replay/test/source-order.test.ts",
+    "packages/replay/test/text-refusals.test.ts",
+    "packages/replay/test/verify.test.ts",
+    "packages/replay/test/view.test.ts"
+  ],
+  "cases": [
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/archive-anchor-ranges.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a cached anchored fact from another pass cannot fill an omitted anchor in this pass"
+        ],
+        "position": "_3"
+      },
+      "calls": 1,
+      "sha256": "327454a85876683c9ca86e3b34763102bec9ffafd1fa855d5f99a661ef781946"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/archive-anchor-ranges.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a remarks-only legacy prefix accepts its exact list and charges cached consultations to each range"
+        ],
+        "position": "_2"
+      },
+      "calls": 6,
+      "sha256": "72fb66613f86a16223d2454d68e0f08cd0e8ba8b1be29dcacd657938614bb855"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/archive-anchor-ranges.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a zero-copy remark publishes its signer's Membership head and needs explicit caller trust"
+        ],
+        "position": "_0"
+      },
+      "calls": 2,
+      "sha256": "c2bb6d64ee9041a9491e1b41b44f10fcb9913550132e6e4e3a8231eaf1569174"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/archive-anchor-ranges.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an extra Register anchor refuses exact-list acceptance and names its full fact and pass range"
+        ],
+        "position": "_1"
+      },
+      "calls": 1,
+      "sha256": "327454a85876683c9ca86e3b34763102bec9ffafd1fa855d5f99a661ef781946"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/archive-anchor-ranges.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "nested public proofs use their own published ranges and name their own unused anchor"
+        ],
+        "position": "_4"
+      },
+      "calls": 2,
+      "sha256": "cf6404f8ba5ce3e9ed6034763a9ef08d9b1b0faa07717a38443237905214df6f"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/archive-git.test.ts",
+      "case": {
+        "kind": "test",
+        "path": ["replays an owed detached text from the caller directory"],
+        "position": "_5"
+      },
+      "calls": 2,
+      "sha256": "f3b4b94936b2e42170183631c306049e5393418afcededd839a08f1dd3f436ca"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/archive-git.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "reports each missing cutoff input through actual clone reads"
+        ],
+        "position": "_2"
+      },
+      "calls": 7,
+      "sha256": "3bfd831737e15d709ebfd04411df7dd4d4914d5539b310f2d10a5c32c284058c"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/archive-git.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "verifies all four judged cutoffs from a disconnected sha1 clone"
+        ],
+        "position": "_0"
+      },
+      "calls": 14,
+      "sha256": "4eca94f5ba5309e8e1783b53d0afe66f430dea5555537ffce87d9223dfbc582a"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/archive-git.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "verifies all four judged cutoffs from a disconnected sha256 clone"
+        ],
+        "position": "_1"
+      },
+      "calls": 14,
+      "sha256": "4eca94f5ba5309e8e1783b53d0afe66f430dea5555537ffce87d9223dfbc582a"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/archive.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "exact caller anchors classify reviewed private Register copies without admitting unknown archive names"
+        ],
+        "position": "_8"
+      },
+      "calls": 2,
+      "sha256": "dd02ac1fde450d07fe0c212a75cfd04573f3a1dee36a2ded284acdb160ba4899"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/archive.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "preserves native verification and missing-input diagnoses for observing delivery"
+        ],
+        "position": "_3"
+      },
+      "calls": 6,
+      "sha256": "25ea3a788838d1eed8f8813a9fe1c79a8630c96f7781540df2046c508c879e2a"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/archive.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "preserves native verification and missing-input diagnoses for outcome snapshot"
+        ],
+        "position": "_2"
+      },
+      "calls": 12,
+      "sha256": "3af953fd56e060bf236df2d599ce1ab7da9854ed9cb26b312ab20537d30771e7"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/archive.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "preserves native verification and missing-input diagnoses for outcome value"
+        ],
+        "position": "_1"
+      },
+      "calls": 3,
+      "sha256": "35cd693472ba06d27fa0521bd78c7153b72e8ec04515d12f130192b29f438995"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/archive.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "shares traversal limits and drains an owned read after deadline"
+        ],
+        "position": "_6"
+      },
+      "calls": 2,
+      "sha256": "14e43db0c63dd348b3b842abec7d077a6d3dfafa742eecae1f9572b534eaa18a"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/capacity.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a later missing body cannot erase the proved redaction reason of an earlier byte span"
+        ],
+        "position": "_3"
+      },
+      "calls": 4,
+      "sha256": "9c9a564d1ce72762cfd29ebe6551eea3e699a8fdd4d48f89d544669da45d2fa2"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/capacity.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an unknown historical text size does not hide a later item-key overflow"
+        ],
+        "position": "_1"
+      },
+      "calls": 2,
+      "sha256": "33d603adfdeb3658455657705fb16e3a0448877a200639bd594a6c975f17adb5"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/capacity.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "whole-scope replay counts escaped text once per digest and reports only the historical span whose later redaction lost its size"
+        ],
+        "position": "_0"
+      },
+      "calls": 7,
+      "sha256": "8fb3aef638d1a9cd953d0eefee6f37acff95068f2f82cf4a20a82b2889510f59"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/child-definitions.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a later definition-domain value is charged at its actual entry and an alias of a birth child is not charged twice"
+        ],
+        "position": "_1"
+      },
+      "calls": 5,
+      "sha256": "5ef60cc81192407a0488cf04e726eb8480a6f0fe9b5f1791094070713fc366b4"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/decisions.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "ordinary redacted replay keeps applied, named-guard, definitive early-field and zero-remaining-count cases derivable"
+        ],
+        "position": "_5"
+      },
+      "calls": 6,
+      "sha256": "2e69df5e3a39c1fec25ba0ed51014e1af7e6583365d29825bc3bfb7478954180"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/decisions.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "replay admission counts the actual register's legacy cleanup closure and preserves scripted external reservations"
+        ],
+        "position": "_0"
+      },
+      "calls": 5,
+      "sha256": "9da945ffd8e04b50c425e72efebfa82839766a9263e66468b358afb3dcc1e736"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/definition-format.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "caller-supplied platform data names its unsupported format at genesis"
+        ],
+        "position": "_1"
+      },
+      "calls": 4,
+      "sha256": "8b5f7a1561dccc5bcda01e7485fade9d0d3362c6c6a6d258e40fe29da6c06f2d"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/floor.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "floor commit absence and a different archive head stop at the floor entry"
+        ],
+        "position": "_1"
+      },
+      "calls": 150,
+      "sha256": "9b11fc42583bdf39f3e9edca863b4231765dfb44b792dc9b3141b16084f0a2ae"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/floor.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "replay follows a kept result's retained foreign decision back to its own completed request"
+        ],
+        "position": "_4"
+      },
+      "calls": 3,
+      "sha256": "fd7fd2661deeeb54e393c637eebec2fdba0bb755c375da3c730f7340383bf179"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/floor.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "replay hides archived facts while preserving accepted keys, reclaimed capacity and checkpoint state"
+        ],
+        "position": "_0"
+      },
+      "calls": 320,
+      "sha256": "abcb851ae5733018705e1ceffeb99db932bbd546510b0274814c8d0d99a7453b"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/floor.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "two floors charge migrated Unicode accepted keys once and preserve complete post-floor checkpoints"
+        ],
+        "position": "_3"
+      },
+      "calls": 696,
+      "sha256": "eef7c2104f89170688379b7ee6fd2d96b9a0025b283c35a328462692689c3a53"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/genesis-bodies.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a later string alias can recover an opt-in refused birth's bytes because birth policy establishes presence, while legacy presence stays unknown"
+        ],
+        "position": "_4"
+      },
+      "calls": 3,
+      "sha256": "6dfc0b6206ef081ef3acb8ba19ea4fb258c47985fdab9522629d8c4b884c9584"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/genesis-bodies.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a recovered non-string under a typed genesis text digest disproves the recorded opt-in birth and its consumer"
+        ],
+        "position": "_5"
+      },
+      "calls": 1,
+      "sha256": "9f3932e52b6e47e33be0b68fa9fd8b9abb3574a03dced36c9498ed68f02e8fef"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/genesis-bodies.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a recovered valid-size body disproves a fabricated refusal and retracts its consumer"
+        ],
+        "position": "_1"
+      },
+      "calls": 1,
+      "sha256": "70870e40b39bc0f54a94e154b48f42437f61c34c149338b89689e53e277a4ab2"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/genesis-bodies.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a size-only refused birth stays incomplete without its body and becomes consistent when a later alias supplies it"
+        ],
+        "position": "_0"
+      },
+      "calls": 1,
+      "sha256": "126254ee163e70a90b08022e480ea2a670b0e627813baf8d3dc78cbe1a8c4e9a"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/genesis-bodies.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "partial recovery rechecks the remaining unknown comparison before accepting or disproving a refused birth"
+        ],
+        "position": "_3"
+      },
+      "calls": 3,
+      "sha256": "982f01eae81786cb9ff233da5683b0a514ee48948736b547908ab73616b17281"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/late.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "late and boundary judgments replay, while a changed branch marker or refusal code is a mismatch"
+        ],
+        "position": "_0"
+      },
+      "calls": 8,
+      "sha256": "d3cbfe50f1d949d84e42b20d07641407641fc7336e22374b48d23e9f37e3f3b1"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/recovered-bytes.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a later alias proves an earlier purported detached non-text JSON invalid"
+        ],
+        "position": "_2"
+      },
+      "calls": 43,
+      "sha256": "a7097c942258e6d1a1b9a65aca6251eb403f7aa306ed5c2b66e5f0e01f494423"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/recovered-bytes.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a later alias proves an earlier purported detached oversized text invalid"
+        ],
+        "position": "_1"
+      },
+      "calls": 42,
+      "sha256": "f6cd7481c0daa58762748ef82da9af11db10c1439941327d9cd97db5a84e40fc"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/recovered-bytes.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a later checked text-domain alias recovers earlier byte totals at equality and retracts a disproved source prefix and its consumer"
+        ],
+        "position": "_0"
+      },
+      "calls": 84,
+      "sha256": "ee12389f128bbe2084b9e6327f3026f929962d93ff39be58adf8709d35df792e"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/recovered-bytes.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "recovered overflow retracts transitive consumers and a foreign prefix admitted through a cached proof"
+        ],
+        "position": "_3"
+      },
+      "calls": 46,
+      "sha256": "3b8d8fbf4759a7dedaa067311815124bd0f5ecd2499f211109f5fbfe78e3c76a"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/recovered-bytes.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "recovering an oversized body preserves a child's correctly recorded bad-field refusal"
+        ],
+        "position": "_4"
+      },
+      "calls": 44,
+      "sha256": "74a1d30a4be10fa6b24d49ed52e8c49fd1fc9ab765ec4d1642d2d297fdcbfdae"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/recovered-bytes.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "recovering one body leaves another body's historical byte span incomplete"
+        ],
+        "position": "_5"
+      },
+      "calls": 47,
+      "sha256": "188669b5fa63a915145a0ee473d5293c6cd6c75652e9a374e67e747449b1f82e"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/room-recovery.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a post-fold capacity failure cannot poison a repeated root or a later use of its checked prefix"
+        ],
+        "position": "_2"
+      },
+      "calls": 4,
+      "sha256": "256b41c05ab0589b2783e8908fc3f09f818a40e80c0b254fb8b43e9a0aeaef3f"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/room-recovery.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a source without capacity still owes its missing text when another root holds the body"
+        ],
+        "position": "_4"
+      },
+      "calls": 6,
+      "sha256": "f0814606731583e84e1513326337a99762f8fa50f2cc616611367c11303a5f57"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/room-recovery.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an earlier missing text remains a problem below a later blocked entry"
+        ],
+        "position": "_3"
+      },
+      "calls": 8,
+      "sha256": "6457a877ea0671f37070df29a12931059bdfce164be5098071f169f607854747"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/room-recovery.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "room finalization retracts both independent roots contradicted by later recovered bodies"
+        ],
+        "position": "_0"
+      },
+      "calls": 10,
+      "sha256": "a7c3eb24d58ab8d33388d5f0a6b0c2d7626528f6d1fa2173e409b30bd8b2a4cf"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/room-recovery.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "room settlement extends an already-open owing dependency before declaring another root's text missing"
+        ],
+        "position": "_1"
+      },
+      "calls": 8,
+      "sha256": "bdf2a8b298004598371c1a5df52725afbf23eba3140be0206600335fa450cc26"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/room-verification.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a bad user's forked reference cannot block later replay of the source's actual valid entry"
+        ],
+        "position": "_2"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/room-verification.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a cached requested prefix still checks a new expected head below its already checked position"
+        ],
+        "position": "_1"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/room-verification.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a cached requested source's genesis contradiction invalidates earlier dependent roots"
+        ],
+        "position": "_5"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/room-verification.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a cached requested source's overlap contradiction invalidates earlier dependent roots"
+        ],
+        "position": "_4"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/room-verification.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a cached requested source's retreat contradiction invalidates earlier dependent roots"
+        ],
+        "position": "_6"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/room-verification.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an actual later root lowers already-followed dependency depth and resolves provisional depth stops"
+        ],
+        "position": "_7"
+      },
+      "calls": 4,
+      "sha256": "f17cd89dac5cddbd66daf158e73a0327b60f4e676d4633f5c714542af714bc8d"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/room-verification.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "one room proof reuses checked prefixes at the exact unique-entry ceiling and publishes final immutable union evidence once"
+        ],
+        "position": "_0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/source-order.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "both source arrival orders replay and historical views retain only the frontier applied at that head"
+        ],
+        "position": "_0"
+      },
+      "calls": 6,
+      "sha256": "0823b37024286d2798878e9ac51ad243c309b15c8deb906f044f260a42ca0d2f"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/text-refusals.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an earlier successful field check rules out a later fabricated size refusal even after the text is erased"
+        ],
+        "position": "_0"
+      },
+      "calls": 1,
+      "sha256": "ddd836b936e2146d701412ec748449591b18f63a61d916e8ea1918d9d33c3a23"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a detached text whose bytes are gone (section 9.3)",
+          "a source scope that is first read while another scope's missing text is settled is itself read to its head: a text it owes with no tombstone makes the replay incomplete, and with one it is reported as redacted; the depth of its chain is counted from the target"
+        ],
+        "position": "_2_0"
+      },
+      "calls": 19,
+      "sha256": "504878524e6f23be45eda96f07dd97d662e31e9a9a2211ae3cda79f6369afc3d"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a detached text whose bytes are gone (section 9.3)",
+          "a tombstone answers for the texts that it lists by one lookup for each: a note that held 30 texts whose bytes are gone, and its one tombstone, are 30 lookups"
+        ],
+        "position": "_2_1"
+      },
+      "calls": 31,
+      "sha256": "b6247f5ec1bb52d29fef472111a638c5d6e684c7a4e686511a7e3d4cdf486bf8"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a history that is not consistent is reported with the right result, at the entry that shows it",
+          "'a changed byte in an entry: its bytes…'"
+        ],
+        "position": "_3_0"
+      },
+      "calls": 2,
+      "sha256": "32f87653a1a1235855a3f9ae8a45cba1a6b5dc645d465bd3912d74a7690a0426"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a history that is not consistent is reported with the right result, at the entry that shows it",
+          "'a changed recorded decision: the entr…'"
+        ],
+        "position": "_3_3"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a history that is not consistent is reported with the right result, at the entry that shows it",
+          "'a changed recorded effect: the entry …'"
+        ],
+        "position": "_3_2"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a history that is not consistent is reported with the right result, at the entry that shows it",
+          "'a history that forks from the head th…'"
+        ],
+        "position": "_3_12"
+      },
+      "calls": 2,
+      "sha256": "32f87653a1a1235855a3f9ae8a45cba1a6b5dc645d465bd3912d74a7690a0426"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a history that is not consistent is reported with the right result, at the entry that shows it",
+          "'a limit reached: the report states wh…'"
+        ],
+        "position": "_3_17"
+      },
+      "calls": 1,
+      "sha256": "70f8b81a4021bc96671c7be12f4df92942a6a2878a0cdc02d6b8300c40708890"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a history that is not consistent is reported with the right result, at the entry that shows it",
+          "'a missing retained input: the bytes o…'"
+        ],
+        "position": "_3_13"
+      },
+      "calls": 2,
+      "sha256": "32f87653a1a1235855a3f9ae8a45cba1a6b5dc645d465bd3912d74a7690a0426"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a history that is not consistent is reported with the right result, at the entry that shows it",
+          "'a preparation entry with no step: its…'"
+        ],
+        "position": "_3_8"
+      },
+      "calls": 2,
+      "sha256": "32f87653a1a1235855a3f9ae8a45cba1a6b5dc645d465bd3912d74a7690a0426"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a history that is not consistent is reported with the right result, at the entry that shows it",
+          "'a retained copy of a used entry, kept…'"
+        ],
+        "position": "_3_14"
+      },
+      "calls": 2,
+      "sha256": "32f87653a1a1235855a3f9ae8a45cba1a6b5dc645d465bd3912d74a7690a0426"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a history that is not consistent is reported with the right result, at the entry that shows it",
+          "'a send removed from a source entry: t…'"
+        ],
+        "position": "_3_1"
+      },
+      "calls": 1,
+      "sha256": "70f8b81a4021bc96671c7be12f4df92942a6a2878a0cdc02d6b8300c40708890"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a history that is not consistent is reported with the right result, at the entry that shows it",
+          "'a source history that cannot be read'"
+        ],
+        "position": "_3_9"
+      },
+      "calls": 1,
+      "sha256": "70f8b81a4021bc96671c7be12f4df92942a6a2878a0cdc02d6b8300c40708890"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a history that is not consistent is reported with the right result, at the entry that shows it",
+          "'a source\\'s genesis that records anot…'"
+        ],
+        "position": "_3_4"
+      },
+      "calls": 2,
+      "sha256": "3638c135a2b454adf4a9584791bda03afa66a0277dbe1099f131e9b5a62ee5a1"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a history that is not consistent is reported with the right result, at the entry that shows it",
+          "'a well-formed outcome entry in a hist…'"
+        ],
+        "position": "_3_7"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a history that is not consistent is reported with the right result, at the entry that shows it",
+          "'a well-formed preparation entry in a …'"
+        ],
+        "position": "_3_6"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a history that is not consistent is reported with the right result, at the entry that shows it",
+          "'a wrong genesis in a reference: the s…'"
+        ],
+        "position": "_3_10"
+      },
+      "calls": 2,
+      "sha256": "32f87653a1a1235855a3f9ae8a45cba1a6b5dc645d465bd3912d74a7690a0426"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: a check entry whose retained snapshot is not its canonical bytes: `incomplete`"
+        ],
+        "position": "_5_10"
+      },
+      "calls": 3,
+      "sha256": "f649ff0f4b6c2772589b0a2a675b57614e96d640b4df2b2786f2706a9ad6f4f8"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: a check entry whose snapshot is no longer retained: `incomplete`"
+        ],
+        "position": "_5_9"
+      },
+      "calls": 3,
+      "sha256": "f649ff0f4b6c2772589b0a2a675b57614e96d640b4df2b2786f2706a9ad6f4f8"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: a preparation whose grant is of another key than the one that signed"
+        ],
+        "position": "_5_4"
+      },
+      "calls": 3,
+      "sha256": "f649ff0f4b6c2772589b0a2a675b57614e96d640b4df2b2786f2706a9ad6f4f8"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: a preparation whose grant rests on an observation outside the window of its step"
+        ],
+        "position": "_5_3"
+      },
+      "calls": 3,
+      "sha256": "f649ff0f4b6c2772589b0a2a675b57614e96d640b4df2b2786f2706a9ad6f4f8"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: a record that a preparation entry did not derive"
+        ],
+        "position": "_5_2"
+      },
+      "calls": 3,
+      "sha256": "f649ff0f4b6c2772589b0a2a675b57614e96d640b4df2b2786f2706a9ad6f4f8"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: an ancestry record that lists a staged commit of other work: the act that it admitted is not derived"
+        ],
+        "position": "_5_12"
+      },
+      "calls": 4,
+      "sha256": "883ce569f5af2a492af23fce649ac8209bd8adbe56c53106bae8635ba706533a"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: an ancestry record that states another count than its snapshot holds"
+        ],
+        "position": "_5_11"
+      },
+      "calls": 3,
+      "sha256": "f649ff0f4b6c2772589b0a2a675b57614e96d640b4df2b2786f2706a9ad6f4f8"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: an effect that the owner's rule does not derive from an outcome"
+        ],
+        "position": "_5_6"
+      },
+      "calls": 3,
+      "sha256": "f649ff0f4b6c2772589b0a2a675b57614e96d640b4df2b2786f2706a9ad6f4f8"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: an outcome that the rules of its owner are not given for: `unsupported-definition`"
+        ],
+        "position": "_5_8"
+      },
+      "calls": 3,
+      "sha256": "f649ff0f4b6c2772589b0a2a675b57614e96d640b4df2b2786f2706a9ad6f4f8"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: an outcome whose input names another owner than its operation has"
+        ],
+        "position": "_5_7"
+      },
+      "calls": 3,
+      "sha256": "f649ff0f4b6c2772589b0a2a675b57614e96d640b4df2b2786f2706a9ad6f4f8"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a lane's history with a check entry, after the root is retired: every entry is derived, the act that the guard `ancestry` admitted among them, from the record and the retained snapshot; the walk is not derived, so the result is `incomplete` at the check entry and never `consistent` (T24; witness 18.10; I3 deltas, entry EU2)"
+        ],
+        "position": "_5_1"
+      },
+      "calls": 5,
+      "sha256": "e1d5ba42ae518a67b69ed5628a2c446674e5992bed553273b23fa9eba827730f"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a lane's history with preparations and their outcomes, and no ancestry record, is consistent, and the report lists what of the outside is trusted (witness 18.4)"
+        ],
+        "position": "_5_0"
+      },
+      "calls": 3,
+      "sha256": "f649ff0f4b6c2772589b0a2a675b57614e96d640b4df2b2786f2706a9ad6f4f8"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a replay without native identity policy leaves a reserved declared source incomplete, while an exact source anchor remains explicit trust"
+        ],
+        "position": "_1"
+      },
+      "calls": 5,
+      "sha256": "c2a63d81b167d016df6a4887685296ff39e4b10b49bbec52bb22391828f00197"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a reservation that an item holds, in a replay: the counts, each `for` and each draw are derived again from the history",
+          "18.47 case 15: a history whose entries draw within the counts is consistent; an entry that opens a held operation for no holder, and one that draws past a count, are each a mismatch with its name"
+        ],
+        "position": "_6_0"
+      },
+      "calls": 7,
+      "sha256": "a1347070ec6a9327ea408705a2175d1926ef5e73dc631139c2eb351856e4e3e5"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a reservation that an item holds, in a replay: the counts, each `for` and each draw are derived again from the history",
+          "18.49 case 12: a history in which a held kind opens a kind that no item holds is consistent, and the operation of that kind has no holder"
+        ],
+        "position": "_6_1"
+      },
+      "calls": 2,
+      "sha256": "4d752340b4ba891ffad99f8cfe2446ad790bda09bde1baa093bf1be82ed43fb9"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an outcome entry of a platform definition, and where a scope records its membership reference",
+          "a scope whose platform version records its membership reference in its state is replayed on that reference, as a directory's slot is read; with no such reference its grant covers nothing (I3 deltas, entry EP14)"
+        ],
+        "position": "_7_5"
+      },
+      "calls": 2,
+      "sha256": "6975cec87d575f9a2e8886483cecda26ad0f863be4d906f2d24ba2b2685715e8"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an outcome entry of a platform definition, and where a scope records its membership reference",
+          "a value that an entry names is a retained input of the kind `value`, under its domain: a replay with the bytes derives the entry again, and one without them, with other bytes, or with the bytes under another domain is `incomplete` and no mismatch"
+        ],
+        "position": "_7_4"
+      },
+      "calls": 2,
+      "sha256": "0999f9cc5cc7fbc1c7674243da68bf07c935d5672410124477a6c694aa1691a0"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an outcome entry of a platform definition, and where a scope records its membership reference",
+          "an observation of the rules is derived again from the history of the rules scope: the value from its state at the head, and the revision against the last entry of the kind `publish` at or before it"
+        ],
+        "position": "_7_3"
+      },
+      "calls": 16,
+      "sha256": "99be17dd1429270363cd966ca4f169ba5f7d8d0fdc26a4155b6b55f75f84591d"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an outcome entry of a platform definition, and where a scope records its membership reference",
+          "each observation that an act retains in `observed` is derived again: it is of the membership scope that the scope records, and inside the window of the act (section 16.1, guards 1 and 5; I3 deltas, entries EM26 and EU4)"
+        ],
+        "position": "_7_1"
+      },
+      "calls": 4,
+      "sha256": "daafdb1eb177623448f6f83c676f98185b3884e617293fcd631828c34c2b1b13"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an outcome entry of a platform definition, and where a scope records its membership reference",
+          "each observation that an outcome retains in `observed` is derived again, in the ten-second window and `fresh`; the judge derives the member from what its rule read, so an outcome that holds one which no rule read, or lacks one that its rule read, is a mismatch"
+        ],
+        "position": "_7_2"
+      },
+      "calls": 18,
+      "sha256": "8d18559cd8fc7f122919c184d5b2a65ec38d884a40b01b49c38c6fd8b29b3b41"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an outcome entry of a platform definition, and where a scope records its membership reference",
+          "the outcome is derived with the rule that the data names for its kind; a rule whose output the commit refuses as a fault writes no entry in a replay either, also when the history holds that output (I3 deltas, entries EN2 and EJ11)"
+        ],
+        "position": "_7_0"
+      },
+      "calls": 4,
+      "sha256": "8b5f7a1561dccc5bcda01e7485fade9d0d3362c6c6a6d258e40fe29da6c06f2d"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "integrity mode (section 9.5)",
+          "a history whose judgment was altered and whose chain is intact passes, and the report says in words that no judgment was derived again; replay of the same history does not pass"
+        ],
+        "position": "_4_0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "replay of a good history (sections 9.3 to 9.5)",
+          "a child's history is consistent only with the histories it used: each scope is covered once, as far as the highest entry needed, and every foreign fact is shown by replay of its source"
+        ],
+        "position": "_0_0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "replay of a good history (sections 9.3 to 9.5)",
+          "an anchor that names a used entry exactly is taken on the caller's word: its source is not read, and the report says so"
+        ],
+        "position": "_0_1"
+      },
+      "calls": 1,
+      "sha256": "70f8b81a4021bc96671c7be12f4df92942a6a2878a0cdc02d6b8300c40708890"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "the rows of `observes`, replayed: the origin, the subject lists, the guards with each row's window, and the values that an observation names",
+          "18.46 cases 13 to 15: the entry of an outcome with four subjects is consistent, with `observation-read` and `platform-code` under `trusts`; a record that no row gives, a `uses` that is no copy of the origin's, and a record that fails a guard under its row's window and use are each a mismatch, and a record that only a row which states `write` gives may be absent"
+        ],
+        "position": "_9_0"
+      },
+      "calls": 13,
+      "sha256": "0cc285de38c97b8595dc8f377b1f45a1e436c95fd60401a59fdea4306f3a4c9d"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "the rows of `observes`, replayed: the origin, the subject lists, the guards with each row's window, and the values that an observation names",
+          "18.48 case 10, and 18.50 case 11: an entry whose observation of the rules names a value is derived again with the bytes that the scope keeps by the domain and the digest; without them, or with other bytes under that digest, the replay is incomplete"
+        ],
+        "position": "_9_2"
+      },
+      "calls": 6,
+      "sha256": "69712105e3dda97c4cac7cc60cd926a02de9ddce98c8fb6770a2e79127b4d80a"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "the rows of `observes`, replayed: the origin, the subject lists, the guards with each row's window, and the values that an observation names",
+          "18.52 cases 11 and 12: the second list is derived from the recorded observation of the rules, so a record of a key that it does not give is a mismatch; an entry whose row is absent and states `write` is consistent, with `observation-read` under `trusts`"
+        ],
+        "position": "_9_1"
+      },
+      "calls": 6,
+      "sha256": "a054dda511fbeb460f398dec626972b431d1e53664ef027d2088d6a6384924a5"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "the value of an observation is derived once from the history of its source, and every entry that names it is compared with it",
+          "40 acts, each on a read of a run of its own: each run is looked up once among the runs seen, and the value of the one head and key is derived once"
+        ],
+        "position": "_8_2"
+      },
+      "calls": 44,
+      "sha256": "f08c5552882f86c00b55291f764f98f2bfbf97705a757763ea998d454efa3470"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "the value of an observation is derived once from the history of its source, and every entry that names it is compared with it",
+          "an entry that names a head and a key whose value is already derived is still compared with it: a standing that membership never gave is the mismatch that it was"
+        ],
+        "position": "_8_1"
+      },
+      "calls": 84,
+      "sha256": "6e0b50a44b0258422de04bdb2f5eda7ada6ece6cc0c668f9cbba1f8e284a0de5"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "the value of an observation is derived once from the history of its source, and every entry that names it is compared with it",
+          "two admins who alternate `publish` on membership heads L and H: the answer is the earlier code's, and the work is the source's history folded once and one value for each distinct head and key, whatever the number of grants"
+        ],
+        "position": "_8_0"
+      },
+      "calls": 85,
+      "sha256": "038cb79aebb5d385ff4ed7e4ef9fcecb5e40be488fd6baa54d10bbad2e366234"
+    },
+    {
+      "list": "replay",
+      "owner": "packages/replay/test/view.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "replay derives opt-in item and originating-request duties through a diagnosis and accepts their covering checkpoint"
+        ],
+        "position": "_1"
+      },
+      "calls": 10,
+      "sha256": "bd1d81567f7bf15f57b5200fe73288b6d0497272f9390f97671ef91c60c0ab76"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": ["a refused act"],
+        "position": "0"
+      },
+      "calls": 7,
+      "sha256": "1269da373a3c3072b7f87042fd845236ffcc5ffd023a4020591584c4b9ea369d"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": ["range guards (section 6.5)"],
+        "position": "0"
+      },
+      "calls": 8,
+      "sha256": "54eba339a035b7acb30456c5ecb0fba18e90d490fa54e2a35857fcbb0dd532ef"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a foreign fact (sections 5.1 and 6.5)",
+          "a fact guard is judged on the fetched entry only, and the entry it read is recorded in `uses`"
+        ],
+        "position": "_7_0"
+      },
+      "calls": 7,
+      "sha256": "48431cf7ee8eaebd81526c13de0df5c70961a0aa744bd582f5469b23fdbcf6d2"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a foreign fact (sections 5.1 and 6.5)",
+          "each fact reference is verified whole: one that shares a verified hash and names another scope and position is not taken for it"
+        ],
+        "position": "_7_1"
+      },
+      "calls": 6,
+      "sha256": "db805167d0a3ac75a8e1eadb3346b275aef78016fe5cdf82ec172ed40e92a8cf"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "a field the act does not declare: bad-field"
+        ],
+        "position": "_1_24"
+      },
+      "calls": 1,
+      "sha256": "a9ae32eab86a2f9145698b38fbde80c86d7ae0eba27d6128f02ba92071b5ff36"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": ["a refused act", "a grant of another action: unauthorized"],
+        "position": "_1_5"
+      },
+      "calls": 1,
+      "sha256": "36c959a74713f0766a7bb7e0c8e682a578be30f99494c192da6d40a6e5c8b43c"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": ["a refused act", "a grant past its notAfter: unauthorized"],
+        "position": "_1_7"
+      },
+      "calls": 1,
+      "sha256": "36c959a74713f0766a7bb7e0c8e682a578be30f99494c192da6d40a6e5c8b43c"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "a grant the authority does not find current: unauthorized"
+        ],
+        "position": "_1_8"
+      },
+      "calls": 1,
+      "sha256": "36c959a74713f0766a7bb7e0c8e682a578be30f99494c192da6d40a6e5c8b43c"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": ["a refused act", "a grant to another key: unauthorized"],
+        "position": "_1_4"
+      },
+      "calls": 1,
+      "sha256": "36c959a74713f0766a7bb7e0c8e682a578be30f99494c192da6d40a6e5c8b43c"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": ["a refused act", "a grant within another scope: unauthorized"],
+        "position": "_1_6"
+      },
+      "calls": 1,
+      "sha256": "36c959a74713f0766a7bb7e0c8e682a578be30f99494c192da6d40a6e5c8b43c"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": ["a refused act", "a party list past its max: slot-full"],
+        "position": "_1_19"
+      },
+      "calls": 1,
+      "sha256": "64b5f9ca89df856347ed2580db444bb98a50d8b52f9aa9ef4ccc495addcc5183"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "a wrong requester fails its named guard with a grant and fails the grant check without it"
+        ],
+        "position": "_1_26"
+      },
+      "calls": 4,
+      "sha256": "b5b8a21d0ad12c1c8b7fed80aeb51139f04f07cda9c2acbf58fb94b0d873f4d8"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "after: a late edit at the deadline: guard-failed"
+        ],
+        "position": "_1_15"
+      },
+      "calls": 1,
+      "sha256": "4377aeacdf5c06976edd89b99e99a04080d344590f295f7bb2c14e2067b8d940"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "an expected revision that has moved: revision-moved"
+        ],
+        "position": "_1_0"
+      },
+      "calls": 1,
+      "sha256": "59fb729ca454c28977f77c7a99b288537e1504f694d71f37f91d0f38f5e1596f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "an intent addressed to another scope: misaddressed"
+        ],
+        "position": "_1_20"
+      },
+      "calls": 1,
+      "sha256": "3e73e98485f14355b39784ea74b636228df61bc5a296072c99d94faa5e3eaceb"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": ["a refused act", "an intent at its notAfter: expired"],
+        "position": "_1_21"
+      },
+      "calls": 1,
+      "sha256": "857aa0cbb62413d719cf7bb3af8f72f666043b6f5f38c80d5acf210fe04f08dd"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "an intent changed after it was signed: bad-intent"
+        ],
+        "position": "_1_22"
+      },
+      "calls": 1,
+      "sha256": "d7195d872d3f6a386188e798d7a2ade219fcbd5546ffc86a6ff6290fedab56c1"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": ["a refused act", "an item that does not exist: no-item"],
+        "position": "_1_25"
+      },
+      "calls": 1,
+      "sha256": "58757fb4e5098794f1624b5360df72c27b38dae973ccf4459aa9206856147385"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "an opening past the type's max of live items: type-full"
+        ],
+        "position": "_1_18"
+      },
+      "calls": 1,
+      "sha256": "94ed0cec92dacc33f6b4c2cffaf8bd917e6bbdcc5315360f53dac748c5d57c1b"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "an opening that leaves a required slot unset: required-unset"
+        ],
+        "position": "_1_17"
+      },
+      "calls": 1,
+      "sha256": "3aa7bc87e4d133203ef5c9e0fc357d8e3ffd7f39456e8a8c9ca506b086c57508"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "before: an edit at the deadline: guard-failed"
+        ],
+        "position": "_1_14"
+      },
+      "calls": 1,
+      "sha256": "c51df2a78aae19db2700519e07354c31778c29d7ceaeb7a1a694aa2b16b099ee"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "each guard family passes when its condition holds, so the refusals above are the guards' own"
+        ],
+        "position": "_1_27"
+      },
+      "calls": 4,
+      "sha256": "656f87daf9ab9cdaf4fc2c50a9002e32af7ff76dbde6912591dad4478d01141f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "equals: an edit by one who is not the owner: guard-failed"
+        ],
+        "position": "_1_13"
+      },
+      "calls": 1,
+      "sha256": "4377aeacdf5c06976edd89b99e99a04080d344590f295f7bb2c14e2067b8d940"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "every: a listed note that is not kept: guard-failed"
+        ],
+        "position": "_1_16"
+      },
+      "calls": 1,
+      "sha256": "e41b3146efe82b66bb7a6229fd8d734b4faf9d2cc9103f0d4fcfbf33b1558d5b"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": ["a refused act", "no grant: unauthorized"],
+        "position": "_1_3"
+      },
+      "calls": 1,
+      "sha256": "36c959a74713f0766a7bb7e0c8e682a578be30f99494c192da6d40a6e5c8b43c"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": ["a refused act", "notIn: a review by an author: guard-failed"],
+        "position": "_1_11"
+      },
+      "calls": 1,
+      "sha256": "f8634191c67bb99b4aff7e66a4216834168bf9bac27d01357b8a0222b7fd171d"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "range: closing while a commitment is live: guard-failed"
+        ],
+        "position": "_1_12"
+      },
+      "calls": 1,
+      "sha256": "af75972bad5fd3cdbc8b0ee06e56403c3972fffe529b1ded5ba930f94a8e0eef"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "signer: an assignment by one who is not the requester: guard-failed"
+        ],
+        "position": "_1_10"
+      },
+      "calls": 1,
+      "sha256": "f8634191c67bb99b4aff7e66a4216834168bf9bac27d01357b8a0222b7fd171d"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "state: a hold under a commitment that is only offered: guard-failed"
+        ],
+        "position": "_1_9"
+      },
+      "calls": 1,
+      "sha256": "ee7bb5d81f6d46cacd8954f2b28b71da02653354ca61f2de9e489873644c4a89"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "the genesis kind, sent as an act: unknown-act"
+        ],
+        "position": "_1_23"
+      },
+      "calls": 1,
+      "sha256": "a48edb4c5e5fa361447b91610a5e6bb1b5958edb3ebc23256622757e6277a5d1"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": ["a refused act", "two names that resolve to one item: alias"],
+        "position": "_1_1"
+      },
+      "calls": 1,
+      "sha256": "c913d1ed650d3b5636974abb1384725d8d533c56fc02c19b0a1ac740bbf9ae04"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a refused act",
+          "two relate sends that resolve to one key, by self and by a slot: duplicate-relation"
+        ],
+        "position": "_1_2"
+      },
+      "calls": 1,
+      "sha256": "532b440951f302a19f0c3ed70bef9afcd4296c180f9ccf82b6e761d4ebc30773"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a scope that is not active (section 7.2)",
+          "a provisional scope judges no act, and the answer is not a refusal"
+        ],
+        "position": "_8_0"
+      },
+      "calls": 1,
+      "sha256": "cf12d75443048e43d13ad5d000b500025ff27282feac7455321ad00cd54befdd"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an accepted act",
+          "its effects, revisions, counts and sends are as derived, and a fresh fold of the entries gives the same state"
+        ],
+        "position": "_0_0"
+      },
+      "calls": 5,
+      "sha256": "6cfbb9311423271578be5e7b466c5f8fda54b83894e8615ab3caa99def966a1e"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "attribution (sections 6.7 and 10.2)",
+          "a report after a handover is attributed to both performers, both holders and their principals"
+        ],
+        "position": "_5_0"
+      },
+      "calls": 12,
+      "sha256": "3e3aa89b8bb92a4afcb5ce34b7097ff40f66ff5e373c519a853070903087b193"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "attribution within an entry, and under later authority (section 6.7)",
+          "a performer set by an earlier effect of the entry is in the attribution; so is the principal of an attributed member's later grant"
+        ],
+        "position": "_6_0"
+      },
+      "calls": 5,
+      "sha256": "3207a550b414e6ecc0a12bbd8f2ae459d83f873aea65d22fe189da68aeecb16f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "effects (section 6.6)",
+          "a reference copied from a slot is the value that slot holds, whatever kind of slot it is"
+        ],
+        "position": "_2_0"
+      },
+      "calls": 1,
+      "sha256": "fad933f145f918ff81ded4a948eb030c5af08c3291703688544b225361730e93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "effects (section 6.6)",
+          "a time derived from the commit clock past the last timestamp is refused; nothing throws and nothing is written"
+        ],
+        "position": "_2_1"
+      },
+      "calls": 1,
+      "sha256": "4d55110b53e7ba29dad836b088aa0dc8f473f226f8eba3f9340bc4a0c5a2fc14"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "effects (section 6.6)",
+          "no effect changes an item that was final before the entry; a final item may still be named and read"
+        ],
+        "position": "_2_2"
+      },
+      "calls": 6,
+      "sha256": "8338bd68604db367abf3abc153a1b67a7c1ab174f1413f6fb9858bfd15df2d05"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "idempotency (section 4.2)",
+          "the same signed intent returns the first entry; another intent with its key and actor is a mismatch; a refusal consumes no key"
+        ],
+        "position": "_4_0"
+      },
+      "calls": 9,
+      "sha256": "e67cc7cb704b9403c80eed2e18c417d8024e8f684e3521511758a5d27c010f53"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "range guards (section 6.5)",
+          "a guard with no `where` is answered from the exact counts, whatever the scan limit"
+        ],
+        "position": "_3_9"
+      },
+      "calls": 3,
+      "sha256": "d150685a0e7b5e9e9d4d7fe2827e82fbc7b14c2e169adfc0f9f90a3743824422"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "range guards (section 6.5)",
+          "enough a: passes on an unfinished scan, passes on complete evidence"
+        ],
+        "position": "_3_7"
+      },
+      "calls": 2,
+      "sha256": "54796ff39af0a70ba7f2e03b9e00f4a3cd2b4c7af324d8a73044ac9c95a586c5"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "range guards (section 6.5)",
+          "enough b: guard-incomplete on an unfinished scan, guard-failed on complete evidence"
+        ],
+        "position": "_3_8"
+      },
+      "calls": 2,
+      "sha256": "4f5d7ceb2a033d7177247f43b1ca7d08c6c0ee0209400e797aea19a02f048e4a"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "range guards (section 6.5)",
+          "few a: guard-failed on an unfinished scan, guard-failed on complete evidence"
+        ],
+        "position": "_3_5"
+      },
+      "calls": 2,
+      "sha256": "768b1b3813bd729f929a7cec40f671d89de7e53e86c734c3cbf67e06541aedc5"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "range guards (section 6.5)",
+          "few b: guard-incomplete on an unfinished scan, passes on complete evidence"
+        ],
+        "position": "_3_6"
+      },
+      "calls": 2,
+      "sha256": "8bf553ca0fd15b576d3330a9dd916a912d83b2b1d3538f459c8e8e3f9eb54716"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "range guards (section 6.5)",
+          "has a: passes on an unfinished scan, passes on complete evidence"
+        ],
+        "position": "_3_0"
+      },
+      "calls": 2,
+      "sha256": "b70293904ffd96781ca8be29c4b6f97483cbca87e3a43a652eda7b2b6af59f8a"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "range guards (section 6.5)",
+          "has c: guard-incomplete on an unfinished scan, passes on complete evidence"
+        ],
+        "position": "_3_1"
+      },
+      "calls": 2,
+      "sha256": "64ec0245262e1cc4a8a99dc7d0dd64d792a78ff368c9adbdd987ce324321d114"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "range guards (section 6.5)",
+          "has z: guard-incomplete on an unfinished scan, guard-failed on complete evidence"
+        ],
+        "position": "_3_2"
+      },
+      "calls": 2,
+      "sha256": "4f5d7ceb2a033d7177247f43b1ca7d08c6c0ee0209400e797aea19a02f048e4a"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "range guards (section 6.5)",
+          "lacks a: guard-failed on an unfinished scan, guard-failed on complete evidence"
+        ],
+        "position": "_3_3"
+      },
+      "calls": 2,
+      "sha256": "768b1b3813bd729f929a7cec40f671d89de7e53e86c734c3cbf67e06541aedc5"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/derive/test/judge.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "range guards (section 6.5)",
+          "lacks z: guard-incomplete on an unfinished scan, passes on complete evidence"
+        ],
+        "position": "_3_4"
+      },
+      "calls": 2,
+      "sha256": "e48a68c52082cbcdea230482f3691068233124ccc1b785aa08ed233147d0b5db"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive-anchor-ranges.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a cached anchored fact from another pass cannot fill an omitted anchor in this pass"
+        ],
+        "position": "_3"
+      },
+      "calls": 2,
+      "sha256": "dce60e62070c170718277f1fae6be3647daf4350dcdc5894365b76bfd22c53c5"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive-anchor-ranges.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a remarks-only legacy prefix accepts its exact list and charges cached consultations to each range"
+        ],
+        "position": "_2"
+      },
+      "calls": 3,
+      "sha256": "5ed73414f4c54018a41b8ae3e58b4d1aaff9683cf3f6f47aa0194257d551d1b3"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive-anchor-ranges.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a zero-copy remark publishes its signer's Membership head and needs explicit caller trust"
+        ],
+        "position": "_0"
+      },
+      "calls": 1,
+      "sha256": "327454a85876683c9ca86e3b34763102bec9ffafd1fa855d5f99a661ef781946"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive-anchor-ranges.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an extra Register anchor refuses exact-list acceptance and names its full fact and pass range"
+        ],
+        "position": "_1"
+      },
+      "calls": 1,
+      "sha256": "327454a85876683c9ca86e3b34763102bec9ffafd1fa855d5f99a661ef781946"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive-anchor-ranges.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "nested public proofs use their own published ranges and name their own unused anchor"
+        ],
+        "position": "_4"
+      },
+      "calls": 4,
+      "sha256": "580bf43e9df5512d8f66922f44ec3e73b996597eedfd0dc280bb747011a7e8cf"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive-command.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": [],
+        "position": "0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive-git.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": [],
+        "position": "0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive-git.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "keeps sha1 corruption, unsafe modes and receipt status separate"
+        ],
+        "position": "_3"
+      },
+      "calls": 5,
+      "sha256": "5dc5e8f0c178b50eec9b24237c8c3fb3c535035fd7fb00994eada401bbb35b59"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive-git.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "keeps sha256 corruption, unsafe modes and receipt status separate"
+        ],
+        "position": "_4"
+      },
+      "calls": 5,
+      "sha256": "5dc5e8f0c178b50eec9b24237c8c3fb3c535035fd7fb00994eada401bbb35b59"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive-git.test.ts",
+      "case": {
+        "kind": "test",
+        "path": ["replays an owed detached text from the caller directory"],
+        "position": "_5"
+      },
+      "calls": 1,
+      "sha256": "7c41e7a12702a5e2f2d8d164de32b7612e5856b4c32aab07c9f33e626601395c"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive-git.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "reports each missing cutoff input through actual clone reads"
+        ],
+        "position": "_2"
+      },
+      "calls": 7,
+      "sha256": "3bfd831737e15d709ebfd04411df7dd4d4914d5539b310f2d10a5c32c284058c"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive-git.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "verifies all four judged cutoffs from a disconnected sha1 clone"
+        ],
+        "position": "_0"
+      },
+      "calls": 7,
+      "sha256": "3bfd831737e15d709ebfd04411df7dd4d4914d5539b310f2d10a5c32c284058c"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive-git.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "verifies all four judged cutoffs from a disconnected sha256 clone"
+        ],
+        "position": "_1"
+      },
+      "calls": 7,
+      "sha256": "3bfd831737e15d709ebfd04411df7dd4d4914d5539b310f2d10a5c32c284058c"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": [],
+        "position": "0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "checks receipt scope, incarnation, position and hash after the entire prefix"
+        ],
+        "position": "_4"
+      },
+      "calls": 1,
+      "sha256": "dd516e19d429d471fa1fd12f621c1f53fb6454fb9b9f1329a9dd076a36d75715"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "exact caller anchors classify reviewed private Register copies without admitting unknown archive names"
+        ],
+        "position": "_8"
+      },
+      "calls": 5,
+      "sha256": "d8c8c6d20b1e55a49eb36902dfffcd497952ef50f7711fba1b637cc473a98651"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "preserves native verification and missing-input diagnoses for observing delivery"
+        ],
+        "position": "_3"
+      },
+      "calls": 2,
+      "sha256": "14e43db0c63dd348b3b842abec7d077a6d3dfafa742eecae1f9572b534eaa18a"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "preserves native verification and missing-input diagnoses for outcome snapshot"
+        ],
+        "position": "_2"
+      },
+      "calls": 4,
+      "sha256": "881c26df71abea94e4369779dc1839cf4cb67e40becd984349e74137d6b83ecb"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "preserves native verification and missing-input diagnoses for outcome value"
+        ],
+        "position": "_1"
+      },
+      "calls": 1,
+      "sha256": "dd516e19d429d471fa1fd12f621c1f53fb6454fb9b9f1329a9dd076a36d75715"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/archive.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "shares traversal limits and drains an owned read after deadline"
+        ],
+        "position": "_6"
+      },
+      "calls": 2,
+      "sha256": "14e43db0c63dd348b3b842abec7d077a6d3dfafa742eecae1f9572b534eaa18a"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/capacity.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": [],
+        "position": "0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/capacity.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a later missing body cannot erase the proved redaction reason of an earlier byte span"
+        ],
+        "position": "_3"
+      },
+      "calls": 4,
+      "sha256": "9c9a564d1ce72762cfd29ebe6551eea3e699a8fdd4d48f89d544669da45d2fa2"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/capacity.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an anchored foreign entry still has to fit the opt-in receiver's retained-entry producer ceiling"
+        ],
+        "position": "_2"
+      },
+      "calls": 2,
+      "sha256": "f96ae3e4b60559b4964a27ac18186f306654f68a09ca5bf098eb6a49902a0f12"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/capacity.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an unknown historical text size does not hide a later item-key overflow"
+        ],
+        "position": "_1"
+      },
+      "calls": 3,
+      "sha256": "05a68bd619d13dbd9f355c5a13271726a81dc464948345fae7085677917f628e"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/capacity.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "whole-scope replay counts escaped text once per digest and reports only the historical span whose later redaction lost its size"
+        ],
+        "position": "_0"
+      },
+      "calls": 3,
+      "sha256": "60a38acc4f18368dcc214c85343df1fa9c0659697e4f5b7506de7acf17fe24c3"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/child-definitions.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": [],
+        "position": "0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/child-definitions.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a later definition-domain value is charged at its actual entry and an alias of a birth child is not charged twice"
+        ],
+        "position": "_1"
+      },
+      "calls": 2,
+      "sha256": "c926acc95547a23353b874d043497287cbc3330cb2eb82849550a5260e0231ad"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/cli.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": [],
+        "position": "0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/decisions.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": [],
+        "position": "0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/decisions.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a floor's proof at 200 cannot bind deciding entry 100, while its proof at 50 can"
+        ],
+        "position": "_6"
+      },
+      "calls": 4,
+      "sha256": "d1e609151ba722e1c242d042e43b89ffab72c890f693e3f91acc259ad1e60242"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/decisions.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "erased text leaves the early size refusal and late effect refusal with the same bare code unproven; replay and cold folding stop before the draw"
+        ],
+        "position": "_4"
+      },
+      "calls": 2,
+      "sha256": "e9b8fe60cc6b6ae48cd04749f0f19566f25230bd1cf8330145cd8f5202e774c6"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/decisions.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "ordinary redacted replay keeps applied, named-guard, definitive early-field and zero-remaining-count cases derivable"
+        ],
+        "position": "_5"
+      },
+      "calls": 6,
+      "sha256": "2e69df5e3a39c1fec25ba0ed51014e1af7e6583365d29825bc3bfb7478954180"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/decisions.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "replay admission counts the actual register's legacy cleanup closure and preserves scripted external reservations"
+        ],
+        "position": "_0"
+      },
+      "calls": 1,
+      "sha256": "8bccbc046a077fc72972ae1f91d9b150f98b3a9bacaada332178df3a7e893ba1"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/definition-format.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": [],
+        "position": "0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/definition-format.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "caller-supplied platform data names its unsupported format at genesis"
+        ],
+        "position": "_1"
+      },
+      "calls": 2,
+      "sha256": "6975cec87d575f9a2e8886483cecda26ad0f863be4d906f2d24ba2b2685715e8"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/floor.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": [],
+        "position": "0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/floor.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "floor commit absence and a different archive head stop at the floor entry"
+        ],
+        "position": "_1"
+      },
+      "calls": 171,
+      "sha256": "a50eeb94918c4f40c28814c31956aaf857e653df09c0f99fcc573e8533b26d90"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/floor.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "observation views and captured own readers retain their historical floor and sparse proof visibility"
+        ],
+        "position": "_2"
+      },
+      "calls": 171,
+      "sha256": "a50eeb94918c4f40c28814c31956aaf857e653df09c0f99fcc573e8533b26d90"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/floor.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "replay follows a kept result's retained foreign decision back to its own completed request"
+        ],
+        "position": "_4"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/floor.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "replay hides archived facts while preserving accepted keys, reclaimed capacity and checkpoint state"
+        ],
+        "position": "_0"
+      },
+      "calls": 171,
+      "sha256": "a50eeb94918c4f40c28814c31956aaf857e653df09c0f99fcc573e8533b26d90"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/floor.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "two floors charge migrated Unicode accepted keys once and preserve complete post-floor checkpoints"
+        ],
+        "position": "_3"
+      },
+      "calls": 348,
+      "sha256": "37dec9e70623db7baa9c9d7a901e76fa5eab9f76edbeea844ed06377ec2662ad"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/genesis-bodies.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": [],
+        "position": "0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/genesis-bodies.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a later string alias can recover an opt-in refused birth's bytes because birth policy establishes presence, while legacy presence stays unknown"
+        ],
+        "position": "_4"
+      },
+      "calls": 2,
+      "sha256": "b6028ed173c8917506903e48059d23ef0c11c37a21dd7a4aa42e6020c2f6b0d6"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/genesis-bodies.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a recovered non-string under a typed genesis text digest disproves the recorded opt-in birth and its consumer"
+        ],
+        "position": "_5"
+      },
+      "calls": 1,
+      "sha256": "9f3932e52b6e47e33be0b68fa9fd8b9abb3574a03dced36c9498ed68f02e8fef"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/genesis-bodies.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a recovered valid-size body disproves a fabricated refusal and retracts its consumer"
+        ],
+        "position": "_1"
+      },
+      "calls": 1,
+      "sha256": "70870e40b39bc0f54a94e154b48f42437f61c34c149338b89689e53e277a4ab2"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/genesis-bodies.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a size-only refused birth stays incomplete without its body and becomes consistent when a later alias supplies it"
+        ],
+        "position": "_0"
+      },
+      "calls": 1,
+      "sha256": "126254ee163e70a90b08022e480ea2a670b0e627813baf8d3dc78cbe1a8c4e9a"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/genesis-bodies.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an unknown size cannot explain arbitrary effects in a refused birth"
+        ],
+        "position": "_2"
+      },
+      "calls": 1,
+      "sha256": "126254ee163e70a90b08022e480ea2a670b0e627813baf8d3dc78cbe1a8c4e9a"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/genesis-bodies.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "partial recovery rechecks the remaining unknown comparison before accepting or disproving a refused birth"
+        ],
+        "position": "_3"
+      },
+      "calls": 2,
+      "sha256": "c62488423a85446a791b66b25f33193a6e4c8132324f66f409eeac7ee7eb1b4c"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/late.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "late and boundary judgments replay, while a changed branch marker or refusal code is a mismatch"
+        ],
+        "position": "_0"
+      },
+      "calls": 12,
+      "sha256": "ae91b0ec0b2661ac2272c3a1bbe44bafc97b3990bda917669bb4a4eea1bb20f3"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/recovered-bytes.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": [],
+        "position": "0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/recovered-bytes.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a later alias proves an earlier purported detached non-text JSON invalid"
+        ],
+        "position": "_2"
+      },
+      "calls": 23,
+      "sha256": "49bd010cd2716d4d850fad47b5bc3d04e8833baf6443b79c124a245a52349d40"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/recovered-bytes.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a later alias proves an earlier purported detached oversized text invalid"
+        ],
+        "position": "_1"
+      },
+      "calls": 23,
+      "sha256": "6a4ee0fbfe26690d7c5966fad481ed2ea97aedb4701415ca7e29f79f91ceb42a"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/recovered-bytes.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a later checked text-domain alias recovers earlier byte totals at equality and retracts a disproved source prefix and its consumer"
+        ],
+        "position": "_0"
+      },
+      "calls": 23,
+      "sha256": "dd329e27bc7f0cd0053797bc1a2938f1068d8cc09cf99a3cdabdad1b7972e09c"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/recovered-bytes.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "recovered overflow retracts transitive consumers and a foreign prefix admitted through a cached proof"
+        ],
+        "position": "_3"
+      },
+      "calls": 27,
+      "sha256": "ab65d02e4ce9fb653872909d1e6180fbb32b306a2a23e6b9fe9613e5786da7d8"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/recovered-bytes.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "recovering an oversized body preserves a child's correctly recorded bad-field refusal"
+        ],
+        "position": "_4"
+      },
+      "calls": 26,
+      "sha256": "4d063b8c9dec3be21349d3e2fc1fe4aa5971a6586a0987c91f5e781da8179a3c"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/recovered-bytes.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "recovering one body leaves another body's historical byte span incomplete"
+        ],
+        "position": "_5"
+      },
+      "calls": 27,
+      "sha256": "67f9547b63fc39e90d417673a1a54a4712c3673e1c590acabd6cd5bc914300d1"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/room-recovery.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": [],
+        "position": "0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/room-recovery.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a post-fold capacity failure cannot poison a repeated root or a later use of its checked prefix"
+        ],
+        "position": "_2"
+      },
+      "calls": 3,
+      "sha256": "3c9ec9f703452e0377c6c97a3a58158697305490dc5164f072825f941e851acf"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/room-recovery.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a source without capacity still owes its missing text when another root holds the body"
+        ],
+        "position": "_4"
+      },
+      "calls": 3,
+      "sha256": "b5102387a60a4b8fc8c883b359f035795b99376ed0bf91595632b8ed96a14cc7"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/room-recovery.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an earlier missing text remains a problem below a later blocked entry"
+        ],
+        "position": "_3"
+      },
+      "calls": 4,
+      "sha256": "38c046a2be97c843011d3fa584649de9ac76a8ebd35801a7af2c1525bb3310e1"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/room-recovery.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "room finalization retracts both independent roots contradicted by later recovered bodies"
+        ],
+        "position": "_0"
+      },
+      "calls": 8,
+      "sha256": "fe0a2e878c49955294634300ef3d572220b92d932958886bdd1f6dd8c909d6b3"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/room-recovery.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "room settlement extends an already-open owing dependency before declaring another root's text missing"
+        ],
+        "position": "_1"
+      },
+      "calls": 6,
+      "sha256": "6812dacc8211ac4b766f1bd2a672c43b06d4499f03518953976715d93aed76c1"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/room-verification.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": [],
+        "position": "0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/source-order.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "both source arrival orders replay and historical views retain only the frontier applied at that head"
+        ],
+        "position": "_0"
+      },
+      "calls": 4,
+      "sha256": "1b118379161b6bc45c4cfe1b00ddf897960c06e2b2fd9f63a281871c91c82549"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/text-refusals.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an earlier successful field check rules out a later fabricated size refusal even after the text is erased"
+        ],
+        "position": "_0"
+      },
+      "calls": 2,
+      "sha256": "53bc19ef1615ea836d408a3b159b87bc97be310aa50af9b9e5793d2406f3a714"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "collection",
+        "path": [],
+        "position": "0"
+      },
+      "calls": 3,
+      "sha256": "041c59c8a8340fa189d99a334019fb8cc3a7ebe3ec7808fcbd0fe16013188b93"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a detached text whose bytes are gone (section 9.3)",
+          "a source scope that is first read while another scope's missing text is settled is itself read to its head: a text it owes with no tombstone makes the replay incomplete, and with one it is reported as redacted; the depth of its chain is counted from the target"
+        ],
+        "position": "_2_0"
+      },
+      "calls": 23,
+      "sha256": "35dd387b2b08e64dcec520a553a1dad62c999c54009fa2fc2515f17220303eaa"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a detached text whose bytes are gone (section 9.3)",
+          "a tombstone answers for the texts that it lists by one lookup for each: a note that held 30 texts whose bytes are gone, and its one tombstone, are 30 lookups"
+        ],
+        "position": "_2_1"
+      },
+      "calls": 31,
+      "sha256": "b6247f5ec1bb52d29fef472111a638c5d6e684c7a4e686511a7e3d4cdf486bf8"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: a check entry whose retained snapshot is not its canonical bytes: `incomplete`"
+        ],
+        "position": "_5_10"
+      },
+      "calls": 5,
+      "sha256": "e1d5ba42ae518a67b69ed5628a2c446674e5992bed553273b23fa9eba827730f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: a check entry whose snapshot is no longer retained: `incomplete`"
+        ],
+        "position": "_5_9"
+      },
+      "calls": 5,
+      "sha256": "e1d5ba42ae518a67b69ed5628a2c446674e5992bed553273b23fa9eba827730f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: a preparation whose grant is of another key than the one that signed"
+        ],
+        "position": "_5_4"
+      },
+      "calls": 5,
+      "sha256": "e1d5ba42ae518a67b69ed5628a2c446674e5992bed553273b23fa9eba827730f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: a preparation whose grant rests on an observation outside the window of its step"
+        ],
+        "position": "_5_3"
+      },
+      "calls": 5,
+      "sha256": "e1d5ba42ae518a67b69ed5628a2c446674e5992bed553273b23fa9eba827730f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: a preparation whose signed intent was changed, in integrity mode too"
+        ],
+        "position": "_5_5"
+      },
+      "calls": 5,
+      "sha256": "e1d5ba42ae518a67b69ed5628a2c446674e5992bed553273b23fa9eba827730f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: a record that a preparation entry did not derive"
+        ],
+        "position": "_5_2"
+      },
+      "calls": 5,
+      "sha256": "e1d5ba42ae518a67b69ed5628a2c446674e5992bed553273b23fa9eba827730f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: an ancestry record that lists a staged commit of other work: the act that it admitted is not derived"
+        ],
+        "position": "_5_12"
+      },
+      "calls": 5,
+      "sha256": "e1d5ba42ae518a67b69ed5628a2c446674e5992bed553273b23fa9eba827730f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: an ancestry record that states another count than its snapshot holds"
+        ],
+        "position": "_5_11"
+      },
+      "calls": 5,
+      "sha256": "e1d5ba42ae518a67b69ed5628a2c446674e5992bed553273b23fa9eba827730f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: an effect that the owner's rule does not derive from an outcome"
+        ],
+        "position": "_5_6"
+      },
+      "calls": 5,
+      "sha256": "e1d5ba42ae518a67b69ed5628a2c446674e5992bed553273b23fa9eba827730f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: an outcome that the rules of its owner are not given for: `unsupported-definition`"
+        ],
+        "position": "_5_8"
+      },
+      "calls": 5,
+      "sha256": "e1d5ba42ae518a67b69ed5628a2c446674e5992bed553273b23fa9eba827730f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a history changed in one place: an outcome whose input names another owner than its operation has"
+        ],
+        "position": "_5_7"
+      },
+      "calls": 5,
+      "sha256": "e1d5ba42ae518a67b69ed5628a2c446674e5992bed553273b23fa9eba827730f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a lane's history with a check entry, after the root is retired: every entry is derived, the act that the guard `ancestry` admitted among them, from the record and the retained snapshot; the walk is not derived, so the result is `incomplete` at the check entry and never `consistent` (T24; witness 18.10; I3 deltas, entry EU2)"
+        ],
+        "position": "_5_1"
+      },
+      "calls": 5,
+      "sha256": "e1d5ba42ae518a67b69ed5628a2c446674e5992bed553273b23fa9eba827730f"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a preparation, its outcomes and an ancestry record are derived again (sections 5.5, 9.3 and 16.4)",
+          "a lane's history with preparations and their outcomes, and no ancestry record, is consistent, and the report lists what of the outside is trusted (witness 18.4)"
+        ],
+        "position": "_5_0"
+      },
+      "calls": 3,
+      "sha256": "f649ff0f4b6c2772589b0a2a675b57614e96d640b4df2b2786f2706a9ad6f4f8"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a replay without native identity policy leaves a reserved declared source incomplete, while an exact source anchor remains explicit trust"
+        ],
+        "position": "_1"
+      },
+      "calls": 6,
+      "sha256": "ada98c7dd05d33546923c1e41f5aecef0d8b1d7fcd1e58d17b10ff80c3c9d003"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a reservation that an item holds, in a replay: the counts, each `for` and each draw are derived again from the history",
+          "18.47 case 15: a history whose entries draw within the counts is consistent; an entry that opens a held operation for no holder, and one that draws past a count, are each a mismatch with its name"
+        ],
+        "position": "_6_0"
+      },
+      "calls": 4,
+      "sha256": "71ecddea84abc7f4d3a52de85954f2fb9293da706f918acfa84418f5bd6fd8f6"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "a reservation that an item holds, in a replay: the counts, each `for` and each draw are derived again from the history",
+          "18.49 case 12: a history in which a held kind opens a kind that no item holds is consistent, and the operation of that kind has no holder"
+        ],
+        "position": "_6_1"
+      },
+      "calls": 2,
+      "sha256": "4d752340b4ba891ffad99f8cfe2446ad790bda09bde1baa093bf1be82ed43fb9"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an outcome entry of a platform definition, and where a scope records its membership reference",
+          "a scope whose platform version records its membership reference in its state is replayed on that reference, as a directory's slot is read; with no such reference its grant covers nothing (I3 deltas, entry EP14)"
+        ],
+        "position": "_7_5"
+      },
+      "calls": 2,
+      "sha256": "6975cec87d575f9a2e8886483cecda26ad0f863be4d906f2d24ba2b2685715e8"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an outcome entry of a platform definition, and where a scope records its membership reference",
+          "a value that an entry names is a retained input of the kind `value`, under its domain: a replay with the bytes derives the entry again, and one without them, with other bytes, or with the bytes under another domain is `incomplete` and no mismatch"
+        ],
+        "position": "_7_4"
+      },
+      "calls": 2,
+      "sha256": "0999f9cc5cc7fbc1c7674243da68bf07c935d5672410124477a6c694aa1691a0"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an outcome entry of a platform definition, and where a scope records its membership reference",
+          "an observation of the rules is derived again from the history of the rules scope: the value from its state at the head, and the revision against the last entry of the kind `publish` at or before it"
+        ],
+        "position": "_7_3"
+      },
+      "calls": 4,
+      "sha256": "76998da8a2c3e543993d288a263586cb49ae69f657122cef9a96fbef2f53f044"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an outcome entry of a platform definition, and where a scope records its membership reference",
+          "each observation that an act retains in `observed` is derived again: it is of the membership scope that the scope records, and inside the window of the act (section 16.1, guards 1 and 5; I3 deltas, entries EM26 and EU4)"
+        ],
+        "position": "_7_1"
+      },
+      "calls": 2,
+      "sha256": "a73e8d5b53816adf37b4dd4926301ea4a4d94ad72e7689933ca9156dadd9f107"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an outcome entry of a platform definition, and where a scope records its membership reference",
+          "each observation that an outcome retains in `observed` is derived again, in the ten-second window and `fresh`; the judge derives the member from what its rule read, so an outcome that holds one which no rule read, or lacks one that its rule read, is a mismatch"
+        ],
+        "position": "_7_2"
+      },
+      "calls": 6,
+      "sha256": "fc876dab0da5eac3cc7439c830a9110f236d4c12fca135be988e29f5673c5dd2"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "an outcome entry of a platform definition, and where a scope records its membership reference",
+          "the outcome is derived with the rule that the data names for its kind; a rule whose output the commit refuses as a fault writes no entry in a replay either, also when the history holds that output (I3 deltas, entries EN2 and EJ11)"
+        ],
+        "position": "_7_0"
+      },
+      "calls": 2,
+      "sha256": "6975cec87d575f9a2e8886483cecda26ad0f863be4d906f2d24ba2b2685715e8"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "the rows of `observes`, replayed: the origin, the subject lists, the guards with each row's window, and the values that an observation names",
+          "18.46 cases 13 to 15: the entry of an outcome with four subjects is consistent, with `observation-read` and `platform-code` under `trusts`; a record that no row gives, a `uses` that is no copy of the origin's, and a record that fails a guard under its row's window and use are each a mismatch, and a record that only a row which states `write` gives may be absent"
+        ],
+        "position": "_9_0"
+      },
+      "calls": 2,
+      "sha256": "3e34317824b549e1aa84bddf47ee1f8c2aa39280d00435481436213cbeead4ad"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "the rows of `observes`, replayed: the origin, the subject lists, the guards with each row's window, and the values that an observation names",
+          "18.48 case 10, and 18.50 case 11: an entry whose observation of the rules names a value is derived again with the bytes that the scope keeps by the domain and the digest; without them, or with other bytes under that digest, the replay is incomplete"
+        ],
+        "position": "_9_2"
+      },
+      "calls": 2,
+      "sha256": "6d6c3cb8178102e0a727b7201bc60e81fe8b5bf2726248b050f1ffa07fbd0de4"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "the rows of `observes`, replayed: the origin, the subject lists, the guards with each row's window, and the values that an observation names",
+          "18.52 cases 11 and 12: the second list is derived from the recorded observation of the rules, so a record of a key that it does not give is a mismatch; an entry whose row is absent and states `write` is consistent, with `observation-read` under `trusts`"
+        ],
+        "position": "_9_1"
+      },
+      "calls": 4,
+      "sha256": "50bf9dd5d18f5845be5d58d85a0b329ec2bda7019c75f4a9535af8c31dd2ce0a"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "the value of an observation is derived once from the history of its source, and every entry that names it is compared with it",
+          "40 acts, each on a read of a run of its own: each run is looked up once among the runs seen, and the value of the one head and key is derived once"
+        ],
+        "position": "_8_2"
+      },
+      "calls": 84,
+      "sha256": "a242138a13bd868740e174f3261cde773ad18bdd504e5b4a1d84af5513e980e8"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "the value of an observation is derived once from the history of its source, and every entry that names it is compared with it",
+          "a view gives the state of a scope at every head that it was folded through, asked in any order, and it is the state that a fold from the genesis to that head gives"
+        ],
+        "position": "_8_3"
+      },
+      "calls": 95,
+      "sha256": "6a9991905cee5c7e97ba429a8e9261f88804027d87ec27a97fb0cac34c82cea4"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "the value of an observation is derived once from the history of its source, and every entry that names it is compared with it",
+          "an entry that names a head and a key whose value is already derived is still compared with it: a standing that membership never gave is the mismatch that it was"
+        ],
+        "position": "_8_1"
+      },
+      "calls": 85,
+      "sha256": "038cb79aebb5d385ff4ed7e4ef9fcecb5e40be488fd6baa54d10bbad2e366234"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/verify.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "the value of an observation is derived once from the history of its source, and every entry that names it is compared with it",
+          "two admins who alternate `publish` on membership heads L and H: the answer is the earlier code's, and the work is the source's history folded once and one value for each distinct head and key, whatever the number of grants"
+        ],
+        "position": "_8_0"
+      },
+      "calls": 85,
+      "sha256": "038cb79aebb5d385ff4ed7e4ef9fcecb5e40be488fd6baa54d10bbad2e366234"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/view.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "historical declared indexes and fixed-slot counts retain their own head's live and final items, in any order"
+        ],
+        "position": "_3"
+      },
+      "calls": 5,
+      "sha256": "81ec0b61b02c839c9cda998a3cb9984f22bfe7e8a5b0441f005bd9d56e555be1"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/view.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "historical fixed counts rekey a retained final record at its floor without changing earlier heads"
+        ],
+        "position": "_0"
+      },
+      "calls": 101,
+      "sha256": "3b23eecd8cfef83356dc8735b1cc474c96fe13ab358339b2dde9e1ed3fbaf07b"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/view.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "historical item duties contain only their head's admitted tasks, preserve an ordinary final transition and remove a genuine settlement"
+        ],
+        "position": "_2"
+      },
+      "calls": 4,
+      "sha256": "c8e48eb7d3a3c0ddb869cd85dc0f45882a7adecea94ec2eb99da06ac10d5b32d"
+    },
+    {
+      "list": "runtime",
+      "owner": "packages/replay/test/view.test.ts",
+      "case": {
+        "kind": "test",
+        "path": [
+          "replay derives opt-in item and originating-request duties through a diagnosis and accepts their covering checkpoint"
+        ],
+        "position": "_1"
+      },
+      "calls": 3,
+      "sha256": "91660b2629865e8e2f2d003b955f42d14dd8091186e90dd2c5aecaaef7e1faff"
+    }
+  ]
+}

@@ -6,7 +6,7 @@ import { capabilityGuard } from "../capability.ts";
 import { members, preparedRule, type GuardResult, type Judging } from "../guards.ts";
 import { all, any, coveredItems, excepted, scanItems } from "../lists.ts";
 import { guardByRule } from "../marks.ts";
-import { copyEntry, copyUnder, matchesCopy, entryValue, equal, kindOf, normalValue, slotOf } from "../operand.ts";
+import { copyEntry, copyUnder, matchesCopy, entryValue, equal, kindOf, normalValue, readSlotValue, slotOf } from "../operand.ts";
 import type { Item } from "../state.ts";
 import { timeMs } from "../time.ts";
 import { isFactRef, isLocalId, own, same } from "../values.ts";
@@ -36,7 +36,7 @@ function range(reading: Reading, op: "some" | "none" | "count", r: RangePlan, mi
     return decide([...new Set(r.states)].reduce((n, state) => n + j.view.count(r.type, state), 0) - left, true)!;
   }
   const [where] = r.where;
-  if (r.where.length === 1 && where?.op === "equals") {
+  if (!j.references && r.where.length === 1 && where?.op === "equals") {
     for (const [slot, value] of [[where.a, where.b], [where.b, where.a]] as const) {
       if (slot.op !== "slot" || slot.projection !== null || slot.slot.subject.identity.kind !== "range" || !slot.slot.fixed
         || (value.op !== "field" && value.op !== "const") || value.projection !== null) continue;
@@ -96,7 +96,7 @@ function executeGuardValue(j: Judging, body: BodyStructure, node: GuardNode, ele
   const bound = (value: BoundPlan): number | null | undefined => {
     if (value.op === "absent") return undefined;
     if (value.op === "literal") return value.value;
-    const answer = read(value.read);
+    const loaded = read(value.read), answer = j.references ? j.references.expose(loaded) : loaded;
     return typeof answer === "number" && Number.isSafeInteger(answer) && answer >= 0 ? answer : null;
   };
   switch (code.op) {
@@ -114,12 +114,16 @@ function executeGuardValue(j: Judging, body: BodyStructure, node: GuardNode, ele
     case "some": case "none": return range(reading, code.op, code.range);
     case "count": { const [min, max] = [bound(code.min), bound(code.max)]; return min === null || max === null ? "fail" : range(reading, "count", code.range, min, max); }
     case "every": {
-      const list = code.list.op === "field" ? own(j.fields, code.list.field.name) : item ? slotOf(item, code.list.slot.name) : null;
+      const list = code.list.op === "field" ? own(j.fields, code.list.field.name) === undefined ? undefined
+        : j.references ? j.references.field(j.fieldTypes, j.fields, code.list.field.name) : own(j.fields, code.list.field.name)
+        : item ? readSlotValue(j, item, code.list.slot.name) : null;
       if (list === undefined) return "fail";
-      return ok((Array.isArray(list) ? list : []).every(id => code.states.includes(j.view.item(id as number)?.state ?? "")));
+      return ok((Array.isArray(list) ? list : []).every(id => code.states.includes((j.references
+        ? j.references.lookup(j.view, { at: "untyped" }, id, null) : j.view.item(id as number))?.state ?? "")));
     }
     case "fact": {
-      const ref = code.source.op === "field" ? own(j.fields, code.source.field.name) : read(code.source.read);
+      const loaded = code.source.op === "field" ? own(j.fields, code.source.field.name) : read(code.source.read);
+      const ref = j.references ? j.references.expose(loaded) : loaded;
       if (ref === undefined || ref === null) return "fail";
       const local = isLocalId(ref), kept = local ? j.own?.(ref) : undefined;
       const fetched = isFactRef(ref) ? j.facts.get(ref.hash) : undefined;
@@ -133,7 +137,8 @@ function executeGuardValue(j: Judging, body: BodyStructure, node: GuardNode, ele
     }
     case "before": case "after": {
       if (j.clock.behind) { captureProgramReads(j.definition, { clockBehind: true }); return "clock-behind"; }
-      const value = item ? own(item.values, code.slot.name) : null;
+      const loaded = item ? readSlotValue(j, item, code.slot.name) : null;
+      const value = j.references ? j.references.expose(loaded) : loaded;
       const deadline = timeMs(value), clock = j.clock.reading, now = timeMs(clock)!;
       captureProgramReads(j.definition, { subject: site.subject, deadline: value ?? null, clock });
       return ok(deadline !== null && (code.op === "before" ? now < deadline : now > deadline));
@@ -165,9 +170,10 @@ function listGuard(reading: Reading, body: BodyStructure, code: Extract<GuardCod
   const keys = bound.map(inner => readValue(inner.j, code.key, item, inner.elements));
   if (keys.some((key, index) => key === null || keys.slice(0, index).some(earlier => equal(j, earlier, key)))) return "fail";
   if (code.op === "distinct") return "pass";
-  const selected = keys.map(key => items.find(item => equal(j, key, item.id)));
+  const selected = keys.map(key => items.find(item => equal(j, key, j.references ? j.references.item(item) : item.id)));
   if (keys.length !== items.length || !selected.every(item => item !== undefined)) return "fail";
   if (!bound.every((inner, index) => matches(inner, code.match, selected[index]!))) return "fail";
+  if (code.ordered && j.references) for (const item of selected) j.references.expose(j.references.item(item!));
   return code.ordered && selected.some((item, index) => index > 0 && selected[index - 1]!.id >= item!.id) ? "fail" : "pass";
 }
 function exhaustive(value: never): never { throw new TypeError(`unknown guard instruction: ${String(value)}`); }
