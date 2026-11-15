@@ -92,7 +92,9 @@ export function actExplore<D extends DeclaredDefinition, K extends Kind<D>>(defi
     if (stated.head === null) return { is: "unavailable", act: bound.act, context: stated, lacks: ["source"] };
     const expected = lowerActBasis(declared, subjects, capture.on, capturedFields, scope.at, bound.act.expected, projection.basisSymbols());
     const body = judgeActBody(reader, definition, { kind: act.kind, on: names.on, fields: shaped.fields, expected }, {
-      ...withTexts(context, shaped.texts), provenance: projection.references.classifier({ source, on: bound.act.on,
+      ...withTexts(context, shaped.texts),
+      ...(Object.hasOwn(context, "capabilities") ? { capabilities: projection.capabilities(context.capabilities) } : {}),
+      provenance: projection.references.classifier({ source, on: bound.act.on,
         fields: fieldSources, expected: bound.act.expected }),
     });
     if (body.result === "refused") return { is: "refused", act: bound.act, context: stated, bound: bound.bound,
