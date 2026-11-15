@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ed9599d7f328268aa6e5df61f2b0b6282c2e459f","text":"Merge retired a covered predecessor; the successor is at packages/client/test/browser-joining.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:eda3295b57790d50265a4d63cf4a562720d660af","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/card-words.ts."}
