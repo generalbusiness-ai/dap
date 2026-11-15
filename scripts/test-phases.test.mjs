@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { scopeScaleFiles, scopeScaleCaseCounts, testOptions } from "../vitest.projects.mjs";
+import { scopeScaleOriginalCaseCounts, scopeScaleMovedCaseCounts, scopeScaleGroup } from "../packages/scope/vitest.scale-files.ts";
 
 test("the canonical partition keeps inherited native configs out of the plain phase and refuses inconsistent selection", () => {
   const all = testOptions(), plain = testOptions("plain"), native = testOptions("native");
@@ -24,8 +25,19 @@ test("the canonical partition keeps inherited native configs out of the plain ph
   assert.deepEqual(scopeScaleFiles, Object.keys(expectedScale));
   assert.equal(scopeScaleFiles.length, 13);
   assert.equal(Object.values(scopeScaleCaseCounts).reduce((sum, count) => sum + count, 0), 22);
+  assert.deepEqual(scopeScaleOriginalCaseCounts, Object.fromEntries(Object.entries(expectedScale).slice(0, 4)));
+  assert.deepEqual(scopeScaleMovedCaseCounts, Object.fromEntries(Object.entries(expectedScale).slice(4)));
+  assert.deepEqual([scopeScaleGroup("all").files.length, scopeScaleGroup("all").expectedCases], [13, 22]);
+  assert.deepEqual([scopeScaleGroup("moved").files.length, scopeScaleGroup("moved").expectedCases], [9, 16]);
+  assert.deepEqual(scopeScaleGroup("moved").files, Object.keys(scopeScaleMovedCaseCounts));
+  assert.deepEqual(scopeScaleGroup("omit").files, []);
+  assert.equal(testOptions("native", "moved").projects.length, 5);
+  assert.deepEqual(testOptions("scale", "moved").projects.map(project => project.test.name), ["scope-scale"]);
   assert.throws(() => testOptions("all", "omit"), /Only the native gate/);
-  assert.throws(() => testOptions("native", "unknown"), /Only the native gate/);
+  assert.throws(() => testOptions("plain", "moved"), /Only the native gate/);
+  assert.throws(() => testOptions("scale", "omit"), /Only the native gate/);
+  assert.throws(() => testOptions("native", "unknown"), /omit, moved or all/);
+  assert.throws(() => testOptions("native", "run"), /omit, moved or all/);
   assert.deepEqual(new Set([...plain.projects, ...native.projects]), new Set(all.projects));
   assert.ok(plain.projects.every(project => !project.extends.includes("vitest.worker") && !project.extends.includes("vitest.lending") && !project.extends.includes("vitest.denial") && !project.extends.includes("vitest.scale")));
   assert.deepEqual(native.projects.map(project => project.test.sequence.groupOrder), [1, 2, 3, 4, 5]);
