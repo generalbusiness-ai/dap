@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:61062db2e16b75ce2371e282e790120f575342b4","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-projection-reader.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6579e47cc8abe36966081b7eaaac06665cedf294","text":"Merge retired a covered predecessor; the successor is at examples/lending/dap.application.json."}
