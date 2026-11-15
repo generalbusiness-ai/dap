@@ -185,7 +185,7 @@ does not need it.
 
 ## 5. One function gives the keys of expected
 
-Four places compute which keys `expected` holds:
+Five places compute which keys `expected` holds:
 
 | Place | Rule |
 |---|---|
@@ -193,8 +193,9 @@ Four places compute which keys `expected` holds:
 | `expectedOf`, `packages/client/src/expected.ts:55-68` | The builder for the CLI, the MCP server, the pages and the examples. About 30 call sites |
 | `packages/mcp/src/views/declared.ts:150-152` | Its own list: each name of `also` that no mark selects, and `on` for a transition. A card signs only when each of those keys is present |
 | `packages/define/src/story.ts:196-201` | Its own rule. It sets `on` whenever the story names an item, and the judge takes no `on` key for a `comment` |
+| `capturedExpected`, `packages/mcp/src/shape.ts:118-133` | The check of the MCP input `at`. It compares with the builder's keys. It also admits a key that the builder left out, for `on` and for each name of `also` that no mark selects, because a subject can leave the live summary |
 
-Four rules for one fact can differ. The fourth differs from the judge
+Five rules for one fact can differ. The fourth differs from the judge
 now. The third is stricter on purpose, and it keeps that rule. Step A
 would add one more condition to each. So step A first makes the change
 easy: `packages/derive` exports one function, and each place calls it.
@@ -207,11 +208,18 @@ function expectedKeys(act: ActType, bound: Iterable<string>): string[]
 
 The judge calls the function with the names that it resolved. The
 builder calls it with the names that the caller's view resolves. The
-card view calls it with each name that no mark selects. The
-check of the MCP input `at` (`packages/mcp/src/shape.ts:118-133`)
-compares with the builder's keys, so it follows. The description of
-that input (`packages/mcp/src/input-schema.ts:36`) says "bound
-subjects" and gains the word "observed".
+card view calls it with each name that no mark selects.
+
+The check of the MCP input `at` does not follow from the builder. The
+builder leaves out the key of a `current` subject, and the check then
+admits that key as one of a subject that left the summary. The scope
+would refuse the intent with `bad-intent`, after a signature. So the
+check takes its admitted names from the function, with each name that
+no mark selects. The MCP server then refuses an `at` that holds a key
+for a `current` subject, and it signs nothing. The rule covers a
+`current` `on` in the same way. The description of that input
+(`packages/mcp/src/input-schema.ts:36`) says "bound subjects" and
+gains the word "observed".
 
 The member `current` sits in the act. Each call site of `expectedOf`
 passes the act today, so no call site changes.
@@ -321,7 +329,7 @@ Three kinds of act suit `current`, and two do not:
 
 | Step | Work | Kernel |
 |---|---|---|
-| A1 | `expectedKeys` in `packages/derive`. The judge, `expectedOf`, `views/declared.ts` and `story.ts` call it. No answer of the judge changes. `story.ts` stops setting `on` for a `comment` | One export |
+| A1 | `expectedKeys` in `packages/derive`. The judge, `expectedOf`, `views/declared.ts`, `story.ts` and `capturedExpected` call it. No answer of the judge changes. `story.ts` stops setting `on` for a `comment` | One export |
 | A2 | The contract types, the validator's checks, the judge's condition, the install gate, and the documents | The part, the member, one problem code |
 | A3 | The map's `comment` takes `also.place`, `current` and the guard `place-gone`, in `~/play/dap-foldkit`. The pinboard states `current` for `move` and `resize` when it has a definition | None |
 
@@ -363,8 +371,9 @@ sections 7 and 7.1 of `docs/kernel.md`, `docs/mcp.md` and
    case 8 of the suite in section 12 of the environment note.
 9. A room at a pin that does not opt in refuses the install with the
    reason of section 7. A room at `platform:rules@14` installs.
-10. `expectedOf` gives no key for a `current` subject, and the MCP
-    server refuses an `at` that holds one.
+10. `expectedOf` gives no key for a `current` subject. The MCP
+    server refuses an `at` that holds one, for `on` and for a name of
+    `also`, before it signs.
 
 **Controls.** Each control changes one line and names the case that
 fails.
