@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8abd9cf401240d2cf769f7285926a9c1042d2266","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/body.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8ec4b57cb4e194ebd5c499fa77d25ce44902a267","text":"Merge retired a covered predecessor; the successor is at scripts/e1-judge-oracle.mjs."}
