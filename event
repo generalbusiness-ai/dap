@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:49f5d67ca34727d8135ef1ebd95654b0fc4f407b","text":"Merge retired a covered predecessor; the successor is at packages/client/src/browser-custody.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4db385e38f7e8630a7232d94532b5dde49f07269","text":"Merge retired a covered predecessor; the successor is at .agents/skills/verify-counter-voice/SKILL.md."}
