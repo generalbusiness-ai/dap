@@ -8,8 +8,8 @@ set the package, Git, and test boundaries.
 P1 derives every role row from `lendingRoles.roles` and adds
 `lending.publish` to `agent`; it changes none of the shipped Lending
 package's roles, manifest, source definition, JSON definition, or pin
-under ruling `36915a7c`. CUT-R's canonical identifiers, pending signed
-release, and hosted settings stay unchanged.
+under ruling `36915a7c`. Shipped release identifiers, signed packets and
+hosted settings stay unchanged.
 
 The scripts consume the checked source definition and publication map.
 No script reads portable package metadata, so P1 adds no unused manifest.
@@ -159,8 +159,20 @@ guard caused the existing restart witness's direct assertion to fail.
 An earlier control invocation was inconclusive before tests because it
 named the wrong package directory; that result remains separate.
 The implementation note records both attempts and the exact evidence.
-Full gate, canonical reproduction, checker review and hosted acceptance
-remain UNRUN. No producer, remote Git write or deployment ran.
+Fresh combined pins, including canonical reproduction, passed at
+`50e16a76` in 17.286229459 s outer. The clean composition retains all
+18 P1 blobs and modes from `63c30fd0`, including the current-client
+accommodation. Its LS4 successor changes only two diagnostic scripts.
+The normal reproduction owner ran its scratch preparation; no manual
+producer or committed output, identifier or version change followed.
+That ordinary owner uses real TEST signatures during scratch preparation;
+it signs no production release.
+The earlier compiler and control results remain bound to `0ef9244f`.
+The combined gate passed at `50e16a76` under END
+`7471c330f974c841a1c68d7d8fd0f11cab8d8530`, including the whole
+13-case publisher owner in Plain. Final documentation checks, checker
+review, landing and hosted acceptance remain owed. No remote Git write
+or deployment ran for P1.
 
 
 ## Source review repairs
@@ -188,4 +200,8 @@ results stay bound to `146dcb26`; the later current-client compiler and
 whole-owner baseline at `0ef9244f` cover the unsent accommodation.
 The new control scripts an existing ending through real file custody;
 it proves no journal-absence algorithm, native enrollment or remote host.
-The full gate and review still wait for root's execution grant.
+The combined gate passed; checker review remains owed. The implementation
+note preserves the historical retained directory-control children and the
+current helper's deleted-JSON qualification, as well as the invocation
+that stopped before tests. The gate supplies no native enrollment,
+remote credential or hosted publisher acceptance.

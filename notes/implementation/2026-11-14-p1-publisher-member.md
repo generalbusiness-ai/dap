@@ -7,8 +7,11 @@ It preserves earlier development/control results at their original heads;
 the standalone Lending compiler and directory control later passed at
 `146dcb26`. Current-client compilation and the thirteen-case baseline
 also passed at `0ef9244f` on 2026-11-15, with the `report-unsent`
-control below. Full gate, canonical reproduction and checker review
-remain unrun.
+control below. Fresh combined pins, including canonical reproduction,
+passed at `50e16a76`. The combined full gate also passed at that head,
+under END `7471c330f974c841a1c68d7d8fd0f11cab8d8530`, including the
+whole 13-case publisher owner in Plain. Final documentation checks and
+checker review remain owed. These results establish no hosted acceptance.
 
 The separate definition and publisher live in
 `examples/lending/publisher/`. They add optional publisher, repository,
@@ -90,8 +93,8 @@ Git diffs supply no runtime or compiler result.
 
 ## Open limits
 
-- P1 request `bea87570` still owes one gate and checker review. The bounded
-  standalone development/control results below do not supply those results.
+- The combined gate below supplies P1's gate result. Checker review remains
+  owed; the standalone development/control results do not supply it.
 - P1 uses the local Git path of `d2d431a9`. P2 owns remote credential
   delivery and later replacement of the shipped Lending package.
 - The in-memory witnesses expose scripted membership and read authority.
@@ -259,6 +262,9 @@ The dated current-client rows give their full record paths:
 | `0ef9244f`: current compiler and compatibility | PASS. Lending compiler exit 0, 0.751358750 s; stdout and stderr empty. Maintained compatibility exit 0, 0.092440750 s. Both commands reaped. They did not repeat during corrected attempt 2. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-p1-current-client-control-attempt1/result.json`, SHA-256 `00d314f8b9bc5bae1d49f1e5c26a746d2b9b4411fb136ce6be2a2ca1b74c6f01`; actual argv `commands[0..1].argv`. |
 | `0ef9244f`: control attempt 1 invocation failure | INCONCLUSIVE, exit 2, 0.072665334 s; all commands outer 0.955878750 s. The helper refused `examples/lending` because it is not a package directory. No owner, baseline, mutant or control source write ran. Source/mode/head/tree remained unchanged. This is an invocation failure, not a product or assertion failure. END `27b502058de4bd591528a6a16cf9c5440b514915`. | Same attempt 1 result, SHA-256 `00d314f8b9bc5bae1d49f1e5c26a746d2b9b4411fb136ce6be2a2ca1b74c6f01`; actual wrong argv `commands[2].argv` and retained stderr metadata. |
 | `0ef9244f`: corrected current-client control attempt 2 | DISTINGUISHES; helper exit 0, signal null, reaped; 33.734917208 s. Whole-owner baseline: all 13 passed. Removing only the settled `unsent` return produced child exit 1: 12 passed and one direct AssertionError at `publisher.test.ts:250`, expected `stopped/report-unsent`, received `stopped/custody-mismatch`. Exact source bytes and mode 0644 restored; head/tree clean. No separate positive or third restored green. END `a4f49579b8ade74bef98a99a491e3fbb7acc4c8a`. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-p1-current-client-control-attempt2/result.json`, SHA-256 `80917d4a8bf60e62434973de2bde0125fb85f1ba28dccc2c7532ff720c25dc8e`; actual corrected `argv`. Safe 3,262-byte stderr.log beside it, SHA-256 `205e8022f7607c8015b2bf6c746fc403b2cfad173adb8b7dcedbba218005f520`. |
+| `50e16a76`: combined pins and canonical reproduction | PASS; `npm run pins`, exit 0, signal null, reaped; 17.286229459 s outer, within the 60-second bound. All maintained pin stages passed, including the whole one-case release reproduction owner. The normal reproduction owner ran its scratch preparation; no manual producer or committed output, identifier or version change followed. Source stayed clean. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-gs4-p1-ls4-pins-attempt1/result.json`, actual `argv`, cwd, head/tree and stream hashes. SHA-256 `c0f36eaae15a26706ef7c3fc3221a66436a9f4ceb0633bcddb8fdf0eaa8ba464`. |
+| `50e16a76`: combined ordinary gate | PASS; child exit 0, verification exit 0, reaped. Child 1775.006830875 s; outer 1775.611015208 s. Kernel passed; Node 205, Counting 56, Plain 4890 passed plus 1 skipped, Native 1158 passed plus 2 skipped. Plain includes the whole 13-case publisher owner. All four terminal case ledgers are complete; 129 unknown/suite observations, zero contradictions or report errors; scope-stories module timings remain partial. END `7471c330f974c841a1c68d7d8fd0f11cab8d8530`. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-gs4-p1-ls4-full-gate-attempt1/result.json`, SHA-256 `c6314cad08bab493f56d3a602bad90d138c200a9b596aea058d483dbe45867b6`; actual controller/child argv and walls. Released `gate.log` beside it, SHA-256 `cb4205c5b33dc5118979c8ff1e87a17ed476a0b57d2e63f8d42d2ef5079752d8`. |
+| Natural Scale selection and observations | ALL, matched `package.json` and `scripts/gate.sh`. Actual 22 passed cases in 13 modules. Scale-only wall remains unknown; the whole Native wall is 1410703.286791 ms and includes other owners. No concurrent sum or CPU estimate substitutes for Scale wall. | `scale-selection.json`, `scale-observation-summary.json` and `stage-status-summary.json` in the same gate directory record the actual selection, unique final observations and stage walls. `scale-selection.json` SHA-256 `4043ea4936e8767235c6eb537e4876bca3f0c3515813c0e3ed0e84d2f3ae6d87`; `scale-observation-summary.json` SHA-256 `905c5dfd79a8df49c56af775ff0cf892c18d7ff3213aeb089e7cb3cc1e3ba439`; `stage-status-summary.json` SHA-256 `e18c0decd678dbd56a128bc7e390d0e4df589cdec66f2c3bb70f0e3645407f4c`. |
 
 For the historical `146dcb26` directory control, the fault fails the
 actual adjacent-bound assertion at
@@ -318,7 +324,9 @@ AE1-composed lanes remain intact. Historical `146dcb26` compiler and
 13-case baseline/control results above retain their original source
 bindings. At that initial refresh the new import closure remained unrun;
 the current compiler and whole-owner results above now cover the
-`0ef9244f` source. Full gate, reproduction and review remain **UNRUN**.
+`0ef9244f` source. Full gate, reproduction and review remained **UNRUN**
+at that refresh; the later combined pins and gate results supply current
+canonical reproduction and the gate PASS at `50e16a76`.
 No project check, dependency setup, producer, package release or hosted
 operation ran for this source preparation.
 
@@ -349,5 +357,60 @@ deadlines. The current-source compiler and whole thirteen-case baseline
 passed at `0ef9244f`. The corrected direct control also distinguished
 the settled-ending guard. That same positive fixture exercises final-send
 reuse, the exact ended record/envelope and repeated stop without another
-signature, delivery, `published` entry or branch commit. Full gate,
-canonical reproduction, checker review and hosted acceptance remain owed.
+signature, delivery, `published` entry or branch commit. These checks
+retain their original `0ef9244f` source binding. Current combined
+canonical reproduction and the combined gate passed below. Final
+documentation checks, checker review and hosted acceptance remain owed.
+
+## Combined source and fresh reproduction on 2026-11-15
+
+Clean composition `b389fdf2711b2eb94789dedb2078b5b08877412d`, tree
+`c8cdd47fdc509a58189c8a1b4b1fd49dc2fba5b5`, contains the current
+CE2/LW1, LS3, GS4 and P1 source. All 18 P1 paths retain the exact blobs
+and modes of documentation checkpoint `63c30fd0697b0ee835977538d105dc84312365fc`.
+The `c8572723` publisher accommodation and its meaningful retained-ending
+witness therefore remain intact. The LS4 successor
+`50e16a765376298f02325cb5d0166fe4eb34bc95`, tree
+`c47b82f46586d98565c9e43e05b32dac0dd2e207`, changes only
+`scripts/test-celld-proxy.mjs` and `scripts/celld-smoke.test.mjs` from
+that composition. Its base main is `9e42735a1901b54c09145841dae51439f522b1c1`.
+
+At `50e16a76`, the whole maintained pins command passed, including
+canonical application reproduction. The normal reproduction owner ran
+its scratch preparation; no manual producer or committed output,
+identifier or version change followed. That ordinary owner uses real
+TEST signatures during preparation; it signs no production release.
+This is new combined-source
+evidence; it does not relocate the earlier compiler or control results
+to a new head.
+The original current-client compiler and whole 13-case control baseline
+stay bound to `0ef9244f`. The `146dcb26` directory control keeps its
+historical retained children; the current conclusive helper deleted its
+JSON children as stated above. The pre-test inconclusive invocation
+remains separate.
+
+The combined ordinary gate passed under START
+`735d73a2390de22d6f7f9198607ce513cc959bf9` and END
+`7471c330f974c841a1c68d7d8fd0f11cab8d8530`. Its source is still
+`50e16a76` / `c47b82f4`, based on `9e42735a`; its Plain stage includes
+the whole 13-case publisher owner. The gate adds current combined-source
+coverage without changing the older compiler/control source bindings.
+The table records actual stage counts, complete terminal ledgers and the
+partial scope-stories timing limit. Natural Scale selected ALL through
+the two matched tooling paths and passed 22 actual cases in 13 modules.
+Scale-only wall and per-phase CPU remain unknown.
+
+The gate directory holds 12 explicitly allowed control files across all
+combined controls. Its P1 subset is under `controls/p1-directory-history`,
+`controls/p1-current-invocation` and `controls/p1-current-unsent`, each
+with the two safe records identified above and unchanged hashes. These
+copies claim no deleted current JSON children and no repeated historical
+directory run. Full test/stage raw data stays private; the public result,
+released gate log and closed summaries retain the reported facts.
+
+The filed report and `final-source-correspondence.json` in the gate
+directory identify the final document-only head, tree and changed paths.
+Source and tests remain unchanged from `50e16a76`. Documentation checks
+and independent review are recorded separately. Hosted acceptance stays
+outside these results. P1 adds no production signed package, trust row,
+hosted operation or remote Git push.
