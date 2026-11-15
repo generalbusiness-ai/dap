@@ -36,7 +36,8 @@ runs stayed inside the authorized scratch fixtures; no repository
 formatter command or shared hook activation ran. The
 [combined DEV and control evidence](2026-11-14-gs3-two-scale-groups.md#development-and-control-evidence)
 records the exact frozen source, logs and the selector's distinguishing
-control. No extra checks followed that control.
+control. That development interval ended after the control; the later
+shared-helper follow-up appears below.
 
 GS3 request `3a4f6d1c` combines this source with its two-group scale
 selector under one tooling gate after NF5, C2 and C3, before E1's full
@@ -87,7 +88,27 @@ existing real-Git hook witness already covers this enumeration gap; its
 root-level source, refusal assertion and shared-import repair stay
 unchanged. No duplicate regression or mirrored selector test was added.
 
-The repaired source and its helper, whole-hook and selection checks are
-**UNRUN**. Earlier results describe their exact earlier heads. The full
-gate and review remain owed. This checkout does not activate hooks or
-change shared Git configuration.
+The repaired head `6f3b556e35360dc1cd9dbdc77e6e2d0ed35d0a0f`, tree
+`c0a2557dd04dbad87b7f7f9ba0ff247f6af47514`, passed its separately granted
+follow-up. Helper syntax exited 0 in 0.064641334 seconds; the maintained
+scan exited 0 in 0.641652625 seconds over 927 sources and 159 bytes
+exports. The whole helper owner passed two cases in 0.150011458 seconds,
+the whole hook owner passed four in 4.348524833 seconds, and the whole
+selection owner passed six in 0.491379000 seconds. No case failed or
+skipped. The outer run took 5.696680333 seconds. END
+`bdc7f61aa26c608b132f4115f46f44869e2172cb` records these actual results.
+
+Raw argv, results and all streams remain under
+`/Users/hughpyle/play/artroom-evidence/2026-11-14-gs3-fh1-helper-development-attempt2`.
+The [combined evidence table](2026-11-14-gs3-two-scale-groups.md#development-and-control-evidence)
+retains both attempts and the cited stdout hashes. The unchanged hook
+case now refuses the staged duplicate and accepts its shared import;
+its actual Git child streams remain in the named scratch repositories.
+Selection's 22-case and 16-case reports are scripted runner-contract
+data, not real Scale acceptance. No separate fault run or third green
+run followed this repair.
+
+Earlier results describe their exact earlier heads. This follow-up
+changes only the notes; the checked source remains `6f3b556e`. The full
+gate and review remain **UNRUN**. This checkout does not activate hooks
+or change shared Git configuration.

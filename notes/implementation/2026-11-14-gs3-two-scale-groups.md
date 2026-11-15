@@ -65,7 +65,8 @@ The development log is
 SHA-256 `8d9e25ec7e75fa3e35b86c77eee02b6449175c4528060800c0e4c4a9d5143007`.
 It retains each actual command, output, exit and time; raw per-command
 logs and time files sit beside it. Checks ran sequentially once and all
-passed. The five Node owners ran seventeen cases with no skips.
+passed. The five Node owners ran seventeen cases with no skips. The
+table retains that dated interval and the later shared-helper attempts.
 
 | Check | Actual result | Time |
 |---|---|---:|
@@ -77,8 +78,52 @@ passed. The five Node owners ran seventeen cases with no skips.
 | `scripts/test.test.mjs` | Exit 0; 6 passed | 2.22 s wall |
 | `scripts/git-hooks.test.mjs` | Exit 0; 3 passed | 2.84 s wall |
 | Selector control, whole six-case owner | Exit 0; distinguishes the new-only answer | 0.91 s wall for both runs |
+| Helper attempt 1, `5f449c4e`: two Node syntax checks, shell syntax and maintained scan | Each exit 0 | Actual phase times in attempt 1 `result.json` |
+| Helper attempt 1: whole hook owner | Exit 1; 3 passed, 1 failed | 4.235859250 s wall |
+| Helper attempt 1: selection owner | Unreached | No execution |
+| Helper attempt 2, `6f3b556e`: helper syntax | Exit 0 | 0.064641334 s wall |
+| Helper attempt 2: maintained scan | Exit 0; 927 sources, 159 bytes exports | 0.641652625 s wall |
+| Helper attempt 2: whole helper owner | Exit 0; 2 passed | 0.150011458 s wall |
+| Helper attempt 2: whole hook owner | Exit 0; 4 passed | 4.348524833 s wall |
+| Helper attempt 2: whole selection owner | Exit 0; 6 passed | 0.491379000 s wall |
 
-The separately granted control changed exactly
+The helper follow-up first failed at
+`5f449c4e82d3f2a1ff387098d1718c992358cfbe`: the new real-Git hook case
+expected commit exit 1 at line 128 but observed 0. The hook ran the
+checker, whose ordinary recursive Git pathspec missed the staged
+direct-child `examples/hook-source.ts`. END
+`45144f9fb98d3fbf29fc7bbb58c6af840fa3b5b1` retains that failure and the
+unreached selection owner. The
+[FH1 note](2026-11-14-fh1-tracked-hooks.md#shared-helper-check) names the
+retained failed scratch repository and its actual child streams.
+
+Only four apps/examples pathspecs gained explicit `:(glob)` magic. The
+existing root-level witness, parser, package patterns and exclusions
+stay unchanged. The repaired source
+`6f3b556e35360dc1cd9dbdc77e6e2d0ed35d0a0f`, tree
+`c0a2557dd04dbad87b7f7f9ba0ff247f6af47514`, passed attempt 2 with no
+failures or skips; its outer wall time was 5.696680333 seconds. END
+`bdc7f61aa26c608b132f4115f46f44869e2172cb` records the terminal results.
+
+Both attempts retain `commands.json`, `result.json` and all streams in
+their respective external directories:
+`/Users/hughpyle/play/artroom-evidence/2026-11-14-gs3-fh1-helper-development-attempt1`
+and
+`/Users/hughpyle/play/artroom-evidence/2026-11-14-gs3-fh1-helper-development-attempt2`.
+Attempt 2's `helper-owner.stdout.log` has SHA-256
+`9e45cc57048731837b39d27a0fdb47047ee8f8505b7c2560a6388e7649aa23e4`;
+`git-hooks.stdout.log` has
+`0de79eabcf1e5daea44e71b0f02143d40f135966a4e1c6f561a447c6d851cfd4`;
+`scale-selection.stdout.log` has
+`8394695cdc6268e3a05754865e0ca3dddb95db9617ad3bb2fef8e831feb78dd2`.
+The hook output names its four actual scratch repositories and retained
+Git child streams. The local-helper scratch is
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/artroom-git-hooks-SqQxxG`.
+The selection owner's 22-case and 16-case reports are scripted data for
+the runner contract; they prove no real Scale case. No separate fault
+run, third green run or sweep followed the helper repair.
+
+The separately granted control at `8338e447` changed exactly
 `movedMatchedPaths.length > 0 ? "moved" : "omit"` to
 `movedMatchedPaths.length > 0 ? "all" : "omit"`, with
 `--expect 'GS1-only paths select moved'`. The baseline exited 0 with six
@@ -100,8 +145,10 @@ modes remain beside the log. Both source copies have SHA-256
 and mode `0644`. Restoration left the exact clean head before this
 notes-only update.
 
-No extra checks followed the control. No Worker acceptance case, full
-scale run, repository formatter, build or combined gate ran. The hook
+The earlier `8338e447` interval ended after its selector control. The
+later helper attempts above ran only their declared checks. No Worker
+acceptance case, full scale run, repository formatter, build or combined
+gate ran. The hook
 owner used the real formatter only inside its authorized scratch
 fixtures. The tooling gate follows NF5, C2 and C3, before E1's full gate.
 Its own selector edit selects all 22, so it cannot provide the first
@@ -113,4 +160,7 @@ gate observed 590 seconds and GS1's all-scale gate observed 1,338 seconds
 on different heads. The audit's older-six and moved-sixteen case sums
 were about 974 and 643 seconds. None of those differences or concurrent
 sums supplies a saving forecast. The first moved-gate wall remains
-**UNRUN**. No landing, push, hook activation or deployment occurred here.
+**UNRUN**. This follow-up changes only the two implementation notes;
+source, tests, configuration and dependencies remain exactly as checked
+at `6f3b556e`. The full tooling gate and review remain **UNRUN**. No
+landing, push, hook activation or deployment occurred here.
