@@ -249,7 +249,7 @@ test("a shipped Grow command exploration matches normal judgment, records and fu
   const afterRows = structuredClone(explored.after.rows("device"));
   const pending = explored.after.rows("device").find(row => row.ref.name === fan);
   expect([ledger.state.all(), ledger.entries.length]).toEqual([before, entries]);
-  expect(pending?.refs.targetAt).toEqual({ entry: explored.source });
+  expect(pending?.refs["targetAt"]).toEqual({ entry: explored.source });
   expect(explored.after.recordCount(DEVICE_COMMAND, "command", "open")).toBe(1);
 
   // Section 12 case 9: the fan's new entry-valued slot is not a fact yet.
@@ -282,7 +282,7 @@ test("a shipped Grow command exploration matches normal judgment, records and fu
     .toBe(ledger.state.recordCount(DEVICE_COMMAND, "command", "open"));
   expect(explored.after.reservations).toEqual(reserved(ledger.state, ledger.definition, { type: "act" }, capabilities));
   const actual = ledger.item(fan), projected = explored.after.rows("device").find(row => row.ref.name === fan);
-  expect([projected?.values.target, projected?.values.level, projected?.refs.targetAt])
+  expect([projected?.values["target"], projected?.values["level"], projected?.refs["targetAt"]])
     .toEqual([actual.values["target"], actual.values["level"], { entry: explored.source }]);
   expect(actual.refs["targetAt"]).toBe(ledger.last.seq);
   expect(explored.after.head).toEqual(before.scope?.head);
