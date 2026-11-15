@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:babcf5773970848b7f9cea2b6f76e05fc44533b1","text":"Merge retired a covered predecessor; the successor is at scripts/scale-selection.test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bc79d1489fa6b5ec6e88c142643ace562f426a7f","text":"Merge retired a covered predecessor; the successor is at docs/testing-reference.md."}
