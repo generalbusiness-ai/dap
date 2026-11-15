@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ed18f4663cf896cc68d1a3174dddd4a299a86644","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/deploy.py."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fde92990b86672b3a5af8ace162bde8207077a60","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.lending.jsonc."}
