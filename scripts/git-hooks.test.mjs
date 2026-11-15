@@ -13,11 +13,11 @@ const formatted = '{\n  "answer": 42\n}\n';
 
 // Real scratch Git commits run the tracked hooks and their actual checks.
 // Keep every repository, message and child stream for diagnosis.
-function repository({ dependencies = true } = {}) {
+function repository({ dependencies = true, stageFixture = true } = {}) {
   const cwd = mkdtempSync(join(tmpdir(), "artroom-git-hooks-"));
   console.log(`Git hook witness scratch: ${cwd}`);
   for (const directory of [".githooks", "scripts", "logs"]) mkdirSync(join(cwd, directory));
-  for (const file of [".githooks/pre-commit", ".githooks/commit-msg", "scripts/pre-commit.mjs", "scripts/format-json.mjs", "scripts/check-shared-helpers.mjs", "scripts/check-commit-messages.mjs"]) {
+  for (const file of [".githooks/pre-commit", ".githooks/commit-msg", "scripts/pre-commit.mjs", "scripts/format-json.mjs", "scripts/check-shared-helpers.mjs", "scripts/shared-helper-selection.mjs", "scripts/check-commit-messages.mjs"]) {
     copyFileSync(join(root, file), join(cwd, file));
   }
   for (const name of ["pre-commit", "commit-msg"]) chmodSync(join(cwd, ".githooks", name), 0o755);
@@ -57,7 +57,7 @@ function repository({ dependencies = true } = {}) {
   git("config", "--local", "user.email", "hook-test@example.invalid");
   git("config", "--local", "commit.gpgsign", "false");
   git("config", "--local", "core.hooksPath", ".githooks");
-  git("add", "--", ".githooks", "scripts", "packages", "package.json", "data.json");
+  if (stageFixture) git("add", "--", ".githooks", "scripts", "packages", "package.json", "data.json");
   let messages = 0;
   const commit = message => {
     const file = join(cwd, `message-${++messages}.txt`);
@@ -107,8 +107,21 @@ test("the commit-msg hook checks the actual subject and body through the shared 
   assert.equal(repo.git("rev-list", "--all", "--count"), "1");
 });
 
-test("the pre-commit hook refuses a checkout without local Prettier explicitly", () => {
-  const repo = repository({ dependencies: false });
+test("a Markdown-only commit passes without Prettier or shared-helper dependencies", () => {
+  const repo = repository({ dependencies: false, stageFixture: false });
+  mkdirSync(join(repo.cwd, "notes"));
+  const file = "notes/sprint report.md";
+  writeFileSync(join(repo.cwd, file), "# Sprint report\n\nSource work continues.\n");
+  repo.git("add", "--", file);
+  const accepted = repo.commit("Record the sprint report\n");
+  assert.equal(accepted.status, 0, accepted.stderr);
+  assert.equal(repo.git("rev-list", "--all", "--count"), "1");
+  assert.equal(repo.git("ls-tree", "-r", "--name-only", "HEAD"), file);
+});
+
+test("the pre-commit hook refuses one selected JSON file without local Prettier explicitly", () => {
+  const repo = repository({ dependencies: false, stageFixture: false });
+  repo.git("add", "--", "data.json");
   const refused = repo.commit("Record the answer\n");
   assert.equal(refused.status, 1);
   assert.match(refused.stderr, /local Prettier is missing/);
