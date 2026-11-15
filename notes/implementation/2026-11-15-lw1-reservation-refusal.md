@@ -33,7 +33,12 @@ The later document-owner and Native route also failed at `d1beb6f0`,
 tree `1771e678e35ec771bba651bf9de6e69cf7c8fb95`, under END
 `3743d64a20e3ab8a0a25de4f34a10d2fc9c710fb`. The production repair at `b59fca7541b3809c08768f93b5b1681792e1afbc`,
 tree `27a37e0fa18db79e9e5009600cb2731d00c33809`, follows rulings
-`206d7d21` and `41b4ba66`. Its validation and new full gate remain owed.
+`206d7d21` and `41b4ba66`. Focused validation passed at note-only successor
+`480508d8f7fcb68d9a0dad3385ecb2e8850cd5aa`, tree
+`9306be3136c716ae7e91c97c2009d1810f9e2963`. Gate attempt 2 started
+there under START `b600fdace92f87b54e2f50c77fa2c220f67d3e27` and passed
+under END `97cec6f0d96e4551f671c2f1de18d40be30a3c5a`.
+Neither earlier FAIL changes.
 
 The tool/day guard has the existing name `tool-day-taken`; the count
 guard is unnamed. These are not two authored guard names. The current
@@ -70,7 +75,11 @@ shared Client API.
 | `31d33777`: joined full gate attempt 1 | FAIL; child exit 1, verification exit 1, reaped. Child wall 344.323734 s; outer wall 344.617307 s. Preliminary checks passed; Node 204 and Counting 56 passed. Plain 4,872 passed, 1 failed, 1 skipped. Sole failure: inventory.test.ts:98, stale generic settle description. Native UNREACHED; natural Scale has no executed result or wall. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-full-gate-attempt1/result.json`, SHA-256 `ab99da9b708d412f8ae0fc0ff43aa4af11f1ec25af87bd003fa750100dbb9fb1`; actual argv: `step.argv`. Public gate.log in that directory, SHA-256 `765324afcc13b99f820054aae9be253abba15501bf281c47067ecc1dd990d94e`. |
 | `d1beb6f0`: document-owner and Native follow-up | FAIL. Inventory 5 passed, exit 0, 1481.329417 ms. Native 1,135 passed, 1 failed, 2 skipped; exit 1, 610313.331375 ms. Outer wall 612237.832375 ms; all children reaped. Original gate remains FAIL. END `3743d64a20e3ab8a0a25de4f34a10d2fc9c710fb`. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-doc-native-followup-attempt1/result.json`, SHA-256 `a906559499e2df3101e42029f193687352e7fdffe2e1b63d8127c2dda9772050`; exact argv: `controllerArgv` and `commands[*].argv`. |
 | Preserved Native acceptance and summary | The old page-first assertion expected unknown answer and phase; CE2 returned neither. Ruling `206d7d21` preserves that assertion. Summary exit 0, zero unknown/suite observations and contradictions. Natural Scale omitted outside scale paths; no Scale result. | Safe failure excerpt `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-doc-native-followup-attempt1/native-final-failure.safe.txt`, SHA-256 `1c3b97c10a1099c5cffd03ee5b522545b7e0f4383df79f33e47adcba9eaf423c`; summary.log beside it, SHA-256 `087fbdb4532c6658920a580f2fbd3c260406e28cac3831124d7953a8b791f954`. |
-| New production repair, full gate, Card workflow and review | OWED. The reported 19-case test-only `01d` pass is superseded as the wrong contract. The production checkpoint is authored but unvalidated; no gate PASS is assumed. | Ruling `206d7d21f7dbb7836cd8cd5f90937559defa3aee`; the CE2 note records the required unknown-report shape and private-raw limits. |
+| Superseded test-only `01d` repair | The reported 19-case test-only `01d` pass is superseded as the wrong contract. It supplies no acceptance or gate PASS. | Ruling `206d7d21f7dbb7836cd8cd5f90937559defa3aee`; the CE2 note preserves the historical result and private-raw limits. |
+| `480508d8`: repaired joined whole owners | PASS. Client 4 in 1.096498 s; MCP 30 in 2.035818 s; CLI 4 in 4.131070 s; restored Native Page owner 19 in 24.334797 s; assets 1 in 0.298247 s, no module change; Security 12 in 4.050549 s; examples 3 plus reproduction 1 in 6.629733 s. Every exit 0, all reaped; separate stderr empty. Compatibility exit 0, 0.083077 s; outer 43.217284 s. All tuples reproduce unchanged, with no new compare or apply. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-nf2-repair-dev-attempt1/2026-11-15-ce2-nf2-focused-owners-attempt1/result.json`, SHA-256 `a84f66b592aac911c1976137731d8fdc0b0449d00267da3b00c436071cc5c2fe`; exact argv: `commands[*].argv`. Fixture output stays private. |
+| `480508d8`: ordinary full gate attempt 2 | PASS, exit 0 and verification exit 0, reaped. Child wall 835.491364 s; outer wall 835.811380 s. Node 204, Counting 56, Plain 4,877 plus 1 skipped, Native 1,136 plus 2 skipped. All four terminals complete; scope-stories module summary partial; 129 unknown/suite observations, zero contradictions. Native wall 496107.263708 ms. Natural Scale omitted outside scale paths; no Scale command/result/wall. Exact-head shared helpers and whole typecheck passed before START. END `97cec6f0d96e4551f671c2f1de18d40be30a3c5a`. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-full-gate-attempt2/result.json`, SHA-256 `edb3450ed7e22486e737a7a70dce0af85a432bea8ddeff169c11137848f0f98c`; actual argv `step.argv`. Inspected gate.log beside it, SHA-256 `93c76571a112f9501dc53b34d46775a54f601f89abee05db9204a1f0dbed4a1a`. |
+| `480508d8`: Card workflow and root QA | PASS, all seven commands exit 0 and reaped; outer wall 129.689435 s. Chromium 153.0.8010.12, Playwright 1.63.0. Views 104 cases and 59 contracts, zero recorded errors; declared views 7; owned scopes 4; Grow 2 width cases at 320/592, zero errors. Root inspected 15 images; no overlay or horizontal clipping. Expected vertical scrolling at 200%. Generated bytes/mode and clean source unchanged. Four browser stderr streams each contain the existing 191-byte DEP0205 warning. END `6f299703cdf96532f7f287241fe1737aff5bc8c2`. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-ce2-lw1-card-browser-attempt1/workflow-result.json`, SHA-256 `124db2549c714e258ae7612f3a303acdc73443255eba3f9d9e02b0ce0fea7f34`, actual argv and walls `stages[*]`; qa-summary.json beside it, SHA-256 `40ffe7d85708d68b4bd32220b696ccbd29524266b39765377e3ea262ae7b6b95`, with 15 reviewed image paths/hashes. |
+| Browser process and private retention | No observed task process or browser profile remains. All 113 capture originals and full streams remain private; only 15 inspected image copies and closed metadata export. | Same public directory's process-check.json, SHA-256 `05beb3c68662b6515ed658b35a9c0a3560fb776b6c4896385be11ebc131f7db8`; privacy limits in qa-summary.json. |
 
 The once-only comparison binds clean joined source `8a08f2a5`, tree
 `7ec4d8b42bd456b30d07428e821d329598257c4f`. Its Counter drift stopped
@@ -98,10 +107,28 @@ snapshots. The unchanged inventory owner then passed, but its Native
 follow-up failed on an existing unknown-answer acceptance assertion.
 Both failures stand. Ruling `206d7d21` requires a production answer
 repair and one new full gate, followed by the required Card workflow and
-review. Those results and landing remain OWED. The CE2 note retains the
-eight actual safe recovery metric rows without treating either failed
-route as a PASS. Full Native request output stays private. RS1 and LS2
+review. Focused repair validation and the new full gate passed at
+`480508d8`. Card commands and root visual, privacy and process QA passed
+under END `6f299703`. Browser scripts ran locally on macOS at this head.
+The Linux workflows have not run at this head. Scripted host, transport
+and report-text fixtures use public TEST keys; the OwnedCore/SQLite route
+proves only its stated scope/signature/custody/replay boundary, not live
+provider, physical-device, deployment or release authority.
+The final source act and artifact reports record documentation checks and
+the reviewed head/tree. Guarded review and landing follow this evidence
+filing. The CE2 note now details
+the eight actual gate 2 recovery metric rows and retains the gate 1
+dataset as history. Neither failed route becomes a PASS. Full Native
+request output stays private. RS1 and LS2
 landed and published at `ce6f02ba` with normal receipt
 `fdb8fbee`. The [CE2 note](2026-11-15-ce2-expired-custody.md) records that
 baseline and the remaining gate order. Planner owns signing Lending and
 Counter 0.4 from main that carries the joined head.
+
+The final follow-up changes only these two implementation notes. Source,
+tests, configuration, dependencies and generated modules keep the exact
+Git blobs and modes from tested tree
+`9306be3136c716ae7e91c97c2009d1810f9e2963`. Artifact reports and the
+final source act bind the final note-only head and tree separately. The
+[document-only follow-up rule](../../docs/evidence-filing.md#follow-up-after-a-gate)
+applies; no additional full gate follows these note changes.
