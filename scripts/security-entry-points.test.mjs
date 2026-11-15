@@ -309,7 +309,7 @@ const seals = {
   "packages/scope/src/core.ts": namedOwners["packages/scope/src/core.ts"],
   "packages/scope/src/applications/act-admission.ts": "bd0aba219f02c47c143e8a86b4204e1923d7c48d10cd4a873c93a40987f2eea9", // Exact native provenance and current trust; actual maintained parser output.
   "packages/derive/src/genesis.ts": "d2a6165d424376a9057cc9390e721a1970341ad937d739a6f94eb9575d9f1cc2",
-  "packages/derive/src/judge.ts": "f1f34a923034e442ae321639b2a4ca0cf0332edf3c138cdb57bb0128e3d9ce38",
+  "packages/derive/src/judge.ts": "3186b50c96e8ac0fc18834d3a2320ea96b35b2f1e1162329ec9e869bf9ada188",
   "packages/scope/src/sessions.ts": "d701c671e110dae78d0b9a73cfd6229dc9b4a1bb89bdc97e76228c53168dd68d",
   "packages/scope/src/originals.ts": "f6091ac370a3346c493eb795ef72b2392217708a00492c59fcaf1f3df9903ac4", // Reviewed J1 owner: the member compare, the signature and actor check, and the caps.
   "packages/client/src/originals.ts": "4b77af1b7f1d97f573f072efbe278cd3fa38ee4809b031d648fa57c5d5d17cf4", // Reviewed J1 owner: the bytes that a second device verifies before it sends them again.
@@ -392,7 +392,7 @@ const pendingR8Seals = {
   "packages/client/src/describe.ts": "5fd433d592d3849baa7d88d1d831d23be4df073000a803931bf8dd44065bae5f", // Moved portable full/compact declaration and schema derivations; actual maintained parser output.
   "packages/client/src/mark-descriptions.ts": "7e22b5140e2a808e091b02d80acaa439f3d57d8c323a2480bfb994db9c063664", // Moved platform mark descriptions, own-property fallbacks and refusal names; actual maintained parser output.
   "packages/mcp/src/description-context.ts": "ef86ba4f8fc9e67f792d10510b9e9c20132b80c3d8915774fede7de714c4be17", // Private native-to-plain catalogue binding; NF-4 moved it to the client install module.
-  "packages/client/src/expected.ts": "914ab6dab7f00e3f6523975f3be131911d07b190043352d465d338ad64e6a851", // Moved prototype-safe expected/via subject resolution; actual maintained parser output.
+  "packages/client/src/expected.ts": "d04561ddd81a00bacfac0cfc175104a89e3ebe499c1994cf0f81af4f6e4f66ec", // Moved prototype-safe expected/via subject resolution; actual maintained parser output.
   "packages/cli/src/claim.ts": "e5799b13266b9bb8efdd1f765916213b91379385218b371cde8ab3efcd8bb3c8", // Remove the retired v1 offer field; current founding, routes and Native authority stay fixed.
   "packages/cli/src/command-support.ts": "d583fdc077383d497a92b4ec452dc4c316da1b6b665a73c917d2c5cd3407af1c", // Moved shared read, session and signing support; actual maintained parser output.
   "packages/cli/src/read-session-cache.ts": "12a5cf131a166001f66672bc3c4b6daf70070645255c61db7b93f18b6fbb83b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
