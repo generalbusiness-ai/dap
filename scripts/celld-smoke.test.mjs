@@ -4,7 +4,7 @@ import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { configOf } from "./security-settings.mjs";
-import { CelldSmokeError, celldReference, celldSmokeOperation, contextForCelldSmoke, runCelldSmoke, sameCelldReference, smokeSettings } from "./celld-smoke.mjs";
+import { CelldSmokeError, celldReference, celldSmokeDetail, celldSmokeOperation, contextForCelldSmoke, runCelldSmoke, sameCelldReference, smokeSettings } from "./celld-smoke.mjs";
 import { matchesCelldVersion } from "./test-celld-proxy.mjs";
 
 test("the proxy compares the maintained celld pin as a whole version token without a hidden release literal", async () => {
@@ -166,4 +166,42 @@ test("proxy errors expose only a maintained smoke operation and never arbitrary 
   for (const foreign of [new CelldSmokeError(sentinel), new Error(sentinel),
     { stage: "install-identity", message: sentinel }, null, undefined])
     assert.equal(celldSmokeOperation(foreign), null);
+
+  // The real CLI's maintained result forms select labels, never their private dynamic text.
+  const forms = [
+    ["plan-missing", 2, "No install is planned here. Run: dap install --plan <base-url>."],
+    ["plan-mismatch", 1, `Refused: plan-mismatch. ${sentinel}`],
+    ["plan-expired", 1, `Refused: plan-expired. The planned install could be created until ${sentinel}`],
+    ["retired-cohort", 1, `Refused: retired-cohort. ${sentinel}`],
+    ["unsupported-provenance", 1, `Unsupported install provenance: ${sentinel}`],
+    ["custody-verification", 1, "Held: storage of the exact selected install plan failed. No request was sent by this run; keep the original request."],
+    ["custody-verification", 1, "Held: storage of the exact selected install plan could not be verified. No request was sent by this run; keep the original request."],
+    ["transport-untrusted", 1, `Held: this injected transport has no configured-service acknowledgement trust. The plan is kept. ${sentinel}`],
+    ["transport-no-answer", 1, `No answer: ${sentinel}`],
+    ["creation-unavailable", 1, `Unavailable: ${sentinel}`],
+    ["creation-refused", 1, "Refused: bad-field. The request was refused."],
+    ["acknowledgement-mismatch", 1, "Held: the retained install acknowledgement does not match the original plan. The plan is kept."],
+    ["acknowledgement-mismatch", 1, "Held: the install acknowledgement does not match the planned register's exact identity. The plan is kept."],
+    ["acknowledgement-conflict", 1, "Held: the install acknowledgement conflicts with the retained accepted fact. The plan is kept."],
+    ["cli-usage", 2, sentinel],
+    ["unclassified-outcome", 1, sentinel],
+  ];
+  for (const [detail, code, line] of forms) {
+    const failure = new CelldSmokeError("install", { code, lines: [line, sentinel] });
+    failure.message = sentinel; failure.stack = sentinel;
+    failure.cause = { private: sentinel }; failure.path = sentinel;
+    const projected = { operation: celldSmokeOperation(failure), detail: celldSmokeDetail(failure) };
+    assert.deepEqual(projected, { operation: "install", detail });
+    assert.equal(JSON.stringify(projected).includes(sentinel), false);
+    assert.equal(Object.hasOwn(failure, "lines"), false, "the diagnostic must not retain CLI output");
+  }
+  assert.equal(celldSmokeDetail(new CelldSmokeError("install", { code: 2, lines: [`No answer: ${sentinel}`] })), "cli-usage");
+  assert.equal(celldSmokeDetail(new CelldSmokeError("install", { code: 1, lines: sentinel })), "unclassified-outcome");
+  assert.equal(celldSmokeDetail(new CelldSmokeError("install", { code: 0, lines: [`No answer: ${sentinel}`] })), null);
+  const unknown = new CelldSmokeError("install", { code: 1, lines: [sentinel] });
+  unknown.detail = sentinel;
+  for (const foreign of [unknown, new CelldSmokeError("install", sentinel), new CelldSmokeError("install"),
+    new CelldSmokeError("plan", { code: 1, lines: ["Refused: bad-field. The request was refused."] }),
+    new Error(sentinel), { stage: "install", detail: "creation-refused", message: sentinel }, null, undefined])
+    assert.equal(celldSmokeDetail(foreign), null);
 });
