@@ -366,6 +366,17 @@ caller's `idempotencyKey`, in the config directory's
   is gone, whatever its time. The passing of an intent's deadline is never
   an outcome. One process at a time breaks it, under a reclaim lock, after
   reading it again. A release removes only the releaser's own holding.
+  A live process can also hold the file store's shared capacity lease.
+  After ten seconds of contention, a send can answer custody `locked`
+  after its envelope was marked `sent` but before delivery began. The
+  current error words describe another call under the key; contention can
+  instead come from another request in the same store. A `sent` phase does
+  not prove delivery or a recorded outcome, and an earlier send under the
+  key may remain unresolved. Keep the same config directory, exact
+  arguments and `idempotencyKey`. Wait for the other process, use `settle`
+  to read any recorded outcome, then repeat the same call if it still
+  needs an ordinary retry. `settle` reads only; the repeated call sends the
+  kept envelope without signing another. A new key can make a second entry.
   A reclaim lock is never broken. If the process holding it died, every
   call that needs that lock is refused as `locked` until an operator
   removes the reclaim file after all processes using this config directory

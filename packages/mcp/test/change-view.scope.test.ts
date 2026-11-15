@@ -15,7 +15,8 @@ import { changeSubject } from "../../../apps/views/src/change.ts";
 import { decisionSource, questionSubject } from "../../../apps/views/src/decision.ts";
 import { RepoInAi } from "../../../apps/views/src/repo-in-ai.ts";
 import type { ReviewStore } from "../../../apps/views/src/review-store.ts";
-import { McpService, ReadSessions, memoryStore, type CustodyStore, type Display, type McpConfig } from "../src/index.ts";
+import { memoryStore, type CustodyStore } from "@generalbusiness/dap-client";
+import { McpService, ReadSessions, type Display, type McpConfig } from "../src/index.ts";
 import { created, mcpRoom, type Agent, type Room } from "./fixtures-native.ts";
 
 // Real: Native M8 authority, the J4 lane judgments, SQLite, Worker HTTP, read sessions under a TEST secret, McpService in app mode,

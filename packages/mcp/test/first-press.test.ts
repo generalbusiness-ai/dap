@@ -2,7 +2,8 @@ import { expect, test } from "vitest";
 import { issueDemo } from "@generalbusiness/dap-lanes";
 import { secretSigner } from "@generalbusiness/dap-client";
 import type { CallResult, McpConfig, ViewSource } from "../src/index.ts";
-import { McpService, memoryStore } from "../src/index.ts";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { McpService } from "../src/index.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";
 
 const START = Date.parse("2099-01-01T00:00:00Z");

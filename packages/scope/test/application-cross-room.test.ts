@@ -7,7 +7,8 @@ import type { Intent, OperationId, ScopeRef, Seed } from "@generalbusiness/dap-c
 import { canonicalize, entryHash, intentDigest, isSeed, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/dap-bytes";
 import { TRUSTED_APPLICATION_COHORT as C, repositoryName } from "@generalbusiness/dap-platform";
 import { requestSession, secretSigner, sessionRequest } from "@generalbusiness/dap-client";
-import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { McpService, type ServerPort } from "@generalbusiness/dap-mcp";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationWorkerBindings, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, effectFixture, driveFixture } from "./fixtures-native.ts";

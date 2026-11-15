@@ -15,7 +15,7 @@ import { b64url, timeOf } from "@generalbusiness/dap-bytes";
 import { Custody, CustodyError, Lost, identityId, type BindingRecord, type CustodyRecord, type ClientCustodyStore, type Envelope, type Identity, type Phase, type Sent } from "./custody.ts";
 
 /** What a page tells a person when it finds a request in a format from before the identifier cutover. */
-export const RETIRED_REQUEST = "This browser kept a request for a room that has retired. The browser removed it. Nothing was sent.";
+export const RETIRED_REQUEST = "This browser kept a request for a room that has retired. The browser removed it.";
 
 /** The signer and the target of a page's requests. Each request adds its own key. */
 export interface BrowserRequestTarget { service: string; membership: ScopeRef | null; signer: KeyId; target: ScopeRef }

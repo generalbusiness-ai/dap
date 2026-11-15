@@ -401,6 +401,17 @@ install it. The public HTTPS reader supports SHA-1 Git repositories only.
   is refused. The command does not renew an expired request. After a
   definite refusal, send a new request to try again.
 
+For this retained `--request` path, the local file store can answer
+“Another command holds this request key. Wait, then repeat the same
+command.” A different request can hold the store's shared capacity lease,
+including after this envelope was kept and marked `sent` but before its
+delivery. The phase proves no outcome, and an earlier send under the key
+can still be unresolved. Wait for the other process, keep the same config
+directory, request key and exact arguments, then repeat the command to
+reuse the kept envelope. Do not remove a living process's lease or choose
+a new key to bypass it. This advice does not apply to a repeated generic
+command, which signs a new intent.
+
 The answer records the install request. It does not mean that every step
 has completed. The output names the install item for `dap application`.
 The MCP tools `install_application` and `application_installation` do

@@ -9,7 +9,8 @@ import { encodeApplicationProjectionQuery, readApplicationProjectionReply } from
 import { DOMAINS, ITEM_QUERY_BOUNDS, PROPOSED_BOUNDS, type ApplicationProjectionQuery, type FactRef, type ScopeRef } from "@generalbusiness/dap-contract";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTransport, secretSigner, signedReader, signedApplicationInstall, ApplicationPackageError, type ServiceBinding } from "@generalbusiness/dap-client";
-import { McpService, memoryStore as custodyStore, type ServerPort } from "@generalbusiness/dap-mcp";
+import { memoryStore as custodyStore } from "@generalbusiness/dap-client";
+import { McpService, type ServerPort } from "@generalbusiness/dap-mcp";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationCounterFactTimePacket2, applicationWorkerBindings, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture } from "./fixtures-native.ts";

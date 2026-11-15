@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import type { Item, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, keyIdOfSecret } from "@generalbusiness/dap-bytes";
 import { firstExtents } from "@generalbusiness/dap-platform";
-import { identityId, meaningOf } from "../src/index.ts";
+import { identityId, meaningOf } from "@generalbusiness/dap-client";
 import { mcpRoom, SERVICE, created } from "./fixtures-native.ts";
 
 // Invariant: a revision captured before another act moves the item is signed unchanged and refused by the real scope;

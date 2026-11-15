@@ -8,7 +8,8 @@ import { b64url, canonicalize, definitionDigest, digestBytes, isSeed, readItemQu
 import { EXPIRY_MARGIN_MS, encodeAgentKeyInvitation, invitationIssueFields, secretSigner, type AgentKeyInvitation } from "@generalbusiness/dap-client";
 import { DECLARED_APPLICATION_COHORT as C, REPOSITORY_BINDING_COHORT as B, ROLE_LISTS, isActions } from "@generalbusiness/dap-platform";
 import { packApplication2 } from "@generalbusiness/dap-platform/application-v2";
-import { CAPABILITIES_META, MODERN, PROTOCOL_META, McpService, claudeCardDomain, memoryStore, type ServerPort, type Tool } from "@generalbusiness/dap-mcp";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { CAPABILITIES_META, MODERN, PROTOCOL_META, McpService, claudeCardDomain, type ServerPort, type Tool } from "@generalbusiness/dap-mcp";
 import type { CallResult, DispatchContext, Failure } from "../../mcp/src/results.ts";
 import type { Display } from "@generalbusiness/dap-mcp";
 import { sqliteStore, type Sql } from "../../mcp/src/sqlite-custody.ts";

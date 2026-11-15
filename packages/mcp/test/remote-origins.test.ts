@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { claudeCardDomain, remoteCardDomain, remoteCardOrigins } from "../src/views/remote-origins.ts";
-import { CAPABILITIES_META, MODERN, PROTOCOL_META, McpHttp, McpService, Wire, memoryStore } from "../src/index.ts";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { CAPABILITIES_META, MODERN, PROTOCOL_META, McpHttp, McpService, Wire } from "../src/index.ts";
 import { fixedSigner } from "./fixtures.ts";
 import { digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 

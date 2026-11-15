@@ -35,13 +35,13 @@ The predecessor capture ran once at `490291a168ca4c8e8b4ae7f369bb387c718077bb`. 
 
 The Client custody witness compares the literal with raw memory and file records, reads the memory records through a fresh `Custody`, and reopens the file store. The MCP SQLite witness compares raw ordered chunk bytes and a reopened store with the same literal. The fixture uses a fixed TEST signer, detached values, one answered step, a lost send, and a settlement at fixed clock positions.
 
-## Named MCP aliases remain until importers move
+## NF3 retained named MCP aliases until NF6
 
-The MCP root re-exports these 16 values from Client: `UNRESOLVED_MOST`, `OUTCOMES_INLINE`, `OUTCOMES_INLINE_BYTES`, `RECORD_BYTES`, `KEY_BYTES`, `DECIDED_SLICE`, `TERMINAL`, `identityId`, `meaningOf`, `stepId`, `CustodyError`, `Lost`, `validKey`, `decisive`, `Custody`, and `memoryStore`. It re-exports these 12 types: `Identity`, `BindingRecord`, `Envelope`, `Phase`, `ArchivedSettlement`, `Decided`, `Outcome`, `Step`, `CustodyRecord`, `CustodyStore`, `HeldBack`, and `Sent`.
+NF3 made the MCP root re-export these 16 values from Client: `UNRESOLVED_MOST`, `OUTCOMES_INLINE`, `OUTCOMES_INLINE_BYTES`, `RECORD_BYTES`, `KEY_BYTES`, `DECIDED_SLICE`, `TERMINAL`, `identityId`, `meaningOf`, `stepId`, `CustodyError`, `Lost`, `validKey`, `decisive`, `Custody`, and `memoryStore`. It also re-exported these 12 types: `Identity`, `BindingRecord`, `Envelope`, `Phase`, `ArchivedSettlement`, `Decided`, `Outcome`, `Step`, `CustodyRecord`, `CustodyStore`, `HeldBack`, and `Sent`.
 
-MCP's Node entry re-exports `FILE_STORE_BOUNDS`, `releaseLock`, `blockedBy`, `takeLock`, `fileStore`, `FileStoreBounds`, and `Holding` from Client. No private custody path remains in MCP. Source consumers import the Client files directly.
+NF3 made MCP's Node entry re-export `FILE_STORE_BOUNDS`, `releaseLock`, `blockedBy`, `takeLock`, `fileStore`, `FileStoreBounds`, and `Holding` from Client. No private custody path remained in MCP.
 
-NF5 removes the named MCP aliases after NF4 and NF5 move their importers to Client. NF5 also retires `Kept` and `AttemptJournal`. NF3 leaves both, and their record domains, unchanged.
+NF6 removes these 35 named MCP aliases and moves their remaining consumers to Client and Client/Node. It also removes SQLite's `OUTCOMES_INLINE` re-export, which otherwise escapes through MCP's export-star. NF4's `Reads`, `ReadSessions`, and `ReadPort` aliases remain. MCP's Node service keeps its local Client/Node `fileStore` import. These source edits remain uncompiled and unrun at this checkpoint; the NF3 results below remain historical evidence. NF5 retired `Kept` and `AttemptJournal`; NF3 left both, and their record domains, unchanged.
 
 ## Changed security seals
 

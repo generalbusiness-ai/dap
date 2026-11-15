@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "vitest";
 import { digestBytes, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { LEGACY, MODERN, McpService, PACKAGE_BRIEF_URI, PackageResources, ViewResources, Wire, memoryStore, newSession, type PresentationPackage } from "../src/index.ts";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { LEGACY, MODERN, McpService, PACKAGE_BRIEF_URI, PackageResources, ViewResources, Wire, newSession, type PresentationPackage } from "../src/index.ts";
 import { sandboxDomain } from "../src/views/hosts.ts";
 import { PRESENTATION } from "../src/views/generated.ts";
 import { MODULE, viewModule } from "../scripts/views.mjs";
