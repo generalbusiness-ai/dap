@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7bcece888ff4619f46766b691ea0520d2e4ac8fc","text":"Merge retired a covered predecessor; the successor is at docs/self-host-mac.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d600ca7357fff1dd500534ae7ea63b43d7cd13b","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/prepare-github.mjs."}
