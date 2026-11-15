@@ -93,10 +93,32 @@ The source follow-up overrides only the Lending-local `manifest(...)`
 result's package capability with the exact reviewed declaration. The typed
 manifest spec has no package-capability option; the shared helper and schema
 stay unchanged. The descriptor bytes, equality assertion, all other tests,
-versions, and Counter stay unchanged. Validation of this authored-package
-repair is **UNRUN**. Package correspondence must pass before canonical
-identifier work. Native Lending, normal reproduction, current identifiers,
-the full gate, and review remain owed.
+versions, and Counter stay unchanged. The follow-up at `563bdadcad` passed
+the Lending compiler, all five package cases, and the Native Lending
+scenario. These dated results preserve the earlier manifest failure.
+
+## Published-main integration and current identifiers, 15 November
+
+Merge `8d7f7f8c6a4212be4665cdfecadad06904d72b29` takes published main
+`17a917cd73b0528dcf8d2610707c1b3f24afbeaa` into the repaired R source.
+Its other parent is `563bdadcad`; its tree is
+`3fce8f35b7a0766b84a8b21cb50610edfea15699`. No conflict changed R's source.
+
+Canonical comparison END `4b3c17fb3b687f6fef083626d9c9b6759997c128`
+passed at that clean head. Grow `2.0.0` and Counter `0.3.0` identifiers
+and file bytes stayed exact. Only open Lending `0.3.0` changed. Normal
+apply wrote only `examples/lending/release-identifiers.json`, then committed
+at `be8af0de5f908b589520ec8ddee7c5fd10d91f1b`, tree
+`998187217b1ae830d5385eaa7edd0ad8d635d93f`.
+The entry and sole definition retain the typed producer's digest.
+The actual candidate tuple lives in `I/identifiers/lending.candidate.json`;
+comparison retains all six original and candidate files. This note-only
+successor changes none of the checked source or applied identifiers.
+
+The comparison uses normal R1 preparation with a public TEST signer.
+It exports no public packet and performs no operator signing. Required
+preflight, the full gate, and review remain **UNRUN**. Neither development
+passes nor identifier correspondence establish final-room acceptance.
 
 ## Definition and witnesses
 
@@ -183,6 +205,11 @@ unrun descriptor repair.
 `M` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-remaining-development-attempt1`.
 The later GREEN and remaining-owner rows bind `eb6d6a30a4`; neither validates
 the authored-package follow-up.
+`F` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-authored-package-followup-attempt1`.
+`I` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-identifiers-compare-attempt1`.
+`IDTOOL` is `/private/tmp/artroom-c3-open-03-identifiers-20261114.mjs`.
+`ROOT` is this worktree's absolute path. `H` is the full `8d7f7f8c` head above,
+and `T` is its full tree. Expand these aliases in the exact commands below.
 
 The generated outputs and development note then committed at
 `321f09ab9e7f3a060812170e55b273597e487ab7`, tree
@@ -216,7 +243,12 @@ classification, fault, test assertions, runner and deadlines stayed unchanged.
 | LP1 same whole base installation owner, GREEN | From `packages/scope`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts --project scope test/base-ordinary-install.test.ts --reporter=default --reporter=json --outputFile=G/lp1-whole-owner.json` (expand `G`) | 0; 17.385805792 s; all three passed | `G/result.json` — `029cd64837dabee9e6683386e2168f40bf3e3c0a3ed51db91ce59c9356334265`; `G/lp1-whole-owner.json` — `0f9e5dde77710a4a306a203d6799a3d1728200d65af835a38cf84bfbeb148baf` |
 | Remaining whole Lending definition owner | From `examples/lending`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts definition.test.ts --reporter=default --reporter=json --outputFile.json=M/lending-definition.json` (expand `M`) | 0; 0.770942542 s; eight passed | `M/result.json` — `23eb955d53dcd598fc0e6a53b87c6d39c4d1d7952857fbf22bc448cb5f027789`; `M/lending-definition.stdout.log` — `30235936995bd21b8456b3b224062bb5d2e1853adf77ce9e6a7f35b0cd628365` |
 | Remaining whole Define story and package owners | From `packages/define`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts test/story.test.ts test/package.test.ts --reporter=default --reporter=json --outputFile.json=M/define-story-package.json` (expand `M`) | 1; 0.652760750 s; ten passed, one direct assertion failure at `package.test.ts:10`; Native Lending unreached | `M/result.json` — digest above; `M/define-story-package.stdout.log` — `014074d87e77535b47f5bf6505e696085ae51dfb266e1a854940f570474358f9`; `M/define-story-package.stderr.log` — `e15c937ac29fbbaaf40d4358993465840d416b4f4772a16ecec36b43252375f1` |
-| LP1 authored-package repair and later release checks | Not run | Compiler and package correspondence UNRUN; no canonical IDs before correspondence passes; Native Lending, reproduction, gate, and review owed | None |
+| Authored-package compiler | `N node_modules/typescript/bin/tsc -p examples/lending/tsconfig.json` | 0; 0.343764500 s, at `563bdadcad` | `F/result.json` — `e6792b79b009a7ae56e3ff7240b95a40ed22e0ceb73b0e72e99be30d98a1dc0c` |
+| Whole package owner after repair | From `packages/define`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts test/package.test.ts --reporter=default --reporter=json --outputFile.json=F/define-package.json` | 0; five passed; 0.616666584 s | `F/define-package.stdout.log` — `9e1913dbaf384930b10e7d3b723b780783f4e0cfd301d0b3ecf9b7d9d0340758` |
+| Previously unreached Native Lending owner | From `packages/scope`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.lending.config.ts test/lending.test.ts --reporter=default --reporter=json --outputFile.json=F/native-lending.json` | 0; one passed; 10.286759500 s | `F/native-lending.stdout.log` — `9836c9dce2eaf6c4a570b3c90b14b93e25101db5152cd90f9e1208c59140525d` |
+| Canonical identifiers comparison | `N --import tsx IDTOOL compare ROOT I/identifiers H T` | 0; 1.824992916 s; only Lending differs | `I/result.json` — `4cc4d30869b3d5ace36915bfeb45c103d030b40708ccd8903572a154fb5c85e2`; `I/identifiers/comparison.json` — `6ccc3145ecc1dfea03ba892d34025b3cf90245a904436c6672953f2832b2596f` |
+| Normal identifier apply | `N --import tsx IDTOOL apply ROOT I/identifiers H T` | 0; 0.251109500 s; only Lending's identifier file changed | `I/apply-result.json` — `dc605e2d93e9a510cdfd581e24ff0bf5d1e39bd8ead2cf1d00824388696ed606` |
+| Current preflight, gate, and review | Not run | UNRUN | None |
 
 Both plain runs and the Native run had empty stderr. The producer's only
 stderr was the Node `DEP0205` deprecation warning. The dedicated Native
@@ -242,9 +274,9 @@ and mode `0644`. No third green run or generated pin rewrite occurred.
 The original R results above bind their historical heads. The later LP1
 rows retain the producer, four compilers, and publication RED at `4f213e9d`,
 then actual GREEN and the package-correspondence failure at `eb6d6a30a4`.
-They do not validate the authored-package follow-up. Its compiler and
-correspondence check, plus the unreached Native owner, remain **UNRUN**.
-Release reproduction, identifiers, full gate, and review remain owed.
+The subsequent `F` rows validate the authored-package repair at `563bdadcad`.
+The `I` rows establish identifier correspondence and apply at the named
+published-main checkpoint. Preflight, full gate, and review remain owed.
 
 ## Release boundary
 
@@ -254,16 +286,11 @@ paths, trust rows, bucket binding, formatter exclusions and version-aware
 reproduction checks. R adds none of those files. It also adds no copied
 `0.2.0` identifier baseline, `public.ts` or Counter `release.ts`.
 
-R owns the reservation, scenario, `0.3.0` version raise and later new
-identifiers. After merging actual LC-1 main, the maintained typed producer
-must regenerate the three outputs if their inputs changed. The normal
-canonical preparation path must then measure current Lending, Counter and
-Grow identifiers. Any unexpected Grow or Counter identifier change returns
-to the planner before application. No TEST signature or TEST release digest
-belongs in source.
-
-Stop at the computed Lending `0.3.0` identifiers for the planner's signing
-decision. Ruling `bdeb6c15` places signing after R lands; a later small head
+R owns the reservation, scenario, `0.3.0` version raise, and new Lending
+identifiers. The later producer and comparison above leave typed outputs,
+Grow, and Counter unchanged. No TEST signature or TEST release digest enters
+source. Computed Lending identifiers await the planner's signing decision.
+Ruling `bdeb6c15` places signing after R lands; a later small head
 adds the signed `0.3.0` packet and row while keeping the installed `0.2.0`
 row. R performs no signing, packet copy, provisioning, installation or
 deployment. The current source checkpoint establishes no release or gate
