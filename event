@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c2e0e68412132225ba0c4b3a85d4cf6d324d5df2","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-14-gs3-two-scale-groups.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cec17867f547e56cd71ae7b76c94cd95e61a008b","text":"Merge retired a covered predecessor; the successor is at scripts/test-selection.test.mjs."}
