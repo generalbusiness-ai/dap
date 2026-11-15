@@ -458,6 +458,7 @@ test("a represented descriptor preserves runtime kind value and all three attrib
     if (!row) throw new Error("the admitted recorded device is missing");
     const descriptor = Object.getOwnPropertyDescriptor(row, "id");
     if (!descriptor) throw new Error("the real row has no id descriptor");
+    expect(Object.hasOwn(descriptor, "value")).toBe(true);
     observed.push(descriptor);
     expect(Object.isFrozen(row)).toBe(true);
     expect(row.id).toBe(descriptor.value);
@@ -467,7 +468,6 @@ test("a represented descriptor preserves runtime kind value and all three attrib
   expect(observed).toHaveLength(2);
   expect(observed[1]).toEqual(observed[0]);
   expect(observed[0]).toMatchObject({ writable: false, enumerable: true, configurable: false });
-  expect(Object.hasOwn(observed[1]!, "value")).toBe(true);
   expect(Object.hasOwn(observed[1]!, "get")).toBe(false);
   expect(runtime.result).toBe("refused");
   expect(body.result).toBe(runtime.result);
