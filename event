@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7ad80ae89063801ec18ae9ef1f2c6b71a1968c0c","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/base-ordinary-install.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7bd13d58fd50c2d3bc02c666c6bff4a38d14db9e","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-projection-reader.ts."}
