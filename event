@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/shared-helper-selection.mjs","body":{"commit":"90a47b2a43a4e4c862a057042cbbc4738e16259b","path":"scripts/shared-helper-selection.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:003e58b422adfdc43cdc580111804e319ff04e91","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/commons.test.ts."}
