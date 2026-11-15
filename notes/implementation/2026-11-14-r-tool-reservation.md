@@ -170,8 +170,9 @@ refusal reason or cause. The later browser-adapter assertions did not run.
 Gate 1 remains FAIL and this follow-up is also FAIL. Under `c637f63f` and
 `841b79030689a4b6d3c9d8f4092905c790dbc7ce`, R leaves this route: no R
 review, artifact filing or landing follows it. E1 takes the slot on published
-main `17a917cd` without R. Root's separate diagnosis act remains pending;
-this note supplies no diagnosis. This note-only successor changes none of
+main `17a917cd` without R. Diagnosis act
+`2dfa33b8bcd6a8be6fd59a9ac4905a829881f015` records source-qualified analysis,
+not a refusal reason exposed by the log. This note-only successor changes none of
 the source or tests checked at `53aba95f`.
 
 ## Definition and witnesses
