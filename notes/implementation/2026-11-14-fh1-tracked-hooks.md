@@ -60,7 +60,34 @@ The scratch repositories use the actual bytes source, the existing
 contract export source, and the owned pinned parser and formatter. They
 install nothing and retain their child streams.
 
-This addition is source only: its syntax checks, four-case hook owner,
-gate, and review are **UNRUN**. Earlier three-case results above describe
-the earlier source. NF5's repair and gate come first. This checkout does
-not activate hooks or change shared Git configuration.
+Development at `5f449c4e82d3f2a1ff387098d1718c992358cfbe` passed both
+Node syntax checks, the shell syntax check, and the shared-helper check.
+The whole four-case hook owner then failed: three cases passed, and the
+new local-helper case expected commit exit 1 but observed 0 at line 128.
+Its process wall time was 4.235859250 seconds. END
+`45144f9fb98d3fbf29fc7bbb58c6af840fa3b5b1` records the failure. The
+scale-selection owner remained **UNREACHED**; no retry ran.
+
+The actual argv, results and streams remain under
+`/Users/hughpyle/play/artroom-evidence/2026-11-14-gs3-fh1-helper-development-attempt1`:
+`commands.json`, `result.json`, and `git-hooks.stdout.log` and
+`git-hooks.stderr.log`. The retained scratch repository
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/artroom-git-hooks-GnQ1id`
+also keeps each Git child's streams. Its `logs/09.stderr.log` shows that
+the hook ran both checks but enumerated only the 26 copied bytes source
+files; `logs/09.stdout.log` shows that the resulting commit included the
+staged `examples/hook-source.ts` duplicate.
+
+The checker used ordinary Git pathspecs such as `examples/**/*.ts`,
+which missed that direct-child source. The repair adds explicit
+`:(glob)` magic to only the four apps and examples TS/TSX pathspecs, so
+`**/` matches zero or more directories. Package patterns, exclusions,
+export traversal, parser and declaration rules stay unchanged. The
+existing real-Git hook witness already covers this enumeration gap; its
+root-level source, refusal assertion and shared-import repair stay
+unchanged. No duplicate regression or mirrored selector test was added.
+
+The repaired source and its helper, whole-hook and selection checks are
+**UNRUN**. Earlier results describe their exact earlier heads. The full
+gate and review remain owed. This checkout does not activate hooks or
+change shared Git configuration.
