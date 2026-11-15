@@ -5,7 +5,7 @@ import type { Entry, Item, MemberRef, Receipt, ScopeRef, Summary } from "@genera
 import type { ScopeKind } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, intentDigest, keyIdOfSecret, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
-import { Custody, memoryStore, meaningOf, requestKey, secretSigner, signedIntent, type CustodyRecord, type Fetch, type HeadStreamFetch, type Phase } from "@generalbusiness/dap-client";
+import { Custody, identityId, memoryStore, meaningOf, requestKey, secretSigner, signedIntent, type CustodyRecord, type Fetch, type HeadStreamFetch, type Phase } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import { assignedTurn, canCommit, countingView, proposal, type CountingView } from "./model.ts";
 import { nativeGateway } from "./client.ts";
@@ -69,7 +69,7 @@ async function fixture(joined=true, proof?:{current():boolean;entry():Promise<bo
   const keepForeign=async()=>{const key=requestKey(),signer=secretSigner(secret);
     await new Custody(store,()=>timeOf(Date.now())).keep({service:identity.origin,membership,signer:identity.publicKey,target:scope,key},meaningOf({kind:"bogus"}),
       async()=>({binding:{definition:"counting",kind:"bogus",declaration:null,pinned:definition},envelope:{signed:await signedIntent(signer,{to:scope,kind:"bogus",fields:{}},{idempotencyKey:key}),beside:{}}}),timeOf(Date.now()+60_000));};
-  return{identity,gateway:await connect(),connect,observations,counters:()=>({posts,settles,writes}),retained:()=>store.records.size?canonicalize([...store.records.entries()]):null,
+  return{identity,store,gateway:await connect(),connect,observations,counters:()=>({posts,settles,writes}),retained:()=>store.records.size?canonicalize([...store.records.entries()]):null,
     record:()=>records().at(-1)??null,phases,mode:(value:string)=>{metadata=value;},lose:()=>{reply="lost";},fail:(phase?:Phase)=>{failPhase=phase;},writeThenFail:()=>{failAfterWrite=true;},acceptSettlement:()=>{settleAccepted=true;},keepForeign};
 }
 
@@ -90,6 +90,38 @@ test("FAKE correlated trusted first refusal keeps the judgment in custody and le
     assert.equal(f.gateway.pendingCommand(),null);assert.equal(f.counters().posts,1);
     assert.deepEqual(f.phases,["prepared","sent","refused"]);assert.equal(f.record()?.phase,"refused");
   }finally{f.gateway.dispose();}
+});
+
+// Invariant (72496543): Check never presents a client absence end as a service refusal or as proof that no POST happened.
+test("FAKE Counter Check gives no service-refusal copy for an unsent record",async()=>{
+  const f=await fixture(),read=f.store.read;
+  try{
+    f.lose();assert.equal((await f.gateway.command("start")).status,"unknown");
+    const original=f.record();assert.ok(original);
+    const id=identityId(original.identity),head={seq:4,hash:textDigest("FAKE verified absence")};
+    let armed=true;
+    f.store.read=async key=>{
+      const snapshot=await read(key);
+      if(armed&&key===id){
+        // The command scan owns this earlier snapshot. Another owner ends it before settlement's fresh read.
+        armed=false;
+        const custody=new Custody(f.store,()=>timeOf(Date.parse(original.signings.at(-1)!.notAfter)+1));
+        await custody.absent(original.identity,original.signings.length-1,head);
+      }
+      return snapshot;
+    };
+    const result=await f.gateway.checkCommand();
+    assert.equal(armed,false);
+    assert.deepEqual(result,{status:"unknown",reason:"The exact original request remains unresolved."});
+    assert.ok(result);
+    assert.doesNotMatch(result.reason??"",/service refused|nothing (?:was )?(?:sent|submitted)|not sent/i);
+    assert.equal("definitelyUnsent" in result,false);
+    const ended=f.record();assert.ok(ended);
+    assert.deepEqual([ended.phase,ended.envelope,ended.signings.length],["refused",original.envelope,original.signings.length]);
+    const outcome=ended.outcomes.at(-1);assert.ok(outcome&&"unsent" in outcome);
+    assert.deepEqual(outcome.unsent,head);
+    assert.deepEqual([f.counters().posts,f.counters().settles],[1,0]);
+  }finally{f.store.read=read;f.gateway.dispose();}
 });
 
 test("FAKE wrong-route first response stays unknown; later refusal/head cannot settle it, exact accepted history can",async()=>{

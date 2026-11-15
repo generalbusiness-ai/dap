@@ -4,10 +4,10 @@
  * signals. The real browser path is the witness of request c288c917.
  */
 import { expect, test } from "vitest";
-import type { SignedIntent } from "@generalbusiness/dap-contract";
+import type { Head, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
-import { BROWSER_TERMINAL_LIVE, Custody, Lost, browserCustodyStore, identityId, meaningOf, signedIntent, type BrowserCustodyPlatform, type StoredCustodyRecord } from "../src/index.ts";
+import { BROWSER_TERMINAL_LIVE, Custody, Lost, browserCustodyStore, identityId, meaningOf, signedIntent, type BrowserCustodyPlatform, type Outcome, type StoredCustodyRecord } from "../src/index.ts";
 import { T0, build as fixtureBuild, identity as fixtureIdentity, notAfter, receiptOf as fixtureReceipt, refused, signer } from "./support/custody.ts";
 
 // Browser storage admits wire shapes. Use real sequence references here; generic trusted-store fixtures keep their old bytes.
@@ -127,6 +127,80 @@ function origin(channelFailure?: "construct" | "post") {
   return { tab, raw, key };
 }
 const settled = () => new Promise((resolve) => { setTimeout(resolve, 5); });
+
+async function absentInBrowser(o: ReturnType<typeof origin>) {
+  const store = o.tab(), who = identity("absent"), meaning = meaningOf("absent");
+  let clock = T0, builds = 0, posts = 0;
+  const custody = new Custody(store, () => timeOf(clock));
+  const make = async () => { builds++; return build(who.key)(); };
+  const deliver = async () => { posts++; throw new Lost(); };
+  await custody.send(who, meaning, make, deliver, { notAfter });
+  const original = await custody.find(who);
+  if (!original) throw new Error("TEST request was not kept");
+  clock = Date.parse(original.signings.at(-1)!.notAfter) + 1;
+  const head = { seq: 4, hash: textDigest("TEST verified browser absence") };
+  const ended = await custody.absent(who, original.signings.length - 1, head);
+  const outcome = ended?.outcomes.at(-1);
+  if (!ended || !outcome || !("unsent" in outcome)) throw new Error("TEST request did not end absent");
+  return { store, custody, who, meaning, make, deliver, original, ended, outcome, head, now: () => clock, counts: () => [builds, posts] };
+}
+
+// Invariant (72496543): browser storage keeps the exact client absence end, inline and segmented, across tabs.
+test("a browser store reopens the same unsent outcome after absence", async () => {
+  const o = origin(), s = await absentInBrowser(o), second = o.tab();
+  try {
+    const reopened = new Custody(second, () => timeOf(s.now())), record = await reopened.find(s.who);
+    expect(record).toEqual(s.ended);
+    expect([record!.phase, record!.envelope, record!.signings.at(-1)!.closed, record!.outcomes.at(-1)])
+      .toEqual(["refused", s.original.envelope, true, { at: timeOf(s.now()), unsent: s.head, attempt: 1, signing: 0 }]);
+    expect(await second.unresolved()).toEqual([]);
+    const again = await reopened.send(s.who, s.meaning, s.make, s.deliver, { notAfter });
+    expect("unsent" in again && again.unsent).toEqual(s.head);
+    expect(s.counts()).toEqual([1, 1]);
+    await second.segment("unsent-history", 0, [s.outcome]);
+    expect(await second.segmented("unsent-history", 0, 1)).toEqual([s.outcome]);
+  } finally { second.close(); s.store.close(); }
+});
+
+type UnsentOutcome = Extract<Outcome, { unsent: Head }>;
+const malformedUnsent: { name: string; alter(outcome: UnsentOutcome): unknown }[] = [
+  { name: "mixed kind", alter: outcome => ({ ...outcome, lost: true }) },
+  { name: "missing signing", alter: ({ signing: _signing, ...outcome }) => outcome },
+  { name: "null signing", alter: outcome => ({ ...outcome, signing: null }) },
+  { name: "negative signing", alter: outcome => ({ ...outcome, signing: -1 }) },
+  { name: "fractional signing", alter: outcome => ({ ...outcome, signing: 0.5 }) },
+  { name: "unsafe signing", alter: outcome => ({ ...outcome, signing: Number.MAX_SAFE_INTEGER + 1 }) },
+  { name: "null Head", alter: outcome => ({ ...outcome, unsent: null }) },
+  { name: "missing seq", alter: outcome => ({ ...outcome, unsent: { hash: outcome.unsent.hash } }) },
+  { name: "missing hash", alter: outcome => ({ ...outcome, unsent: { seq: outcome.unsent.seq } }) },
+  { name: "negative seq", alter: outcome => ({ ...outcome, unsent: { ...outcome.unsent, seq: -1 } }) },
+  { name: "malformed hash", alter: outcome => ({ ...outcome, unsent: { ...outcome.unsent, hash: "not a digest" } }) },
+  { name: "extra Head member", alter: outcome => ({ ...outcome, unsent: { ...outcome.unsent, extra: true } }) },
+];
+
+// Invariant (72496543): malformed stored absence evidence grants neither a readable record nor a new sending.
+test.each(malformedUnsent)("browser custody refuses an unsent outcome: $name", async ({ alter }) => {
+  const o = origin(), s = await absentInBrowser(o), id = identityId(s.who);
+  const records = o.raw("records"), key = o.key(id), original = records.get(key);
+  if (!original || typeof original !== "object") throw new Error("TEST stored row is missing");
+  const malformed = structuredClone(s.ended), invalid = alter(s.outcome);
+  // Cross the storage trust boundary with an invalid runtime value, not a new typed record shape.
+  Object.assign(malformed, { outcomes: [...malformed.outcomes.slice(0, -1), invalid] });
+  try {
+    await expect(s.store.write(id, malformed)).rejects.toMatchObject({ why: { held: "unreadable" } });
+    expect(records.get(key)).toEqual(original);
+    // Fractional and unsafe numbers fail canonicalization before segment admission. Persisted corrupt values still reach its reader.
+    await expect(s.store.segment("invalid-unsent", 0, malformed.outcomes)).rejects.toThrow();
+    await s.store.segment("corrupt-unsent", 0, [s.outcome]);
+    o.raw("outcomes").set(o.key(["corrupt-unsent", 0]), invalid);
+    await expect(s.store.segmented("corrupt-unsent", 0, 1)).rejects.toMatchObject({ why: { held: "unreadable" } });
+    records.set(key, { ...original, text: JSON.stringify(malformed) });
+    await expect(s.store.read(id)).rejects.toMatchObject({ why: { held: "unreadable" } });
+    await expect(s.custody.find(s.who)).rejects.toMatchObject({ why: { held: "unreadable" } });
+    await expect(s.custody.send(s.who, s.meaning, s.make, s.deliver, { notAfter })).rejects.toMatchObject({ why: { held: "unreadable" } });
+    expect(s.counts()).toEqual([1, 1]);
+  } finally { records.set(key, original); s.store.close(); }
+});
 
 // Invariant: a record that one tab kept before a lost send is read by another tab, which settles the same envelope and signs nothing.
 test("a lost send kept by one tab settles in a second tab with the same envelope, and nothing is signed again", async () => {

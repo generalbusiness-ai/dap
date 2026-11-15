@@ -259,13 +259,15 @@ export function readStoredOutcome(value: unknown): StoredOutcome {
   const natural = (n: unknown): n is number => Number.isSafeInteger(n) && !Object.is(n, -0) && (n as number) >= 0;
   if (!isRecord(value) || typeof value["at"] !== "string" || timeMs(value["at"]) === null || !natural(value["attempt"]) || value["attempt"] < 1 ||
     (value["signing"] !== undefined && value["signing"] !== null && !natural(value["signing"]))) throw new CustodyError({ held: "unreadable" });
-  const kinds = ["lost", "answer", "settled", "archivedSettlement", "folded"].filter((key) => Object.hasOwn(value, key));
-  if (kinds.length !== 1 || (value["signing"] === null && kinds[0] !== "folded")) throw new CustodyError({ held: "unreadable" });
+  const kinds = ["lost", "answer", "settled", "archivedSettlement", "folded", "unsent"].filter((key) => Object.hasOwn(value, key));
+  if (kinds.length !== 1 || (value["signing"] === null && kinds[0] !== "folded") ||
+    (kinds[0] === "unsent" && (!Object.hasOwn(value, "signing") || !natural(value["signing"])))) throw new CustodyError({ held: "unreadable" });
   const body = value[kinds[0]!];
   if (kinds[0] === "lost" ? body !== true : !isRecord(body)) throw new CustodyError({ held: "unreadable" });
   if ((kinds[0] === "answer" && !ANSWERS.submit(body)) || (kinds[0] === "settled" && !isReceipt(body)) ||
     (kinds[0] === "archivedSettlement" && (!ANSWERS.settle(body) || body.ok || body.reason !== "archived")) ||
-    (kinds[0] === "folded" && (!isRecord(body) || !isFactRef(body["fact"]) || !isDigest(body["intent"])))) throw new CustodyError({ held: "unreadable" });
+    (kinds[0] === "folded" && (!isRecord(body) || !isFactRef(body["fact"]) || !isDigest(body["intent"]))) ||
+    (kinds[0] === "unsent" && !isHead(body))) throw new CustodyError({ held: "unreadable" });
   return value as unknown as StoredOutcome;
 }
 

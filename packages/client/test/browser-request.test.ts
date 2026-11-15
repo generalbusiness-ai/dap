@@ -5,8 +5,8 @@
  */
 import { expect, test } from "vitest";
 import type { Answer, FieldRecord, Receipt } from "@generalbusiness/dap-contract";
-import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
-import { browserRequests, meaningOf, memoryStore, signedIntent, type BrowserRequestPorts, type Envelope } from "../src/index.ts";
+import { canonicalize, textDigest, timeOf } from "@generalbusiness/dap-bytes";
+import { Custody, browserRequests, meaningOf, memoryStore, signedIntent, type BrowserRequestPorts, type Envelope } from "../src/index.ts";
 import { T0, lane, receiptOf, signer } from "./support/custody.ts";
 
 const who = { service: "https://scopes.test", membership: null, signer: signer.key, target: lane };
@@ -35,6 +35,50 @@ const gate = () => {
   const wait = new Promise<void>((done) => { release = done; });
   return { wait, release };
 };
+
+async function unsentBench() {
+  const b = bench(), key = "unsent";
+  b.script.post = async () => { throw new Error("lost"); };
+  await b.send(key);
+  const original = await b.requests.find(key);
+  if (!original) throw new Error("TEST request was not kept");
+  const ending = new Custody(b.store, () => timeOf(Date.parse(original.signings.at(-1)!.notAfter) + 1));
+  const head = { seq: 4, hash: textDigest("TEST verified absence") };
+  const ended = await ending.absent(b.requests.identity(key), original.signings.length - 1, head);
+  b.calls.length = 0;
+  return { ...b, key, original, ending, head, ended };
+}
+
+// Invariant (72496543): a client absence end is not a refusal from the service.
+test("an unsent custody record settles as unknown without a service refusal", async () => {
+  const b = await unsentBench();
+  expect(b.ended?.phase).toBe("refused");
+  expect(await b.requests.settle(b.key)).toEqual({ status: "unknown" });
+  expect(await b.requests.find(b.key)).toEqual(b.ended);
+  expect([b.calls, b.builds(), b.posted.length]).toEqual([[], 1, 1]);
+});
+
+// Invariant (72496543): repeating send returns the retained absence end without a new sending.
+test("an unsent custody record sends its retained end as unknown", async () => {
+  const b = await unsentBench();
+  expect(b.ended?.outcomes.at(-1)).toMatchObject({ unsent: b.head, signing: 0 });
+  expect(await b.again(b.key)).toEqual({ status: "unknown" });
+  expect(await b.requests.find(b.key)).toEqual(b.ended);
+  expect([b.calls, b.builds(), b.posted.length]).toEqual([[], 1, 1]);
+});
+
+// Invariant (72496543): a later verified entry can accept the same record that a client ended absent.
+test("a late folded entry changes the same unsent record to recorded", async () => {
+  const b = await unsentBench();
+  expect(await b.requests.settle(b.key)).toEqual({ status: "unknown" });
+  const folded = await b.ending.folded(b.requests.identity(b.key), {
+    fact: receiptOf(b.original.envelope.signed, 3).fact, intent: b.original.signings.at(-1)!.intent,
+  });
+  expect(folded?.phase).toBe("accepted");
+  expect([await b.requests.settle(b.key), await b.again(b.key)]).toEqual([{ status: "recorded" }, { status: "recorded" }]);
+  expect((await b.requests.find(b.key))?.envelope).toEqual(b.original.envelope);
+  expect([b.calls, b.builds(), b.posted.length]).toEqual([[], 1, 1]);
+});
 
 // Invariant: custody keeps the envelope before its one send, and each answer leaves the phase that is true.
 test("a request is kept before its one send, and each answer leaves the phase that is true", async () => {
