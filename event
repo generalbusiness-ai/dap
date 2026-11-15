@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a72bf3a42af3ba045f8de6b052cb40e9fd1e8706","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-14-lc1-lending-counter-releases.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:aaf431a04669a0a125886439697b0cab98b0750a","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/views-host.ts."}
