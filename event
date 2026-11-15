@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:74ea7790034dcba59d640dcf48387983c4a6e733","text":"Merge retired a covered predecessor; the successor is at examples/lending/release-identifiers.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:78ed0fe93f3f469078ad1555b9ea5166f96f2fe1","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/guard-value.ts."}
