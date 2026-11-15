@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0e2e88aded68c4e440053c28b06368a4d1f4d9af","text":"Merge retired a covered predecessor; the successor is at packages/client/test/support/custody-child.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0f8bd48a59652a65a2574435bfe2f28c951b6e67","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/directory-partition-lanes.scope.fixture.ts."}
