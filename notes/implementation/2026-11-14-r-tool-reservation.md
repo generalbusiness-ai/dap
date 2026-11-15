@@ -8,7 +8,7 @@ day semantics below. Canonical ruling
 sets Lending to `0.3.0`, and moves packets, trust rows and the content bucket
 to LC-1 request `91829f2e`. It supersedes retired ruling `b2654766`.
 
-## Current source composition
+## Original source composition
 
 Branch `builder/r-on-main-source-20261114` starts at actual main
 `57f887ce066448133d0bd0fe611d0935cc6eb0ed`. It replays only R's own commits
@@ -25,15 +25,16 @@ imports, adapters and recovery witnesses alongside R's reservation race.
 No old Kept interface returns. This composition changes no Core or SDK
 production source.
 
-The authored package and descriptor now both say `0.3.0`. Counter remains
-`0.2.0`. No producer, packer or identifier calculation ran on this branch.
+At the original composition checkpoint, the authored package and descriptor
+both say `0.3.0`. Counter remains `0.2.0`. No producer, packer or identifier
+calculation had run on this branch.
 The carried `definition.json`, `pin.ts` and `scenarios/application.json`
 remain the dated outputs of original R commit `321f09ab9e`; regeneration
 and byte correspondence are **OWED** at the later executable boundary.
 Current release identifiers remain main's old values. They do not claim
 that the new version or reservation source reproduces those identifiers.
 
-All validation in this composed worktree is **UNRUN**. The table preserves
+All validation at that original checkpoint was **UNRUN**. The table preserves
 old-head results as history and names current obligations separately.
 LC-1 must land and R must merge its actual main before preflight. The
 canonical same-lock dependency view also remains owed. Neither the old
@@ -45,6 +46,39 @@ The three prerequisite witnesses live in
 slot form, own-item timed effects, and a named refusal after two
 same-head opens with empty expected revisions. They passed before the
 production edits. The renewed whole definition owner below includes them.
+
+## LP1: the actual publication refusal and source repair
+
+LP1 request `fe834d8e8954718e30e61885a14a40438b5b9f92` and promise
+`d9b356ed2d2501bf34dda9287cab4d1dcfe6f36a` track this repair.
+On 2026-11-15, END `af78c2ecf75729070ea15899cc94ac28773ef781` records
+an actual RED at clean head `4f213e9d080a12e928974e9fb76b2113384b067a`,
+tree `7d0b2c6b1c4f15840a5df88fc4c4a397ee505671`.
+The maintained producer left all three dated outputs unchanged. Four affected
+compiler contexts passed. The whole three-case base installation owner had
+two passes and one assertion failure, with no skips or setup failure.
+
+The failing case installed the current Lending package in a real base room
+and donated `shelf/lp1.md`. Destination acknowledged its deciding entry as
+recorded. The exact Result for donation sequence 2, send 0 then refused
+`publish-file` with `guard-failed` and `publication-path-not-declared`.
+The applied-outcome assertion at `base-ordinary-install.test.ts:256–257`
+failed before the page and receipt assertions. A recorded acknowledgment
+alone does not establish publication.
+
+The source repair adds `publication-paths@1` to the Lending descriptor with
+one literal directory prefix, `shelf/`. The schema rejects glob syntax.
+This is the fewest prefixes that covers the definition's five sends:
+`donate` checks a `shelf/` page and stores it in a fixed slot; `borrow`,
+`return`, `cancel`, and `publish` reuse that page. The README states what the
+Library publishes and where. Every test and assertion stays unchanged, as do
+Directory, Destination, grants, and receipt code. Lending stays `0.3.0`;
+Counter and both immutable `0.2.0` packets stay unchanged.
+
+Validation of this descriptor repair is **UNRUN**. The same whole owner must
+show GREEN before later identifier work. Normal reproduction, current
+identifiers, the full gate, and review remain owed. This RED establishes no
+successful page publication, release, signing, or deployment.
 
 ## Definition and witnesses
 
@@ -122,6 +156,12 @@ Wall times come from `/usr/bin/time -p`; case counts come from actual Vitest
 JSON reports. Earlier temporary raw files remain, and the retained copies
 match them byte-for-byte. This table records development, not a gate.
 
+`L` denotes the later raw directory
+`/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-minimal-red-attempt1`.
+Its JSON results retain each exact argv, working directory, exit, wall time,
+and stream hashes. LP1 rows below bind the clean `4f213e9d` head, not the
+unrun descriptor repair.
+
 The generated outputs and development note then committed at
 `321f09ab9e7f3a060812170e55b273597e487ab7`, tree
 `785c9dee6e4db0694ccdb1f9c083aed2f62123de`. The Native owner and both
@@ -144,9 +184,14 @@ classification, fault, test assertions, runner and deadlines stayed unchanged.
 | Native Lending owner | From `packages/scope`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.lending.config.ts test/lending.test.ts` | 0; one whole file and one scenario passed; zero failed, pending or todo; 11.46 s | `native-lending.json` — `bee66653e695d11702574f858999e4371585e518d9ee4d8f1e9fbfbe7afdedd0` |
 | Guard control attempt 1 | `N controls/held-reservation/control.retained.mjs SOURCE OLD NEW --expect TITLE -- examples/lending --config vitest.config.ts definition.test.ts`, helper path under the output directory | 2, INCONCLUSIVE; package preflight stopped before any child or mutation; 0.07 s | `controls/held-reservation/control.stderr.log` — `43248b73322f0fb46fb8cf3386750a4b4739981285913fbebda1516a39833e50` |
 | Corrected guard control attempt 2 | `N controls/held-reservation-attempt2/control.retained.mjs SOURCE OLD NEW --expect TITLE -- . --config examples/lending/vitest.config.ts definition.test.ts`, helper path under the output directory | 0, DISTINGUISHES; baseline eight passed; mutant six passed and two assertion failures; 2.36 s | `controls/held-reservation-attempt2/control.stderr.log` — `bd0e786d652ced3298fe208bdae1684fde58e287e0d6950bee686aaa28fe834d` |
-| Current composed source: affected compilers and owners | Not run | UNRUN; original results above bind their named old heads only | None |
-| Current typed outputs and normal release reproduction | Not run | Regeneration and source/identifier correspondence OWED; merge actual LC-1 main first | None |
-| Current guard control, full gate and review | Not run | UNRUN; queue and later execution grant required | None |
+| Original composition: affected compilers and owners | Not run | UNRUN; original results above bind their named old heads only | None |
+| Original composition: typed outputs and normal release reproduction | Not run | Regeneration and source/identifier correspondence OWED; merge actual LC-1 main first | None |
+| Original composition: guard control, full gate and review | Not run | UNRUN; queue and later execution grant required | None |
+| LP1 typed producer | `N --import tsx examples/lending/scripts/pin.mjs` | 0; 1.102256667 s; all three outputs unchanged | `L/producer-result.json` — `b022c22e182dff126bae632638104413e0a8ace693f34550fd5f4325dda9f9b5` |
+| LP1 four compiler contexts | `N node_modules/typescript/bin/tsc -p CONFIG`; the same four configs listed above, in that order | All 0; 0.653721667, 0.306571792, 0.318671334, and 0.860577166 s | `L/validate-result.json` — `95a568897223f546ccc1a1daa45d31a14328b8ecd148eb11ecc56bb11f61135c`; all compiler stdout and stderr empty |
+| LP1 compatibility prerequisite | `N scripts/cloudflare-pool-compat.mjs` | 0; 0.086807833 s; accepted bundle unchanged, `copied:false` | `L/compat.stdout.log` — `94d712b506adaa3b784ef817d13532e78b3fc2679a33a7252aa608bb4aa1d526` |
+| LP1 whole base installation owner, actual RED | From `packages/scope`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts --project scope test/base-ordinary-install.test.ts --reporter=default --reporter=json --outputFile=L/lp1-whole-owner.json` (expand `L`) | 1; 18.676032917 s; two passed, one assertion failed, zero skipped; exact Destination refusal above | `L/lp1-whole-owner.json` — `1489edd416a9cc1ded882eaa2566738296851e68cf495139005d685d0cfe2937`; `L/lp1-whole-owner.stdout.log` — `95f2c49d620c6999098a26e52fdef993337a52e47289525fe47ebf97dceaa955`; `L/lp1-whole-owner.stderr.log` — `0f6ab0dc630ba969805682fb3802e262fe735504201aa3507ad3a953c067c666` |
+| LP1 descriptor repair and later release checks | Not run | Same-owner GREEN, normal reproduction and identifiers, gate, and review UNRUN | None |
 
 Both plain runs and the Native run had empty stderr. The producer's only
 stderr was the Node `DEP0205` deprecation warning. The dedicated Native
@@ -169,9 +214,10 @@ occurred. Source bytes restored exactly to SHA256
 `cb17d224d6ad6518f1ad8dfe2bf15e2db0604ac0d5c52c48830be0f42bb20eee`
 and mode `0644`. No third green run or generated pin rewrite occurred.
 
-Those historical results do not validate this composed head. Current
-compilers, affected whole owners, guard control, typed regeneration,
-normal reproduction and the full gate remain **UNRUN**.
+The original R results above bind their historical heads. The later LP1
+rows record the producer, four compilers, and actual publication RED at
+`4f213e9d`. They do not validate the descriptor repair. Its GREEN owner,
+release reproduction, identifiers, full gate, and review remain **UNRUN**.
 
 ## Release boundary
 

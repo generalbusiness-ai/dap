@@ -52,6 +52,11 @@ the library tells its destination to publish it at the thing's path,
 The scope does not check a page's text against the thing; the journal
 shows who stated it, and the next act on the thing rewrites the page.
 
+The package declares `publication-paths@1` with the single directory prefix
+`shelf/`. This permits the Library to publish donated tools' pages and
+refresh them after circulation or an explicit `publish` act. The declaration
+covers files under `shelf/` at the Library's destination, not other paths.
+
 [Build a lending library](../../docs/build-a-lending-library.md) is the
 planner's four-step tutorial for the first definition without publication.
 
