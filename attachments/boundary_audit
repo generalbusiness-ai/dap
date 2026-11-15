@@ -1,0 +1,62 @@
+# E1 descriptor repair checkpoint
+
+Source only. Core f31ba72af24cb4b3cdd4b109fa8e26cf7c047609, tree 84e4e8338803258deeb51a069d7cb3e8cd782113. Client 75ae0d4155391f7680049defb572e14892976b0a, tree e9fafffdfb8e4ae75c392fef530811e09c4984a8. Both worktrees are clean. Normal commit hooks ran; no compiler, test, AST, project import, control, oracle, capture, model, formatter, dependency mutation, merge or push ran.
+
+The Core diff from 7f55 is /private/tmp/artroom-e1-descriptor-core-repair-20261114.diff. The client diff from peer checkpoint 22631025 is /private/tmp/artroom-e1-descriptor-client-repair-20261114.diff. The proposed single control is /private/tmp/artroom-e1-descriptor-control-proposal-20261114.txt. These are scratch review files, not evidence of execution.
+
+## Accepted cut and carriers
+
+The implementation follows 34fb3c6de1ff9a6fb9e30a810f55fae2bee7ebd8, d66ce570d58792fbf42e1c7e73573e6d075b7209 and canonical marker ruling 654ec50a8c2b271c328c2781765bce4e07f4c8b0. It does not rest on the superseded 6688 copy.
+
+1. given() builds private data. The absent unsigned intent is private undefined data, not an invented accessor. The effect's base/details copy uses descriptors and invokes no getter. One final publicGiven guard wraps the complete context at the actual capability invocation. Runtime signed judgment returns the original context without this guard.
+2. fields/from/fromItems and Item/snapshot/record data use truthful descriptors. A known data descriptor retains kind, guarded value, writable, enumerable and configurable. Resolving an unknown value throws its existing missing-intent/entry result before the descriptor returns.
+3. Lazy mirrors initially hold key placeholders, never frozen raw values. An actual descriptor request resolves its guarded value before materializing the original flags. Memoized values satisfy frozen/nonwritable Proxy invariants. Arrays retain their real length and prototype. No identity promise follows.
+4. Client forwarding constructs no copy of public context descriptors. It forwards the completed context and substitutes only the completeness facade at the view read. Construction reads own keys, which remains supported, without touching intent. Original receiver and optional port presence remain intact.
+5. The former public markSelf key and its type member are gone. Closed producers call an internal module helper. A call-scoped collector surrounds the actual synchronous capability invocation and restores the previous collector in finally. A nested runtime call receives no collector rather than inheriting an outer body's collector. No collector or function is passed to runtime code, and no SDK index export exposes this carrier.
+6. judgeActBody always constructs BodyReferences. Without the SDK classifier, the neutral classifier marks only metadata of an actual current-output object unknown. All other positions return null. It infers no Source or item identity from a number. The strengthened existing owner case omits provenance and reads the actual current fromItems id descriptor.
+7. The declared-kind condition now accepts a recorded ACT or the existing unsigned-body discriminator. Both use the same planned direct-field/type checks. It fabricates no Entry or verified scope-kind evidence. The strict context case uses the existing receiver-pin ACT definition and actual hold producer to compare its nested declared.from descriptor and effects.
+
+## Rule-reachable data keys
+
+- Public Given: runtime and body use the same ordered base keys. Effect details append the same from/fromItems keys in the same order. No marker or other Explore-only data key remains. The strict public walk compares the entire ordered key list, with no exception.
+- intent: unknown unsigned data stops on a direct or descriptor read. No accessor kind is invented.
+- fields: the existing shaped field names and order remain. Source tracking stays outside the object. Existing provided/default origins select the actual value guard.
+- from: the same actual bound argument names remain. Its reached data value uses exact bound-item provenance.
+- fromItems: the same binding map names remain; protected rows retain Item's runtime data keys. Current working rows come from actual Core working objects, not projection guesses.
+- rows, refs and values: no new fields or symbols enter them. Current-output, revision and entry-slot marks stay in private maps. Descriptor/enumeration unavailability follows 34fb, not a replacement field or sentinel visible to a rule.
+- records: actual record keys, state, values and seq remain their existing shape. Exact marked positions guard unknown values; key-dependent selection and canonical ordering stop before trusting private aliases.
+- snapshots: optional members stay absent when absent. all().items reuses guarded rows. No marker, source label, assumed-entry hash, symbolic request or symbolic account is added to a rule's StateSnapshot.
+- kindContext: source stays the same recorded context. declared now retains actual scope-typed argument names on both ordinary runtime and body paths; the prior missing from key is repaired and covered by the existing receiver-pin fixture.
+- scope, clock, verified facts and represented declaration data add no Explore-only keys. Prototype and identity comparisons are not data-key comparisons under the consolidated boundary below.
+
+The required source search `rg -n 'markSelf' packages/derive/src` returned no matches before commit. Its old name remains only in historical discussion, not an executable public context member. Package index exports, Contract types and the frozen oracle/harness files are unchanged.
+
+## Observation boundary and source review
+
+Rulings a870c3436052bb8ab4fcc1add606dd40357e06fb, 1ffd7288bbb18c07837eaa9da054eae7e26d6e8a and consolidated ed9af69d98c7995c3c93b1cd7e18cfe3fe7d656e distinguish data and declared interface calls from implementation observations.
+
+The unsupported observations identified in this audit are function identity, name, length, toString and own metadata, plus object identity, prototypes, constructors and undeclared backend members. A SqliteStore has localSigners while MemoryState has tally. StateView-container reflection therefore makes no supported promise and receives no new filter, adapter, guard or unavailable result. Existing view methods remain callable ports. No function metadata is copied and no function Proxy is added.
+
+The independent source search by nf7_plan covers packages/derive/src/capability and packages/platform/src, including generated sources. It found no capability or Platform rule reading view-method properties, comparing method identity, reflecting the StateView container, or reading undeclared backend members/prototype/constructor. Its false positives are static JSON validators, capability dispatcher implements binding, a separate optional Tally and a page result spread. No shipped Grow/Lending/Counter rule reads an unsupported observation in this reviewed slice. No additional witness is claimed or required for function/container implementation metadata.
+
+The earlier numbered enumeration audit remains 86c904d9a5db57fe51ad57b40a121a4fa1f07bec, with independent Platform act 3a59fef0a88b60806a6987ebe3096609142d6019 and callback-label correction 48d3aa9cc94dba2023758bc89e3e4aa044ae6897. It remains source history, not a new inventory or executed measurement.
+
+Two limits remain unchanged: hold.ts's export enumerates every ref, and prepared rules hash their full prescribed input. Counts remain 16 demo Grow Room forms (15 maintained), one Lending form and six current Counter forms, conditional on reaching the rule with unknown input. Those are not new descriptor regressions or measured successful reaches. Grow's four device-command ACT callbacks perform selected reads, not protected-container enumeration. Lending and Counter declare no capabilities.
+
+## Owning cases and pending control
+
+Core's whole judge-body owner now has 21 static test registrations. Its seven new cases are:
+
+1. represented descriptor matches runtime kind/value/three attributes, including a real frozen row and an actual guard changed by the rejected accessor;
+2. unknown descriptor stops before a value escapes;
+3. Object.keys on unknown data stops;
+4. Object.keys on represented data equals runtime;
+5. Reflect.ownKeys and in agree on both states;
+6. skipped intent performs zero public lazy reads and still matches actual runtime consequences (any private read would throw and prevent the write);
+7. the actual public context walk compares ordered keys and descriptors, reaches intent/field/from/row unknown data without mistaking a TypeError for unavailability, and compares the existing scope-field receiver-pin declared-kind path.
+
+The earlier fourteenth case now also covers a current opening without the optional SDK classifier. The client five-case facade owner remains, with only its new descriptor.get assertions changed to descriptor.value. The peer's Describe and seven wrapper additions at 22631025 remain byte-identical in this client follow-up.
+
+The ONE proposed accessor-restoration control targets the Core helper's data descriptor expression, requires the first represented-descriptor test to fail, and runs the entire 21-case file before/after with no name filter. It has not run. No third green or sweep is proposed.
+
+All new checks are NOT COMPILED and UNRUN. The 4,029 answers, 249 case aggregates, raw capture and original baselines remain immutable. Actual-main/C3 composition, full client invariant 9, gate, kernel and checker review remain owed. Core note is 40,883 bytes; client note is 38,397 bytes, both below 40,960. Notes preserve historical failures and actual a16 results without promoting this source checkpoint to evidence.
