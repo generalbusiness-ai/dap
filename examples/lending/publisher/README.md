@@ -151,10 +151,16 @@ Those checks use local bare Git, real IPC children and scripted authority;
 they prove no network, remote credential or hosted publication behavior.
 The implementation note retains their full source and evidence bindings.
 
-The 2026-11-15 refresh starts from published main `ce6f02ba`. Checks of
-that new import closure, one full gate and checker review remain UNRUN.
-No compiler, test, publisher script, producer or deployment ran for this
-source refresh.
+The 2026-11-15 refresh starts from published main `ce6f02ba` and includes
+the one-note main successor `9e42735a`. At current source `0ef9244f`,
+the Lending compiler passed and the whole 13-case baseline passed inside
+the corrected `report-unsent` control. Removing only the settled-ending
+guard caused the existing restart witness's direct assertion to fail.
+An earlier control invocation was inconclusive before tests because it
+named the wrong package directory; that result remains separate.
+The implementation note records both attempts and the exact evidence.
+Full gate, canonical reproduction, checker review and hosted acceptance
+remain UNRUN. No producer, remote Git write or deployment ran.
 
 
 ## Source review repairs
@@ -177,6 +183,9 @@ bound and one below it, with only two distinct tree objects.
 The standalone 13-case baseline includes both repair witnesses. Its
 directory control changes only `>` to `>=` and fails the real adjacent-bound
 assertion before restoring the source. The original nine witnesses and
-all earlier behavior assertions remain. Those dated results do not
-validate the current-main refresh; new checks and the full gate still
-wait for root's execution grant.
+all earlier behavior assertions remain. Those dated directory-control
+results stay bound to `146dcb26`; the later current-client compiler and
+whole-owner baseline at `0ef9244f` cover the unsent accommodation.
+The new control scripts an existing ending through real file custody;
+it proves no journal-absence algorithm, native enrollment or remote host.
+The full gate and review still wait for root's execution grant.

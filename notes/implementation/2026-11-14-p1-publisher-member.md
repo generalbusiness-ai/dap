@@ -5,7 +5,10 @@ P1 is request `bea87570`, under promise `3acac812` and the ratified note
 records actual-main composition and dependency setup on 2026-11-14.
 It preserves earlier development/control results at their original heads;
 the standalone Lending compiler and directory control later passed at
-`146dcb26`. The full gate and checker review remain unrun.
+`146dcb26`. Current-client compilation and the thirteen-case baseline
+also passed at `0ef9244f` on 2026-11-15, with the `report-unsent`
+control below. Full gate, canonical reproduction and checker review
+remain unrun.
 
 The separate definition and publisher live in
 `examples/lending/publisher/`. They add optional publisher, repository,
@@ -214,13 +217,13 @@ authority. They establish no network, credential/Gateway, hosted-room or
 operator acceptance. At that note-only checkpoint, the standalone
 compiler/owner, full gate and checker review remained **UNRUN**.
 
-## Standalone development and control on 2026-11-14
+## Development and controls at their actual heads
 
 END `1bf6851054fa7cfdc085c8dd7804d9945b395ab7` records the clean tested
 source `146dcb26a3c7d6558ae21936be47ac7d2ee8e7fa`, tree
 `ef2bc8d6822a4ed721c11c71f054dfeb89019fcf`. The run finished at 20:08 EST
-on 2026-11-14 (2026-11-15 01:08 UTC). This later documentation commit
-changes only this note; it is not the tested head.
+on 2026-11-14 (2026-11-15 01:08 UTC). Historical documentation commit
+`fe0409e6` changed only this note; it is not the tested head.
 
 Raw directory:
 `/Users/hughpyle/play/artroom-evidence/2026-11-14-p1-standalone-development-control-attempt1`.
@@ -240,7 +243,8 @@ Its owner arguments were
 The `--expect` assertion identifies the required failure; it filters no
 tests. Both children ran the whole 13-case publisher owner.
 
-Paths in this evidence table are relative to the raw directory:
+The historical `146dcb26` rows use paths relative to that raw directory.
+The dated current-client rows give their full record paths:
 
 | Check or record | Actual result | Evidence and SHA-256 |
 |---|---|---|
@@ -250,15 +254,22 @@ Paths in this evidence table are relative to the raw directory:
 | Baseline child | PASS; exit 0; 13 passed, 0 failed or pending | `tmp/artroom-control-tXUFy3/before.json`; `bc4f4cb890aea2b8b715f93a13132729ad6bf493a5fece288db2c3f3d48fd793` |
 | Fault child | Exit 1; 12 passed, 1 direct assertion failure; none pending | `tmp/artroom-control-tXUFy3/after.json`; `bdbf181569112fe69e6dd98c4b20338165ef9769788cd2c5b97ee5379e9af8d3` |
 | Outer result | PASS; exit 0; 26.907420792 s; source restored, owner unchanged | `result.json`; `478eb30aef9a07aea9f807674da068158d3564bb1b30b59f486d2862deacc78e` |
+| 2026-11-15 authentic owned setup | PASS. One copy exit 0, 0.612151084 s; total 5.123328833 s. All 18 metadata inputs matched; 107 installed roots, 15 bindings, 57 exports, 18 bins and 21 owned directories checked. Source/index/donor unchanged; no install or stamp change. END `8eed1d3df07bbca26b379cf0f05ea6c3a06bbba3`. | `/private/tmp/artroom-p1-owned-dependency-setup-attempt1-20261115/result.json`, SHA-256 `016c5c611199f3994dcb55a811b456287a7dce8f9f9288c55f6e5a0d63d58216`; actual copy argv in the record. |
+| Current-main source and note integration | Source commit `92f6c9e8e8c4586421730ef174ecac13b37c6313`, tree `8bd814ce73902d475bf746d053207e86a63cb313`: normal hooks/commit exit 0, 2.356090542 s; 18 own paths. The subsequent one-note main integration exited 0 in 0.120046167 s, reaching tested head `0ef9244fd71d96b16f49ee667a3de4029453f6af`, tree `ffe9768d399e954f07c34ffcffc120dbb751c991`. It added only the sprint report from `9e42735a`; source stayed unchanged. | `/private/tmp/artroom-p1-source-commit-attempt1-20261115/result.json`, actual argv `commands[*].argv`; `/private/tmp/artroom-p1-sprint-note-integration-attempt1-20261115/result.json`, actual `argv`, head/tree and one-path delta. These records bind their actual Git source objects. |
+| `0ef9244f`: current compiler and compatibility | PASS. Lending compiler exit 0, 0.751358750 s; stdout and stderr empty. Maintained compatibility exit 0, 0.092440750 s. Both commands reaped. They did not repeat during corrected attempt 2. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-p1-current-client-control-attempt1/result.json`, SHA-256 `00d314f8b9bc5bae1d49f1e5c26a746d2b9b4411fb136ce6be2a2ca1b74c6f01`; actual argv `commands[0..1].argv`. |
+| `0ef9244f`: control attempt 1 invocation failure | INCONCLUSIVE, exit 2, 0.072665334 s; all commands outer 0.955878750 s. The helper refused `examples/lending` because it is not a package directory. No owner, baseline, mutant or control source write ran. Source/mode/head/tree remained unchanged. This is an invocation failure, not a product or assertion failure. END `27b502058de4bd591528a6a16cf9c5440b514915`. | Same attempt 1 result, SHA-256 `00d314f8b9bc5bae1d49f1e5c26a746d2b9b4411fb136ce6be2a2ca1b74c6f01`; actual wrong argv `commands[2].argv` and retained stderr metadata. |
+| `0ef9244f`: corrected current-client control attempt 2 | DISTINGUISHES; helper exit 0, signal null, reaped; 33.734917208 s. Whole-owner baseline: all 13 passed. Removing only the settled `unsent` return produced child exit 1: 12 passed and one direct AssertionError at `publisher.test.ts:250`, expected `stopped/report-unsent`, received `stopped/custody-mismatch`. Exact source bytes and mode 0644 restored; head/tree clean. No separate positive or third restored green. END `a4f49579b8ade74bef98a99a491e3fbb7acc4c8a`. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-p1-current-client-control-attempt2/result.json`, SHA-256 `80917d4a8bf60e62434973de2bde0125fb85f1ba28dccc2c7532ff720c25dc8e`; actual corrected `argv`. Safe 3,262-byte stderr.log beside it, SHA-256 `205e8022f7607c8015b2bf6c746fc403b2cfad173adb8b7dcedbba218005f520`. |
 
-The fault fails the actual adjacent-bound assertion at
+For the historical `146dcb26` directory control, the fault fails the
+actual adjacent-bound assertion at
 `publisher/publisher.test.ts:387`: expected skipped `[]`, received the
 `tree-limit` skip. Both arms retain the same 13 identities, with no
 filter, separate positive owner, third green, timeout, setup failure or
 sweep. Each child's JSON, stdout and stderr remains beside the other raw
 outputs.
 
-The retained helper differs from the maintained helper only by
+For that historical `146dcb26` directory control, the retained helper
+differs from the maintained helper only by
 `preserveScratch = false` becoming `true`. The original SHA-256 is
 `8d7ba44b672b1c84c2272dd185661c77ecc06b958e59fb83b5b4a0d0562aa818`;
 the retained copy is
@@ -270,11 +281,21 @@ the owner stayed at
 `b3929103b47ac0dfa3b2619b65e75b5ce24856906b7e20cfdba0a65bd33c06ee`.
 The tested checkout ended clean.
 
+The current-client control uses the maintained helper unchanged, with
+root package `.` and explicit
+`--config examples/lending/vitest.config.ts publisher/publisher.test.ts`.
+Its `--expect` selects the required assertion for classification; both
+arms run the whole owner. The normal conclusive helper deleted its
+before/after JSON children, so those reports are not claimed retained.
+The safe result and exact stderr summary remain available. This differs
+from the retained raw children of the historical directory control above.
+
 These results cover local bare Git and IPC under scripted membership and
 read authority. They establish no network, Gateway, credential, operator,
 hosted-room, enrollment, live publication or deployment acceptance. The full
-gate and checker review remain **UNRUN**. This note update ran no project
-check and changed no publisher, package, configuration or dependency byte.
+gate and checker review remained **UNRUN** at that checkpoint. The
+historical `fe0409e6` note update ran no project check and changed no
+publisher, package, configuration or dependency byte.
 
 ## Source refresh onto published main on 2026-11-15
 
@@ -295,7 +316,9 @@ The two shared configs add only `publisher/**/*.ts` and
 including shipped Lending inputs and identifiers, stays unchanged. The old standalone and
 AE1-composed lanes remain intact. Historical `146dcb26` compiler and
 13-case baseline/control results above retain their original source
-bindings. The new import closure, gate and review remain **UNRUN**.
+bindings. At that initial refresh the new import closure remained unrun;
+the current compiler and whole-owner results above now cover the
+`0ef9244f` source. Full gate, reproduction and review remain **UNRUN**.
 No project check, dependency setup, producer, package release or hosted
 operation ran for this source preparation.
 
@@ -309,10 +332,22 @@ Native answer or receipt. Its key combines the commit and Library
 revision, so each cycle stops again until the Library revision moves;
 P1 adds no second report.
 
+`custody-mismatch` means the publisher cannot match or interpret the
+retained record or outcome. An `unsent` ending records the caller's
+statement that a verified journal contains no report under the request
+key after the latest signing died. The Git branch can already hold a
+commit that the Library does not name. Those different operator states
+require different words. This witness scripts the ending; it does not
+prove journal absence or a Native refusal.
+
 The existing restart witness retains all original assertions and adds a
 scripted preexisting ending through real file custody. Stale enumeration
 reaches the settled-decision arm, and the next cycle reaches final-send
 reuse. This checks publisher handling, not a journal-absence algorithm or
 Native refusal. The owner still has thirteen identities and the same
-deadlines. Current-source compiler, owner and gate checks remain UNRUN;
-the historical results above do not validate this accommodation.
+deadlines. The current-source compiler and whole thirteen-case baseline
+passed at `0ef9244f`. The corrected direct control also distinguished
+the settled-ending guard. That same positive fixture exercises final-send
+reuse, the exact ended record/envelope and repeated stop without another
+signature, delivery, `published` entry or branch commit. Full gate,
+canonical reproduction, checker review and hosted acceptance remain owed.
