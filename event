@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:be0a8f4b00b00d98851e73133d8e1e1d9db4a656","text":"Merge retired a covered predecessor; the successor is at scripts/scale-selection.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c2e0e68412132225ba0c4b3a85d4cf6d324d5df2","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-14-gs3-two-scale-groups.md."}
