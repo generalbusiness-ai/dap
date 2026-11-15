@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:98bcb1305fe7de021cc2c2f0154afad3416d7d66","text":"Merge retired a covered predecessor; the successor is at examples/commons-bill/custody.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9b83790eed2b441ec0693ba10842d21c938165e4","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/install-words.ts."}
