@@ -71,6 +71,60 @@ test('GitHub preparation stages a private copy, keeps session custody and never 
   assert.equal((await readFile(join(f.project, 'wrangler.json'))).equals(before), true);
 });
 
+// Production trust parsing and private staging only. No public packet, App installation, R2 store or fleet participates.
+test('package settings survive GitHub staging byte-for-byte with the exact content binding', async t => {
+  const f = await fixture(t), path = join(f.project, 'wrangler.json');
+  const original = JSON.parse(await readFile(path));
+  const trust = ' [\n' + JSON.stringify({ release: 'sha256:' + 'a'.repeat(64),
+    publisher: 'key_' + Buffer.alloc(32, 3).toString('base64url'), host: 'github.com' }) + '\n] ';
+  original.r2_buckets = [{ binding: 'APPLICATION_CONTENT', bucket_name: 'application-content' }];
+  original.vars.APPLICATION_TRUST = trust;
+  await writeFile(path, JSON.stringify(original));
+  const before = await readFile(path);
+  await prepareGitHubProject(f);
+  const staged = JSON.parse(await readFile(join(f.out, 'wrangler.json')));
+  assert.equal(staged.vars.APPLICATION_TRUST, trust);
+  assert.deepEqual(staged.r2_buckets, original.r2_buckets);
+  assert.equal(staged.vars.SESSION_SECRET, original.vars.SESSION_SECRET);
+  assert.equal((await readFile(path)).equals(before), true);
+  const checked = spawnSync('/usr/bin/python3', ['-B', '-c',
+    'import deploy,sys; deploy.prepared_project(deploy.Path(sys.argv[1]))', f.out],
+  { cwd: fileURLToPath(new URL('../', import.meta.url)), encoding: 'utf8' });
+  assert.equal(checked.status, 0, checked.stderr);
+  assert.equal(checked.stdout.includes(f.key) || checked.stderr.includes(f.token), false);
+});
+
+test('package settings stay closed and reject before private-key access or new output', async t => {
+  const f = await fixture(t), path = join(f.project, 'wrangler.json');
+  const original = JSON.parse(await readFile(path));
+  const trust = JSON.stringify([{ release: 'sha256:' + 'a'.repeat(64),
+    publisher: 'key_' + Buffer.alloc(32, 3).toString('base64url'), host: 'github.com' }]);
+  const configured = () => ({ ...structuredClone(original),
+    r2_buckets: [{ binding: 'APPLICATION_CONTENT', bucket_name: 'application-content' }],
+    vars: { ...original.vars, APPLICATION_TRUST: trust } });
+  const changed = change => { const config = configured(); change(config); return JSON.stringify(config); };
+  const specimens = [
+    changed(config => { delete config.r2_buckets; }),
+    changed(config => { delete config.vars.APPLICATION_TRUST; }),
+    changed(config => { config.r2_buckets[0].binding = 'ARTIFACTS'; }),
+    changed(config => { config.r2_buckets[0].bucket_name = 'another-store'; }),
+    changed(config => { config.r2_buckets[0].preview_bucket_name = 'extra-authority'; }),
+    changed(config => { config.r2_buckets.push({ binding: 'ARTIFACTS', bucket_name: 'artifacts' }); }),
+    changed(config => { config.vars.APPLICATION_TRUST = '[{"release":"invalid"}]'; }),
+    changed(config => { config.vars.UNREVIEWED_SETTING = 'TEST'; }),
+    changed(config => { config.UNREVIEWED_SETTING = 'TEST'; }),
+    JSON.stringify(configured()).replace('"APPLICATION_TRUST":' + JSON.stringify(trust),
+      '"APPLICATION_TRUST":' + JSON.stringify(trust) + ',"APPLICATION_TRUST":' + JSON.stringify(trust)),
+  ];
+  for (const text of specimens) {
+    await writeFile(path, text);
+    await assert.rejects(prepareGitHubProject({ ...f, privateKeyFile: join(f.directory, 'NEVER-READ-private-key') }),
+      error => error instanceof GitHubProjectPreparationError && error.stage === 'project');
+    await assert.rejects(lstat(f.out), { code: 'ENOENT' });
+    assert.equal(await readFile(path, 'utf8'), text, 'refusal preserves the original private project');
+  }
+});
+
 test('App-only private preparation needs no static read token and retains exact binding authority', async t => {
   const f = await fixture(t), before = await readFile(join(f.project, 'wrangler.json'));
   await writeFile(f.configFile, JSON.stringify({ ...f.config, installationReads: true }));

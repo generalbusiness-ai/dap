@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
-import { hostedMcpTools, McpService, memoryStore, WORDS, type ServerPort } from "../src/index.ts";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { hostedMcpTools, McpService, WORDS, type ServerPort } from "../src/index.ts";
 import { fixedSigner } from "./fixtures.ts";
 import { StandIn } from "./support/standin.ts";
 import { TRUSTED_APPLICATION_COHORT, firstExtents } from "@generalbusiness/dap-platform";

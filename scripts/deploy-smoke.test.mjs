@@ -152,7 +152,7 @@ test("sandbox smoke refuses an untracked host or an invalid room before fetch an
   assert.equal(await deploySmokeMain(["sandbox", "--host", screen, "--room", room, "--url", screen], { ...ports, write: () => {} }), 2);
   assert.equal(calls, 0);
   const tracked = await readFile(new URL("../apps/sandbox/wrangler.rollout.jsonc", import.meta.url), "utf8");
-  assert.deepEqual(sandboxScreenOrigins(parseConfig(tracked)), ["https://grow.inguz.space"]);
+  assert.deepEqual(sandboxScreenOrigins(parseConfig(tracked)), ["https://grow.inguz.space", "https://lending.inguz.space"]);
 });
 
 test("room screen descriptors and sandbox mappings agree in both directions on the matching Worker service", async () => {

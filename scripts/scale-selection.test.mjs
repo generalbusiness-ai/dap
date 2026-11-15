@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { gateScaleSelection, scaleGateDecision } from "./scale-selection.mjs";
 import { runScale, scaleResults } from "./scale-runner.mjs";
 import { scaleDeadline, scaleDeadlineFactor } from "../packages/scope/test/support/archive-scale-deadline.ts";
+import { scaleDeadlineRegistrations } from "./scale-deadline-registrations.mjs";
 import { scopeScaleFiles, scopeScaleCaseCounts, scopeScaleGroup } from "../packages/scope/vitest.scale-files.ts";
 import { readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -217,4 +218,65 @@ test("the real Git comparison keeps a removed scale path when a rename moves it 
   assert.equal(selected.mode, "all");
   assert.deepEqual(selected.matchedPaths, [original]);
   assert(selected.changedPaths.includes("docs/moved fixture.ts"));
+});
+
+
+// SD1: every fixed Scale registration needs an explicit, reviewed exception.
+// Read current factories without importing their Worker/native dependencies.
+test("scale registration factories leave no unlisted fixed deadline", () => {
+  const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
+  const demoSuite = "the demo runner's rehearsal on real scopes. The Git host, git and the scheduler are STAND-INs > ";
+  const exceptions = [
+    ["../cli/test/fixed-slot-membership.scope.test.ts", "a real 2000-member room keeps handle uniqueness and verifies every actual scope under shipped defaults", 1_820_000],
+    ["test/floor-kept.test.ts", "Native floor-kept refuses the 4097th live opening after an exact4096 kept set", 120_000],
+    ["../../apps/room/lanes/test/directory-partition-capacity.scope.test.ts", "native full root preserves three thousand standing entries through one thousand undelivered generations", 600_000],
+    ["test/evidence-rules-real-scale.test.ts", "actual landing reuse follows the tree key and a fresh passed job still publishes after disagreement disables reuse", 240_000],
+    ["test/evidence-rules-real-scale.test.ts", "real published holds survive newer counted passes and clear only through distinct authorized transition and override records", 240_000],
+    ["test/evidence-rules-real-scale.test.ts", "literal native TIME holds at its own head, replays unchanged, and recovers one funded incident within the pending bound", 240_000],
+    ["test/evidence-rules-real-scale.test.ts", "the real failure and reservation outcomes serialize atomically in both admitted-before-failure and failure-before-admission schedules", 240_000],
+    ["../../apps/room/lanes/test/directory-partition-lanes-scale.scope.test.ts", "two native partition roots keep cross-room block and restart release with one nineteen-call admission", 60_000],
+    ...["file-publication", "default"].map(creation => ["../../apps/room/lanes/test/manifest-tree-scale.scope.test.ts", `a manifest-list reservation records both files before the configured checker passes; no branch push occurs before that pass (real scopes, STAND-IN Git host and scheduler; ${creation} creation)`, 120_000]),
+    ...["artifacts", "github.com"].map(host => ["../../apps/room/lanes/test/demo-scale.scope.test.ts", demoSuite + `on ${host}: the optional manifest sequence follows shot 16, publishes both text files together and refuses a controlled two-file branch; Git capture is a STAND-IN`, 240_000]),
+  ];
+  const factorySources = {
+    "test/evidence-rules-real-scale.test.ts": "packages/scope/test/evidence-rules-real.fixture.ts",
+    "../../apps/room/lanes/test/directory-partition-lanes-scale.scope.test.ts": "apps/room/lanes/test/directory-partition-lanes.scope.fixture.ts",
+    "../../apps/room/lanes/test/manifest-tree-scale.scope.test.ts": "apps/room/lanes/test/manifest-tree.scope.fixture.ts",
+    "../../apps/room/lanes/test/demo-scale.scope.test.ts": "apps/room/lanes/test/demo.scope.fixture.ts",
+  };
+  const expected = exceptions.map(([owner, title, milliseconds]) => [owner, factorySources[owner] ?? resolve(root, "packages/scope", owner).slice(root.length + 1), title, milliseconds]);
+  const fixed = rows => rows.filter(row => !row.scaled).map(row => [row.owner, row.source, row.title, row.milliseconds]);
+  const ordered = rows => rows.map(row => JSON.stringify(row)).sort();
+  const check = rows => assert.deepEqual(ordered(fixed(rows)), ordered(expected), "unlisted or changed fixed Scale registration");
+  const actual = scaleDeadlineRegistrations(root, scopeScaleFiles);
+  check(actual);
+  for (const owner of scopeScaleFiles) assert.equal(actual.filter(row => row.owner === owner).length, scopeScaleCaseCounts[owner], owner);
+
+  // One new fixed case inside an imported factory must reach the guard.
+  // Source strings only: no mutation, fixture import, or native collection.
+  const file = resolve(root, "packages/scope/test/evidence-rules-real.fixture.ts");
+  const original = readFileSync(file, "utf8"), marker = "export function registerEvidenceRulesScale() {";
+  assert.equal(original.split(marker).length, 2);
+  const changed = original.replace(marker, marker + '\ntest("SD1 unlisted fixed case", { timeout: 30_000 }, async () => {});');
+  const fault = scaleDeadlineRegistrations(root, scopeScaleFiles, path => path === file ? changed : readFileSync(path, "utf8"));
+  assert.ok(fault.some(row => row.title === "SD1 unlisted fixed case" && !row.scaled && row.milliseconds === 30_000));
+  assert.throws(() => check(fault), /unlisted or changed fixed Scale registration/);
+
+  // Registrations hidden in values must not vanish from the inventory.
+  const inspectSource = (file, source) => scaleDeadlineRegistrations(root, scopeScaleFiles, path => path === file ? source : readFileSync(path, "utf8"));
+  const valueRegistration = original.replace(marker, marker + '\nconst extra = test("SD1 hidden fixed case", { timeout: 30_000 }, async () => {});');
+  assert.throws(() => inspectSource(file, valueRegistration), /Scale registration calls in initializers/);
+  const localFactory = original.replace(marker, 'function registerExtra() { test("SD1 local fixed case", { timeout: 30_000 }, async () => {}); }\n' + marker + '\nconst extra = registerExtra();');
+  assert.throws(() => inspectSource(file, localFactory), /Scale registration calls in initializers/);
+  const owner = resolve(root, "packages/scope/test/archive-installed-scale.test.ts"), ownerSource = readFileSync(owner, "utf8");
+  assert.ok(ownerSource.includes('registerArchiveInstalledCases(["Grow production"]);'));
+  const importedFactory = ownerSource.replace('registerArchiveInstalledCases(["Grow production"]);', 'const extra = registerArchiveInstalledCases(["Grow production"]);');
+  assert.throws(() => inspectSource(owner, importedFactory), /Scale registration calls in initializers/);
+
+  // An imported helper's spelling grants no authority after local shadowing.
+  const archive = resolve(root, "packages/scope/test/archive-installed.fixture.ts"), archiveSource = readFileSync(archive, "utf8");
+  const archiveFactory = "export function registerArchiveInstalledCases(scenarios: readonly string[]) {";
+  assert.equal(archiveSource.split(archiveFactory).length, 2);
+  const shadow = archiveSource.replace(archiveFactory, archiveFactory + '\nconst scaleDeadline = (ms: number) => ms;');
+  assert.throws(() => inspectSource(archive, shadow), /Shadowed Scale registration binding: scaleDeadline/);
 });

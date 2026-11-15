@@ -4,6 +4,7 @@ import { chmod, lstat, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { contextForCelldSmoke, celldAnswersVersionQuestion } from '../../../../scripts/celld-smoke.mjs';
+import { stageApplicationSettings } from './application-settings.mjs';
 
 const maintained = new URL('../wrangler.json', import.meta.url);
 const worker = fileURLToPath(new URL('../../worker.ts', import.meta.url));
@@ -12,8 +13,7 @@ const absolute = value => typeof value === 'string' && value.length <= 4096 && i
 
 /** What each refused stage adds to its message. */
 const ADVICE = {
-  // Ruling 96676b22: celld keeps its present family in CF-1, and `dap install` defaults to `base`.
-  cohort: ' celld runs the unpublished and repository-binding families: plan with --host none and --cohort unpublished or --cohort repository-binding.',
+  cohort: ' Plan with --host none and the base default, or retain an explicit unpublished or repository-binding plan.',
 };
 
 export class ProjectPreparationError extends Error {
@@ -23,7 +23,7 @@ export class ProjectPreparationError extends Error {
 export async function prepareProject(options) {
   let stage = 'arguments';
   try {
-    const { origin, home, out } = options ?? {};
+    const { origin, home, out, applicationTrustFile } = options ?? {};
     if (!absolute(home) || !absolute(out)) throw Error();
     stage = 'origin';
     const url = new URL(origin);
@@ -43,18 +43,22 @@ export async function prepareProject(options) {
     if (typeof config.plan.register !== 'string'
       || !/^sc_[a-z2-7]{52}$/.test(config.plan.register)
       || config.plan.founding?.intent?.fields?.host !== 'none' || config.plan.founding.intent.fields.namespace !== '') throw Error();
-    const project = JSON.parse(await readFile(maintained, 'utf8'));
-    stage = 'output';
-    await mkdir(out, { mode: 0o700 });
-    await chmod(out, 0o700);
+    let project = JSON.parse(await readFile(maintained, 'utf8'));
     project.vars = { ...project.vars, REGISTER_SCOPE: config.plan.register, PUBLIC_ORIGIN: origin,
       MCP_ENABLED: 'true', MCP_TOOL_ADDITIONS: '[]', SESSION_SECRET: randomBytes(32).toString('base64url') };
     if (await celldAnswersVersionQuestion(config.plan.definition, "celldPreparedBindingPolicyRegister")) {
       const policy = JSON.parse(await readFile(new URL('./repository-binding-policy.json', import.meta.url), 'utf8'));
       project.vars.PLATFORM_CREATION_PINS = JSON.stringify(policy.PLATFORM_CREATION_PINS);
     }
+    stage = 'applications';
+    project = await stageApplicationSettings(project, applicationTrustFile);
+    const configuredText = JSON.stringify(project, null, 2) + '\n';
+    if (Buffer.byteLength(configuredText, 'utf8') > 64 * 1024) throw Error();
+    stage = 'output';
+    await mkdir(out, { mode: 0o700 });
+    await chmod(out, 0o700);
     for (const [name, text] of [
-      ['wrangler.json', JSON.stringify(project, null, 2) + '\n'],
+      ['wrangler.json', configuredText],
       ['worker.ts', `export * from ${JSON.stringify(worker)};\nexport { default } from ${JSON.stringify(worker)};\n`],
     ]) {
       const path = join(out, name);
@@ -71,8 +75,15 @@ export async function prepareProject(options) {
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
   const args = process.argv.slice(2);
   try {
-    if (args.length !== 6 || args[0] !== '--origin' || args[2] !== '--home' || args[4] !== '--out') throw new ProjectPreparationError('arguments');
-    console.log(JSON.stringify(await prepareProject({ origin: args[1], home: args[3], out: args[5] })));
+    const names = new Set(['--origin', '--home', '--out', '--application-trust-file']), values = new Map();
+    if (args.length % 2) throw new ProjectPreparationError('arguments');
+    for (let i = 0; i < args.length; i += 2) {
+      if (!names.has(args[i]) || values.has(args[i])) throw new ProjectPreparationError('arguments');
+      values.set(args[i], args[i + 1]);
+    }
+    if (!['--origin', '--home', '--out'].every(name => values.has(name))) throw new ProjectPreparationError('arguments');
+    console.log(JSON.stringify(await prepareProject({ origin: values.get('--origin'), home: values.get('--home'),
+      out: values.get('--out'), applicationTrustFile: values.get('--application-trust-file') })));
   } catch (error) {
     console.error(error instanceof ProjectPreparationError ? error.message : 'Project preparation failed. Retain any private output for inspection.');
     process.exitCode = 1;

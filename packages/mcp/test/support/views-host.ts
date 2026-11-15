@@ -6,7 +6,8 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import type { Intent } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { firstExtents } from "@generalbusiness/dap-platform";
-import { LEGACY, MODERN, McpService, Wire, memoryStore, newSession, type Card, type Message, type ResourcePolicy, type ViewSource } from "../../src/index.ts";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { LEGACY, MODERN, McpService, Wire, newSession, type Card, type Message, type ResourcePolicy, type ViewSource } from "../../src/index.ts";
 import { StandIn, SERVICE } from "./standin.ts";
 import { applicationCounterNavigationPacket2 } from "../../../scope/test/fixtures.ts";
 import { viewToolName } from "../../src/views/names.ts";

@@ -246,7 +246,7 @@ const seals = {
   "packages/derive/src/validate/spelling.ts": "1c53e1ec4503e15be23d409b4862162a52f24f9e7e504a96922db90845a31a11", // F canonical identity/retained-origin boundary; actual maintained parser output.
   "packages/platform/src/evidence-incident-origin-v17.ts": "6d6e6af6897688829bd9710e0e3c736dce0028e56218970f5bce3efd5e266cf4", // F canonical identity/retained-origin boundary; actual maintained parser output.
   "packages/contract/src/catalog-vocabulary.ts": "458e087b56935e8c198016c476d11aff10ca24e9ab131d90d31fe282a6b731f1", // BR13 exact native question/relation owner; CF-1 adds the five new family pins to its questions; actual maintained parser output.
-  "packages/platform/src/version-questions.ts": "069eaf4cc12c5e65caff4936d3deb088e19a5d173882131885ff1596b71fdef8", // BR13 exact native question/relation owner; CF-1 adds the five new family pins and scopePublicationPrefixesDestination; actual maintained parser output.
+  "packages/platform/src/version-questions.ts": "e13a31cfa361891571369a4b976abe053189285547b9238d2a80bfabb19fc2f0", // BR13 exact native question/relation owner; CF-1 adds the five new family pins and scopePublicationPrefixesDestination; actual maintained parser output.
   "packages/platform/src/version-relations.ts": "1eb52555e06569c8f76d9de97a03717828996f2de7500c6c17e66413eef25f0a", // BR13 exact native question/relation owner; CF-1 adds the base cohort and the Membership 14 and Register 28 relations; actual maintained parser output.
   "packages/scope/src/http-stream.ts": "ac798ac542c6295bda6495ef9c3f46f2c78511bfb89b88ee4b2d4df7711e2168", // Retain the exact existing close capability on observed HTTP disconnect.
   "packages/bytes/src/session.ts": "71a16d6d2d02b2f424e711a80ca28fe8e10204d3daacc4d0cf23f85ebe80903e", // O3 OAuth authority, public-client policy or retained browser consent owner.
@@ -333,7 +333,7 @@ const seals = {
   "packages/mcp/src/oauth-resource.ts": "895d3a1b241e5fe0d5228febff46fe6c921899110fef99056dd1b53199d341ae", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/oauth-access.ts": "96679465b97286aa2babe6e3b670bf51b202427300cea836e9be9da744884b78", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/oauth-http.ts": "6a2668b96a105b077cd07528897b0ed6f6d7aec8cec619a26a535bcb5adb6707", // O1 resource discovery and grant transport boundary.
-  "packages/mcp/src/index.ts": "4b7c10621b87ff3d8ca88e046e9d8e15fd52affd8e0479460c24c39ccf434b8a", // O1 resource discovery and grant transport boundary; NF-4 reader aliases from the client.
+  "packages/mcp/src/index.ts": "95ab1f1ddd97466f7de1322a5cb1fbbef4172dd4b281bc7ce9b1a58e8e5e3f36", // O1 resource discovery and grant transport boundary; NF-4 reader aliases from the client.
   "packages/mcp/src/hosted.ts": "3b1805bd2091a83a66e2d3d0a5d90d9ceaa93469ca805f88530613014e26e179",
   "packages/mcp/src/hosted-retirement.ts": "ca631baf28f180b8d64e988ab7c5e5583ce0c96e0b374be1acee7c8723ef2a8d", // R15 caller-envelope and verified enrollment target owner.
   "packages/mcp/src/views/remote-origins.ts": "81c7e7a044690df7c00a30691ddc5e0da11531fabad2a9143d2d389ff8c0a1b1", // Exact remote presentation URL policy; no authority selection.

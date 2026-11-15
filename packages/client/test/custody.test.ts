@@ -25,17 +25,26 @@ function setup(bounds?: Parameters<typeof fileStore>[1], metrics?: CustodyMetric
 }
 
 /** A second process on the same store: `support/custody-child.ts`, under the repository's pinned TypeScript loader. */
-function child(asked: Record<string, unknown>): { done: Promise<{ code: number | null; out: string }>; line: (text: string) => Promise<void>; kill: () => void } {
-  const process_ = spawn(process.execPath, ["--import", "tsx", "--disable-warning=DEP0205", new URL("./support/custody-child.ts", import.meta.url).pathname, JSON.stringify(asked)], { cwd: new URL("../../..", import.meta.url).pathname, stdio: ["ignore", "pipe", "pipe"] });
+function child(asked: Record<string, unknown>): { done: Promise<{ code: number | null; out: string }>; line: (text: string) => Promise<void>; kill: () => void; release: () => void; pid: number | undefined } {
+  const args = ["--import", "tsx", "--disable-warning=DEP0205", new URL("./support/custody-child.ts", import.meta.url).pathname, JSON.stringify(asked)];
+  const cwd = new URL("../../..", import.meta.url).pathname;
+  const process_ = asked["op"] === "hold-capacity"
+    ? spawn(process.execPath, args, { cwd, stdio: ["pipe", "pipe", "pipe"] })
+    : spawn(process.execPath, args, { cwd, stdio: ["ignore", "pipe", "pipe"] });
   let out = "";
   const waiting: { text: string; resolve: () => void }[] = [];
   process_.stdout.on("data", (chunk: Buffer) => { out += chunk.toString("utf8"); for (const w of waiting.splice(0)) { if (out.includes(w.text)) w.resolve(); else waiting.push(w); } });
   let err = "";
   process_.stderr.on("data", (chunk: Buffer) => { err += chunk.toString("utf8"); });
+  process_.stdin?.on("error", error => { err += `stdin: ${error.message}\n`; });
   return {
-    done: new Promise((resolve) => { process_.on("exit", (code) => resolve({ code, out: out + err })); }),
+    done: new Promise((resolve) => { process_.on("close", (code) => resolve({ code, out: out + err })); }),
     line: (text) => new Promise((resolve) => { if (out.includes(text)) resolve(); else waiting.push({ text, resolve }); }),
     kill: () => { process_.kill("SIGKILL"); },
+    release: () => {
+      if (process_.stdin && !process_.stdin.destroyed && process_.exitCode === null && process_.signalCode === null) process_.stdin.end("release\n");
+    },
+    pid: process_.pid,
   };
 }
 
@@ -252,6 +261,58 @@ describe("custody keeps the exact envelope under the caller's key", { timeout: 6
     await expect(b.send(identity("k5"), meaningOf("m"), build("k5"), async () => { throw new Error("must not send"); }, { notAfter })).rejects.toMatchObject({ why: { held: "locked" } });
     release();
     expect(((await first) as { answer: Answer }).answer.answer).toBe("accepted");
+  });
+
+  test("a second process holds the dispatch lease, locked keeps the envelope, and recovery delivers it exactly once", async () => {
+    const { dir, custody, make } = setup();
+    const who = identity("dispatch-contention"), id = identityId(who), meaning = meaningOf("dispatch contention");
+    const observed: { holder?: ReturnType<typeof child>; bytes?: string } = {};
+    const sent: string[] = [];
+    let builds = 0;
+    const write = custody.store.write;
+    custody.store.write = async (name, record, options) => {
+      await write(name, record, options);
+      if (name !== id || record.phase !== "sent" || observed.holder) return;
+      observed.bytes = canonicalize(record.envelope);
+      const holder = child({ op: "hold-capacity", dir });
+      observed.holder = holder;
+      await Promise.race([
+        holder.line("capacity-held "),
+        holder.done.then(result => { throw new Error(`the capacity holder exited before readiness: ${result.code}\n${result.out}`); }),
+      ]);
+    };
+    try {
+      await expect(custody.send(who, meaning, async () => { builds++; return build(who.key)(); }, async envelope => {
+        sent.push(canonicalize(envelope));
+        return accepted(envelope.signed);
+      }, { notAfter })).rejects.toMatchObject({ why: { held: "locked" } });
+      const holder = observed.holder, kept = await custody.store.read(id);
+      if (!holder || holder.pid === undefined || !kept || kept.v !== 2 || observed.bytes === undefined) throw new Error("the real dispatch contention did not keep its setup");
+      expect(holder.pid).not.toBe(process.pid);
+      expect([builds, sent, kept.phase, kept.attempt, kept.count, kept.outcomes.length, kept.signings.length])
+        .toEqual([1, [], "sent", 1, 0, 0, 1]);
+      expect(canonicalize(kept.envelope)).toBe(observed.bytes);
+    } finally {
+      custody.store.write = write;
+      if (observed.holder) {
+        observed.holder.release();
+        const stopped = await observed.holder.done;
+        expect(stopped.code, stopped.out).toBe(0);
+        expect(stopped.out).toContain("capacity-released");
+      }
+    }
+    if (observed.bytes === undefined) throw new Error("the kept envelope bytes are missing");
+    const reopened = make();
+    const rebuild = async (): Promise<never> => { throw new Error("recovery must not build or sign another envelope"); };
+    const recovered = await reopened.send(who, meaning, rebuild, async envelope => {
+      sent.push(canonicalize(envelope));
+      return accepted(envelope.signed);
+    }, { notAfter });
+    expect("answer" in recovered && recovered.answer.answer).toBe("accepted");
+    expect([builds, sent]).toEqual([1, [observed.bytes]]);
+    const terminal = await reopened.send(who, meaning, rebuild, async () => { throw new Error("a terminal replay must not deliver again"); }, { notAfter });
+    expect("answer" in terminal && terminal.answer.answer).toBe("accepted");
+    expect([builds, sent, (await reopened.store.read(id))?.phase]).toEqual([1, [observed.bytes], "accepted"]);
   });
 
   // Invariant: a restart between keeping and sending resends the bytes kept before it, with no new signature.

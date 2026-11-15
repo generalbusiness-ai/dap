@@ -11,7 +11,8 @@ import { changeSubject } from "../../../../apps/views/src/change.ts";
 import { decisionSource, questionSubject } from "../../../../apps/views/src/decision.ts";
 import { RepoInAi } from "../../../../apps/views/src/repo-in-ai.ts";
 import type { ReviewStore } from "../../../../apps/views/src/review-store.ts";
-import { McpService, memoryStore } from "../../src/index.ts";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { McpService } from "../../src/index.ts";
 import { SERVICE, StandIn } from "./standin.ts";
 
 const NOW = Date.parse("2099-01-01T00:00:00Z");

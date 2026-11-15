@@ -11,7 +11,8 @@ import { firstExtents, UNPUBLISHED_COHORT as C } from "@generalbusiness/dap-plat
 import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import { firstExtentsV11, rulesPolicyProposalV11 } from "../../platform/src/rules-policy-v11.ts";
-import { McpService, memoryStore as custodyStore, type ServerPort } from "@generalbusiness/dap-mcp";
+import { memoryStore as custodyStore } from "@generalbusiness/dap-client";
+import { McpService, type ServerPort } from "@generalbusiness/dap-mcp";
 import { issueDemo, changeDemo, DEMO_DIGESTS } from "../../../apps/room/lanes/src/index.ts";
 import { openRoom, listLanes, loadIssue, loadChange } from "../../../apps/room/page/src/data.ts";
 import { devicePackageFixture } from "../../derive/test/fixtures-device-command.ts";

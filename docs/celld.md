@@ -8,11 +8,18 @@ configures the local Worker `dap-celld-local`, separate from
 `dap-self-host`, the Worker that the self-host template
 [`apps/room/wrangler.jsonc`](../apps/room/wrangler.jsonc) names.
 It keeps the four Durable Object bindings and all three migration tags of
-the room configuration. It has no Git host, no application content bucket
-and no committed secret.
+the room configuration. The maintained template has no Git host, application
+content binding or committed secret. Mac preparation can stage the checked
+application settings for a persistent fleet.
 
 To run persistent services with HTTPS on one Mac, follow
-[Run your own service on a Mac](self-host-mac.md).
+[Run your own service on a Mac](self-host-mac.md). Package installation
+needs that fleet's object-store bucket. `celld dev` has no fleet bucket, so
+this page's loopback run supplies no package-installation evidence.
+
+CB-1's fleet witness waits for the public Counter packet in CUT-R R2 and
+Hugh's machine and operator selection. No fleet is currently available
+for that witness. The previously recorded Mac mini is unavailable.
 
 1. Obtain the release named in
    [`celld.version`](../apps/room/celld/celld.version). Verify its GitHub
@@ -44,8 +51,9 @@ To run persistent services with HTTPS on one Mac, follow
    PHASE=run BASE=http://127.0.0.1:9876 CELLD_LOCAL_NO_PROXY=1 node scripts/celld-smoke.mjs
    ```
 
-The smoke test installs the planned register, creates one unpublished room,
-makes member acts, joins a second member, verifies the journals and reads
+The smoke test uses the CLI's default `base` plan, installs its register,
+creates one host-none room, makes member acts, joins a second member,
+verifies the journals and reads
 the register's readiness. Its output holds public metadata only. A failed
 run keeps its original requests and refuses a second run in that
 directory. Inspect that state before you decide how to reconcile it. Do not
@@ -54,7 +62,10 @@ discard an uncertain operation or replace it with a new plan.
 The local runtime keeps state in `.celld/dev` across restarts. Do not use
 `--clean` on state you need. The flags and the private variable file follow
 the [celld documentation for v0.6.3](https://github.com/denoland/celld/blob/v0.6.3/docs/README.md#develop-an-application-locally).
-The local runtime has no backup or recovery.
+The local runtime has no backup or recovery. Its host-none room has no
+repository or archive. The Directory can reserve publication prefixes.
+Publication and `bind-archive` still refuse `no-repository`. CB-1 adds no
+archive provider. CB-2 owns the later archive-provider scene.
 
 ## Exercise service identity behind a proxy
 
@@ -86,5 +97,7 @@ release, verifies its attestation and runs the same script.
 
 ## Source
 
-Checked against main `6bfb6e16` on 10 November 2026. Sources: [apps/room/celld/wrangler.json](../apps/room/celld/wrangler.json), [apps/room/celld/celld.version](../apps/room/celld/celld.version), [scripts/celld-smoke.mjs](../scripts/celld-smoke.mjs), [scripts/test-celld-proxy.mjs](../scripts/test-celld-proxy.mjs), [packages/scope/src/public-origin.ts](../packages/scope/src/public-origin.ts).
+The local-runtime source review used main `6bfb6e16` on 10 November 2026.
+CB-1 updates base-family preparation and persistent-fleet package staging
+in source on 14 November 2026. Sources: [apps/room/celld/wrangler.json](../apps/room/celld/wrangler.json), [apps/room/celld/celld.version](../apps/room/celld/celld.version), [scripts/celld-smoke.mjs](../scripts/celld-smoke.mjs), [scripts/test-celld-proxy.mjs](../scripts/test-celld-proxy.mjs), [packages/scope/src/public-origin.ts](../packages/scope/src/public-origin.ts).
 The commands on this page were not run for this revision.

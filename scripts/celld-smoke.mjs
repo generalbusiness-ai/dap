@@ -21,7 +21,8 @@ async function cli() {
     const files = await tsImport(new URL("../packages/cli/src/files.ts", import.meta.url).href, import.meta.url);
     const helpers = await tsImport(new URL("../packages/cli/src/browser-helpers.ts", import.meta.url).href, import.meta.url);
     const questions = await tsImport(new URL("../packages/platform/src/version-questions.ts", import.meta.url).href, import.meta.url);
-    return { command: line.command, fileStore: files.fileStore, linkOf: helpers.linkOf, LINK: helpers.LINK, answersVersionQuestion: questions.answersVersionQuestion };
+    const records = await tsImport(new URL("../packages/bytes/src/records.ts", import.meta.url).href, import.meta.url);
+    return { command: line.command, fileStore: files.fileStore, linkOf: helpers.linkOf, LINK: helpers.LINK, answersVersionQuestion: questions.answersVersionQuestion, isScopeRef: records.isScopeRef };
   })();
 }
 
@@ -29,6 +30,18 @@ export class CelldSmokeError extends Error {
   constructor(stage) { super(`celld smoke failed: ${stage}; retain the private DAP_HOME for inspection`); this.stage = stage; }
 }
 const fail = stage => { throw new CelldSmokeError(stage); };
+// Only these maintained operation names may cross the proxy's public error boundary.
+const operations = new Set([
+  "phase", "base", "home", "local-address", "home-permissions", "request-origin",
+  "health-body", "health", "plan", "plan-identity", "retained-plan", "run-already-started",
+  "install", "install-identity", "verify-register", "create", "room-identity", "invite",
+  "invitation-link", "invitation-identity", "join", "join-identity", "member-read",
+  "verify-all", "verify-coverage", "operation", "arguments",
+]);
+export function celldSmokeOperation(error) {
+  const operation = error instanceof CelldSmokeError ? error.stage : null;
+  return operations.has(operation) ? operation : null;
+}
 const loopback = hostname => hostname === "[::1]" || /^127(?:\.(?:0|[1-9][0-9]{0,2})){3}$/.test(hostname);
 
 export function smokeSettings({ phase, base, home, localAddress }) {
@@ -76,9 +89,15 @@ const command = async (ctx, args, stage) => {
   return result;
 };
 const scope = value => typeof value === "string" && /^sc_[a-z2-7]{52}$/.test(value);
-const ref = (value, kind) => value && typeof value === "object" && value.kind === kind && scope(value.scope)
-  && typeof value.inc === "string" && /^in_[a-z2-7]{26}$/.test(value.inc);
-const publicRef = value => ({ scope: value.scope, inc: value.inc, kind: value.kind });
+/** Validate retained or received identity before projecting the public smoke report. */
+export async function celldReference(value) {
+  return (await cli()).isScopeRef(value) ? { scope: value.scope, genesis: value.genesis } : null;
+}
+/** Invitation and joined stores must name the same complete membership history. */
+export async function sameCelldReference(left, right) {
+  const a = await celldReference(left), b = await celldReference(right);
+  return a !== null && b !== null && a.scope === b.scope && a.genesis === b.genesis;
+}
 export const celldAnswersVersionQuestion = async (named, question) => (await cli()).answersVersionQuestion(named, question);
 const planIsOurs = async (config, base) => config?.v === 2 && config.service === base && config.plan?.service === base
   && await celldAnswersVersionQuestion(config.plan.definition, "celldSmokeOwnedPlanRegister") && scope(config.plan.register)
@@ -115,8 +134,8 @@ async function smoke(options) {
   const settings = smokeSettings(options), { phase, base, home, localAddress } = settings;
   const ctx = await contextForCelldSmoke({ base, home, localAddress, ...(options.fetch ? { fetch: options.fetch } : {}) });
   if (phase === "plan") {
-    // celld runs the unpublished family by explicit choice; the default for --host none is base (ruling bccd8dd1, Q5b).
-    await command(ctx, ["install", "--plan", base, "--host", "none", "--cohort", "unpublished"], "plan");
+    // CB-1 uses the CLI's base default. Explicit retained old-family plans remain readable.
+    await command(ctx, ["install", "--plan", base, "--host", "none"], "plan");
     const config = await ctx.store.config();
     if (!await planIsOurs(config, base)) fail("plan-identity");
     return { version: 1, phase, register: config.plan.register, definition: config.plan.definition };
@@ -129,12 +148,14 @@ async function smoke(options) {
   await ctx.store.keepPrivate("celld-smoke-run-started", new Uint8Array([1]));
   if (!before.register) await command(ctx, ["install", "--planned"], "install");
   const installed = await ctx.store.config();
-  if (!await planIsOurs(installed, base) || !ref(installed.register, "register") || installed.register.scope !== before.plan.register) fail("install-identity");
+  const register = await celldReference(installed?.register);
+  if (!await planIsOurs(installed, base) || !register || register.scope !== before.plan.register) fail("install-identity");
   await command(ctx, ["verify", "register"], "verify-register");
   if (!installed.repository) await command(ctx, ["create", "TEST celld public-origin room", "--handle", "@owner"], "create");
   const created = await ctx.store.config(), repository = created?.repository;
-  if (!ref(repository?.directory, "directory") || !ref(repository?.membership, "membership")
-    || !scope(repository.rules) || !scope(repository.destination) || !scope(repository.inbox) || created.handle !== "@owner") fail("room-identity");
+  const directory = await celldReference(repository?.directory), membership = await celldReference(repository?.membership);
+  if (!directory || !membership || !scope(repository.rules) || !scope(repository.destination)
+    || !scope(repository.inbox) || created.handle !== "@owner") fail("room-identity");
   let invitation = await ctx.store.private("celld-smoke-invitation");
   if (!invitation) {
     const current = await ctx.store.config();
@@ -143,7 +164,7 @@ async function smoke(options) {
     const links = invited.lines.flatMap(line => { const at = line.indexOf(LINK); return at < 0 ? [] : [line.slice(at)]; });
     if (links.length !== 1) fail("invitation-link");
     const link = linkOf(links[0]);
-    if (link?.service !== base || link.handle !== "@member" || link.repository.membership.scope !== repository.membership.scope) fail("invitation-identity");
+    if (link?.service !== base || link.handle !== "@member" || !await sameCelldReference(link.repository?.membership, membership)) fail("invitation-identity");
     invitation = new TextEncoder().encode(links[0]);
     await ctx.store.keepPrivate("celld-smoke-invitation", invitation);
   }
@@ -151,7 +172,7 @@ async function smoke(options) {
   const memberConfig = await member.store.config();
   if (!memberConfig?.repository) await command(member, ["join", new TextDecoder("utf-8", { fatal: true }).decode(invitation)], "join");
   const joined = await member.store.config();
-  if (joined?.service !== base || joined.handle !== "@member" || joined.repository?.membership?.scope !== repository.membership.scope
+  if (joined?.service !== base || joined.handle !== "@member" || !await sameCelldReference(joined.repository?.membership, membership)
     || !scope(joined.repository?.inbox) || joined.repository.inbox === repository.inbox) fail("join-identity");
   await command(member, ["status", "membership"], "member-read");
   const verified = await command(ctx, ["verify", "--all"], "verify-all");
@@ -166,8 +187,7 @@ async function smoke(options) {
   }).sort();
   if (verified.lines.at(-1) !== "All consistent: 7 scopes." || actual.length !== 7
     || new Set(actual).size !== 7 || actual.some((identity, index) => identity !== expected[index])) fail("verify-coverage");
-  return { version: 1, phase, register: publicRef(installed.register), directory: publicRef(repository.directory),
-    membership: publicRef(repository.membership), rules: repository.rules, destination: repository.destination,
+  return { version: 1, phase, register, directory, membership, rules: repository.rules, destination: repository.destination,
     health: await health(ctx, base), verifiedScopes: 7 };
 }
 
