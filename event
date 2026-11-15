@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:62aa55429971dbb2e2fe1e8b7e14c8932e94e61c","text":"Merge retired a covered predecessor; the successor is at apps/counter/release-identifiers.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:632fc4a3b7e2528b51ba317ca22d48915bf26a67","text":"Merge retired a covered predecessor; the successor is at packages/client/src/scope-client.ts."}
