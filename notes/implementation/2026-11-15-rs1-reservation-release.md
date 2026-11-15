@@ -61,36 +61,97 @@ all historical records remain unchanged.
 
 ## Evidence and remaining work
 
-This is an uncompiled, unrun source checkpoint. No project import,
-compiler, test, parser, producer, canonical comparison, browser, model,
-seal calculation, dependency setup, gate, or release operation ran here.
-The table records obligations, not results.
+The whole affected owners and two guard controls passed at
+`805d2fa98795d222814f19580e7d21c7b37c96da`, tree
+`2146b1ea9e6c99c8d1bc33b3c43c3edeb25d822c`. Source merge `7ac3bfe9`
+integrated published main `fb7877d9` while preserving the authored RS1
+change. The earlier compiler and producer failures below remain FAIL.
+Final whole preflight, the full gate and independent review remain OWED.
 
-| Check or output | Command or whole owner | Result |
+Root composed RS1 and LS2 code at
+`f9c490ec0101238e63f1322821b31e713dfe2e1a`, tree
+`5909f7b83a9bc4e7972e79fa612b22bcac673986`, as an exact 17-path union;
+the normal merge exited 0 in 0.116088 s. This records code composition
+only. The RS1 and LS2 promises remain independent. The owner and control
+results below bind the earlier RS1 source, not this joined head.
+
+The first authoring interval stopped at missing release annotation entries
+and deletion of required fixture properties. Commits `96180121` and
+`ade06042` completed the existing typed maps and used a filtered fixture
+acts record; they changed no production form or assertion. The first
+actual producer then stopped before writes: the story expected tool 9's
+revision to equal its ID. Commit `fb9b170d` corrected only the expected
+revision to 1. New items start at revision 1; reservation effects do not
+change their tool. No parser, judge or clock rule changed.
+
+The repaired normal producer wrote only definition.json, pin.ts and
+scenarios/application.json; `ea25bb9f` committed those actual outputs.
+The normal CLI check measured 38 steps, replay through 15 and 3 projection
+checks. The three-way comparison for current 0.4 kept Grow 2.0 and
+Counter 0.4 exact and measured Lending's new tuple. Commit `805d2fa9`
+adopted only the measured Lending identifiers and the existing CLI
+Lending row 38/15. All other tuples and assertions stayed unchanged.
+
+All wall times below measure the actual child command, rounded to six
+decimals. Test/module duration sums are not elapsed wall time. SHA-256
+prefixes identify the cited files; retained result records contain full
+stream hashes, commands and source bindings.
+
+| Source / check | Actual result and wall | Retained output / SHA-256 prefix |
 |---|---|---|
-| Changed authored source | Lending and Define compiler contexts | UNRUN |
-| Definition judgment, bounds, release, and retained byte/pin agreement | `examples/lending/definition.test.ts` | UNRUN |
-| Manifest default/override and retained descriptor agreement | `packages/define/test/package.test.ts` | UNRUN |
-| Normal definition, pin, and scenario production | `node --import tsx examples/lending/scripts/pin.mjs` | OWED; no generated file edited |
-| Retained scenario consumers | Whole `packages/cli/test/application-examples.test.ts` and applicable existing story/native Lending owners | UNRUN; actual produced counts must precede any expectation update |
-| Canonical application tuples | Normal three-way comparison | OWED; Grow and Counter must stay unchanged |
-| Required pre-START checks | Shared helper, whole typecheck, whole Security owner, and whole CLI examples owner | UNRUN |
-| Full gate and review | `npm run gate`, then review | UNRUN; gate follows the NF four-promise head and CB1/LS1 |
+| `7ac3bfe9`: initial authoring | FAIL. Define source: exit 0, 0.552199 s; Define test: exit 0, 0.324553 s; Lending compiler: exit 1, 0.305648 s. Browser compiler and producer UNREACHED; all three generated files unchanged. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-authoring-producer-attempt1/result.json` (`2ed10440d938`) |
+| `ade06042`: resumed authoring / first actual pin producer | FAIL. Lending compiler: exit 0, 0.287708 s; browser compiler: exit 0, 0.315532 s; producer: exit 1, 0.850356 s on item 9 revision mismatch, before any generated write. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-authoring-producer-attempt2/result.json` (`b9ce324fc506`); `pin-producer.stderr.log` in that directory (`5d60b24f54e7`) |
+| `fb9b170d`: affected compilers / repaired pin producer | PASS. Define test: exit 0, 0.398091 s; Lending: exit 0, 0.295003 s; producer: exit 0, 0.884406 s. Exactly the three normal generated outputs changed. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-authoring-producer-attempt3/result.json` (`040993d38b76`) |
+| `ea25bb9f`: generated checkpoint | Normal commit: exit 0, 1.853606 s; only definition.json, pin.ts and scenarios/application.json. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-ls2-source-dev-safe-attempt1/rs1-generated-checkpoint/result.json` (`f54230eb0e9b`) |
+| `ea25bb9f`: normal `dap check . --config examples/lending/dap.application.json` | PASS; exit 0, 2.353401 s. Actual 38 steps, native replay through 15 and 3 projection checks. Scripted TEST authority; external effects disabled. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-ls2-source-dev-safe-attempt1/rs1-cli-identifiers/cli-check.stdout.log` (`3570c57a7509`) |
+| `ea25bb9f`: normal three-way compare | PASS; exit 0, 1.850840 s. Grow and Counter identifier bytes exact; only Lending changed. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-ls2-source-dev-safe-attempt1/rs1-cli-identifiers/comparison/comparison.json` (`ba7bfa3d0108`); execution record `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-ls2-source-dev-safe-attempt1/rs1-cli-identifiers/result.json` (`e736a2f81cb6`) |
+| `ea25bb9f` input: reviewed identifier apply | PASS; exit 0, 0.257237 s. Wrote only Lending release-identifiers.json. `805d2fa9` then committed it with the measured CLI row. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-ls2-source-dev-safe-attempt1/rs1-cli-identifiers/apply-result.json` (`7a82bf28aa91`) |
+| `805d2fa9`: measured checkpoint | Normal commit: exit 0, 1.210000 s. Only Lending identifiers and its existing CLI tuple changed; all other source stayed exact. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-ls2-source-dev-safe-attempt1/rs1-measured-checkpoint/result.json` (`c7e616bb0203`) |
+| `805d2fa9`: compatibility prerequisite | PASS; exit 0, 0.082910 s. copied:false; accepted pool bytes unchanged. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-whole-owners-attempt1/compatibility.stdout.log` (`86b320bf0218`) |
+| `805d2fa9`: whole Define package + story owners | PASS; exit 0, 1.380242 s; 12 tests in 2 files. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-whole-owners-attempt1/define-owners.stdout.log` (`6cd43a4c1aac`) |
+| `805d2fa9`: whole Lending definition + browser model owners | PASS; exit 0, 1.543117 s; 13 tests in 2 files. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-whole-owners-attempt1/lending-owners.stdout.log` (`597d3fdbd6b4`) |
+| `805d2fa9`: whole CLI examples + release reproduction owners | PASS; exit 0, 6.623576 s; 4 tests in 2 files. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-whole-owners-attempt1/cli-owners.stdout.log` (`58fe696ab3ce`) |
+| `805d2fa9`: whole Native scope-lending owner | PASS; exit 0, 11.035064 s; 1 test in 1 file, unchanged maintained Worker runtime. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-whole-owners-attempt1/scope-lending-owner.stdout.log` (`5b9fcdb5b74c`) |
+| `805d2fa9`: whole Node Security owner | PASS; exit 0, 3.928938 s; 12 tests. No new RS1 seal row or seal refresh. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-whole-owners-attempt1/security-owner.stdout.log` (`475e8df12f27`) |
+| `805d2fa9`: whole owner interval | PASS; outer wall 24.798090 s; source clean and unchanged. All six command stderr files empty. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-whole-owners-attempt1/result.json` (`f1837cd4eb7e`) |
+| `805d2fa9`: remove holder guard | DISTINGUISHES; helper exit 0, 2.328762 s. Whole definition owner: baseline 9 passed; mutant 7 passed, 2 failed, child exit 1. Direct nonholder assertion failed at 134:72; original bytes and mode restored. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-guard-controls-attempt1/holder.stderr.log` (`cc8f836a6601`); child outputs in `artroom-control-9gEiYs` under that directory |
+| `805d2fa9`: change member count max 1 to 2 | DISTINGUISHES; helper exit 0, 2.047780 s. Whole definition owner: baseline 9 passed; mutant 7 passed, 2 failed, child exit 1. Direct third-hold assertion failed at 132:85; original bytes and mode restored. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-guard-controls-attempt1/member-count.stderr.log` (`8692287673c0`); child outputs in `artroom-control-KikBGe` under that directory |
+| `805d2fa9`: control interval | Both direct behavioral failures inspected; outer wall 4.428499 s. Source restored byte-exact, mode 0644 and clean. No third green. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-guard-controls-attempt1/result.json` (`d12d17b918f6`) |
+| `f9c490ec`: RS1 + LS2 code composition | Normal merge: exit 0, 0.116088 s; exact 17-path union. Code composition only; promises stay independent. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-ls2-source-dev-safe-attempt1/source-join/result.json` (`7a84ccf507d8`) |
+| Safe source/development retention | 40 explicitly selected files; retained bytes and hashes equal originals. No fixture, cache or private provider log copied. | `/Users/hughpyle/play/artroom-evidence/2026-11-15-rs1-ls2-source-dev-safe-attempt1/retention-index.json` (`3f87c3905e1a`) |
+| Final exact-head preflight / full gate / review | OWED. No full-gate or review PASS follows from these development/controls results. | Actual future records not yet available |
 
-`definition.json`, `pin.ts`, `scenarios/application.json`, and release
-identifiers still hold the published baseline. They do not yet represent
-these authored forms. The normal producer must judge the story and supply
-actual output before byte/pin and scenario-consumer correspondence can
-pass. The CLI examples owner currently retains the old scenario counts;
-this checkpoint neither guesses replacements nor weakens that assertion.
+Both mutants also failed canonical-byte equality at definition.test.ts:153.
+That was not the sole evidence: removing holder identity admitted a
+nonholder write, and raising the count admitted the third hold. Each
+control used the whole existing definition owner. The external retained
+helper copy changed only one cleanup line; classifier, runner, selection
+and deadlines stayed exact. Actual before/after JSON and streams remain
+in the two child directories above. No model or new verification claim
+follows from these controls.
+
+The staff-only positive path uses an explicit staff grant. This evidence
+does not include a separate member-only denial of the staff action.
+Native scope-lending covers real library scopes and roles; the CLI
+story uses scripted TEST grants and local replay. Neither result proves
+a hosted release, provider action or physical-device acceptance.
+
+The successful producer/compare stderr contains the existing Node
+DEP0205 module.register deprecation warning. The whole-owner interval's
+stderr files are empty. Earlier FAIL records stay separate and retain
+their actual pre-repair source; the later passes do not relabel them.
+
+Root retained the selected generated-checkpoint, CLI/comparison/apply,
+measured-checkpoint and source-join records under the safe directory in
+the table. The original temporary files remain untouched; citations now
+use the exact durable destinations. No raw fixture, cache or private
+provider log entered that copy. The private provider log remains withheld.
 
 No packets, signer, trust rows, Worker configuration, grants, Directory,
-Destination, receipt path, Counter source, or browser controls change.
-The signing END releases the temporary signing hold; it does not promote
-RS1 ahead of its assigned gate order. Planner question
-`a7f24240fc3d79a7f6b38652407832ad31a20a14` concerns later signed-presentation
-drift on the separate NF head. RS1 keeps the explicitly approved open
-`0.4.0` until the planner changes its number or order. Actual future main integration,
-validation, canonical outputs, review, landing, and any later release
-remain owed. This source checkpoint claims no hosted or physical-device
-acceptance.
+Destination, receipt path, Counter source or browser controls change.
+Earlier question `a7f24240` concerned signed-presentation drift on the
+separate NF head. RS1 retains the approved open 0.4.0; planner owns signing
+after RS1 lands. Published-main integration and normal generated outputs
+are complete; final preflight, one full gate, review, landing and later
+release remain OWED. No protected lifecycle function or formal model
+changed, and no model run or coverage-pin advance is claimed.
