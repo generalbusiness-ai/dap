@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d6e5a5ce2b49911df7224dede96d34c8eadd52a3","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-14-fh1-tracked-hooks.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dfdba519d8b0a8f29b52297f7080eae59b8803ac","text":"Merge retired a covered predecessor; the successor is at .github/workflows/scale-tests.yml."}
