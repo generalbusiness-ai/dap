@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a09af362d18bd0931043c6537e50ecf1f6c8ec95","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/version-questions.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b4ea33eb50f2931de4d3eaa2ed1173efd364cf1a","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/application-settings.mjs."}
