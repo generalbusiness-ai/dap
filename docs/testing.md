@@ -270,6 +270,10 @@ A head that changes any file under `packages/*/src` runs the whole
 `scripts/security-entry-points.test.mjs` owner before gate START and states
 its result.
 
+Before gate START, a head that changes a file under `packages/*/src` or example
+source runs the whole `packages/cli/test/application-release-reproduction.test.ts`
+owner and states its result.
+
 File START with the clean head, tree, and current main. Keep the gate's
 output in one log in a new directory under `~/play/artroom-evidence/`.
 File END with the actual exit code, wall time, stage count lines, and log
