@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:578b3e135a634a4920c3fccddc4f9ae32c4c1319","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-14-nf5-storage-follow-up.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5906ea1b517c61d0df510a5f7a2c8706ae1a1dbe","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/storage.ts."}
