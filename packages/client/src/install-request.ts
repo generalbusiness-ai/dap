@@ -19,6 +19,7 @@ import { commonsInstallCheck } from "./commons.ts";
 import { CustodyError, Lost, meaningOf, validKey, type ArchivedSettlement, type Custody, type Envelope, type Identity, type Phase } from "./custody.ts";
 import { descriptionsOf, type DefinitionLike } from "./describe.ts";
 import { ScopeHandle, TransportError, type Transport } from "./handle.ts";
+import type { AbsenceFailure, AbsenceRecovery } from "./reads.ts";
 import type { Signer } from "./signer.ts";
 
 // ---------------------------------------------------------------- the declaration digest
@@ -113,6 +114,8 @@ export interface InstallOptions {
   admit?: (target: InstallTarget) => Promise<boolean>;
   /** Custody's send, or a caller's wrapper with its signature. A wrapper may stop the call with `SendStop`. */
   send: Custody["send"];
+  /** Explicit recovery of an existing dead ordinary signing. Any result stops this install invocation without sending. */
+  recoverAbsent?: (identity: Identity) => Promise<AbsenceRecovery>;
   /** The package bytes at an address, at most `limit` bytes. The host fetches them itself as well. */
   packageBytes: (address: ApplicationReleaseUri, limit: number) => Promise<PackageBytes>;
 }
@@ -144,6 +147,9 @@ export type InstallRefusal = RoomRefusal
   | { refused: "receipt" }
   | { refused: "entry-unread" }
   | { refused: "entry" }
+  | { refused: "recovery"; state: "unproved"; why: AbsenceFailure }
+  | { refused: "recovery"; state: Exclude<AbsenceRecovery["state"], "unproved"> }
+  | { refused: "unsent" }
   | { refused: "accepted-unread"; scope: ScopeId };
 
 export type InstallRequest =
@@ -250,6 +256,18 @@ export async function installApplication(handle: InstallHandle, custody: Custody
   catch { return refused({ refused: "trust" }); }
   const identity: Identity = { service: handle.service, membership: room.membership, signer: handle.signer.key, target: room.rules, key: key as string };
   const meaning = meaningOf(selected);
+  if (options.recoverAbsent) {
+    const record = await custody.find(identity), latest = record?.signings.at(-1);
+    if (record && record.meaning === meaning && isScopeRef(record.identity.target) && record.envelope.creation === undefined
+      && record.envelope.signed.intent.to !== null && !record.standalone
+      && (record.phase === "prepared" || record.phase === "sent" || record.phase === "unknown")
+      && latest && !latest.closed && custody.dead(latest)) {
+      const recovery = await options.recoverAbsent(identity);
+      return refused(recovery.state === "unproved"
+        ? { refused: "recovery", state: recovery.state, why: recovery.why }
+        : { refused: "recovery", state: recovery.state });
+    }
+  }
   const build = async () => {
     // Recheck after custody awaits; an earlier list or policy read is no authority.
     const allowed = trustForBuild();
@@ -290,8 +308,9 @@ export async function installApplication(handle: InstallHandle, custody: Custody
   }
   if ("lost" in kept) return refused({ refused: "lost", scope });
   if ("archivedSettlement" in kept) return { outcome: "archived", rules: room.rules, archivedSettlement: kept.archivedSettlement };
-  // A folded or unsent record holds no answer for the install caller to project here.
-  if ("folded" in kept || "unsent" in kept) throw new CustodyError({ held: "unreadable" });
+  if ("unsent" in kept) return refused({ refused: "unsent" });
+  // A folded record holds no answer for the install caller to project here.
+  if ("folded" in kept) throw new CustodyError({ held: "unreadable" });
   if (kept.answer.answer !== "accepted") return { outcome: "answered", rules: room.rules, answer: kept.answer, retained: kept.retained, phase: kept.record.phase };
   const receipt = kept.answer.receipt;
   if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return refused({ refused: "receipt" });

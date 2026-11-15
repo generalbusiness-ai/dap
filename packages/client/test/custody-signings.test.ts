@@ -6,9 +6,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import type { Answer, Head, Receipt, RefusalReason, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, timeOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, scopeIdOf, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { signedIntent } from "@generalbusiness/dap-client";
-import { Custody, CustodyError, ENVELOPES_MOST, Lost, RECORD_BYTES, envelopeOf, envelopesOf, identityId, meaningOf, memoryStore, type CustodyRecord, type CustodyRecordV1, type Envelope, type Identity } from "../src/index.ts";
+import { Custody, CustodyError, ENVELOPES_MOST, Lost, RECORD_BYTES, envelopeOf, envelopesOf, identityId, meaningOf, memoryStore, type AbsenceSnapshot, type CustodyRecord, type CustodyRecordV1, type Envelope, type Identity } from "../src/index.ts";
 import { T0, accepted, identity, lane, notAfter, receiptOf, signer } from "./support/custody.ts";
 
 const MINUTE = 60_000;
@@ -35,6 +35,74 @@ function scene() {
   return { store, custody, sent, build, submit, builds: () => builds, advance: (ms: number) => { now += ms; }, at: () => now,
     record: async (key: string) => (await custody.find(identity(key)))! };
 }
+
+/** An ordinary envelope with a current full scope reference. The proof Head remains a caller's scripted attestation here. */
+async function absentScene() {
+  const s = scene(), target = { scope: scopeIdOf({ v: 1, kind: "lane", definition: "platform:inbox@1", creator: null, cause: textDigest("TEST absent"), ordinal: 0 }), genesis: lane.genesis };
+  const who: Identity = { ...identity("TEST-proof"), target }, meaning = meaningOf("TEST original");
+  let builds = 0;
+  const build = async () => {
+    builds++;
+    return { binding: { definition: "issue", kind: "comment", declaration: null, pinned: "platform:inbox@1" as const },
+      envelope: { signed: await signedIntent(signer, { to: target, kind: "comment", fields: {} }, { idempotencyKey: who.key, now: s.at(), lifetimeSeconds: 60 }), beside: {} } };
+  };
+  await s.custody.send(who, meaning, build, async () => { throw new Lost(); }, { notAfter });
+  s.advance(2 * MINUTE);
+  const before = (await s.custody.find(who))!, signing = before.signings.at(-1)!;
+  const expected: AbsenceSnapshot = { index: before.signings.length - 1, attempt: before.attempt, intent: signing.intent,
+    meaning: before.meaning, notAfter: signing.notAfter, pinned: before.binding.pinned };
+  return { ...s, who, target, meaning, build, expected, before, built: () => builds };
+}
+
+test("a guarded absent proof ends only its exact latest snapshot and preserves the original envelope", async () => {
+  const s = await absentScene(), id = identityId(s.who);
+  const ended = await s.custody.absentIf(s.who, s.expected, head);
+  expect(ended).toMatchObject({ applied: true, record: { phase: "refused", signings: [{ closed: true }], outcomes: [{ lost: true }, { unsent: head, signing: 0, attempt: 1 }] } });
+  expect(ended.record!.envelope).toEqual(s.before.envelope);
+  expect(await s.store.unresolved()).toEqual([]);
+  const bytes = s.store.records.get(id);
+  expect(await s.custody.absentIf(s.who, s.expected, head)).toMatchObject({ applied: false });
+  expect(s.store.records.get(id)).toBe(bytes);
+  expect(s.built()).toBe(1);
+});
+
+test("a guarded absent proof revalidates after acquiring the lock when an attempt, signing, binding or settlement changed", async () => {
+  for (const change of ["attempt", "signing", "binding", "accepted"] as const) {
+    const s = await absentScene();
+    let entered!: () => void, release!: () => void;
+    const atLock = new Promise<void>(resolve => { entered = resolve; }), proceed = new Promise<void>(resolve => { release = resolve; });
+    const guarded = new Custody({ ...s.store, lock: async (id, until) => {
+      entered(); await proceed;
+      return s.store.lock(id, until);
+    } }, () => timeOf(s.at()));
+    const pending = guarded.absentIf(s.who, s.expected, head);
+    await atLock;
+    if (change === "attempt") {
+      await s.custody.send(s.who, s.meaning, s.build, async () => refusedFor("revision-moved"), { notAfter });
+      await s.custody.send(s.who, s.meaning, s.build, async () => { throw new Lost(); }, { notAfter, resubmit: true });
+    } else if (change === "signing") {
+      await s.custody.send(s.who, meaningOf("TEST changed meaning"), s.build, async () => { throw new Lost(); }, { notAfter, resign: true });
+    } else if (change === "binding") {
+      const changed = (await s.custody.find(s.who))!;
+      changed.binding.pinned = "platform:rules@2";
+      s.store.records.set(identityId(s.who), canonicalize(changed));
+    } else {
+      await s.custody.settle(s.who, async envelope => {
+        const receipt = receiptOf(envelope.signed, 3);
+        return { ...receipt, fact: { ...receipt.fact, at: s.target } };
+      });
+    }
+    const before = s.store.records.get(identityId(s.who));
+    release();
+    expect(await pending, change).toMatchObject({ applied: false });
+    expect(s.store.records.get(identityId(s.who)), change).toBe(before);
+    const current = (await s.custody.find(s.who))!;
+    expect(current.outcomes.some(outcome => "unsent" in outcome), change).toBe(false);
+    if (change === "attempt") expect([current.attempt, current.signings.length]).toEqual([2, 1]);
+    if (change === "signing") expect(current.signings.length).toBe(2);
+    if (change === "accepted") expect(current.phase).toBe("accepted");
+  }
+});
 
 describe("custody record version 2 holds the signings of one request", { timeout: 30_000 }, () => {
   // Invariant: a version 1 record reads as version 2 with one signing that holds every outcome, and an unresolved one settles.
