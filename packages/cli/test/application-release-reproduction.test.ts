@@ -67,7 +67,8 @@ test("Grow, Lending and Counter reproduce their reviewed definition and presenta
       expect(packets.has(packet.ids.release), "Each committed packet must name a distinct release").toBe(false);
       packets.set(packet.ids.release, { source, bytes });
     }
-    expect(trust, "dap-lending must trust exactly its two committed application packets").toHaveLength(packets.size);
+    expect(trust.map(row => row.release).sort(), "dap-lending must trust each committed packet exactly once")
+      .toEqual([...packets.keys()].sort());
     expect(deployment.r2_buckets).toEqual([{ binding: "APPLICATION_CONTENT", bucket_name: "dap-lending-application-content" }]);
     for (const row of trust) {
       const committed = packets.get(row.release);

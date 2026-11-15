@@ -43,8 +43,10 @@ For dap-lending, the published reader first validates both versioned
 packets and discovers their releases. Each actual trust row then selects
 one committed packet. The same reader reads that packet with the row's
 exact release, and the witness compares its publisher with the row.
-A missing packet or a mismatched publisher fails. Row order grants no
-meaning. The witness also checks the exact private bucket binding.
+A missing packet or a mismatched publisher fails. The sorted trust and
+packet release lists must match exactly, including multiplicity. Row
+order grants no meaning. The witness also checks the exact private bucket
+binding.
 
 When a packet's manifest version equals the authored version, its
 identifiers must equal the current `release-identifiers.json`. The
