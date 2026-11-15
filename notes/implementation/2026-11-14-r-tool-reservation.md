@@ -136,11 +136,43 @@ assertions, deadlines, imports, fixtures, configuration and identifiers stay
 unchanged. A tracked-source search found no import of this test file; the
 corpus's filename string labels an origin without loading the owner.
 
-This commit changes only that failing file and this note, under the
+The repair changes only that failing file and this note, under the
 [isolated follow-up rule](../../docs/evidence-filing.md#follow-up-after-a-gate).
-The affected compiler, whole CLI owner, and unreached Native stage remain
-**UNRUN**, pending the planner's order. A later passing follow-up would not
-turn the original failed gate into a pass.
+Ruling `c637f63f62997e5054e6e4fc6554291382320322` replaces item 2 of
+`913b5e7d` with one compiler, the whole CLI owner, then the unreached Native
+phase. It preserves gate 1 as FAIL and leaves the checker to assess the
+rule's conditions or require a full gate.
+
+START `991a24b76dc6a005c5cb2a103fab73d6c4efb558` binds clean
+`53aba95f00a5f0808af8884d35386f7189e0cc2f`, tree
+`c813fbde17e29c6d6cadff00b0c31fc7cfa01243`. The isolated compiler passed
+in 0.540242750 s; all three CLI owner cases passed in 6.165756083 s.
+The pre-START source read found application-pack.test.ts's separate
+lending-standard fixture (five steps, through 1), not another stale count
+of the current package scenario. Fresh natural Scale selection is omit,
+`outside-scale-paths`: 19 changed paths, no matches. No Scale acceptance or
+first-moved timing follows.
+
+END `aa2c014f5cc8f773baa0d316b316c913853efe37` records the separate
+follow-up FAIL, exit 1 in 515.584793499962 s. Native exited 1 in
+508.723583167 s; its controller took 508.877585583 s. Native had 1134
+passes, one failure and two skips across 1137 tests; files had 286 passes,
+one failure and one skip across 288 files. No signal, spawn error, timeout
+or unhandled error occurred. Native and its controller closed and reaped.
+
+The sole failure was `maintained-application-projections.test.ts:54:41`,
+case `maintained lending package installs and its browser adapter reads
+native declared state`. Its `install_application` assertion expected
+answer/phase `accepted/accepted` and received `refused/refused`. The terminal
+formatter omitted six other matching properties, so this note claims no
+refusal reason or cause. The later browser-adapter assertions did not run.
+
+Gate 1 remains FAIL and this follow-up is also FAIL. Under `c637f63f` and
+`841b79030689a4b6d3c9d8f4092905c790dbc7ce`, R leaves this route: no R
+review, artifact filing or landing follows it. E1 takes the slot on published
+main `17a917cd` without R. Root's separate diagnosis act remains pending;
+this note supplies no diagnosis. This note-only successor changes none of
+the source or tests checked at `53aba95f`.
 
 ## Definition and witnesses
 
@@ -230,6 +262,7 @@ the authored-package follow-up.
 `F` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-authored-package-followup-attempt1`.
 `I` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-identifiers-compare-attempt1`.
 `Q` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-full-gate-attempt1`.
+`U` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-targeted-followup-attempt1`.
 `IDTOOL` is `/private/tmp/artroom-c3-open-03-identifiers-20261114.mjs`.
 `ROOT` is this worktree's absolute path. `H` is the full `8d7f7f8c` head above,
 and `T` is its full tree. Expand these aliases in the exact commands below.
@@ -247,6 +280,12 @@ old text `none(reservation, ["held"], held => [` as `OLD`, and new text
 The helper copies changed only the success-cleanup line to retain raw files;
 classification, fault, test assertions, runner and deadlines stayed unchanged.
 
+`C` is `Q/controls`, the byte-exact retained historical control copies.
+It includes all six original child records. Command paths retain their
+original dated invocation root; `C` output citations do not claim a rerun.
+Originals remain unchanged. Retain the copies for at least 30 days after
+landing. The unrelated Node compile cache was not copied.
+
 | Check | Command | Exit and actual result | Output and SHA-256 |
 |---|---|---|---|
 | Four compiler contexts | `N node_modules/typescript/bin/tsc -p CONFIG`; configs are `examples/lending/tsconfig.json`, `examples/lending/browser/tsconfig.json`, `packages/define/tsconfig.test.json` and `packages/scope/tsconfig.test.json`, sequentially once | All four 0; stdout and stderr empty | `compiler-1.stdout.log` through `compiler-4.stdout.log` and matching stderr files, each `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
@@ -254,8 +293,8 @@ classification, fault, test assertions, runner and deadlines stayed unchanged.
 | Whole Lending definition owner | From `examples/lending`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts definition.test.ts` | 0; eight passed, zero failed, pending or todo; 0.86 s | `lending.json` — `bbc62e17734c133408178a0687bb591dd1530ab68eb8befe77c9e1a27e1ab99e` |
 | Whole Define story and package owners | From `packages/define`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts test/story.test.ts test/package.test.ts` | 0; six story and five package cases passed, zero failed, pending or todo; 0.67 s | `define.json` — `42633973cc21b3f97869bc102b1b5002597338168ec266101f27b260b19ab15a` |
 | Native Lending owner | From `packages/scope`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.lending.config.ts test/lending.test.ts` | 0; one whole file and one scenario passed; zero failed, pending or todo; 11.46 s | `native-lending.json` — `bee66653e695d11702574f858999e4371585e518d9ee4d8f1e9fbfbe7afdedd0` |
-| Guard control attempt 1 | `N controls/held-reservation/control.retained.mjs SOURCE OLD NEW --expect TITLE -- examples/lending --config vitest.config.ts definition.test.ts`, helper path under the output directory | 2, INCONCLUSIVE; package preflight stopped before any child or mutation; 0.07 s | `controls/held-reservation/control.stderr.log` — `43248b73322f0fb46fb8cf3386750a4b4739981285913fbebda1516a39833e50` |
-| Corrected guard control attempt 2 | `N controls/held-reservation-attempt2/control.retained.mjs SOURCE OLD NEW --expect TITLE -- . --config examples/lending/vitest.config.ts definition.test.ts`, helper path under the output directory | 0, DISTINGUISHES; baseline eight passed; mutant six passed and two assertion failures; 2.36 s | `controls/held-reservation-attempt2/control.stderr.log` — `bd0e786d652ced3298fe208bdae1684fde58e287e0d6950bee686aaa28fe834d` |
+| Guard control attempt 1 | `N controls/held-reservation/control.retained.mjs SOURCE OLD NEW --expect TITLE -- examples/lending --config vitest.config.ts definition.test.ts`, helper path under the output directory | 2, INCONCLUSIVE; package preflight stopped before any child or mutation; 0.07 s | `C/held-reservation/control.stderr.log` — `43248b73322f0fb46fb8cf3386750a4b4739981285913fbebda1516a39833e50` |
+| Corrected guard control attempt 2 | `N controls/held-reservation-attempt2/control.retained.mjs SOURCE OLD NEW --expect TITLE -- . --config examples/lending/vitest.config.ts definition.test.ts`, helper path under the output directory | 0, DISTINGUISHES; baseline eight passed; mutant six passed and two assertion failures; 2.36 s | `C/held-reservation-attempt2/control.stderr.log` — `bd0e786d652ced3298fe208bdae1684fde58e287e0d6950bee686aaa28fe834d` |
 | Original composition: affected compilers and owners | Not run | UNRUN; original results above bind their named old heads only | None |
 | Original composition: typed outputs and normal release reproduction | Not run | Regeneration and source/identifier correspondence OWED; merge actual LC-1 main first | None |
 | Original composition: guard control, full gate and review | Not run | UNRUN; queue and later execution grant required | None |
@@ -272,7 +311,11 @@ classification, fault, test assertions, runner and deadlines stayed unchanged.
 | Canonical identifiers comparison | `N --import tsx IDTOOL compare ROOT I/identifiers H T` | 0; 1.824992916 s; only Lending differs | `I/result.json` — `4cc4d30869b3d5ace36915bfeb45c103d030b40708ccd8903572a154fb5c85e2`; `I/identifiers/comparison.json` — `6ccc3145ecc1dfea03ba892d34025b3cf90245a904436c6672953f2832b2596f` |
 | Normal identifier apply | `N --import tsx IDTOOL apply ROOT I/identifiers H T` | 0; 0.251109500 s; only Lending's identifier file changed | `I/apply-result.json` — `dc605e2d93e9a510cdfd581e24ff0bf5d1e39bd8ead2cf1d00824388696ed606` |
 | Full gate attempt 1 at `84481fb1` | `npm run gate` | 1; 333.676312082971 s; pre-test checks and Kernel passed; Node 200 passed; Counting 56 passed; Plain 4813 passed, one failed, one skipped; Native unreached, wall unknown; Scale omitted (`outside-scale-paths`) | `Q/gate.log` — `8dc04a5aa0d81ba11889e1b22dbd7cf43a83eae2e1ce39902337dddadcc9152c`; `Q/result.json` — `5fce14773681c9ea3163ef6163733bd8268849b2ce1a57573ab737a47b56cb37` |
-| Isolated CLI fixture follow-up and review | Not run | Affected compiler, whole CLI owner, unreached Native stage, and review UNRUN | None |
+| Isolated CLI test compiler at `53aba95f` | `N node_modules/typescript/bin/tsc -p packages/cli/tsconfig.test.json` | 0; 0.540242750 s | `U/cli-test-compiler.log` — `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Same whole CLI application examples owner | From `packages/cli`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts test/application-examples.test.ts` | 0; all three passed; 6.165756083 s | `U/application-examples-owner.log` — `7dff5073b0516b86357b6328ff5840f6a24fdbf75f2700566cf8928a8063748f` |
+| Previously unreached Native phase at `53aba95f` | `ARTROOM_TEST_PHASE=native ARTROOM_TEST_TIMING=U/native.jsonl ARTROOM_SCALE_MODE=omit /opt/homebrew/Cellar/node/26.13.1/bin/node ROOT/node_modules/vitest/vitest.mjs run --config ROOT/vitest.native.config.ts` | 1; Native wall 508.723583167 s, controller 508.877585583 s; 1134 passed, one failed, two skipped (1137); files 286 passed, one failed, one skipped (288); natural Scale omit/outside-scale-paths | `U/native.log` — `064450464b6c7fd922c08d26d2e0fa182003499db5ea1eedc9e691af63f45c5f`; `U/native.jsonl` — `bc04d2d9b68b178a00fb728c1ff7f34685ac4a86b94753eb490ff7c2831d9ab8`; `U/native-result.json` — `e998af1a0eaae87635fedb382a4e3511bda91d3ef047df03a50276b0f13267e6`; actual argv/env in `U/native-descriptor.json` |
+| Isolated follow-up aggregate | Compiler, whole CLI owner, then maintained Native descriptor above, sequentially once | 1; outer 515.584793499962 s; END `aa2c014f5cc8f773baa0d316b316c913853efe37`; source and status unchanged | `U/result.json` — `76b03f7d7ef68f6f96ef3a493360b06badbfe08d7438dd00f7d4b2404a7f54ba` |
+| Review, artifact filing and landing under this route | Not run | UNRUN; route ends on the Native failure; E1 next without R | None |
 
 Both plain runs and the Native run had empty stderr. The producer's only
 stderr was the Node `DEP0205` deprecation warning. The dedicated Native
@@ -300,8 +343,10 @@ rows retain the producer, four compilers, and publication RED at `4f213e9d`,
 then actual GREEN and the package-correspondence failure at `eb6d6a30a4`.
 The subsequent `F` rows validate the authored-package repair at `563bdadcad`.
 The `I` rows establish identifier correspondence and apply at the named
-published-main checkpoint. The failed gate remains failed; targeted
-follow-up checks and review remain owed.
+published-main checkpoint. Gate 1 and the separate targeted follow-up both
+remain FAIL. The compiler and whole CLI owner passed; Native's sole refusal
+assertion failure ended this route. No passing gate, review or combined
+acceptance follows.
 
 ## Release boundary
 
@@ -315,11 +360,12 @@ R owns the reservation, scenario, `0.3.0` version raise, and new Lending
 identifiers. The later producer and comparison above leave typed outputs,
 Grow, and Counter unchanged. No TEST signature or TEST release digest enters
 source. Ruling `bdeb6c15` originally placed signing after R lands. Later
-ruling `0fcc2ec547a1ac3116abf8ebf81bb8f8bc3466c3` supersedes that order:
-Lending and Counter `0.3.0` stay open through E1. E1 must integrate actual
-future R main, run the normal three-way comparison once, and apply the open
-Lending and Counter identifiers. Grow `2.0.0` must remain unchanged. The
-planner signs after E1 main is published. A later packet head keeps the
-installed `0.2.0` row. R performs no signing, packet copy, provisioning,
-installation or deployment. The current source checkpoint establishes no
-release or passing gate result.
+ruling `0fcc2ec547a1ac3116abf8ebf81bb8f8bc3466c3` superseded that order:
+both `0.3.0` releases stay open through E1, with normal three-way comparison
+and Grow `2.0.0` unchanged. R's failed Native follow-up now sends E1 first
+without R under `c637f63f`. Latest ruling
+`841b79030689a4b6d3c9d8f4092905c790dbc7ce` permits Lending `0.3.0` signing
+only after both E1 and R with LP1 have landed. Counter's `0fcc` rule stands.
+A later packet head keeps the installed `0.2.0` row. R performs no signing,
+packet copy, provisioning, installation or deployment. This source establishes
+no release or passing gate result.
