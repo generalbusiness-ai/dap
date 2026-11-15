@@ -316,42 +316,61 @@ test("a source, a recorded number and an absent numeric target keep separate loo
 });
 
 test("numeric absence changes only when the actual current opening becomes lookupable", () => {
-  const definition = variant(deviceCommandFixture, data => {
-    data.acts["phase-open"] = structuredClone(data.acts.commission);
-    data.acts["phase-open"].guards = [{ capability: { name: "device-command", guard: "allowed", with: { kind: { field: "kind" } } } }];
-    data.acts["phase-open"].effects.push({ capability: { name: "device-command", do: "open", with: { device: { slot: "kind" } } } });
+  const definition = variant(laneDefinition.declared, data => {
+    data.acts["phase-open"] = structuredClone(data.acts["take-hold"]);
+    data.acts["phase-open"].guards.push({ capability: { name: "hold", guard: "pin", with: {} } });
+    data.acts["phase-renew"] = structuredClone(data.acts.renew);
+    data.acts["phase-renew"].guards.push({ capability: { name: "hold", guard: "pin", with: {} } });
   });
-  const scope = created(definition, {}, "TEST actual opening phase");
-  const device = scope.did(rita, "commission", { fields: { kind: "fan" } }).seq;
+  const scope = new Scope(definition);
+  const commitment = scope.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } }).seq;
+  scope.did(rita, "assign", { ...on(scope, commitment), fields: { performer: keys.una.member } });
   const seen: unknown[] = [];
   const provenance: NonNullable<Parameters<typeof judgeActBody>[3]["provenance"]> = ({ value }) =>
     typeof value === "number" ? { is: "recorded", id: value, item: scope.state.item(value) } : null;
+  // A declared workspace callback runs after the real hold effects. These
+  // scripts inspect the supplied view/working row; they create no workspace.
   const capabilities: Capabilities = {
     implements: () => true,
     guard(_capability, _guard, _args, given) { seen.push(["guard", given.view.item(999)]); return true; },
-    effect(_capability, _effect, _args, given) {
-      seen.push(["known after", given.view.item(0)?.id]);
-      seen.push(["missing after", given.view.item(999)]);
+    effect: () => [],
+    workspace(view, _definition, self, _k, _holds, working) {
+      seen.push(["working", working(self)?.state ?? null]);
+      seen.push(["known after", view.item(0)?.id]);
+      seen.push(["missing after", view.item(999)]);
       return [];
     },
   };
-  const context = { ...scope.context(), actor: rita.key, capabilities, provenance };
+  const context = { ...scope.context(), actor: keys.una.key, capabilities, provenance };
   const before = scope.state.snapshot();
-  expect(judgeActBody(scope.state, definition, { kind: "phase-open", on: null, fields: { kind: "heater" }, expected: {} }, context))
+  expect(judgeActBody(scope.state, definition, { kind: "phase-open", on: null,
+    fields: { commitment }, expected: { commitment: scope.item(commitment).revision } }, context))
     .toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
-  expect(seen).toEqual([["guard", null], ["known after", 0]]);
+  expect(seen).toEqual([["guard", null], ["working", "held"], ["known after", 0]]);
   expect(scope.state.snapshot()).toBe(before);
+
+  // Seal the existing valid take-hold act, then judge a nonopening renewal
+  // at that new recorded cut. No row or judgment is forged for the contrast.
+  expect(scope.act(keys.una, "take-hold", { fields: { commitment },
+    expected: { commitment: scope.item(commitment).revision } }).result).toBe("write");
+  const hold = scope.last.seq, renewalBefore = scope.state.snapshot();
   seen.length = 0;
   expect(judgeActBody(scope.state, definition,
-    { kind: "command", on: device, fields: { target: "on", level: 1 }, expected: { on: scope.item(device).revision } }, context).result).toBe("write");
-  expect(seen).toEqual([["guard", null], ["known after", 0], ["missing after", null]]);
-  expect(scope.state.snapshot()).toBe(before);
+    { kind: "phase-renew", on: hold, fields: {}, expected: { on: scope.item(hold).revision } }, context).result).toBe("write");
+  expect(seen).toEqual([["guard", null], ["working", null], ["known after", 0], ["missing after", null]]);
+  expect(scope.state.snapshot()).toBe(renewalBefore);
 });
 
 test("opaque snapshots and descriptors preserve the runtime cut while working subjects show earlier effects", () => {
   const definition = variant(deviceCommandFixture, data => {
+    data.capabilities.push({ name: "hold", version: 1 });
+    data.items.device.values.commit = { fixed: false, required: false, of: { type: "commit" } };
+    data.items.device.refs.targetAt.to.kind.push("descriptor-open");
     data.acts["descriptor-open"] = structuredClone(data.acts.commission);
-    data.acts["descriptor-open"].effects.push({ capability: { name: "device-command", do: "open", with: { device: { slot: "kind" } } } });
+    data.acts["descriptor-open"].effects.push(
+      { value: { slot: "commit", from: { const: "a".repeat(40) } } },
+      { capability: { name: "hold", do: "pin-release", with: { commit: { slot: "commit" } } } },
+    );
   });
   const scope = created(definition, {}, "TEST opaque snapshot cut");
   const device = scope.did(rita, "commission", { fields: { kind: "fan" } }).seq;
@@ -369,11 +388,15 @@ test("opaque snapshots and descriptors preserve the runtime cut while working su
       expect(Array.isArray(Object.getOwnPropertyDescriptor(snapshot, "items")?.value)).toBe(true);
       const deviceRow = snapshot.items.find(item => item.type === "device");
       if (!deviceRow) throw new Error("the recorded device is missing");
-      seen.push([given.fromItems?.["device"]?.values["level"], deviceRow.values["level"]]);
+      const subject = given.fromItems?.[_capability === "hold@1" ? "commit" : "device"];
+      seen.push([subject?.values["level"], deviceRow.values["level"]]);
       if (read === "direct") void deviceRow.id;
       if (read === "descriptor") Object.getOwnPropertyDescriptor(deviceRow, "id")?.value;
       if (read === "enumeration") Object.assign({}, deviceRow);
-      if (read === "current") Object.getOwnPropertyDescriptor(given.fromItems!["device"]!, "id");
+      if (read === "current") {
+        if (!subject) throw new Error("the actual commit-slot subject is missing");
+        Object.getOwnPropertyDescriptor(subject, "id");
+      }
       return [];
     },
   };
@@ -387,12 +410,14 @@ test("opaque snapshots and descriptors preserve the runtime cut while working su
       .toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
   }
   read = "current";
+  seen.length = 0;
   // Omit the optional SDK provenance port. Core still knows this actual
   // opening's object identity and must not expose its unrecorded id.
   expect(judgeActBody(scope.state, definition,
     { kind: "descriptor-open", on: null, fields: { kind: "heater" }, expected: {} },
     { ...scope.context(), actor: rita.key, capabilities }))
     .toEqual({ result: "unavailable", reason: "unavailable", lacks: ["entry"] });
+  expect(seen).toEqual([[0, 0]]);
   expect(scope.state.snapshot()).toBe(before);
 });
 
