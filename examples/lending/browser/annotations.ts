@@ -27,8 +27,8 @@ export const refusalAnnotations = {
   },
   "release-by-staff": {
     ...common,
-    unauthorized: "Only staff can release a reservation.",
-    "guard-failed": "Only a held reservation can be released.",
+    unauthorized: "Only staff can use this release action.",
+    "guard-failed": "That reservation is no longer held.",
     "revision-moved": "Someone changed that reservation first. Look again, then decide.",
     final: "That reservation has ended.",
   },
