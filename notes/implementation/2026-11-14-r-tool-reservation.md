@@ -116,9 +116,31 @@ comparison retains all six original and candidate files. This note-only
 successor changes none of the checked source or applied identifiers.
 
 The comparison uses normal R1 preparation with a public TEST signer.
-It exports no public packet and performs no operator signing. Required
-preflight, the full gate, and review remain **UNRUN**. Neither development
+It exports no public packet and performs no operator signing. The later full
+gate failed as recorded below. Review remains **UNRUN**. Neither development
 passes nor identifier correspondence establish final-room acceptance.
+
+## Isolated CLI fixture follow-up, 15 November
+
+Full gate END `5bad3c96027b8149e64a76e6915b24ed3244ba00` records exit 1 at
+`84481fb186893ed241b0652818b8ac56e47f74b6`, tree
+`e8c1066fdda1904288bb2d92aed343649f442810`. Its sole failure was the old
+Lending tuple in `packages/cli/test/application-examples.test.ts`.
+`checkCommand` returned zero before the summary assertion failed.
+
+The retained scenario has 25 steps. Genesis is entry 0; donation,
+two reservations, borrow, return, and cancel reach entry 6. The two explicit
+timed lapses reach entries 7 and 8. The repair changes only Lending's tuple
+from `14, 4` to `25, 8`. Counter keeps `18, 10`. All three cases, production
+assertions, deadlines, imports, fixtures, configuration and identifiers stay
+unchanged. A tracked-source search found no import of this test file; the
+corpus's filename string labels an origin without loading the owner.
+
+This commit changes only that failing file and this note, under the
+[isolated follow-up rule](../../docs/evidence-filing.md#follow-up-after-a-gate).
+The affected compiler, whole CLI owner, and unreached Native stage remain
+**UNRUN**, pending the planner's order. A later passing follow-up would not
+turn the original failed gate into a pass.
 
 ## Definition and witnesses
 
@@ -207,6 +229,7 @@ The later GREEN and remaining-owner rows bind `eb6d6a30a4`; neither validates
 the authored-package follow-up.
 `F` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-authored-package-followup-attempt1`.
 `I` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-identifiers-compare-attempt1`.
+`Q` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-full-gate-attempt1`.
 `IDTOOL` is `/private/tmp/artroom-c3-open-03-identifiers-20261114.mjs`.
 `ROOT` is this worktree's absolute path. `H` is the full `8d7f7f8c` head above,
 and `T` is its full tree. Expand these aliases in the exact commands below.
@@ -248,7 +271,8 @@ classification, fault, test assertions, runner and deadlines stayed unchanged.
 | Previously unreached Native Lending owner | From `packages/scope`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.lending.config.ts test/lending.test.ts --reporter=default --reporter=json --outputFile.json=F/native-lending.json` | 0; one passed; 10.286759500 s | `F/native-lending.stdout.log` — `9836c9dce2eaf6c4a570b3c90b14b93e25101db5152cd90f9e1208c59140525d` |
 | Canonical identifiers comparison | `N --import tsx IDTOOL compare ROOT I/identifiers H T` | 0; 1.824992916 s; only Lending differs | `I/result.json` — `4cc4d30869b3d5ace36915bfeb45c103d030b40708ccd8903572a154fb5c85e2`; `I/identifiers/comparison.json` — `6ccc3145ecc1dfea03ba892d34025b3cf90245a904436c6672953f2832b2596f` |
 | Normal identifier apply | `N --import tsx IDTOOL apply ROOT I/identifiers H T` | 0; 0.251109500 s; only Lending's identifier file changed | `I/apply-result.json` — `dc605e2d93e9a510cdfd581e24ff0bf5d1e39bd8ead2cf1d00824388696ed606` |
-| Current preflight, gate, and review | Not run | UNRUN | None |
+| Full gate attempt 1 at `84481fb1` | `npm run gate` | 1; 333.676312082971 s; pre-test checks and Kernel passed; Node 200 passed; Counting 56 passed; Plain 4813 passed, one failed, one skipped; Native unreached, wall unknown; Scale omitted (`outside-scale-paths`) | `Q/gate.log` — `8dc04a5aa0d81ba11889e1b22dbd7cf43a83eae2e1ce39902337dddadcc9152c`; `Q/result.json` — `5fce14773681c9ea3163ef6163733bd8268849b2ce1a57573ab737a47b56cb37` |
+| Isolated CLI fixture follow-up and review | Not run | Affected compiler, whole CLI owner, unreached Native stage, and review UNRUN | None |
 
 Both plain runs and the Native run had empty stderr. The producer's only
 stderr was the Node `DEP0205` deprecation warning. The dedicated Native
@@ -276,7 +300,8 @@ rows retain the producer, four compilers, and publication RED at `4f213e9d`,
 then actual GREEN and the package-correspondence failure at `eb6d6a30a4`.
 The subsequent `F` rows validate the authored-package repair at `563bdadcad`.
 The `I` rows establish identifier correspondence and apply at the named
-published-main checkpoint. Preflight, full gate, and review remain owed.
+published-main checkpoint. The failed gate remains failed; targeted
+follow-up checks and review remain owed.
 
 ## Release boundary
 
@@ -293,5 +318,5 @@ source. Computed Lending identifiers await the planner's signing decision.
 Ruling `bdeb6c15` places signing after R lands; a later small head
 adds the signed `0.3.0` packet and row while keeping the installed `0.2.0`
 row. R performs no signing, packet copy, provisioning, installation or
-deployment. The current source checkpoint establishes no release or gate
-result.
+deployment. The current source checkpoint establishes no release or passing
+gate result.
