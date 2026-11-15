@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { scopeScaleFiles, testOptions } from "../vitest.projects.mjs";
+import { scopeScaleFiles, scopeScaleCaseCounts, testOptions } from "../vitest.projects.mjs";
 
 test("the canonical partition keeps inherited native configs out of the plain phase and refuses inconsistent selection", () => {
   const all = testOptions(), plain = testOptions("plain"), native = testOptions("native");
@@ -9,8 +9,21 @@ test("the canonical partition keeps inherited native configs out of the plain ph
   assert.equal(all.projects.length, 21);
   assert.deepEqual(testOptions("native", "omit").projects.map(project => project.test.name), ["scope", "scope-stories", "scope-lending", "scope-denial"]);
   assert.deepEqual(testOptions("scale").projects.map(project => project.test.name), ["scope-scale"]);
-  assert.deepEqual(scopeScaleFiles, ["test/floor-archive.test.ts", "test/archive-one-entry-scale.test.ts", "test/archive-cadence.test.ts",
-    "../../apps/room/lanes/test/directory-partition-success-capacity.scope.test.ts"]);
+  const expectedScale = {
+    "test/floor-archive.test.ts": 3, "test/archive-one-entry-scale.test.ts": 1, "test/archive-cadence.test.ts": 1,
+    "../../apps/room/lanes/test/directory-partition-success-capacity.scope.test.ts": 1,
+    "../cli/test/fixed-slot-membership.scope.test.ts": 1, "test/floor-kept.test.ts": 1,
+    "../../apps/room/lanes/test/directory-partition-capacity.scope.test.ts": 1,
+    "../../apps/room/lanes/test/certified-rules-hardening-budget.scope.test.ts": 1,
+    "test/archive-installed-scale.test.ts": 2, "test/evidence-rules-real-scale.test.ts": 4,
+    "../../apps/room/lanes/test/directory-partition-lanes-scale.scope.test.ts": 2,
+    "../../apps/room/lanes/test/manifest-tree-scale.scope.test.ts": 2,
+    "../../apps/room/lanes/test/demo-scale.scope.test.ts": 2,
+  };
+  assert.deepEqual(scopeScaleCaseCounts, expectedScale);
+  assert.deepEqual(scopeScaleFiles, Object.keys(expectedScale));
+  assert.equal(scopeScaleFiles.length, 13);
+  assert.equal(Object.values(scopeScaleCaseCounts).reduce((sum, count) => sum + count, 0), 22);
   assert.throws(() => testOptions("all", "omit"), /Only the native gate/);
   assert.throws(() => testOptions("native", "unknown"), /Only the native gate/);
   assert.deepEqual(new Set([...plain.projects, ...native.projects]), new Set(all.projects));
@@ -27,7 +40,8 @@ test("the canonical partition keeps inherited native configs out of the plain ph
     "../../apps/room/page/test/**/*.scope.test.ts",
     "../mcp/test/**/*.scope.test.ts",
   ]);
-  assert.deepEqual(stories.test.exclude, ["test/**/*.test.ts"]);
+  assert.deepEqual(stories.test.exclude, ["test/**/*.test.ts", ...scopeScaleFiles]);
+  assert.deepEqual(native.projects.find(project => project.test.name === "scope-scale").test.provide, scope.test.provide);
   assert.equal(plain.maxWorkers, 4); assert.equal(native.maxWorkers, 4);
   assert.throws(() => testOptions("unknown"), /Unknown test phase/);
   // Exercise the actual selection guard, without importing or resolving an

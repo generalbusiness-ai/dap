@@ -6,7 +6,7 @@ status line is the first line after its title (see
 
 ## Current
 
-- [036: Deploy the identifier cutover to the hosted Workers](036-2026-11-14-cutover-deployment.md): proposed. The window waits for the checker's approval of the plan and for CDF-1 on main.
+- [036: Deploy the identifier cutover to the hosted Workers](036-2026-11-14-cutover-deployment.md): landed. The window ran on 14 November 2026 at main `5b342ee9` and passed.
 
 - [035: Give Dap derivations a typed, inspectable program](035-2026-11-04-typed-derivation-core.md): implementation scheduled through M8 by gitseq request `e99550e9bfedcde3bed05bae1d345fcbfe5f7c9a`; M1–M2 landed and M3 passes its complete source gate, awaiting review. Hugh overrides only the deletion-size gate; the other acceptance criteria still apply.
 

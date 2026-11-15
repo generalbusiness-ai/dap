@@ -98,9 +98,9 @@
       "ProofBeforeClear": "cleared => proof",
       "MarkBeforeSpeech": "speaks > 0 => marker"
     },
-    "syncCommit": "8faa38dcf31855a0a6264e5912b58061b5eda223",
+    "syncCommit": "bd023336786186721240ec6e89998b01683469c4",
     "sha256": {
-      "apps/counter/browser/voice-controller.ts": "3e730253d863a5a8698a68b0f0ed65b17968f114942d01394ab7f84860f906b3"
+      "apps/counter/browser/voice-controller.ts": "917d03ba09dbfd2910eb9605fc7bcafdc10c73a5a897d0b78ee4ccc759fbfe0a"
     }
   }
 }

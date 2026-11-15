@@ -12,11 +12,13 @@ Replayed audio could speak the same pledged number twice; early clearing could l
 
 ## Coverage
 
-The correspondence review covers commit `8faa38dcf31855a0a6264e5912b58061b5eda223`. `verification/state-machines/coverage.json` records exact source hashes.
+The correspondence review covers commit `bd023336786186721240ec6e89998b01683469c4`. `verification/state-machines/coverage.json` records exact source hashes.
 
 - `apps/counter/browser/voice-controller.ts`: `start`, `ready`, `stopAudio`, `settle`.
 
 Rules: `NoReplay`, `ProofBeforeClear`, `MarkBeforeSpeech`.
+
+The report slot now names the shared custody key. `settle` requires accepted custody and verified reporting before clear or archive. `start` rechecks current ownership, generation and active turn after the synchronous speaking notice, before playback. An interrupted start stays retained and blocks rearming after restart. The restart fault control and the three targeted unknown-report, unverified-acceptance and disposal witnesses passed at this commit. The renewed model check passed at coverage checkpoint `b4d6a7e9fe2720ed3d93c1204db4139a34342ada`: eight distinct states and all safety rules held. The copied-worker statechart matched the tracked Mermaid bytes, so the existing SVG stands. The [NF5 follow-up note](../../../notes/implementation/2026-11-14-nf5-storage-follow-up.md#voice-source-correspondence-after-integration) records the results and their limits.
 
 One armed turn, two possible playback counts, one report. Storage succeeds, the lock serializes custody, and verified report proof is trusted. Audio interruption remains uncertain. Native pledge resolution, corrected requests, token-memory capacity and browser speech-engine behavior remain outside the model. Restart covers unresolved audio custody. After a verified report clears custody, this model assumes fresh authenticated observations cannot reoffer the fulfilled turn.
 
