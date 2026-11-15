@@ -4,7 +4,7 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import type { Intent } from "@generalbusiness/dap-contract";
 import { expect, inject, test } from "vitest";
-import { b64url, canonicalize, definitionDigest, intentDigest, isRecord, isScopeRef, isSeed, scopeIdOf, signIntent, textDigest, unb64url } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, definitionDigest, intentDigest, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, textDigest, unb64url } from "@generalbusiness/dap-bytes";
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { BASE_COHORT as C, PUBLICATION_PATHS, applicationPublicationPrefixes, fileReceiptRef, platform } from "@generalbusiness/dap-platform";
@@ -244,7 +244,17 @@ test("the current Lending package in a base room publishes a donated shelf page 
       body: { message: "publish-file", fields: { path, content } } } });
     expect(act.sends).toHaveLength(1);
     const answer = await life.wait(() => G.stub.deliver({ to: send.to, from: cause, n: send.n, message: send.message }));
-    expect(answer, `Actual Destination publish-file answer: ${JSON.stringify(answer)}`).toMatchObject({ answer: "recorded" });
+    expect(answer, `Destination delivery acknowledgment: ${JSON.stringify(answer)}`).toMatchObject({ answer: "recorded" });
+    if (answer.answer !== "recorded") return expect.fail("The real Destination must record its deciding entry.");
+    const decided = (await life.wait(() => G.entries()))[answer.fact.seq];
+    if (!decided) return expect.fail("The acknowledged Destination entry must exist.");
+    expect(decided.input).toMatchObject({ type: "delivery", from: cause, n: send.n, message: send.message });
+    const results = decided.sends.filter(result => result.message.class === "result"
+      && result.message.of.n === send.n && same(result.message.of.from, cause));
+    expect(results).toHaveLength(1);
+    const result = results[0];
+    expect(result, `Actual Destination publish-file Result: ${JSON.stringify(result?.message)}`)
+      .toMatchObject({ to: scope, message: { class: "result", of: { from: cause, n: send.n }, outcome: "applied" } });
     life.setHold(() => false); await settle();
     const state = await life.wait(() => runInDurableObject(G.object, (_object, storage) => {
       const store = new SqliteStore({ exec: (sql, ...args) => storage.storage.sql.exec(sql, ...args), transaction: run => storage.storage.transactionSync(run) });
