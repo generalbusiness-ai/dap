@@ -81,6 +81,7 @@ test("unknown record keys cannot select an alias or reveal a guessed first state
 
 test("marked fixed and index keys stop negative queries before the storage lookup", () => {
   const declaration = { ...notes,
+    outcomes: {},
     items: { note: { ...notes.items.note, indexes: ["me"], refs: { me: { fixed: true, required: true, to: { type: "item", of: "note" } }, at: { fixed: true, required: false, to: { type: "fact", under: "notes", kind: ["add-fact"] } } } } },
     acts: { ...notes.acts,
       start: { ...notes.acts.start, effects: [{ ref: { slot: "me", from: "self" } }] },
