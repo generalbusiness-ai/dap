@@ -7,12 +7,22 @@ remove NF3's temporary MCP custody aliases after NF5. NF8 request
 `d549e07995dd20b90aaf9171d9dbe77de142bb75` add the contention witness
 and correct the retired-browser wording from review `b6e9f538`.
 
-This isolated branch starts at actual NF5 main
+The original source starts at actual NF5 main
 `57f887ce066448133d0bd0fe611d0935cc6eb0ed`, tree
-`5ad88394b9dfc03ec2be385239ffff63d58900e9`. Its source does not compose
-the unlanded C3 candidate. Old worktrees and their evidence remain intact.
-This checkpoint is **UNCOMPILED and UNRUN**. It claims no queue priority
-before C3, the tooling head or E1.
+`5ad88394b9dfc03ec2be385239ffff63d58900e9`.
+Fresh branch `builder/nf6-nf8-on-c3-sh1-source-20261115` preserves NF6/NF8
+head `bd4ce55857d5158b8be76f581a5d6da7c7587b3a` and merges actual C3/SH1
+main `4b198d0fc980327d87347b05a3817106974bf8d7` in
+`43d2772`. The normal merge has no conflicts. The three overlapping paths
+are additive: `docs/cli.md` retains the lease advice and signed/open-version
+policy; `browser-request.ts` retains both independent changes; MCP's
+`errors.test.ts` keeps the direct client imports and incoming whole witness.
+Old worktrees, refs, dependency views, and evidence remain intact.
+The integrated source is **UNCOMPILED and UNRUN**. The MCP index seal
+computation/adoption, normal canonical comparison, affected development
+checks, browser checks, and gate remain owed at root's permitted slot.
+No dependency copy, import, AST computation, or project check accompanies
+this integration. No release identifier or packet changes.
 
 ## One home for the custody names
 
