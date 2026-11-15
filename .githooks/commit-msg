@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+import { readFileSync } from "node:fs";
+import { checkMessage } from "../scripts/check-commit-messages.mjs";
+
+try {
+  const message = new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(process.argv[2]));
+  const issues = checkMessage(message);
+  for (const issue of issues) {
+    console.error(`commit-msg: line ${issue.line}: ${issue.rule}${issue.length === undefined ? "" : ` (${issue.length} characters)`}${issue.token === undefined ? "" : `: ${issue.token}`}`);
+  }
+  process.exitCode = issues.length ? 1 : 0;
+} catch (error) {
+  console.error(`commit-msg: cannot check the message: ${error.message}`);
+  process.exitCode = 1;
+}

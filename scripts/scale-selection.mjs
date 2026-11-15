@@ -2,14 +2,16 @@ import { execFileSync } from "node:child_process";
 import { posix } from "node:path";
 import { scopeScaleFiles } from "../packages/scope/vitest.scale-files.ts";
 
-// PD-3 and GS1 select these runtime families and their existing test owners.
-const families = [
+// Keep the exact pre-GS1 runtime predicate from main 270dc8c7 for the old six.
+const originalFamilies = [
   "packages/scope/src/archive", "packages/scope/test/archive",
   "packages/scope/test/floor", "packages/derive/src/floor",
   "packages/derive/test/floor", "packages/git/src/journal",
   "packages/git/test/journal", "packages/platform/src/directory-partitions",
   "packages/platform/test/directory-partitions",
   "apps/room/lanes/test/directory-partition",
+];
+const movedFamilies = [
   "packages/scope/test/evidence-rules-real",
   "apps/room/lanes/test/certified-rules-hardening",
   "apps/room/lanes/test/manifest-tree", "apps/room/lanes/test/demo",
@@ -88,19 +90,24 @@ const selectionFiles = new Set([
   "scripts/test-phases.test.mjs", "scripts/test.mjs", "scripts/gate.sh",
   "package.json", ".github/workflows/scale-tests.yml",
 ]);
-const selectsScale = path => families.some(prefix => path.startsWith(prefix))
+const selectsOriginal = path => originalFamilies.some(prefix => path.startsWith(prefix))
   || /^packages\/scope\/test\/support\/archive[^/]*\.ts$/.test(path)
-  || path === "packages/replay/src/archive.ts" || protectedFiles.has(path) || selectionFiles.has(path);
+  || path === "packages/replay/src/archive.ts";
+const selectsMoved = path => movedFamilies.some(prefix => path.startsWith(prefix)) || protectedFiles.has(path);
 
 export function scaleGateDecision({ head, main, changedPaths }) {
   if (!/^[a-f0-9]{40}$/.test(head) || !/^[a-f0-9]{40}$/.test(main)
     || !Array.isArray(changedPaths) || changedPaths.some(path => typeof path !== "string" || !path)) {
     throw new Error("The scale gate needs exact heads and the complete changed-path list.");
   }
-  const matchedPaths = changedPaths.filter(selectsScale);
-  return { include: head === main || matchedPaths.length > 0,
+  const allMatchedPaths = changedPaths.filter(path => selectsOriginal(path) || selectionFiles.has(path));
+  const movedMatchedPaths = changedPaths.filter(selectsMoved);
+  const matches = new Set([...allMatchedPaths, ...movedMatchedPaths]);
+  const matchedPaths = changedPaths.filter(path => matches.has(path));
+  const mode = head === main || allMatchedPaths.length > 0 ? "all" : movedMatchedPaths.length > 0 ? "moved" : "omit";
+  return { mode, include: mode !== "omit",
     reason: head === main ? "main" : matchedPaths.length ? "changed-scale-path" : "outside-scale-paths",
-    head, main, changedPaths, matchedPaths };
+    head, main, changedPaths, matchedPaths, allMatchedPaths, movedMatchedPaths };
 }
 
 export function gateScaleSelection(root) {

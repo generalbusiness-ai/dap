@@ -2,15 +2,16 @@ import { spawnSync } from "node:child_process";
 import { closeSync, mkdirSync, openSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { scopeScaleCaseCounts } from "../packages/scope/vitest.scale-files.ts";
+import { scopeScaleGroup } from "../packages/scope/vitest.scale-files.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const expectedCases = Object.values(scopeScaleCaseCounts).reduce((sum, count) => sum + count, 0);
 
 /** Reconcile the runner's report without reading its potentially large logs. */
-export function scaleResults(report, repository = root) {
+export function scaleResults(report, repository = root, mode = "all") {
+  const { caseCounts, expectedCases } = scopeScaleGroup(mode);
+  if (mode === "omit") throw new Error("Omitted scale has no case result to reconcile.");
   const issues = [], cases = [], files = new Set();
-  const owners = new Map(Object.entries(scopeScaleCaseCounts).map(([file, count]) =>
+  const owners = new Map(Object.entries(caseCounts).map(([file, count]) =>
     [relative(repository, resolve(repository, "packages/scope", file)), count]));
   for (const module of report?.testResults ?? []) {
     const file = typeof module.name === "string" ? relative(repository, resolve(module.name)) : "";
@@ -32,21 +33,23 @@ export function scaleResults(report, repository = root) {
 }
 
 /** The command seam lets the owning test observe real file output and exits. */
-export function runScale(directory, { command = ["npm", "run", "test:scale", "--"], repository = root, environment = process.env } = {}) {
+export function runScale(directory, { command = ["npm", "run", "test:scale", "--"], repository = root, environment = process.env, mode = "all" } = {}) {
+  const selected = scopeScaleGroup(mode), { expectedCases } = selected;
+  if (mode === "omit") { console.log("Scale selection: omit; no scale command or result."); return null; }
   const out = resolve(directory);
   mkdirSync(out, { mode: 0o700 });
   const argv = [...command, "--reporter=json", "--outputFile=" + resolve(out, "scale.json")];
-  writeFileSync(resolve(out, "command.json"), JSON.stringify({ argv, cwd: repository, deadlineFactor: environment.ARTROOM_SCALE_DEADLINE_FACTOR ?? "1" }, null, 2) + "\n");
+  writeFileSync(resolve(out, "command.json"), JSON.stringify({ argv, cwd: repository, mode, expectedOwners: selected.files, expectedCases, deadlineFactor: environment.ARTROOM_SCALE_DEADLINE_FACTOR ?? "1" }, null, 2) + "\n");
   const stdout = openSync(resolve(out, "scale.stdout.log"), "wx", 0o600), stderr = openSync(resolve(out, "scale.stderr.log"), "wx", 0o600);
   const started = performance.now();
   let child;
-  try { child = spawnSync(argv[0], argv.slice(1), { cwd: repository, env: environment, stdio: ["ignore", stdout, stderr] }); }
+  try { child = spawnSync(argv[0], argv.slice(1), { cwd: repository, env: { ...environment, ARTROOM_SCALE_MODE: mode }, stdio: ["ignore", stdout, stderr] }); }
   finally { closeSync(stdout); closeSync(stderr); }
   let summary;
-  try { summary = scaleResults(JSON.parse(readFileSync(resolve(out, "scale.json"), "utf8")), repository); }
+  try { summary = scaleResults(JSON.parse(readFileSync(resolve(out, "scale.json"), "utf8")), repository, mode); }
   catch { summary = { cases: [], issues: ["No readable complete Vitest JSON report; inspect the retained stdout and stderr"], passed: 0, failed: 0, complete: false }; }
   const exitCode = child.status === 0 && summary.complete && summary.passed === expectedCases ? 0 : child.status || 1;
-  const result = { childExit: child.status, signal: child.signal, spawnError: child.error?.message ?? null, exitCode, elapsedMilliseconds: performance.now() - started, ...summary };
+  const result = { mode, expectedOwners: selected.files, expectedCases, childExit: child.status, signal: child.signal, spawnError: child.error?.message ?? null, exitCode, elapsedMilliseconds: performance.now() - started, ...summary };
   writeFileSync(resolve(out, "result.json"), JSON.stringify(result, null, 2) + "\n");
   writeFileSync(resolve(out, "scale.exit"), "exit " + exitCode + "\n");
   for (const test of summary.cases) console.log(`${test.status} ${test.durationMs === null ? "duration unreported" : (test.durationMs / 1000).toFixed(3) + "s"} ${test.file}: ${JSON.stringify(test.name)}`);
@@ -56,6 +59,6 @@ export function runScale(directory, { command = ["npm", "run", "test:scale", "--
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  if (process.argv.length !== 3) throw new Error("Usage: node scripts/scale-runner.mjs <new-output-directory>");
-  process.exitCode = runScale(process.argv[2]).exitCode;
+  if (process.argv.length < 3 || process.argv.length > 4) throw new Error("Usage: node scripts/scale-runner.mjs <new-output-directory> [omit|moved|all]");
+  process.exitCode = runScale(process.argv[2], { mode: process.argv[3] ?? "all" })?.exitCode ?? 0;
 }
