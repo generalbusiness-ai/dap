@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bfdf13aa22a35e2be01eaf1ce7017497bd1c3adc","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/custody-store-witness.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c06f61d0d2b883b9714036f76b9529cb19e22980","text":"Merge retired a covered predecessor; the successor is at examples/lending/browser/client.ts."}
