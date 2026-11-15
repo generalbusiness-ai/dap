@@ -320,7 +320,8 @@ test("written detached text keeps its Source version while Explore and submit de
 const offerNotes = { ...notes,
   items: { note: { ...notes.items.note, parties: { author: { fixed: true, required: true, list: false, author: true } } } },
   acts: { ...notes.acts,
-    start: { ...notes.acts.start, effects: [{ party: { slot: "author", from: { signer: true } } }] },
+    start: { ...notes.acts.start, fields: { opener: { type: "member", required: true } },
+      effects: [{ party: { slot: "author", from: { field: "opener" } } }] },
     remove: { ...notes.acts.write, fields: {}, presents: {},
       guards: [{ signer: ["author"], reason: "not-your-note" }], effects: [] },
     touch: { ...notes.acts.write, fields: {}, presents: {}, guards: [], effects: [] },
@@ -328,7 +329,7 @@ const offerNotes = { ...notes,
 } as const satisfies DeclaredDefinition;
 
 function offerScope(key: string) {
-  const ledger = created(valid(validateDefinition(offerNotes, PROPOSED_BOUNDS)), {}, key);
+  const ledger = created(valid(validateDefinition(offerNotes, PROPOSED_BOUNDS)), { opener: keys.rita.member }, key);
   const context = { ...ledger.context(), actor: keys.sam.key, scope: ledger.at, evidence: [], owners: null };
   const ref = { name: 0, seen: ledger.item(0).revision, assumes: [] };
   const form: FormContext = { describe: descriptionsOf({}), setting: { pinned: ledger.definition.digest }, who: { standing: "unknown" } };
