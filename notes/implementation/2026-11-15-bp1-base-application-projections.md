@@ -126,10 +126,17 @@ not a browser renderer, provider, deployed host or physical-room acceptance.
 `B=E/2026-11-15-r-lp1-bp1-lending-base-red-attempt1`,
 `G=E/2026-11-15-r-lp1-bp1-green-owners-attempt1`.
 `RR=E/2026-11-15-r-lp1-bp1-release-reproduction-attempt1`.
+`PF=E/2026-11-15-r-lp1-bp1-preflight-attempt1`,
+`FG=E/2026-11-15-r-lp1-bp1-full-gate-attempt1` and
+`TE=FG/stage-logs/test-evidence`.
 Each result.json retains exact argv/cwd/exit/wall/streams. The named RED includes
 its anchored quoted title; GREEN uses whole owners without a name filter. Rows
-bind f18 for RED and 55b041 for GREEN, not a future note-only head. Root's source
-act supplies that successor head/tree; this note makes no circular self-hash.
+bind f18 for RED and 55b041 for GREEN. Final preflight and gate bind
+`be552e7639696ce4d0fd23a3494ba42d90d69381`, tree
+`4ed5786b76d23d4a822ae68b5076ae5e96581739`. Its only differences from
+55b041 are these two notes; all 4,894 other entries match. A final note-only
+successor changes no source, tests or IDs. Root's source act supplies that
+successor head/tree; this note makes no circular self-hash.
 
 | Check | Actual result | Retained output and SHA-256 |
 | --- | --- | --- |
@@ -143,11 +150,16 @@ act supplies that successor head/tree; this note makes no circular self-hash.
 | Whole Page assets owner | 1 PASS/0/0.733151083 s; maintained write:false module/build, assets unchanged; no separate producer/write | `G/page-assets.json` — `b3cb3c9bf6edeecea2fc089fd7fe913aa7769c3ae829370b24bda00149e487fc` |
 | Whole Security/aggregate, END 0c825126862fc06986735cb055089b6067e52e24 | 12 PASS/0/3.994228458 s; all 8 commands exited 0,outer 33.146512875s; 17 guards/0 errors,all stderr empty,no failure/skip/todo/signal/interruption | `G/security-entry-points.stdout.log` — `f55e2a77f2ededd760e53dd52b251ea62416e3ad0fe14044647d9fdfb2fe5b9f`; aggregate result hash above |
 | Post-BP1 whole release-reproduction, END 6b6c7a92 | 0; 1 PASS/2.794627542 s; case 1734.553875 ms; 0 fail/skip/todo,stderr empty; all three checked tuples/published Grow/immutable 0.2 trust match | `RR/result.json` — `7705f469c12f0ca993916c2203f2a630f71ecc4f90934b03c6a9a4035aff2cdf`; `RR/reproduction.json` — `e3055aa74967446ac4a207a61982229a40b999b0cf937b52b93ce94b25620f0b` |
-| Final preflight, full gate and review | UNRUN; actual helpers/whole typecheck, ONE gate and independent review owed | None |
+| Final preflight, END dd9d3184983cb42c504f068ad6f4a78e3ea8ae8e | All 0: fetch 0.436369208 s, helpers 0.642846917 s, whole typecheck 16.062253500 s; outer 17.731247542 s; 8 guards passed, empty helper/compiler stderr, all reaped | `PF/result.json` — `287575fab219960f5e69c2ede6b530010fa548b6358e221fa9190ddc51a75ada`; `PF/whole-typecheck.stdout.log` — `a9abf7e40e10fbda74447d08a5ea3b33733361ecd9ac199658065cfbc874936a` |
+| ONE full gate, END 1959b58db8c7a28fdb1714b5b24cde6deeeca01c | Child 0/832.331575125 s; outer 832.636939166 s; terminal passed, verification 0; all prechecks passed, notes 0 warnings; 4 guards passed, no signal/spawn/error, all reaped | `FG/result.json` — `6ce12b921662fb26bfc5746102f4de581cd2bb07c992cf2c498e256cf7fde581`; `FG/gate.log` — `9eb67d9ba5165d4bf4857d2aabc0e7c6752fe0556b651d33895621a330f6ef83` |
+| Gate stage ledger | Kernel PASS/220.375958 ms; Node 200 PASS/0 skip, 128118.092708 ms; Counting 56 PASS/0 skip, 482.327042 ms; Plain 4857 PASS/1 skip of 4858, 418 files PASS, 170353.142333 ms; Native 1136 PASS/2 skip of 1138, 287 files PASS/1 skip of 288, measured 504081.419167 ms | `TE/stages.json` — `f65e6d6874798ae54c139c161e7e247f4ba9e24879033489055604add127c13a` |
+| Natural Scale selection | OMIT/outside-scale-paths against d158; 24 changed paths, all three match arrays empty; no Scale command, result or wall | `TE/scale-selection.json` — `90dd8bb22ff2fcd14ba206392c9360fa01670fdfe7103ec1c62343a4b13452b0` |
+| Final documentation checks, metadata filing and review | UNRUN; four cheap doc checks and independent three-promise review/Security conclusions remain owed | None |
 
 All earlier R/LP1 failures and dated reservation/publication controls stay in R's
 central table. The named BP1 RED remains a failure and never becomes a passing
-run. Current GREEN is not a full gate or independent Security approval.
+run. GREEN and the later full gate remain distinct intervals; neither supplies
+an independent Security approval.
 
 Post-BP1 END `6b6c7a92e188880c5da926a6c49698349601f844` records the
 existing whole release-reproduction owner once at the same 55b041 source:
@@ -157,6 +169,33 @@ published Grow/immutable 0.2 packet/trust relationships. Thus the pre-RED
 measured Lending 7217583c presentation remains current after BP1. No separate
 comparison/apply rerun, identifier rewrite, publisher custody or signature/trust
 change followed. This is source correspondence, not a passing gate or release.
+
+Final preflight START `910e78d85e754b47d15cfdf39c36fe61ca8cc269` preceded
+the first actual fetch/helper/typecheck sequence, once each. Before that launch,
+root supplied a placeholder START; the argument regex refused before source
+guards, raw creation, fetch or any project command. The receipt
+`/private/tmp/artroom-r-bp1-preflight-argument-refusal-20261115.json` retains that
+prelaunch error. Root corrected the START argument, then ran the actual passing
+sequence. No failed fetch/check output was overwritten.
+
+Full gate START `29c9a8203d0b5ab012b2eff95791ab7c97f71ad9` ran one
+`npm run gate` with maintained worker/deadline/oracle settings. The child ran
+09:55:25.617453–10:09:17.949754 UTC. Main and origin stayed at published
+`d1585bda558c2bcea13ca6cc7c162be1e47b9127`; source and status stayed clean.
+The summary has complete Node/Counting/Plain/Native terminal evidence, 129
+unknown/suite observations, zero contradictions and zero report errors.
+Plain and Native report zero unhandled errors. The scope-stories timing is
+partial: concurrent module/test-and-hook sums are not elapsed wall or CPU and
+do not establish a runtime failure. Natural Scale omitted this head; no Scale
+pass or wall is claimed, and this gate did not exercise the separate SD1 lane.
+
+Root verified retained stage logs: 36 files, 16,279,730 bytes, exact bytes/modes,
+no symlinks. The actual four Counting MJS files plus source/metafile add six
+files, 5,475,905 bytes; `TE/counting-sources.json` keeps their four source
+mappings. Originals remain intact. No compile cache or operator key/custody file
+was selected. Copy receipt
+`/private/tmp/artroom-r-lp1-bp1-counting-copy-receipt-20261115.json` has SHA-256
+`d0ab0d3fa8e3debd3e4672f6c592854b8a56d8b1b166c63198d6b77375fd52f6`.
 
 ## Ownership and remaining work
 
@@ -170,9 +209,12 @@ No new LP1 report/promise, shared path artifact or new authority is introduced.
 
 Static source-seal coverage found no additional target rows to adopt; actual
 whole Security 12 passed without expectation refresh or ad hoc AST computation.
-Checker still owns the independent Security conclusion. Root owes exact-head
-helpers/whole typecheck, final gate/evidence and review filing. Current 23 source
-paths match neither Page nor Card workflow; notes add no match. Assets equality
+Checker still owns the independent Security conclusion on both BP1 readers.
+Root owes four final cheap documentation checks, exact-path metadata filing and
+independent three-promise review. Preflight and full gate passed at be552e76;
+no owner, producer, browser or gate repeat follows this note-only update.
+The 23 source paths and final 24-path gate diff match neither Page nor Card
+workflow; notes add no match. Assets equality
 already passed; assets stayed unchanged and no separate Page producer/write or
 new browser run is currently owed.
 If later assets regenerate, four Page scripts become owed. E1 Linux Page

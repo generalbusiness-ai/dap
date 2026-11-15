@@ -245,10 +245,13 @@ packet tuples plus published Grow/immutable 0.2 trust, so Lending's measured
 7217583c presentation remains current. The table gives child/case durations;
 no compare/apply rerun, ID/signature/trust change or publisher custody followed.
 
-The table adds exact dated records below. These source/owner results do not
-claim a passing full gate. Final exact-head helper/whole-typecheck preflight,
-ONE gate and three-promise review remain UNRUN. This drafting changes no source,
-test or ID from 55b041; root binds any final note-only head/tree in its source act.
+Final preflight END `dd9d3184983cb42c504f068ad6f4a78e3ea8ae8e` and ONE full
+gate END `1959b58db8c7a28fdb1714b5b24cde6deeeca01c` PASS at
+`be552e7639696ce4d0fd23a3494ba42d90d69381`, tree
+`4ed5786b76d23d4a822ae68b5076ae5e96581739`. Only two notes differ from
+55b041. The BP1 report gives all stage counts, timings and retention limits.
+Earlier failures stay failed. Four final documentation checks, metadata filing
+and three-promise review remain owed; root binds the note-only successor in its act.
 Lending signing waits the combined R/LP1/BP1 head. Counter retains 0fcc's E1
 order; no statement here reopens a signed Counter version. Packet/installation/
 provisioning/physical-room/provider/frontend acceptance remains outside these runs.
@@ -374,7 +377,10 @@ Current result.json files retain exact argv/cwd/exit/wall/streams; H1/T1 below
 are the full 1b091111/7db3fa84 values above, not the older H/T aliases.
 Named RED uses the exact anchored quoted title retained in B1/result.json.
 The whole CLI, Platform and Native owners retain their configs, Native case
-allowance and worker limits. Page and Security also run whole. No case-name filter runs in GREEN. Final gate/preflight UNRUN.
+allowance and worker limits. Page and Security also run whole. No case-name filter runs in GREEN.
+`E=/Users/hughpyle/play/artroom-evidence`,
+`PF=E/2026-11-15-r-lp1-bp1-preflight-attempt1` and
+`FG=E/2026-11-15-r-lp1-bp1-full-gate-attempt1`.
 
 | Check | Command | Exit and actual result | Output and SHA-256 |
 |---|---|---|---|
@@ -417,7 +423,9 @@ allowance and worker limits. Page and Security also run whole. No case-name filt
 | GREEN whole Native owner | `packages/scope/test/maintained-application-projections.test.ts`,scope project; actual argv in result | 0; 3 PASS/18.158350083 s; both Base metadata assertions pass; negative controls ONLY Lending Base | `G1/scope-maintained-application-projections.json` — `08aef481b6793cabb9eb9700038e9f833714db0a112002e217588a80e70585cf` |
 | GREEN whole Security owner/aggregate | `N --test scripts/security-entry-points.test.mjs`; eight commands sequentially once | 0; 12 PASS/3.994228458 s; outer 33.146512875s; 17 guards/0 errors; no failures/skips/todo/signal/interruption; all stderr empty | `G1/security-entry-points.stdout.log` — `f55e2a77f2ededd760e53dd52b251ea62416e3ad0fe14044647d9fdfb2fe5b9f`; aggregate result hash above |
 | Post-BP1 whole release-reproduction owner at 55b041 | Whole existing CLI release-reproduction owner; exact argv in `RR/result.json` | 0; 1 PASS/2.794627542 s; case 1734.553875 ms; 0 fail/skip/todo,stderr empty; current three tuples/Grow/immutable 0.2 trust correspond | `RR/result.json` — `7705f469c12f0ca993916c2203f2a630f71ecc4f90934b03c6a9a4035aff2cdf`; `RR/reproduction.json` — `e3055aa74967446ac4a207a61982229a40b999b0cf937b52b93ce94b25620f0b` |
-| Current final preflight, full gate, review and publication | Not run | UNRUN; whole helpers/typecheck, ONE gate, independent three-promise review and planner release disposition remain owed | None |
+| Current preflight at be552e76 | Fetch, helpers, whole typecheck; exact argv in result | All 0; 0.436369208/0.642846917/16.062253500 s; outer 17.731247542 s. A prior placeholder-START argument refusal ran no fetch/project command and created no raw output | `PF/result.json` — `287575fab219960f5e69c2ede6b530010fa548b6358e221fa9190ddc51a75ada`; refusal receipt and full facts in BP1 |
+| Current ONE full gate at be552e76 | `npm run gate`; actual argv in result | 0; child 832.331575125 s, outer 832.636939166 s; all stages PASS, natural Scale OMIT. Full counts/partial-timing limits in BP1 | `FG/result.json` — `6ce12b921662fb26bfc5746102f4de581cd2bb07c992cf2c498e256cf7fde581`; `FG/gate.log` — `9eb67d9ba5165d4bf4857d2aabc0e7c6752fe0556b651d33895621a330f6ef83` |
+| Final documentation checks, metadata filing and independent review | Not run | UNRUN; both BP1 readers still need independent Security review; planner release disposition remains owed | None |
 
 
 Both plain runs and the Native run had empty stderr. The producer's only
