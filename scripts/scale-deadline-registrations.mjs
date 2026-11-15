@@ -42,6 +42,30 @@ function bind(pattern, data, scope) {
 export function scaleDeadlineRegistrations(root, owners, read = file => readFileSync(file, "utf8")) {
   const helper = resolve(root, "packages/scope/test/support/archive-scale-deadline.ts");
   const modules = new Map(), active = new Set(), rows = [];
+  function checkBinding(pattern, module) {
+    if (!pattern) return;
+    if (pattern.type === "Identifier") {
+      if (module.vitest.has(pattern.name) || module.deadlines.has(pattern.name) || module.imports.has(pattern.name) || module.functions.has(pattern.name)) throw Error(`Shadowed Scale registration binding: ${pattern.name}`);
+    } else if (pattern.type === "ArrayPattern") pattern.elements.forEach(part => checkBinding(part, module));
+    else if (pattern.type === "ObjectPattern") pattern.properties.forEach(part => checkBinding(part.value ?? part.argument, module));
+    else throw Error("Unsupported Scale registration binding");
+  }
+  function bindLocal(pattern, data, scope, module) {
+    checkBinding(pattern, module); bind(pattern, data, scope);
+  }
+  function initializer(node, module, everyCall) {
+    if (!node || typeof node !== "object" || ["ArrowFunctionExpression", "FunctionExpression"].includes(node.type)) return;
+    if (node.type === "CallExpression") {
+      let target = unwrap(node.callee);
+      while (["CallExpression", "MemberExpression"].includes(target.type)) target = unwrap(target.callee ?? target.object);
+      if (everyCall || module.vitest.has(target.name) || module.deadlines.has(target.name) || module.imports.has(target.name) || module.functions.has(target.name)) throw Error("Scale registration calls in initializers need a standalone statement");
+    }
+    for (const [key, child] of Object.entries(node)) {
+      if (["start", "end", "loc"].includes(key)) continue;
+      if (Array.isArray(child)) child.forEach(part => initializer(part, module, everyCall));
+      else if (child && typeof child === "object") initializer(child, module, everyCall);
+    }
+  }
   function moduleAt(file) {
     if (modules.has(file)) return modules.get(file);
     const text = read(file), body = parseAst(text, { lang: "ts" }, file).body;
@@ -50,7 +74,6 @@ export function scaleDeadlineRegistrations(root, owners, read = file => readFile
     for (const statement of body) {
       const node = statement.declaration ?? statement;
       if (node.type === "FunctionDeclaration" && node.id) module.functions.set(node.id.name, node);
-      if (node.type === "VariableDeclaration") for (const part of node.declarations) bind(part.id, value(part.init, module.globals), module.globals);
       if (node.type !== "ImportDeclaration" || node.importKind === "type") continue;
       for (const part of node.specifiers) {
         if (part.type !== "ImportSpecifier" || part.importKind === "type") continue;
@@ -61,6 +84,14 @@ export function scaleDeadlineRegistrations(root, owners, read = file => readFile
           module.imports.set(part.local.name, { from, name });
           if (from === helper && name === "scaleDeadline") module.deadlines.add(part.local.name);
         }
+      }
+    }
+    // Collect imports and hoisted factories before checking any declaration.
+    for (const statement of body) {
+      const node = statement.declaration ?? statement;
+      if (node.type === "VariableDeclaration") for (const part of node.declarations) {
+        initializer(part.init, module, false);
+        bindLocal(part.id, value(part.init, module.globals), module.globals, module);
       }
     }
     return module;
@@ -91,6 +122,7 @@ export function scaleDeadlineRegistrations(root, owners, read = file => readFile
     if (name === "describe") {
       const title = value(expression.arguments[0], scope), callback = unwrap(expression.arguments.at(-1));
       if (typeof title !== "string" || callback?.body?.type !== "BlockStatement") throw Error("Unresolved Scale suite");
+      callback.params.forEach(part => checkBinding(part, module));
       statements(callback.body.body, module, new Map(scope), owner, [...suites, title]);
       return;
     }
@@ -121,7 +153,7 @@ export function scaleDeadlineRegistrations(root, owners, read = file => readFile
     const key = `${target.file}:${factory.id.name}`;
     if (active.has(key)) throw Error("Recursive Scale registration factory");
     const inner = new Map(target.globals);
-    factory.params.forEach((part, i) => bind(part, value(expression.arguments[i], scope), inner));
+    factory.params.forEach((part, i) => bindLocal(part, value(expression.arguments[i], scope), inner, target));
     active.add(key);
     try { statements(factory.body.body, target, inner, owner, suites); }
     finally { active.delete(key); }
@@ -129,7 +161,10 @@ export function scaleDeadlineRegistrations(root, owners, read = file => readFile
   function statements(body, module, scope, owner, suites) {
     for (const statement of body) {
       const node = statement.declaration ?? statement;
-      if (node.type === "VariableDeclaration") for (const part of node.declarations) bind(part.id, value(part.init, scope), scope);
+      if (node.type === "VariableDeclaration") for (const part of node.declarations) {
+        initializer(part.init, module, true);
+        bindLocal(part.id, value(part.init, scope), scope, module);
+      }
       else if (node.type === "ExpressionStatement") {
         const expression = unwrap(node.expression);
         if (expression.type !== "CallExpression") throw Error("Unsupported Scale registration expression");
@@ -139,7 +174,7 @@ export function scaleDeadlineRegistrations(root, owners, read = file => readFile
         const choices = value(node.right, scope);
         if (!Array.isArray(choices) || node.left.type !== "VariableDeclaration" || node.left.declarations.length !== 1) throw Error("Unresolved Scale registration loop");
         for (const choice of choices) {
-          const inner = new Map(scope); bind(node.left.declarations[0].id, choice, inner);
+          const inner = new Map(scope); bindLocal(node.left.declarations[0].id, choice, inner, module);
           statements([node.body], module, inner, owner, suites);
         }
       } else if (node.type === "IfStatement") {
@@ -147,7 +182,9 @@ export function scaleDeadlineRegistrations(root, owners, read = file => readFile
         if (typeof condition !== "boolean") throw Error("Unresolved Scale registration condition");
         const branch = condition ? node.consequent : node.alternate;
         if (branch) statements([branch], module, new Map(scope), owner, suites);
-      } else if (!["ImportDeclaration", "FunctionDeclaration", "ClassDeclaration", "TSInterfaceDeclaration", "TSTypeAliasDeclaration", "EmptyStatement"].includes(node.type)) throw Error(`Unsupported Scale registration statement: ${node.type}`);
+      } else if (node.type === "FunctionDeclaration" || node.type === "ClassDeclaration") {
+        if (module.functions.get(node.id?.name) !== node) checkBinding(node.id, module);
+      } else if (!["ImportDeclaration", "TSInterfaceDeclaration", "TSTypeAliasDeclaration", "EmptyStatement"].includes(node.type)) throw Error(`Unsupported Scale registration statement: ${node.type}`);
     }
   }
   for (const owner of owners) {

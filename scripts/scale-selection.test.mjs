@@ -261,4 +261,22 @@ test("scale registration factories leave no unlisted fixed deadline", () => {
   const fault = scaleDeadlineRegistrations(root, scopeScaleFiles, path => path === file ? changed : readFileSync(path, "utf8"));
   assert.ok(fault.some(row => row.title === "SD1 unlisted fixed case" && !row.scaled && row.milliseconds === 30_000));
   assert.throws(() => check(fault), /unlisted or changed fixed Scale registration/);
+
+  // Registrations hidden in values must not vanish from the inventory.
+  const inspectSource = (file, source) => scaleDeadlineRegistrations(root, scopeScaleFiles, path => path === file ? source : readFileSync(path, "utf8"));
+  const valueRegistration = original.replace(marker, marker + '\nconst extra = test("SD1 hidden fixed case", { timeout: 30_000 }, async () => {});');
+  assert.throws(() => inspectSource(file, valueRegistration), /Scale registration calls in initializers/);
+  const localFactory = original.replace(marker, 'function registerExtra() { test("SD1 local fixed case", { timeout: 30_000 }, async () => {}); }\n' + marker + '\nconst extra = registerExtra();');
+  assert.throws(() => inspectSource(file, localFactory), /Scale registration calls in initializers/);
+  const owner = resolve(root, "packages/scope/test/archive-installed-scale.test.ts"), ownerSource = readFileSync(owner, "utf8");
+  assert.ok(ownerSource.includes('registerArchiveInstalledCases(["Grow production"]);'));
+  const importedFactory = ownerSource.replace('registerArchiveInstalledCases(["Grow production"]);', 'const extra = registerArchiveInstalledCases(["Grow production"]);');
+  assert.throws(() => inspectSource(owner, importedFactory), /Scale registration calls in initializers/);
+
+  // An imported helper's spelling grants no authority after local shadowing.
+  const archive = resolve(root, "packages/scope/test/archive-installed.fixture.ts"), archiveSource = readFileSync(archive, "utf8");
+  const archiveFactory = "export function registerArchiveInstalledCases(scenarios: readonly string[]) {";
+  assert.equal(archiveSource.split(archiveFactory).length, 2);
+  const shadow = archiveSource.replace(archiveFactory, archiveFactory + '\nconst scaleDeadline = (ms: number) => ms;');
+  assert.throws(() => inspectSource(archive, shadow), /Shadowed Scale registration binding: scaleDeadline/);
 });

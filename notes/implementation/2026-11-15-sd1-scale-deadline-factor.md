@@ -88,7 +88,12 @@ The new case in
 syntax with the already locked parser. It never imports or executes a
 fixture. It follows named registration imports, literal parameter choices,
 static loops and conditions, and the selected suite bodies. It skips test
-callback bodies. Unknown registration forms fail for source review.
+callback bodies. Registration statements stand alone. Call initializers in
+selected registration scopes fail for source review, including imported or
+local factory calls. Imported registration, factory, and deadline bindings
+cannot be shadowed by a selected local declaration, parameter, or loop
+binding. Module imports and hoisted factories resolve before global values.
+Other unknown registration forms also fail for source review.
 
 The five factory owners select only their Scale registrations:
 `registerArchiveInstalledCases(["Grow production"])`,
@@ -100,11 +105,15 @@ existing inventory and compares every fixed case and base with the explicit
 12-case list. A missing explicit timeout is also fixed, so a new inherited
 default cannot disappear from the guard.
 
-Within that same Node case, a source-string fault adds one fixed test inside
-the imported evidence registration factory. The scanner must report that
-case, and the exception comparison must reject it. This changes no checkout
-file and runs no Native fixture. It remains an **UNRUN assertion**, not a
-reported control result. No mutation sweep or Native collection was added.
+Within that same Node case, source-string witnesses add an unlisted fixed
+case and require both discovery and rejection. They also require rejection
+when a variable initializer contains the test or an imported or local factory
+call, and when a local function value shadows the actual deadline import.
+The latter previously let an identity function impersonate the factor
+helper. These are two source-review findings after the initial checkpoint,
+not observed runtime failures. All witnesses change only input strings and
+run no Native fixture. They remain **UNRUN assertions**, not reported
+control results. No mutation sweep or Native collection was added.
 
 ## Ownership and validation
 
