@@ -5,7 +5,7 @@ import type { Entry, Item, MemberRef, Receipt, ScopeRef, Summary } from "@genera
 import type { ScopeKind } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, intentDigest, keyIdOfSecret, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
-import { Custody, identityId, memoryStore, meaningOf, requestKey, secretSigner, signedIntent, type CustodyRecord, type Fetch, type HeadStreamFetch, type Phase } from "@generalbusiness/dap-client";
+import { Custody, identityId, memoryStore, meaningOf, requestKey, secretSigner, sendableAt, signedIntent, type CustodyRecord, type Fetch, type HeadStreamFetch, type Phase } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import { assignedTurn, canCommit, countingView, proposal, type CountingView } from "./model.ts";
 import { nativeGateway } from "./client.ts";
@@ -105,7 +105,7 @@ test("FAKE Counter Check gives no service-refusal copy for an unsent record",asy
       if(armed&&key===id){
         // The command scan owns this earlier snapshot. Another owner ends it before settlement's fresh read.
         armed=false;
-        const custody=new Custody(f.store,()=>timeOf(Date.parse(original.signings.at(-1)!.notAfter)+1));
+        const custody=new Custody(f.store,()=>timeOf(sendableAt(original.signings.at(-1)!.notAfter)));
         await custody.absent(original.identity,original.signings.length-1,head);
       }
       return snapshot;

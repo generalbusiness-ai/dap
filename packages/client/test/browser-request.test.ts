@@ -6,7 +6,7 @@
 import { expect, test } from "vitest";
 import type { Answer, FieldRecord, Receipt } from "@generalbusiness/dap-contract";
 import { canonicalize, textDigest, timeOf } from "@generalbusiness/dap-bytes";
-import { Custody, browserRequests, meaningOf, memoryStore, signedIntent, type BrowserRequestPorts, type Envelope } from "../src/index.ts";
+import { Custody, browserRequests, meaningOf, memoryStore, sendableAt, signedIntent, type BrowserRequestPorts, type Envelope } from "../src/index.ts";
 import { T0, lane, receiptOf, signer } from "./support/custody.ts";
 
 const who = { service: "https://scopes.test", membership: null, signer: signer.key, target: lane };
@@ -42,7 +42,7 @@ async function unsentBench() {
   await b.send(key);
   const original = await b.requests.find(key);
   if (!original) throw new Error("TEST request was not kept");
-  const ending = new Custody(b.store, () => timeOf(Date.parse(original.signings.at(-1)!.notAfter) + 1));
+  const ending = new Custody(b.store, () => timeOf(sendableAt(original.signings.at(-1)!.notAfter)));
   const head = { seq: 4, hash: textDigest("TEST verified absence") };
   const ended = await ending.absent(b.requests.identity(key), original.signings.length - 1, head);
   b.calls.length = 0;
@@ -76,6 +76,18 @@ test("a late folded entry changes the same unsent record to recorded", async () 
   });
   expect(folded?.phase).toBe("accepted");
   expect([await b.requests.settle(b.key), await b.again(b.key)]).toEqual([{ status: "recorded" }, { status: "recorded" }]);
+  expect((await b.requests.find(b.key))?.envelope).toEqual(b.original.envelope);
+  expect([b.calls, b.builds(), b.posted.length]).toEqual([[], 1, 1]);
+});
+
+// Invariant (2e0379fc): a folded entry that names no signing is a mismatch, not an acceptance.
+test("a fold matching no signing stays unknown through settle and retained send", async () => {
+  const b = await unsentBench(), intent = textDigest("TEST intent with no signing");
+  expect(b.original.signings.every(signing => signing.intent !== intent)).toBe(true);
+  const folded = await b.ending.folded(b.requests.identity(b.key), { fact: receiptOf(b.original.envelope.signed, 3).fact, intent });
+  expect(folded?.phase).toBe("mismatch");
+  expect(folded?.outcomes.at(-1)).toMatchObject({ folded: { intent }, signing: null });
+  expect([await b.requests.settle(b.key), await b.again(b.key)]).toEqual([{ status: "unknown" }, { status: "unknown" }]);
   expect((await b.requests.find(b.key))?.envelope).toEqual(b.original.envelope);
   expect([b.calls, b.builds(), b.posted.length]).toEqual([[], 1, 1]);
 });

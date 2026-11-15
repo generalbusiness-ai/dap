@@ -70,6 +70,7 @@ async function settledOf(custody: Custody, identity: Identity, record: CustodyRe
 }
 
 const settledOfSent = (sent: Sent): RequestSettled => {
+  if ("folded" in sent && sent.record.phase === "accepted") return { status: "recorded" };
   if ("lost" in sent || "archivedSettlement" in sent || "folded" in sent || "unsent" in sent) return { status: "unknown" };
   if (sent.answer.answer === "accepted") return { status: "recorded" };
   if (sent.answer.answer === "refused") return { status: "refused", reason: sent.answer.reason };

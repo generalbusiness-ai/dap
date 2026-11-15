@@ -7,7 +7,7 @@ import { expect, test } from "vitest";
 import type { Head, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
-import { BROWSER_TERMINAL_LIVE, Custody, Lost, browserCustodyStore, identityId, meaningOf, signedIntent, type BrowserCustodyPlatform, type Outcome, type StoredCustodyRecord } from "../src/index.ts";
+import { BROWSER_TERMINAL_LIVE, Custody, Lost, browserCustodyStore, identityId, meaningOf, sendableAt, signedIntent, type BrowserCustodyPlatform, type Outcome, type StoredCustodyRecord } from "../src/index.ts";
 import { T0, build as fixtureBuild, identity as fixtureIdentity, notAfter, receiptOf as fixtureReceipt, refused, signer } from "./support/custody.ts";
 
 // Browser storage admits wire shapes. Use real sequence references here; generic trusted-store fixtures keep their old bytes.
@@ -137,7 +137,7 @@ async function absentInBrowser(o: ReturnType<typeof origin>) {
   await custody.send(who, meaning, make, deliver, { notAfter });
   const original = await custody.find(who);
   if (!original) throw new Error("TEST request was not kept");
-  clock = Date.parse(original.signings.at(-1)!.notAfter) + 1;
+  clock = sendableAt(original.signings.at(-1)!.notAfter);
   const head = { seq: 4, hash: textDigest("TEST verified browser absence") };
   const ended = await custody.absent(who, original.signings.length - 1, head);
   const outcome = ended?.outcomes.at(-1);
