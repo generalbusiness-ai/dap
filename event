@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:36095b98e34e4a4d8ab82b71b0e9c9eff0b1a8ff","text":"Merge retired a covered predecessor; the successor is at packages/client/test/support/act-explore-grow.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:39b01746c8c4081cb42fadac26b81111fae1fba6","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/judge.ts."}
