@@ -314,9 +314,12 @@ reproduction checks. R adds none of those files. It also adds no copied
 R owns the reservation, scenario, `0.3.0` version raise, and new Lending
 identifiers. The later producer and comparison above leave typed outputs,
 Grow, and Counter unchanged. No TEST signature or TEST release digest enters
-source. Computed Lending identifiers await the planner's signing decision.
-Ruling `bdeb6c15` places signing after R lands; a later small head
-adds the signed `0.3.0` packet and row while keeping the installed `0.2.0`
-row. R performs no signing, packet copy, provisioning, installation or
-deployment. The current source checkpoint establishes no release or passing
-gate result.
+source. Ruling `bdeb6c15` originally placed signing after R lands. Later
+ruling `0fcc2ec547a1ac3116abf8ebf81bb8f8bc3466c3` supersedes that order:
+Lending and Counter `0.3.0` stay open through E1. E1 must integrate actual
+future R main, run the normal three-way comparison once, and apply the open
+Lending and Counter identifiers. Grow `2.0.0` must remain unchanged. The
+planner signs after E1 main is published. A later packet head keeps the
+installed `0.2.0` row. R performs no signing, packet copy, provisioning,
+installation or deployment. The current source checkpoint establishes no
+release or passing gate result.
