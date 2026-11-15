@@ -1,0 +1,86 @@
+# Local Worker smoke: cause and CB1 disposition
+
+Read-only answer to planner fab78cef0283dc7975dfda826165cc9b048949e3.
+No test/server/proxy, network/CI inspection, import/AST/compiler, source
+change or filing ran. The CI chronology/run 43678773991 and four-second red
+are planner-supplied facts, not independently rerun observations.
+
+## Cause, with the first-failure limit
+
+celld-smoke.yml runs node scripts/test-celld-proxy.mjs against pinned celld,
+a generated-CA loopback TLS proxy and the production Room Worker. The driver
+sets failureMetadata.stage=smoke immediately before runCelldSmoke(phase:run).
+Its failure handler emits the outer stage, not CelldSmokeError's inner stage.
+Thus the redacted {stage:smoke} alone does NOT establish which inner operation
+first failed. An earlier install/transport failure is not excluded by that log.
+
+A mandatory post-cutover incompatibility is certain from source:
+
+- Cutover 57e893c01c changed references to {scope,genesis}, no kind.
+  packages/contract/src/scope.ts:67–74 defines that exact SequenceRef;
+  packages/bytes/src/records.ts:119–122 implements its shared closed codec.
+- Current CLI command-install.ts:283–284 checks receipt.fact.at.genesis
+  against the genesis hash; lines313–315 save register:receipt.fact.at.
+  Config.register is ScopeRef (store.ts:77–86). Successful current install
+  therefore stores the new complete reference, not {scope,inc,kind}.
+- scripts/celld-smoke.mjs:79–81 STILL requires value.kind plus in_…inc and
+  emits {scope,inc,kind}. This code predates the cutover and survived it.
+- Run ordering (lines124–137): validate retained plan, write private run marker,
+  install --planned if necessary, read saved config, then call that obsolete
+  predicate at install-identity BEFORE verify-register/create. Any otherwise
+  successful current install must fail this mandatory check. The later room
+  directory/membership checks use it again; publicRef would omit genesis.
+
+I found no earlier deterministic reference-shape mismatch in the run's
+plan checks: home v2/service/plan register string/founding host/namespace
+already use current forms. The main smoke explicitly plans unpublished,
+which remains in current CREATION_INSTALL_COHORTS; Register 21 remains admitted
+for its owned-plan question. This read supplies no evidence that install
+actually reached success in the reported run. It identifies the first
+GUARANTEED schema incompatibility after successful install, not a reconstructed
+CI stack trace. No private scratch/log or credential file was opened.
+
+## CB1 as built does not repair the exact smoke
+
+Actual CB1 worktree is .builder-worktrees/cb1-main-attestation-20261114,
+clean HEAD 8a5880b6716dab2691a2115498125d06f347d15b, tree
+5414af5e71d360d593380ad0bb6cae2c68ee7024. Its reviewed source includes
+15 feature paths plus the later narrow security expectation row (16 paths
+against its actual base 336dd74e). The last 8a588 commit is a note-only security
+owner result; 206092 is the older seal checkpoint, not the current head.
+
+Feature commit 8b1a37344c01a2611f92f8ad37dd3be97528d957 changes the smoke PLAN
+call to the CLI's base default (celld-smoke.mjs:118–119). Its two version
+questions admit Register 28 (version-questions.ts:304–311). Other feature
+changes concern Mac staging/settings/tests/docs and do not run in this Linux
+proxy driver. The workflow invokes none of those Mac preparation/deploy paths.
+
+CB1 leaves the obsolete ref/publicRef and room comparisons untouched.
+The test-celld-proxy.mjs blob is exactly the same on CB1 and main 4b198d0f
+(7deaa1ae2f5bed7a91c6aff3e71ba51e292b9596). The current CLI install writer
+also matches exactly (dbbe0080af11c097d106e63db9a7abd402f58053).
+CB1's default-family repair is useful but insufficient: its otherwise
+successful Register 28 install still cannot pass its own old ref predicate.
+The CB1 smoke Node owner exercises planning/transport policy and a repeat-run
+stop, not a completed actual run. Its dated green result does not refute this.
+
+## Smallest repair for a new authorized head
+
+Repair the maintained smoke consumer, not the Worker/SDK or accepted wire:
+use the existing shared isScopeRef/isSequenceRef codec for register/directory/
+membership, emit only {scope,genesis}, and compare the FULL membership
+reference in invitation and joined-room checks (currently scope-only at
+lines 146/154). Keep rules/destination/inbox as the existing ScopeId fields.
+Preserve semantic-kind evidence through actual verify/register/coverage,
+not a removed kind property. Admit no old-shape fallback or migration.
+Retain plan/install custody, private-only key/log handling, exact origin/TLS
+policy, run-once marker and all bounds. No trust bypass, lease/authority,
+provider, operator or base-family redesign belongs to this repair.
+
+Keep CB1's approved base selection/question changes separate and intact.
+The new head needs its owning Node regressions plus the maintained actual
+local Worker/proxy witness when root grants execution; no runtime success
+is claimed here. CB1 stays unlanded/ungated with its independent fleet/CB2
+obligations. This finding does not block the hosted deployment, as planner
+fab78cef states. Root files the one requested disposition act; no CB1 note
+edit can honestly label the current built branch a complete smoke repair.
