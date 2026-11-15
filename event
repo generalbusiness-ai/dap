@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1ea131f6f3367b1b5cd80277fe347a729c2bd1da","text":"Merge retired a covered predecessor; the successor is at apps."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:202dadbbcac1569b5dc6f86f1e2fc6ce2a924dfb","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/application-cross-room.test.ts."}
