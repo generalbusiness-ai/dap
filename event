@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cab25cb485edda0c0755ff51c71fa870ada06000","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/grow-demo-tick.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cac278ae6f31dc4aa30227cee607bff56443a766","text":"Merge retired a covered predecessor; the successor is at apps/counter/releases/0.3.0/application.dap.json."}
