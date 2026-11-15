@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:05a0e9487655f5c690223ed58f0f2dd57be641fd","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/opaque-object.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:087d3875027f38d1ae25c03ffc2f3fad28441a80","text":"Merge retired a covered predecessor; the successor is at packages/derive/vitest.config.ts."}
