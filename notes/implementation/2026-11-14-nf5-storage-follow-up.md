@@ -1,10 +1,13 @@
 # NF-5 storage and context follow-up
 
-This checkpoint follows continuation promise `11ad3b377f2ff807ed5dc9be85b79c038d00acaf`
-from baseline `9ea739ea9d102f3972558ec2429071a185f94e23`. The source-only
-sections below retain their original execution limits. The current evidence
-section records later checks and the remaining gate and hosted Counter work.
-No dependency view changed for the original source edits.
+NF5's full gate passed at `787f7088cbfc30f07e3e201952c0e40673115198`,
+tree `11479ddd1c6ce944d6d5dc98c6f286b7136ba890`: exit 0, wall
+752.834269791 seconds. END `b17de89df377b10f9d5e5262411ff6ff048b44c6`
+records the result. This final filing changes only this note; production,
+tests, configuration, dependencies, models, and identifiers stay exact at
+the gated source. Earlier failures and dated precursor results remain below.
+The work follows promise `11ad3b377f2ff807ed5dc9be85b79c038d00acaf`
+from baseline `9ea739ea9d102f3972558ec2429071a185f94e23`.
 
 ## Actual C2 main integration
 
@@ -41,8 +44,7 @@ release constant, or identifier. Counter and Lending retain the two
 presentation identifiers cited below, with unchanged entry and semantic
 identifiers. No canonical producer or runtime owner ran for this merge.
 
-The earlier development, browser, controls, canonical comparison, and
-C/Q results below remain dated to their named heads. At that integration
+Precursor results below retain their named heads. At that integration
 checkpoint, runtime checks and the full NF5 gate were UNRUN. Planner act
 `1b0d2f10436d6c0d1cc42cc9661b8a7f7aba1fad` confirms actual `main` and
 `origin/main` at `26d1e65c` and releases NF5's next gate prerequisite.
@@ -88,12 +90,11 @@ The whole normal R1 reproduction owner then passed its one case at
 `91c49425` in 2.053530042 seconds. Commit messages, JSON format, section
 citations, document links, and note limits also passed once. END
 `1f77fdd386b1bf8179105cdc795954196e756f0e` retains those six results.
-This note-only follow-up changes no checked source, test, or identifier.
 The later gate attempt 2 failed as recorded below; the first gate
 retains its failed verdict.
 
-The full pre-code proposal remains attached as `proposal` to builder request
-`2a65dcffc89bd43675bb3c07536dc30c41d6cacb`. It covers schema history,
+The `proposal` attachment on request `2a65dcffc89bd43675bb3c07536dc30c41d6cacb`
+covers schema history,
 bounded segments, malformed rows, lifecycle, notifications, async authority,
 real browser witnesses and Voice correspondence. The source follows planner
 rulings `14609eb8335b24ffdb794ea8a0a4e30e6ec4ed9a` and
@@ -120,8 +121,23 @@ assertions read the actual latest signing through `envelopeOf`.
 All original expected values, case counts, deadlines, native authority,
 POST/journal idempotency, causal publication, and replay checks remain.
 No production, helper, configuration, dependency, packet, or identifier
-changes. The migrated compiler and two whole owners remain UNRUN;
-gate attempt 3 also remains UNRUN.
+changes. At the migration checkpoint those checks were UNRUN. Before
+gate START, maintained helpers and the whole `npm run typecheck` passed
+at the same head through root's actual tool calls. Those preflight calls
+have no separate raw directory; START `78377356b509db5b45f80681fcb837533b1f6caf`
+and DEV START `e7c3abc25a084656864615d487185fcf34eeb742` record them.
+Both whole Native owners then passed: Lending one case
+in 10.872679333 seconds and maintained projections two cases in
+13.849331291 seconds. DEV END `62f308e4ce5592c5c3afd58393227ff33af1c3df`
+records those results. No source or note changed before gate attempt 3.
+
+That gate passed all stages: Node 195, Counting 55, Plain 4,760 passed
+and one skipped, Native 1,134 passed and two skipped. Native wall was
+498.38686 seconds. The scale project was omitted by the maintained
+selector. Terminal reports are complete; timing callbacks are not:
+scope-stories is partial with 92 observed modules, and 126 unknown/suite
+observations remain. No contradictory timing record appeared. Case/module
+duration sums are concurrent observations, not process wall or CPU.
 
 ## First released storage layout
 
@@ -443,9 +459,9 @@ stock worker cleanup line changed; original tools and model, config, view,
 Mermaid and SVG bytes remain unchanged. No fetch or install ran.
 
 
-## Current evidence before the gate
+## Current evidence and dated precursors
 
-These are completed precursor checks, not a passing NF5 gate. The canonical
+The older rows are precursor checks, not the final gate. The canonical
 comparison used `4d065ce5`; reproduction and renewed integration development
 checks used `76b7a304`. The source-only GS1 merge preserved their applicable
 inputs. Client controls, fresh browser acceptance and Voice C used
@@ -454,16 +470,15 @@ inputs. Client controls, fresh browser acceptance and Voice C used
 `b4d6a7e9fe2720ed3d93c1204db4139a34342ada`, tree
 `e52b9c70dcddc04ca1b5d55c7e4ca84aa6f49964`. This documentation update changes
 no production source, tests, coverage, dependencies or model artifacts.
-The later source-only integration above takes actual main after C2's
-local landing. Its runtime graph has not run; the precursor results below
-do not become integrated-head results through that merge.
+The later integration and gate above cover actual C2 main. Older precursor
+results keep their named heads; they do not become new runs through a merge.
 
 In the table, `N` is `/opt/homebrew/bin/node` and `E` is
 `/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-browser-custody-gate-attempt1`.
 `Q` is `E/voice-q`. Relative output paths resolve under `E`; they name
 retained actual files, not new runs. Ordinary development rows describe
-readiness only. No formal focused result replaces the gate. Wall times come
-from `/usr/bin/time -p`; case counts come from actual JSON or Node terminal
+readiness only. No formal focused result replaces the gate. Wall times follow
+the actual named process records; case counts come from JSON or Node terminal
 reports. The retained records stay for at least 30 days after landing.
 `F` is
 `/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-browser-custody-full-gate-attempt1`.
@@ -475,6 +490,12 @@ to `2026-11-14-nf5-natural-development-attempt1`,
 `2026-11-14-nf5-natural-reproduction-attempt1`. Their command and result
 records retain the exact argv, working directories, exits, and process walls.
 `G` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-browser-custody-full-gate-attempt2`.
+`T` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-browser-custody-full-gate-attempt3`.
+`V` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-native-caller-development-attempt1`.
+The 36 control files in `T/retained-controls` are byte-exact copies of
+the original helper inputs, reports, and streams from `E/controls` and
+`E/voice-c/source-control`, with unchanged hashes and source qualifications.
+Originals remain intact; unrelated compile caches were not copied.
 
 The eight compiler roots were `packages/client/tsconfig.json`,
 `packages/client/tsconfig.node.json`, `packages/client/tsconfig.test.json`,
@@ -501,10 +522,10 @@ the current ordinary development rows do not turn it into a pass.
 | Client ordinary DEV | From `packages/client`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts test/browser-custody.test.ts test/browser-request.test.ts test/browser-joining.test.ts test/custody.test.ts test/custody-signings.test.ts` | 0; five whole files, 70 passed; 13.29 s | `dev/integration/client.json` — `2805860d7812eebd07c5bd87c2f83ab5187afd82ed40cf440c14ba1b67f4afd1` |
 | Lending ordinary DEV | From `examples/lending`: `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts definition.test.ts shelf.test.ts browser/model.test.ts browser/publication.test.ts` | 0; four whole files, 13 passed; 1.17 s | `dev/integration/lending.json` — `91d09bd99f04170d5cc10699503a9e66bfa3edf5e11fd6799655dbc4c05c1e88` |
 | Counter ordinary DEV | `N apps/counter/scripts/test-browser.mjs` | 0; four whole Node owners, 55 passed; 0.47 s | `dev/integration/counter.stdout.log` — `41c9c2bb7c92785b26d329b7d71507e03e4b1dd998f903689eba319137cdac64` |
-| Admission-before-build control | `N E/controls/admission-before-build/control.retained.mjs` with the approved pre-build fault and exact admission-wait title; package args `-- packages/client --config vitest.config.ts test/browser-request.test.ts` | 0, DISTINGUISHES; baseline 8 passed, mutant 7 passed and only the named assertion failed; 2.78 s | `controls/admission-before-build/control.stderr.log` — `451eb0f182b6529ddf362114c79b062d68c67ebbeb9445b201ef0e8b5fc2e314` |
-| Malformed-row control | `N E/controls/malformed-row/control.retained.mjs` with the approved parse-to-absence fault and exact malformed-row title; package args `-- packages/client --config vitest.config.ts test/browser-custody.test.ts` | 0, DISTINGUISHES; baseline 8 passed, mutant 7 passed and only the named assertion failed; 2.58 s | `controls/malformed-row/control.stderr.log` — `f183b2ed365f0d37db2a0e266d8ac9c68e8d2b0ca5764413bf35a60f601539d0` |
+| Admission-before-build control | Original `N E/controls/admission-before-build/control.retained.mjs`; approved pre-build fault and exact title; whole `browser-request.test.ts` | 0, DISTINGUISHES; baseline 8 passed, mutant 7 passed/one assertion failed; 2.78 s | `T/retained-controls/client-custody/admission-before-build/control.stderr.log` — `451eb0f182b6529ddf362114c79b062d68c67ebbeb9445b201ef0e8b5fc2e314` |
+| Malformed-row control | Original `N E/controls/malformed-row/control.retained.mjs`; approved parse-to-absence fault and exact title; whole `browser-custody.test.ts` | 0, DISTINGUISHES; baseline 8 passed, mutant 7 passed/one assertion failed; 2.58 s | `T/retained-controls/client-custody/malformed-row/control.stderr.log` — `f183b2ed365f0d37db2a0e266d8ac9c68e8d2b0ca5764413bf35a60f601539d0` |
 | Fresh Native join and real IDB | `N apps/room/page/test/custody-witness.mjs`, no screen argument; existing Playwright 1.63.0, Chrome and Wrangler 4.147.0 | 0; native join one signing, POST and journal entry with exact envelope and proof-before-clear; 31 storage cases, seven multi-tab checks and both held-POST checks passed; 22.34 s | `browser.stdout.json` — `838a5c41ff8032c4c05e31e98a8c0a245988a12e9742977bcfe1d5037467dd30` |
-| Voice C restart control | `N verification/state-machines/control.mjs Voice E/voice-c/source-control` | 0; baseline 1 passed, broken 1 intended assertion failure, restored 1 passed; 2.95 s | `voice-c/source-control/broken.log` — `caff1c582aa65d75438e5e4cf91e306374e53eb83bb70a95b84d573d96f5df58` |
+| Voice C restart control | Original `N verification/state-machines/control.mjs Voice E/voice-c/source-control` | 0; baseline 1 passed, broken 1 intended assertion failure, restored 1 passed; 2.95 s | `T/retained-controls/voice-c/broken.log` — `caff1c582aa65d75438e5e4cf91e306374e53eb83bb70a95b84d573d96f5df58` |
 | Voice C proof and disposal cases | `N --import tsx --test --test-name-pattern=PATTERN apps/counter/browser/voice-controller.test.ts`; exact three-title pattern in accepted plan `9573e0da` | 0; three passed, no failed, cancelled, skipped or todo; 0.72 s | `voice-c/targeted.stdout.log` — `15da5471911f1a141d68da7b7928a296d7d7c681b84eb4960fba4e5a907f0e59` |
 | Voice Q model and source | `N verification/state-machines/check.mjs Voice`, existing pinned Java and TLC | 0; eight distinct model states, rules held; source case 1 passed; 1.68 s | `voice-q/check.stdout.log` — `229f08d6a8a6f3443ca9eb2949952fc0aa0d68070ca7d154c049a017357b8766` |
 | Voice copied worker | `N --disable-warning=ExperimentalWarning Q/tool/worker.ts Q/statechart-stage Q/Voice.tla Q/Voice.cfg Q/view.mjs`, exact environment in `voice-q/commands.txt` | 0; eight states, ten steps; chart seven states, seven arrows, three hidden steps; 1.29 s | `voice-q/statechart-stage/done/report.md` — `14ba0a2b9f2f6e49676e2795f44c1624cf1e94750bcb5af212e2b90ab76e08f7` |
@@ -517,7 +538,9 @@ the current ordinary development rows do not turn it into a pass.
 | Whole normal R1 reproduction at `91c49425` | Exact argv in `R/commands.json`; existing `application-release-reproduction.test.ts` | 0; 1 passed; 2.053530042 s | `R/01-reproduction.stdout.log` — `b20d032a3a1c0ec0e9447dede216eadc1fbd788f244767b0e1bd5bacfae903c3` |
 | Five pre-gate checks at `91c49425` | Exact commands in `R/commands.json` | All 0; per-command walls in result record | `R/results.json` — `d95a17e6d1b1c1600525921d570dcbcf259118ca7464769ee68a960e6f6cb045` |
 | Full NF5 gate attempt 2 at `034d68a8` | Exact argv in `G/command.json` | 1; 24.248759167 s; typecheck failed; runtime stages UNREACHED, zero cases | `G/gate.log` — `877d2bc37dc9e2ef2cb40ccf9a5e8bfbdd0aa325e26df60d0ce1f824c25557cc` |
-| Migrated Native callers and gate attempt 3 | Root review and execution pending | **UNRUN** | No later result at this checkpoint |
+| Migrated Native Lending owner at `787f7088` | Exact argv in `V/commands.json`; whole `lending.test.ts` | 0; one case passed; 10.872679333 s | `V/02-lending.stdout.log` — `42512eefaaef6ab898e35fcd3923b9b8cfb22bf75af53ede3ff13d7d18fa8de9` |
+| Migrated Native projection owner at `787f7088` | Exact argv in `V/commands.json`; whole `maintained-application-projections.test.ts` | 0; two cases passed; 13.849331291 s | `V/03-maintained-projections.stdout.log` — `7a46294c5669ea7889483e7a221f6411a00af5eafbad8f5a649d086bf60aaa74` |
+| Full NF5 gate attempt 3 at `787f7088` | Exact argv in `T/command.json` | 0; 752.834269791 s; Node 195, Counting 55, Plain 4760/1 skipped, Native 1134/2 skipped; scale omitted | `T/gate.log` — `c71b82bfb0c48cacfaeb2220a1cfcdc4b0e66bbabb93a4559bdd3dcf40231935` |
 
 The browser run used the established unchanged Playwright helper because the
 Browser plugin was not available. It made no visual or screenshot claim.
@@ -542,9 +565,8 @@ was produced by these checks.
 
 ## Open limits
 
-- NF5's full gate and exact-head review remain owed under promise
-  `11ad3b377f2ff807ed5dc9be85b79c038d00acaf`. The completed development and
-  acceptance checks do not supply that gate result.
+- NF5's gate passed at the named source. Final filing checks and exact-head
+  review remain owed under promise `11ad3b377f2ff807ed5dc9be85b79c038d00acaf`.
 - Hosted Counter enrollment, installed-screen transport and installed main
   gateway acceptance remain **UNRUN** under NF7 request
   `13ff61c707c771cfe9062c5ce01425f227676509` and ruling `657e4217`.
