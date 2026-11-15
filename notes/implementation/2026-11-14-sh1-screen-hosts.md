@@ -22,7 +22,7 @@ one reviewed full `npm run gate`, and two planner deployments: the room
 Worker and sandbox. SH1 also adds the consistency witness below and this
 note. These source facts describe the current cost, not a redesign.
 
-## Consistency witness and pending checks
+## Consistency witness
 
 The existing Node owner `scripts/deploy-smoke.test.mjs` gains one case:
 “room screen descriptors and sandbox mappings agree in both directions on
@@ -48,19 +48,47 @@ restored exactly, mode `0644`, SHA-256
 END `a4512f2e535e29ae05da1998dc08cc2d5dcddbf9` records that result.
 
 Prefix `E` below is
-`/Users/hughpyle/play/artroom-evidence/2026-11-14-sh1-development-control-attempt1`.
+`/Users/hughpyle/play/artroom-evidence/2026-11-14-sh1-full-gate-attempt1/controls/2026-11-14-sh1-development-control-attempt1`.
+Root verified this byte-exact copy; originals remain in the original directory
+at the evidence root. The copy adds no control run.
 `E/command.json` retains the actual whole-owner helper argv, including its
 expected case title. The owner command is
 `/opt/homebrew/bin/node --test scripts/deploy-smoke.test.mjs` from the checkout.
 TAP duration is not the helper's outer wall. This shows tracked-config
 consistency, not a deployed screen or browser acceptance.
 
-| Phase at a06fbdec | Result | Raw path | SHA-256 |
-|---|---|---|---|
-| Whole-owner baseline | 11 pass; 0 fail/skip/cancel; TAP 26.057542 ms | `E/tmp/artroom-control-U2vGAW/before.tap` | `d63bcc56ae854e2034ce79f39808b88a6c7d3fd4b87886ee144ff7fb561ba23d` |
-| One-sided descriptor fault | 10 pass/1 direct fail; 0 skip/cancel; TAP 22.641833 ms | `E/tmp/artroom-control-U2vGAW/after.tap` | `8236ae02586f971481e2462a9e0f28c2c3734af064912581373a5d3c4b6e6e6f` |
-| Helper verdict | Exit 0/DISTINGUISHES | `E/helper.stderr.log` | `adeab4eeac3a70c4f95c134f92e888e9d9551dcc4e4df891219e888cec7633bb` |
-| Terminal/restoration record | Exit 0; wall 0.2559744159807451 s; exact restore | `E/result.json` | `b37b58b102373996b45ca4cb3a2e57823ced6ace9453e3c3e45b02e784594e89` |
+## Full gate
+
+START `809e074bec77251c90b047d328e3d23de27767aa` binds clean gated head
+`3753c02ce9872b54376a36e527e5dd8051a598bf`, tree
+`d971e732d6564244d70a353df7eb927782d14492`, containing actual main `863ca6b2`.
+The exact-head shared-helper check and whole typecheck passed before START:
+exit 0 in 0.9951489999657497 and 16.9454276249744 seconds respectively.
+No assets precheck applied because SH1 changes no page-build source.
+
+Gate END `499274baf318c73af4932f7b2ee865b60e7e0e6a` records exit 0 in
+793.3041585839819 seconds, 2026-11-15 03:49:33.046208–04:02:46.353499 UTC.
+All pretest steps passed with zero note warnings. Node 196 and Counting 55
+passed; Plain passed 4760 with 1 skipped, Native passed 1134 with 2 skipped.
+All four terminal records are complete. Scope-stories duration coverage
+remains partial: 92 observed modules, 126 unknown/suite observations and
+zero contradictions. Concurrent case/module durations are not process wall.
+Scale was omitted for `outside-scale-paths`; this gate proves no Scale case.
+The head, tree and clean status stayed unchanged through completion.
+
+Prefix `G` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-sh1-full-gate-attempt1`.
+It retains actual argv/results, the log and the system-temp stage-log copy.
+The control rows below bind `a06fbdec`; the gate rows bind `3753c02c`.
+These are local source checks, not deployment or real screen/browser proof.
+
+| Phase and source | Actual command or retained argv | Result | Raw path | SHA-256 |
+|---|---|---|---|---|
+| Whole-owner baseline, a06fbdec | `/opt/homebrew/bin/node --test scripts/deploy-smoke.test.mjs` via `E/command.json` | 11 pass; 0 fail/skip/cancel; TAP 26.057542 ms | `E/tmp/artroom-control-U2vGAW/before.tap` | `d63bcc56ae854e2034ce79f39808b88a6c7d3fd4b87886ee144ff7fb561ba23d` |
+| One-sided descriptor fault, a06fbdec | Same whole-owner argv via `E/command.json` | 10 pass/1 direct fail; 0 skip/cancel; TAP 22.641833 ms | `E/tmp/artroom-control-U2vGAW/after.tap` | `8236ae02586f971481e2462a9e0f28c2c3734af064912581373a5d3c4b6e6e6f` |
+| Helper verdict, a06fbdec | Actual helper argv in `E/command.json` | Exit 0/DISTINGUISHES | `E/helper.stderr.log` | `adeab4eeac3a70c4f95c134f92e888e9d9551dcc4e4df891219e888cec7633bb` |
+| Terminal/restoration record, a06fbdec | Retained data; no separate command | Exit 0; wall 0.2559744159807451 s; exact restore | `E/result.json` | `b37b58b102373996b45ca4cb3a2e57823ced6ace9453e3c3e45b02e784594e89` |
+| Full gate, 3753c02c | `/opt/homebrew/bin/npm run gate`; `G/command.json` | Exit 0; wall 793.3041585839819 s; counts above | `G/gate.log` | `a5af93743d1b4c35c3e8cd343e4abe107791b0ee5347f3883c92a9d885736d47` |
+| Gate terminal/source record, 3753c02c | Retained data; no separate command | Exit 0; head/tree/status unchanged | `G/result.json` | `2e7e627197397929af00eb1fbf7dc3bac6bd92da35aee67d56c158a553b6b226` |
 
 ## Authentic dependency setup
 
@@ -87,6 +115,9 @@ This note-only successor changes no runtime/test/config/package bytes.
 Ruling `a1a726099d6ef178dcc7ba7763c38c654d237673` keeps SH1 Grow-only;
 Counter follows after its install facts, without holding this head. The gate
 follows first-ready ruling `50088553` and displaces no active START.
-Required helpers and whole typecheck must pass at the eventual gate head
-under `7fe68ffe`. Gate, checker review, planner deployment of
-`dap-grow` and sandbox, and the planner's real browser read remain owed.
+The exact-head prechecks and full gate above satisfy local validation. This
+note-only successor changes none of the three gated source/test/config blobs;
+the later source act records its final head/tree separately from the gated
+tree above. Checker review, artifact filing, planner landing and deployment
+of `dap-grow` and sandbox, and the planner's real screen/browser read remain
+owed. No gate or control rerun follows from this documentation update.
