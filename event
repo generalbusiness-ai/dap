@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:90e1323a3a2884228cffe17b01b386fda2429a0a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-14-nf6-nf8-custody-follow-ups.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9106602a14ef48207c9295819aedd18300c4b83a","text":"Merge retired a covered predecessor; the successor is at scripts/pre-commit.mjs."}
