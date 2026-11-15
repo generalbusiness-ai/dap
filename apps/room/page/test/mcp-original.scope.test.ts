@@ -394,14 +394,27 @@ test("a page that answered first leaves custody to the scope's answer", async ()
     expect(s.wire.acts.at(-1)!.body).toBe(s.wire.acts[0]!.body);
     expect(await rows(s)).toEqual([]);
 
-    // After a restart the scope holds no entry, so `settle` says unknown and sends nothing. The repeat sends the same bytes, and the
-    // scope's refusal resolves custody. No entry exists at any step.
-    const restarted = s.server(store);
+    // The quiet journal's head predates expiry. After a restart, public settle cannot prove absence or end the capacity charge.
+    // It sends no ACT; the later deliberate repeat gets the scope's real refusal for the same bytes. No entry exists at any step.
+    const restarted = s.server(store), id = identityId(await identityOf(s, "never-1"));
+    const kept = await store.read(id), unresolved = await store.unresolved();
+    expect(kept?.phase).toBe("unknown");
+    expect(unresolved.map(record => record.id)).toContain(id);
     const settled = await restarted.call("settle", { target: s.lane, idempotencyKey: "never-1" });
-    expect([said(settled).answer, said(settled).phase]).toEqual(["unknown", "unknown"]);
+    expect(settled.isError).toBe(true);
+    expect(said(settled)).toMatchObject({
+      error: "custody",
+      message: "The verified scope journal has no entry at or past this request's expiry. The outcome stays unknown, and custody keeps the original record and its capacity charge. This call signed and submitted no ACT.",
+      next: "Keep the original key and arguments. Call settle after the scope records a later entry at or past the request's expiry.",
+    });
+    expect([said(settled).answer, said(settled).phase, said(settled).fact]).toEqual([undefined, undefined, undefined]);
+    expect(await store.read(id)).toEqual(kept);
+    expect(await store.unresolved()).toEqual(unresolved);
     expect(s.wire.acts).toHaveLength(phoneSends + 1);
     const repeated = await comment(s, restarted, "never-1");
     expect([said(repeated).answer, said(repeated).reason, said(repeated).phase]).toEqual(["refused", "expired", "refused"]);
+    expect(s.wire.acts).toHaveLength(phoneSends + 2);
+    expect(s.wire.acts.at(-1)!.body).toBe(s.wire.acts[0]!.body);
     expect(await entriesUnder(s, "never-1")).toEqual([]);
     expect(await rows(s)).toEqual([]);
   } finally { s.d.done(); }
