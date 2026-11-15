@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e1c53dcb86981af1537320e9c9df5c253f858845","text":"Merge retired a covered predecessor; the successor is at packages/client/src/act-types.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e47fedc3a6d921370a3ef60c3e8a7e50e698a556","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/item-duties.ts."}
