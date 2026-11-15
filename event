@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f019abe223c4fbfa568839ed962f7c72f3e04323","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/body-references.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f50aa90417627907b594156b41f2f67c5b0306f6","text":"Merge retired a covered predecessor; the successor is at packages/client/src/act-opaque.ts."}
