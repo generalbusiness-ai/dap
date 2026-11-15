@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3f13874f1a8737cecf4102c9c3cb855154c5c690","text":"Merge retired a covered predecessor; the successor is at packages/client/src/request-schedule.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4f11026821c33e3238572fd0b102566fa568cbee","text":"Merge retired a covered predecessor; the successor is at examples/lending/dap.application.json."}
