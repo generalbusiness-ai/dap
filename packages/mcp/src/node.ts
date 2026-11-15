@@ -27,8 +27,6 @@ import { join } from "node:path";
 import { Readable } from "node:stream";
 import type { Signer, Fetch } from "@generalbusiness/dap-client";
 import { fileStore } from "@generalbusiness/dap-client/node";
-// Temporary same-symbol compatibility exports; NF5 removes these after importer migration.
-export { FILE_STORE_BOUNDS, releaseLock, blockedBy, takeLock, fileStore, type FileStoreBounds, type Holding } from "@generalbusiness/dap-client/node";
 import type { ConfigPort } from "./inventory.ts";
 import { diffWithCredential, fileWithCredential, interdiffWithCredential } from "@generalbusiness/dap-git/diff";
 import { McpService } from "./service.ts";

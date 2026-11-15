@@ -6,6 +6,7 @@ import { createRequire } from "node:module";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseAst } from "rolldown/parseAst";
+import { selectedHelperFiles, sharedHelperPathspecs } from "./shared-helper-selection.mjs";
 
 const parse = (source, file) => parseAst(source, { lang: file.endsWith(".tsx") ? "tsx" : "ts" }, file);
 const sourceOf = (file, specifier) => specifier.startsWith(".") ? resolve(dirname(file), specifier) : createRequire(file).resolve(specifier);
@@ -63,8 +64,8 @@ export function helperRedefinitions(owners, sources) {
 }
 
 export function checkSharedHelpers(root) {
-  const names = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", "packages/*/src/*.ts", "packages/*/src/*.tsx", ":(glob)apps/**/*.ts", ":(glob)apps/**/*.tsx", ":(glob)examples/**/*.ts", ":(glob)examples/**/*.tsx"], { cwd: root, encoding: "utf8" }).split("\0");
-  const files = [...new Set(names)].filter(file => file && !file.includes("/test/") && !file.includes("/tests/") && !/\.(?:test|spec)\.[cm]?[jt]sx?$/.test(file) && !/\/(?:testing|test-support)\.ts$/.test(file));
+  const names = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", ...sharedHelperPathspecs], { cwd: root, encoding: "utf8" }).split("\0");
+  const files = selectedHelperFiles(names);
   const packageRoot = resolve(root, "packages/bytes"), manifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
   const runtimeTargets = value => typeof value === "string" ? [value] : value && typeof value === "object"
     ? Object.entries(value).filter(([condition]) => condition !== "types").flatMap(([, target]) => runtimeTargets(target)) : [];

@@ -9,7 +9,8 @@ import { canonicalize, definitionDigest, intentDigest, scopeIdOf, textDigest } f
 import { secretSigner, TransportError, type Fetch } from "@generalbusiness/dap-client";
 import { FIRST_ACTIONS_OF } from "@generalbusiness/dap-platform";
 import { change, change3, changeDemo, issue, issueDemo } from "@generalbusiness/dap-lanes";
-import { BOUNDS, McpService, memoryStore, type CallResult, type CustodyStore, type McpConfig, type Mode } from "../src/index.ts";
+import { memoryStore, type CustodyStore } from "@generalbusiness/dap-client";
+import { BOUNDS, McpService, type CallResult, type McpConfig, type Mode } from "../src/index.ts";
 import { ERROR_BYTES, failed, ListRestart } from "../src/service.ts";
 import { finding } from "../src/errors.ts";
 import { fileStore } from "@generalbusiness/dap-client/node";

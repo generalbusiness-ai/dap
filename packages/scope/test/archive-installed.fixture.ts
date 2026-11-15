@@ -1,3 +1,4 @@
+import { scaleDeadline } from "./support/archive-scale-deadline.ts";
 /** Native installed TEST application, declared root/child creation, issued
  * session reads and SQLite. Package peer, clock, scheduler and reviewed
  * archive policy are explicit fixtures. No provider or production admission.
@@ -11,7 +12,8 @@ import { inputTexts, outcomeValueDomains, ownersOf, validateDefinition, type Ope
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ARCHIVE_REPLAY_CODE, BASE_COHORT, FAILED_CLAIM_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
 import { ScopeHandle, httpTransport, invitationIssueFields, invitationRedemptionFields, requestSession, secretSigner, sessionRequest } from "@generalbusiness/dap-client";
-import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { McpService, type ServerPort } from "@generalbusiness/dap-mcp";
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
 import { Reader, idOf, objectId } from "@generalbusiness/dap-git";
 import { buildJournalPass, journalRef, verifyJournalAppend, type JournalArchive, type JournalObject, type JournalPassArchive } from "@generalbusiness/dap-git/journal";
@@ -182,7 +184,7 @@ for (const scenario of scenarios) {
     ? "installed old R17 Grow advances a published thirty-seven-pass history from sequence 146 with an exact remainder"
     : `installed ${scenario} scopes export genesis zero after a late native membership directory binding`;
   let retainedCommand: NativeCommandHandoff | null = null;
-  test(producerTitle, { timeout: 30_000 }, async context => {
+  test(producerTitle, { timeout: scaleDeadline(30_000) }, async context => {
   const activationScenario = scenario.startsWith("Grow activation"), productionScenario = scenario === "Grow production" || scenario === "Grow Room A shape" || activationScenario, kind = scenario === "fixture" ? "fixture" : "Grow";
   let roomAFan: number | null = null;
   const prepared = kind === "fixture" ? await applicationOwnedScopesPacket() : await (async () => {
@@ -1676,7 +1678,7 @@ for (const scenario of scenarios) {
     // their median is 82,687.5 ms. Each concurrent replay child gets 90 s;
     // the follower leaves another 10 s for reporting and joined cleanup.
     // The Native producer and each original archive budget stay at 30 s.
-    test(`installed ${scenario} public archive command verifies its native producer clone`, { timeout: 100_000 }, async context => {
+    test(`installed ${scenario} public archive command verifies its native producer clone`, { timeout: scaleDeadline(100_000) }, async context => {
       const basis = retainedCommand;
       if (!basis) expect.fail("the immediately preceding native producer did not publish a command session");
       retainedCommand = null;

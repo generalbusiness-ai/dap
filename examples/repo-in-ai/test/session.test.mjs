@@ -12,7 +12,7 @@ const load = source => tsImport(source, import.meta.url);
 const { canonicalize, entryHash, factRefOf, intentDigest, isLogPage, newGenesisNonce, textDigest, timeOf, verifySignedIntent } = await load("@generalbusiness/dap-bytes");
 const { secretSigner } = await load("@generalbusiness/dap-client");
 const { firstExtents, ARCHIVE_DEVICE_APPLICATION_COHORT: setupCohort } = await load("@generalbusiness/dap-platform");
-const { identityId } = await load("@generalbusiness/dap-mcp");
+const { identityId } = await load("@generalbusiness/dap-client");
 const { StandIn, SERVICE } = await load(new URL("../../../packages/mcp/test/support/standin.ts", import.meta.url).href);
 const { changeJ4 } = await load(new URL("../../../apps/room/lanes/src/j4.ts", import.meta.url).href);
 const { durableCliStore, durableRequestStore } = await load(new URL("../custody.ts", import.meta.url).href);

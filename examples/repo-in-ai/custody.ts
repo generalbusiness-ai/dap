@@ -2,9 +2,9 @@
 import { closeSync, constants, fstatSync, fsyncSync, lstatSync, openSync } from "node:fs";
 import { dirname, join, parse, resolve } from "node:path";
 import { fileStore as cliFiles } from "../../packages/cli/src/files.ts";
-import { fileStore as requestFiles } from "@generalbusiness/dap-mcp/node";
+import { fileStore as requestFiles } from "@generalbusiness/dap-client/node";
 import type { Store } from "@generalbusiness/dap-cli";
-import type { CustodyStore } from "@generalbusiness/dap-mcp";
+import type { CustodyStore } from "@generalbusiness/dap-client";
 
 /** Reject linked paths before opening a private record or its directory. */
 function unlinked(path: string): void {

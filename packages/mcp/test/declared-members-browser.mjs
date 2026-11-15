@@ -6,7 +6,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { canonicalize } from '@generalbusiness/dap-bytes';
 import { secretSigner } from '@generalbusiness/dap-client';
-import { McpService, memoryStore } from '../src/index.ts';
+import { memoryStore } from '@generalbusiness/dap-client';
+import { McpService } from '../src/index.ts';
 import { PRESENTATION } from '../src/views/generated.ts';
 import { startViewsHost } from './support/views-host.ts';
 

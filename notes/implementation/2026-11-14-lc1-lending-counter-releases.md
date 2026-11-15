@@ -93,6 +93,16 @@ equal the donor bytes. No install, restamp or preserved-view mutation ran.
 | Exact-head preflight: whole typecheck | `/opt/homebrew/bin/npm run typecheck` | Exit 0; 17.468887916 s at the same head | `P/whole-typecheck.stdout.log` — `a9abf7e40e10fbda74447d08a5ea3b33733361ecd9ac199658065cfbc874936a` |
 | Full gate at `faece658` | `/opt/homebrew/bin/npm run gate` | Exit 0; outer wall 870.297345083 s. Node 195; Counting 55; Plain 4,760 passed/1 skipped; Native 1,134 passed/2 skipped. Scale omitted as `outside-scale-paths` | `G/gate.log` — `0ad7621fac3b17b864702b773561bc0bd6a41f968f49997264010d080a2ab268` |
 | Checker review and local artifacts | Not run | OWED under the LC1 request | No result claimed |
+| LC2 whole CLI examples and configuration owners | `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts test/application-examples.test.ts test/demo-config.test.ts` with native reporters | Exit 0; 3 examples and 6 configuration cases passed; 6.366250250 s | `B/cli-examples-config.stdout.log` — `0290ce6d17e3bb0537071b9847bf4ba6c9bdd27f040b767185f5eafe100e32f6` |
+| LC2 whole formatter owner | `N --test scripts/format-json.test.mjs` | Exit 0; 1 passed; 0.158079084 s | `B/formatter-owner.stdout.log` — `394cdc9e97c28e2a264115ddedea53f42f3bce14447ec6cb4f75dfac27df1e27` |
+| LC2 whole Security owner | `N --test scripts/security-entry-points.test.mjs` | Exit 0; 12 passed; 3.886222833 s | `S/stdout.tap` — `a615f2ab428c653583b8f086e3d84bc13f1e5dc20d4b87d251f072abdb523da0` |
+| LC2 unchanged whole reproduction baseline | `N ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts test/application-release-reproduction.test.ts` with native reporters, detached scratch | Exit 0; 1 passed; 3.271128208 s | `C/baseline/vitest.json` — `180ea88dfcea98e4b607cdc9e4de5644102035e93e712b25c2c86f0da6644630` |
+| LC2 missing-packet control | Same whole owner with the single zero-digest trust-row fault | Exit 1; 1 failed by intended direct assertion at 71:8; 2.310296958 s; DISTINGUISHES | `C/missing-packet-row/vitest.json` — `8fe0d653f4d9efc91d3709aa434d74b39308c7dd53d3ca9e6c237b8c1f291b3f` |
+| LC2 equal-version control | Same whole owner with both Lending versions 0.3.0 and the retained measured NF03 tuple | Exit 1; 1 failed by intended “Raise the version” assertion at 90:184; 2.446507709 s; DISTINGUISHES | `C/signed-version/vitest.json` — `b76bbb6c1135952572069a23bde3cb5c2ee819a6472df271a848f5a4d48bbe9f`; aggregate `C/result.json` — `6620eaad8d1644288f54ac7ebbbdc1c23df4100e51ab531317dc584dabc741ac` |
+| LC2 exact-head shared helpers | `N scripts/check-shared-helpers.mjs` | Exit 0; 0.596663333 s | `T/helpers.stdout.log` — `af00848d1b94433533085adfecd184e68584914cce159b58ead29f4dab584502` |
+| LC2 exact-head whole typecheck | `/opt/homebrew/bin/npm run typecheck` | Exit 0; 16.459192000 s | `T/typecheck.stdout.log` — `a9abf7e40e10fbda74447d08a5ea3b33733361ecd9ac199658065cfbc874936a` |
+| LC2 combined full gate | `/opt/homebrew/bin/npm run gate` | Exit 0; child 1620.579566916 s, outer 1620.829315250 s; Node 202, Counting 56, Plain 4858 passed and 1 skipped, Native 1158 passed and 2 skipped; natural Scale all 22 passed in 13 owners | `/Users/hughpyle/play/artroom-evidence/2026-11-15-nf6-nf8-fh2-sd1-lc2-full-gate-attempt1/gate.log` — `44a9865875f439993459f0f78655acc3475b54615a65b838ec78aae452f2daf9` |
+| LC2 joint independent review | One five-promise review after final note-only successor | OWED | No approval claimed |
 
 The stderr files `E/cli-test-compiler.stderr.log`,
 `E/formatter-owner.stderr.log`, `E/compatibility.stderr.log` and
@@ -153,6 +163,9 @@ needs no second gate. No project check ran for the documentation update.
 
 ## Open limits
 
+The following LC1 limits describe its original gated head. The dated LC2
+continuation below records the later source and validation.
+
 LC1 gated first under ruling `500885533dfe8ed370cc7c627f0ae3501142cff0`
 after the two checks required by `7fe68ffe`. It still has not integrated C3;
 the matching donor dependency view does not imply C3 source composition.
@@ -168,3 +181,120 @@ head; none occurred in these checks. NF7's hosted Counter installation and
 witness remain held under its own request. R retains reservation source and
 its later signing boundary. Passing the gate makes no deployment, installed
 release or hosted acceptance claim.
+
+
+## LC2 source continuation, 15 November
+
+LC2 request `46072a190cf7cc6be55036b0e62c7ddda6c821f9` and promise
+`d59fe799976cf95b91c5dbb1ce8f6d7dcd3f6870` govern this successor. LC1's
+results above retain their dated heads. Ruling
+`c168799e37d1052a7199d29506e57649d6c5c2bd` puts LC2 on the waiting
+NF6/NF8/FH2/SD1 head. The LC2 development results below bind source
+`27e0165938ec563420c1fecce6364d11c14f4afb`, tree
+`66ccd762db65d34a8f9e95f59071984a32c2c7be`. Earlier LC1 results keep their
+original heads and limits.
+
+Signing END `37119ff2f86cc48f0b4d8190f3cd24dd4b1a5775` records the two
+0.3.0 packets signed from main
+`c6711b53a368d24c1fad2830ea5634c045999ce1`. They come byte-for-byte from
+carrier `5cb79ddd812b222c469069201c50df53d21b19e2`:
+
+- Lending: `examples/lending/releases/0.3.0/application.dap.json`, Git blob
+  `d083d5b16d5731563fbec6921d75dadf755bfcdc`, 2,504,735 bytes,
+  SHA-256 `84f8e5f8738a1fd27fc7abe2cdf7b82a1ccd701d9edfeccd970631c3d4b3c039`.
+  Release: `sha256:51f8afe2fd6728c121dfe18597808d529f642722634987144712bfedecfbb204`.
+- Counter: `apps/counter/releases/0.3.0/application.dap.json`, Git blob
+  `d77f239ffa4a9a80dfa8ca46b1dab8e4f0bc081d`, 2,593,092 bytes,
+  SHA-256 `81b59b8cd3b8b109f3485116c5a570833fc6bb0ced222291b959b1b2a42a32e1`.
+  Release: `sha256:0b3e5038f96e69cfb7942c9d7fc3dbbb67d49a71ba737aaec9fcc129a1e619ed`.
+
+These packet hashes and sizes come from the signing END, not a new builder
+calculation or signature check. Both rows retain publisher
+`key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI` and host `github.com`.
+`APPLICATION_TRUST` contains exactly those two rows. The old 0.2.0 packets and
+rows are removed because no installation uses them; Git history retains them.
+The content bucket, installed registers, serving settings and empty screen-host
+list stay unchanged. The formatter excludes the two new canonical paths and
+keeps both Grow packet exclusions.
+
+The side head changes both presentations after the 0.3.0 signing, so c168799e
+opens authored Lending and Counter 0.4.0. Root completed the one normal comparison and applied its measured tuples
+before LC2 composition, under END `3f54a4e6fe4c760b42fc09b41add62fd0c08b7b7`.
+NF6 carries those six version and identifier paths under planner
+`8228f48165d0f0cdb09dcfde3316a19b60cb402d`. Signed 0.3.0 stays immutable.
+The reproduction owner keeps its version conditional: it compares a packet
+with current source only when their versions match. On authored 0.4.0 it still
+validates each signed 0.3.0 packet's release, publisher, host, application name
+and manifest version against the exact configuration row. It still reproduces
+all three current source tuples. It does not substitute 0.4.0 screen bytes for
+the installed 0.3.0 packet's own presentation.
+
+Both named REDs distinguished their intended guards under END
+`60571fe4556bcccb2dc00d41f483af779256fe8c`. The unchanged whole reproduction
+owner first passed its one case. The candidate and detached scratch matched
+in source, owned dependencies and compatibility, so that baseline supplies
+the required reproduction owner without another green run.
+
+The missing-packet fault changed only Lending's trust release to the valid
+zero digest. The owner failed with direct AssertionError, “dap-lending must
+trust each committed packet exactly once,” at line 71:8. The later missing-
+packet assertion did not run.
+
+After exact restoration, the equal-version fault restored both authored
+Lending versions to 0.3.0 and used the already measured NF03 candidate from
+`/Users/hughpyle/play/artroom-evidence/2026-11-15-nf-canonical-compare-only-attempt1/preparation/lending.candidate.json`.
+Its presentation is
+`sha256:f99dce241076cc0d8a2b6eac1c84dff60f1f7858b5882ae5065ba7c914229b63`;
+its entry, definition and semantic identifiers stay exact. The version enters
+the browser bundle, so this measured input keeps the earlier current-source
+assertion consistent. The owner reached the intended direct AssertionError,
+“Lending 0.3.0: signed identifiers differ from current source. Raise the
+version,” at line 90:184. Counter stayed at current 0.4.0.
+
+Each fault failed the same one-case owner with zero pending or todo cases.
+Neither run timed out or received a signal. Root read both complete native
+JSON reports and assertion stacks, then verified the four restored files
+against both candidate and saved originals, including every 0644 mode.
+Candidate and scratch remained clean at the original head and tree. No new
+producer, synthetic expected baseline, packet edit, weakened assertion or
+third green supplied these results.
+
+For the current rows in the existing evidence table, `C` is
+`/Users/hughpyle/play/artroom-evidence/2026-11-15-nf6-nf8-fh2-sd1-lc2-full-gate-attempt1/controls/lc2`.
+`B` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-nf-lc2-bounded-owners-attempt1`,
+`S` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-nf-lc2-security-owner-attempt1`,
+and `T` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-nf-lc2-exact-head-preflight-attempt1`.
+Current root commands ran from
+`/Users/hughpyle/play/artroom/.builder-worktrees/nf6-nf8-on-c3-sh1-source-20261115`;
+CLI examples and configuration ran from its `packages/cli`. The reproduction
+baseline and controls ran from `packages/cli` in the matching detached scratch
+`/private/tmp/artroom-lc2-fh2-control-source-20261115`. Exact reporter argv and
+paths remain in each retained result. The earlier `W`, `E`, `P` and `G`
+aliases describe LC1 only.
+
+The 17 explicit safe LC2 and FH2 control records retain their original bytes
+beside the combined gate log. Original attempts remain retained separately.
+
+The whole application-examples and demo-config owners passed together, as
+three and six cases. The whole formatter owner passed one case; Security
+passed all 12. The pre-START helper and whole typecheck commands both exited
+0 at the unchanged source above. The pinned-version source audit preceded
+LC2's deliberate historical-packet assertions; it does not claim that all
+current tests lack the literal 0.3.0. The combined gate passed under END
+`9d48f8f053c936598e8de3d441ed9b5e08c2241c`. The retained terminal records
+are complete for Node, Counting, Plain and Native. Native wall time was
+1282098.070041 ms, including Scale; no separate Scale-only wall was recorded.
+Scope-stories module observations remain partial, with 129 unknown or suite
+observations and zero contradictory records. Independent review remains owed.
+
+After landing, the planner owns dap-lending deployment, Lending 0.3.0
+installation in lending-library, and later screen-host rows with the actual
+installation item. RS1 continues within open 0.4.0 without another version;
+planner signing follows RS1. These local checks claim none of those outcomes.
+
+The final reviewed successor changes only four existing implementation notes:
+this LC1/LC2 note, the NF6/NF8 report, the FH2 note and the SD1 note. Source,
+configuration, tests, generated assets, packet bytes and dependencies match
+the gated tree `66ccd762db65d34a8f9e95f59071984a32c2c7be` exactly. The source
+checkpoint records the final commit and tree. The document-only follow-up
+rule requires no repeated gate, typecheck, owner, control or producer.

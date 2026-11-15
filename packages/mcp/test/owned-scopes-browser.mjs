@@ -11,7 +11,8 @@ import { applicationProjectionId, applicationProjectionQueryDigest } from '@gene
 import { secretSigner } from '@generalbusiness/dap-client';
 import { prepareGrowCheck } from '../../../examples/grow/prepare-check.ts';
 import { prepareApplicationDirectory } from '../../cli/src/application-files.ts';
-import { McpService, memoryStore } from '../src/index.ts';
+import { memoryStore } from '@generalbusiness/dap-client';
+import { McpService } from '../src/index.ts';
 import { DeclaredViewSource } from '../src/views/declared.ts';
 import { viewToolName } from '../src/views/names.ts';
 import { startViewsHost } from './support/views-host.ts';

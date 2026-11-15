@@ -148,14 +148,17 @@ test("browser invitation context mismatches and malformed kept joins cannot be s
   expect(await f.api.check()).toMatchObject({ status: "unknown" }); expect(await f.api.continueOriginal()).toMatchObject({ status: "unknown" }); expect(f.posts).toHaveLength(1); expect(f.kept()).toEqual(malformed);
 });
 
-test("a join slot from before the cutover is removed, the person is told the room retired, and nothing is signed or sent", async () => {
+test("a join slot from before the cutover is removed, the person is told the room retired, and this call signs or sends nothing", async () => {
   const f = await fixture();
   const retired = { v: 1, seat: f.seat, kept: { v: 1, kind: "join", envelope: { signed: {}, grants: [], beside: {} }, phase: "unknown" } };
-  for (const press of [() => f.api.check(), () => f.api.continueOriginal(), () => f.api.join(f.link, f.seat)]) {
+  for (const phase of ["sent", "unknown"]) for (const press of [() => f.api.check(), () => f.api.continueOriginal(), () => f.api.join(f.link, f.seat)]) {
+    retired.kept.phase = phase;
     f.setHeld(retired);
     expect(await press()).toEqual({ status: "retired", reason: RETIRED_REQUEST });
     expect(f.kept()).toBeNull(); expect(f.calls.at(-1)).toBe("clear retired");
   }
+  expect(RETIRED_REQUEST).toContain("room that has retired");
+  expect(RETIRED_REQUEST).not.toContain("Nothing was sent");
   f.setHeld(retired);
   expect(await f.api.pending()).toBeNull(); expect(await f.api.retired()).toBe(RETIRED_REQUEST); expect(f.kept()).toBeNull(); expect(await f.api.retired()).toBeNull();
   expect(f.posts).toHaveLength(0); expect(f.records()).toBe(0);

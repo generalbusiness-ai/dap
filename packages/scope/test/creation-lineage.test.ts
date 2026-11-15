@@ -10,7 +10,8 @@ import { packApplication2, readApplicationProjection } from "@generalbusiness/da
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import type { Delivered } from "@generalbusiness/dap-derive";
 import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
-import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { McpService, type ServerPort } from "@generalbusiness/dap-mcp";
 import { secretSigner } from "@generalbusiness/dap-client";
 import { admitChildCreation, type CreationTimer } from "../src/creation-lineage.ts";
 import { namespace, type Binding, type Peer } from "../src/namespace.ts";

@@ -9,7 +9,8 @@ import { applicationProjectionQueryDigest, type AnyPackedApplication } from "@ge
 import { signedIntent, type Fetch } from "@generalbusiness/dap-client";
 import type { openOwnedGrowScenario } from "./grow-owned-session.ts";
 import { room } from "../../../../examples/grow/room.ts";
-import { McpService, memoryStore } from "../../src/index.ts";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { McpService } from "../../src/index.ts";
 import { DeclaredViewSource } from "../../src/views/declared.ts";
 import type { MembershipDisplayRead } from "../../src/views/member-types.ts";
 import { SERVICE, StandIn } from "./standin.ts";

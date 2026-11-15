@@ -6,7 +6,8 @@ import { INVITATION_LINK, readApplicationInstallOptions, secretSigner, signedInt
 import { TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { projectAnswer, ACT_OUTPUT, type ActResult } from "../src/act-result.ts";
 import { earlierSaid } from "../src/errors.ts";
-import { Custody, McpService, MISMATCH_NOTES, UNAVAILABLE_NOTES, answered, finding, meaningOf, memoryStore, type Finding } from "../src/index.ts";
+import { Custody, meaningOf, memoryStore } from "@generalbusiness/dap-client";
+import { McpService, MISMATCH_NOTES, UNAVAILABLE_NOTES, answered, finding, type Finding } from "../src/index.ts";
 import { type DefinitionLike } from "@generalbusiness/dap-client";
 import { READ_CREDENTIAL, SERVICE, SESSION_TOKEN, StandIn } from "./support/standin.ts";
 import { fixedSigner } from "./fixtures.ts";

@@ -3,7 +3,8 @@ import { b64url, canonicalize, digestBytes, domainBytes, utf8 } from "@generalbu
 import { DOMAINS, type SignedIntent } from "@generalbusiness/dap-contract";
 import { TransportError } from "@generalbusiness/dap-client";
 import { issueDemo } from "@generalbusiness/dap-lanes";
-import { LEGACY, MODERN, ApplicationReads, McpService, Wire, memoryStore, newSession, type ApplicationReadCatalogue, type CallResult, type Display, type Tool, type ViewSource } from "../src/index.ts";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { LEGACY, MODERN, ApplicationReads, McpService, Wire, newSession, type ApplicationReadCatalogue, type CallResult, type Display, type Tool, type ViewSource } from "../src/index.ts";
 import { fixedSigner } from "./fixtures.ts";
 import { SERVICE, StandIn } from "./support/standin.ts";
 

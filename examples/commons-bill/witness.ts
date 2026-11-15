@@ -5,7 +5,8 @@ import type { FactRef, KeyId, Read, Receipt, ScopeRef, Summary } from "@generalb
 import { canonicalize, entryHash, intentDigest, isFactRef, isKeyId, isRecord, isScopeRef, parseStrict, resolveGenesisSelf, same, scopeIdOf, takeBytes, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, loadCommons, notesAbout, type Fetch } from "@generalbusiness/dap-client";
 import { COMMONS_COHORT } from "@generalbusiness/dap-platform";
-import { McpService, identityId, type CustodyRecord, type Identity, type ConfigPort } from "@generalbusiness/dap-mcp";
+import { identityId, type CustodyRecord, type Identity } from "@generalbusiness/dap-client";
+import { McpService, type ConfigPort } from "@generalbusiness/dap-mcp";
 import { fileStore } from "../../packages/cli/src/files.ts";
 import { storedSigner } from "../../packages/cli/src/store-signer.ts";
 import { durableCustody, flushFile, noLinks } from "./custody.ts";

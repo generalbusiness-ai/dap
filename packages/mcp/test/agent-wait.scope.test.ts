@@ -6,7 +6,8 @@ import { secretSigner, type Fetch } from "@generalbusiness/dap-client";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, ROLE_LISTS } from "@generalbusiness/dap-platform";
 import { issueQuestions, QUESTION_DIGESTS } from "@generalbusiness/dap-lanes";
-import { McpService, memoryStore, type McpConfig } from "../src/index.ts";
+import { memoryStore } from "@generalbusiness/dap-client";
+import { McpService, type McpConfig } from "../src/index.ts";
 import { created, mcpRoom, type Agent } from "./fixtures-native.ts";
 import { drainScheduledFixture, nativeFixtureLifetime } from "../../scope/test/support/native-fixture-lifetime.ts";
 
