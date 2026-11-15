@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a6cc7f89d7e51092136eb6f426d13b8aaf4776d9","text":"Merge retired a covered predecessor; the successor is at apps/counter/package.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a848967180fc3e3826cf6254292a02447e7cb776","text":"Merge retired a covered predecessor; the successor is at apps/counter/dap.application.json."}
