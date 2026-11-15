@@ -74,7 +74,7 @@ export class ActProjection {
     return new ActProjection(definition, this.recorded, this.raw, this.#records, this.references.fork(this.raw), this.history, this.assumes);
   }
 
-  capabilities(capabilities: Capabilities | null | undefined): Capabilities | null | undefined {
+  capabilities(capabilities: Capabilities | undefined): Capabilities | undefined {
     return capabilities ? this.opaque().capabilities(capabilities) : capabilities;
   }
 
