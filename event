@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f06e50ddd58187a46d2bb14b9eda7cb86f2fbb52","text":"Merge retired a covered predecessor; the successor is at apps/counter/dap.application.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f1c370a6c1b93308e8ea66b9b5e853e5b583026f","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/agent-wait.scope.test.ts."}
