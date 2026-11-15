@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bfd4cfbdf020ced7871db408a72c038688901c6d","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/capability/device-command.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c3588f887110981f7cdeacb94d3787296574cc0e","text":"Merge retired a covered predecessor; the successor is at packages/client/src/act-projection.ts."}
