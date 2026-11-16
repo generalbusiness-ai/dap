@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ef61922d078174c1edd2fb114867ab2c0bec9cfd","text":"Merge retired a covered predecessor; the successor is at packages/client/test/c4-replica-explore.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f37a0537371a596ffb0b0cd1ef1777385c751169","text":"Merge retired a covered predecessor; the successor is at examples/lending/release-identifiers.json."}
