@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ef0a16a70c38510c13922d78e7e01bb013981eb1","text":"Merge retired a covered predecessor; the successor is at scripts/scale-deadline-registrations.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:efddb4b8333bc1a4fb7394bc3c435b899de2d685","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.grow.jsonc."}
