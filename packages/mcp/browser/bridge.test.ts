@@ -145,3 +145,67 @@ test("a held activation key keeps its first binding through repeats, cancellatio
     expect(captures).toEqual(["A", "C", "D", "E", "F", "G", "H", "I"]);
   } finally { retireControls(element); }
 });
+
+// A scripted DOM port: just the node operations reconcile.ts uses. It checks
+// the reconciler's tree decisions and bindings, not browser layout or events.
+test("a refresh that swaps two keyed actions rebuilds the card; a press runs the action it shows", async () => {
+  class NodePort extends EventTarget {
+    nodeType = 1; parentNode: NodePort | null = null; childNodes: NodePort[] = []; nodeValue: string | null = null; connected = false;
+    get isConnected(): boolean { return this.connected || (this.parentNode?.isConnected ?? false); }
+    get firstChild() { return this.childNodes[0] ?? null; }
+    get nextSibling() { const siblings = this.parentNode?.childNodes ?? []; return siblings[siblings.indexOf(this) + 1] ?? null; }
+    insertBefore(node: NodePort, before: NodePort | null) {
+      node.parentNode?.removeChild(node); const at = before ? this.childNodes.indexOf(before) : -1;
+      this.childNodes.splice(at < 0 ? this.childNodes.length : at, 0, node); node.parentNode = this; return node;
+    }
+    appendChild(node: NodePort) { return this.insertBefore(node, null); }
+    append(...nodes: NodePort[]) { for (const node of nodes) this.appendChild(node); }
+    removeChild(node: NodePort) { this.childNodes.splice(this.childNodes.indexOf(node), 1); node.parentNode = null; return node; }
+    replaceChild(node: NodePort, old: NodePort) { this.insertBefore(node, old); return this.removeChild(old); }
+  }
+  class ElementPort extends NodePort {
+    namespaceURI = "html"; attributes: { name: string; value: string }[] = [];
+    constructor(public localName = "div") { super(); }
+    getAttribute(name: string) { return this.attributes.find(entry => entry.name === name)?.value ?? null; }
+    hasAttribute(name: string) { return this.getAttribute(name) !== null; }
+    setAttribute(name: string, value: string) { this.removeAttribute(name); this.attributes.push({ name, value }); }
+    removeAttribute(name: string) { this.attributes = this.attributes.filter(entry => entry.name !== name); }
+  }
+  class ButtonPort extends ElementPort { disabled = false; constructor() { super("button"); } }
+  class CommentPort extends NodePort { override nodeType = 8; }
+  vi.stubGlobal("window", new EventTarget()); vi.stubGlobal("Element", ElementPort); vi.stubGlobal("HTMLElement", ElementPort);
+  vi.stubGlobal("HTMLButtonElement", ButtonPort); vi.stubGlobal("document", { createComment: () => new CommentPort() });
+  const { bindControl, keyed, reconcile, retained, retireControls } = await import("./reconcile.ts");
+  const root = new ElementPort(); root.connected = true;
+  const pressed: string[] = [];
+  const card = (order: readonly string[], surface?: ElementPort) => {
+    const fragment = new NodePort(), actions = keyed(new ElementPort(), "actions");
+    for (const id of order) {
+      const control = new ButtonPort(); control.setAttribute("data-label", id);
+      bindControl(control as unknown as HTMLButtonElement, `action:${id}`, () => () => { pressed.push(id); });
+      actions.appendChild(control);
+    }
+    fragment.appendChild(actions);
+    if (surface) fragment.appendChild(retained(surface as unknown as HTMLElement, "surface") as unknown as NodePort);
+    return fragment as unknown as DocumentFragment;
+  };
+  const labels = () => (root.childNodes[0]!.childNodes as ElementPort[]).map(control => control.getAttribute("data-label"));
+  const click = (control: NodePort) => { const event = new Event("click"); Object.defineProperty(event, "detail", { value: 0 }); control.dispatchEvent(event); };
+  try {
+    const surface = new ElementPort("iframe");
+    expect(reconcile(root as unknown as HTMLElement, card(["approve", "decline"], surface))).toBe("patched");
+    const [before] = root.childNodes[0]!.childNodes;
+    expect(reconcile(root as unknown as HTMLElement, card(["decline", "approve"], surface)), "a reorder rebuilds, never freezes").toBe("rebuilt");
+    expect(labels()).toEqual(["decline", "approve"]);
+    expect(root.childNodes[1], "the surface host keeps its place").toBe(surface);
+    click(before!);
+    expect(pressed, "a press on the earlier card's control sends nothing").toEqual([]);
+    click(root.childNodes[0]!.childNodes[0]!);
+    expect(pressed, "a press runs the action the control shows").toEqual(["decline"]);
+    // A host that the next tree would move into a new parent refuses, and the live tree stays for the caller to replace.
+    const nested = new NodePort(), wrapper = new ElementPort("section");
+    wrapper.appendChild(retained(surface as unknown as HTMLElement, "surface") as unknown as NodePort); nested.appendChild(wrapper);
+    expect(reconcile(root as unknown as HTMLElement, nested as unknown as DocumentFragment)).toBe("refused");
+    expect(root.childNodes[1]).toBe(surface);
+  } finally { retireControls(root as unknown as HTMLElement); vi.unstubAllGlobals(); }
+});

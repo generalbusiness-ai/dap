@@ -316,7 +316,13 @@ function render() {
   renderedCard = identity;
   const desired = document.createDocumentFragment();
   renderCard(desired, identity, sections);
-  reconcile(root, desired);
+  if (reconcile(root, desired) === "refused") {
+    // Never leave an earlier card on screen: replace it with a way back.
+    retireControls(root); root.replaceChildren();
+    const fallback = document.createDocumentFragment();
+    fallback.append(node("p", "The card could not update. Read it again.", "notice"), button("read-again", "Read the card again", () => read(), "quiet"));
+    reconcile(root, fallback);
+  }
 }
 /** Prepare ordinary children without moving a live surface or committing a partial tree. */
 function renderCard(desired: DocumentFragment, identity: string, sections: ReadonlyMap<string, boolean>): void {

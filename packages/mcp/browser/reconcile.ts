@@ -173,5 +173,44 @@ function patch(current: Node, desired: Node): () => void {
   }
   return () => { if (current.nodeValue !== desired.nodeValue) current.nodeValue = desired.nodeValue; };
 }
-/** Build the complete plan before touching the live tree. There is no detach/reinsert fallback. */
-export function reconcile(root: HTMLElement, desired: DocumentFragment): void { plan(root, [...desired.childNodes])(); }
+/** Build the complete plan before touching the live tree. When the plan
+ * refuses, because the next tree reorders matched children or moves a
+ * surface, the card rebuilds instead (`rebuilt`). When a rebuild cannot keep
+ * every live surface host in its place, the live tree stays unchanged
+ * (`refused`), and the caller must replace it. */
+export function reconcile(root: HTMLElement, desired: DocumentFragment): "patched" | "rebuilt" | "refused" {
+  const wanted = [...desired.childNodes];
+  let apply: () => void;
+  try { apply = plan(root, wanted); } catch { return rebuild(root, wanted) ? "rebuilt" : "refused"; }
+  apply(); return "patched";
+}
+/** Every live child leaves, and its control state ends: a press in flight on
+ * it is lost. Every wanted child enters as a new element, except a live
+ * surface host, which keeps its place in `root`. */
+function rebuild(root: HTMLElement, wanted: readonly Node[]): boolean {
+  const kept: Node[] = [];
+  const live = (node: Node): boolean => {
+    const reference = opaque.get(node);
+    if (reference) return reference.element.isConnected;
+    return [...node.childNodes].some(live);
+  };
+  for (const node of wanted) {
+    const reference = opaque.get(node);
+    if (reference?.element.isConnected) {
+      if (reference.element.parentNode !== root) return false;
+      kept.push(reference.element);
+    } else if (!reference && live(node)) return false; // A live host would move into a new parent.
+  }
+  const order = [...root.childNodes].filter(node => kept.includes(node));
+  if (order.some((node, index) => node !== kept[index])) return false;
+  for (const node of [...root.childNodes]) if (!kept.includes(node)) { retire(node); root.removeChild(node); }
+  let cursor = root.firstChild;
+  for (const node of wanted) {
+    const reference = opaque.get(node);
+    if (reference?.element.isConnected) { keys.set(reference.element, reference.key); cursor = reference.element.nextSibling; continue; }
+    const key = reference?.key ?? keys.get(node), inserted = fresh(node, root)();
+    if (key !== undefined) keys.set(inserted, key);
+    root.insertBefore(inserted, cursor);
+  }
+  return true;
+}

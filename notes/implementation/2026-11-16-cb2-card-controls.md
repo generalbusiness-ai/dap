@@ -23,10 +23,17 @@ tree, child by child:
 - A wanted child with no match enters as a new element. A live child that no
   wanted child matches leaves the document, and its control state ends.
 - The reconciler builds the complete plan before it changes the live tree.
-  If the next tree reorders matched elements, the plan throws, and the live
-  tree stays as it was. No path removes an element and inserts it again.
+  The plan refuses a next tree that reorders matched elements, for example
+  two actions that swap places after a refresh of the same card.
 - A surface that the card holds open, such as an embedded host, stays in
-  its parent. The plan throws if the next tree moves it to another parent.
+  its parent. The plan refuses a next tree that moves it to another parent.
+- When the plan refuses, the card rebuilds. Every live child leaves, and its
+  control state ends, so a press in flight on it sends nothing. Every wanted
+  child enters as a new element. A live surface host keeps its place in the
+  card root.
+- If a rebuild would also move a live surface host, `render()` replaces the
+  card with a notice, "The card could not update. Read it again.", and a
+  button that reads the card again. The screen never keeps an earlier card.
 
 ## The gesture binding
 
@@ -56,8 +63,16 @@ before signing.
 
 ## Evidence
 
-- `packages/mcp/browser/bridge.test.ts` passes 11 of 11, with the new
-  held-key case.
+- `packages/mcp/browser/bridge.test.ts` passes 12 of 12, with the new
+  held-key case and the reorder case. The reorder case refreshes one card
+  with two keyed actions in swapped order. It asserts the new order, the
+  surface host in its place, no action from a press on the earlier control,
+  and the shown action from a press on the new one. It also asserts that a
+  next tree that would move a live host into a new parent returns
+  `refused` and leaves the live tree for `render()` to replace.
+- The reorder control: with `reconcile()` calling `plan()` without the
+  fallback, the reorder case fails with "The Card changed the order of
+  retained controls". The source was restored byte for byte afterwards.
 - The Grow routing browser witness
   (`packages/mcp/test/grow-routing-browser.mjs`) holds a native press on
   "Report in chat" through two background reads, at widths 320 and 592. It
