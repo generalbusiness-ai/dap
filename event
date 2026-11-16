@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5133b639ba7ce83e2390405836ee55b60f1bd832","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/story.scope.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:52e42756ef7058d44efd72b2d16b212efdf5177b","text":"Merge retired a covered predecessor; the successor is at apps/views/test/j4-reads.golden.json."}
