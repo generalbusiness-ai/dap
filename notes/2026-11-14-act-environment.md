@@ -8,7 +8,9 @@ replay judge through the shared body, and no production module calls
 Explore yet. R landed as main `c6711b53` on the same day, and Lending
 0.3.0 holds the reservation definition. No other step is built.
 Section 13 lists the build steps and their requests. Section 18 lists
-the rulings of step E1 that changed sections 3, 5 and 8.
+the rulings of step E1 that changed sections 3, 5 and 8. Section 19
+lists the rulings of steps E4 and C4, of 15 November 2026, that
+changed sections 6, 7, 13, 15 and 16. Step E4 is not on main.
 
 A dap application has more than one interface. A member acts through a
 page, an agent acts through MCP tools, and an operator acts through the
@@ -446,6 +448,13 @@ at that view.
 Rule 4 is the member's own act. It is the only way that a step gets a
 new basis.
 
+Step C4 builds rules 1 to 4, with the exploration of rule 3. The
+replica keeps its checked state private, so the replica owns one
+internal operation that explores an act. The operation uses the real
+authority, owners and evidence, and it answers `unavailable` when it
+holds none. No raw state leaves the replica, and no second evaluator
+exists. Step E3 calls the same operation at each view and each tick.
+
 A draft that lacks a required field has values, and a page can show
 them. The map shows a pin at the draft's coordinates while the name is
 empty. That pin is the presentation of a draft. It is not a row, and no
@@ -492,6 +501,62 @@ package cannot widen what a retained step can do.
 The rule is a predicate over the signing, the authorization with its
 history, the journal and the clock. The suite checks the predicate for
 each signing that custody holds.
+
+**A position names a gesture.** The `id` of a version is the digest
+of its act, so it names content. Two versions of one authorization
+can have one `id`. The position in `versions` names the gesture, with
+its own `at` and `deadline`, and one position permits a signing. A
+member who submits A, B and A again makes position 2 with a new
+deadline. Position 2 never reuses the envelope of position 0. A timer
+sends again only the live bytes of the last position. A source still
+names a version by its `id` (section 8.2).
+
+**One position permits one call of the signer.** The instance writes
+a permission mark under the fence before it calls the signer. The
+mark names the position and the exact materialized act. When the
+signer fails, or the custody write fails after the signer ran, the
+mark stays. The instance then holds no signing for that position,
+sends no bytes that custody does not hold, and rolls back nothing. A
+second attempt to sign for that position stops with
+`authorization-used`, and no timer signs for it. The draft stays
+editable, and the member's next submit appends a new position. A
+custody write can fail after the store took the bytes, and a signer
+need not give equal bytes twice. One call for each position needs no
+proof about either case.
+
+**The instance takes the descriptor digest as a required option.**
+Each authorization keeps the value of its first submit. Step E4
+builds no descriptor and no hash scheme, and the step that builds the
+descriptor supplies the real value. An instance whose option differs
+from the value of a retained authorization stops with
+`descriptor-mismatch`. It adds no version and no signing to that
+step. It can send the live bytes of the last position again, and it
+can settle the step.
+
+**A signing carries a reference to its authorization and position.**
+A signing with no reference is `legacy`: custody held it before step
+E4. The instance reconciles a legacy signing and sends its live bytes
+again. It signs nothing more for that signing without a new gesture,
+and it invents no gesture, descriptor or cancellation. The suite
+states the legacy signings that each test seeds, and it fails when
+any other signing has no reference.
+
+**The store keeps the history of a key while the store lives.** Step
+E4 adds no deletion and no eviction. A key holds at most 64
+positions, and an unsigned position and a failed position each
+count. A gesture past that bound stops before any write, and the
+member continues with a new request key. The bound equals the 64
+signings of D12 section 5.1, and the two bounds are separate
+constants.
+
+**The authorization write comes first.** The authorizations have
+their own namespace in the store. The instance writes the
+authorization before the custody record of its signing, under one
+fence. No signing counts as permitted by a version that the store
+wrote later. Step E4 delivers the port and a store in memory. Step
+E4-B adds the browser store. There, the history of a key leaves in
+the transaction that removes the custody record of that key, live or
+archived, and at no other time.
 
 ### 7.2 Four operations, each with its own condition
 
@@ -565,6 +630,23 @@ Rule 2 orders a `current` act too. Two moves of one note from one
 device expect no revision. If the instance sent both at once, they
 could arrive in the other order, and the first destination would
 stand.
+
+The instance has one ordering policy. A second act on a subject has
+no signing while an earlier pending act on that subject is
+unresolved.
+
+A draft adds one precondition to this transaction. The instance
+checks, under the same fence and before the permission mark, that
+the draft still belongs to this tab. A failed check stops with
+`taken` and writes nothing. No second fence exists, and no public
+entry skips the fence.
+
+One case stops before the transaction. An `also.via` selector can
+pass through the reference of a pending source, which has no recorded
+row yet. Step E4 stops that submit before retention and before any
+signing, and it writes nothing. When the row is recorded, the same
+submit takes the ordinary path. Step E5 selects through a pending
+source, by a checked hypothetical view.
 
 Separate submits with no required local order can proceed at the same
 time, and the scope judges how they interact. A full type or a range
@@ -847,8 +929,9 @@ A small model also runs to a bound over every order of its steps.
 |---|---|---|
 | E1 | Explore for complete acts: the split of `actJudged`, the context, the result, the hypothetical view and the three symbolic names | The planner's ruling for the export, from Hugh's decision (section 16) |
 | E2 | The MCP tool `explore`, on a replica in the agent host, with the same result and context | E1, C2 |
-| E3 | Explore in the local instance, again at each view and each tick. Drafts and references: `ref` with its sources, the basis of a draft, changed fields, the new version after a return, one identity for a row | E1, C2, C4 |
-| E4 | Retained authorization: the record with versions, the default deadline, three of the four operations (no new envelope for the same version), the owner and the store, the transaction of a submit, the predicate | C1, C3 |
+| E3 | Explore in the local instance, again at each view and each tick. `offers`, a `ref` with its sources, `recorded`, and one identity for a row. Step C4 builds the basis of a draft, the changed fields, the returned `now` and the new version after a return (section 6) | E1, C2, C4 |
+| E4 | Retained authorization: the record with versions, the default deadline, three of the four operations (no new envelope for the same version), the owner and the store in memory, the transaction of a submit, the predicate | C1, C3 |
+| E4-B | The browser store keeps authorizations, with the removal rule of section 7.1. It lands in the C4 head | E4 |
 | E5 | Sequential dependencies: sources by key and version, the materialized act, `waits`, the returns | E4 |
 | E6 | Environment resolution through MCP `settle`, React and foldkit. `dap dev` with `log` and the head stream | E3 to E5 |
 | R | The reservation definition, with its scenario | Starts with E1 |
@@ -890,6 +973,7 @@ covers the acts that need no basis.
 | Rule 3: "The client signs only when the member submits. No timer signs" | The rule of section 7.1. With the default deadline, the behavior that a member sees is D12's |
 | Rule 5: the intent is built "at the replica's head" | A draft keeps the basis that it opened on, and a returned draft takes the basis `now` (section 6) |
 | Section 8, step 3: the stop `busy` | Stays for an `observed` subject whose pending step the act does not name. An act that names the step waits (section 7.4) |
+| Section 8: "A stop changes no store" | A stop of the signer or of the custody write changes no custody record. The authorization store keeps the version and its permission mark (section 7.1). Each earlier stop writes nothing |
 | Section 9: `ClientView` and `Judged` | The view gains `explore` and `offers`, and each row gains `ref` and `recorded`. `Judged` is the exploration of a signed version |
 | Section 10: no file and no export in `packages/contract` or `packages/derive` | Step E1 adds one export to `packages/derive` (section 16) |
 | Section 15: work offline for longer than one signing is not taken | Stays not taken in the first build. The rule of section 7.1 permits a later deadline (section 7.2) |
@@ -929,8 +1013,10 @@ This note did not check how the MCP server reads the state of a scope
 inside the runtime, which imports it (`packages/scope/src/worker.ts`).
 If the server reads that state directly, step E2 does not need C2.
 
-**Decision A enters with its own design.** Two more rules of that page
-apply to it.
+**Decision A enters with its own design.** That design is
+[the subject admission note](2026-11-14-subject-admission.md). Hugh
+decided its items on 15 November 2026, and ruling `451d3c8e` permits
+the step. Two more rules of that page apply to it.
 
 - Section 7.2 binds validation to the format `artroom-definition-1`.
   The validator refuses each member of an act that the contract does
@@ -950,7 +1036,17 @@ apply to it.
 This note read the rule that `level` and `capacity` carry versions,
 and not their code. It did not check whether a room needs a Rules
 cohort to install a definition with a new part, as section 7.3
-requires for the `reference` field type.
+requires for the `reference` field type. The step A note answers the
+question: no such gate exists, and each room installs the part when
+its Worker has the code.
+
+**A change to act admission needs the absence proof in its review.**
+A client ends an expired request as absent on evidence from the
+scope (ruling `98c1dba9`). That proof rests on one rule of admission:
+the scope refuses an act after its `notAfter`, so a kept envelope
+cannot enter a later entry. An admission path that records an act
+below the time of the existing head makes the proof unsound. The
+checker stated this fact in approval `1e7574bd`.
 
 **The rest stays outside the kernel.** The types of the act, the
 context and the exploration live in `packages/client`, which
@@ -1010,3 +1106,20 @@ hold the results.
 The requests of the build steps: E1 `d35ebede`, E2 `a102d847`, E3
 `17e075b3`, E4 `afe0a437`, E5 `b1c6aad6`, E6 `edc09d8b`, R `5b5b6896`
 and A `04e4438e`. Request `6b6def0a` holds the review after step E3.
+
+## 19. Rulings of steps E4 and C4
+
+The build of step E4 and the plan of step C4 found points that this
+note did not settle. The planner ruled on each on 15 November 2026,
+and the sections above hold the results.
+
+| Ruling | Point | Section |
+|---|---|---|
+| `34791662` | A position names a gesture. The descriptor digest is a required option. A signing with no reference is `legacy`. The authorization write comes first | 7.1 |
+| `f494b29d` | One position permits one call of the signer, and a failed signing keeps its mark | 7.1, 15 |
+| `686dc913` | The instance has one ordering policy | 7.4 |
+| `63f034d9` | A selection through a pending source stops before retention. Step E5 owns it | 7.4 |
+| `52b638a9` | The store keeps the history of a key, with at most 64 positions | 7.1 |
+| `d48ce431` | Step C4 owns the exploration at a submit and the basis of a draft. Step E4-B owns the browser store | 6, 7.1, 7.4, 13 |
+
+Request `4bd07278` holds step E4-B.
