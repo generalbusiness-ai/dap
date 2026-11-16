@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"9d69f8072e7816903812bb0e21a4ad658ec0245a","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:01fb8f64c449a1983f2ff6b6fd801875311aab9a","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/session-cache.test.ts."}
