@@ -1,10 +1,10 @@
 # A definition states which subjects an act observed
 
-Status: for review. This note is the design of step A of
+Status: decided, and not built. This note is the design of step A of
 [the act environment note](2026-11-14-act-environment.md), which this
 note calls the environment note. Hugh decided the direction on 14
-November 2026 (decision 1 of its section 17). Nothing here is built.
-Section 10 lists the decisions that this note asks Hugh to make.
+November 2026 (decision 1 of its section 17). He decided the items of
+section 10 on 15 November 2026. Nothing here is built.
 
 Two members drag one note on a pinboard. Each page sends a `move` with
 the revision of the note that its member saw. The scope records the
@@ -262,39 +262,45 @@ does not give a wrong answer.
 A later stricter check on the list takes version 2 of the part, as
 section 7.2 of the kernel page rules.
 
-## 7. A room installs the part only at a Rules pin that opts in
+## 7. A room installs the part when its Worker has the code
 
-Reference fields set the precedent. They stay in format 1, and
+Reference fields have an install gate. They stay in format 1, and
 `requireReferenceInstall` refuses a definition with a reference field
 unless the room's Rules pin is `platform:rules@14`
 (`packages/platform/src/application-install-reference.ts:24-27`). The
 kernel page says why: "The shared field type does not migrate an
 older room's native installation policy" (section 7.3).
 
-The part `level` has no such gate, and it needs none today. No runtime
+The first draft of this note gave the admission part the same gate.
+Hugh decided on 15 November 2026 that the part takes no gate.
+
+- The install rule names no reason for the part. A room at any Rules
+  pin installs a definition with the part when the validator of its
+  Worker admits the definition.
+- No Rules version reads the admission. The judge in
+  `packages/derive` reads it from the pinned definition (section 2).
+  A room's Rules pin therefore decides nothing about it.
+- A Worker built before step A2 refuses the definition with `shape`
+  (section 6). That refusal ends when the Worker takes the head of
+  step A2.
+
+The part `level` has no gate for a different reason. No runtime
 derives a `live` or a `sequenced` definition
 (`packages/derive/src/capability.ts:224-226`), so no room pins one.
+The admission part is derivable from its first build.
 
-The admission part is derivable from its first build. So step A takes
-the gate of the reference field:
+Two rules of operation replace the gate:
 
-- The install rule refuses a definition with the part unless the
-  room's Rules pin opts in. The reason is
-  `admission-requires-rules<n>`, where `<n>` is the lowest pin that
-  opts in. The reason is a name in `packages/platform`, as
-  `reference-requires-rules14` is.
-- A pin opts in by name. An unknown later pin stays closed until its
-  cohort opts in.
-- The pins that opt in are the pins that install reference fields at
-  the head of step A. Today that is `platform:rules@14`. Step A adds
-  no Rules version.
-- One table in `packages/platform` holds both features with their
-  pins. `requireReferenceInstall` reads that table.
+- Each room Worker and each verifier takes the head of step A2 before
+  an author publishes a definition with the part.
+- A Worker does not return to a head before step A2 after one of its
+  rooms installs such a definition. The earlier validator refuses the
+  pinned definition, and that room then records nothing. The
+  deployment record of step A2 states this limit.
 
-The gate changes what a room at `platform:rules@14` installs. It
-changes no recorded entry. Before step A, each such room refused the
-part, so no journal holds an install that the new rule judges
-differently.
+Step A changes no recorded entry. Before step A2, each validator
+refused the part, so no journal holds an install that the new rule
+judges differently.
 
 ## 8. A current act still moves the item's revision
 
@@ -330,7 +336,7 @@ Three kinds of act suit `current`, and two do not:
 | Step | Work | Kernel |
 |---|---|---|
 | A1 | `expectedKeys` in `packages/derive`. The judge, `expectedOf`, `views/declared.ts`, `story.ts` and `capturedExpected` call it. No answer of the judge changes. `story.ts` stops setting `on` for a `comment` | One export |
-| A2 | The contract types, the validator's checks, the judge's condition, the install gate, and the documents | The part, the member, one problem code |
+| A2 | The contract types, the validator's checks, the judge's condition, and the documents | The part, the member, one problem code |
 | A3 | The map's `comment` takes `also.place`, `current` and the guard `place-gone`, in `~/play/dap-foldkit`. The pinboard states `current` for `move` and `resize` when it has a definition | None |
 
 A1 and A2 are one head or two. Each waits for the kernel ruling of
@@ -369,8 +375,9 @@ sections 7 and 7.1 of `docs/kernel.md`, `docs/mcp.md` and
    `current` subject that is not fixed. It admits the same act when
    the slot is fixed, and when the name is also `current`. This is
    case 8 of the suite in section 12 of the environment note.
-9. A room at a pin that does not opt in refuses the install with the
-   reason of section 7. A room at `platform:rules@14` installs.
+9. A room at a Rules pin before `platform:rules@14` installs a
+   definition with the part. A room at `platform:rules@14` installs
+   it too. No answer of the install rule names the part.
 10. `expectedOf` gives no key for a `current` subject. The MCP
     server refuses an `at` that holds one, for `on` and for a name of
     `also`, before it signs.
@@ -384,7 +391,8 @@ fails.
   more test then shows the fault of section 4 in the judge: the slot
   moves to an item with an equal revision, and the judge admits the
   act.
-- Remove the install gate. Case 9 fails.
+
+Case 9 shows that no rule exists, so it has no control.
 
 **Compatibility.** Each row of the definition corpus
 (`packages/derive/test/definition-corpus/`) keeps its bytes, its
@@ -435,19 +443,19 @@ earlier validator refused it.
 **Promise 3** gains the part: "The optional parts `level`, `capacity`
 and `admission` carry their own versions."
 
-Hugh decides these items. Each has this note's recommendation.
+Hugh decided these items on 15 November 2026.
 
 1. **The carrier: a versioned part and one act member** (section 6).
-   The environment note recommended a part and left the act form as
-   it is. This note puts the list in the act, for the reasons of
-   section 6.
-2. **The install gate at the pins of the reference field** (section
-   7). The other choice is no gate: each room installs the part when
-   its Worker has the code.
+   Accepted. The environment note recommended a part and left the
+   act form as it is. This note puts the list in the act, for the
+   reasons of section 6.
+2. **The install gate.** Refused. The first draft recommended the
+   gate of the reference field. Each room installs the part when its
+   Worker has the code (section 7).
 3. **The narrow scope of version 1** (section 3, check 3): no
-   platform declaration, the recorded level only.
+   platform declaration, the recorded level only. Accepted.
 4. **The export `expectedKeys`** (section 5), as one more addition to
-   `packages/derive`.
-5. **The kernel ruling.** After Hugh's decision, the planner files
-   the ruling that sections 7 and 7.1 of the kernel page record, and
-   step A2 writes it there.
+   `packages/derive`. Accepted.
+5. **The kernel ruling.** Accepted. Ruling `451d3c8e` permits
+   step A under sections 7 and 7.1 of the kernel page, and step A2
+   writes it there.
