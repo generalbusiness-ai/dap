@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-11-14-act-environment.md","body":{"commit":"aa72a5b0c572391771ac5030db339cd62b8d277f","path":"notes/2026-11-14-act-environment.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:972db3a211148e04f7cd9883d15bddfae2b30abd","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-14-act-environment.md."}
