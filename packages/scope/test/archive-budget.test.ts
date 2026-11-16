@@ -1,6 +1,13 @@
 import { expect, test } from "vitest";
+import { JOURNAL_INVENTORY_CEILINGS } from "@generalbusiness/dap-git/journal";
 import { ArchiveBudget, ArchiveStopped, ARCHIVE_BOUNDS } from "../src/archive-budget.ts";
 import { admitArchiveMigration } from "../src/archive-bootstrap-cost.ts";
+
+test("native and serialized inventory ceilings share the approved pass bounds", () => {
+  expect(ARCHIVE_BOUNDS).toEqual(JOURNAL_INVENTORY_CEILINGS);
+  expect({ nodes: JOURNAL_INVENTORY_CEILINGS.nodes, inputWork: JOURNAL_INVENTORY_CEILINGS.inputWork })
+    .toEqual({ nodes: 128, inputWork: 134_217_728 });
+});
 
 test("one pass admits exact cumulative limits, refuses the next unit atomically and never resets after failure", () => {
   const budget = new ArchiveBudget({}, () => 0);

@@ -3,8 +3,9 @@
 import { natural } from "@generalbusiness/dap-bytes";
 import type { Head } from "@generalbusiness/dap-contract";
 import type { Sql, SqlValue } from "./sqlite.ts";
+import { JOURNAL_INVENTORY_CEILINGS } from "@generalbusiness/dap-git/journal";
 
-export const ARCHIVE_BOUNDS = Object.freeze({ entries: 4096, attempts: 512, nodes: 128, calls: 16384, metadata: 4 * 1024 * 1024, inputWork: 128 * 1024 * 1024 });
+export const ARCHIVE_BOUNDS = Object.freeze({ entries: 4096, attempts: 512, nodes: JOURNAL_INVENTORY_CEILINGS.nodes, calls: 16384, metadata: 4 * 1024 * 1024, inputWork: JOURNAL_INVENTORY_CEILINGS.inputWork });
 export const ARCHIVE_SECONDS = 30;
 export type ArchiveCost = { -readonly [K in keyof typeof ARCHIVE_BOUNDS]: number };
 const keys = ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const;

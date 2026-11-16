@@ -18,6 +18,19 @@ import { archiveInstallationIdentity, type ArchiveInstallationIdentity } from ".
 import { archivePackagePolicies } from "./archive-policy.ts";
 
 export const APPLICATION_ARCHIVE_REVOKED = "application-policy-revoked";
+/** App-private templates shared by production reads and the Plain native-guard owner. */
+export const archivePackageQueries = Object.freeze({
+  entryPosition: "SELECT hash,size,typeof(bytes) AS type,octet_length(bytes) AS actual FROM entry WHERE seq=? LIMIT 1",
+  currentRules: "SELECT id,octet_length(record) AS bytes FROM item WHERE type='rules' AND state='current' LIMIT 2",
+  rulesDirectory: `SELECT ${text("$.refs.directory.scope", 71, "record")} AS scope,${text("$.refs.directory.genesis", 71, "record")} AS genesis FROM item WHERE id=? AND octet_length(record)=? LIMIT 1`,
+  entryItems: "SELECT DISTINCT CASE WHEN typeof(json_extract(value,'$.item'))='integer' THEN json_extract(value,'$.item') ELSE NULL END AS item FROM entry,json_each(entry.bytes,'$.effects') WHERE entry.seq=? AND entry.hash=? AND entry.size=? AND typeof(entry.bytes)='text' AND octet_length(entry.bytes)=? LIMIT ?",
+  activeInstallation: "SELECT id FROM item WHERE id=? AND type='installation' AND state='active' LIMIT 1",
+  directoryInput: `SELECT ${text("$.input.type", 16)} AS type,${text("$.input.decision", 16)} AS decision,
+          ${text("$.input.message.class", 16)} AS class,${text("$.input.message.type", 16)} AS messageType,
+          ${text("$.input.message.body.message", 64)} AS message,CASE WHEN typeof(json_extract(bytes,'$.input.message.body.fields.job'))='integer' THEN json_extract(bytes,'$.input.message.body.fields.job') ELSE NULL END AS job,
+          ${text("$.input.from.at.scope", 71)} AS rulesScope,${text("$.input.from.at.genesis", 71)} AS rulesGenesis
+          FROM entry WHERE seq=? AND hash=? AND size=? AND typeof(bytes)='text' AND octet_length(bytes)=? LIMIT 1`,
+});
 type ProofReply = string | ApplicationArchiveProofRefusal | null | RoomRetiredStop;
 type ProofPeer = { applicationArchiveProofBytes(directory: ScopeRef, item: number): Promise<ProofReply> };
 type Identity = Pick<ArchiveInstallationIdentity, "directory" | "rules" | "rulesNamed" | "item">;
@@ -146,38 +159,33 @@ export function roomArchivePackages(_given: OutsideGiven, sql: Sql, binding: Bin
     async candidate(seq: number, budget: ArchiveBudget): Promise<void> {
       if (!active || isDigest(active.seed.definition) || !["rules", "directory"].includes(active.seed.kind)) return;
       const { at, seed } = active;
-      const position = budget.native(sql, () => ({ metadata: 256, inputWork: 0 })).exec("SELECT hash,size,typeof(bytes) AS type,octet_length(bytes) AS actual FROM entry WHERE seq=? LIMIT 1", seq).toArray()[0];
+      const position = budget.native(sql, () => ({ metadata: 256, inputWork: 0 })).exec(archivePackageQueries.entryPosition, seq).toArray()[0];
       const size = position?.["size"], hash = position?.["hash"];
       if (typeof size !== "number" || !Number.isSafeInteger(size) || size < 1 || size > bounds.entryBytes || !isDigest(hash)
         || position?.["type"] !== "text" || position["actual"] !== size) return budget.stop("unavailable");
       const identities: Identity[] = [];
       if (seed.kind === "rules") {
-        const rooms = budget.native(sql, () => ({ metadata: 128, inputWork: 0 })).exec("SELECT id,octet_length(record) AS bytes FROM item WHERE type='rules' AND state='current' LIMIT 2").toArray();
+        const rooms = budget.native(sql, () => ({ metadata: 128, inputWork: 0 })).exec(archivePackageQueries.currentRules).toArray();
         const roomSize = rooms[0]?.["bytes"], roomId = rooms[0]?.["id"];
         if (rooms.length !== 1 || typeof roomSize !== "number" || !Number.isSafeInteger(roomSize) || roomSize < 1 || typeof roomId !== "number") return budget.stop("unavailable");
-        const room = budget.native(sql, () => ({ metadata: 256, inputWork: roomSize * 64 })).exec(`SELECT ${text("$.refs.directory.scope", 71, "record")} AS scope,${text("$.refs.directory.genesis", 71, "record")} AS genesis FROM item WHERE id=? AND octet_length(record)=? LIMIT 1`, roomId, roomSize).toArray()[0];
+        const room = budget.native(sql, () => ({ metadata: 256, inputWork: roomSize * 64 })).exec(archivePackageQueries.rulesDirectory, roomId, roomSize).toArray()[0];
         const directory = { scope: room?.["scope"], genesis: room?.["genesis"] };
         if (!isScopeRef(directory)) return budget.stop("unavailable");
         const items = budget.native(sql, () => ({ metadata: (bounds.derivedEffects + 1) * 16, inputWork: size * 64 }))
-          .exec("SELECT DISTINCT CASE WHEN typeof(json_extract(value,'$.item'))='integer' THEN json_extract(value,'$.item') ELSE NULL END AS item FROM entry,json_each(entry.bytes,'$.effects') WHERE entry.seq=? AND entry.hash=? AND entry.size=? AND typeof(entry.bytes)='text' AND octet_length(entry.bytes)=? LIMIT ?", seq, hash, size, size, bounds.derivedEffects + 1).toArray();
+          .exec(archivePackageQueries.entryItems, seq, hash, size, size, bounds.derivedEffects + 1).toArray();
         if (items.length > bounds.derivedEffects) return budget.stop("limit");
         for (const effect of items) {
           if (typeof effect["item"] !== "number" || !Number.isSafeInteger(effect["item"]) || effect["item"] < 0) continue;
           const item = effect["item"];
           const key = `${at.scope}:${item}`;
           if (prepared.has(key)) continue;
-          const job = budget.native(sql, () => ({ metadata: 16, inputWork: 0 })).exec("SELECT id FROM item WHERE id=? AND type='installation' AND state='active' LIMIT 1", item).toArray()[0];
+          const job = budget.native(sql, () => ({ metadata: 16, inputWork: 0 })).exec(archivePackageQueries.activeInstallation, item).toArray()[0];
           if (job?.["id"] === item) {
             identities.push({ directory, rules: at, rulesNamed: seed.definition, item }); prepared.add(key);
           }
         }
       } else {
-        const input = budget.native(sql, () => ({ metadata: 2048, inputWork: size * 64 })).exec(`SELECT
-          ${text("$.input.type", 16)} AS type,${text("$.input.decision", 16)} AS decision,
-          ${text("$.input.message.class", 16)} AS class,${text("$.input.message.type", 16)} AS messageType,
-          ${text("$.input.message.body.message", 64)} AS message,CASE WHEN typeof(json_extract(bytes,'$.input.message.body.fields.job'))='integer' THEN json_extract(bytes,'$.input.message.body.fields.job') ELSE NULL END AS job,
-          ${text("$.input.from.at.scope", 71)} AS rulesScope,${text("$.input.from.at.genesis", 71)} AS rulesGenesis
-          FROM entry WHERE seq=? AND hash=? AND size=? AND typeof(bytes)='text' AND octet_length(bytes)=? LIMIT 1`, seq, hash, size, size).toArray()[0];
+        const input = budget.native(sql, () => ({ metadata: 2048, inputWork: size * 64 })).exec(archivePackageQueries.directoryInput, seq, hash, size, size).toArray()[0];
         if (input?.["type"] === "delivery" && input["decision"] === "applied" && input["class"] === "request"
           && input["messageType"] === "tell" && input["message"] === "application-create") {
           const job = input["job"], rules = { scope: input["rulesScope"], genesis: input["rulesGenesis"] }, cohort = applicationAdmissionCohort(seed.definition);

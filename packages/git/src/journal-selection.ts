@@ -14,7 +14,8 @@ import { JOURNAL_SELECTION_BYTES, JOURNAL_MEASURED_OMISSION_METADATA, journalOrd
 import { journalAnchorPublication, journalAnchorCopyCount, type JournalLegacyAnchors } from "./journal-anchors.ts";
 
 export { JOURNAL_SELECTION_BYTES } from "./journal-selection-cost.ts";
-const inventoryCeilings: Readonly<JournalCost> = { entries: 4096, attempts: 512, nodes: 64, calls: 16384, metadata: 4 * 1024 * 1024, inputWork: 64 * 1024 * 1024 };
+export const JOURNAL_INVENTORY_CEILINGS = Object.freeze({ entries: 4096, attempts: 512, nodes: 128, calls: 16384, metadata: 4 * 1024 * 1024, inputWork: 128 * 1024 * 1024 });
+const inventoryCeilings: Readonly<JournalCost> = JOURNAL_INVENTORY_CEILINGS;
 const inputs: readonly string[] = ["genesis", "act", "delivery", "diagnosis", "timed", "preparation", "outcome", "checkpoint", "floor"];
 // Format vocabulary only; this descriptive serializer grants no export
 // admission. The native inventory checks the exact pin/data/place first.
@@ -96,7 +97,8 @@ function currentRetained(value: unknown): ArchiveRetainedName {
 /** Descriptive policy basis only. This shape grants no export permission or
  * provenance. Empty extensions are rejected so local v1 bytes stay stable. */
 export function journalForeignSources(value: unknown, work: JournalWork): JournalForeignSource[] {
-  const rows = journalList(value, inventoryCeilings.nodes, work);
+  // Source-list grammar stays at 64; it is separate from cumulative work.
+  const rows = journalList(value, 64, work);
   if (rows.length === 0) return refuseJournal("input");
   const sources = rows.map(raw => {
     const row = journalRecord(raw, ["at", "pin"]);

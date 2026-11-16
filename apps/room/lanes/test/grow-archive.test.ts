@@ -14,6 +14,20 @@ import { EARLIER_GROW_RELEASE, EARLIER_GROW_DEFINITIONS } from "../../../../exam
 import { roomArchiveConfiguration } from "../../archive.ts";
 import { EARLIER_GROW_ARCHIVE_RELEASE } from "../../../../packages/scope/test/support/earlier-grow-release.ts";
 import { ArtifactsProvider } from "../../../../packages/scope/src/artifacts-host.ts";
+import { archivePackageQueries } from "../../archive-packages.ts";
+import { ArchiveBudget } from "../../../../packages/scope/src/archive-budget.ts";
+
+test("archive package discovery queries pass the native read guard before SQL work", () => {
+  // The SQL reply and reservation are scripted; the actual budget owns the query guard.
+  const budget = new ArchiveBudget({}, () => 0), seen: string[] = [];
+  const sql = { exec(query: string) { seen.push(query); return { toArray: () => [] }; } };
+  const reservation = () => ({ metadata: 0, inputWork: 0 });
+  for (const [name, query] of Object.entries(archivePackageQueries)) {
+    expect(() => budget.native(sql, reservation).exec(query).toArray(), `archive package query: ${name}`).not.toThrow();
+  }
+  expect(seen).toEqual(Object.values(archivePackageQueries));
+  expect(budget.admitted().calls).toBe(seen.length);
+});
 
 test("Grow export keeps earlier signed proof, uses shared archive admission, and excludes private source journals", () => {
   const text = readFileSync(new NodeURL("../../../../examples/grow/fixtures/earlier-application.dap.json", import.meta.url), "utf8"), policies = growArchivePolicies(text, EARLIER_GROW_ARCHIVE_RELEASE);
