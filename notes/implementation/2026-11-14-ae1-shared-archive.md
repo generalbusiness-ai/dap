@@ -1,90 +1,46 @@
 # Share room archive policy and wiring
 
-16 November: Native passed 97 and failed 4 of 101; complete shared fit
-remains unproved.
+Validated runtime source `027b16439aefcec90024d7209fb1cb70f0550b16`, tree
+`f77baa86eada63118eb4e6aafa08aaccc28428db`, commits two reviewed repairs
+and their actual seals. Native attempt 2 passes 102/102; the query control
+qualifies offline as described below. Earlier 97/4 failure remains unchanged.
+The coupled Scale owner also passes 2/2. Repaired compilers, Security, preflight
+pins and gate remain UNRUN. These fixtures prove no general ARC-1 cohort or peak.
 
-Initial AE-1 request 0c265d01/ruling 59767cd8; updated promise 43fa0d74
-requires one combined head to preserve Grow answers until installed policy
-exists. Dated composition limits follow. Through `2740e6d1` (2026-11-14),
-two installed-package producers and dependent followers remain failed;
-Scale, assets, gate and Security remain unrun.
+Request `0c265d01`, ruling `59767cd8` and promise `43fa0d74` require one head
+that preserves Grow answers until installed policy exists. Scope owns the
+driver; room/archive.ts supplies shared DeployedScope Artifacts wiring;
+worker.grow.ts re-exports it. Admitted roots and checked Directory/Destination
+routes name repositories. No room/repository/release selector, Grow packet or
+fixture policy enters production. Obsolete Grow config/Text rule disappear.
 
-`packages/scope` keeps the driver. `apps/room/archive.ts` supplies common
-`DeployedScope`'s Artifacts adapter; `worker.grow.ts` re-exports it. Config
-names admitted register roots/provider authority; checked Directory/Destination
-routes name recorded repositories. No production setting selects room,
-repository or release. Grow config/packet Text rule disappear. Historical
-fixtures use this adapter; production imports no Grow packet/fixture policy.
+Native policy remains a finite catalog/runtime/capability policy excluding
+private roots. Package export separately requires immutable creation/install
+chain, actual Rules installation, retained signed release and current publisher
+trust. Digest, alias or declaration alone grants nothing. Signature authenticates
+publisher; closed reviewed runtime policy grants supported export permission.
 
-Native policy uses finite catalog/runtime owner/capability support, excluding
-private roots. Package policy requires immutable creator/install chain, actual
-native Rules installation, retained signed release and current
-`APPLICATION_TRUST` publisher agreement. R2 digest, alias or declaration
-proves none. Signature authenticates publisher; closed reviewed runtime
-policy supplies export permission.
+Namespace-only applicationArchiveProofBytes returns signed text or reason-only
+refusal under 12115613. Bounded sizes precede bodies; exact native pin/Rules select
+codec without dispatch, cold repair or fallback. Receiver prepays proof/reply,
+validates birth/installation/root/IDs/trust, and parses freshly validated
+declarations. Bounded scalar candidate queries and exact within-pass full-reference
+proof reuse replace scans. RPC ownership lasts through settlement after deadline.
 
-Security first reviews namespace-only `applicationArchiveProofBytes` and its
-closed refusals. Ruling `12115613` requires signed text or reason-only
-refusal. Bounded metadata selects the sender's actual native pin, without
-first-ingress dispatch, cold-pin repair or HTTP route. The sender checks
-Rules/job sizes against preparation metadata bounds before reading records,
-and each retained value's size before its body. Exact native Rules fields
-select v1 or v2, without codec fallback. The receiver reserves reply and
-verification before RPC, separately charges fixed sender metadata/pin work,
-admits Rules birth, checks installation/root/IDs, then rechecks current
-publisher trust before adding policy. Missing pin metadata has no dispatch fallback.
+Trust revocation precedes provider work and preserves row/receipt while stopping
+wake; restored trust cannot clear terminal. Unsupported policy stops unavailable;
+pending installation/unreadable reply retries without payload selection.
+Diagnostics expose fixed reasons, not payloads or credentials. Artifacts keeps
+host-owned exact-repository/scope/ref credentials and read-back. AE-1 adds no
+GitHub mint or retargeting. Security review remains separate from seal adoption.
 
-`roomArchivePackages` owns one paid snapshot per pass. Scalar, size/hash-bound
-candidate queries avoid unbounded uncharged item reads. Native Rules/Directory
-entries select their proofs without scanning every installation or trusted
-release. The builder pays fresh validation before parsing each signed declaration.
-Admission never crosses scope/release, even for equal declaration digest.
-Only exact full-reference installation proof can repeat within a pass.
-An RPC stays owned until settlement, including after its caller's deadline.
-
-Trust removal yields `application-policy-revoked` before new package policy
-or provider work. A provider-independent terminal names full scope and reason,
-preserves the archive row and confirmed receipt byte-for-byte, and stops its
-wake. Policy preparation precedes large pending-row reads. Operator view and
-reconstruction show the same terminal state. Authenticated packages outside
-supported runtime policy yield `application-policy-unavailable`. Pending
-installation or unreadable namespace reply retries without payload selection.
-Restoring trust alone cannot clear a terminal. Diagnostics expose fixed
-reasons, never packets, records or credentials.
-
-Security also reviews provider scope. Artifacts retains host-owned, expiring
-exact-repository/scope/ref credentials and read-back. CB-2 owns production
-GitHub mint; AE-1 adds none. Pages state when another provider cannot archive
-or no repository exists. Rows keep repository binding; discovery cannot
-retarget history.
-
-Witnesses cover strict signed-proof reader, real non-Grow Base with ordinary
-signed root/child package, and signed TEST Grow with accepted device answers.
-Both installed cases use native-only initial policy, actual proof RPCs,
-shared adapter, Artifacts, clone and public replay. Actual creation determines
-five journal identities before provider refs. Trust removal checks terminal,
-unchanged coverage and no provider calls. Provider/clock/per-entry schedule
-are explicit stand-ins. Base's second same-definition installation rejects
-first installation's genuine proof and accepts its own. Grow scenarios stay.
-At `ca1efcea`, producers failed before completing this flow; trust-removal
-and public-clone acceptance remain held.
-
-Two driver witnesses use actual confirmed fixture rows and labelled TEST
-policy callbacks, not signed-reader or installation-authority evidence.
-One changes pending policy to permanent metadata refusal and checks row bytes,
-receipt, stopped wake, reconstruction, diagnostic and zero provider calls.
-The other carries immutable count refusal through candidate preparation and
-adaptive catches, checking fixed `chainReason`, exact entry, unchanged row
-and receipt, stopped wake and reconstruction. The row witness ties prepaid
-terminal price to its shared function, checks the 512-byte record bound and
-writes once with no remaining work or call allowance. The original ledger
-stays valid.
-
-Base also runs both actual creator walks over root and child. Provenance
-names the signed release. Admission accepts that release and revokes when
-only an unrelated release remains trusted; the public API hides the release.
-A genuine Rules birth at the wrong parent makes both walks refuse. The
-witness adds no synthetic chain or second installation.
+Real Base/TEST Grow witnesses use actual native installs/proof RPCs, shared
+Artifacts, clone/replay and five created journals, with labelled provider/clock/
+schedule. Different installations/parents/releases cannot borrow proof. At that failed
+checkpoint, producers had not completed trust-removal/public-clone acceptance. Separate
+TEST-policy driver/row witnesses check permanent refusal, exact reason/entry,
+unchanged row/receipt, stopped wake, reconstruction, no provider calls and one
+bounded prepaid terminal write. They prove no signed installed authority or fit.
 
 ## Policy costs and proof limits
 
@@ -104,74 +60,43 @@ They grant no proof, trust, source or export permission. In this table,
 | Terminal overlay read | `forecastArchiveTerminalRead`: 1 call, M 512, W 4608 |
 | Terminal overlay and wake write | `forecastArchiveTerminalWrite(512)`: 2 calls, M 576, W 8192, prepaid once before policy work |
 
-Reply price covers both validations; small replies cannot reduce fixed sender
-metadata work. Rules-birth admission separately reserves
-one node, one call, M `E`, W `8E`, settles at returned bytes `n`, and pays
-W `32n` before parsing. Existing entry bound `E` adds no allowance.
+Reply price includes both validations; fixed sender work survives small replies.
+Rules-birth admission additionally reserves one node/call, metadata E, work `8E`;
+settles returned bytes n, then pays work `32n` before parse. Existing entry bound
+adds no allowance. Ancestor/ProofBytes walks, scalar/birth queries, reference/
+flight bookkeeping and capabilities remain outside this price table. Adapter
+and target each pay birth admission; SQL adds reserved metadata to work and
+repeated current-trust/provider checks remain charged. Host/catalog startup
+and cold CPU stay outside the pass. Calls count caller operations/RPC, not peer
+SQL. The table proves no ARC-1 cohort or pass multiplicity.
 
-Missing forecasts: ancestor walks/local `ProofBytes`, native Rules/Directory
-scalar queries, birth lookup, full-reference/flight bookkeeping and runtime
-capability checks. Adapter and target each pay target-birth admission. Native
-SQL adds returned metadata reservations to input work. Totals include these
-and all current-trust callbacks, including repeated provider checks. The
-table bounds neither pass multiplicity nor sufficient numeric ARC-1 cohort.
-Catalog/host initialization and cold Worker CPU stay outside the pass; ARC-1
-must state this. Calls count caller operations/one namespace RPC, not peer SQL.
+`25222294` keeps each chain sender inside its own bounds; receiver pays reply,
+measured decode and hop work, not sender-ceiling quote. Signed proof retains
+its fixed price. Act admission bounds are 18 hops, 37 bodies, 16 MiB proof, 36 RPCs
+per walk/pass; target/package proof is extra. Each pass repeats the walk;
+exact within-pass reference reuse grants no cross-pass trust permission.
 
-Ruling `25222294` keeps both existing chain-read senders within their own
-preparation bounds. The receiver pays reserved reply, measured decode and
-fixed hop work, without sender-ceiling charge or quote. The separate signed-install
-proof read keeps the table's fixed price.
+Birth preparation allows 10 s, 16 calls/candidates, 64 KiB metadata, 256 KiB declaration,
+1 MiB genesis; archive entry limits the body to 256 KiB. Exact proof sender permits
+five SQL calls, 4096-byte scope row and requested body bound before selection.
+SB-1 `836283176f960b8c886eeab41ee36ca4b83316e3` owns existing pre-budget alarm
+recovery that can load full metadata. Audit `853f63cf` leaves it unproved/unrepaired.
 
-`APPLICATION_ACT_ADMISSION_BOUNDS` permits 18 ancestor hops, 37 bodies,
-16 MiB aggregate proof and 36 RPCs: at most 36 sender calls per full scope
-walk per pass. Package-proof and target reads remain separate. Each pass
-clears proved references and repeats the walk. Exact full-reference identity
-can repeat within that pass; cross-pass proof/trust caching grants no permission.
+Under 50ce6650, ArchiveChainLimit survives adaptive catches as permanent
+application-policy-unavailable/admission-limit with exact candidate sequence/hash.
+Budget shortage still means limit/deferral/retry at every preparation position.
+Each pass prepays one terminal write in its original ledger; lookahead includes
+that debit. One-use writer shares deadline, adds no debit/ledger/allowance,
+marker, walk or discovery reorder. Repeated retry implies no eventual success.
+ARC-1 owns one-pass cohort and outside-cohort permanent stop, including five
+variable pre-entry costs: discovery/format/target save and mutable replies;
+warm policy-table reset; trust text/rows/repeated comparisons; retained row/
+manifest/frontier/parent bytes; adaptive/fixed selection and row context.
 
-Birth sender `PreparationBudget` has a 10-second deadline
-(`ScopeObject.nativeBirth`, `ReadPreparation.birth`): 16 calls, 16 candidates,
-64 KiB metadata, 256 KiB declaration and 1 MiB genesis. Existing archive
-entry bound further limits its body request to 256 KiB. The exact proof
-sender limits SQL to five calls, scope row to 4096 bytes and body to the
-requested bound before selection (`ScopeObject.proofSource`, `ProofBytes.exact`).
-SB-1 request `836283176f960b8c886eeab41ee36ca4b83316e3` owns the existing
-birth sender's earlier alarm-recovery read, which can load full metadata
-before that budget starts. Main and admission already use it. SB-1 follows
-AE-1; audit `853f63cf` records this unrepaired, unproved bound.
-
-Ruling `50ce6650` separates immutable counts from budget shortage.
-`ArchiveChainLimit` survives adaptive catches. In own or candidate preparation,
-the driver records `application-policy-unavailable`, `chainReason: admission-limit`.
-Candidate stops include exact entry sequence and hash.
-
-Each production pass prepays one terminal write in its original ledger before
-policy work. Outer lookahead starts with that price spent. The one-use writer
-checks the same deadline and writes terminal plus wake without another debit.
-It neither revives a stopped ledger nor adds allowance, ledger, stored marker,
-walk or discovery reorder. Every budget shortage retains `limit`, capacity
-deferral and retry, including own preparation and first candidate. Before
-ARC-1, an unfit chain can repeat `limit` each pass; diagnostics name the site.
-AE-1 infers no permanence from candidate position. ARC-1 owns fits-one-pass
-and permanent outside-cohort stop. Its number act must bound five variable
-pre-entry costs beside measured creator-chain cost:
-
-1. Discovery and initial format/target persistence, including actual mutable
-   Directory/Destination reply sizes. A later pass can skip a committed target save.
-2. Warm policy/release/prepared/owned table reset costs. Cold objects start
-   with native tables only.
-3. Current trust text, rows and repeated provider comparisons. Unrelated
-   valid trust rows can change cost.
-4. Retained archive row, manifests, confirmed frontier and parent. Receipt
-   progress or layout transition changes their bytes.
-5. Adaptive/fixed selection after capacity deferral and snapshot/standalone
-   row-context setup.
-
-Ruling `12115613` answers question `59c2e3cb` with the closed list below.
-Each bounded refusal has only `reason`, no sender label or payload, and
-retains the original full read reservation. Unreadable replies keep prior
-transient behavior. Terminal and activation diagnostic expose `proofReason`
-with `application-policy-unavailable`; no new page, command or ARC-1 proof seam.
+Ruling `12115613` answers `59c2e3cb` with these closed reason-only refusals.
+They retain the original full reservation. Unreadable replies retain transient
+behavior; terminal/activation diagnostics add proofReason with
+`application-policy-unavailable`, not a page, command or ARC-1 proof seam.
 
 | Proof refusal | Later event and classification |
 |---|---|
@@ -180,48 +105,33 @@ with `application-policy-unavailable`; no new page, command or ARC-1 proof seam.
 | `metadata-limit` | Stop. AE-1 provides no transition that trims or resets these existing Rules/job records under the unchanged 64 KiB bound. |
 | `malformed-or-unsupported` | Stop. A fixed native pin, installation identity or signed digest cannot change through a pending installation event. |
 
-Native retention commits `valuesOf` beside admitted draft
-(`packages/scope/src/core.ts`); creation result precedes active transition
-(`packages/platform/src/application-install.ts`). Insert-on-conflict-do-nothing
-retention (`packages/scope/src/sqlite.ts`) never replaces malformed values.
-A new installation could fill a missing key with the same immutable signed
-value, but AE-1 adds no repair/resume trigger for an old terminal. Its receipt
-stays intact; refusal during preparation stops provider calls.
+Native valuesOf retention accompanies admitted draft; creation result precedes
+active transition. SQLite conflict-do-nothing cannot replace malformed values.
+Another installation may fill an absent immutable key, but AE-1 adds no old
+terminal repair/resume. Under ff83b78d, native target/format/parent reads may
+precede candidate proof. They expose no refused payload/label/policy. Refusal
+stops provider calls, preserves prefix and leaves refused/later entries
+unarchived. ARC-1 owns the separate pre-provider predicate; AE-1 adds no scan.
 
-Ruling `ff83b78d` keeps native control-journal order. Candidate Rules/Directory
-entries discover package proof after native target, format or current-parent
-reads. Those reads carry no refused payload, label or package policy. Refusal
-stops provider calls; terminal/diagnostic name reason and exact local entry.
-Confirmed prefix stays intact. Refused and later entries remain unarchived.
-AE-1 adds no prefix scan; ARC-1 owns the separate per-entry pre-provider predicate.
-
-The existing `joined-shell.test.ts` notice witness imports real Main, waits
-for workbench lifecycle and opens both real room disclosures over scripted
-Room/DOM ports. It checks no-repository/unavailable-provider notices, their
-absence for Artifacts, and unpublished branch. Existing no-key-operation
-and no-settings-write assertions stay. Compiler and whole page owner passed
-at `ca1efcea`; scripted DOM proves neither browser layout nor Native authority.
+The joined-shell witness uses real Main with scripted Room/DOM, both disclosures,
+repository/provider/Artifacts notices and unpublished branch. Existing no-key/
+no-settings-write assertions survive. Its ca1 pass is no layout/Native proof.
 
 ## Validation scope
 
-The evidence table preserves initial pending checks and later failures.
-Protected `Operations` dispatch and `SqliteStore.markSent` stay unchanged.
-Effects models cover those functions, not this archive lifecycle. Reviewed
-AST values below supply no lifecycle model result. Checker Security must
-review proof and provider boundaries after validation.
-
-The initial AE-1 scope changed no kernel/archive cap, format, staging,
-restore or deployment. The dated resumed ruling below changes two caps only.
-ARC-1 ruling b188f9e7 separately owns exact one-pass cohort and permanent
-pre-provider stop, including AE-1's actual policy/target preparation. ARC-1
-source follows AE-1; planner owns deployment and post-cutover binding.
+The table preserves historical pending checks and failures. Operations dispatch
+and SqliteStore.markSent stay unchanged; Effects covers those functions, not
+archive lifecycle. AST seals supply no model/Security result. Initial AE1 changed
+no cap/format/staging/restore/deploy; the resumed ruling changes two caps only.
+ARC-1/b188f9e7 owns exact one-pass cohort/permanent stop including paid preparation;
+planner owns deployment and cutover. Security review remains owed.
 
 ## R2 and CB-1 composition
 
-Historical branch `builder/ae1-on-cb1-combined-source-20261114` starts at CB-1
+Historical `builder/ae1-on-cb1-combined-source-20261114` starts at CB1
 `8b1a37344c01a2611f92f8ad37dd3be97528d957`, parent combined `0eb5a1aaf4`.
-This prepared unlanded dependencies, without claiming either had landed.
-Five AE-1 replays include joint-chain trust and prepaid-write fixture fixes:
+Five own replays retain joint-chain trust and prepaid-write fixture fixes;
+this composition claimed no landing:
 
 | Original commit | Composed commit |
 |---|---|
@@ -231,93 +141,47 @@ Five AE-1 replays include joint-chain trust and prepaid-write fixture fixes:
 | `8353c4d7aaeb66e385f1a1afd37c2ea9f4461ea1` | `672a6b5ae8f426d95e76d17e5076f0a7e1c08aa6` |
 | `abf2f22330a1208a071a2db48483fa456704c794` | `04d62c3d57ceedf875dfe6471ccce592a92e9aec` |
 
-Dependency merge `20185343d9073b564945be5fb654297f6cb4142b` stays excluded.
-Original branch and pre-composition ref retain
-`abf2f22330a1208a071a2db48483fa456704c794`.
-Only first replay conflicted: `worker.grow.ts`, `grow-archive.test.ts`,
-`archive-installed.test.ts`. Shared Worker re-export replaces obsolete R2
-Grow selector. Ruling `d257a67f` leaves archive reactivation to AE-1;
-promise `43fa0d74` requires shared installed-package driver without separate
-Directory setting or Grow fallback.
-
-Grow regression keeps earlier signed packet, tamper/private-root refusals,
-exact native pins and unequal `DEMO_RELEASE`/`EARLIER_GROW_RELEASE`.
-Shared Artifacts/register-root assertions replace selector assertions.
-Historical fixtures use `EARLIER_GROW_ARCHIVE_RELEASE`; production scenarios
-still build/verify maintained TEST packet. Base keeps shared driver and
-`BASE_COHORT`. Current/earlier packets, release constants, definition IDs,
-manifests, Grow trust, bucket, register roots, deployment and Artifacts
-settings match CB-1. Grow removes only `GROW_ARCHIVE_CONFIG` and obsolete
-packet Text rule. Operator values, CB-1 celld, kernel, dispatch, formal models
-and lockfile stay unchanged.
-
-Rulings `25222294` and `50ce6650` still govern bounded senders, prepaid stops,
-budget retries and ARC-1 cohort proof. Source confirms proof-byte/birth
-limits; SB-1's pre-budget alarm-recovery bound stays unproved/unrepaired.
-At this checkpoint dependencies were absent and compilers, owners, controls,
-page producer, seals and gate **UNRUN**. Later dated results follow. Security
-remains owed. Preparation made no push, pack, signing, provider call or deployment.
+Dependency merge 20185343d9073b564945be5fb654297f6cb4142b stays excluded;
+original abf2f223 refs survive. First replay alone conflicts in Worker/Grow/installed
+owners; d257a67f/43fa0d74 selects shared wiring, no Directory setting/fallback.
+Earlier signed proof, unequal releases, native pins, tamper/private-root refusals,
+TEST packet and BASE_COHORT survive. Packets/IDs/trust/config/authority/kernel/
+models/lock stay exact except obsolete Grow setting/Text rule. Dependencies and
+all validation were absent/UNRUN then; no publish/provider/deploy action followed.
 
 ## Portability and attestations, 2026-11-14
 
-At `9011b593aa1dfdc0dcab05b5e443630c5b0687f3`, tree
-`cfc137dc01d92097c1948400b876d75bd3e76714`, CB1 merge added only its Python
-fixture and two notes, preserving 30 AE1 blobs. Repair
-`ad4c61e32f45f042c19c0687ef4376260fcee11f` narrowed two ports to optional
-`APPLICATION_TRUST` and reused Scope admission's portable parser. Trust grammar
-stays unchanged; Node-only lanes no longer accidentally require `R2Bucket`.
+At 9011b593/tree cfc137dc, CB1 adds only a Python fixture and two notes, retaining 30
+AE1 blobs. ad4c61e3 narrows two ports to optional APPLICATION_TRUST and the
+unchanged portable parser, removing accidental Node-only R2Bucket dependency.
 
-Root reviewed 17 boundaries in act `0258f47c151f044023a6fb1d81c9c8f47b44a258`
-before maintained `sourceSeal`/`namedSourceSeals` computation act
-`20fd934656d0ad05a8f8efc68db4ab4a153e0fc1`, then reviewed output before
-`f189881e` adopted eight new whole-file rows, eight changed whole-file rows
-and two existing named values: 18 AST values, 17 files. Unrelated rows stay
-unchanged. Raw hashes substitute for neither AST seals nor passing owners.
+Root reviewed 17 boundaries in 0258f47c151f044023a6fb1d81c9c8f47b44a258 before
+maintained AST computation 20fd934656d0ad05a8f8efc68db4ab4a153e0fc1 and f189
+adoption: eight new/eight changed whole-file rows plus two existing named
+values, 18 values in 17 files. Unrelated rows survive. object.ts keeps exactly
+$module/ScopeObject; two imports and namespace-only method add no standalone
+selector, dispatch or cold-pin repair. Raw hashes/source review are no AST,
+owner or Security result; trust/export/signature remain separate.
 
-`object.ts` retains exactly `$module` and `ScopeObject`. Its delta adds two
-value imports and namespace-only `applicationArchiveProofBytes` class method,
-without standalone selector or top-level runtime declaration. Retirement,
-proof identity and exact pin checks use no dispatch or cold-pin repair.
-Signed validation, current trust and closed export policy remain separate;
-source review supplies no Security conclusion.
-
-First whole Security failed inherited `packages/platform/src/version-questions.ts`,
-outside the 17: expected
-`069eaf4cc12c5e65caff4936d3deb088e19a5d173882131885ff1596b71fdef8`, actual
-`e13a31cfa361891571369a4b976abe053189285547b9238d2a80bfabb19fc2f0`.
-That run does not prove every adopted boundary was reached. Root reviewed CB1's two-line
-delta and ruling `4d03ff1dda006ad8ff50a29ea471001ff46218ae`: Register 28 enters
-only `celldPreparedNoHostRegister` and `celldSmokeOwnedPlanRegister`.
-`celldPreparedBindingPolicyRegister` retains Register 25 and exact includes
-predicate. `5e8d4a63` adopted only that actual seal and note; whole Security
-then passed 12/12. Later composition preserves source/parser inputs without
-relabeling failure or expanding authority. Effects/SB1/ARC1 ownership stays unchanged.
+The first Security run fails inherited version-questions.ts outside 17:
+069eaf4cc12c5e65caff4936d3deb088e19a5d173882131885ff1596b71fdef8 versus
+e13a31cfa361891571369a4b976abe053189285547b9238d2a80bfabb19fc2f0.
+It does not prove all 17 reached. Root reviewed CB1/4d03ff1d: Register 28 enters
+only celldPreparedNoHostRegister/celldSmokeOwnedPlanRegister; BindingPolicy 25
+and exact includes remain. 5e8d adopts only that seal/note; Security 12/12 passes.
+Neither composition nor that pass expands authority or Effects/SB1/ARC1 scope.
 
 ## Actual-main composition and GS1 split
 
-Historical isolated `builder/ae1-on-main-gs1-source-20261114` starts at
-`5e8d4a63284854eabd9c86bdb9e0645f22e6e727`, merges actual main
-`336dd74e990f057834ac8b2edc92a4287315ec8c`, and preserves original checkout
-and evidence. Composition claims neither CB1 nor AE1 landing.
-
-Only `packages/scope/test/archive-installed.test.ts` conflicted. Main split
-registration into that entry and body into `archive-installed.fixture.ts`.
-Byte comparison showed GS1's fixture was old main body plus registration
-wrapper; resolution applies that same wrapper to exact AE1 body. No callback,
-assertion, budget or deadline changed. Ordinary entry keeps eight scenarios
-in order, then appends `shared Base`/`shared Grow`. Scale keeps only coupled
-`Grow production`, producer immediately before public-command follower:
-main's inventory/two cases unchanged. Fixtures never become test entries.
-
-All AE1 production, reviewed seals and parser/test helpers retain `5e8d4a63`
-blobs. Main configs/split owners enter unchanged. Generated MCP view matches
-both parents; Page producer remains unrun. Parents' root/workspace metadata
-and lock match, fingerprint
-`f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54`.
-The worktree owns an APFS copy of verified AE1 dependencies. Seventeen
-root/workspace lock/manifest files matched before copy; stamp stays exact;
-fifteen relative workspace links resolve inside new root. No install,
-download, restamp, package edit or global dependency mutation occurred.
+Historical ae1-on-main-gs1 composition merges 336dd74e into 5e8d, retaining refs
+without claiming landing. Only installed owner conflicts. Main's registration
+wrapper around AE1's exact moved fixture preserves callbacks/assertions/budgets/
+deadlines: eight old scenarios then shared Base/Grow, separate coupled Scale
+Grow producer/follower. Fixtures are not entries. Production/seals/helpers and
+main configs/splits stay exact; generated MCP views match. All 17 metadata/lock
+bytes matched f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54
+before one owned APFS copy; authentic stamp/15 local links remain. No install,
+download, restamp, package/global mutation. Page production was then UNRUN.
 
 Maintained registrations/configs select these owners:
 
@@ -328,11 +192,9 @@ Maintained registrations/configs select these owners:
 | `vitest.plain.config.ts`, `lanes` | `apps/room/lanes/test/grow-archive.test.ts` |
 | `vitest.plain.config.ts`, `page` | `apps/room/page/test/joined-shell.test.ts`, `apps/room/page/test/publication.test.ts` |
 
-No discovery run precedes owners; granted runs retain actual cases/results.
-Old monolithic installed command and Scope's three-project config exclude
-the separate Scale pair. A fixture path runs no owner. Budget/operator/build
-owners remain necessary despite unchanged tests: AE1 changes their production
-inputs and transitive planning.
+The fixture path selects no owner; monolithic/Scope-three-project commands
+exclude Scale. Budget/operator/build owners needed validation at that checkpoint
+because AE1 changes their imported planning. No discovery run precedes whole owners.
 
 | Compiler area | Committed configurations, in execution order |
 |---|---|
@@ -341,59 +203,38 @@ inputs and transitive planning.
 | Lanes | `apps/room/lanes/tsconfig.test.json`, `apps/room/lanes/tsconfig.scope.json` |
 | Page | `apps/room/page/tsconfig.json`, `apps/room/page/tsconfig.test.json`, `apps/room/page/tsconfig.scope.json` |
 
-Scope test covers moved fixture/entries. Portable lanes excludes
-`.scope.fixture.ts`; lanes Scope covers them. Scope's listed local-clone
-`test/support/tsconfig.node.json` inputs stay unchanged. Nine contexts passed
-at `ca1efcea`; Scope's two repeated after diagnostic repair at `2740e6d1`.
-Those results retain exact-head/imported-input limits. Separate Page producer
-`npm run build --workspace @generalbusiness/dap-page` calls `scripts/assets.mjs`.
-It, coupled Scale, full gate and Security review remain **UNRUN**. Composition
-and copying supplied no result.
+Scope test owns the split fixture; lanes portable/Scope programs retain their
+separate includes. Local-clone Node inputs stay unchanged. Nine ca1 compilers
+and two 2740 Scope repeats are exact-input results. Page assets, Scale, gate
+and Security review were UNRUN then; later rows qualify completed work.
 
 ## Integrated failures and diagnostic repair
 
-Native at `ca1efcea0b1b8ca9c0aa6b0a0de83e9db36600bd`, tree
-`dbbff0e26f9d602c4c96b3b57e71bf7df714c87d`, ended 69 pass/5 fail:
-three primary, two dependent. Driver finished fixed-next, then failed
-`firstFinishAttribution.complete` at `archive-driver.test.ts:656`.
-Capture kept 64 sites, dropped one, set only site-overflow and reconciled
-the ledger. Terminal read/prepaid write add two legitimate sites.
-`2740e6d1534ead6756e068e582dc7e33b89645a0`, tree
-`1193e450b731499128ba376adf8e73b1ac40b6c6`, raises only recorder bound to 66.
-Its overflow witness uses 67 spenders and keeps incomplete-attribution/settlement
-checks. Follow-up passed 12 observation + 21 driver cases; full callback
-reached remaining privacy, margin, cap, head and foreign-source-unavailable
-terminal checks. No allowance, price, deadline or driver assertion changed.
-Native74 remains failed.
+At ca1efcea/tree dbbff0e2, Native has 69 passes and 5 failures: three primary,
+two dependent. Driver finishes fixed-next, then firstFinishAttribution.complete
+fails at 656: 64 sites retained, one dropped, only overflow, ledger reconciled.
+Terminal read/prepaid write add two legitimate sites. At 2740e6d1/tree 1193e450,
+recorder bound becomes 66; overflow witness 67 keeps incomplete/settlement checks.
+Observation 12 + driver 21 = 33 PASS reaches remaining privacy, margin, cap, head and
+foreign-source-unavailable assertions. No budget/price/deadline/driver assertion
+changes; the failed 74-case result stands.
 
-Both shared producers refused `finish-affordability` under original allowances:
-entries 4096, attempts 512, nodes 64, calls 16384, metadata 4194304,
-input work 67108864, deadline 30 seconds. Base's first failed root prefix,
-sequence 1 after confirmed 0, spent 35 nodes, leaving 29 against finish 30:
-one short. Grow's root sequence 0 spent input work 45969870, leaving 21138994
-against finish 29732767: short 8593773. Other axes fit. Both show zero
-unsettled metadata, no settlement refusal, timeout or policy refusal.
+Original caps are 4096 entries, 512 attempts, 64 nodes, 16384 calls, 4194304 metadata,
+67108864 work and 30 s. Base root 1 after confirmed 0 uses 35 nodes, 29 left against
+finish 30: one short. Grow root 0 uses 45969870 work, 21138994 left against 29732767:
+8593773 short. Other axes fit; no unsettled metadata, timeout, settlement or
+policy refusal. Each eligible [rootScope,childScope,D,A,G] cutoff gets a fresh
+ordinary budget/native-only policy, excluding private R/M. Signed policy
+precedes row load. Adaptive finish uses the same ledger, prepays capacity wake,
+then retries limit before provider send. Base receipt survives; aggregate costs
+identify no removable charge. Followers fail at 1904 without retained sessions.
 
-Eligible journals are exactly `[rootScope, childScope, D, A, G]`, excluding
-private `R`/`M`. Each cutoff gets fresh ordinary budget/native-only policy.
-Shared adapter pays current signed-install policy before row load. Adaptive
-finish uses that same allowance, persists prepaid capacity wake and returns
-`retry/limit` before provider send. Base keeps preceding receipt. Custom
-fixture budget has no component-level debit attribution; aggregate shortage
-proves no removable charge. Both followers fail at fixture line 1904 because
-producers publish no retained command session. They add no root bugs.
-
-Installed-policy, trust-revocation and public-clone acceptance remain failed
-or unreached. Question `d61031367cfface1e2120bb7866017ca5a502a43` holds
-AE1/ARC1 acceptance/ownership. These results justify no cap raise, price cut,
-deadline/assertion change, one-pass or eventual retry-success claim.
-The later resumed ruling is separate authority, not proof of fit.
-
-Directory control substitutes genuine signed proof with different genesis.
-Metadata subtraction-to-addition reaches full-record read trap; sender catch
-yields `malformed-or-unsupported`, so direct `metadata-limit` assertion fails
-before later zero-read assertion. Controls distinguish recipient binding and
-combined pre-read admission, not installed-export/trust-removal acceptance.
+At that checkpoint, installed-policy, trust-removal and clone acceptance stayed
+failed or unreached under d61031367cfface1e2120bb7866017ca5a502a43. Later cap authority proves no
+fit, one-pass or eventual success. Directory control uses another genesis's
+real signed proof. Metadata fault hits full-record trap; catch returns malformed-
+or-unsupported. Direct metadata-limit assertion fails before zero-read assertion.
+These show binding/pre-read admission, not installed export or trust removal.
 
 ## Evidence checkpoints
 
@@ -407,6 +248,7 @@ current status of later completed work. `N` = `/opt/homebrew/bin/node`;
 - `I`: `/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-integrated-development-attempt1`.
 - `D`: `/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-diagnostic-development-attempt1`.
 - `G`: `/Users/hughpyle/play/artroom-evidence/2026-11-16-ae1-cs1-development-attempt1`.
+- `H`: `/Users/hughpyle/play/artroom-evidence/2026-11-16-ae1-cs1-development-attempt2`; actual safe exports, with private raw retained separately.
 
 Four legacy logs were copied byte-exact from preserved
 `/private/tmp/artroom-ae1-dev-20261114` originals to `O`, verifying table SHAs.
@@ -439,6 +281,10 @@ monotonic seconds. `EMPTY` = SHA-256
 | 2026-11-16 Page producer | `npm run build --workspace @generalbusiness/dap-page` | Exit 0, 0.639458 s at `337c5566`; only `assets.ts` changes; actual two-script review/corrected description below | `G/page/result.json` `8570135078f62120f2352fdb5e25c8eaf3b9c9beb0b88ebe276d14307d59b74a`; `G/page/generated-review.json` `2b1f73cd694793e0fdad50d7116bd9ff965a0b06f54da649f04e38f17d2d5a15` |
 | 2026-11-16 Plain3 | Compatibility, then same three Plain owner paths/projects as the `ca1efcea` row; full actual argv in result | Compatibility exit 0, 0.079700 s; whole three files / four cases pass, exit 0, 2.010108 s; outer 3.015831 s at `7808c064` | `G/plain/result.json` `190d697076456ad4177161445c7eba7fcaff052c0b3cdceb5a42d0e7f7b8ccce`; `G/plain/plain.report.json` `a9743bf5f9b5546b0363235086183ccaccde5ccb9b149ec747af2401f5338695` |
 | 2026-11-16 Native9 | `V --config vitest.native.config.ts --project scope` with the seven Native paths above plus `packages/scope/test/archive-capacity-observation.test.ts` and `packages/scope/test/archive-host.test.ts`; full actual argv in summary | **Exit 1; 97 pass / 4 fail of 101**, zero pending/todo; child 63.814107250 s, outer 64.347450708 s; no retry; source unchanged | `G/native-failure-summary.json` `966d94a68e704577e9d0d251757219b18ffc1235c90d237708844180c91cea87`; original full Native raw stays PRIVATE, paths/hashes in this safe summary |
+| 2026-11-16 causal diagnostic, prior 7808 source | `V --config vitest.native.config.ts --project scope packages/scope/test/archive-installed.test.ts --testNamePattern PATTERN --reporter=default --reporter=json`; exact two-title pattern/argv in summary | Exit 1; two selected failures, ten intentionally unselected; child 12.824149125 s, outer 13.547464583 s; probes restored. Causal only, not fit or whole-owner PASS | `H/diagnostic-summary.json` SHA `5adc4e94b10067258b723012cb748396078832b225b696d82c7c07417f5d9887`; exact private result/stream hashes retained inside summary |
+| 2026-11-16 query control, offline qualification | `N /private/tmp/artroom-ae1-retained-query-control-20261116.mjs apps/room/archive-packages.ts OLD NEW --expect QUERY_TITLE -- apps/room/lanes --config vitest.config.ts test/grow-archive.test.ts` | Helper exit 0, 3.353155666 s: baseline 3/3, mutant 2 pass / 1 direct AssertionError naming directoryInput. Original controller exit 2, 4.301351375 s: 536 Node compile-cache files mixed with six raw files; source restored exactly. Offline qualification, no rerun | `H/query-control-qualified.json`; actual qualification SHA `085a95d072ab7e21221b94843300cc8bd06db24130847d57dc38bb811b5d3b46`. Original result SHA `c2d8a9d9be87eef7af321ac7c09023dd1c3132bf3ad0740437f897c303e38249` stays exit 2 |
+| 2026-11-16 Native attempt 2 | `V --config vitest.native.config.ts --project scope` with the same nine whole owner paths as Native9 above; actual argv/report location in result | Exit 0; 102/102 pass in nine owners at 027b/tree f77b; child 124.026111125 s, outer 125.228115292 s. Same-run Base 36 and Grow 37 confirmed passes; command followers pass | `H/native-result.json`, SHA `99d192bb8cde229ef0b11e66d0116bba6cd3f7e951de7b7f1f7dbb1b51eb5f3a`; stdout SHA `19c15a75baa2c198f8d7841615a9cbb97c9da57efbb9fcacfa2ccc3156a64f32`, stderr EMPTY. `H/native-measurements.json` SHA `0c7ea13c9ca5552d2d7373fbf9897836097c993440d19dde2e2ccd98fe98d774` |
+| 2026-11-16 coupled Scale | `V --config vitest.scale.config.ts --project scope-scale packages/scope/test/archive-installed-scale.test.ts --reporter=default --reporter=json` with actual private output path in result | Exit 0; whole coupled producer/follower 2/2 PASS at 027b, child 40.901748833 s, outer 41.621330125 s; source/dependencies unchanged | `H/scale-result.json`, SHA `13b2501f5365b8f958130e6edfb736d1d017abf61f443253596ff76d958bd311`; stdout `3165a34a1ecdb0841d10236efe433df807026280ee13e12e15c4ead5cbeac37e`, stderr EMPTY |
 
 `TITLE` is the exact single argument
 `archive install proof binds Base Rules, exact signed IDs and native retained byte limits without codec fallback`.
@@ -457,41 +303,131 @@ expectation, release, model and operator values stayed unchanged.
 
 ## Resumed source, 15 November 2026
 
-Ruling `790afe00333dd0cd581b78a61ce37e434074628c` raises nodes 64 to 128 and inputWork 67,108,864 to 134,217,728. Other caps, charges, cases and deadlines stay unchanged; composition preserves target source outside AE1. New-cap fit, compilers, assets, seal adoption and gate remain UNRUN. At this dated checkpoint, gate awaited three approved landings.
+Ruling `790afe00333dd0cd581b78a61ce37e434074628c` raises nodes 64 to 128 and inputWork 67,108,864 to 134,217,728. Other caps, charges, cases and deadlines stay unchanged; composition preserves target source outside AE1. At that checkpoint, new-cap fit, compilers, assets, seal adoption and gate were UNRUN; gate awaited three approved landings. Later rows record only the work actually completed.
 
 
-## Current composition and failed Native, 16 November 2026
+## Failed runtime checkpoint, 16 November 2026
 
-Runtime source is `7808c06482d61e27e1bda07f195d85f55da1ac16`, tree
-`69c0c36caea4aa06f505e6f072e72602e706cfb2`. Compiler source `337c5566`
-differs only by reviewed Page assets; the result names all fourteen contexts.
-`G/retained-files.json` preserves 61 safe exact copies, manifest SHA-256
-`d6dd949183742627ae9ee8c1bbf6528f1eb8a057aeb10f0ec1fdb9ac3a4f84e2`.
-Full Native streams/report remain private; this update copies none.
+At `7808c06482d61e27e1bda07f195d85f55da1ac16`, tree
+`69c0c36caea4aa06f505e6f072e72602e706cfb2`, compiler source `337c` differs only
+in reviewed Page assets. G retains 61 safe exact copies; retained-files.json
+SHA d6dd949183742627ae9ee8c1bbf6528f1eb8a057aeb10f0ec1fdb9ac3a4f84e2.
+Full Native output remains private. Hook/Bytes.same repair changes no guard;
+two actual seals were reviewed/adopted, not a Security pass. Old proof controls
+retain exact input correspondence and their limits.
 
-The hook rejected duplicate `same`; importing Bytes' identical equality
-changed no guard. The two reviewed AST values
-are reader `e261d7d0e052702daf16b07eba0a7457df30f7a9591ba1a13524456c27a4ee2e`
-and budget `07351068919cbbe84974992e7d30bc03003ee3a31a7552bee90b823490bee1a8`.
-Their adoption is not a whole Security-owner pass. Both old proof controls
-retain exact source/witness correspondence and original limitations; no repeat ran.
+Page production changes PAGE_JS by 313 B and OAUTH_JS by 55 B; both HTML exports
+stay exact. Both scripts change shared data reader, Page also disclosure/local
+minifier names. The offline unchanged-OAuth assumption was false, not a run.
+Root reviewed both differences and corrected the description without rerun.
 
-Page production changes PAGE_JS by 313 bytes and OAUTH_JS by 55; both HTML
-exports stay exact. Both scripts change the shared data reader; Page also
-changes room disclosure and local minifier names. Offline review wrongly
-assumed OAuth unchanged; no producer/test ran there. Root read both differences
-and corrected the commit description before owners, without a production rerun.
+END `2ae3212a80b1ca7680e2f38e583915d885ea4317` keeps 97 pass/4 fail.
+Base cutoff 0 retries unavailable, used [0,0,13,27,125538,7369823]. Grow cutoff 3
+stops input, used [2,42,41,143,1146690,79110748], confirmed through 2. Neither
+has capacity refusal; both command followers lack a producer session. These
+results alone identify neither root cause nor cap shortage. Confirmed diagnostics
+omit scope/cutoff identity; final admitted costs are not peaks or complete-case
+maxima. Fit, trust removal and public clone were then unproved. CS1 had
+11 Node passes; Scale, sandbox Native, pins, gate and review were then UNRUN.
 
-Native END `2ae3212a80b1ca7680e2f38e583915d885ea4317` preserves four failures.
-The Base producer's failed scope cutoff 0 returns `retry/unavailable`, used
-`[0,0,13,27,125538,7369823]` in `[entries,attempts,nodes,calls,metadata,inputWork]`.
-Grow's failed scope cutoff 3 stops `input`, used
-`[2,42,41,143,1146690,79110748]`, with a confirmed prefix through 2.
-Both show no capacity refusal. Their public-command followers lack a producer
-session and fail dependently. Neither failure establishes a new cap shortage or root cause.
-The summary's confirmed diagnostics omit successful scope/cutoff identity;
-its final admitted costs are not instantaneous peaks or complete-case maxima.
-Complete shared fit, trust-removal and public-clone acceptance stay unproved.
+## Reviewed producer repairs, 16 November 2026
 
-CS1's separate note records its eleven-pass Node owner. Scale, CS1 sandbox
-Native, pins, gate and review remain UNRUN. No automatic rerun follows.
+The one restored diagnostic selected two producers: exit 1, two failures and
+ten intentionally unselected cases; child 12.824149125 s, outer 13.547464583 s.
+It proves causes, not fit. Raw output stays private; the durable
+safe scalar summary in H records the cause. Rulings 29f6b30abe5d5a6bde52f3d9ffc60643a1cdd333,
+cf8dba11a9f0ce88efa8a5e7ad1486f2f848eb1d and
+bb732744b50de8528c15c6a2c4135b8818dffa4b govern these repairs.
+
+Base directoryInput starts SELECT-newline; actual ArchiveBudget.native requires
+SELECT-space. It refused unavailable before SQL. Only the separator changes;
+the security guard, bindings, reservations, charges and stop remain exact.
+
+Grow root delivery 3 serialized cost was [2,27,22,125,1103026,67270606] in
+[entries,attempts,nodes,calls,metadata,inputWork]. The reader ceiling was
+[4096, 512,64, 16384, 4194304,67108864]; live admitted cost was
+[2,42,41,139,1145970,72757836]. Natural inputWork exceeds the fixed ceiling
+by 161,742, but not live cost. This is the reached input refusal; the earlier
+final 79,110,748 is not the guard operand.
+
+Six-path commit 8f7bd055ca552909092cbe44ecdac1d4251dce05 moves all six actual
+queries into frozen app-private archivePackageQueries. Reverse substitution
+recovers prior production except SELECT-space. Source review confirms all
+six current calls use entryPosition, currentRules, rulesDirectory, entryItems,
+activeInstallation and directoryInput. The new first Plain grow-archive case
+passes every value through real ArchiveBudget.native. Empty SQL replies,
+zero metadata/work reservation and clock are scripted. The case checks native
+prefix/semicolon admission and call debit, not SQL semantics, production prices,
+proof, policy or fit. It cannot detect a future query outside the map; no cheap
+universal site check is implemented. Planner bb732 accepts that stated limit.
+Old case bodies/order/deadlines stay exact. The proposed SELECT-newline condition fault
+fails the named directoryInput not.toThrow assertion before SQL in the actual
+control row; original controller exit 2 remains distinct.
+
+JOURNAL_INVENTORY_CEILINGS is frozen and exported through existing
+@generalbusiness/dap-git/journal. Reader and native nodes/inputWork share
+128/134,217,728; native permission was already there. Entries 4096, attempts 512,
+calls 16384 and metadata 4,194,304 remain exact. A new existing-owner case pins
+full vector equality and both approved values, including joint-reversion
+protection. Original debit/refusal tests remain. Foreign-source grammar stays
+64; no format, source permission, charge, deadline or package metadata changes.
+
+Full v1/v2 selection decoders enforce fixed and live cost. Callers include
+journal-layout, journal-v2-layout, journal-v2-convert, journal-anchor-legacy and
+Scope storedSelection. Local ArchiveMark.manifest/pending-frontier copies can
+reach older Worker code. Old full decoders refuse above-old cost as input;
+old native storedSelection may return null and rebuilding refuse manifest.
+Earlier time/byte/source/work failures can change that outcome; no migration
+or fallback exists. archive-retained-pass only checks retained-key bookkeeping,
+not cost. Public v1/v2 manifests omit inventory cost/private bookkeeping;
+public readers and Replay cannot reject merely on producer cost absent there.
+Their own byte/work/time/layout/source/replay checks still apply. Neither
+universal old-verifier acceptance nor failure follows. Foreign-source grammar
+stays 64. Repository source cannot enumerate external installed API callers.
+Full reader audit remains in the reviewed shared-ceilings package's READERS.md.
+
+The pure portable export adds no Scope cycle, Replay/process import, export-map
+or lock change. Compiler closure grows from 14 to 16 with Git production and
+Replay Node; old 337c passes do not validate these imports. At 027b, root adopted only reviewed whole-file seals: archive-budget.ts
+`a35cc8c0e8cc4be8fc33bd4316906085173f19e1e68e12091803a5e3ce08f499`;
+archive-packages.ts
+`f4155b32056fef2ae38ac64b553b83a0de5427d97a7b30fceef76347c80edc9b`.
+Other rows/selectors stay exact. No diagnostic source enters production.
+The query owner/control, nine Native owners and Scale have the bounded results
+reported here. Repaired compilers, shared-helper/package checks, whole Security,
+preflight pins, gate and review remain UNRUN. Scale passes its coupled pair;
+no universal fit or instantaneous peak follows from final admitted measurements.
+
+## Qualified positive checkpoint, 16 November 2026
+
+QUERY_TITLE is `archive package discovery queries pass the native read guard before SQL work`. OLD is directoryInput's SELECT-space;
+NEW restores SELECT-newline before the same projection. Actual result retains
+exact argv. Only the controller's cache-file postguard failed; the helper
+reached the direct directoryInput assertion. No rerun occurred; source is exact.
+
+The same Native invocation confirms every recorded producer cutoff: Base 36
+passes/proofReads 22, Grow 37/proofReads 25. Each public command reports all five
+journals missing-dependency without published trust and all five consistent
+with trust. Authority, trust, revocation and repeated-terminal ledgers remain
+separate from these pass costs. Do not sum them or combine different argmax
+coordinates into a synthetic vector.
+
+Maxima below are final admitted values, not instantaneous peaks; byte settlement
+can lower work. Zero-based Base pass 5 has nodes 63 at
+sc_vnvj5vdrecvsjasoklm6zpzfzydzv3mqfmzgwkvgkh3j5tmvalwq/cutoff 1.
+Base pass 27 has work 53,298,198 at
+sc_eifk5d2kggatzpatw7lu37m3vusu45xogr5ls7p3gzy2rnmdgdga/cutoff 5.
+Grow nodes 61 ties pass 3 (root/cutoff 3) and pass 5 (child/cutoff 1).
+Grow pass 4 has work 82,077,224 at
+sc_swtlf72kslh27h5awxd2y7naeaphj4aabme7d3ijiu56nuoqpvta/cutoff 0.
+The safe projection binds each axis to its own vector. No summed authority/
+trust/revocation cost, instantaneous peak, alarm cadence, hosted service or
+general cohort follows. TEST clock/scheduler/peer limits remain; raw stays
+private; H holds the safe export.
+
+The whole Scale owner runs its real paired Grow production producer and public
+clone-verification follower, with genesis zero after late native membership
+Directory binding. Both pass in one unchanged invocation; no case filter,
+second producer, hosted operation or alarm-cadence claim follows. CS1 separately
+records its ten-case sandbox pass. Both runs preserve source/dependencies and
+release their owned groups without cleanup actions. Gate remains UNRUN.
