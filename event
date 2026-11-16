@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/native-timeout-crossing.test.mjs","body":{"commit":"5394563cb512795f3ce8d0d7f0f709e04da835b4","path":"scripts/native-timeout-crossing.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5540a7b42e762bc00d1d757ae62fc76df49e68a9","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-16-xd1-native-timeout-crossings.md."}
