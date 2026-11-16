@@ -152,7 +152,7 @@ test("sandbox smoke refuses an untracked host or an invalid room before fetch an
   assert.equal(await deploySmokeMain(["sandbox", "--host", screen, "--room", room, "--url", screen], { ...ports, write: () => {} }), 2);
   assert.equal(calls, 0);
   const tracked = await readFile(new URL("../apps/sandbox/wrangler.rollout.jsonc", import.meta.url), "utf8");
-  assert.deepEqual(sandboxScreenOrigins(parseConfig(tracked)), ["https://grow.inguz.space", "https://lending.inguz.space"]);
+  assert.deepEqual(sandboxScreenOrigins(parseConfig(tracked)), ["https://grow.inguz.space", "https://lending.inguz.space", "https://counter.inguz.space"]);
 });
 
 test("room screen descriptors and sandbox mappings agree in both directions on the matching Worker service", async () => {
@@ -170,6 +170,12 @@ test("room screen descriptors and sandbox mappings agree in both directions on t
       expected.push({ host, service: services[0].binding });
     }
   }
+  assert.deepEqual(mapped.filter(row => row.host.screenOrigin === "https://counter.inguz.space"), [{
+    host: { v: 1, screenOrigin: "https://counter.inguz.space", roomOrigin: "https://dap-lending.inguz.workers.dev",
+      directory: "sc_rgtlrioy5eckfikcapmqdteiw7y4b4lrc7k6use4rqdktn4lnabq", item: 2,
+      presentation: "sha256:52378055c218a42c6808af21fea097b69e42b9cc52877f3cec12ad432df8ff9e" },
+    service: "LENDING",
+  }], "Counter 0.4.0 uses its exact installed screen descriptor through dap-lending");
   const byHost = (a, b) => a.host.screenOrigin.localeCompare(b.host.screenOrigin) || a.service.localeCompare(b.service);
   assert.deepEqual(mapped.sort(byHost), expected.sort(byHost), "room and sandbox screen descriptors must match, with no row on one side alone");
 });
