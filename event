@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"scripts/gate.sh at exact 5784e23d8197d5cbea819849af3830131449c874 on refs/heads/builder/gs4-p1-on-ls3-20261115, under promise git:sha1…e1a3dbc on request git:sha1…402006c","body":{"commit":"5784e23d8197d5cbea819849af3830131449c874","path":"scripts/gate.sh"}}
+{"kind":"artifact","text":"docs/testing.md at exact 5784e23d8197d5cbea819849af3830131449c874 on refs/heads/builder/gs4-p1-on-ls3-20261115, under promise git:sha1…e1a3dbc on request git:sha1…402006c","body":{"commit":"5784e23d8197d5cbea819849af3830131449c874","path":"docs/testing.md"}}
