@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:efddb4b8333bc1a4fb7394bc3c435b899de2d685","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.grow.jsonc."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f1385a0e6617138f1f58baf14c29faf0b9e3664b","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/definition-corpus-data.ts."}
