@@ -206,7 +206,7 @@ test("capacity wake reservations preserve old rows, saturate and refuse a stale 
     const sql = { transaction: native.transaction, exec(query: string, ...args: SqlValue[]) {
       nativeCalls++; return native.exec(query, ...args);
     } }, store = new ArchiveRows(sql, lane.at);
-    const target = store.target(repository, "sha1"); store.defer(at(30));
+    const target = store.target(repository, "sha1"); store.defer(() => at(30));
     // Only this store's same-budget owned row earns serialization reuse.
     // Genuine token failure below is the exact cross-budget control seam.
     const tokenFor = () => {
@@ -265,7 +265,9 @@ test("capacity wake reservations preserve old rows, saturate and refuse a stale 
     expect(() => store.wake()).toThrow("archive-row-unavailable");
     expect(store.load()).toEqual(target);
     sql.exec("UPDATE meta SET v = ? WHERE k = ?", saturated, "archive-wake-1");
-    store.clearWake(); store.defer(at(30));
+    // A pre-Mark wake with no retry count, as written before AR-1: the Mark
+    // below then writes the same wake bytes, so only the row fence refuses.
+    sql.exec("UPDATE meta SET v = ? WHERE k = ?", canonicalize({ pending: true, stopped: false, next: at(30) }), "archive-wake-1");
     const stale = store.prepareCapacityDeferral(target, () => at(60), new ArchiveBudget());
     const oldWake = wake();
     const mark: ArchiveMark = { commit: "a".repeat(40), parent: null, through: head, manifest: canonicalize({ fixture: "metadata only" }), markedAt: at(0) };
@@ -282,7 +284,7 @@ test("atomic initial Mark and attempt preserve the target on rollback and recove
   const lane = await create(), head = await lane.head();
   const mark: ArchiveMark = { commit: "e".repeat(40), parent: null, through: head, layout: 2,
     manifest: canonicalize({ format: "artroom-local-inventory-2", after: null, objects: [] }), markedAt: at(0) };
-  await rows(lane, store => { store.target(repository, "sha1"); store.defer(at(30)); });
+  await rows(lane, store => { store.target(repository, "sha1"); store.defer(() => at(30)); });
   const target = await rows(lane, store => store.load()), failures: unknown[] = [];
   for (const cut of ["before-row", "after-row", "after-wake"] as const) {
     const receipt = await lane.inside(state => {

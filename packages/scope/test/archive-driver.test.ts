@@ -16,7 +16,7 @@ import { driver, ScriptedHost } from "./support/archive-driver.ts";
 import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import { archiveHostGate as gate } from "./support/archive-provider.ts";
 import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
-import { ArchiveDriver } from "../src/archive-driver.ts";
+import { ARCHIVE_RETRY_FLOOR_SECONDS, ARCHIVE_RETRY_MAX_SECONDS, ArchiveDriver } from "../src/archive-driver.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { archiveRowDiagnostic } from "../src/archive-operator.ts";
 import { planArchive, type ArchiveFixedFinish } from "../src/archive-build.ts";
@@ -188,14 +188,14 @@ test("a native birth read restores a lost archive alarm without shortening backo
   expect(await lane.alarm()).toBe(true);
   const first = (await row(lane))!;
   expect(first.attempts).toBe(1);
-  expect(Date.parse(first.next!) - Date.parse(lane.c.clock.now)).toBe(PROPOSED_BOUNDS.dispatchRetrySeconds * 1000);
+  expect(Date.parse(first.next!) - Date.parse(lane.c.clock.now)).toBe(ARCHIVE_RETRY_FLOOR_SECONDS * 1000);
   // A second failed mint keeps the existing Mark cadence, independently
   // of the new pre-Mark capacity counter.
   lane.c.clock.now = first.next!; host.missingMint = true;
   await lane.restart(); expect(await lane.alarm()).toBe(true);
   const pending = (await row(lane))!;
   expect(pending.attempts).toBe(2); expect(pending.pending).toEqual(first.pending);
-  expect(Date.parse(pending.next!) - Date.parse(lane.c.clock.now)).toBe(PROPOSED_BOUNDS.dispatchRetrySeconds * 2 * 1000);
+  expect(Date.parse(pending.next!) - Date.parse(lane.c.clock.now)).toBe(ARCHIVE_RETRY_FLOOR_SECONDS * 2 * 1000);
   expect(pending.pending).not.toBeNull(); expect(pending.confirmed).toBeNull();
   expect(pending.next).not.toBeNull();
   const next = Date.parse(pending.next!), head = await lane.head();
@@ -263,7 +263,7 @@ test("a pre-Mark target failure survives eviction and new native input without l
     const lane = await alarmFixture(host, async () => { host.targets++; if (!ready) throw new Error("TEST PRIVATE ERROR SENTINEL"); return archiveRepository; });
     const before = await lane.head(); expect(await lane.alarm()).toBe(true); expect(await row(lane)).toBeNull();
     const next = await lane.inside(state => state.storage.getAlarm()); expect(next).not.toBeNull();
-    expect(next! - Date.parse(lane.c.clock.now)).toBe(PROPOSED_BOUNDS.dispatchRetrySeconds * 1000);
+    expect(next! - Date.parse(lane.c.clock.now)).toBe(ARCHIVE_RETRY_FLOOR_SECONDS * 1000);
     await lane.restart();
     await lane.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
     expect(await lane.inside(state => state.storage.getAlarm())).toBe(next);
@@ -271,7 +271,8 @@ test("a pre-Mark target failure survives eviction and new native input without l
     lane.c.clock.now = timeOf(next!); await lane.restart();
     expect(await lane.alarm()).toBe(true); expect(host.targets).toBe(2);
     const second = await lane.alarmAt();
-    expect(second! - Date.parse(lane.c.clock.now)).toBe(PROPOSED_BOUNDS.dispatchRetrySeconds * 1000);
+    // AR-1: the second consecutive retry without progress waits twice as long.
+    expect(second! - Date.parse(lane.c.clock.now)).toBe(ARCHIVE_RETRY_FLOOR_SECONDS * 2 * 1000);
     ready = true; lane.c.clock.now = timeOf(second!); await lane.restart();
     expect(await lane.alarm()).toBe(true); expect(host.sends).toHaveLength(1); expect(host.targets).toBe(3);
     expect((await row(lane))?.confirmed?.through.seq).toBeGreaterThan(before.seq);
@@ -374,7 +375,7 @@ test.each([0, 1])("a native archive shortage at %s entries retries the same head
   const retryLane = await alarmFixture(retryHost, undefined, false, { budget: () => {
     const budget = budgets.length === 0 ? makeShortage() : new ArchiveBudget(); budgets.push(budget); return budget;
   } });
-  const before = await retryLane.head(), due = timeOf(Date.parse(retryLane.c.clock.now) + PROPOSED_BOUNDS.dispatchRetrySeconds * 2 * 1000);
+  const before = await retryLane.head(), due = timeOf(Date.parse(retryLane.c.clock.now) + ARCHIVE_RETRY_FLOOR_SECONDS * 2 * 1000);
   expect(await retryLane.alarm()).toBe(true);
   expect(budgets).toHaveLength(1);
   const shortage = budgets[0]!; expect(() => shortage.check()).not.toThrow();
@@ -419,10 +420,10 @@ test.each([0, 1])("a native archive shortage at %s entries retries the same head
 
 // Real Native alarms and eviction; the existing host and policy are TEST
 // stand-ins. Literal observed delays distinguish reset, escalation and cap.
-test("capacity deferrals survive eviction, cap at five minutes and reset after progress", async () => {
+test("capacity deferrals survive eviction, cap at one hour and reset after progress", async () => {
   const host = new ScriptedHost("sha1"); let shortage = true;
   const lane = await alarmFixture(host, undefined, false, { budget: () => new ArchiveBudget(shortage ? { entries: 0 } : {}) });
-  const head = await lane.head(), delays = [2, 4, 8, 16, 32, 64, 128, 256, 300, 300, 300];
+  const head = await lane.head(), delays = [120, 240, 480, 960, 1920, ARCHIVE_RETRY_MAX_SECONDS, ARCHIVE_RETRY_MAX_SECONDS, ARCHIVE_RETRY_MAX_SECONDS];
   let deferred: Awaited<ReturnType<typeof row>> = null;
   for (const [index, seconds] of delays.entries()) {
     const now = Date.parse(lane.c.clock.now);
@@ -449,8 +450,8 @@ test("capacity deferrals survive eviction, cap at five minutes and reset after p
   const now = Date.parse(lane.c.clock.now);
   expect(await lane.alarm()).toBe(true);
   const reset = await lane.inside(state => JSON.parse(state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'archive-wake-1'").one().v));
-  expect(reset).toEqual({ capacityDeferrals: 1, pending: true, stopped: false, next: timeOf(now + 2000) });
-  expect(await lane.alarmAt()).toBe(now + 2000);
+  expect(reset).toEqual({ capacityDeferrals: 1, pending: true, stopped: false, next: timeOf(now + ARCHIVE_RETRY_FLOOR_SECONDS * 2 * 1000) });
+  expect(await lane.alarmAt()).toBe(now + ARCHIVE_RETRY_FLOOR_SECONDS * 2 * 1000);
   expect((await row(lane))!).toMatchObject({ confirmed: { through: head }, pending: null, stopped: null });
   expect(host.sends).toHaveLength(1);
 });
