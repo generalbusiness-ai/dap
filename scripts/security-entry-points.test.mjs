@@ -360,9 +360,9 @@ const pendingArchiveSeals = {
   "apps/room/archive-identity.ts": "1d96727f139ac309b5632c1aa9b1b0b2e51dd0e204b5ebcaabe52f5d06042089", // AE-1 reviewed boundary; actual maintained AST output.
   "apps/room/archive-packages.ts": "9d4b79b973a7b7576f133462a80d48f34d9414af9aea61cc203242d2d7fcac34", // AE-1 reviewed boundary; actual maintained AST output.
   "apps/room/archive-setup-cost.ts": "ff70caaf56adfc4501cb1fe6606fa7f9283f2207b7e2d50d29063d9e9d41baed", // AE-1 reviewed boundary; actual maintained AST output.
-  "packages/platform/src/application-archive-reader.ts": "16aa46853d0e675f1ad616cc426ef8be717132b0efd57b8b555ad07912aa1c88", // AE-1 reviewed boundary; actual maintained AST output.
+  "packages/platform/src/application-archive-reader.ts": "e261d7d0e052702daf16b07eba0a7457df30f7a9591ba1a13524456c27a4ee2e", // AE-1 uses shared canonical same; actual maintained AST output.
   "packages/scope/src/applications/archive-proof.ts": "163a8b2f7710752ee09e24d4b81704bc2fe8ce1484ad4a58b42edb9a89d5004b", // AE-1 reviewed boundary; actual maintained AST output.
-  "packages/scope/src/archive-budget.ts": "50cb6ffeedf9a3f03a065cd4b36ae724e65fdcc60cc907e30e69d56b65f410f4", // Historical old-cap value; resumed caps require maintained computation and adoption.
+  "packages/scope/src/archive-budget.ts": "07351068919cbbe84974992e7d30bc03003ee3a31a7552bee90b823490bee1a8", // AE-1 raises only nodes 64 to 128 and inputWork 64 to 128 MiB; actual maintained AST output.
   "packages/scope/src/archive-adaptive.ts": "ddf7c2ec284340fe10b965d73e373ca639563cdad19dcbd510b5e7b2b83953b8", // AE-1 reviewed boundary; actual maintained AST output.
   "packages/scope/src/archive-row-cost.ts": "cb9a949c1f9a0d8be8dc678b0c82371ab2f25cf51d980e25a8bf6f21f7178855", // AE-1 reviewed boundary; actual maintained AST output.
   "packages/scope/src/archive-outcome-values.ts": "d142fa0fb776d6558a5c1101bab05105fe904e1cf4c71fc883fc8a5c5425bd67", // Certified rules evidence projection; actual maintained parser output.
