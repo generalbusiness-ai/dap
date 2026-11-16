@@ -6,13 +6,14 @@ main `270dc8c7` for request `98f450a1`. Steps E1 and R are built. E1
 landed as main `d1585bda` on 15 November 2026. The runtime and the
 replay judge through the shared body, and no production module calls
 Explore yet. R landed as main `c6711b53` on the same day, and Lending
-0.3.0 holds the reservation definition. No other step is built.
+0.3.0 holds the reservation definition. E4 landed as main `91610da9`
+on 16 November 2026. No other step is built.
 Section 13 lists the build steps and their requests. Section 18 lists
 the rulings of step E1 that changed sections 3, 5 and 8. Section 19
-lists the rulings of steps E4 and C4, of 15 and 16 November 2026,
-that changed sections 5, 6, 7, 13, 15 and 16. Step E4 is not on main. One
-question of steps E2 and E3 is with the owner: the source of an
-instance's standing (section 5.7).
+lists the rulings of steps E4 and C4 and of the requests EK-1, ES-1,
+DD-1 and E4-C, of 15 and 16 November 2026, that changed sections 5,
+6, 7, 10, 13, 15 and 16. Section 5.7 gives the source of an
+instance's standing.
 
 A dap application has more than one interface. A member acts through a
 page, an agent acts through MCP tools, and an operator acts through the
@@ -44,8 +45,8 @@ environment is not a second judge of conflicts.
 The note keeps the client of
 [the client note](2026-11-13-scope-client.md) as the machinery for
 submit and observe. This note calls that note D12. Section 15 lists
-each change to D12. Two parts of the design enter the kernel and a
-third waits, and section 16 gives the rule that each meets. Two drafts
+each change to D12. Three parts of the design enter the kernel and a
+fourth waits, and section 16 gives the rule that each meets. Two drafts
 and two reviews came before this note,
 in `~/play/dap-foldkit` (`ENVIRONMENT.draft-1.md` and
 `ENVIRONMENT.draft-2.md`). Each fact below is read at main
@@ -419,32 +420,70 @@ The contract of section 5.1 does not wait for a transport. Invariant 9
 of the suite (section 12) tests it in one process, against the
 in-memory scope.
 
-No placement outside the scope holds a grant today. The scope reads
-the caller's standing itself, and it ignores each grant that a caller
-presents (`packages/scope/src/authority.ts:538`). No read returns
-that standing to a member. So a local instance and the agent host
-state `standing` as null. An act that reaches the grant check answers
-`unavailable` with `authority-unavailable` (section 5.4). The judge
-runs the grant check before the guards, so the explorations of
-section 5.5 are `unavailable` too.
+No placement outside the scope holds a grant. The scope reads the
+caller's standing itself, and it ignores each grant that a caller
+presents (`packages/scope/src/authority.ts:538`). An instance
+explores under the standing that its session gives. Without that
+standing, a local instance and the agent host state `standing` as
+null. An act that reaches the grant check then answers `unavailable`
+with `authority-unavailable` (section 5.4). The judge runs the grant
+check before the guards, so the explorations of section 5.5 are
+`unavailable` too.
 
-Steps E2 and E3 need the standing. Two things are open, and neither
-step starts before the owner answers:
+**The session answer carries the standing.** A client that asks with
+`?standing=1` on the session request gets the signer's own standing
+in the answer. `issueSession` already reads that standing at the
+membership head (`packages/scope/src/sessions.ts:389`). The signed
+body does not change. The answer gives only the signer's own
+standing, so the option needs no signature. Without the option, the
+answer does not change. An older Worker answers with no standing, and
+the reader takes that as a session with no standing. So an older
+client and an older Worker keep working. The contract exports the
+type of the value today, `ObservationAnswer`. The largest reply is
+5,976 bytes of the cap of 16,384.
 
-- The grant guard `judgeGrant` takes the record of the scope's own
-  read, and a grant carries that record as its proof of freshness
-  (`packages/derive/src/grant.ts:305`). An instance holds no such
-  record and makes none. An exploration under real standing needs a
-  value check that `judgeGrant` shares, and a grant value with no
-  proof for the body. Both change `packages/derive`, so section 16
-  applies.
-- The source of the standing. A replica of the membership scope is
-  checked and follows each change. Its cost is a new owner of native
-  membership state in the client, and a whole membership journal with
-  no bound on memory. The answer to a session request can carry the
-  standing that `issueSession` reads
-  (`packages/scope/src/sessions.ts:389`). That value is small. No
-  journal checks it, and it is up to 600 seconds old.
+- The context names its standing: the observation, the membership
+  head at which the service read it, and the session that gave it.
+- The value is small and up to 600 seconds old. No journal checks
+  it. The scope judges each submit with its own read, so an old value
+  costs a refused submit and never a wrong record.
+- A session with no standing gives none, and the exploration is
+  `unavailable`. A row of `observes` stays `unavailable`. The value
+  is no proof of freshness and no grant for the runtime.
+- The standing changes when the instance receives a new session.
+  Only a refusal `unauthorized` by the scope ends the cached session.
+  `authority-unavailable` ends nothing. Silence proves nothing.
+- A reader checks the value fields and the native pin. It checks
+  that the key, the member, the membership and its incarnation equal
+  those of the request and of the claims.
+- The caller opts in. The MCP server and the command line do. The
+  application gateway refuses a query on a POST to `sessions` until
+  step E2 opens it for a screen page.
+- The MCP inventory asks the shared value check for each action, and
+  it keeps no role table. It reads the member `kind` from the member
+  item of the membership summary. `kind` decides no action. If the
+  inventory does not hold the member item, `kind` is absent.
+
+A replica of the membership scope waits. It is checked and follows
+each change. Its cost is a new owner of native membership state in
+the client, and a whole membership journal with no bound on memory.
+
+**Explore judges a grant by value.** The grant guard `judgeGrant`
+takes the record of the scope's own read, and a grant carries that
+record as its proof of freshness (`packages/derive/src/grant.ts:305`).
+An instance holds no such record and makes none. So
+`packages/derive` exports one function more, `judgeExploreGrant`, and
+no type. The function shares the value check of `judgeGrant`, and it
+judges a grant by value, without the use guards (`fresh`). A grant
+value with no `fresh` of its own serves only the unsigned body that
+Explore judges. It never becomes recordable authority, and it is
+never `granted`. With any row of `observes`, the function answers
+`authority-unavailable`. The bytes of a recorded grant do not change.
+Section 16 lists the export.
+
+Request ES-1 builds the session answer, and request EK-1 builds the
+export. Neither is built. Step E2 needs both, and step E3 needs C4
+too.
 
 An instance never presents a guessed grant. The stand-in
 `predictionGrant` of step C2 stays in the prediction of the member's
@@ -464,10 +503,9 @@ This is D12 step C4, with one rule changed and one added.
    effect.
 3. **At the submit, the instance explores the act.** If an `observed`
    basis has moved, the draft returns before any signature. Its view
-   holds the reason, the member's changed fields, and `now`, the `ref`
-   of the row in the view that carries the return.
-4. **A submit of a draft that rule 3 returned is a new version.** The
-   member has the current row and the reason on the page. The member's next
+   holds the reason, the member's changed fields, and `now` (below).
+4. **A submit of a returned draft is a new version.** The member has
+   the current row and the reason on the page. The member's next
    submit authorizes the changed fields, as they are then, on the basis
    `now`. The version takes no basis from a later view. It keeps the
    request's key, as D12 rules 2 and 6 say.
@@ -475,34 +513,56 @@ This is D12 step C4, with one rule changed and one added.
 Another member can act between any two submits. If the item moved
 again after `now`, the new version returns in the same way.
 
-**A return has two forms, and the view names the form.**
+**A return has one stored shape and two causes.**
 
-- A return by an exploration holds the reason, the changed fields
-  and `now`. Rule 3 makes it.
-- A return by a request that ended refused or withdrawn holds the
-  exact cause and no `now`. The draft keeps the basis that it had.
-  The draft returns when the replica holds the head of the refusal
-  (D12 section 6.1). The view shows the return from the custody
-  record, and no step writes it or reads a row for it.
+- An exploration at a submit found a moved basis. Rule 3 makes this
+  return.
+- A request ended refused or withdrawn. The draft returns when the
+  replica holds the head of the refusal (D12 section 6.1). The view
+  shows the return from the custody record, and no step writes it.
 
-A submit of a draft of the second form explores first, as each submit
-does. A moved basis returns the draft in the first form. An unchanged
-basis makes a new version on the kept basis.
+The stored draft keeps its basis and the cause, and nothing more.
 
-The second form has one case that a member can notice. Member A
-explores at head 39. The act of member B takes effect at head 40
-before the scope judges the request of A, and the scope refuses with
-`revision-moved`. The draft of A returns with the cause. The next
-submit of A explores, finds the moved basis, and returns the draft
-with `now`. The submit after that signs. The member makes one submit
-more than a return by an exploration needs.
+**The view of a returned draft holds one value, `now`.** `now` is the
+basis that the view renders for every subject of the act: the
+primary, each `also` and each `via`. The view computes `now` each
+time, from the kept basis and the rows that it holds, for both
+causes. The view stores nothing. So `now` is never older than the row
+on the page. For an act that makes a new item, `now` has no primary
+row and holds the basis of the other subjects.
 
-One rule pays for that submit. **A draft changes only by a call of the
-member.** No background step writes to the draft store. So two clients
-of one member never race to store a return, and a stop between the
-custody write and a draft write leaves nothing to repair. An act that
-makes a new item has no row, so its refusal has no `now` in any
-design.
+**The page passes `now` back whole: `submit(slot, now)`.** The client
+explores the act on that basis. A subject that moved after that view
+returns the draft again, before any signature.
+
+- A returned draft with a missing, ill-shaped or foreign `now` stops
+  with `shape` before any signature. An editing draft that is given a
+  `now` stops in the same way.
+- A view that cannot render a subject gives no `now`. It names the
+  subject that it lacks, so a page can tell the member. A submit then
+  stops with `state`. Edit and `dismiss` still work, and `now`
+  appears when the replica holds the row.
+
+Member A explores at head 39. The act of member B takes effect at
+head 40 before the scope judges the request of A, and the scope
+refuses with `revision-moved`. The draft of A returns with the cause,
+and its view holds `now` at head 40. The member sees the row of head
+40, and the next submit signs on that basis. A refusal by the scope
+after a passed exploration always returns the draft with a new `now`,
+and the member submits one time more. The instance makes no hidden
+retry, because a retry signs on a row that the member has not seen.
+Each real race costs one submit.
+
+On MCP, each refused result that a model can answer carries `now`.
+The `act` tool takes `after` and `now` as a pair, and that pair is
+the submit of a returned request. A bare `act` is a fresh act with
+its own key. A host that drops tool output gives the model no `now`.
+The model then gets `shape`, and it can send a fresh act.
+
+**A draft changes only by a call of the member.** No background step
+writes to the draft store. So two clients of one member never race to
+store a return, and a stop between the custody write and a draft
+write leaves nothing to repair.
 
 The same rule governs a request with the status `other-recorded`: an
 earlier version of the request took effect after its return. The
@@ -512,6 +572,49 @@ new key, and `dismiss(key)` removes the request. The earlier version
 is on the record. For an act that makes a new item, a submit of the
 present values makes a second item, so the member decides it and no
 view decides it for the member.
+
+**Each arm of the list of requests carries `is`.** A reader narrows
+the list with one switch.
+
+- A request with no stored draft carries `is: "request"` and its
+  status.
+- A request with a stored draft carries `is: "draft"`, with `slot`
+  and `values`, the present fields. So a page renders one draft in
+  one way before and after a submit. No partial act claims the type
+  of a complete act, `AskedOf`.
+- A **held intention** is a stored row that the client cannot show as
+  a request or a draft. It carries its key and no status, and it says
+  nothing on whether a submit can sign.
+
+A held intention names one of three reasons. The first reason that
+holds is the one that the arm names.
+
+1. `another-definition`: another definition made the row. The arm
+   shows the stored definition digest and no values. `restore(key)`
+   stops with `definition-mismatch` and changes nothing.
+2. `another-descriptor`: another descriptor made the row. The arm
+   shows the stored descriptor digest and no values. `restore(key)`
+   stops with `descriptor-mismatch` and changes nothing.
+3. `nonrequest-held`: a custody record that is no request holds the
+   key of a stored draft. Step C3 excludes such a record, for example
+   a standalone step.
+   The arm shows the key and the stored values. `restore(key)` moves
+   the values to a draft with a new key. A submit under the held key
+   gets the stop that custody gives for a conflicting record.
+
+In each case `dismiss(key)` removes the stored row. Neither call reads
+or writes the custody record. The client shows no values that it has
+not checked, and it rewrites and promotes no row of another
+definition or descriptor. One held row never fails the read, and the
+rest of the view publishes. Each key shows one time in the view. A
+key with an ordinary custody record shows as its request, and a
+stored row of another descriptor adds no values to it.
+
+An optional field of the arm holds the place of a verified entry with
+the key, when the replica holds one. It is evidence and no status. It
+tells the member that an act with this key took effect, so a second
+submit of the same form can make a second item. It does not say that
+the entry holds the values that the member typed.
 
 Rule 4 is the member's own act. It is the only way that a step gets a
 new basis.
@@ -525,6 +628,38 @@ change by another client from that store.
 Each call validates and copies its inputs before its first wait: the
 slot, the patch and the names of a clear. A page can change its own
 objects after the call, and the call does not see the change.
+
+**A call decides on what it read, and a later answer shows at the next
+view.** Under the existing fence, a member call reads the finite set
+of custody records that it needs, one time. It stops on a change that
+it observed, keeps each displaced row as waiting, and launches one
+write. An answer of the scope can arrive during the call. That answer
+changes custody and nothing else. The next view shows its cause. It
+removes no new intention, and it gives no draft a new basis.
+
+The view is a total function of the draft store and custody. Each key
+shows one time, in a slot or in the list, for every pair of store
+states. So a late answer changes only the order that the member sees:
+the call first, then the answer. Both orders are valid outcomes.
+
+Outcome writes stay outside the fence. An answer must settle without
+a wait for a member's edit, and another tab writes outcomes that no
+fence of this tab holds. D12 has two store ports and claims no write
+across both.
+
+A stored return by an exploration stays when the cause of the same
+signing changes. A later kept signing consumes it. An entry, a
+pending request and a stopped client keep their priority over it.
+
+**The fold of custody is its own background step.** `Custody.folded`
+writes an outcome from a verified entry of the journal. The read for
+a view reads and writes nothing, and it does not call the fold. No
+view depends on the fold. A published view that holds the entry shows
+the request as recorded, from the view's own data. So the view is the
+same when the fold ran, when it failed and when it has not run yet. A
+failed fold stops no view and no member call. It runs again at the
+next change of the replica or of the store. The fold changes no
+draft.
 
 Step C4 builds rules 1 to 4, with the exploration of rule 3. The
 replica keeps its checked state private, so the replica owns one
@@ -580,9 +715,9 @@ subject.**
 - A `ref` whose name the view does not hold stops with `state`. A
   derived subject that the view does not hold gets no basis. The
   submit sends no guessed revision, and the scope judges the act.
-- A return by an exploration takes `now` and the revisions of its
-  derived subjects from the cut of the exploration that decided the
-  movement.
+- The view of a returned draft computes `now`, with the revision of
+  the primary and of each derived subject, from the kept basis and
+  the rows that it holds. No stored cut gives `now`.
 
 **An optional item field can stay absent in a slot.**
 
@@ -746,6 +881,17 @@ archived, and at no other time.
 
 A stale replica proves no absence. The second row needs the read that
 D12 section 5.5 defines.
+
+**A fill folds the journal to the source entry.**
+`authorizationSource` folds the journal from genesis to the source
+entry at each call, at about 35 microseconds for each row: 33 to 37
+ms at 1,028 rows and 137 to 156 ms at 4,100 rows, one run each.
+Request E4-C, which is not built, keeps the answer in a map keyed by
+the hash of the source entry. The map holds only the owner's own
+source entries, and it clears when the replica folds again from
+genesis. The state seed bounds the first fold, because a replica that
+starts at a seed holds no earlier entry. Until then the measured cost
+is a known limit.
 
 **The deadline** of a version is its `at` plus one signing lifetime,
 300 s, by default. A version that waits for a source is bound by the
@@ -945,10 +1091,24 @@ is published.
 | The scope | Gains nothing in the first version. The method `explore` is held (section 16) |
 | `dap dev` | Gains `log` and the head stream, so that a local instance runs against it. It serves neither today |
 
-**The descriptor** is data, with a digest. For each act it holds the
-schema of the fields, the type of the item, the type of the item that
-the act opens, the names that the guards declare, the admission of
-each subject, and the sentences of `describe.ts`. Each adapter
+**The descriptor** is data. For each act it holds the schema of the
+fields, the type of the item, the type of the item that the act
+opens, the names that the guards declare, the admission of each
+subject, and the sentences of `describe.ts`.
+
+The descriptor has one digest for each act. The digest of an act
+covers that content for that act, from the definition bytes. It
+covers no version text, no name of the application, no path and no
+other act. A release that changes only the version keeps each digest.
+A change of one act's declaration changes the digest of that act, and
+of each act that shares the changed content. The stored drafts and
+authorizations of the other acts stay valid. A draft row and a
+retained authorization each hold the digest of their own act, and the
+field `descriptor` of section 7.1 stays one digest. Request DD-1
+builds the digest after step C4. Its proposal states how the instance
+gets the digest of an act in place of the one option of section 7.1.
+
+Each adapter
 interprets the descriptor. A TypeScript caller takes its types from the
 definition's own type, as `AskedOf` does today (`declared.ts:67`).
 Another language can generate bindings.
@@ -1148,13 +1308,13 @@ covers the acts that need no basis.
 | D12 | Change |
 |---|---|
 | Rule 3: "The client signs only when the member submits. No timer signs" | The rule of section 7.1. With the default deadline, the behavior that a member sees is D12's |
-| Rule 5: the intent is built "at the replica's head" | A draft keeps the basis that it opened on. A draft that an exploration returned takes the basis `now`. A draft that a refusal returned keeps its basis (section 6) |
+| Rule 5: the intent is built "at the replica's head" | A draft keeps the basis that it opened on. A submit of a returned draft, for either cause, takes the basis `now` that the page passes back (section 6) |
 | Section 8, step 3: the stop `busy` | Stays for an `observed` subject whose pending step the act does not name. An act that names the step waits (section 7.4) |
 | Section 8: an `other-recorded` request enters an empty slot as a new draft | The request waits in the list, also when its slot is empty. The new key starts at the `restore` in each case (section 6) |
 | Section 8: "A stop changes no store" | No stop leaves a custody record. Most stops write nothing. A `source` stop can leave a version with no mark and no signing. Three stops leave a version and its permission mark, with one call of the signer (section 7.1): a stop of the signer, a stop of the custody write, and `full` with the reason `bytes` after the build |
 | Section 8: the stops of a submit | Ten stops: `shape`, `state`, `busy`, `signer`, `store`, `full`, `taken`, `descriptor-mismatch`, `source` and `versions-full`. `full` keeps custody's reasons: `bytes`, `count`, `budget` and `signings`. An `unavailable` exploration is no stop |
 | Section 9: `ClientView` and `Judged` | The view gains `explore` and `offers`, and each row gains `ref` and `recorded`. `Judged` is the exploration of a signed version |
-| Section 10: no file and no export in `packages/contract` or `packages/derive` | Step E1 adds one export to `packages/derive` (section 16) |
+| Section 10: no file and no export in `packages/contract` or `packages/derive` | Step E1 adds one export to `packages/derive`, and request EK-1 adds `judgeExploreGrant` (section 16) |
 | Section 15: work offline for longer than one signing is not taken | Stays not taken in the first build. The rule of section 7.1 permits a later deadline (section 7.2) |
 
 Steps C1 to C4 keep their order. C4 takes the changed rule 5 from its
@@ -1187,17 +1347,19 @@ draft from the store. A stop that follows a commit in the same call
 names the commit. The table's write column states that case for
 `state` and for `taken`.
 
-## 16. One part enters the kernel first, one enters last, and one waits
+## 16. Two parts enter the kernel first, one enters last, and one waits
 
 `docs/kernel.md` section 7 admits a part to the kernel only after a
 review. The review says why the part cannot be a platform service or an
-application. Hugh decided each part on 14 November 2026 (section 17).
+application. Hugh decided the first three rows on 14 November 2026
+(section 17), and the export of request EK-1 on 16 November 2026.
 
 | Part | Enters | Why it is kernel | Decided |
 |---|---|---|---|
 | The judgment of an intent body under a context | `packages/derive`, as one export, in step E1 | Promise 9: the runtime and the verifier call the same functions. An exploration that runs other code is a second judge, and dap has three partial ones today | Yes. The condition: `judgeAct` gives identical answers on the replay corpus |
 | The admission of a subject (decision A) | The definition form in `packages/contract/src/definition.ts`, the validator and the judge, in step A | The admission changes how the judge reads `expected`. The runtime and replay must derive one answer from one definition | Yes to the direction. The part enters last, with its own design |
 | The explore read | `ScopeApi` in `packages/contract/src/transport.ts`, as one method with its argument and its answer | Each native read is a method of `ScopeApi`. Each transport must agree on the shapes, as section 7.4 of that page says for read minimums | Held |
+| The judgment of a grant by value for Explore | `packages/derive`, as one function export, `judgeExploreGrant`, and no type, in request EK-1 | Promise 9: Explore and the scope judge a grant with one shared value check. A second check of a grant is a second judge | Yes, on 16 November 2026, as an exception. The bytes of a recorded grant do not change |
 
 No part closes a K item of that page. Its section 7.1 holds a head
 that adds to the kernel and closes no K item. The owner's decisions
@@ -1314,9 +1476,10 @@ and A `04e4438e`. Request `6b6def0a` holds the review after step E3.
 
 ## 19. Rulings of steps E4 and C4
 
-The build of step E4 and the plan of step C4 found points that this
-note did not settle. The planner ruled on each on 15 and 16 November
-2026, and the sections above hold the results.
+The build of step E4, the plan of step C4 and the requests EK-1,
+ES-1, DD-1 and E4-C found points that this note did not settle. The
+planner ruled on each on 15 and 16 November 2026, and the sections
+above hold the results.
 
 | Ruling | Point | Section |
 |---|---|---|
@@ -1336,5 +1499,14 @@ note did not settle. The planner ruled on each on 15 and 16 November
 | `bbee5700` | The client takes one required draft store. A call owns its inputs before its first wait. A call reports what the store holds | 6, 15 |
 | `ff578fef`, `481aac4e` | A return has two forms. A draft that a refusal returned holds the cause and keeps its basis. A draft changes only by a call of the member | 6, 15 |
 | `fc765743` | An `other-recorded` request waits in the list, and `restore(key)` starts the new key | 6, 15 |
+| `77a253b9`, `a6f98773` | One submit. The view computes `now` for every subject of the act, and the page passes it back. A return has one stored shape and two causes. No hidden retry | 6, 6.1, 15 |
+| `e19f27b5`, `357c2195`, `c79545a3`, `bc447034`, `6d3b979f` | A held intention has three reasons and the optional place of a verified entry | 6 |
+| `6d3b979f` | A request with a stored draft shows as a draft. Each arm of the list carries `is` | 6 |
+| `0967101f` | The fold of custody is its own background step, and no view depends on it | 6 |
+| `81711f39` | A call decides on what it read. Outcome writes stay outside the fence. The marker rule | 6 |
+| `695a1839`, `a9056244`, `25f241cc`, `bb2f7f17` | The session answer carries the standing when the client asks. The membership replica waits | 5.7 |
+| `77a253b9`, `25f241cc`, `bb2f7f17` | `packages/derive` exports `judgeExploreGrant` and no type, by the owner's exception of 16 November 2026 | 5.7, 15, 16 |
+| `17e10e32` | One descriptor digest for each act | 10 |
+| `01c542cc` | One fold for each source entry of an authorization | 7.2 |
 
 Request `4bd07278` holds step E4-B.
