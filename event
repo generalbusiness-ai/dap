@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ef03258b901b6ab6ca745e47ae1beb067c0ccc5c","text":"Merge retired a covered predecessor; the successor is at docs/security/settings.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ef0a16a70c38510c13922d78e7e01bb013981eb1","text":"Merge retired a covered predecessor; the successor is at scripts/scale-deadline-registrations.mjs."}
