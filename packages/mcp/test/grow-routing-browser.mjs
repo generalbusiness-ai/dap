@@ -32,6 +32,11 @@ async function contained(app) {
 }
 async function layout(app, width) {
   await contained(app);
+  // The host applies a new viewport width to the card frame a few frames later.
+  // Wait for it, then assert, so a width that never arrives still fails below.
+  await app.locator('html').evaluate(async (root, expected) => {
+    for (let i = 0; i < 90 && root.clientWidth !== expected; i++) await new Promise(resolve => requestAnimationFrame(resolve));
+  }, width);
   const value = await app.locator('html').evaluate(root => ({ width: root.clientWidth, overflow: root.scrollWidth > root.clientWidth }));
   assert.equal(value.width, width); assert.equal(value.overflow, false); return value;
 }
