@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b8fa79f14493bc851c7824f1baddbf719438931c","text":"Merge retired a covered predecessor; the successor is at packages/client/test/install-request.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bd7aecc7bf2f56592cfb86c098dd37ce31c09f25","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-15-ce2-expired-custody.md."}
