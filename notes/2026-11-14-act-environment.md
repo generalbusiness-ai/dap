@@ -458,7 +458,7 @@ type of the value today, `ObservationAnswer`. The largest reply is
   those of the request and of the claims.
 - The caller opts in. The MCP server and the command line do. The
   application gateway refuses a query on a POST to `sessions` until
-  step E2 opens it for a screen page.
+  step E3 opens it for a screen page.
 - The MCP inventory asks the shared value check for each action, and
   it keeps no role table. It reads the member `kind` from the member
   item of the membership summary. `kind` decides no action. If the
@@ -554,7 +554,9 @@ and the member submits one time more. The instance makes no hidden
 retry, because a retry signs on a row that the member has not seen.
 Each real race costs one submit.
 
-On MCP, each refused result that a model can answer carries `now`.
+On MCP, a refused `act` result with the reason `revision-moved` or
+`bad-intent` carries `now`. `settle` gives `now` for a refusal with
+another reason.
 The `act` tool takes `after` and `now` as a pair, and that pair is
 the submit of a returned request. A bare `act` is a fresh act with
 its own key. A host that drops tool output gives the model no `now`.
@@ -885,16 +887,26 @@ archived, and at no other time.
 A stale replica proves no absence. The second row needs the read that
 D12 section 5.5 defines.
 
-**A fill folds the journal to the source entry.**
+**A fill folds the journal to each source entry one time.**
 `authorizationSource` folds the journal from genesis to the source
-entry at each call, at about 35 microseconds for each row: 33 to 37
-ms at 1,028 rows and 137 to 156 ms at 4,100 rows, one run each.
-Request E4-C, which is not built, keeps the answer in a map keyed by
-the hash of the source entry. The map holds only the owner's own
-source entries, and it clears when the replica folds again from
-genesis. The state seed bounds the first fold, because a replica that
-starts at a seed holds no earlier entry. Until then the measured cost
-is a known limit.
+entry, at about 35 microseconds for each row: 33 to 37 ms at 1,028
+rows and 137 to 156 ms at 4,100 rows, one run each. Since E4-C, the
+replica keeps the answer in a map keyed by the hash of the source
+entry, and later calls for that entry read the map. The answer for an
+entry never changes, so the key needs no head. A fold again from
+genesis clears the map.
+
+The map's bound: the one caller, the retained authorization, asks only
+for the owner's own source entries. So the map holds at most one row
+for each accepted act of the owner that a session uses as a source.
+Each row maps each item to its revision after that entry.
+
+The first call for each source entry still costs one fold. Today a
+replica holds the journal from the genesis entry, so `foldThrough`
+starts at entry 0. A replica that starts at a state seed (SS1 to SS3)
+will hold no entry before the seed, and its fold will start at the
+seed entry. Until then the measured cost of the first fold is a known
+limit.
 
 **The deadline** of a version is its `at` plus one signing lifetime,
 300 s, by default. A version that waits for a source is bound by the
@@ -1497,7 +1509,7 @@ above hold the results.
 | `22ae2bd0`, `850da1af` | A submit has ten stops. `source` is coarse, and `versions-full` is its own stop | 15 |
 | `9930cf7f` | A stop leaves one of three results. The second size check of custody can refuse after the signer ran | 15 |
 | `4dffc26a` | A `ref` is a value. The basis of a subject is read when the draft first names that subject | 6.1 |
-| `d038a2ee` | The standing of an instance is open. The owner decides the change of `packages/derive` | 5.7 |
+| `d038a2ee` | The standing of an instance is open. The owner decides the change of `packages/derive`. `695a1839` answers it | 5.7 |
 | `c1b26daf` | An optional item field can stay absent in a slot. An edit is a patch that never clears. `clear(slot, fields)` is its own call | 6.1 |
 | `bbee5700` | The client takes one required draft store. A call owns its inputs before its first wait. A call reports what the store holds | 6, 15 |
 | `ff578fef`, `481aac4e` | A draft changes only by a call of the member. The two stored forms of a return that these rulings set are replaced by `77a253b9` | 6, 15 |

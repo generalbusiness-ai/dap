@@ -109,6 +109,9 @@ export class Replica<D extends DeclaredDefinition> {
   readonly #definition: ValidDefinition | null;
   readonly #held = new HeldEntries(PROPOSED_BOUNDS.entryBytes);
   #state = new MemoryState();
+  /** The revisions after each source entry that `authorizationSource` folded, by the entry's hash.
+   * The answer for an entry never changes, so the key needs no head. A fold again from genesis clears it. */
+  readonly #sources = new Map<Digest, Readonly<Record<number, number>>>();
   readonly #listeners = new Set<Listener<D>>();
   readonly #exploration: ReplicaExploration<D> | null;
   /** Actual journal-read and stop transitions only, not view ticks. */
@@ -197,6 +200,8 @@ export class Replica<D extends DeclaredDefinition> {
     if (this.#stopped || !this.#definition) return null;
     const entry = this.accepted(actor, key);
     if (!entry) return null;
+    const kept = this.#sources.get(entry.fact.hash);
+    if (kept) return { entry: structuredClone(entry), revisions: { ...kept } };
     const state = new MemoryState();
     const complete = this.#held.foldThrough(entry.fact.seq, (held, own) => {
       applyEntry(state, this.#definition!, held.entry, held.hash, { bounds: PROPOSED_BOUNDS, own });
@@ -205,7 +210,9 @@ export class Replica<D extends DeclaredDefinition> {
     const scope = state.scope();
     if (!scope || scope.at.scope !== entry.fact.at.scope || scope.at.genesis !== entry.fact.at.genesis
       || scope.head.seq !== entry.fact.seq || scope.head.hash !== entry.fact.hash) return null;
-    return { entry: structuredClone(entry), revisions: Object.fromEntries(state.all().items.map(item => [item.id, item.revision])) };
+    const revisions: Readonly<Record<number, number>> = Object.fromEntries(state.all().items.map(item => [item.id, item.revision]));
+    this.#sources.set(entry.fact.hash, revisions);
+    return { entry: structuredClone(entry), revisions: { ...revisions } };
   }
 
   /** A refusal of class `protocol` stops the replica. Returns whether it stopped. */
@@ -368,6 +375,7 @@ export class Replica<D extends DeclaredDefinition> {
     this.#folding = true;
     this.#state = new MemoryState();
     this.#held.clear();
+    this.#sources.clear();
     this.#again = true;
     this.#publish();
     return false;
