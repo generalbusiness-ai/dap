@@ -43,11 +43,19 @@ this order. Each step ends the call before the next.
 4. Build the candidate from the stored act and the passed `now`
    (`composeDraftCandidate`). The call never takes `Explore.result.act`, which
    can autofill an omitted key.
-5. Run `actExplore` on the candidate. A refusal `revision-moved` writes the
-   genuine form 1 return and ends the call.
+5. Run `actExplore` on the candidate, outside the fence. Then take the fence
+   again and read the batch again. The stored draft must equal the draft that
+   step 2 read. A difference stops with `state`, signs nothing and writes
+   nothing. A refusal `revision-moved` writes the genuine form 1 return and ends
+   the call.
 6. Write one batch (`adoptionBatch`): the adopted `expected`, `capture` and
    `namedRefs`, and no return marker.
 7. Retain and sign the same candidate.
+
+A call decides on what it read under the fence. A submit reads two times, around
+its exploration: the exploration reader can wait for the network, and no call
+waits for the network inside the fence. A replica head that moved during the
+exploration is no difference. The scope judges the act.
 
 A scope can still refuse after step 5 passes, because a row can move between the
 client's exploration and the scope's judgment. The draft then returns with a new
@@ -149,8 +157,19 @@ The planner settled the six points of the first run in ruling 09041476.
    (`replica.ts` line 260), which is the `exploration` reader that the caller
    passes to `scopeClient` (`scope-client.ts` line 168). A reader can wait for
    the network, for example to issue a read session. `actExplore` itself is
-   synchronous. The call stays inside the fence until the planner rules on
-   that wait.
+   synchronous. Ruling 29b355c5 moves the wait outside the fence. A slow or lost
+   answer would otherwise hold every member call of every client that shares
+   the store. Custody keeps the same rule for a delivery
+   (`packages/client/src/custody.ts`, `#dispatch`). Of the two forms that the
+   ruling allows, the submit takes two fenced sections with the exploration
+   between them. The first section runs steps 2 to 4. The second reads the batch
+   again and requires the same stored draft in the same slot, then writes the
+   form 1 return or the adoption. Step 7 signs outside the fence. This changes less than the other form, which composes the candidate
+   from an unfenced read and compares it afterwards: the first section stays the
+   code that it was. Three cases in `c4-draft-now.test.ts` pin the wait: other
+   calls (`edit`, `discard` and a submit of another slot) complete while the
+   reader waits, a changed draft stops with `state`, and
+   an unchanged draft signs once.
 4. **Order of checks.** The call checks the form of its inputs before its first
    wait: `slot`, the patch, and `now`. An ill-shaped `now` is a fault of the
    caller, and no state of the store changes that. The order is then `taken`,
@@ -175,7 +194,10 @@ The planner settled the six points of the first run in ruling 09041476.
      signing and selected at the judgment, `judgeActBody` counts the keys of
      `expected` against the subjects it binds (`packages/derive/src/judge.ts`
      lines 392 to 395). The count differs, so the scope refuses `bad-intent`
-     ("expected has one key for each of: ..."), not `revision-moved`.
+     ("expected has one key for each of: ..."), not `revision-moved`. The
+     scope refuses, so no act records without the basis. The member then sees
+     `bad-intent` for what is a race. This is a known wording limit, and the
+     planner carries it in the E5 request.
 6. **D12.** `notes/2026-11-13-scope-client.md` stays as written. The act
    environment note lists each change to D12 in section 15. Its row for D12
    section 9 now says that `requests` holds three arms, each with `is`. No

@@ -565,3 +565,151 @@ test("a second client that submits the same key between the adoption write and t
   expect(s.copies.at(-1)!.intent).toMatchObject({ idempotencyKey: key, expected: { on: moved } });
   client.close(); second.close();
 });
+
+// ---------------------------------------------------------------- the exploration waits outside the fence
+// Ruling 29b355c5 point 3: a reader that waits for the network holds no fence. The submit reads the batch again afterwards.
+/** The Lending runtime with three donated tools, a client whose first armed exploration waits, and one borrow slot per tool. */
+async function gatedLending() {
+  const runtime = await c4Runtime(), store = memoryStore(), drafts = memoryDrafts(), feed = new Feed();
+  let armed = false, release!: () => void, entered!: () => void;
+  const started = new Promise<void>(resolve => { entered = resolve; }), held = new Promise<void>(resolve => { release = resolve; });
+  const client = scopeClient(runtime.handle, { descriptor: LENDING_DESCRIPTOR, signer: runtime.signer,
+    member: { service: runtime.service, ...runtime.member, principal: null }, store, drafts, observe: feed.observe,
+    clock: runtime.clock, exploration: async () => { if (armed) { armed = false; entered(); await held; } return runtime.readInputs(); } });
+  const did = async <K extends Kind<typeof lending>>(key: string, kind: K, asked: AskedOf<typeof lending, K>): Promise<number> => {
+    const packet = await runtime.handle.intent(runtime.signer, kind, asked, { now: runtime.now(), idempotencyKey: key, lifetimeSeconds: 60 });
+    const answer = await runtime.handle.submit(packet.signed, [], packet.beside);
+    expect(answer.answer).toBe("accepted");
+    const effect = answer.answer === "accepted" ? answer.receipt.effects.find(found => found.effect === "open") : undefined;
+    if (!effect || effect.effect !== "open") return expect.fail("the receipt names its opened item");
+    return effect.item;
+  };
+  feed.emit({ status: "streaming" }); await client.read(); await clientIdle(client);
+  const tools: number[] = [];
+  for (const name of ["one", "two", "three"]) {
+    tools.push(await did(`g-donate-${name}`, "donate", { on: null, expected: { library: runtime.store.item(0)!.revision },
+      fields: { name: `Tool ${name}`, description: "A tool", page: `shelf/g-${name}.md`, content: "content" } }));
+  }
+  await client.read(); await clientIdle(client);
+  // `library` is an `also` subject, so the address names only the tool.
+  const slots = tools.map(tool => client.slot("borrow", { on: { name: tool, seen: client.view.row({ item: tool })!.revision, assumes: [] } }));
+  const edits = [] as string[];
+  for (const [index, slot] of slots.entries()) {
+    const made = await client.edit(slot, { content: `borrow ${index}` });
+    if (!made.ok) return expect.fail("the edit creates the draft");
+    edits.push(made.value);
+  }
+  await clientIdle(client);
+  return { runtime, store, drafts, client, slots, keys: edits, started, release, arm: () => { armed = true; },
+    state: async () => canonicalize(await drafts.read(runtime.signer.key, runtime.at)),
+    close: () => { client.close(); runtime.close(); } };
+}
+
+test("a submit waits for its exploration outside the fence: edit, discard and a submit of another slot complete", async () => {
+  const g = await gatedLending();
+  try {
+    const signatures = g.runtime.counts.actSignatures;
+    g.arm();
+    const waiting = g.client.submit(g.slots[0]!);
+    await g.started;
+    expect(await g.client.edit(g.slots[1]!, { content: "edited while waiting" })).toEqual({ ok: true, value: g.keys[1] });
+    // `discard` removes an editing draft; `dismiss` applies to an unsent intention, and none waits here.
+    expect(await g.client.discard(g.slots[2]!)).toEqual({ ok: true, value: undefined });
+    expect(await g.client.submit(g.slots[1]!)).toEqual({ ok: true, value: g.keys[1] });
+    g.release();
+    expect(await waiting).toEqual({ ok: true, value: g.keys[0] });
+    await clientIdle(g.client);
+    expect(g.runtime.counts.actSignatures).toBe(signatures + 2);
+  } finally { g.release(); g.close(); }
+});
+
+test("a draft that changes while the submit waits stops with state, signs nothing and writes nothing", async () => {
+  const g = await gatedLending();
+  try {
+    const signatures = g.runtime.counts.actSignatures, records = [...g.store.records];
+    g.arm();
+    const waiting = g.client.submit(g.slots[0]!);
+    await g.started;
+    expect(await g.client.edit(g.slots[0]!, { content: "changed while waiting" })).toEqual({ ok: true, value: g.keys[0] });
+    await clientIdle(g.client);
+    const stored = await g.state();
+    let writes = 0; const write = g.drafts.write.bind(g.drafts);
+    g.drafts.write = async (owner, at, entries) => { writes++; return write(owner, at, entries); };
+    g.release();
+    expect(await waiting).toEqual({ ok: false, stop: { stop: "state" } });
+    await clientIdle(g.client);
+    expect([writes, g.runtime.counts.actSignatures, [...g.store.records], await g.state()]).toEqual([0, signatures, records, stored]);
+  } finally { g.release(); g.close(); }
+});
+
+test("a submit whose draft did not change during the exploration signs once", async () => {
+  const g = await gatedLending();
+  try {
+    const signatures = g.runtime.counts.actSignatures, records = g.store.records.size;
+    g.arm();
+    const waiting = g.client.submit(g.slots[0]!);
+    await g.started;
+    g.release();
+    expect(await waiting).toEqual({ ok: true, value: g.keys[0] });
+    await clientIdle(g.client);
+    expect([g.runtime.counts.actSignatures, g.store.records.size]).toEqual([signatures + 1, records + 1]);
+  } finally { g.release(); g.close(); }
+});
+
+// Ruling 29b355c5 point 2: a return by an exploration. The adoption removes the stored cause; a stop before the signing
+// leaves an editing draft with no return, and the next submit takes no now, explores and signs once.
+test("a stop between the adoption write and the signing of a return by an exploration leaves an editing draft, and the next submit signs once", async () => {
+  const runtime = await c4Runtime(), store = memoryStore(), drafts = memoryDrafts(), feed = new Feed();
+  const client = scopeClient(runtime.handle, { descriptor: LENDING_DESCRIPTOR, signer: runtime.signer,
+    member: { service: runtime.service, ...runtime.member, principal: null }, store, drafts, observe: feed.observe,
+    clock: runtime.clock, exploration: runtime.readInputs });
+  const did = async <K extends Kind<typeof lending>>(key: string, kind: K, asked: AskedOf<typeof lending, K>): Promise<Answer> => {
+    const packet = await runtime.handle.intent(runtime.signer, kind, asked, { now: runtime.now(), idempotencyKey: key, lifetimeSeconds: 60 });
+    const answer = await runtime.handle.submit(packet.signed, [], packet.beside);
+    expect(answer.answer).toBe("accepted");
+    return answer;
+  };
+  const opened = (answer: Answer): number => {
+    const effect = answer.answer === "accepted" ? answer.receipt.effects.find(found => found.effect === "open") : undefined;
+    if (!effect || effect.effect !== "open") return expect.fail("the receipt names its opened item");
+    return effect.item;
+  };
+  try {
+    feed.emit({ status: "streaming" }); await client.read(); await clientIdle(client);
+    const tool = opened(await did("s-donate", "donate", { on: null, expected: { library: runtime.store.item(0)!.revision },
+      fields: { name: "Step tool", description: "A tool", page: "shelf/step-tool.md", content: "content" } }));
+    const held = opened(await did("s-reserve", "reserve", { on: null, expected: {},
+      fields: { tool, day: "2026-11-15", until: timeOf(runtime.now() + 3_600_000) } }));
+    await client.read(); await clientIdle(client);
+    const seen = client.view.row({ item: held })!.revision;
+    const slot = client.slot("release", { on: { name: held, seen, assumes: [] } });
+    const edited = await client.edit(slot, {});
+    if (!edited.ok) return expect.fail("the edit creates the draft");
+    await did("s-other-release", "release", { on: held, fields: {}, expected: { on: seen } });
+    await client.read(); await clientIdle(client);
+    // The first submit explores, finds the basis moved and returns the draft (form 1).
+    expect(await client.submit(slot)).toEqual({ ok: false, stop: { stop: "state" }, committed: edited.value });
+    await clientIdle(client);
+    const returned = returnedOf(client, slot);
+    if (returned?.by !== "exploration" || returned.now.is !== "now") return expect.fail("the return by an exploration shows a now");
+    const signatures = runtime.counts.actSignatures, moved = client.view.row({ item: held })!.revision;
+    const write = drafts.write.bind(drafts);
+    let stopAfter = true;
+    drafts.write = async (owner, at, entries) => {
+      await write(owner, at, entries);
+      if (stopAfter) { stopAfter = false; throw new Error("stopped after the adoption write"); }
+    };
+    await expect(client.submit(slot, returned.now.now)).rejects.toThrow("stopped after the adoption write");
+    await clientIdle(client);
+    // The adoption removed the stored cause and took the moved basis; nothing signed.
+    const [row] = readStoredDrafts(await drafts.read(runtime.signer.key, runtime.at), { owner: runtime.signer.key, scope: runtime.at });
+    if (row?.is !== "draft") return expect.fail("the adopted draft stays stored");
+    expect([row.key, row.returned, row.act.expected, runtime.counts.actSignatures]).toEqual([edited.value, undefined, { on: moved }, signatures]);
+    expect(client.view.drafts.get(slot)).toMatchObject({ state: "editing" });
+    expect(returnedOf(client, slot)).toBeUndefined();
+    // The editing draft takes no now: the next submit explores and signs once.
+    expect(await client.submit(slot)).toEqual({ ok: true, value: edited.value });
+    await clientIdle(client);
+    expect(runtime.counts.actSignatures).toBe(signatures + 1);
+  } finally { client.close(); runtime.close(); }
+});

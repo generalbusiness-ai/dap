@@ -18,7 +18,7 @@ import type { AuthorizationPort, CustodyBuildFence } from "./authorization-store
 import type { ItemName, PartialAct, Source } from "./act-types.ts";
 import { actVersion } from "./act-version.ts";
 import { lowerActNames } from "./act-symbols.ts";
-import { exploreReplica, registerExplore, type ReadExploreInputs } from "./replica-explore.ts";
+import { exploreReplica, registerExplore, type DraftExploreResult, type ReadExploreInputs } from "./replica-explore.ts";
 import { openDraftCustodyCut, type DraftCustodyObservation } from "./draft-custody.ts";
 import { prepareDraftClear, prepareDraftEdit } from "./draft-edit.ts";
 import { ownDraftClearInputs, ownDraftEditInputs } from "./draft-preflight.ts";
@@ -219,6 +219,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
   // ---------------------------------------------------------------- C4 member calls
   // Each call owns its inputs before its first await, takes the store's one exclusive fence, reads the raw draft
   // batch once and each relevant exact custody identity once, decides synchronously, and joins one whole-batch write.
+  // A submit reads two times, around its exploration, which waits outside the fence.
 
   /** A Slot is a value: the kind, the primary ref and every supplied item ref. It reads and captures nothing. */
   slot<const K extends Kind<D>>(kind: K, input: SlotInput<D, K>): Slot<D, K> { return slotFor(this.#handle.definition, kind, input); }
@@ -300,7 +301,9 @@ export class ScopeClient<D extends DeclaredDefinition> {
     } catch (error) { return this.#refused(error); }
     const address = slotAddress(definition, owned), displayed = this.#displayed(owned);
     if (displayed === null) return { ok: false, stop: { stop: "taken" } };
-    const launch = await this.#member<{ key: string; act: AuthorizedAct; adopted: boolean }>(async () => {
+    // Two fenced sections surround the exploration, which waits for the network outside any fence. The first decides and
+    // composes the candidate (steps 2 to 4). The second reads the batch again and requires the same stored draft (step 5 on).
+    const first = await this.#member<{ stored: StoredDraft; candidate: DraftCandidate; adopted: StoredDraft | null }>(async () => {
       // Step 2: under the one exclusive fence, read the raw batch and the key's occurrence once; apply `taken`, then `state`.
       // `taken` outranks every `now` check below.
       const context = await this.#acquire(address, displayed, false);
@@ -328,14 +331,27 @@ export class ScopeClient<D extends DeclaredDefinition> {
         if (!composed.ok) return { ok: false, stop: { stop: "shape", path: composed.field, message: composed.what } };
         candidate = composed.candidate; adopted = composed.adopted;
       }
-      // Step 5: `actExplore` over the candidate through the Replica's one registered exploration. It signs nothing, and its
-      // `result.act` is never taken: it can autofill an omitted key. `revision-moved` writes the genuine form 1 return and ends.
-      const explored = await exploreReplica(this.#replica, stored.key, candidate as unknown as PartialAct<D, K>);
+      return { ok: true, value: { stored, candidate, adopted } };
+    });
+    if (!first.ok) return first;
+    const { stored, candidate, adopted } = first.value;
+    // Step 5: `actExplore` over the candidate through the Replica's one registered exploration, outside the fence. It signs
+    // nothing, and its `result.act` is never taken: it can autofill an omitted key. The reader may wait for the network, so
+    // other member calls run meanwhile.
+    let explored: DraftExploreResult<D, K>;
+    try {
+      explored = await exploreReplica(this.#replica, stored.key, candidate as unknown as PartialAct<D, K>);
       this.#current();
+    } catch (error) { return this.#refused(error); }
+    const launch = await this.#member<{ key: string; act: AuthorizedAct; adopted: boolean }>(async () => {
+      // Step 5, second section: the batch holds the same stored draft in the same slot. Any difference stops with `state`
+      // and writes nothing. A replica head that moved is no difference: the scope judges the act.
+      const context = await this.#acquire(address, displayed, false);
+      if ("stop" in context) return { ok: false, stop: { stop: "state" } };
       const again = this.#decide(context, displayed);
-      if ("stop" in again) return { ok: false, stop: again.stop };
-      if (!again.current) return { ok: false, stop: { stop: "taken" } };
+      if ("stop" in again || !again.current || !same(again.current, stored)) return { ok: false, stop: { stop: "state" } };
       if (!this.#acceptable()) return { ok: false, stop: { stop: "state" } };
+      // `revision-moved` writes the genuine form 1 return and ends.
       if (explored.exploration.is === "refused" && explored.exploration.reason === "revision-moved") {
         const marked: StoredDraft = { ...stored, returned: { cause: { by: "exploration", reason: "revision-moved", class: "head" },
           expected: stored.act.expected, capture: stored.capture, againstCustody: null } };
@@ -351,7 +367,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
       return { ok: true, value: { key: stored.key, act: { kind: candidate.kind, on: candidate.on, fields: candidate.fields, expected: candidate.expected }, adopted: adopted !== null } };
     });
     if (!launch.ok) return launch;
-    const { key, act, adopted } = launch.value;
+    const { key, act } = launch.value;
     try {
       // Step 7: retain and sign the same candidate. `submitBoundAct` is one gesture, never an inferred copy. A scope refusal
       // is a returned request in the view (form 2), not a stop here, and nothing retries it.
@@ -360,7 +376,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
     } catch (error) {
       const stop = stopped(error);
       if (!stop) throw error;
-      return { ok: false, stop, ...(adopted ? { committed: key } : {}) };
+      return { ok: false, stop, ...(adopted !== null ? { committed: key } : {}) };
     } finally {
       this.#submitting.delete(key);
       this.#background(() => this.#sync());
