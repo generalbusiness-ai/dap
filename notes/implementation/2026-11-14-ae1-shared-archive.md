@@ -1,11 +1,10 @@
 # Share room archive policy and wiring
 
-Scanner repair source is `c8c308a710be130d4c55941ebeb20f88e80307e9`,
-tree `05acf39b48f3a735fb18509dfb9976ec2709c62b`. Native102/Scale2 and CS1
-sandbox 10 bind unchanged runtime027b. Gate1 fails before Counting/Plain/Native;
-its scanner/docs-only repair has two passing controls. Whole maintained Node
-alone at the final repaired head, new preflight and gate2 remain UNRUN.
-No current Node total or gate2 result is predicted.
+Current fixture repair is `d38275d047fdd8c44e5da5046ac301542ae2cc31`, tree
+`5b42dab41b6bdc213a6f0e6c45da09e974e491da`. Gate1 and Gate2 stay failed.
+Whole Node 206/206 and preflight2 passed at `1c01a94f0b80d87c4d45f1db4cc8322f2f4536f8`,
+tree `bfeb3ee0544507be4491d3a660303b936dd74390`. Native 102/Scale 2 and
+CS1 sandbox 10 remain dated 027b results. Attempt3 is UNRUN.
 
 Request 0c265d01/ruling 59767cd8/promise 43fa0d74 require shared installed-policy
 wiring, not Grow fallback: Scope driver, room/archive Artifacts adapter, Grow
@@ -207,6 +206,7 @@ current status of later completed work. `N` = `/opt/homebrew/bin/node`;
 - `H`: `/Users/hughpyle/play/artroom-evidence/2026-11-16-ae1-cs1-development-attempt2`; actual safe exports, with private raw retained separately.
 - `G1`: `/Users/hughpyle/play/artroom-evidence/2026-11-16-ae1-cs1-gate-attempt1`.
 - `S`: `/Users/hughpyle/play/artroom-evidence/2026-11-16-ae1-scanner-repair-development-attempt1`.
+- `G2`: `/Users/hughpyle/play/artroom-evidence/2026-11-16-ae1-cs1-gate-attempt2`.
 
 Four legacy logs were copied byte-exact from preserved
 `/private/tmp/artroom-ae1-dev-20261114` originals to `O`, verifying table SHAs.
@@ -246,6 +246,9 @@ monotonic seconds. `EMPTY` = SHA-256
 | Gate1 and preflight1 at 1f0498aa/tree50da6240 | `npm run gate`; preflight fetch, `node scripts/check-shared-helpers.mjs`, `npm run typecheck`, `npm run pins` | Preflight all0; pins16.957318792s (command reports16.768); Security13PASS. Gate exit1, child64.276236917s, outer64.418330042s; KernelPASS, Node203PASS/3FAIL of206, no cancelled/skipped/todo; Counting/Plain/Native UNREACHED | `G1/gate.result.json` SHA `d1ec1116e8c49c1dbc58da7555527de4bffa29c52082beebe1aa7f3800e66bd0`; log `f6a87288459a38a7878406b563d650ea604ae8399591b6e1c642108242ef0d82`; preflight `dab17ba729daf22a1e34af93641562c4197206d7264f78dc5cb206823514a9a5` |
 | c8 Scale-registration control | `N HELPER scripts/scale-deadline-registrations.mjs OLD NEW --expect 'scale registration factories leave no unlisted fixed deadline' -- . scripts/scale-selection.test.mjs`; exact strings in S/result | Helper0, 1.187506s; baseline7PASS, mutant6PASS/1 direct ERR_ASSERTION Missing expected exception. Demanded unknown→false fault; exact bytes/0644 restored, no third green | `S/result.json` SHA `d6784daf614050b964336da68020e637e22909f418a746140ae59a1309961b29`; `S/scale.stderr.log` SHA `577b6778ae91885fea4a137939939fd5bce144d58c8f28d3d0c26627471de182`; raw TAPs retained |
 | c8 settings-read control | `N HELPER scripts/security-settings.mjs OLD NEW --expect 'setting reads follow immutable lexical aliases and refuse unsupported escapes' -- . scripts/security-settings.test.mjs`; exact strings in S/result | Helper0, 255.9801985s; baseline3PASS, mutant2PASS/1 direct ERR_ASSERTION: copied RHS cannot hide nested undocumented read. Actual TAP wall126.488874208s/128.957392791s; original deadlines, no rerun/third green; bytes/0644 restored | `S/result.json`, same digest; `S/settings.stderr.log` SHA `f3503feeb364e4012aecdc51cc9d39d2794aa48422f365606bccbf1b73ef2691`; raw TAPs retained |
+| Whole maintained Node at `1c01a94f` | Exact `fixedStages` Node descriptor alone; launcher argv in `G2/whole-node.result.json` | Exit 0; 206/206 pass, no fail/cancelled/skipped/todo; child 131.715873458 s, outer 131.811788792 s; child reaped/group empty | `G2/whole-node.result.json` SHA `d6284ab06873ffaba2ddb56e326e0706ded6cf8a3929a3f24dd146f23da47340`; stdout digest in record, stderr EMPTY; original streams stay private |
+| Preflight2 at `1c01a94f` | Fetch origin/main; `N scripts/check-shared-helpers.mjs`; `npm run typecheck`; `npm run pins`; exact argv in result | All four exit 0; helpers 0.634325500 s, whole TC 16.540657625 s, pins command 17.109324542 s; total 35.229670291 s; all groups empty | `G2/preflight.result.json` SHA `38cddba05839748f8cc463cf8a312ca0707208e89024966e6bf9e6ec2bf13e1e`; fetch stderr 99 B, other stderr EMPTY |
+| Gate2 at `1c01a94f`/tree `bfeb3ee0` | `npm run gate`; START `9ab6812709a5ad852417b34428a7c1a93730ef59`; END `8614277786e258be2a8396695b527527aea9d6a1` | **FAIL, exit 1**; child 1806.755506542 s, outer 1806.906823458 s; Kernel pass, Node 206, Counting 56, Plain 4913 pass/1 skip, Native 1171 pass/1 fail/2 skip. All 22 Scale cases pass in 13 owners; no separate Scale wall. Sole failure is the stale 64-node inventory expectation | `G2/gate.result.json` SHA `2de5dee8a4f5f44444271ae9c8d53833d72978c9ee869ff92af55d8de57d786a`; log `67baf048adc57046bf64665c5f26a62be19592b51c5908c45e54da42ef845c34`; child reaped/group empty. Native terminal evidence partial, 129 unknown/suite observations, zero contradictions |
 
 `TITLE` is the exact single argument
 `archive install proof binds Base Rules, exact signed IDs and native retained byte limits without codec fallback`.
@@ -264,7 +267,7 @@ expectation, release, model and operator values stayed unchanged.
 
 ## Resumed source, 15 November 2026
 
-Ruling `790afe00333dd0cd581b78a61ce37e434074628c` raises nodes 64 to 128 and inputWork 67,108,864 to 134,217,728. Other caps, charges, cases and deadlines stay unchanged; composition preserves target source outside AE1. At that checkpoint, new-cap fit, compilers, assets, seal adoption and gate were UNRUN; gate awaited three approved landings. Later rows record only the work actually completed.
+Ruling `790afe00333dd0cd581b78a61ce37e434074628c` raises nodes 64→128 and inputWork 67,108,864→134,217,728. Other caps/charges/cases/deadlines and non-AE1 source stay exact. Fit, compilers, assets, seals and gate were then UNRUN; gate awaited three approved landings. Later rows retain actual results.
 
 
 ## Failed runtime checkpoint, 16 November 2026
@@ -361,7 +364,7 @@ cohort, hosted or alarm-cadence claim. TEST clock/scheduler/peer limits stay.
 The coupled Scale producer/follower passes together after late native membership
 Directory binding; no second producer/filter. CS1 records sandbox 10 separately.
 Both runs preserve source/dependencies and release groups with no actions.
-Gate1 later fails; gate2 remains UNRUN.
+Both gates stay failed; later checks do not erase the dated Native/Scale passes.
 
 ## Gate1 failure and scanner-only repair
 
@@ -370,20 +373,36 @@ Gate1 stays failed. G1/raw-gate-retention.json SHA
 files/6,203,032bytes privately. All preflight commands and Security’s 13 cases passed.
 Gate1 failed before Counting, Plain and Native started. Earlier owners retain their own meanings.
 
-The reviewed c8 five-path MJS/docs correction admits only boolean ||: true
-short-circuits; false requires known boolean RHS; demanded unknown refuses.
-Settings recognizes literal canonical uppercase keys on direct env, immutable
-alias or this.env, still refusing copied/dynamic keys. Docs alone cover eight
-deployment restarts/shared Worker, name archive-packages APPLICATION_TRUST
-reader, and remove unread/undeclared GROW_ARCHIVE_CONFIG. Runtime, fixtures,
-prices, caps, authority and owner deadlines stay unchanged.
+The c8 five-path MJS/docs repair admits boolean || only: true short-circuits;
+false needs boolean RHS; demanded unknown refuses. Settings accepts canonical
+uppercase literals on direct env/immutable alias/this.env, not copied/dynamic
+keys. Docs cover eight deployment restarts/shared Worker, APPLICATION_TRUST's
+archive-packages reader and removal of unread/undeclared GROW_ARCHIVE_CONFIG.
+Runtime, fixtures, prices, caps, authority and deadlines stay unchanged.
 
-HELPER is the retained maintained copy at
-/private/tmp/artroom-ae1-retained-query-control-20261116.mjs. Exact OLD/NEW in
-S/result: demanded unknown→false and removal of direct-origin guard. Intended
-assertions distinguish both; S/manifest SHA
+HELPER: /private/tmp/artroom-ae1-retained-query-control-20261116.mjs.
+S/result retains both faults; S/manifest SHA
 f5fb9b973ac64dc99282f0af01cc858e4511401218a0aa60df41818cdab065d8 binds logs/TAPs.
-Bytes/0644 restore; groups end with no actions, no raised timeout/third green.
-Planner 7be10b34 requires whole maintained Node alone at the exact final repaired head BEFORE START2,
-with actual count in START; Node/new preflight/gate2 are UNRUN. Do not forecast
-206 from gate1 or infer a larger deadline from the long settings control.
+Both distinguish, restore bytes/0644 and release groups without actions,
+raised deadlines or a third green.
+Planner 7be10b34 required whole Node before START2; 206/206 and preflight2
+passed at 1c01a94f. Neither erases either failed gate or raises owner deadlines.
+
+
+## Gate2 failure and attempt3
+
+Gate2's private retention has 38 files/53,876,500 B, bound by
+`G2/raw-gate-retention.json` SHA `e3f4988723e59a7f671187ad72646d83a62abd6a7edfc0247d025944d2731490`; raw Native stays private.
+
+The d382 repair changes five test/doc paths: shared graph helper, Native case,
+raw corpus/mapping and driver words. Both graph consumers use the shared max.
+273 graph declarations (127+128+18), formerly 145 (63+64+18), are source
+arithmetic, not observed case counts. Per-root 17 and stronger 64 MiB assertions
+stay; no production/charge/deadline/ID/version/packet change. Driver wording is
+“Shared production ceilings apply.” Scanner repair remains `c8c308a710be130d4c55941ebeb20f88e80307e9`,
+tree `05acf39b48f3a735fb18509dfb9976ec2709c62b`.
+
+Ruling `a1c5a189f33f49ef2c80f915e13476954aa94b94` requires the 39 whole Native
+files, whole Node again, exact-head old-form audit and fresh preflight3 before
+START3, then gate3. All are UNRUN. START3 names actual owners/counts and each
+hit disposition. The initial audit is pre-repair; review/hosted remain owed.
