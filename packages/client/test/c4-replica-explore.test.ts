@@ -2,7 +2,7 @@
  * bootstrap host replies, local routing, fixed clock, and feed notices are
  * labelled fixtures; no hosted admission or browser persistence runs here. */
 import { expect, test } from "vitest";
-import type { Answer, Digest } from "@generalbusiness/dap-contract";
+import type { Answer } from "@generalbusiness/dap-contract";
 import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
 import { lending } from "../../../examples/lending/definition.ts";
 import { type AskedOf, type Kind } from "../src/declared.ts";
@@ -13,11 +13,6 @@ import { exploreClient } from "../src/replica-explore.ts";
 import { Feed } from "./replica-support.ts";
 import { c4Runtime, c4SelectionRuntime } from "./support/c4-runtime.ts";
 import { selection } from "./support/c4-selection.ts";
-
-// Opaque TEST values only. DD1 owns the real descriptor recipe.
-// Each runtime.handle.digest binds its definition independently.
-const TEST_LENDING_DESCRIPTOR: Digest = "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd";
-const TEST_SELECTION_DESCRIPTOR: Digest = "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
 
 function opened(answer: Answer): number {
   expect(answer.answer).toBe("accepted");
@@ -36,7 +31,7 @@ test("a real issued-session Replica finds moved Lending basis without signing an
   store.write = async (...args) => { custodyWrites++; return writeCustody(...args); };
   store.authorizations.write = async (...args) => { authorizationWrites++; return writeAuthorization(...args); };
   const client = scopeClient(runtime.handle, {
-    descriptor: TEST_LENDING_DESCRIPTOR, signer: runtime.signer,
+    signer: runtime.signer,
     member: { service: runtime.service, ...runtime.member, principal: null },
     store, drafts: { read: async () => [], write: async () => {}, observe: () => () => {} }, observe: feed.observe,
     clock: runtime.clock, exploration: runtime.readInputs,
@@ -172,8 +167,7 @@ test("one real selection journey keeps sparse absent basis and returns null-prim
   store.write = async (...args) => { custodyWrites++; return writeCustody(...args); };
   store.authorizations.write = async (...args) => { authorizationWrites++; return writeAuthorization(...args); };
   const client = scopeClient(runtime.handle, {
-    // Opaque TEST descriptor; the handle binds the definition separately.
-    descriptor: TEST_SELECTION_DESCRIPTOR, signer: runtime.signer,
+    signer: runtime.signer,
     member: { service: runtime.service, ...runtime.member, principal: null },
     store, drafts: { read: async () => [], write: async () => {}, observe: () => () => {} }, observe: feed.observe,
     clock: runtime.clock, exploration: runtime.readInputs,

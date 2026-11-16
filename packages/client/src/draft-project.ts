@@ -4,7 +4,7 @@ import { same } from "@generalbusiness/dap-bytes";
 import type { Kind } from "./declared.ts";
 import { draftNowOf, nowMovement } from "./draft-now.ts";
 import { draftIndex, slotFor, type EditableValues, type SlotInput } from "./draft-slot.ts";
-import type { StoredDraft } from "./draft-store.ts";
+import { descriptorFor, type StoredDraft } from "./draft-store.ts";
 import type { SignedEntry } from "./replica.ts";
 import { requestEntryDecision } from "./request-entry-decision.ts";
 import type { AnyDraftContent, AnyDraftView, DraftKeyEvidence, DraftKeyRoute, DraftPresentation, DraftProjection,
@@ -28,7 +28,7 @@ function checkedEvidence<D extends DeclaredDefinition>(input: DraftProjectInput<
   const { stored, evidence } = cell;
   requireFact(stored.owner === input.binding.owner && same(stored.scope, input.binding.scope), "stored namespace differs");
   if (cell.is === "current") {
-    requireFact(stored.definition === input.binding.definition && stored.descriptor === input.binding.descriptor, "current binding differs");
+    requireFact(stored.definition === input.binding.definition && stored.descriptor === descriptorFor(input.binding, stored.slot.kind), "current binding differs");
     requireFact(["entry", "absent", "request", "non-request"].includes(cell.evidence.is), "unknown current coverage arm");
     if (cell.evidence.is === "request") requireFact(["pending", "refused", "withdrawn"].includes(cell.evidence.status.status), "entry status in a non-entry arm");
     if (cell.evidence.is === "entry") requireFact(cell.evidence.observed.is === "found" || cell.evidence.observed.is === "absent", "missing direct entry coverage");
@@ -37,7 +37,7 @@ function checkedEvidence<D extends DeclaredDefinition>(input: DraftProjectInput<
   } else {
     requireFact(cell.is === "historical" || cell.is === "dismissed", "unknown stored binding arm");
     requireFact(["absent", "non-request", "ordinary"].includes(cell.evidence.is), "unknown historical coverage arm");
-    if (cell.is === "historical") requireFact(stored.definition !== input.binding.definition || stored.descriptor !== input.binding.descriptor, "historical binding equals current");
+    if (cell.is === "historical") requireFact(stored.definition !== input.binding.definition || stored.descriptor !== descriptorFor(input.binding, stored.slot.kind), "historical binding equals current");
     if (cell.evidence.is === "ordinary") requireFact(cell.evidence.view.key === stored.key, "ordinary C3 view names another key");
   }
   if (evidence.is === "non-request") requireFact(evidence.excludedBy === "standalone", "unknown C3 exclusion");

@@ -107,6 +107,42 @@ export function definitionDigest(definition: DeclaredDefinition): Digest {
 }
 
 /**
+ * The digest of one act's own content in a definition (act environment note,
+ * sections 7.1 and 10). The bytes are the act's declaration, the item types and
+ * rules it names, the capabilities it names, and, when it names a rule, the
+ * profile. They hold no definition name, version, path or other act. Two acts
+ * that share an item type, a rule or a capability share that content. Throws
+ * for a kind that the definition lacks.
+ */
+export function actDescriptorDigest(definition: DeclaredDefinition, kind: string): Digest {
+  if (!Object.hasOwn(definition.acts, kind)) throw new Error(`the definition has no act ${kind}`);
+  const act = definition.acts[kind]!;
+  const items = new Set<string>(), rules = new Set<string>(), capabilities = new Set<string>();
+  if (typeof act.on === "string") items.add(act.on);
+  for (const rule of Object.values(act.also)) items.add(rule.item);
+  const walk = (value: unknown): void => {
+    if (Array.isArray(value)) { for (const member of value) walk(member); return; }
+    if (typeof value !== "object" || value === null) return;
+    const form = value as Record<string, unknown>;
+    if (form["type"] === "item" && typeof form["of"] === "string") items.add(form["of"]);            // a field of type item
+    if (typeof form["type"] === "string" && Array.isArray(form["states"])) items.add(form["type"]);   // a Range
+    if (typeof form["rule"] === "string") rules.add(form["rule"]);                                   // a rule guard
+    const capability = form["capability"];
+    if (typeof capability === "object" && capability !== null && typeof (capability as Record<string, unknown>)["name"] === "string") {
+      capabilities.add((capability as Record<string, string>)["name"]!);                             // a capability guard or effect
+    }
+    for (const member of Object.values(form)) walk(member);
+  };
+  walk(act);
+  const named = <T>(held: Record<string, T>, names: ReadonlySet<string>): Record<string, T> =>
+    Object.fromEntries([...names].filter(name => Object.hasOwn(held, name)).sort().map(name => [name, held[name]!]));
+  const ruled = named(definition.rules, rules);
+  return digest(DOMAINS.actDescriptor, { kind, act, items: named(definition.items, items), rules: ruled,
+    capabilities: definition.capabilities.filter(held => capabilities.has(held.name)).sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0),
+    ...(Object.keys(ruled).length > 0 ? { profile: definition.profile } : {}) });
+}
+
+/**
  * The digest that names a detached text (section 6.2): over the text as one
  * JSON string. An intent, an entry and an effect hold this digest, and never
  * the text. Throws for a text with a lone surrogate, which has no canonical

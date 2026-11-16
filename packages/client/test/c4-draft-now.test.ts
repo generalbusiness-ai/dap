@@ -12,7 +12,7 @@ import type { Slot } from "../src/draft-slot.ts";
 import { prepareDraftEdit } from "../src/draft-edit.ts";
 import { scopeClient, clientIdle, type ScopeClient } from "../src/scope-client.ts";
 import { Feed } from "./replica-support.ts";
-import { REQUEST_DESCRIPTOR, checkSigningAuthorizations, requestScene } from "./request-support.ts";
+import { requestDescriptors, checkSigningAuthorizations, requestScene } from "./request-support.ts";
 import { c4Runtime } from "./support/c4-runtime.ts";
 import { ShapeError } from "../src/declared.ts";
 import { draftNowOf, nowExpected, nowMovement, readDraftNow, type DraftNow } from "../src/draft-now.ts";
@@ -21,7 +21,7 @@ import type { DraftKeyEvidence, DraftProjectInput } from "../src/draft-project-t
 import { slotFor } from "../src/draft-slot.ts";
 import { adoptionBatch, checkDraftNow, composeDraftCandidate } from "../src/draft-submit.ts";
 import { memoryDrafts, readStoredDrafts, refineDraft, type StoredDraft } from "../src/draft-store.ts";
-import { binding, bump, definition, digest, draftAt, judge, repoint, scope, truth, world, type World } from "./support/c4-now-model.ts";
+import { binding, boundAct, bump, definition, digest, draftAt, judge, repoint, scope, truth, world, type World } from "./support/c4-now-model.ts";
 import type { DraftReturnView } from "../src/draft-project-types.ts";
 /** `returned` is on the editing arm only; the tests read it without narrowing first. */
 const returnedView = (view: unknown): DraftReturnView | undefined => (view as { readonly returned?: DraftReturnView } | undefined)?.returned;
@@ -50,7 +50,7 @@ function shownNow(stored: StoredDraft, w: World): DraftNow {
 }
 const noteDraft = (w: World, key: string): StoredDraft => {
   const refs = Object.fromEntries(w.rows.map(row => [row.id, { name: row.id, seen: row.revision, assumes: [] }]));
-  return refineDraft({ ...binding, is: "draft", key, slot: { kind: "make-note", on: null, items: {} },
+  return refineDraft({ ...boundAct("make-note"), is: "draft", key, slot: { kind: "make-note", on: null, items: {} },
     act: { kind: "make-note", on: null, fields: { label: "note" }, expected: { anchor: 1, target: 1 } },
     capture: { anchor: { is: "derived", ref: refs[0]! }, target: { is: "derived", ref: refs[2]! } },
     namedRefs: { on: null, fields: {} }, placement: "slot" }, binding, definition);
@@ -277,7 +277,7 @@ function realOwner(over: { store?: ReturnType<typeof memoryStore>; drafts?: Retu
   const s = requestScene(), store = over.store ?? memoryStore(), drafts = over.drafts ?? memoryDrafts();
   audits.push({ scene: s, store });
   const member = { service: "https://requests.test", membership: s.actor.member.membership, member: s.actor.member.member, principal: s.actor.principal };
-  const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer, member, store, drafts,
+  const client = scopeClient(s.handle, { signer: s.signer, member, store, drafts,
     observe: (over.feed ?? s.feed).observe, clock: s.clock, lifetimeSeconds: 60 });
   const who = { service: member.service, membership: member.membership, signer: s.signer.key, target: s.handle.at };
   return { s, store, drafts, client, who };
@@ -359,7 +359,7 @@ test("submit with the shown now signs once after a 39 to 40 race, in one batch w
 // Priority: `taken` is decided at step 2, before any check of `now` at step 3.
 test("taken outranks the now check", async () => {
   const feed = new Feed(), first = realOwner(), { s, store, drafts } = first;
-  const second = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
+  const second = scopeClient(s.handle, { signer: s.signer,
     member: { service: first.who.service, membership: first.who.membership, member: s.actor.member.member, principal: s.actor.principal },
     store, drafts, observe: feed.observe, clock: s.clock, lifetimeSeconds: 60 });
   s.feed.current(s.scope); feed.current(s.scope); await first.client.read(); await second.read();
@@ -398,7 +398,7 @@ test("taken outranks the now check", async () => {
 test("a view without now stops with state", async () => {
   const { s, store, drafts, client } = realOwner();
   s.feed.current(s.scope); await client.read();
-  const bound = { owner: s.signer.key, scope: s.handle.at, definition: s.handle.digest, descriptor: REQUEST_DESCRIPTOR };
+  const bound = { owner: s.signer.key, scope: s.handle.at, definition: s.handle.digest, descriptors: requestDescriptors(s.handle.definition) };
   // A raw return marker over an item that the replica does not hold: a stored row is not a claim that its rows exist.
   const gone = { id: 99, type: "intent", revision: 1, refs: {}, values: {} };
   const ref = { name: 99, seen: 1, assumes: [] };
@@ -424,7 +424,7 @@ test("a view without now stops with state", async () => {
 // Real Explore: the Lending runtime issues a read session, so `actExplore` runs and refuses `revision-moved` before any signature.
 test("a subject that moved after the view returns form 1 with no signature", async () => {
   const runtime = await c4Runtime(), store = memoryStore(), drafts = memoryDrafts(), feed = new Feed();
-  const client = scopeClient(runtime.handle, { descriptor: LENDING_DESCRIPTOR, signer: runtime.signer,
+  const client = scopeClient(runtime.handle, { signer: runtime.signer,
     member: { service: runtime.service, ...runtime.member, principal: null }, store, drafts, observe: feed.observe,
     clock: runtime.clock, exploration: runtime.readInputs });
   const did = async <K extends Kind<typeof lending>>(key: string, kind: K, asked: AskedOf<typeof lending, K>): Promise<Answer> => {
@@ -466,7 +466,6 @@ test("a subject that moved after the view returns form 1 with no signature", asy
     expect(returned).toMatchObject({ state: "editing", returned: { by: "exploration", now: { is: "now", now: { primary: { name: held, seen: moved, assumes: [] } } } } });
   } finally { client.close(); runtime.close(); }
 });
-const LENDING_DESCRIPTOR = "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" as const;
 
 // ---------------------------------------------------------------- order of checks and the signing after the fence
 // Ruling 09041476 item 4: the form of the inputs, then `taken`, then `state`, then a missing or foreign `now`.
@@ -534,7 +533,7 @@ test("a stop between the adoption write and the signing leaves the draft, and th
 test("a second client that submits the same key between the adoption write and the signing makes one signing", async () => {
   const { s, store, drafts, client, who, slot, basis, key, shown, moved, signed } = await returnedRace();
   const feed = new Feed();
-  const second = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
+  const second = scopeClient(s.handle, { signer: s.signer,
     member: { service: who.service, membership: who.membership, member: s.actor.member.member, principal: s.actor.principal },
     store, drafts, observe: feed.observe, clock: s.clock, lifetimeSeconds: 60 });
   feed.current(s.scope); await second.read(); await clientIdle(second);
@@ -573,7 +572,7 @@ async function gatedLending() {
   const runtime = await c4Runtime(), store = memoryStore(), drafts = memoryDrafts(), feed = new Feed();
   let armed = false, release!: () => void, entered!: () => void;
   const started = new Promise<void>(resolve => { entered = resolve; }), held = new Promise<void>(resolve => { release = resolve; });
-  const client = scopeClient(runtime.handle, { descriptor: LENDING_DESCRIPTOR, signer: runtime.signer,
+  const client = scopeClient(runtime.handle, { signer: runtime.signer,
     member: { service: runtime.service, ...runtime.member, principal: null }, store, drafts, observe: feed.observe,
     clock: runtime.clock, exploration: async () => { if (armed) { armed = false; entered(); await held; } return runtime.readInputs(); } });
   const did = async <K extends Kind<typeof lending>>(key: string, kind: K, asked: AskedOf<typeof lending, K>): Promise<number> => {
@@ -660,7 +659,7 @@ test("a submit whose draft did not change during the exploration signs once", as
 // leaves an editing draft with no return, and the next submit takes no now, explores and signs once.
 test("a stop between the adoption write and the signing of a return by an exploration leaves an editing draft, and the next submit signs once", async () => {
   const runtime = await c4Runtime(), store = memoryStore(), drafts = memoryDrafts(), feed = new Feed();
-  const client = scopeClient(runtime.handle, { descriptor: LENDING_DESCRIPTOR, signer: runtime.signer,
+  const client = scopeClient(runtime.handle, { signer: runtime.signer,
     member: { service: runtime.service, ...runtime.member, principal: null }, store, drafts, observe: feed.observe,
     clock: runtime.clock, exploration: runtime.readInputs });
   const did = async <K extends Kind<typeof lending>>(key: string, kind: K, asked: AskedOf<typeof lending, K>): Promise<Answer> => {

@@ -1,5 +1,6 @@
 /** Memory-store ordering/retention and real-source fill evidence; no browser durability claim. */
 import { expect, test } from "vitest";
+import type { Digest } from "@generalbusiness/dap-contract";
 import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
 import { AuthorizationTransaction, type RetainAuthorization } from "../src/authorization.ts";
 import { Custody, memoryStore } from "../src/custody.ts";
@@ -8,14 +9,14 @@ import { scopeClient, request, clientReplica } from "../src/scope-client.ts";
 import { actVersion } from "../src/scope.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { citing } from "./replica-support.ts";
-import { REQUEST_DESCRIPTOR, checkSigningAuthorizations, requestScene } from "./request-support.ts";
+import { requestDescriptors, checkSigningAuthorizations, requestScene } from "./request-support.ts";
 
 test("an invalid last step commits none of an authorization batch under the shared store fence", async () => {
   const s = requestScene(), store = memoryStore(); let writes = 0;
   const write = store.authorizations.write.bind(store.authorizations);
   store.authorizations.write = async (...args) => { writes++; return write(...args); };
   const transaction = () => new AuthorizationTransaction(store.authorizations,
-    { owner: s.signer.key, scope: s.handle.at, definition: s.handle.digest, descriptor: REQUEST_DESCRIPTOR });
+    { owner: s.signer.key, scope: s.handle.at, definition: s.handle.digest, descriptors: requestDescriptors(s.handle.definition) });
   s.scope.did(s.actor, "remark", { on: 0, fields: { text: "real cause" } });
   const pending: RetainAuthorization = { key: "pending", act: { kind: "remark", on: 0, fields: { text: "pending" }, expected: {} },
     sources: [], subjects: [{ name: "on", item: 0 }] };
@@ -39,6 +40,28 @@ test("an invalid last step commits none of an authorization batch under the shar
   expect(store.records.size).toBe(0);
 });
 
+test("one authorization key holds versions of one kind, and a version of another kind stops before any digest is compared", async () => {
+  const s = requestScene(), store = memoryStore(), descriptors = requestDescriptors(s.handle.definition);
+  const transaction = (held: Readonly<Record<string, Digest>>) => new AuthorizationTransaction(store.authorizations,
+    { owner: s.signer.key, scope: s.handle.at, definition: s.handle.digest, descriptors: held });
+  const remark: RetainAuthorization = { key: "one", act: { kind: "remark", on: 0, fields: { text: "first" }, expected: {} },
+    sources: [], subjects: [{ name: "on", item: 0 }] };
+  const link: RetainAuthorization = { key: "one", act: { kind: "link", on: null, fields: { target: s.handle.at, about: 0 }, expected: {} },
+    sources: [], subjects: [] };
+  await store.exclusive(async () => {
+    const tx = transaction(descriptors); await tx.retain([remark], s.now(), 60, async () => true); await tx.commit();
+  });
+  const before = await store.authorizations.read(s.signer.key, s.handle.at);
+  // Every digest of this namespace differs from the retained row, so a digest comparison would stop with `descriptor-mismatch`.
+  const other: Digest = `sha256:${"e".repeat(64)}`;
+  const elsewhere = Object.fromEntries(Object.keys(descriptors).map(kind => [kind, other]));
+  const result = await store.exclusive(async () => {
+    const tx = transaction(elsewhere); await tx.retain([link], s.now(), 60, async () => true); await tx.commit();
+  }).catch((error: unknown) => error);
+  expect(result).toMatchObject({ reason: "version" });
+  expect(await store.authorizations.read(s.signer.key, s.handle.at)).toEqual(before);
+});
+
 test("a failed signer or uncertain custody write keeps one permission and never calls that position again", async () => {
   for (const fault of ["signer", "before-persist", "after-persist"] as const) {
     const s = requestScene(), store = memoryStore(); let calls = 0, fail = true;
@@ -51,7 +74,7 @@ test("a failed signer or uncertain custody write keeps one permission and never 
       }
       return write(...args);
     };
-    const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR,
+    const client = scopeClient(s.handle, {
       signer: { key: s.signer.key, sign: async bytes => {
         calls++; if (fault === "signer" && fail) { fail = false; throw new Error("TEST signer stopped"); }
         return s.signer.sign(bytes);
@@ -68,7 +91,7 @@ test("a failed signer or uncertain custody write keeps one permission and never 
       const identity = { key: row!.key, owner: row!.owner, scope: row!.scope };
       const retry = await store.exclusive(async () => {
         const tx = new AuthorizationTransaction(store.authorizations,
-          { owner: row!.owner, scope: row!.scope, definition: row!.definition, descriptor: row!.descriptor });
+          { owner: row!.owner, scope: row!.scope, definition: row!.definition, descriptors: { [row!.versions[0]!.act.kind]: row!.descriptor } });
         return tx.permit(identity, 0, s.now());
       }).catch((error: unknown) => error);
       expect(retry).toMatchObject({ reason: "authorization-used" }); expect(calls).toBe(1);
@@ -96,7 +119,7 @@ test("a failed signer or uncertain custody write keeps one permission and never 
 
 test("one unsigned instance batch fills from its real recorded source and signs the same retained position", async () => {
   const s = requestScene(), store = memoryStore();
-  const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
+  const client = scopeClient(s.handle, { signer: s.signer,
     member: { service: "https://fill.test", membership: s.actor.member.membership,
       member: s.actor.member.member, principal: s.actor.principal },
     store, drafts: memoryDrafts(), observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
@@ -155,7 +178,7 @@ test("a pending via selector stops before either store changes, while its record
     d.acts.assign.also = { intent: { item: "intent", via: { of: "on", slot: "intent" } } };
   });
   const s = requestScene(definition), store = memoryStore();
-  const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
+  const client = scopeClient(s.handle, { signer: s.signer,
     member: { service: "https://via.test", membership: s.actor.member.membership,
       member: s.actor.member.member, principal: s.actor.principal },
     store, drafts: memoryDrafts(), observe: s.feed.observe, clock: s.clock });
@@ -186,7 +209,7 @@ test("a pending via selector stops before either store changes, while its record
 
 test("unsigned retention owns the whole input batch before an authorization read waits", async () => {
   const s = requestScene(), store = memoryStore();
-  const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
+  const client = scopeClient(s.handle, { signer: s.signer,
     member: { service: "https://batch.test", membership: s.actor.member.membership,
       member: s.actor.member.member, principal: s.actor.principal },
     store, drafts: memoryDrafts(), observe: s.feed.observe, clock: s.clock });
@@ -219,7 +242,7 @@ test("64 unsigned positions retain history and the next gesture stops without a 
   const s = requestScene(), store = memoryStore(); let writes = 0;
   const write = store.authorizations.write.bind(store.authorizations);
   store.authorizations.write = async (...args) => { writes++; return write(...args); };
-  const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
+  const client = scopeClient(s.handle, { signer: s.signer,
     member: { service: "https://bound.test", membership: s.actor.member.membership,
       member: s.actor.member.member, principal: s.actor.principal },
     store, drafts: memoryDrafts(), observe: s.feed.observe, clock: s.clock });

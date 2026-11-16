@@ -108,10 +108,11 @@ the room at the versions that the register creates. Both commands print the
 versions.
 
 Every digest and signature is over a domain tag, a newline and the
-canonical JSON of one value. The nine tags are in `DOMAINS`, in
+canonical JSON of one value. The ten tags are in `DOMAINS`, in
 `packages/contract/src/intent.ts`. They include `artroom-input-1` for
-genesis inputs, `artroom-text-1` for detached texts and
-`artroom-snapshot-1` for snapshots of staged refs.
+genesis inputs, `artroom-text-1` for detached texts,
+`artroom-snapshot-1` for snapshots of staged refs and
+`artroom-act-descriptor-1` for the content of one act.
 Sessions have their own tags, `SESSION_DOMAINS`, in `session.ts`. No value
 contains its own digest: an entry has no field for its own hash.
 

@@ -1,7 +1,7 @@
 /** Requests over a declared replica: custody owns bytes, the replica owns facts, and one schedule owns time. */
 import type { Answer, Beside, DeclaredDefinition, Digest, FieldValue, Head, MemberId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { REFUSAL_CLASSES, canonicalize, intentDigest, isDigest, isLocalId, isRecord, same, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { REFUSAL_CLASSES, actDescriptorDigest, canonicalize, intentDigest, isDigest, isLocalId, isRecord, same, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { changeItem, isItemEffect, newItem, validateDefinition, type PredictionActor, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { Custody, CustodyError, Lost, envelopeOf, meaningOf, validKey, type BindingRecord, type ClientCustodyStore, type CustodyRecord, type DeliveryOccurrence, type Envelope, type Identity, type Outcome, type Sent } from "./custody.ts";
 import { ShapeError, shapeDeclaredAct, shapeFieldsOf, type AskedOf, type DeclaredHandle, type Kind, type ShapeFieldType } from "./declared.ts";
@@ -29,7 +29,7 @@ import type { DraftKeyEvidence, DraftProjection, DraftRequestListEntry, DraftReq
   LocalDraftActivity, ProjectStoredKey } from "./draft-project-types.ts";
 import type { DraftSelectionRow } from "./draft-selection.ts";
 import { ownDraftSlot, slotAddress, slotFor, type ClearField, type DraftIndex, type EditPatch, type Slot, type SlotInput } from "./draft-slot.ts";
-import { readStoredDrafts, refineDraft, type DraftBinding, type DraftDismissal, type DraftPort, type DraftSlot, type StoredDraft, type StoredDraftEntry } from "./draft-store.ts";
+import { descriptorFor, readStoredDrafts, refineDraft, type DraftBinding, type DraftDismissal, type DraftPort, type DraftSlot, type StoredDraft, type StoredDraftEntry } from "./draft-store.ts";
 
 /** Seat holds no principal and uses an origin; this port states the four facts C3 needs, each once (ruling e868dd08). */
 export interface ScopeMember { service: string; membership: ScopeRef; member: MemberId; principal: MemberRef | null }
@@ -40,8 +40,6 @@ export interface ClientOptions<D extends DeclaredDefinition> extends Omit<Replic
   signer: Signer;
   member: ScopeMember;
   store: ClientCustodyStore & { authorizations: AuthorizationPort };
-  /** Fixed by the descriptor owner; E4 invents no descriptor or fallback digest. */
-  descriptor: Digest;
   /** The one raw whole-batch draft port. A member call writes it under the store's exclusive fence; background work never does. */
   drafts: DraftPort;
   clock?: ClientClock;
@@ -154,7 +152,8 @@ export class ScopeClient<D extends DeclaredDefinition> {
       signer: { key: options.signer.key, sign: options.signer.sign.bind(options.signer) } };
     this.#handle = handle; this.#options = options;
     this.#at = structuredClone(handle.at);
-    this.#binding = { owner: options.signer.key, scope: this.#at, definition: handle.digest, descriptor: options.descriptor };
+    this.#binding = { owner: options.signer.key, scope: this.#at, definition: handle.digest,
+      descriptors: Object.fromEntries(Object.keys(handle.definition.acts).map(kind => [kind, actDescriptorDigest(handle.definition, kind)])) };
     this.#clock = options.clock ?? wallClock;
     this.#schedule = new RequestSchedule(this.#clock);
     this.#custody = new Custody(options.store, () => timeOf(this.#clock.now()));
@@ -480,7 +479,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
         await this.#options.drafts.write(this.#binding.owner, this.#at, next);
         return { ok: true, value: undefined };
       };
-      if (row.definition !== this.#binding.definition || row.descriptor !== this.#binding.descriptor) {
+      if (row.definition !== this.#binding.definition || row.descriptor !== descriptorFor(this.#binding, row.slot.kind)) {
         // A historical row keeps its stored bytes. Restore promotes nothing; dismiss removes exactly this row.
         // Planner 6d3b979f item 4: the definition is checked first, so a row that differs in both stops with `definition-mismatch`.
         if (mode === "dismiss") return write(entries.filter(entry => entry !== row));
@@ -642,7 +641,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
     const entry = this.#replica.accepted(this.#options.signer.key, row.key), identity = observation.identity;
     const verified = entry ? { verifiedEntry: entry } : {};
     // The definition is checked first (planner 6d3b979f item 4); a row of another definition never reaches current refinement.
-    if (row.is === "draft" && row.definition === this.#binding.definition && row.descriptor === this.#binding.descriptor) {
+    if (row.is === "draft" && row.definition === this.#binding.definition && row.descriptor === descriptorFor(this.#binding, row.slot.kind)) {
       const stored = refineDraft(row, this.#binding, this.#handle.definition), meaning = this.#draftMeaning(stored);
       let evidence: DraftKeyEvidence;
       if (observation.is === "absent") evidence = entry ? { identity, is: "entry", entry, presentMeaning: meaning, observed: { is: "absent" } } : { identity, is: "absent" };
@@ -670,7 +669,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
     let found = classes.get(key);
     if (!found) {
       const entry = this.#replica.accepted(this.#options.signer.key, key);
-      const meaning = row?.is === "draft" && row.descriptor === this.#binding.descriptor ? this.#draftMeaning(row) : observation.record.meaning;
+      const meaning = row?.is === "draft" && row.descriptor === descriptorFor(this.#binding, row.slot.kind) ? this.#draftMeaning(row) : observation.record.meaning;
       found = this.#statusFor(entry, observation.record, observation.outcomes, meaning);
       classes.set(key, found);
     }
@@ -802,7 +801,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
 
   #authorization(port: AuthorizationPort): AuthorizationTransaction {
     return new AuthorizationTransaction(port, { owner: this.#options.signer.key, scope: this.#at,
-      definition: this.#handle.digest, descriptor: this.#options.descriptor }, this.#replica);
+      definition: this.#handle.digest, descriptors: this.#binding.descriptors }, this.#replica);
   }
   #authorizationIdentity(key: string): AuthorizationIdentity {
     return { key, owner: this.#options.signer.key, scope: this.#at };

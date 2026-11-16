@@ -207,3 +207,11 @@ The planner settled the six points of the first run in ruling 09041476.
    environment note lists each change to D12 in section 15. Its row for D12
    section 9 now says that `requests` holds three arms, each with `is`. No
    page under `docs` names `RequestView`.
+
+## DD-1 and outside adopters
+
+No caller in this repository holds an old descriptor value. Every caller of
+`scopeClient` passed a test constant, and the instance now builds the digest of
+each act from its own definition. An outside adopter's retained authorization
+holds the old value. It stops once with `descriptor-mismatch` at its next
+version.

@@ -11,7 +11,11 @@ import { lowerActNames } from "./act-symbols.ts";
 import type { DraftSelection } from "./replica-explore.ts";
 
 export interface DraftNamespace { readonly owner: KeyId; readonly scope: ScopeRef }
-export interface DraftBinding extends DraftNamespace { readonly definition: Digest; readonly descriptor: Digest }
+/** `descriptors` holds the digest of each act of the definition, by kind. A stored row holds the digest of its own act. */
+export interface DraftBinding extends DraftNamespace { readonly definition: Digest; readonly descriptors: Readonly<Record<string, Digest>> }
+/** The digest of the act of this kind in the binding, or undefined for a kind that the definition lacks. */
+export const descriptorFor = (binding: Pick<DraftBinding, "descriptors">, kind: string): Digest | undefined =>
+  Object.hasOwn(binding.descriptors, kind) ? binding.descriptors[kind] : undefined;
 export interface DraftSlot { readonly kind: string; readonly on: ItemName | null; readonly items: Readonly<Record<string, ItemName>> }
 export interface StoredDraftAct {
   readonly kind: string; readonly on: ItemName | null;
@@ -29,7 +33,7 @@ export interface StoredDraftReturn {
   readonly capture: Readonly<Record<string, DraftCapture>>;
   readonly againstCustody: DeliveryOccurrence | null;
 }
-interface DraftCommon extends DraftBinding { readonly key: string; readonly slot: DraftSlot }
+interface DraftCommon extends DraftNamespace { readonly definition: Digest; readonly descriptor: Digest; readonly key: string; readonly slot: DraftSlot }
 export interface StoredDraft extends DraftCommon {
   readonly is: "draft"; readonly act: StoredDraftAct;
   readonly capture: Readonly<Record<string, DraftCapture>>;
@@ -188,7 +192,7 @@ export function refineDraft(value: StoredDraft, binding: DraftBinding, definitio
   const [row] = readStoredDrafts([value], binding);
   if (!row || row.is !== "draft") return bad();
   if (row.definition !== binding.definition || definitionDigest(definition) !== binding.definition) throw new AuthorizationError("definition-mismatch");
-  if (row.descriptor !== binding.descriptor) throw new AuthorizationError("descriptor-mismatch");
+  if (row.descriptor !== descriptorFor(binding, row.act.kind)) throw new AuthorizationError("descriptor-mismatch");
   const act = Object.hasOwn(definition.acts, row.act.kind) ? definition.acts[row.act.kind] : undefined;
   if (!act || row.act.kind === definition.genesis) return bad();
   const needs = act.step !== "open" && act.on !== null;

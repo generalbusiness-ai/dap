@@ -12,7 +12,7 @@ import { ScopeHandle } from "../src/handle.ts";
 import { bindingTransport, type ServiceBinding } from "../src/binding.ts";
 import { Feed, SESSION } from "./replica-support.ts";
 import { scopeClient, request, clientReplica, clientIdle, clientDelivery } from "../src/scope-client.ts";
-import { REQUEST_DESCRIPTOR, checkSigningAuthorizations, requestScene } from "./request-support.ts";
+import { requestDescriptors, checkSigningAuthorizations, requestScene } from "./request-support.ts";
 import { memoryDrafts, refineDraft, type DraftPort, type StoredDraft } from "../src/draft-store.ts";
 import { prepareDraftEdit } from "../src/draft-edit.ts";
 
@@ -22,7 +22,7 @@ afterEach(async () => { for (const audit of authorizationAudits.splice(0)) await
 function clientAt(s: ReturnType<typeof requestScene>, store = memoryStore(), drafts: DraftPort = memoryDrafts(), lifetimeSeconds = 60) {
   const member = { service: "https://requests.test", membership: s.actor.member.membership, member: s.actor.member.member, principal: s.actor.principal };
   authorizationAudits.push({ scene: s, store });
-  const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer, member, store, drafts, observe: s.feed.observe, clock: s.clock, lifetimeSeconds });
+  const client = scopeClient(s.handle, { signer: s.signer, member, store, drafts, observe: s.feed.observe, clock: s.clock, lifetimeSeconds });
   const who = { service: member.service, membership: member.membership, signer: s.signer.key, target: s.handle.at };
   return { client, store, who, drafts };
 }
@@ -30,7 +30,7 @@ function clientAt(s: ReturnType<typeof requestScene>, store = memoryStore(), dra
 /** Real raw waiting rows for the old C3 present-value fixtures, not Client.edit. */
 function waitingRemark(s: ReturnType<typeof requestScene>, key: string, text: string): StoredDraft {
   const item = s.scope.item(0), binding = { owner: s.signer.key, scope: s.handle.at,
-    definition: s.handle.digest, descriptor: REQUEST_DESCRIPTOR };
+    definition: s.handle.digest, descriptors: requestDescriptors(s.handle.definition) };
   const prepared = prepareDraftEdit({ binding, definition: s.handle.definition, rows: [item],
     slot: { kind: "remark", on: item.id, items: {} }, namedRefs: {
       on: { name: item.id, seen: item.revision, assumes: [] }, fields: {},
@@ -235,7 +235,7 @@ test("alternating values reaches eight envelopes before signing and can submit a
   let text = "A";
   const member = { service: "https://requests.test", membership: s.actor.member.membership, member: s.actor.member.member, principal: s.actor.principal };
   authorizationAudits.push({ scene: s, store });
-  const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer, member, store, drafts, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+  const client = scopeClient(s.handle, { signer: s.signer, member, store, drafts, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
   s.feed.current(s.scope); await client.read(); s.mode("refused");
   for (let n = 0; n < 8; n++) {
     text = n % 2 ? "B" : "A";
@@ -574,7 +574,7 @@ test("a second device cannot sign under the retained step owner", async () => {
   const original = await store.authorizations.read(s.signer.key, s.handle.at);
   const first = original.find(row => row.key === "owned")!;
   const other = secretSigner(keys.vic.secret); let signatures = 0;
-  const second = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR,
+  const second = scopeClient(s.handle, {
     signer: { key: other.key, sign: bytes => { signatures++; return other.sign(bytes); } },
     member: { service: "https://requests.test", membership: s.actor.member.membership,
       member: s.actor.member.member, principal: s.actor.principal },
@@ -596,9 +596,13 @@ test("a changed descriptor may copy a live original but adds no version or signi
   s.feed.current(s.scope); await client.read(); await clientIdle(client); s.mode("unavailable");
   const input = { on: 0, fields: { text: "same original" } };
   await request(client, "descriptor", "remark", input);
-  const original = canonicalize(s.copies[0]), rows = await store.authorizations.read(s.signer.key, s.handle.at), signs = s.signs();
+  const original = canonicalize(s.copies[0]), signs = s.signs();
   client.close();
-  const changed = scopeClient(s.handle, { descriptor: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  // The instance derives its digests from its definition, so one definition cannot give two digests. The retained row
+  // holds the digest of an earlier recipe, as an outside adopter's store holds it after an upgrade.
+  const rows = (await store.authorizations.read(s.signer.key, s.handle.at)).map(row => ({ ...row, descriptor: TEST_HISTORICAL_DESCRIPTOR }));
+  await store.exclusive(() => store.authorizations.write(s.signer.key, s.handle.at, rows));
+  const changed = scopeClient(s.handle, {
     signer: s.signer, member: { service: "https://requests.test", membership: s.actor.member.membership,
       member: s.actor.member.member, principal: s.actor.principal },
     store, drafts, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
@@ -621,7 +625,7 @@ test("a changed descriptor may copy a live original but adds no version or signi
 // Case 6: distinct client instances share one actor and the same actual memory-store fence.
 test("a second remark waits behind the pending first remark without signing", async () => {
   const s = requestScene(), { client, store, drafts } = clientAt(s), feed = new Feed();
-  const second = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
+  const second = scopeClient(s.handle, { signer: s.signer,
     member: { service: "https://requests.test", membership: s.actor.member.membership,
       member: s.actor.member.member, principal: s.actor.principal },
     store, drafts, observe: feed.observe, clock: s.clock, lifetimeSeconds: 60 });
@@ -648,7 +652,7 @@ test("a second remark waits behind the pending first remark without signing", as
 
 test("two captured observed submits from stale views stop busy without a partial second authorization", async () => {
   const s = requestScene(), { client, store, drafts } = clientAt(s), feed = new Feed();
-  const second = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
+  const second = scopeClient(s.handle, { signer: s.signer,
     member: { service: "https://requests.test", membership: s.actor.member.membership,
       member: s.actor.member.member, principal: s.actor.principal },
     store, drafts, observe: feed.observe, clock: s.clock, lifetimeSeconds: 60 });
@@ -818,7 +822,7 @@ const TEST_HISTORICAL_DESCRIPTOR: Digest = "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeee
 /** A real stored row under another descriptor, built by the actual edit and refinement path. */
 function historicalRemark(s: ReturnType<typeof requestScene>, key: string, text: string): StoredDraft {
   const item = s.scope.item(0), binding = { owner: s.signer.key, scope: s.handle.at,
-    definition: s.handle.digest, descriptor: TEST_HISTORICAL_DESCRIPTOR };
+    definition: s.handle.digest, descriptors: { remark: TEST_HISTORICAL_DESCRIPTOR } };
   const prepared = prepareDraftEdit({ binding, definition: s.handle.definition, rows: [item],
     slot: { kind: "remark", on: item.id, items: {} }, namedRefs: {
       on: { name: item.id, seen: item.revision, assumes: [] }, fields: {},

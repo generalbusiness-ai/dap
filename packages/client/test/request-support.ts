@@ -1,7 +1,7 @@
 /** The real in-memory judge and fold behind a scripted transport, with independent scope and client clocks. */
-import type { Answer, Beside, Digest, Grant, Intent, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Answer, Beside, DeclaredDefinition, Digest, Grant, Intent, SignedIntent } from "@generalbusiness/dap-contract";
 import { expect } from "vitest";
-import { intentDigest, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { actDescriptorDigest, intentDigest, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { Scope, keys } from "@generalbusiness/dap-derive/testing";
 import { DeclaredHandle } from "../src/declared.ts";
 import { secretSigner } from "../src/intent.ts";
@@ -10,7 +10,9 @@ import { Feed, citingDefinition, served } from "./replica-support.ts";
 import { envelopeOf, memoryStore, type StoredCustodyRecord } from "../src/custody.ts";
 import { signingPermitted } from "../src/authorization.ts";
 
-export const REQUEST_DESCRIPTOR: Digest = "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd";
+/** The digest of each act of the definition, by kind: the lookup that the instance builds from its own definition. */
+export const requestDescriptors = (definition: DeclaredDefinition): Record<string, Digest> =>
+  Object.fromEntries(Object.keys(definition.acts).map(kind => [kind, actDescriptorDigest(definition, kind)]));
 
 export function requestScene(definition = citingDefinition) {
   const scope = new Scope(definition);
