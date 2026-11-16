@@ -10,7 +10,8 @@ test.each([
   { name: "open unpublished", binding: false, policy: "open", selects: true },
   { name: "open repository-binding", binding: true, policy: "open", selects: true },
   { name: "keys repository-binding operator", binding: true, policy: "keys", selects: true },
-  { name: "keys unpublished operator", binding: false, policy: "keys", selects: false },
+  // The default no-host keys plan is Register28, whose installer-founder selector permits it.
+  { name: "keys unpublished operator", binding: false, policy: "keys", selects: true },
 ])("$name: expired custody selects only the supported initial revision; mismatched custody keeps the actual read path", async ({ binding, policy, selects }) => {
   const service = "https://selector.test", store = memoryStore();
   let now = Date.parse("2099-01-01T00:00:00Z"), summaries = 0;
