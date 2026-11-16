@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c91800a4922efcfc5a1bb37629be4cb377cdbfe8","text":"Merge retired a covered predecessor; the successor is at packages/client/src/custody-occurrence.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ceff76fda8699e1a0802b885a838f1d052e9d3cc","text":"Merge retired a covered predecessor; the successor is at docs/mcp.md."}
