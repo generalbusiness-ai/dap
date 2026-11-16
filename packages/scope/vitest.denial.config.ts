@@ -5,6 +5,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [cloudflareTest({ main: "./test/worker.ts", wrangler: { configPath: "./wrangler.test.jsonc" } })],
   test: {
+    setupFiles: ["./test/support/native-timeout-crossing.setup.ts"],
     include: ["test/operation-denial.test.ts"],
     isolate: false,
     maxWorkers: 1,
