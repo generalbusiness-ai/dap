@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bef022cc23c4998b5c8d496df6506229dd5213a4","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-capacity-observation.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c61bbbbe33693210385141b23846e7d40285c97e","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/publication.test.ts."}
