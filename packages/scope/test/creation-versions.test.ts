@@ -247,7 +247,7 @@ test("host storage alone permits a real new room and its current restart", async
   const trace: NonNullable<ReturnType<typeof creationFormatStorage.get>> = { failAfterWord: true, starts: [] };
   roomFormatFixtures.set(name, fixture);
   creationFormatStorage.set(name, trace);
-  const object = objectOf(name), native = object as unknown as Native;
+  const object = objectOf(name), native = live(object as unknown as Native);
   try {
     await expect(native.create(signed, pin)).rejects.toThrow("TEST fresh schema and format word rollback");
     expect(trace.starts[0]?.atFailure).toEqual({ schema: 1, word: 2 });
@@ -275,7 +275,7 @@ test("host storage alone permits a real new room and its current restart", async
     }))).toEqual(before);
   } finally {
     trace.failAfterWord = false;
-    try { await evictDurableObject(objectOf(name)); }
+    try { await restart(object); }
     finally { creationFormatStorage.delete(name); roomFormatFixtures.delete(name); }
   }
 });
