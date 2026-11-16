@@ -116,9 +116,54 @@ interface CreationFormatStart {
 }
 /** Name-scoped TEST storage observer and one setup fault. No returned row or transaction is replaced. */
 export const creationFormatStorage = new Map<string, { failAfterWord: boolean; starts: CreationFormatStart[] }>();
+interface RoomFormatFixtureStart { catalogReads: number; wordReads: number; writes: number }
+/** Exact-name TEST setup before either actual production constructor. */
+export interface RoomFormatFixture {
+  seed: "host" | "scope" | "agent";
+  seeded: boolean;
+  starts: RoomFormatFixtureStart[];
+}
+export const roomFormatFixtures = new Map<string, RoomFormatFixture>();
+
+function seedRoomFormatFixture(ctx: DurableObjectState): void {
+  const fixture = roomFormatFixtures.get(ctx.id.name ?? "");
+  if (!fixture) return;
+  const sql = ctx.storage.sql;
+  if (!fixture.seeded) {
+    // The real host creates its KV backing table. User SQL does not create
+    // a reserved host name, and no production catalog result is replaced.
+    ctx.storage.kv.put("TEST LS5 host marker", "retained");
+    if (fixture.seed === "scope") {
+      // First Scope schema, 59c019ef. This is deliberately the only owned
+      // table, so the meta-removal control has no second marker to hide it.
+      sql.exec("CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT NOT NULL) WITHOUT ROWID;");
+      sql.exec("INSERT INTO meta (k,v) VALUES (?,?)", "TEST legacy marker", "unchanged");
+    } else if (fixture.seed === "agent") {
+      // First HostedAgent schema, c41a4bff. No fabricated journal or seed.
+      sql.exec("CREATE TABLE IF NOT EXISTS agent (id INTEGER PRIMARY KEY CHECK (id = 1), op TEXT NOT NULL, seed BLOB NOT NULL, key TEXT NOT NULL, state TEXT NOT NULL, membership TEXT NOT NULL, handle TEXT NOT NULL, config TEXT NOT NULL, bearer TEXT, answer TEXT, created TEXT NOT NULL, updated TEXT NOT NULL)");
+    }
+    fixture.seeded = true;
+  }
+  if (fixture.starts.length >= 4) throw Error("TEST room-format fixture exceeded four starts");
+  const start: RoomFormatFixtureStart = { catalogReads: 0, wordReads: 0, writes: 0 };
+  fixture.starts.push(start);
+  const observed = new Proxy(sql, { get(target, property) {
+    if (property === "exec") return (query: string, ...bindings: unknown[]) => {
+      if (query.includes(" AS any_table") && query.includes(" AS format_table")) start.catalogReads++;
+      if (query.includes("END AS word FROM room_record_format LIMIT 2")) start.wordReads++;
+      if (/^\s*(?:CREATE|INSERT|UPDATE|DELETE|ALTER|DROP)\b/i.test(query)) start.writes++;
+      return Reflect.apply(target.exec, target, [query, ...bindings]);
+    };
+    const value = Reflect.get(target, property, target);
+    return typeof value === "function" ? value.bind(target) : value;
+  } });
+  Object.defineProperty(ctx.storage, "sql", { value: observed, configurable: true });
+}
+
 export class CreationVersionScope extends DeployedScope {
   constructor(ctx: DurableObjectState, env: Env) {
     const name = ctx.id.name ?? "", trace = creationFormatStorage.get(name);
+    seedRoomFormatFixture(ctx);
     const start: CreationFormatStart = { catalogReads: 0, wordReads: 0, formatWrites: 0, atFailure: null, tablesAfterFailure: null };
     const exec = ctx.storage.sql.exec.bind(ctx.storage.sql);
     if (trace) {
@@ -485,6 +530,7 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
   #startupBinding: Binding | null = null;
   constructor(ctx: DurableObjectState, env: HostedEnv) {
     const index = startupTest.index;
+    seedRoomFormatFixture(ctx);
     super(ctx, { ...env, REGISTRIES: hostedRegistries(env.REGISTRIES), ...creationTest.settings, ...hostedTest.applicationSettings, ...(index ? { SCOPE_INDEX: index } : {}), ...(hostedTest.toolSettings ?? { MCP_ENABLED: "true", MCP_TOOL_ADDITIONS: '["create","install_application","credential","prepare","join","record","step","text"]' }) });
     this.#productionHostedFetch = creationTest.productionHostedFetch;
     this.#startup = index !== null;

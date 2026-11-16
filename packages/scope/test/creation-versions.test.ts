@@ -14,7 +14,7 @@ import { admitChildCreation, type CreationTimer } from "../src/creation-lineage.
 import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";
 import type { Binding } from "../src/namespace.ts";
 import type { ScopeObject } from "../src/object.ts";
-import { creationFormatStorage, creationVersionSettings } from "./worker.ts";
+import { creationFormatStorage, creationVersionSettings, roomFormatFixtures, type RoomFormatFixture } from "./worker.ts";
 import { live } from "./support.ts";
 
 const legacy = "platform:register@2";
@@ -238,5 +238,78 @@ test("repository binding and own-agent families remain opt-in in actual deployed
         expect(await count(object)).toBe(answer === "accepted" ? 1 : 0);
       } finally { await evictDurableObject(object); creationVersionSettings.delete(name); }
     }
+  }
+});
+
+test("host storage alone permits a real new room and its current restart", async () => {
+  const signed = install(undefined, "none"), pin = BASE_COHORT.register, name = scopeIdOf(seedOf(signed, pin));
+  const fixture: RoomFormatFixture = { seed: "host", seeded: false, starts: [] };
+  const trace: NonNullable<ReturnType<typeof creationFormatStorage.get>> = { failAfterWord: true, starts: [] };
+  roomFormatFixtures.set(name, fixture);
+  creationFormatStorage.set(name, trace);
+  const object = objectOf(name), native = object as unknown as Native;
+  try {
+    await expect(native.create(signed, pin)).rejects.toThrow("TEST fresh schema and format word rollback");
+    expect(trace.starts[0]?.atFailure).toEqual({ schema: 1, word: 2 });
+    expect(trace.starts[0]?.tablesAfterFailure).toBeGreaterThan(0);
+    trace.failAfterWord = false;
+    const answer = await native.create(signed, pin);
+    expect(answer).toMatchObject({ answer: "accepted", receipt: { definition: pin, fact: { seq: 0 } } });
+    const before = await runInDurableObject(object, (_instance, state) => ({
+      host: state.storage.kv.get("TEST LS5 host marker"),
+      word: state.storage.sql.exec("SELECT id,v FROM room_record_format").toArray(),
+      entries: state.storage.sql.exec("SELECT seq FROM entry").toArray(),
+    }));
+    expect(before).toEqual({ host: "retained", word: [{ id: 1, v: 2 }], entries: [{ seq: 0 }] });
+    expect(fixture.starts.map(({ catalogReads, wordReads }) => [catalogReads, wordReads])).toEqual([[1, 0], [1, 0]]);
+    expect(trace.starts.map(({ formatWrites }) => formatWrites)).toEqual([2, 2]);
+    await restart(object);
+    const after = objectOf(name) as unknown as Native;
+    expect(await after.create(signed, pin)).toEqual(answer);
+    expect(fixture.starts.map(({ catalogReads, wordReads }) => [catalogReads, wordReads])).toEqual([[1, 0], [1, 0], [1, 1]]);
+    expect(trace.starts.map(({ formatWrites }) => formatWrites)).toEqual([2, 2, 0]);
+    expect(await runInDurableObject(objectOf(name), (_instance, state) => ({
+      host: state.storage.kv.get("TEST LS5 host marker"),
+      word: state.storage.sql.exec("SELECT id,v FROM room_record_format").toArray(),
+      entries: state.storage.sql.exec("SELECT seq FROM entry").toArray(),
+    }))).toEqual(before);
+  } finally {
+    trace.failAfterWord = false;
+    try { await evictDurableObject(objectOf(name)); }
+    finally { creationFormatStorage.delete(name); roomFormatFixtures.delete(name); }
+  }
+});
+
+test("an earlier Scope meta table keeps the actual room retired without writes", async () => {
+  const signed = install(undefined, "none"), pin = BASE_COHORT.register, name = scopeIdOf(seedOf(signed, pin));
+  const fixture: RoomFormatFixture = { seed: "scope", seeded: false, starts: [] };
+  roomFormatFixtures.set(name, fixture);
+  const object = objectOf(name), native = object as unknown as Native;
+  const snapshot = () => runInDurableObject(objectOf(name), (_instance, state) => ({
+    host: state.storage.kv.get("TEST LS5 host marker"),
+    schema: state.storage.sql.exec("SELECT sql FROM sqlite_master WHERE type='table' AND name='meta'").toArray(),
+    rows: state.storage.sql.exec("SELECT k,v FROM meta ORDER BY k").toArray(),
+    extra: state.storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('entry','room_record_format')").toArray(),
+  }));
+  try {
+    // This direct actual-caller assertion must distinguish the meta control.
+    // A live() wrapper would turn a retired result into a generic error.
+    expect(await native.create(signed, pin)).toEqual({ stop: "retired" });
+    const before = await snapshot();
+    expect(before.rows).toEqual([{ k: "TEST legacy marker", v: "unchanged" }]);
+    expect(before.schema).toHaveLength(1);
+    expect(before.host).toBe("retained");
+    expect(before.extra).toEqual([]);
+    expect(fixture.starts).toEqual([{ catalogReads: 1, wordReads: 0, writes: 0 }]);
+    await evictDurableObject(object);
+    expect(await (objectOf(name) as unknown as Native).create(signed, pin)).toEqual({ stop: "retired" });
+    expect(await snapshot()).toEqual(before);
+    expect(fixture.starts).toEqual([
+      { catalogReads: 1, wordReads: 0, writes: 0 },
+      { catalogReads: 1, wordReads: 0, writes: 0 },
+    ]);
+  } finally {
+    try { await evictDurableObject(objectOf(name)); }
+    finally { roomFormatFixtures.delete(name); }
   }
 });

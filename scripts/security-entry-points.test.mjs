@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { test } from "node:test";
+import { parseAst } from "rolldown/parseAst";
 import { fileURLToPath } from "node:url";
 import { checkSecurityWitnesses, readSecurityWitnesses } from "./security-witnesses.mjs";
 import { assertInventory, documentedInventory, servedInventory, sourceSeal, namedSourceSeals, roomHttpEntry, sandboxInventory, workerEntrypoints, scopeRows } from "./security-entry-points.mjs";
@@ -683,4 +684,97 @@ test("the threat model names executable witnesses, and a renamed declaration lef
     + `\n// test(${quoted}, () => {});\n`;
   assert.throws(() => checkSecurityWitnesses(root, { document, overrides: new Map([[witness.path, renamed]]) }),
     /Missing or ambiguous security witness/);
+});
+
+test("the room-format table union covers its historical and current defining schemas", () => {
+  const root = new URL("../", import.meta.url);
+  const history = JSON.parse(readFileSync(new URL("./fixtures/room-format-table-history.json", import.meta.url), "utf8"));
+  assert.equal(history.v, 1);
+  assert.equal(history.target, "5784e23d8197d5cbea819849af3830131449c874");
+  assert.ok(Array.isArray(history.names) && history.names.every(name => typeof name === "string" && /^[a-z_][a-z0-9_]*$/.test(name)));
+  assert.equal(new Set(history.names).size, history.names.length, "historical names are unique");
+  assert.equal(history.names.length, 66);
+  const classifier = readFileSync(new URL("packages/scope/src/room-format.ts", root), "utf8");
+  const parsed = parseAst(classifier, { lang: "ts" });
+  const declarations = parsed.body.filter(node => node.type === "VariableDeclaration")
+    .flatMap(node => node.declarations).filter(node => node.id.type === "Identifier" && node.id.name === "ROOM_TABLES");
+  assert.equal(declarations.length, 1, "one private table-name declaration");
+  let value = declarations[0].init;
+  if (value?.type === "TSAsExpression") value = value.expression;
+  assert.equal(value?.type, "ArrayExpression", "ROOM_TABLES is a literal array, optionally as const");
+  const selected = value.elements.map(node => {
+    assert.equal(node?.type, "Literal", "no computed table name or spread");
+    assert.equal(typeof node.value, "string");
+    assert.match(node.value, /^[a-z_][a-z0-9_]*$/);
+    return node.value;
+  });
+  assert.equal(new Set(selected).size, selected.length, "classifier names are unique");
+
+  const owners = new Set(history.definingSources);
+  const excluded = new Map(Object.entries(history.independentObjects));
+  const foundOwners = new Set();
+  const current = new Set();
+  const walk = (node, visit, parent = null) => {
+    if (!node || typeof node !== "object") return;
+    if (typeof node.type === "string") visit(node, parent);
+    for (const [key, child] of Object.entries(node)) {
+      if (["start", "end", "loc", "comments", "leadingComments", "trailingComments"].includes(key)) continue;
+      if (Array.isArray(child)) for (const part of child) walk(part, visit, node);
+      else if (child && typeof child === "object") walk(child, visit, node);
+    }
+  };
+  const tableNames = (source, path) => {
+    const tables = new Set();
+    const read = (sql, computed, concatenated = false) => {
+      // Plain operation-name literals such as "create" are not SQL. A CREATE
+      // fragment in a template/concatenation is never exempt on that account.
+      const candidate = /(?:^|[;\n])\s*CREATE\s+/i.test(sql)
+        || /\bCREATE\s+(?:VIRTUAL\s+)?TABLE\b/i.test(sql)
+        || (computed || concatenated) && /^\s*CREATE\b/i.test(sql);
+      if (!candidate) return;
+      assert.equal(computed || concatenated, false, `${path}: a CREATE must have fixed literal SQL`);
+      const starts = [...sql.matchAll(/\bCREATE\b/gi)];
+      for (let index = 0; index < starts.length; index++) {
+        const tail = sql.slice(starts[index].index, starts[index + 1]?.index);
+        const named = /^CREATE\s+(?:VIRTUAL\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:"([a-z_][a-z0-9_]*)"|`([a-z_][a-z0-9_]*)`|([a-z_][a-z0-9_]*))\s*\(/i.exec(tail);
+        if (named) {
+          tables.add(named[1] ?? named[2] ?? named[3]);
+          continue;
+        }
+        // These are the existing non-table schema forms, not new owned tables.
+        const identifier = String.raw`(?:"[a-z_][a-z0-9_]*"|\x60[a-z_][a-z0-9_]*\x60|[a-z_][a-z0-9_]*)`;
+        const indexHeader = new RegExp(String.raw`^CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:IF\s+NOT\s+EXISTS\s+)?${identifier}\s+ON\s+${identifier}\s*\(`, "i");
+        const triggerHeader = new RegExp(String.raw`^CREATE\s+TRIGGER\s+(?:IF\s+NOT\s+EXISTS\s+)?${identifier}\s+(?:BEFORE|AFTER)\s+(?:INSERT|DELETE|UPDATE(?:\s+OF\s+${identifier}(?:\s*,\s*${identifier})*)?)\s+ON\s+${identifier}\b`, "i");
+        assert.ok(indexHeader.test(tail) || triggerHeader.test(tail), `${path}: unsupported or computed CREATE target`);
+      }
+    };
+    walk(parseAst(source, { lang: "ts" }), (node, parent) => {
+      if (node.type === "Literal" && typeof node.value === "string") read(node.value, false, parent?.type === "BinaryExpression" && parent.operator === "+");
+      if (node.type === "TemplateLiteral") read(node.quasis.map(part => part.value.cooked ?? part.value.raw).join(""), node.expressions.length !== 0);
+    });
+    return tables;
+  };
+  assert.deepEqual([...tableNames('sql.exec(`CREATE INDEX IF NOT EXISTS record_phase ON record (phase, created)`);', "fixed-index fixture")], [], "the actual fixed custody index adds no table");
+  assert.throws(() => tableNames('sql.exec(`create ${tableKeyword} future_owned (id INTEGER)`);', "split-lowercase fixture"), /a CREATE must have fixed literal SQL/);
+  assert.throws(() => tableNames('sql.exec("create " + tableKeyword + " future_owned (id INTEGER)");', "split-concatenation fixture"), /a CREATE must have fixed literal SQL/);
+  assert.throws(() => tableNames('sql.exec(`CREATE TABLE retained (id INTEGER); create ${tableKeyword} future_owned (id INTEGER)`);', "mixed-computed fixture"), /a CREATE must have fixed literal SQL/);
+  assert.throws(() => tableNames('sql.exec("CREATE TABLE retained (id INTEGER); create unsupported future_owned");', "mixed-literal fixture"), /unsupported or computed CREATE target/);
+  const sources = directory => readdirSync(new URL(directory, root), { withFileTypes: true }).flatMap(entry => {
+    const path = `${directory}/${entry.name}`;
+    assert.ok(!entry.isSymbolicLink(), `${path}: unexpected source symlink`);
+    return entry.isDirectory() ? sources(path) : entry.isFile() && path.endsWith(".ts") ? [path] : [];
+  });
+  for (const path of [...sources("packages/scope/src"), ...sources("packages/mcp/src")]) {
+    const tables = tableNames(readFileSync(new URL(path, root), "utf8"), path);
+    if (tables.size === 0) continue;
+    assert.ok(owners.has(path) || excluded.has(path), `${path}: classify this table-defining source before changing the union`);
+    if (excluded.has(path)) {
+      assert.deepEqual([...tables].sort(), [...excluded.get(path)].sort(), `${path}: independent object schema changed`);
+      continue;
+    }
+    foundOwners.add(path);
+    for (const name of tables) current.add(name);
+  }
+  assert.deepEqual([...foundOwners].sort(), [...owners].sort(), "each declared defining source still has its CREATE site");
+  assert.deepEqual([...selected].sort(), [...new Set([...history.names, ...current])].sort(), "classifier covers actual current CREATE sites and every earlier owned name");
 });
