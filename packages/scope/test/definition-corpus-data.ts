@@ -50,6 +50,14 @@ export const archiveInventoryChange = () => (data: any) => {
   data.acts["link"]!.sends = data.acts["link"]!.sends.filter((send: SendForm) => !("create" in send));
   data.acts["remark"]!.fields["text"] = { type: "text", max: 128, detached: true, required: true };
 };
+/** Same aggregate-bound graph arguments for Native inventory and raw corpus.
+ * The caller supplies the shared ceiling; each root keeps its own 17-node bound. */
+export function archiveInventoryBoundaryGraphs(maximum: number): readonly [readonly number[], readonly number[]] {
+  const lengths: number[] = [];
+  // The genuine local root consumes one aggregate node.
+  for (let remaining = maximum - 1; remaining > 0; remaining -= 17) lengths.push(Math.min(17, remaining));
+  return [lengths, lengths.map((length, n) => length + Number(n === lengths.length - 1))];
+}
 export function archiveLeafData(name: string, child?: Digest): DeclaredDefinition { return {
   format: "artroom-definition-1", name, profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "found",
   items: { root: { many: false, max: 1, states: { live: { final: false } }, initial: "live", parties: {}, refs: {}, values: {} } },

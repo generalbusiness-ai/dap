@@ -25,7 +25,7 @@ fixture `changedDraft`; it returns raw bytes' data, never a validation result.
 | archive-inventory.test.ts leaf(name,child?) | archiveLeafData | direct names scouted-child, planned-declaration-child, missing-scout-child, late-child, covered-root, uncovered-final-root |
 | archive-inventory.test.ts four parents | archiveInventoryParentChange(child) | four separate exact child digests, same original pushes |
 | archive-inventory.test.ts root always | archiveInventoryAlwaysChange | same true rule |
-| archive-inventory.test.ts graph boundary cases | archiveLeafData | all actual graphs [17,17,17,12], [17,17,17,13], [18]; raw child digest linkage reconstructed in original reverse order, each actual group/position named |
+| archive-inventory.test.ts graph boundary cases | archiveInventoryBoundaryGraphs(maximum) / archiveLeafData | Native owner and raw corpus both pass JOURNAL_INVENTORY_CEILINGS.nodes to the same exact/overflow graph-pair helper, plus unchanged [18]; raw child digest linkage reconstructed in original reverse order, each actual group/position named |
 | archive-source-pins.test.ts wrongDeclaration | archiveWrongProducerChange | negative source admission still uses a complete positive different-name declaration |
 | archive-text.test.ts definition | archiveTextChange | same whole-scope capacity and detached text1024 |
 

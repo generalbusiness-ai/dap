@@ -21,11 +21,12 @@ import { indexedStandingData } from "../../../scope/test/definition-corpus-data.
 /** Scope raw fixture declarations. This shard never opens a Durable Object. */
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
 import { definitionDigest } from "@generalbusiness/dap-bytes";
+import { JOURNAL_INVENTORY_CEILINGS } from "@generalbusiness/dap-git/journal";
 import { RULE_PROFILES } from "../../src/rule/index.ts";
 import type { DefinitionCorpusRow } from "./row.ts";
 import { scopeData, scopeLaneData, scopeArchiveData, scopeFactoryData, scopeScaleData, scopeInventoryData, scopeReceiverData,
   scopeStagedChange, archiveActFieldsChange, archiveMembershipProofChange, archiveInventoryParentChange, archiveInventoryAlwaysChange,
-  archiveLeafData, archiveWrongProducerChange, archiveTextChange,
+  archiveLeafData, archiveInventoryBoundaryGraphs, archiveWrongProducerChange, archiveTextChange,
   capacityLaneChange, capacityRequestChange, capacityHoldReaderChange, capacityTokenOwnerChange, capacityRecoveredTextChange,
   composeWholeTicketChange, composeWholeDeskChange, creationStagedRenewChange, creationNoAttentionChange, creationProofChange, creationStagedReportChange,
   floorKeptChange, floorMonotonicChange, floorReceiverChange, floorSenderChange, floorPendingChange, observabilityCountChange,
@@ -82,7 +83,7 @@ export const scopeFixtureDefinitions: readonly DefinitionCorpusRow[] = [
   row("Scope/inventory covered root", ["packages/scope/test/archive-inventory.test.ts#good"], () => archiveLeafData("covered-root")),
   row("Scope/inventory uncovered root", ["packages/scope/test/archive-inventory.test.ts#uncovered"], () => archiveLeafData("uncovered-final-root")),
   ...native("Scope/inventory rule root", ["packages/scope/test/archive-inventory.test.ts#root always"], () => scopeData(scopeInventoryData(), archiveInventoryAlwaysChange())),
-  ...([ [17, 17, 17, 12], [17, 17, 17, 13], [18] ] as const).flatMap(lengths => graphDefinitions(lengths).map(({ group, position, data }) =>
+  ...([...archiveInventoryBoundaryGraphs(JOURNAL_INVENTORY_CEILINGS.nodes), [18]]).flatMap(lengths => graphDefinitions(lengths).map(({ group, position, data }) =>
     row(`Scope/inventory graph ${lengths.join("+")}/${group}/${position}`,
       [`packages/scope/test/archive-inventory.test.ts#graph([${lengths.join(",")}])/group=${group}/position=${position}`], () => structuredClone(data)))),
   ...native("Scope/wrong foreign producer", ["packages/scope/test/archive-source-pins.test.ts#wrongDeclaration"], () => scopeData(scopeLaneData(), archiveWrongProducerChange())),

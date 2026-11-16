@@ -1,10 +1,11 @@
 import { oldMembershipStandingData } from "./definition-corpus-data.ts";
-import { archiveInventoryChange, archiveLeafData, archiveInventoryParentChange, archiveInventoryAlwaysChange } from "./definition-corpus-data.ts";
+import { archiveInventoryChange, archiveLeafData, archiveInventoryParentChange, archiveInventoryAlwaysChange, archiveInventoryBoundaryGraphs } from "./definition-corpus-data.ts";
 /** Native read frames, SQLite and genuine creation/acts. All reviewed
  * policies/certificates are explicit TEST STAND-INS, never production
  * certifications. Synthetic/corrupt rows are labelled at their witnesses.
  * No inventory result proves authority, replay, ancestry or host custody. */
 import { expect, test } from "vitest";
+import { JOURNAL_INVENTORY_CEILINGS } from "@generalbusiness/dap-git/journal";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, GenesisEntry, Head, Input, Seed} from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, entryHash, textDigest, utf8 } from "@generalbusiness/dap-bytes";
@@ -493,15 +494,17 @@ async function graph(lengths: readonly number[]) {
   return scan(lane, through, policies);
 }
 
-test("native declaration metadata admits exactly 64 aggregate nodes while retaining the separate native root-plus-16 closure ceiling", async () => {
-  // Synthetic outcome rows select four disjoint typed roots. The 63 stored
-  // declarations plus genuine local root make 64 actual visited nodes.
-  const exact = await graph([17, 17, 17, 12]);
+test("native declaration metadata admits the shared aggregate node ceiling while retaining the separate native root-plus-16 closure ceiling", async () => {
+  const maximum = JOURNAL_INVENTORY_CEILINGS.nodes;
+  const [exactLengths, overflowLengths] = archiveInventoryBoundaryGraphs(maximum);
+  // Synthetic outcomes select disjoint typed roots; the genuine local root
+  // consumes the remaining aggregate node. The raw corpus uses this same pair.
+  const exact = await graph(exactLengths);
   expect(exact.result.ok).toBe(true);
-  if (exact.result.ok) { expect(exact.result.inventory.cost.nodes).toBe(64); expect(exact.result.inventory.objects).toHaveLength(64); }
-  const aggregate = await graph([17, 17, 17, 13]);
+  if (exact.result.ok) { expect(exact.result.inventory.cost.nodes).toBe(maximum); expect(exact.result.inventory.objects).toHaveLength(maximum); }
+  const aggregate = await graph(overflowLengths);
   expect(aggregate.result).toEqual({ ok: false, reason: "limit" });
-  expect(aggregate.cost.nodes).toBe(64);
+  expect(aggregate.cost.nodes).toBe(maximum);
   expect(payloadReads(aggregate.calls)).toEqual([]);
   const perRoot = await graph([18]);
   expect(perRoot.result).toEqual({ ok: false, reason: "limit" });
