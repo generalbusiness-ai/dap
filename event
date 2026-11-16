@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval 07c2b4d7: land AR-1a (head 16063746) now. You ratify and merge onto 447e9b1a, then ask for the landing check. I push; no deployment follows, since the runtime bytes equal the running hotfix. After it lands, the rule 'no deployment from main without the hotfix' ends, because main carries it.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:07c2b4d7460445ac4ae70408180c92ca993e98d3"}
