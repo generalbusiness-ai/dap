@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/mcp/src/views/generated.ts","body":{"commit":"957b275520efb6ed0d0d67f7684c21eccf487b36","path":"packages/mcp/src/views/generated.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0e8ca9595b92d1c8a01652a107326beee52b3b3a","text":"Merge retired a covered predecessor; the successor is at packages/client/src/draft-submit.ts."}
