@@ -20,6 +20,7 @@ export const nodeFiles = [
   'scripts/security-entry-points.test.mjs',
   'scripts/active-source.test.mjs',
   'scripts/check-kernel-boundary.test.mjs',
+  'scripts/check-formal-source-hashes.test.mjs',
   'scripts/cloudflare-pool-compat.test.mjs',
   'scripts/check-shared-helpers.test.mjs',
   'scripts/check-doc-links.test.mjs',

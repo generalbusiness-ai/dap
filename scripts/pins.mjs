@@ -10,6 +10,7 @@ const env = { ...process.env };
 delete env.MCP_WRITE_DOCS;
 
 const steps = [
+  ["formal-sources", ".", ["scripts/check-formal-source-hashes.mjs"]],
   ["compatibility", ".", ["scripts/cloudflare-pool-compat.mjs"]],
   ["security", ".", ["--test", "scripts/security-entry-points.test.mjs"]],
   ["release", "packages/cli", ["../../node_modules/vitest/vitest.mjs", "run", "--config", "vitest.config.ts", "test/application-release-reproduction.test.ts"]],

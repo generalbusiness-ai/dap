@@ -4,7 +4,9 @@ The corrected Editor chart and targeted checks pass after published M0 main `f26
 
 The 7 November survey lives in gitseq request `a99e32d9` at `attachments/full-report` and `attachments/priority-list`. It audited `e50d9eebb27f47d0f33549486751ab8bdce8de80`. This verification follows the five-item shortlist, not the full inventory. Gitseq request `3c6d197df2db35e3d1603f63acfa63953da7c1a0` tracks this delivery, under promise `5c826d7435eef1e7a2b8df3c7db6efdf94f4654b`.
 
-Transport and observation retain their source at `8faa38dcf31855a0a6264e5912b58061b5eda223`, unchanged through main `f2677f77`. Effects follows the identifier cutover at `99ed4a7e143f`: its check and source control pass on 13 November. Editor now follows `8dc1381c732132be8a6d378697e0b87191bd2801`: its model check, real-source witness and statechart pass on 10 November. The model reaches seven distinct states; the chart shows six arrows and hides three terminal waits. F changes `supports` outside `continueEdit`. Both protected Editor functions match the BR13 bytes. Planner ruling `12c4f5fb` requires no repeated fault control for this unchanged boundary. The [BR13 note](../../notes/implementation/2026-11-09-br13-version-questions.md) records the earlier comparison and results. See the [F implementation note](../../notes/implementation/2026-11-10-canonical-spelling.md) for the 10 November Editor evidence. Each model checks a narrow safety obligation. None proves its entire subsystem.
+Transport and observation retain their source at `8faa38dcf31855a0a6264e5912b58061b5eda223`. Effects' identifier-cutover check and source control passed on 13 November at the recorded `99ed4a7e143f` boundary. Editor's model check, reducer witness and statechart passed on 10 November at `8dc1381c732132be8a6d378697e0b87191bd2801`. Its model reached seven states; the chart showed six arrows and hid three terminal waits. Planner ruling `12c4f5fb` addressed the unchanged boundary at that time. These results remain historical. The [BR13 note](../../notes/implementation/2026-11-09-br13-version-questions.md) and [F note](../../notes/implementation/2026-11-10-canonical-spelling.md) retain their source and result limits.
+
+CV1 reviews the full exported parent history through `6728059211cee75dc0f6fdd104ef52a44c5f7da0`. Effects' protected bodies remain exact to their sync source. Historical merge parents restore the already-covered pre-Mark and trusted-answer premises; later CDF changes concern retained bytes and scope-full payload detail. Editor's identity guards change on the continuation call tree, while receipt-verification and progress ordering remain exact. The [CV1 note](../../notes/implementation/2026-11-16-cv1-source-correspondence.md) maps every reviewed commit and parent. The refreshed correspondence metadata records that source review. It does not record a fresh model, source-control, or gate PASS. Each model checks a narrow safety obligation.
 
 Voice now has source correspondence at `bd023336786186721240ec6e89998b01683469c4`. Its restart control and three targeted source cases passed on 14 November. The model check passed at coverage checkpoint `b4d6a7e9fe2720ed3d93c1204db4139a34342ada`, reaching eight distinct states with all rules holding. The chart draws seven states and seven arrows and hides three steps. Generated Mermaid bytes matched the tracked chart exactly, so the model, config, view, Mermaid and SVG remain unchanged. The [NF5 follow-up note](../../notes/implementation/2026-11-14-nf5-storage-follow-up.md#voice-source-correspondence-after-integration) separates these results from the historical model run.
 
@@ -38,14 +40,32 @@ To repeat one source fault, run `control.mjs` with a subsystem and a new externa
 node verification/state-machines/control.mjs Editor "$HOME/play/artroom-evidence/$(date +%Y%m%d-%H%M%S)-editor-control"
 ```
 
+## Keep formal source correspondence current
+
+`npm run pins` checks the raw SHA-256 of all eight files named by `coverage.json` before the existing owners. This check uses built-in Node modules, imports no mapped source, and starts no subprocess. It runs no TLC or source witness. Missing bytes or drift fail pins and name the file, its model, and one refresh command.
+
+Before a deliberate refresh, review the changed file against that model's premises. In the body of the commit that carries the refreshed record, state which premise the changed source still meets. If the premise no longer holds, repair the model or correspondence first. A refresh without that statement is a review finding. The checker does not inspect commit-body prose.
+
+Commit the reviewed source before refreshing its record. For example, after reviewing an Editor change, run:
+
+```sh
+node scripts/check-formal-source-hashes.mjs --refresh Editor
+```
+
+Replace `Editor` with the model named in the failure. Only this explicit route reads Git. It refuses without writing if any mapped file differs from its bytes at the recorded HEAD. It then updates that model's hashes and `syncCommit` together, preserving other records and JSON formatting. A hash refresh supplies no new model or source-control result.
+
+The existing `check.mjs Model --source` command keeps its current meaning: it skips the hash guard and runs the selected source witness. Use the ordinary subsystem command for its hash check, TLC, and source witness. Neither a raw hash match nor a reducer witness proves a full workflow.
+
+Pins keep their total 60-second budget. CV1 records the measured pins cost with and without this guard; those measurements remain unrun until root's authorized interval.
+
 ## Match model actions to source
 
 | Model actions | Source boundary | Atomicity assumption |
 |---|---|---|
 | Transport `FactoryReturns`, `Retire`, `LateFactoryDisposed` | `HttpGeneration.open`, `#discard`, and `graceful` | Retirement changes the owner before awaiting cleanup. The factory return checks that owner before opening. Disposal completion abstracts resource cleanup. |
 | Observation `Invalidate`, `ReadReturns`, `Discard` | `ObservationConnection.cancel`, `RefreshCoordinator.check` and `read`, and the guarded `emit` callbacks | JavaScript checks and publication run synchronously. The snapshot await separates request from return. Invalidation represents loss of view ownership or cancellation. |
-| Editor `Attempt`, `Accept`, `Verify`, `VerificationFailed`, `Advance`, `Refuse` | `transitionEdit` result cases | Each reducer call changes one value synchronously. The executor supplies receipt-verification evidence separately. |
-| Effects `Mark`, `Send`, `Restart`, `LateAnswer` | `Operations.#pass`, `#send`, `#answer`, `#offer`, and SQLite `markSent` | The durable mark precedes the queued outside call. Restart loses the local dispatch closure. The model admits a matching late answer conservatively even when it cannot tell whether the call left. |
+| Editor `Attempt`, `Accept`, `Verify`, `VerificationFailed`, `Advance`, `Refuse` | `transitionEdit` result cases; reviewed `continueEdit`, `runStep`, `verifyStep`, and `checkEditRequest` order | Each reducer call changes one value synchronously. The executor awaits receipt verification before progress. The executed source probe exercises only the reducer; it does not verify the network executor or source identity checks. |
+| Effects `Mark`, `Send`, `Restart`, `LateAnswer` | `Operations.#pass`, `#send`, `#answer`, `#offer`, and SQLite `markSent` | The durable mark and readback precede the queued outside call. Restart loses local dispatch permission. Historical identifier/evidence premises restore the known sync. Retained-payload accounting and scope-full detail lie outside this one-attempt model. A trusted matching late answer does not prove quota availability or payload authentication. |
 | Voice `SaveStart`, `Speak`, `Interrupt`, `Complete`, `VerifyReport`, `Clear` | `start`, `stopAudio`, restoration in `ready`, and `settle` | `SaveStart` represents successful durable write and exact readback. Interruption after persistence but before playback keeps uncertainty. Verified reporting abstracts the reporter's proof checks. |
 
 ## Scope and evidence
@@ -106,7 +126,7 @@ stateDiagram-v2
 
 ## Submit an edit without mistaking acceptance for proof
 
-One request step. Repeat this obligation at opening, rules, source and manifest stages. Receipt verification is a trusted input from the network executor. This model does not prove signatures, workflow stage order, reload persistence or source contents.
+One request step. Repeat this obligation at opening, rules, source and manifest stages. Receipt verification is a trusted input from the network executor. This model does not prove signatures, workflow stage order, reload persistence or source contents. The reviewed executor awaits receipt verification before progress; the executed source probe exercises the reducer only. Source identity checks and their payloads remain outside this receipt-verification abstraction.
 
 [SVG diagram](Editor/chart.svg) · [TLA+ model](Editor/Editor.tla)
 
@@ -133,7 +153,7 @@ stateDiagram-v2
 
 ## Recover an outside effect after a lost answer
 
-One opened attempt, two possible send counts, arbitrary restarts. Mark and dispatch are separate actions. Durable storage survives restart; in-memory permission does not. Safe recovery reads, additional attempts, selection, parked scans and retained-reply paging are outside this model. A decisive answer must authenticate the exact original attempt. Send counts calls from Operations to its outside port, not provider-internal retries.
+One opened attempt, two possible send counts, arbitrary restarts. Mark and dispatch are separate actions. Durable storage survives restart; in-memory permission does not. Safe recovery reads, additional attempts, selection, parked scans and retained-reply paging are outside this model. A decisive answer must authenticate the exact original attempt. Send counts calls from Operations to its outside port, not provider-internal retries. The reviewed identifier and evidence premises restore the known sync source. Later retained-payload accounting and scope-full result detail lie outside this one-attempt model; trusted late-answer evidence does not prove quota availability or payload authentication.
 
 [SVG diagram](Effects/chart.svg) · [TLA+ model](Effects/Effects.tla)
 

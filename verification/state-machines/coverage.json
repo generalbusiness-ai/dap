@@ -50,14 +50,14 @@
       ],
       "apps/room/page/src/retained-editor-data.ts": ["continueEdit"]
     },
-    "limits": "One request step. Repeat this obligation at opening, rules, source and manifest stages. Receipt verification is a trusted input from the network executor. This model does not prove signatures, workflow stage order, reload persistence or source contents.",
+    "limits": "One request step. Repeat this obligation at opening, rules, source and manifest stages. Receipt verification is a trusted input from the network executor. This model does not prove signatures, workflow stage order, reload persistence or source contents. The reviewed executor awaits receipt verification before progress; the executed source probe exercises the reducer only. Source identity checks and their payloads remain outside this receipt-verification abstraction.",
     "rules": {
       "EvidenceBeforeProgress": "advanced => accepted /\\ verified"
     },
-    "syncCommit": "8dc1381c732132be8a6d378697e0b87191bd2801",
+    "syncCommit": "6728059211cee75dc0f6fdd104ef52a44c5f7da0",
     "sha256": {
       "apps/room/page/src/retained-editor-state.ts": "159a82608a78b04f3849d10bcb5a5f2f8a7c6c0dcae69f932636cf3e0b688141",
-      "apps/room/page/src/retained-editor-data.ts": "9536e24dbb79de4e543d5c0cface52072fa63bdf196129a7bab88900d7452d83"
+      "apps/room/page/src/retained-editor-data.ts": "6e620c3377e6041a9cf935b0f7bc4f733bd6ebf1738c1585a4b751be26cc0498"
     }
   },
   "Effects": {
@@ -71,15 +71,15 @@
       ],
       "packages/scope/src/sqlite.ts": ["markSent"]
     },
-    "limits": "One opened attempt, two possible send counts, arbitrary restarts. Mark and dispatch are separate actions. Durable storage survives restart; in-memory permission does not. Safe recovery reads, additional attempts, selection, parked scans and retained-reply paging are outside this model. A decisive answer must authenticate the exact original attempt. Send counts calls from Operations to its outside port, not provider-internal retries.",
+    "limits": "One opened attempt, two possible send counts, arbitrary restarts. Mark and dispatch are separate actions. Durable storage survives restart; in-memory permission does not. Safe recovery reads, additional attempts, selection, parked scans and retained-reply paging are outside this model. A decisive answer must authenticate the exact original attempt. Send counts calls from Operations to its outside port, not provider-internal retries. The reviewed identifier and evidence premises restore the known sync source. Later retained-payload accounting and scope-full result detail lie outside this one-attempt model; trusted late-answer evidence does not prove quota availability or payload authentication.",
     "rules": {
       "AtMostOneSend": "sends <= 1",
       "MarkBeforeEffect": "sends > 0 => marked"
     },
-    "syncCommit": "99ed4a7e143f82ba9ca946b9d98f21bbaf09efe2",
+    "syncCommit": "6728059211cee75dc0f6fdd104ef52a44c5f7da0",
     "sha256": {
-      "packages/scope/src/operations.ts": "a18c09eccbeaec55d0130d6f5e77c50431e0d49ac4997c853ea3462e4eac5094",
-      "packages/scope/src/sqlite.ts": "1f4c1f97955a511faf274d1a4ee3bba9267a52fdab35cb3ef6a760244914956a"
+      "packages/scope/src/operations.ts": "b33908e9a65901298d6d6ca3b11c3dadb0888891591874ccd369a9011e19cf3b",
+      "packages/scope/src/sqlite.ts": "c012365221f0695050a8f891fc40f95942753ad199173c30af4e9f6da8c299b6"
     }
   },
   "Voice": {
