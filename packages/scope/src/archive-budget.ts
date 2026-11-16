@@ -1,9 +1,10 @@
 /** One local inventory pass's admitted work, not a heap or custody proof.
  * Native callers must reserve SQL/parse work before touching the bodies. */
 import { natural } from "@generalbusiness/dap-bytes";
+import type { Head } from "@generalbusiness/dap-contract";
 import type { Sql, SqlValue } from "./sqlite.ts";
 
-export const ARCHIVE_BOUNDS = Object.freeze({ entries: 4096, attempts: 512, nodes: 64, calls: 16384, metadata: 4 * 1024 * 1024, inputWork: 64 * 1024 * 1024 });
+export const ARCHIVE_BOUNDS = Object.freeze({ entries: 4096, attempts: 512, nodes: 128, calls: 16384, metadata: 4 * 1024 * 1024, inputWork: 128 * 1024 * 1024 });
 export const ARCHIVE_SECONDS = 30;
 export type ArchiveCost = { -readonly [K in keyof typeof ARCHIVE_BOUNDS]: number };
 const keys = ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const;
@@ -11,6 +12,19 @@ export type ArchiveStopReason = "limit" | "timeout" | "unavailable";
 export class ArchiveStopped extends Error {
   constructor(readonly reason: ArchiveStopReason, readonly capacityRefusal: ArchiveCapacityCheck | null = null) { super(`archive-${reason}`); }
 }
+/** Trusted policy owner may stop before any repository has been selected.
+ * It crosses wait() intact; it neither resets nor exhausts the budget. */
+export class ArchivePolicyStopped extends ArchiveStopped {
+  constructor(readonly policyReason: "application-policy-revoked" | "application-policy-unavailable", readonly details: ArchivePolicyStopDetails = {}) { super("unavailable"); }
+}
+export interface ArchivePolicyStopDetails { readonly proofReason?: string; readonly chainReason?: "admission-limit"; readonly position?: Head }
+/** Immutable admission counts differ from a shortage in this pass's ledger.
+ * Keep the ledger usable for its already paid terminal write. */
+export class ArchiveChainLimit extends ArchiveStopped {
+  constructor(readonly position?: Head) { super("limit"); }
+}
+/** Policy proof may lag native creation; it must remain a retry. */
+export class ArchivePolicyPending extends ArchiveStopped { constructor() { super("unavailable"); } }
 const zero = (): ArchiveCost => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
 export interface ArchiveCapacityCheck {
   readonly kind: "debit" | "lookahead-reserve" | "window-metadata" | "window-entry" | "finish-quote" | "migration-quote";

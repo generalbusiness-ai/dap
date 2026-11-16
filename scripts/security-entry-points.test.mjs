@@ -11,8 +11,8 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 // its own source-ordered line. Root adopts actual parser values after review.
 const namedOwners = {
   "packages/scope/src/object.ts": {
-    "packages/scope/src/object.ts:$module": "6316c9c49d3379a9d4d7b45233119cd8e102d09beed207051c10ed617d25d912",
-    "packages/scope/src/object.ts:ScopeObject": "5cac901a7ab4d7c00983aeeae397fb4e6393d788194808d59ee6ffc68ae0001b"
+    "packages/scope/src/object.ts:$module": "61e64e92aebf2a3c602365b09d982b68ab0d7a348a1bc2b6232455b2bbf2079e",
+    "packages/scope/src/object.ts:ScopeObject": "4c656dbca3dfb49f958e81ca12acb83e5b748482b67d7c70d64204d5294add92"
   },
   "packages/scope/src/object-archive.ts": {
     "packages/scope/src/object-archive.ts:$module": "7d7c0da57c8b69bc953c19a59e3bd6af25a5f02863bac10ef6fd839fc9dd5adc",
@@ -279,7 +279,7 @@ const seals = {
   "apps/room/celld/worker.ts": "d1bc465525bd0af046fa0703464f14aeaaee8286b88415dfec3b9e03869fb644", // H1 reviewed production entry or public-origin gate owner.
   "packages/scope/src/public-origin.ts": "d6e867fc859db69b6fcf2d465d387a032966331cbae04310ea4c24cda3773269", // H1 reviewed production entry or public-origin gate owner.
   "packages/platform/src/versions.ts": "6b9b184d22fbffaa617049e1b6ec01bc64fd6039b068ac534d0adaf443868962", // Closed native publication protocol policy; actual maintained parser output.
-  "apps/room/worker.ts": "aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67",
+  "apps/room/worker.ts": "0460fe0647f5494a0ed8fb38ff49a09bdf5d7c89b2fadf988ffd446be8aa465d",
   "apps/room/worker.commons.ts": "c525a1b0d13e6243099d03b80c5207b76f082c71432db2b8ecaf86ccf8cb1160", // Reviewed separate deployment entry; actual maintained parser output.
   "apps/room/fetch.ts": "83b2a56552c5f6874935d1491f487fd7d2b9e2651a9acceb87d731139897ad2c", // Forward the HTTP context to the existing scope route; dispatcher gates stay fixed.
   "apps/room/demo-creation.ts": "18124da145e98edf887394d92a1d3e37f2e350127c4e268e16729acfe8cdfc23",
@@ -357,24 +357,32 @@ const seals = {
 // Integrated archive owners computed by the maintained owning parser.
 // Root adopted the reviewed outputs; the historical map name is retained here.
 const pendingArchiveSeals = {
+  "apps/room/archive-identity.ts": "1d96727f139ac309b5632c1aa9b1b0b2e51dd0e204b5ebcaabe52f5d06042089", // AE-1 reviewed boundary; actual maintained AST output.
+  "apps/room/archive-packages.ts": "9d4b79b973a7b7576f133462a80d48f34d9414af9aea61cc203242d2d7fcac34", // AE-1 reviewed boundary; actual maintained AST output.
+  "apps/room/archive-setup-cost.ts": "ff70caaf56adfc4501cb1fe6606fa7f9283f2207b7e2d50d29063d9e9d41baed", // AE-1 reviewed boundary; actual maintained AST output.
+  "packages/platform/src/application-archive-reader.ts": "16aa46853d0e675f1ad616cc426ef8be717132b0efd57b8b555ad07912aa1c88", // AE-1 reviewed boundary; actual maintained AST output.
+  "packages/scope/src/applications/archive-proof.ts": "163a8b2f7710752ee09e24d4b81704bc2fe8ce1484ad4a58b42edb9a89d5004b", // AE-1 reviewed boundary; actual maintained AST output.
+  "packages/scope/src/archive-budget.ts": "50cb6ffeedf9a3f03a065cd4b36ae724e65fdcc60cc907e30e69d56b65f410f4", // Historical old-cap value; resumed caps require maintained computation and adoption.
+  "packages/scope/src/archive-adaptive.ts": "ddf7c2ec284340fe10b965d73e373ca639563cdad19dcbd510b5e7b2b83953b8", // AE-1 reviewed boundary; actual maintained AST output.
+  "packages/scope/src/archive-row-cost.ts": "cb9a949c1f9a0d8be8dc678b0c82371ab2f25cf51d980e25a8bf6f21f7178855", // AE-1 reviewed boundary; actual maintained AST output.
   "packages/scope/src/archive-outcome-values.ts": "d142fa0fb776d6558a5c1101bab05105fe904e1cf4c71fc883fc8a5c5425bd67", // Certified rules evidence projection; actual maintained parser output.
   "packages/scope/src/archive-restart.ts": "bb8ff18338ffc3f2a53389d25c8eda77010a9dac9c7ef2dc63c5df171f7ed98b", // Deployment directive parser; actual maintained output.
-  "packages/scope/src/archive-operator.ts": "28890e3e30348c9f84a5e59b8a1d4e19584e0389dfa2623e7b2fc5c3cb9e963a", // Private observation owner; actual maintained parser output.
+  "packages/scope/src/archive-operator.ts": "8fca4c14a1fd93a21f5a707c60ef8fb6f8249b644fe32f367ce0321f975091b8", // Private observation owner; actual maintained parser output.
   // Publication and floor owners were reviewed before these values were
   // computed by the maintained parser on the integrated source.
   "packages/scope/src/archive-target.ts": "0b96dfe16e0d051a9978e1324505206e6dcea9019985f2ee3dd787e712285469", // Read ceilings settle only after bounded replies; authority checks unchanged.
   "packages/scope/src/archive-source-window.ts": "300e4a3f51f23b93a2ce026b98993700e3c0b8947d35b68de195adc5c522ae45",
   "packages/scope/src/archive-publication.ts": "6c13c9f864b559e26d75982eca85c058975a12f18ad00b660c227577aae76d9b",
   "packages/scope/src/archive-build.ts": "bf1c79debbe0141140174c9a3d79f63d1952b874bce1d8713207dea8c817b8a0", // Actual pin SQL payload settles; final identity fence unchanged.
-  "packages/scope/src/archive-driver.ts": "a8115888e3f21a5529173c3fddcb9c3317035881dcc7ca6c13c7c532136c6a5b", // Pin read settlement and bounded scalar observation; authority/retry checks unchanged.
-  "packages/scope/src/archive-row.ts": "5def61284f023e083eb03a7c605b5c2008e2460384d1c1669e48d7d435b77c71", // Paid prior-capacity scalar reviewed; actual maintained parser output.
+  "packages/scope/src/archive-driver.ts": "388b95a5509123b3d2247b1fef682081fb05d748e67b03e8a2e0bc71db256545", // AE-1 current policy and prepaid terminal owner; actual maintained AST output.
+  "packages/scope/src/archive-row.ts": "0dd79bd4d3c519457a1fc232d7c1f33d48f04aa6569ee4c8bdc0072a737519a9", // AE-1 bounded terminal preserves the row and confirmed receipt; actual maintained AST output.
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "packages/scope/src/object-archive.ts": namedOwners["packages/scope/src/object-archive.ts"],
-  "apps/room/worker.grow.ts": "e5406bd609c8da87eae5ac49255c212e4711e0b8bef65bf648f90d23c928de36",
-  "apps/room/archive-policy.ts": "7ae44bad96028f44a3107adbd3c9936c67375438bcd0396f8606b37c5dce727f",
-  "apps/room/archive.ts": "f48d094c318ffdd1012f5917ba7997477285e165555d05cacf18a8fd388e2d8f", // Valid source proof settles; source policy and identity checks unchanged.
-  "packages/scope/src/archive-host-item.ts": "b5e7e65542613603b5ace32572067d6449f0101bf569f697889ffb82c4299b28",
+  "apps/room/worker.grow.ts": "c525a1b0d13e6243099d03b80c5207b76f082c71432db2b8ecaf86ccf8cb1160",
+  "apps/room/archive-policy.ts": "3723eb633f5da1572d3adc3c1321de3e37cd3a0ee2ea3da77186d6a7b374483c",
+  "apps/room/archive.ts": "7a9e7aa6f3a1f38245f6dafcf526afcd27f1893462f89f287f69f4bd0997f8df", // AE-1 shared Artifacts adapter and authenticated package policy; actual maintained AST output.
+  "packages/scope/src/archive-host-item.ts": "72a9e8b4364fba877df3502f11bd71de4f9ae2076cbd490744aaedd7e3ca8602",
   "packages/scope/src/archive-host.ts": "ad759aff6f090fab3401d2f75274af294269f7db488ae2d5c56954759cdf754a", // Migration collectors settle only checked POST byte receipts; decoder fees and authority fences unchanged.
   "packages/scope/src/artifacts-host.ts": "17169f775db94ec5544115119385ab979854b43679185f4360b07311e1a8a516", // Reviewed durable fork setup custody; the journal owns its later revocation.
   "packages/scope/src/artifacts-wiring.ts": "addcb51aef7f62f98b9ddabe3a40ebb9f552df2d6d41f192eadd840dd0a4d76d",

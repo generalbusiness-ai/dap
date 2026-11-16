@@ -10,7 +10,7 @@ import { at, create, type Lane } from "./fixtures-native.ts";
 import { SqliteStore, type SqlValue } from "../src/sqlite.ts";
 import { readRetainedArchivePass } from "../src/archive-retained-pass.ts";
 import { archiveSql } from "./support/archive.ts";
-import { ARCHIVE_CONFIRMED_ROW_BYTES, archivePendingRowBytesUpper, forecastArchiveBookkeeping } from "../src/archive-row-cost.ts";
+import { ARCHIVE_CONFIRMED_ROW_BYTES, archivePendingRowBytesUpper, forecastArchiveBookkeeping, forecastArchiveTerminalWrite } from "../src/archive-row-cost.ts";
 
 const repository = { host: "fixture-host", namespace: "fixture-room", name: "archive-fixture", id: "fixture-repository" };
 const rows = <T>(lane: Lane, work: (store: ArchiveRows) => T) => lane.inside(state => work(new ArchiveRows({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: action => state.storage.transactionSync(action) }, lane.at)));
@@ -20,6 +20,43 @@ async function refusal(action: Promise<unknown>, reason: string): Promise<void> 
   expect(rejected, "the conflicting mark must be refused").toBe(true);
   expect(message).toContain(reason);
 }
+
+test("one prepaid terminal write matches its shared price and needs no remaining work allowance", async () => {
+  const lane = await create(), head = await lane.head();
+  // Static closed-schema maximum, not an admitted journal or policy reason.
+  const id = `sha256:${"f".repeat(64)}`, largest = { v: 1, at: { scope: id, genesis: id }, reason: "r".repeat(128),
+    proofReason: "malformed-or-unsupported", chainReason: "admission-limit", position: { seq: Number.MAX_SAFE_INTEGER, hash: id } };
+  expect(utf8(canonicalize(largest)).length).toBeLessThanOrEqual(512);
+  await lane.inside(state => {
+    const sql = archiveSql(state), writes: { query: string; bindings: readonly SqlValue[] }[] = [];
+    let capture = false;
+    const store = new ArchiveRows({ transaction: work => sql.transaction(work), exec: (query, ...bindings) => {
+      if (capture) writes.push({ query, bindings: [...bindings] });
+      return sql.exec(query, ...bindings);
+    } }, lane.at);
+    const price = forecastArchiveTerminalWrite(512), budget = new ArchiveBudget(price), halt = store.prepareHalt(budget);
+    expect(budget.admitted()).toEqual(price);
+    expect(budget.canSpend({ calls: 1 })).toBe(false); expect(budget.canSpend({ inputWork: 1 })).toBe(false);
+    capture = true;
+    halt("application-policy-unavailable", { chainReason: "admission-limit", position: head });
+    capture = false;
+    // Count the actual prepaid SQL only; later observation reads are outside
+    // this interval. An extra unpriced write must fail independently of the
+    // shared forecast used by both the ledger and the native writer.
+    expect(writes).toHaveLength(price.calls);
+    expect(writes.map(write => write.bindings[0])).toEqual(["archive-terminal-1", "archive-wake-1"]);
+    expect(writes.every(write => write.query.startsWith("INSERT INTO meta "))).toBe(true);
+    const bindingBytes = writes.reduce((sum, write) => sum + write.bindings.reduce<number>((bytes, value) => {
+      expect(typeof value).toBe("string"); return bytes + utf8(value as string).length;
+    }, 0), 0);
+    expect(bindingBytes).toBeLessThanOrEqual(price.metadata);
+    expect(budget.admitted()).toEqual(price);
+    expect(store.terminal()).toEqual({ reason: "application-policy-unavailable", chainReason: "admission-limit", position: head });
+    expect(store.storedWake()).toEqual({ pending: false, stopped: true, next: null });
+    expect(store.load()).toBeNull();
+    expect(() => halt("application-policy-unavailable")).toThrow("archive-row-unavailable");
+  });
+});
 
 // Invariant: one exact outstanding mark survives eviction and later native
 // entries; a stale/other confirmation cannot clear it or advance the prefix.
