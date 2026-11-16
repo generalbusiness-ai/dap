@@ -531,7 +531,7 @@ test("a second device cannot sign under the retained step owner", async () => {
 
 test("a changed descriptor may copy a live original but adds no version or signing", async () => {
   const s = requestScene(), { client, store } = clientAt(s);
-  s.feed.current(s.scope); await client.read(); s.mode("unavailable");
+  s.feed.current(s.scope); await client.read(); await clientIdle(client); s.mode("unavailable");
   const input = { on: 0, fields: { text: "same original" } };
   await request(client, "descriptor", "remark", input);
   const original = canonicalize(s.copies[0]), rows = await store.authorizations.read(s.signer.key, s.handle.at), signs = s.signs();
@@ -541,7 +541,9 @@ test("a changed descriptor may copy a live original but adds no version or signi
       member: s.actor.member.member, principal: s.actor.principal },
     store, drafts: { read: async () => null }, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
   try {
-    s.feed.current(s.scope); await changed.read();
+    s.feed.current(s.scope); await changed.read(); await clientIdle(changed);
+    // One original member POST plus one permitted startup recovery copy. The next member request makes three.
+    expect(s.copies).toHaveLength(2);
     const copies = s.copies.length;
     await request(changed, "descriptor", "remark", input);
     expect(s.copies.length).toBe(copies + 1);
@@ -665,9 +667,11 @@ test("same-clock A B A launches the third signing's exact authorization position
 
 test("a live legacy copy expires while its launch waits for the shared fence", async () => {
   const s = requestScene(), { client, store, who } = clientAt(s), held = gate();
-  const exclusive = store.exclusive.bind(store);
+  const exclusive = store.exclusive.bind(store), pending: Promise<unknown>[] = [];
   let now = s.now(); s.clock.now = () => now;
   try {
+    // Drain real startup recovery while custody is empty, before keeping the original.
+    s.feed.current(s.scope); await client.read(); await clientIdle(client);
     const values = { on: 0, fields: { text: "kept legacy" } };
     const shaped = shapeDeclaredAct(s.handle.definition, "remark", values);
     const signed = await signedIntent(s.signer, { to: s.handle.at, kind: "remark", on: shaped.on,
@@ -678,14 +682,19 @@ test("a live legacy copy expires while its launch waits for the shared fence", a
       binding: { definition: s.handle.definition.name, kind: "remark", declaration: s.handle.digest, pinned: s.handle.digest },
       envelope: { signed, beside: shaped.beside },
     }), timeOf(now + 30_000));
-    s.feed.current(s.scope); await client.read(); await clientIdle(client);
+    // The keep notification only reconciles the row. Do not trigger another feed recovery.
+    await clientIdle(client);
+    expect((await custody.find(identity))!.phase).toBe("prepared");
+    expect(clientReplica(client).accepted(s.signer.key, identity.key)).toBeNull();
+    expect(s.copies).toEqual([]);
     const signs = s.signs(), bytes = canonicalize(signed);
-    const blocker = exclusive(() => held.wait()); await held.started;
+    const blocker = exclusive(() => held.wait()); pending.push(blocker); await held.started;
     let entered!: () => void, armed = true;
     const queued = new Promise<void>(done => { entered = done; });
     store.exclusive = run => { if (armed) { armed = false; entered(); } return exclusive(run); };
-    const copied = request(client, identity.key, "remark", values);
+    const copied = request(client, identity.key, "remark", values); pending.push(copied);
     const completed = expect(copied).resolves.toMatchObject({ lost: true });
+    pending.push(completed); void completed.catch(() => {});
     await queued;
     expect(s.copies).toEqual([]);
     now = Date.parse(signed.intent.notAfter);
@@ -694,7 +703,10 @@ test("a live legacy copy expires while its launch waits for the shared fence", a
     expect(s.signs()).toBe(signs);
     expect(canonicalize((await custody.find(identity))!.envelope.signed)).toBe(bytes);
     expect(await store.authorizations.read(s.signer.key, s.handle.at)).toEqual([]);
-  } finally { held.release(); store.exclusive = exclusive; client.close(); }
+  } finally {
+    held.release(); store.exclusive = exclusive; client.close();
+    await Promise.allSettled(pending);
+  }
 });
 
 test("cancellation or a newer position wins before a queued copy launches", async () => {
