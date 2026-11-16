@@ -83,6 +83,22 @@ binds `VERSION_METADATA`, as Grow and Demo do. Wrangler supplies its value
 on deployment. Health reports `unknown` when the binding or a valid version
 ID is absent.
 
+The Lending Worker serves separate installed screens for two rooms. The
+0.3.0 `lending-library` keeps `https://lending.inguz.space`. The 0.4.0
+`lending-shelf` uses `https://lending-shelf.inguz.space`. The sandbox maps
+both to the existing `LENDING` service binding to `dap-lending`. Each screen
+origin names one installation.
+
+These two new nonsecret rows name the shelf's active installation at item 2:
+
+| Setting and source | Screen origin | Installation descriptor |
+| --- | --- | --- |
+| `APPLICATION_SCREEN_HOSTS` in [`wrangler.lending.jsonc`](../../apps/room/wrangler.lending.jsonc) | `https://lending-shelf.inguz.space` | Room `https://dap-lending.inguz.workers.dev`, directory `sc_a7fawlxbqabykqatabrx2ldhx4ufji2s4wlm6l4mh5krmqvrzrta`, item 2, presentation `sha256:188f7b84e6b1ba29c2090265f4d7884a29884beff6ea58774a34ce8fbeef9f81` |
+| `SCREEN_HOSTS` in [`wrangler.rollout.jsonc`](../../apps/sandbox/wrangler.rollout.jsonc) | `https://lending-shelf.inguz.space` | The same descriptor with `service: "LENDING"` |
+
+The conservative sandbox `wrangler.jsonc` keeps its empty mapping. These
+tracked rows establish configuration, not DNS, deployment or hosted acceptance.
+
 `SCOPE_INDEX_MODE=register` is a transition mode. A scope that the index
 does not know can still start, so that its own verified genesis registers
 it. `enforce` refuses an unknown existing scope before the Worker looks it
