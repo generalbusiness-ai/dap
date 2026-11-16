@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:84f17bd3e41ed15463a1240c4dc72d60fffe7aba","text":"Merge retired a covered predecessor; the successor is at packages/client/test/support/c4-now-model.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:87806182bb6be3d930eed71465cfd8520f33c7ef","text":"Merge retired a covered predecessor; the successor is at apps/room/page/assets.ts."}
