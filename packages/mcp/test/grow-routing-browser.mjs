@@ -140,6 +140,11 @@ try {
     assert.equal(day.signatures(), 1); assert.equal(session.scope.state.item(task.id).state, 'taken');
     // Reuse the existing current-revision, two-read and idle milestones around one native press.
     await page.waitForFunction(revision => proof.contexts.at(-1)?.structuredContent?.identity?.revision === revision, String(session.scope.state.item(task.id).revision));
+    // Every read disables the card's controls, so a press that starts during a background read misses the button.
+    // Start the press just after a read ends, at the start of an idle refresh interval.
+    const readsBefore = await page.evaluate(() => proof.calls.filter(call => call.name === 'view_read').length);
+    await page.waitForFunction(reads => proof.calls.filter(call => call.name === 'view_read').length > reads, readsBefore);
+    await app.locator('#card-root[aria-busy="false"]').waitFor();
     const pressedIdentity = await page.evaluate(() => proof.contexts.at(-1).structuredContent.identity);
     const reportButton = app.getByRole('button', { name: 'Report in chat', exact: true });
     const pressedButton = await reportButton.elementHandle(); assert.ok(pressedButton);
@@ -156,12 +161,16 @@ try {
       };
       const observer = new MutationObserver(removed); observer.observe(document, { subtree: true, childList: true });
       button.addEventListener('click', () => { state.clicks++; }, { passive: true });
+      state.downs = [];
+      for (const type of ['pointerdown', 'mousedown']) button.addEventListener(type, () => { state.downs.push(type); }, { passive: true });
       button.__connectedReport = { state, observer, removed, sectionState };
       return { label: state.label, disabled: state.disabled, sections: state.sections };
     });
     await page.mouse.move(pressedBox.x + pressedBox.width / 2, pressedBox.y + pressedBox.height / 2);
     await page.mouse.down();
     try {
+      assert.deepEqual(await pressedButton.evaluate(button => button.__connectedReport.state.downs), ['pointerdown', 'mousedown'],
+        'The press starts on the enabled Report button');
       const quiet = await page.evaluate(() => ({ contexts: proof.contexts.length, reads: proof.calls.filter(call => call.name === 'view_read').length }));
       await page.waitForFunction(reads => proof.calls.filter(call => call.name === 'view_read').length >= reads + 2, quiet.reads);
       await app.locator('#card-root[aria-busy="false"]').waitFor();
