@@ -1,6 +1,6 @@
 import { describe, expect, test, onTestFinished } from "vitest";
 import type { Entry, OperationId, ScopeId, Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, intentDigest, isSeed, LATE, scopeIdOf, seedDigest, timeMs, timeOf, within } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, intentDigest, isSeed, LATE, scopeIdOf, seedDigest, timeMs, timeOf, within } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { BASE_COHORT, DIRECTORY_OF, repositoryName } from "@generalbusiness/dap-platform";
 import { net } from "@generalbusiness/dap-scope/testing";
@@ -437,5 +437,140 @@ test("a retained selected install founds a second real room after its Signed win
     expect(sessionRegisterReads).toBeGreaterThan(0); expect(signedRegisterReads).toBe(0);
     expect((await first.store.config())!.repository).toEqual(saved.repository);
     Object.assign(context.task.meta, { lateClaim: { qualification: "Actual two-room CLI/Worker/Native creation and a consistent full replay that states the first room's creation result on the service's word; no retained copy or caller anchor supplies admission proof. TEST clock, scheduler, transport-option bridge and generated session secret. No hosted runtime or throughput claim.", register: R.name, first: firstDirectory, second: selected.repository!.directory.scope, sessionRegisterReads, signedRegisterReads, anchors, registerCreationResult: result.seq } });
+  } finally { await close(); }
+});
+
+// CR2: actual Native install/found/children/enrollment; scripted clock, finite
+// scheduler, explicit OutsideDouble host replies and presence-only ingress binding.
+test("the original installer creates a later hosted keys Register28 room after its read window without a summary", async context => {
+  if (lateClaimClock?.failed) return context.skip("Hosted late-claim fixture skipped: failed close retained ownership");
+  if (lateClaimClock !== null) throw Error("Late-claim fixture clock already owned");
+  const previous = net.clock, clock = new ScriptedClock(timeOf(Date.now())), owned = { failed: false };
+  lateClaimClock = owned; net.clock = clock;
+  const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
+  const life = nativeFixtureLifetime(owner, { finish: "external" });
+  let closing: Promise<void> | null = null;
+  const active = () => { if (lateClaimClock !== owned || net.clock !== clock) throw Error("Late-claim ownership changed"); };
+  const close = () => closing ??= (async () => {
+    const joined = await within(9, async () => {
+      for (let round = 0, count = 0; round < 64; round++) {
+        const before = life.platforms().length;
+        let callbacks = 0;
+        for (const node of life.platforms()) {
+          const value = await life.wait(() => (node.stub as unknown as { awaitScheduledCallbacks(): Promise<{ callbacks: number }> }).awaitScheduledCallbacks());
+          callbacks += value.callbacks; count += value.callbacks;
+          if (!Number.isSafeInteger(count) || count > 4096) throw Error("Late-claim callback bound exceeded");
+        }
+        if (!callbacks && life.platforms().length === before) return true;
+      }
+      throw Error("Late-claim callback rounds exceeded");
+    });
+    if (joined === LATE) throw Error("Late-claim close exceeded nine seconds; ownership retained");
+    active(); life.release(); active(); net.clock = previous; lateClaimClock = null;
+  })().catch(error => { if (lateClaimClock === owned) owned.failed = true; throw error; });
+  onTestFinished(close);
+  try {
+    const track = life.platform;
+    life.setHold(envelope => { if (isSeed(envelope.to)) track(scopeIdOf(envelope.to)); return false; });
+    const pause = async (waiting: readonly ScopeId[]) => {
+      for (const scope of waiting) track(scope);
+      for (let round = 0; round < 16; round++) {
+        const before = life.platforms().length;
+        let callbacks = 0;
+        for (const node of life.platforms()) callbacks += (await life.wait(() => (node.stub as unknown as { awaitScheduledCallbacks(): Promise<{ callbacks: number }> }).awaitScheduledCallbacks())).callbacks;
+        await driveFixture(life.platforms(), life.wait);
+        for (const node of life.platforms()) callbacks += (await life.wait(() => (node.stub as unknown as { awaitScheduledCallbacks(): Promise<{ callbacks: number }> }).awaitScheduledCallbacks())).callbacks;
+        if (!callbacks && life.platforms().length === before) return;
+      }
+      throw Error("Late-claim scheduler rounds exceeded");
+    };
+    let register: ScopeId | null = null, measure = false, registerSummaries = 0;
+    const foundPosts: SignedIntent[] = [];
+    const fetch: Fetch = async (url, init) => {
+      active();
+      const parsed = new URL(url);
+      if (measure && parsed.pathname === `/v1/scopes/${register}` && (init?.method ?? "GET") === "GET") registerSummaries++;
+      if (parsed.pathname.endsWith("/acts") && typeof init?.body === "string") {
+        const signed = (JSON.parse(init.body) as { signed?: SignedIntent }).signed;
+        if (signed?.intent.kind === "found") foundPosts.push(structuredClone(signed));
+      }
+      const { redirect: _redirect, credentials: _credentials, ...wire } = init as typeof init & { redirect?: string; credentials?: string };
+      // Presence-only admission stand-in, ruling812256f9 / creation-admission.test.ts118.
+      // The binding is never a provider: the owned OutsideDouble below supplies host replies.
+      return life.wait(() => route(new Request(url, { ...wire, redirect: "manual" }), env.PLATFORM,
+        { ...(register === null ? {} : { REGISTER_SCOPE: register }), SCOPE_INDEX: env.SCOPE_INDEX,
+          DEPLOYMENT: TEST_DEPLOYMENT, ARTIFACTS: {} }));
+    };
+    const first: Context = { store: memoryStore(), fetch, now: life.now, pause, trustedCreationService: { service: SERVICE, fetch } };
+    const run = (who: Context, ...args: string[]) => life.wait(() => command(who, args));
+    const ok = (value: Awaited<ReturnType<typeof run>>) => { expect(value.code, value.lines.join("\n")).toBe(0); };
+    expect([BASE_COHORT.register, BASE_COHORT.directory]).toEqual(["platform:register@28", "platform:directory@27"]);
+    ok(await run(first, "install", "--plan", SERVICE, "--cohort", "base", "--host", "artifacts",
+      "--namespace", "TEST-cr2", "--register-policy", "keys"));
+    const planned = (await first.store.config())!; register = planned.plan!.register;
+    const R = track(register), host = outsideOf(R.name);
+    life.wire(R.name, () => ({ outside: {
+      accepts: () => { life.active(); return host.accepts(); },
+      send: request => life.wait(async () => {
+        // This is an outside host answer, never a scripted Native judgment or receipt.
+        const input = request.origin.entry.input;
+        if (request.kind !== "create-repository" || input.type !== "act" || input.signed.intent.kind !== "found") {
+          throw new Error("Hosted claim fixture reached an unexpected outside operation");
+        }
+        const directory: Seed = { v: 1, kind: "directory", definition: BASE_COHORT.directory,
+          creator: request.scope, cause: intentDigest(input.signed.intent), ordinal: 0 };
+        host.answer(request.operation, request.attempt, { result: "confirmed", evidence: { basis: "own-answer",
+          body: { name: repositoryName(seedDigest(directory), request.attempt), id: `repo-${request.origin.entry.seq}` } } });
+        return host.send(request);
+      }),
+      late: deliver => { life.active(); host.late(deliver); },
+    } }));
+    ok(await run(first, "install", "--planned"));
+    const installed = (await first.store.config())!, installBytes = canonicalize(installed.plan!.founding);
+    expect(installed.plan!.definition).toBe("platform:register@28");
+    expect(installed.plan!.acknowledged!.receipt.fact.at).toEqual(await life.wait(() => R.at()));
+    expect(installed.plan!.acknowledged!.receipt.definition).toBe("platform:register@28");
+    expect(installed.plan!.founding.intent.fields).toMatchObject({ host: "artifacts", namespace: "TEST-cr2", policy: "keys" });
+    expect(installed.plan!.founding.intent.fields["founders"]).toContain(installed.plan!.founding.intent.actor);
+    ok(await run(first, "create", "hosted-first", "--handle", "@owner"));
+    const saved = (await first.store.config())!, secret = (await first.store.secret(saved.key))!;
+    expect(foundPosts).toHaveLength(1);
+    const originalFound = foundPosts[0]!;
+    const store = memoryStore(); await store.keep(saved.key, secret);
+    await store.save({ v: 2, service: saved.service, key: saved.key, register: saved.register!, plan: saved.plan! });
+    const second: Context = { ...first, store };
+    life.advance(16 * 60_000);
+    expect(timeMs(saved.plan!.founding.intent.notAfter)!).toBeLessThan(life.now());
+    expect(timeMs(originalFound.intent.notAfter)!).toBeLessThan(life.now());
+    measure = true;
+    const later = await run(second, "create", "hosted-later", "--handle", "@owner");
+    measure = false;
+    // Direct selector boundary: no fabricated Summary supplies the new found's basis.
+    expect(registerSummaries).toBe(0); ok(later);
+    const selected = (await second.store.config())!;
+    expect(selected.repository!.directory.scope).not.toBe(saved.repository!.directory.scope);
+    expect(selected.claim).toBeUndefined(); expect(saved.claim).toBeUndefined();
+    expect(foundPosts).toHaveLength(2);
+    expect(foundPosts[1]!.intent.expected).toEqual({ register: 1 });
+    expect(intentDigest(foundPosts[1]!.intent)).not.toBe(intentDigest(originalFound.intent));
+    expect(foundPosts[1]!.intent.actor).toBe(saved.plan!.founding.intent.actor);
+    const creates = (await life.wait(() => R.entries())).filter((entry): entry is Entry & { input: { type: "act" } } =>
+      entry.input.type === "act" && entry.input.signed.intent.kind === "found");
+    expect(creates).toHaveLength(2);
+    expect(creates[1]!.input.signed).toEqual(foundPosts[1]);
+    const D = track(selected.repository!.directory.scope), births = await life.wait(() => D.entries());
+    expect((await life.wait(() => D.summary())).value.definition).toBe("platform:directory@27");
+    expect(births[0]!.input).toMatchObject({ type: "genesis", seed: { definition: "platform:directory@27",
+      creator: saved.register, cause: intentDigest(foundPosts[1]!.intent) } });
+    expect(births[0]!.uses.map(use => use.fact.seq)).toContain(creates[1]!.seq);
+    expect(host.sent).toHaveLength(2);
+    expect(canonicalize((await first.store.config())!.plan!.founding)).toBe(installBytes);
+    expect(canonicalize((await second.store.config())!.plan!.founding)).toBe(installBytes);
+    expect((await first.store.config())!.repository).toEqual(saved.repository);
+    Object.assign(context.task.meta, { hostedLateClaim: {
+      qualification: "Actual CLI/Worker/Native keys Register28 install and two rooms; clock, finite scheduler, outside host answers and ARTIFACTS presence-only ingress setting are TEST stand-ins. No deployed host or live Worker claim.",
+      register: R.name, first: saved.repository!.directory.scope, second: selected.repository!.directory.scope,
+      registerSummaries, hostRequests: host.sent.length,
+    } });
   } finally { await close(); }
 });

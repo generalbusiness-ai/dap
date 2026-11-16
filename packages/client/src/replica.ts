@@ -175,6 +175,22 @@ export class Replica<D extends DeclaredDefinition> {
     return accepted ? this.signed(accepted.seq) : null;
   }
 
+  /** Positive source evidence from this checked journal, with revisions immediately after that entry. */
+  authorizationSource(actor: KeyId, key: string): { entry: SignedEntry; revisions: Readonly<Record<number, number>> } | null {
+    if (this.#stopped || !this.#definition) return null;
+    const entry = this.accepted(actor, key);
+    if (!entry) return null;
+    const state = new MemoryState();
+    const complete = this.#held.foldThrough(entry.fact.seq, (held, own) => {
+      applyEntry(state, this.#definition!, held.entry, held.hash, { bounds: PROPOSED_BOUNDS, own });
+    });
+    if (!complete) return null;
+    const scope = state.scope();
+    if (!scope || scope.at.scope !== entry.fact.at.scope || scope.at.genesis !== entry.fact.at.genesis
+      || scope.head.seq !== entry.fact.seq || scope.head.hash !== entry.fact.hash) return null;
+    return { entry: structuredClone(entry), revisions: Object.fromEntries(state.all().items.map(item => [item.id, item.revision])) };
+  }
+
   /** A refusal of class `protocol` stops the replica. Returns whether it stopped. */
   protocol(reason: RefusalReason): boolean {
     if (REFUSAL_CLASSES[reason] !== "protocol") return false;

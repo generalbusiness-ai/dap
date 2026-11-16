@@ -75,6 +75,25 @@ export class HeldEntries {
   }
   at(seq: number): HeldEntry | null { return Number.isSafeInteger(seq) && seq >= 0 ? this.#entries[seq] ?? null : null; }
 
+  /** Fold an already checked prefix with the same apply-before-put visibility as the live replica.
+   * The admitted genesis capability becomes visible only after its successful apply. */
+  foldThrough(seq: number, apply: (held: HeldEntry, own: Own) => void): boolean {
+    if (!Number.isSafeInteger(seq) || seq < 0 || seq >= this.#entries.length
+      || [...this.#lacking].some(lacking => lacking <= seq)) return false;
+    const prefix = new HeldEntries(this.entryBytes);
+    for (const held of this.#entries.slice(0, seq + 1)) {
+      const owned = structuredClone(held);
+      prefix.take();
+      try { apply(owned, prefix.own); } catch { return false; }
+      if (prefix.take().length) return false;
+      // These parsed rows and the sequence capability already passed the real fold/put path.
+      // Do not reconstruct bytes or admit a different genesis for this temporary prefix.
+      prefix.#entries.push(owned);
+      if (owned.entry.seq === 0) prefix.#sequence = this.#sequence;
+    }
+    return true;
+  }
+
   /** Keep the next entry, after the fold took it. `bytes`: the entry's bytes, as the log gave them. Only the genesis entry's are read, to admit the sequence. */
   put(held: HeldEntry, bytes: string): void {
     if (held.entry.seq !== this.#entries.length) throw new RangeError(`entry ${held.entry.seq} is not the next position ${this.#entries.length}`);

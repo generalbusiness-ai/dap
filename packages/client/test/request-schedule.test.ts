@@ -55,3 +55,22 @@ test("a suspended timer still rejects a reply at the thirty-second deadline", as
   await rejected;
   expect(s.timers.size).toBe(0);
 });
+
+test("a queued launch checks the original timeout or close after its await", async () => {
+  for (const terminal of ["deadline", "close"] as const) {
+    const s = scene(); let release!: () => void, started!: () => void, launches = 0;
+    const acquired = new Promise<void>(done => { release = done; });
+    const waiting = new Promise<void>(done => { started = done; });
+    const send = s.schedule.bounded(async current => {
+      started(); await acquired;
+      if (!current()) throw new Lost();
+      launches++; return "launched";
+    });
+    const rejected = expect(send).rejects.toBeInstanceOf(Lost);
+    await waiting;
+    if (terminal === "deadline") s.advance(30_000); else s.schedule.close();
+    await rejected; release(); await Promise.resolve(); await Promise.resolve();
+    expect(launches).toBe(0);
+    expect(s.timers.size).toBe(0);
+  }
+});

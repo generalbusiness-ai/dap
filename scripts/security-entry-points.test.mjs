@@ -212,7 +212,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:scopeRefArg": "54eb8fcb90bd3e5dbacec1eb71f853e5a3b578aae10d11a24d3c0ee0d69a88b3",
     "packages/mcp/src/service.ts:memberRefArg": "80b4a7634bee92e5b6d8b03dea6102cbf701fcab94198e54de219783961ee281",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "75b8ec6b08351957201fe0538d19871036ce72244051197723f581d2ffec74aa", // Public settle alone proves absence; every Card check keeps its Native answer path.
+    "packages/mcp/src/service.ts:McpService": "5b326661e862845861a3157315b42d596d4201f1e36446c703f27c34e617ac3a", // E4 forwards the actual fence-capable custody builder type; existing settle and Card paths stay unchanged.
     "packages/mcp/src/service.ts:commitIdFault": "36b75703f0eb36b5abca60906629f23df18a233d26c395f0b61c792eddabe405",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
@@ -249,7 +249,7 @@ const seals = {
   "packages/derive/src/validate/spelling.ts": "1c53e1ec4503e15be23d409b4862162a52f24f9e7e504a96922db90845a31a11", // F canonical identity/retained-origin boundary; actual maintained parser output.
   "packages/platform/src/evidence-incident-origin-v17.ts": "6d6e6af6897688829bd9710e0e3c736dce0028e56218970f5bce3efd5e266cf4", // F canonical identity/retained-origin boundary; actual maintained parser output.
   "packages/contract/src/catalog-vocabulary.ts": "458e087b56935e8c198016c476d11aff10ca24e9ab131d90d31fe282a6b731f1", // BR13 exact native question/relation owner; CF-1 adds the five new family pins to its questions; actual maintained parser output.
-  "packages/platform/src/version-questions.ts": "e13a31cfa361891571369a4b976abe053189285547b9238d2a80bfabb19fc2f0", // BR13 exact native question/relation owner; CF-1 adds the five new family pins and scopePublicationPrefixesDestination; actual maintained parser output.
+  "packages/platform/src/version-questions.ts": "1db22b0f15e32ac2f221530a7070f2c3ecf2a2db35503afe7ccfd81134b6e178", // CR2 adds the exact register28 installer-founder question; existing pin groups stay unchanged.
   "packages/platform/src/version-relations.ts": "1eb52555e06569c8f76d9de97a03717828996f2de7500c6c17e66413eef25f0a", // BR13 exact native question/relation owner; CF-1 adds the base cohort and the Membership 14 and Register 28 relations; actual maintained parser output.
   "packages/scope/src/http-stream.ts": "ac798ac542c6295bda6495ef9c3f46f2c78511bfb89b88ee4b2d4df7711e2168", // Retain the exact existing close capability on observed HTTP disconnect.
   "packages/bytes/src/session.ts": "71a16d6d2d02b2f424e711a80ca28fe8e10204d3daacc4d0cf23f85ebe80903e", // O3 OAuth authority, public-client policy or retained browser consent owner.
@@ -312,7 +312,7 @@ const seals = {
   "packages/scope/src/core.ts": namedOwners["packages/scope/src/core.ts"],
   "packages/scope/src/applications/act-admission.ts": "bd0aba219f02c47c143e8a86b4204e1923d7c48d10cd4a873c93a40987f2eea9", // Exact native provenance and current trust; actual maintained parser output.
   "packages/derive/src/genesis.ts": "d2a6165d424376a9057cc9390e721a1970341ad937d739a6f94eb9575d9f1cc2",
-  "packages/derive/src/judge.ts": "3186b50c96e8ac0fc18834d3a2320ea96b35b2f1e1162329ec9e869bf9ada188",
+  "packages/derive/src/judge.ts": "0336279062131ca01f725c4d2d4f29a5a9009abbe58bdb9583748e7853380997", // A1 derives expected names through shared expectedKeys without changing judgment order.
   "packages/scope/src/sessions.ts": "d701c671e110dae78d0b9a73cfd6229dc9b4a1bb89bdc97e76228c53168dd68d",
   "packages/scope/src/originals.ts": "f6091ac370a3346c493eb795ef72b2392217708a00492c59fcaf1f3df9903ac4", // Reviewed J1 owner: the member compare, the signature and actor check, and the caps.
   "packages/client/src/originals.ts": "4b77af1b7f1d97f573f072efbe278cd3fa38ee4809b031d648fa57c5d5d17cf4", // Reviewed J1 owner: the bytes that a second device verifies before it sends them again.
@@ -395,8 +395,8 @@ const pendingR8Seals = {
   "packages/client/src/describe.ts": "5fd433d592d3849baa7d88d1d831d23be4df073000a803931bf8dd44065bae5f", // Moved portable full/compact declaration and schema derivations; actual maintained parser output.
   "packages/client/src/mark-descriptions.ts": "7e22b5140e2a808e091b02d80acaa439f3d57d8c323a2480bfb994db9c063664", // Moved platform mark descriptions, own-property fallbacks and refusal names; actual maintained parser output.
   "packages/mcp/src/description-context.ts": "ef86ba4f8fc9e67f792d10510b9e9c20132b80c3d8915774fede7de714c4be17", // Private native-to-plain catalogue binding; NF-4 moved it to the client install module.
-  "packages/client/src/expected.ts": "d04561ddd81a00bacfac0cfc175104a89e3ebe499c1994cf0f81af4f6e4f66ec", // Moved prototype-safe expected/via subject resolution; actual maintained parser output.
-  "packages/cli/src/claim.ts": "e5799b13266b9bb8efdd1f765916213b91379385218b371cde8ab3efcd8bb3c8", // Remove the retired v1 offer field; current founding, routes and Native authority stay fixed.
+  "packages/client/src/expected.ts": "d510e63f137da02563758e525a87e4db5254f93ee692d3d89ed4952819ce6ecf", // A1 shares expectedKeys while preserving sparse, prototype-safe subject resolution.
+  "packages/cli/src/claim.ts": "99d3f75a1caf5b86d6f8a5f2d6fa94ea2adf26d9ba33c05196687aa98757f4dc", // CR2 admits the signed original installer-founder at register28; legacy binding25 keeps host-none limits.
   "packages/cli/src/command-support.ts": "d583fdc077383d497a92b4ec452dc4c316da1b6b665a73c917d2c5cd3407af1c", // Moved shared read, session and signing support; actual maintained parser output.
   "packages/cli/src/read-session-cache.ts": "12a5cf131a166001f66672bc3c4b6daf70070645255c61db7b93f18b6fbb83b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/verification.ts": "4875139168f453ff917ff565deefccc60b377ab529b42a236c6025bc7bf429d9", // Reviewed unique-entry ledger, source conflicts and owner retirement; actual maintained output.

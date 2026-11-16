@@ -8,7 +8,7 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Entry, type LogPage, type MemberRef, type Read } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, intentDigest, textDigest } from "@generalbusiness/dap-bytes";
-import { validateDefinition, type PlatformRules, type RuleGiven } from "@generalbusiness/dap-derive";
+import { applyEntry, MemoryState, validateDefinition, type PlatformRules, type RuleGiven } from "@generalbusiness/dap-derive";
 import { Scope, changedDraft, directory, keys, lane, laneDefinition, valid, type Actor } from "@generalbusiness/dap-derive/testing";
 import { gateRules, gateWith } from "../../derive/test/fixtures-marks.ts";
 import { M as marks } from "../../derive/test/definition-corpus/forms-settles-data.ts";
@@ -484,8 +484,38 @@ describe("the catch sites of Own: a replica that lacks a held entry reads not-ju
 });
 
 test("the package entry exports no test seam", () => {
-  expect(Object.keys(entry).sort()).toEqual(["Replica", "UnheldEntry", "intentMeaning", "judged", "requestStatus", "scopeClient", "scopeReplica"]);
+  expect(Object.keys(entry).sort()).toEqual(["AUTHORIZATION_VERSIONS_MOST", "AuthorizationError", "Replica", "UnheldEntry", "actVersion", "intentMeaning", "judged", "requestStatus", "scopeClient", "scopeReplica", "signingPermitted"]);
   for (const internal of ["request", "clientReplica", "clientIdle", "ScopeClient"]) expect(entry).not.toHaveProperty(internal);
   expect(entry).not.toHaveProperty("LogProtocolError");
   expect(rootEntry).not.toHaveProperty("LogProtocolError");
+});
+
+
+test("a checked source prefix exposes only successfully applied earlier rows and records caught unheld reads", async () => {
+  const s = laneScope(), { replica } = await started(s), held = seamOf(replica).held;
+  try {
+    const state = new MemoryState();
+    let first: typeof held.own | null = null, visits = 0;
+    const complete = held.foldThrough(s.head.seq, (row, own) => {
+      if (!first) first = own;
+      expect(own).toBe(first);
+      expect(own(row.entry.seq)).toBeNull();
+      expect(own(row.entry.seq + 1)).toBeNull();
+      expect(own.sequence!()).toBe(row.entry.seq === 0 ? null : held.own.sequence!());
+      if (row.entry.seq > 0) expect(own(row.entry.seq - 1)).toEqual(s.entries[row.entry.seq - 1]);
+      applyEntry(state, s.definition, row.entry, row.hash, { bounds: PROPOSED_BOUNDS, own });
+      expect(state.scope()!.head).toEqual({ seq: row.entry.seq, hash: row.hash });
+      visits++;
+    });
+    expect(complete).toBe(true); expect(visits).toBe(s.entries.length);
+    expect(state.all()).toEqual(s.state.all());
+    let caught = false;
+    expect(held.foldThrough(s.head.seq, (_row, own) => {
+      try { own.retained!({ fact: s.fact(1), content: s.fact(1).hash, kind: "lane" }); }
+      catch (error) { expect(error).toBeInstanceOf(UnheldEntry); caught = true; }
+    })).toBe(false);
+    expect(caught).toBe(true); expect(held.take()).toEqual([]);
+    held.lack(1);
+    expect(held.foldThrough(s.head.seq, () => { expect.fail("a lacking prefix supplies no source evidence"); })).toBe(false);
+  } finally { replica.close(); }
 });

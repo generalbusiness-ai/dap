@@ -28,6 +28,7 @@ import { covers } from "./grant.ts";
 import type { Judging, ReplayAssumptions } from "./guards.ts";
 import { judgmentFacts, readJudgmentFacts, replayContext, verifiedContext } from "./operand.ts";
 import { alsoItems, giving, type ItemSettlement } from "./handlers.ts";
+import { expectedKeys } from "./expected.ts";
 import { actionOf, atHand, atHandByRows, fieldOutsideType, grantByRule, placeWithoutValue, placesOf, retainedOf, RuleFault, selectedBy, unjudged, type JudgedInput, type ValueRead } from "./marks.ts";
 import { listedBy, rowsOfAct, settle, type Listed, type Needed, type Observing, type Settled } from "./observes.ts";
 import type { Item, StateView } from "./state.ts";
@@ -369,7 +370,6 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
 
   // Section 6.4: `on` and each `also` name are resolved to local items before any guard or effect.
   const subjects = new Map<string, Item>();
-  const expects: string[] = [];
   if (act.step === "open" || act.on === null) {
     if (intent.on !== null) return refused("bad-intent", "this act names no item in `on`");
   } else {
@@ -379,7 +379,6 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
     if (frame.references) item = frame.references.lookup(view, { at: "subject", name: "on", binding: "on", item }, item.id, { type: "item", of: act.on });
     if (item?.type !== act.on) return refused("no-item", `on names no ${act.on}`);
     subjects.set("on", item);
-    if (act.step === "transition") expects.push("on");
   }
   // An `also` name is unbound when its field is absent, its slot is empty or its type has no item yet. It is then no subject, and
   // `expected` has no key for it. A transition's primary item exists before the entry, so a `via` may read its slots.
@@ -389,8 +388,8 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
   if (!also.ok) return refused("no-item", also.detail);
   for (const [name, item] of also.items) {
     subjects.set(`also.${name}`, item);
-    if (!also.marked.has(name)) expects.push(name);
   }
+  const expects = expectedKeys(act, also.items.map(([name]) => name).filter(name => !also.marked.has(name)));
   // No aliases: each subject is one distinct item, so its expected revision is checked once and it rises once.
   if (new Set([...subjects.values()].map((i) => i.id)).size !== subjects.size) return refused("alias", "two names resolve to one item");
   if (Object.keys(intent.expected).length !== expects.length || expects.some((k) => !Object.hasOwn(intent.expected, k))) return refused("bad-intent", `expected has one key for each of: ${expects.join(", ")}`);

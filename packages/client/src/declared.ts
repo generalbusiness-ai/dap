@@ -108,6 +108,8 @@ export interface FieldShapeOptions {
   member?: (handle: string) => MemberRef | null;
   texts?: ReadonlyMap<string, string>;
   platformMarks?: true;
+  /** Non-signing act validation only. The instance registered these exact owned symbolic item objects. */
+  symbolicItems?: ReadonlySet<object>;
 }
 
 interface Shaping {
@@ -144,7 +146,8 @@ function shaped(type: ShapeFieldType, value: unknown, path: readonly (string | n
       if (found) return found;
       return isMemberRef(value) ? value : not("member", "is not a member reference");
     }
-    case "item": return isLocalId(value) ? value : not("item", "is not a local item ID");
+    case "item": return isLocalId(value) ? value : value !== null && typeof value === "object" && at.options.symbolicItems?.has(value)
+      ? value as FieldValue : not("item", "is not a local item ID");
     case "fact": return isFactRef(value) ? value : not("fact", "is not a fact reference");
     case "reference": return isReference(value, type.fragment) ? value : not("reference", "is not a document or entry reference with a bounded fragment");
     // A reference names no kind; the declared field fixes it.

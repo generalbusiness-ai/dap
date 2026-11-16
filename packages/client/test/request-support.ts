@@ -1,14 +1,20 @@
 /** The real in-memory judge and fold behind a scripted transport, with independent scope and client clocks. */
-import type { Answer, Beside, Grant, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Answer, Beside, Digest, Grant, Intent, SignedIntent } from "@generalbusiness/dap-contract";
+import { expect } from "vitest";
 import { intentDigest, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { Scope, keys } from "@generalbusiness/dap-derive/testing";
 import { DeclaredHandle } from "../src/declared.ts";
 import { secretSigner } from "../src/intent.ts";
 import type { ClientClock } from "../src/request-schedule.ts";
-import { Feed, citing, citingDefinition, served } from "./replica-support.ts";
+import { Feed, citingDefinition, served } from "./replica-support.ts";
+import { envelopeOf, memoryStore, type StoredCustodyRecord } from "../src/custody.ts";
+import { signingPermitted } from "../src/authorization.ts";
 
-export function requestScene() {
-  const scope = new Scope(citingDefinition);
+export const REQUEST_DESCRIPTOR: Digest = "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd";
+
+export function requestScene(definition = citingDefinition) {
+  const scope = new Scope(definition);
+  const declared = definition.declared;
   let now = Date.parse(scope.now), timerId = 0;
   const timers = new Map<number, { at: number; run(): void }>();
   const clock: ClientClock = { now: () => now, set(run, delay) { const id = timerId++; timers.set(id, { at: now + delay, run }); return id; },
@@ -18,6 +24,7 @@ export function requestScene() {
   const actor = keys.rita;
   const actual = secretSigner(actor.secret);
   let signerFailure = false;
+  const legacy = new Map<Digest, number>();
   let inspectCopy: ((signed: SignedIntent) => Promise<void>) | null = null;
   const signer = { key: actor.key, sign: async (bytes: Uint8Array) => {
     if (signerFailure) throw new Error("scripted signer failure");
@@ -39,7 +46,7 @@ export function requestScene() {
       default: return { answer: "unavailable", reason: "unavailable" };
     }
   };
-  const base = served(scope, citing);
+  const base = served(scope, declared);
   const transport = new Proxy(base.handle.scope, { get(target, name) {
     if (name === "submit") return async (signed: SignedIntent, _grants: readonly Grant[], beside: Beside = {}): Promise<Answer> => {
       copies.push(signed);
@@ -58,7 +65,7 @@ export function requestScene() {
     const value = Reflect.get(target, name, target) as unknown;
     return typeof value === "function" ? value.bind(target) : value;
   } });
-  const handle = new DeclaredHandle(transport, scope.at, citing, scope.definition.digest), feed = new Feed();
+  const handle = new DeclaredHandle(transport, scope.at, declared, scope.definition.digest), feed = new Feed();
   const advance = (ms: number) => {
     now += ms;
     for (;;) {
@@ -67,11 +74,45 @@ export function requestScene() {
       timers.delete(due[0]); due[1].run();
     }
   };
-  return { scope, handle, feed, actor, signer, clock, timers, copies, held, serving: base.serving,
+  return { scope, handle, feed, actor, signer, clock, timers, copies, held, legacy, serving: base.serving,
+    seedLegacy(signed: SignedIntent) { const digest = intentDigest(signed.intent); legacy.set(digest, (legacy.get(digest) ?? 0) + 1); },
     inspectCopies: (inspect: (signed: SignedIntent) => Promise<void>) => { inspectCopy = inspect; },
     signs: () => signs, now: () => now, advance,
     scopeAdvance: (ms: number) => { scope.now = timeOf(Date.parse(scope.now) + ms); },
     mode: (next: typeof mode) => { mode = next; }, failSigner: (fail: boolean) => { signerFailure = fail; },
     deliverHeld: () => { const copy = held.shift(); return copy ? apply(copy.signed, copy.beside) : null; },
   };
+}
+
+/** Check actual custody metadata, including earlier closed envelopes whose bytes were legitimately dropped. */
+export async function checkSigningAuthorizations(scene: ReturnType<typeof requestScene>, store: ReturnType<typeof memoryStore>): Promise<void> {
+  const rows = await store.authorizations.read(scene.signer.key, scene.handle.at), legacy = new Map<Digest, number>();
+  for (const text of store.records.values()) {
+    const record = JSON.parse(text) as StoredCustodyRecord;
+    if (record.v !== 2) throw new Error("the instance wrote a non-v2 record");
+    if (record.identity.signer !== scene.signer.key) continue;
+    for (const [index, signing] of record.signings.entries()) {
+      const reference = signing.authorization;
+      if (!reference) {
+        const count = (legacy.get(signing.intent) ?? 0) + 1; legacy.set(signing.intent, count);
+        expect(count, "only a declared seeded signing may be legacy").toBeLessThanOrEqual(scene.legacy.get(signing.intent) ?? 0);
+        continue;
+      }
+      const authorization = rows.find(row => row.key === reference.identity.key);
+      if (!authorization) expect.fail("a referenced authorization must remain retained");
+      expect(reference.identity.owner).toBe(record.identity.signer);
+      expect(reference.identity.key).toBe(record.identity.key);
+      expect(authorization.definition).toEqual(record.binding.pinned);
+      const permission = authorization.permissions[reference.permission];
+      if (!permission) expect.fail("a referenced pre-sign permission must remain retained");
+      const { beside: _beside, ...act } = permission.materialized;
+      const intent: Intent = { v: 1, to: authorization.scope, actor: authorization.owner,
+        kind: act.kind, on: act.on, fields: { ...act.fields }, expected: { ...act.expected },
+        idempotencyKey: authorization.key, notAfter: authorization.versions[reference.position]!.deadline };
+      expect(intentDigest(intent)).toBe(signing.intent);
+      expect(signingPermitted(authorization, reference, { intent })).toBe(true);
+      const envelope = envelopeOf(record, index);
+      if (envelope) expect(signingPermitted(authorization, reference, envelope.signed)).toBe(true);
+    }
+  }
 }

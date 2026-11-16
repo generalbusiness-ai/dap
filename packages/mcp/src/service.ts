@@ -854,7 +854,7 @@ export class McpService {
    * keeps no copy, nothing is sent. A stop after the keep ends the row, and the scope's answer ends the row. A service with no
    * person's session takes the plain path, and a hosted agent's service always does.
    */
-  async #sendAct(s: Snapshot, membership: ScopeRef | null, scope: ScopeId, identity: Identity, meaning: Digest, build: () => Promise<{ binding: CustodyRecord["binding"]; envelope: Envelope }>, options: { resubmit?: true; notAfter: string; bytes: number }, dispatch?: DispatchContext): Promise<Sent> {
+  async #sendAct(s: Snapshot, membership: ScopeRef | null, scope: ScopeId, identity: Identity, meaning: Digest, build: Parameters<Custody["send"]>[2], options: { resubmit?: true; notAfter: string; bytes: number }, dispatch?: DispatchContext): Promise<Sent> {
     const deliver = async (envelope: Envelope): Promise<Answer> => {
       const finish = dispatch ? await dispatch.prepare(identity, this.#port.dispatchSource ?? null) : null;
       this.#finishDispatch(finish);

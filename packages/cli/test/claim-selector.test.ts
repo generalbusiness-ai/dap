@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import type { Receipt, SignedIntent } from "@generalbusiness/dap-contract";
+import type { KeyId, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import { secretSigner, signedIntent, type Fetch } from "@generalbusiness/dap-client";
 import { command, memoryStore, type Context } from "../src/index.ts";
@@ -10,7 +10,8 @@ test.each([
   { name: "open unpublished", binding: false, policy: "open", selects: true },
   { name: "open repository-binding", binding: true, policy: "open", selects: true },
   { name: "keys repository-binding operator", binding: true, policy: "keys", selects: true },
-  { name: "keys unpublished operator", binding: false, policy: "keys", selects: false },
+  // The default no-host keys plan is Register28, whose installer-founder selector permits it.
+  { name: "keys unpublished operator", binding: false, policy: "keys", selects: true },
 ])("$name: expired custody selects only the supported initial revision; mismatched custody keeps the actual read path", async ({ binding, policy, selects }) => {
   const service = "https://selector.test", store = memoryStore();
   let now = Date.parse("2099-01-01T00:00:00Z"), summaries = 0;
@@ -90,5 +91,109 @@ test.each([
     expect((await command(ctx, ["create", "not-a-founder", "--handle", "@owner"])).lines.join("\n")).toContain("forbidden");
     expect(summaries).toBe(3);
     expect(submitted).toHaveLength(1);
+  }
+});
+
+/** These additional cases keep SCRIPTED service acknowledgements and replies.
+ * Real signatures/custody bind local selection; no case claims Native installation authority. */
+async function hostedSelectorFixture() {
+  const service = "https://hosted-selector.test", store = memoryStore();
+  let now = Date.parse("2099-01-01T00:00:00Z"), summaries = 0;
+  let receipt!: Receipt;
+  const submitted: SignedIntent[] = [];
+  const fetch: Fetch = async (url, init) => {
+    const path = new URL(url).pathname;
+    if (path === "/v1/scopes" && init?.method === "POST") {
+      const given = JSON.parse(init.body!) as { creation: SignedIntent; definition: Receipt["definition"] };
+      const genesis = textDigest("SCRIPTED Register28 acknowledged genesis");
+      const scope = scopeIdOf({ v: 1, kind: "register", definition: given.definition, creator: null,
+        cause: intentDigest(given.creation.intent), ordinal: 0 });
+      receipt = { fact: { at: { scope, genesis }, seq: 0, hash: genesis }, definition: given.definition,
+        intent: intentDigest(given.creation.intent), effects: [], sends: [], epoch: 0 };
+      return Response.json({ answer: "accepted", receipt });
+    }
+    if (path.endsWith("/acts")) {
+      submitted.push((JSON.parse(init!.body!) as { signed: SignedIntent }).signed);
+      return Response.json({ answer: "refused", reason: "unauthorized", judgedAt: { seq: 0, hash: receipt.fact.hash } });
+    }
+    summaries++;
+    return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
+  };
+  const ctx: Context = { store, fetch, now: () => now, trustedCreationService: { service, fetch } };
+  expect((await command(ctx, ["install", "--plan", service, "--cohort", "base", "--host", "artifacts",
+    "--namespace", "TEST-cr2", "--register-policy", "keys"])).code).toBe(0);
+  expect((await command(ctx, ["install", "--planned"])).code).toBe(0);
+  const installed = (await store.config())!, plan = installed.plan!;
+  expect(plan.definition).toBe("platform:register@28");
+  const operator = secretSigner((await store.secret("operator"))!);
+  expect(plan.founding.intent.actor).toBe(operator.key);
+  expect(plan.founding.intent.fields["founders"]).toEqual([operator.key]);
+  const refound = async (founders: readonly KeyId[]) => {
+    // The normal option always names the installer. This explicit alternative is SCRIPTED custody only.
+    const founding = await signedIntent(operator, { to: null, kind: "install", fields: {
+      ...plan.founding.intent.fields, founders: [...founders],
+    } }, { now });
+    const register = scopeIdOf({ v: 1, kind: "register", definition: plan.definition, creator: null,
+      cause: intentDigest(founding.intent), ordinal: 0 });
+    const acknowledged = { ...plan.acknowledged!, receipt: { ...receipt, intent: intentDigest(founding.intent),
+      fact: { ...receipt.fact, at: { ...receipt.fact.at, scope: register } } } };
+    const attempted = textDigest(canonicalize({ service, operator: operator.key, founding, definition: plan.definition, register }));
+    const current = { ...installed, register: acknowledged.receipt.fact.at,
+      plan: { ...plan, founding, register, attempted, acknowledged } };
+    await store.save(current);
+    return current;
+  };
+  return { ctx, store, installed, operator, submitted, refound, summaries: () => summaries,
+    advance: () => { now += 16 * 60_000; }, now: () => now };
+}
+
+test("a second signed founder without install custody keeps the Register28 summary read", async () => {
+  const f = await hostedSelectorFixture(), secret = new Uint8Array(32).fill(19), second = secretSigner(secret);
+  const installed = await f.refound([f.operator.key, second.key]);
+  expect(installed.plan!.founding.intent.fields["founders"]).toContain(second.key);
+  expect(installed.plan!.founding.intent.actor).not.toBe(second.key);
+  const store = memoryStore(); await store.keep("operator", secret);
+  await store.save({ v: 2, service: installed.service, key: "operator", register: installed.register! });
+  expect((await store.config())!.plan).toBeUndefined();
+  f.advance();
+  const result = await command({ ...f.ctx, store }, ["create", "second-founder", "--handle", "@second"]);
+  expect(f.summaries()).toBe(1); expect(f.submitted).toHaveLength(0);
+  expect((await store.config())!.claim).toBeUndefined();
+  expect(result.code).toBe(1); expect(result.lines.join("\n")).toContain("forbidden");
+  expect(canonicalize((await f.store.config())!.plan!.founding)).toBe(canonicalize(installed.plan!.founding));
+});
+
+test("an installer outside the signed founders keeps the Register28 summary read", async () => {
+  const f = await hostedSelectorFixture(), other = secretSigner(new Uint8Array(32).fill(23));
+  const installed = await f.refound([other.key]), original = canonicalize(installed.plan!.founding);
+  expect(installed.plan!.founding.intent.actor).toBe(f.operator.key);
+  expect(installed.plan!.founding.intent.fields["founders"]).not.toContain(f.operator.key);
+  f.advance();
+  const result = await command(f.ctx, ["create", "excluded-installer", "--handle", "@owner"]);
+  // The founder-membership control must fail these transport assertions before any refusal wording.
+  expect(f.summaries()).toBe(1); expect(f.submitted).toHaveLength(0);
+  expect((await f.store.config())!.claim).toBeUndefined();
+  expect(result.code).toBe(1); expect(result.lines.join("\n")).toContain("forbidden");
+  expect(canonicalize((await f.store.config())!.plan!.founding)).toBe(original);
+});
+
+test("a mismatched Register28 receipt or attempted plan keeps the actual summary read", async () => {
+  const f = await hostedSelectorFixture(), valid = f.installed, plan = valid.plan!, original = canonicalize(plan.founding);
+  f.advance();
+  expect(timeMs(plan.founding.intent.notAfter)!).toBeLessThan(f.now());
+  for (const fault of ["receipt", "attempted"] as const) {
+    // Each row starts from the independently acknowledged valid plan, not the preceding fault.
+    await f.store.save(valid);
+    const changed = fault === "receipt" ? { ...plan, acknowledged: { ...plan.acknowledged!, receipt: {
+      ...plan.acknowledged!.receipt, fact: { ...plan.acknowledged!.receipt.fact,
+        at: { ...plan.acknowledged!.receipt.fact.at, genesis: textDigest("SCRIPTED other incarnation") } },
+    } } } : { ...plan, attempted: textDigest("SCRIPTED other attempted install") };
+    await f.store.save({ ...valid, plan: changed });
+    const before = f.summaries();
+    const result = await command(f.ctx, ["create", `mismatch-${fault}`, "--handle", "@owner"]);
+    expect(f.summaries()).toBe(before + 1); expect(f.submitted).toHaveLength(0);
+    expect((await f.store.config())!.claim).toBeUndefined();
+    expect(result.code).toBe(1); expect(result.lines.join("\n")).toContain("forbidden");
+    expect(canonicalize((await f.store.config())!.plan!.founding)).toBe(original);
   }
 });

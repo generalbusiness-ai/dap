@@ -29,7 +29,7 @@ export class RequestSchedule {
   cancel(key: object): void { this.#due.delete(key); this.#arm(); }
 
   /** Ignore every reply after the deadline or close. No second timer accompanies an in-flight send. */
-  bounded<T>(work: () => Promise<T>): Promise<T> {
+  bounded<T>(work: (current: () => boolean) => Promise<T>): Promise<T> {
     if (this.#closed) return Promise.reject(new Lost());
     const key = {}, deadline = this.clock.now() + 30_000;
     return new Promise<T>((resolve, reject) => {
@@ -44,7 +44,8 @@ export class RequestSchedule {
       const stop = (): void => finish(() => reject(new Lost()));
       this.#pending.add(stop);
       this.at(key, deadline, stop);
-      Promise.resolve().then(() => { if (!active) throw new Lost(); return work(); }).then(value => finish(() => this.clock.now() >= deadline ? reject(new Lost()) : resolve(value)), error => finish(() => reject(error)));
+      const current = () => active && !this.#closed && this.clock.now() < deadline;
+      Promise.resolve().then(() => { if (!current()) throw new Lost(); return work(current); }).then(value => finish(() => this.clock.now() >= deadline ? reject(new Lost()) : resolve(value)), error => finish(() => reject(error)));
     });
   }
 

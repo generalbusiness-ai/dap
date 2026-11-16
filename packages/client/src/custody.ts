@@ -75,6 +75,8 @@ import { REFUSAL_CLASSES, canonicalize, digestBytes, intentDigest, isDefinitionN
 import { ANSWERS } from "./answers.ts";
 import { sendableAt } from "./originals.ts";
 import { StoreFormatError } from "./store-format-error.ts";
+import { authorizationBuildFence, memoryAuthorizations, type AuthorizationPort, type CustodyBuildFence } from "./authorization-store.ts";
+import type { AuthorizationPosition, SigningAuthorization } from "./authorization.ts";
 
 export const UNRESOLVED_MOST = 256;
 export const OUTCOMES_INLINE = 64;
@@ -105,6 +107,18 @@ export interface Envelope {
   beside: Beside;
   creation?: { definition: DeclaredDefinition | Digest | PlatformDefinition; definitions: readonly DeclaredDefinition[] };
 }
+
+/** The exact occurrence selected while custody owns its identity. Content digests do not name occurrences. */
+export interface DeliveryOccurrence {
+  readonly identity: Identity;
+  readonly attempt: number;
+  readonly signing: number;
+  readonly intent: Digest;
+  readonly authorization?: SigningAuthorization;
+}
+/** A new gesture differs from resuming a previously retained position. */
+export type AuthorizationSelection = { readonly kind: "gesture" }
+  | { readonly kind: "position"; readonly reference: AuthorizationPosition };
 
 /**
  * `settled` is the terminal phase of a record that holds only standalone capability steps (steps with no act): every step it
@@ -147,6 +161,8 @@ export interface Step {
  * signing cannot hold the key.
  */
 export interface CustodySigning {
+  /** Absent only for custody created outside the authorization instance (legacy). */
+  authorization?: SigningAuthorization;
   intent: Digest;
   meaning: Digest;
   notAfter: Timestamp;
@@ -383,7 +399,7 @@ function deathIn(outcomes: readonly StoredOutcome[]): CustodySigning["dead"] {
   return death;
 }
 
-const signingOf = (envelope: Envelope, meaning: Digest): CustodySigning => ({ intent: intentDigest(envelope.signed.intent), meaning, notAfter: envelope.signed.intent.notAfter });
+const signingOf = (envelope: Envelope, meaning: Digest, authorization?: SigningAuthorization): CustodySigning => ({ intent: intentDigest(envelope.signed.intent), meaning, notAfter: envelope.signed.intent.notAfter, ...(authorization ? { authorization: structuredClone(authorization) } : {}) });
 
 /** A version 1 record as version 2: one signing, which holds every outcome. A refusal that killed it marks it dead; a mismatch closes it. */
 function upgraded(stored: StoredCustodyRecord): CustodyRecord {
@@ -414,10 +430,17 @@ export interface CustodyMetrics {
 }
 
 type Read = (envelope: Envelope) => Promise<Receipt | ArchivedSettlement | null>;
-type Build = () => Promise<{ binding: BindingRecord; envelope: Envelope }>;
+type Build = (fence: CustodyBuildFence) => Promise<{ binding: BindingRecord; envelope: Envelope; authorization?: SigningAuthorization }>;
 
 export class Custody {
   constructor(readonly store: CustodyStore, private readonly now: () => string, private readonly metrics?: CustodyMetrics) {}
+
+  /** Called only from the exclusive section that also writes the resulting custody signing. */
+  async #build(build: Build): ReturnType<Build> {
+    const port = (this.store as CustodyStore & { authorizations?: AuthorizationPort }).authorizations;
+    const held = authorizationBuildFence(port);
+    try { return await build(held.fence); } finally { await held.close(); }
+  }
 
   async #locked<T>(id: string, notAfter: string, work: () => Promise<T>): Promise<T> {
     const release = await this.store.lock(id, notAfter);
@@ -570,16 +593,19 @@ export class Custody {
       // A store with a budget admits the new identity's completion need now, before anything is signed.
       await this.store.admit?.(id, bytes + RECORD_OVERHEAD);
       try {
-        const { binding, envelope } = await build();
+        const { binding, envelope, authorization } = await this.#build(build);
         const at = this.now();
-        const record: CustodyRecord = { v: 2, identity, binding, meaning, envelope, signings: [signingOf(envelope, meaning)], phase: "prepared", outcomes: [], count: 0, attempt: 1, steps: {}, created: at, updated: at, ...(standalone ? { standalone: true as const } : {}) };
+        const record: CustodyRecord = { v: 2, identity, binding, meaning, envelope, signings: [signingOf(envelope, meaning, authorization)], phase: "prepared", outcomes: [], count: 0, attempt: 1, steps: {}, created: at, updated: at, ...(standalone ? { standalone: true as const } : {}) };
         const size = envelopeBytes(record);
         if (size + RECORD_OVERHEAD > RECORD_BYTES) throw new CustodyError({ held: "full", reason: "bytes", bytes: size });
         await this.#write(id, record, false, null);
         return record;
       } catch (error) {
-        // No record came of it: what was admitted for this identity is released.
-        await this.store.unadmit?.(id).catch(() => undefined);
+        // A write may have persisted before throwing. Only a proven absence
+        // releases admission; an unreadable result keeps the reservation.
+        try {
+          if (await this.#read(id) === null) await this.store.unadmit?.(id).catch(() => undefined);
+        } catch { /* Keep the reservation and the original preparation error. */ }
         throw error;
       }
     });
@@ -616,11 +642,11 @@ export class Custody {
     const keptBytes = envelopeBytes(record) - (replaced ? envelopeBytes(record.envelope) : 0);
     if (keptBytes + bytes + RECORD_OVERHEAD > RECORD_BYTES) throw new CustodyError({ held: "full", reason: "bytes", bytes });
     const sign = async (): Promise<CustodyRecord> => {
-      const { binding, envelope } = await build();
+      const { binding, envelope, authorization } = await this.#build(build);
       const next: CustodyRecord = structuredClone(record);
       const latest = next.signings.at(-1)!;
       if (!latest.closed) latest.envelope = next.envelope;
-      next.signings.push(signingOf(envelope, meaning));
+      next.signings.push(signingOf(envelope, meaning, authorization));
       Object.assign(next, { binding, envelope, meaning, phase: "sent", attempt: next.attempt + 1, updated: this.now() });
       const size = envelopeBytes(next);
       if (size + RECORD_OVERHEAD > RECORD_BYTES) throw new CustodyError({ held: "full", reason: "bytes", bytes: size });
@@ -648,12 +674,23 @@ export class Custody {
    * behaves as without it. `read` asks the scope for the earlier signings when
    * the new signing is answered `mismatch`.
    */
-  async send(identity: Identity, meaning: Digest, build: Build, deliver: (envelope: Envelope) => Promise<Answer>, options: { resubmit?: boolean; resign?: boolean; read?: Read; notAfter: string; bytes?: number }): Promise<Sent> {
+  async send(identity: Identity, meaning: Digest, build: Build, deliver: (envelope: Envelope, occurrence: DeliveryOccurrence) => Promise<Answer>, options: { resubmit?: boolean; resign?: boolean; read?: Read; notAfter: string; bytes?: number; authorization?: AuthorizationSelection }): Promise<Sent> {
+    identity = structuredClone(identity);
+    options = { ...options, ...(options.authorization ? { authorization: structuredClone(options.authorization) } : {}) };
     const id = identityId(identity);
     return this.#locked(id, options.notAfter, async () => {
-      const existing = options.resign ? await this.#read(id) : null;
+      const existing = options.resign || options.authorization ? await this.#read(id) : null;
+      if (existing && options.authorization && TERMINAL.has(existing.phase) && existing.phase !== "refused") {
+        const last = await this.decided(id, existing);
+        if (!last) throw new CustodyError({ held: "unreadable" });
+        return sentOf(existing, last);
+      }
+      const latestAuthorization = existing?.signings.at(-1)?.authorization;
+      const samePosition = options.authorization?.kind === "position" && latestAuthorization
+        && canonicalize({ identity: latestAuthorization.identity, position: latestAuthorization.position }) === canonicalize(options.authorization.reference);
+      const replace = options.authorization ? !samePosition : existing && this.#resigns(existing);
       let record: CustodyRecord;
-      if (existing && this.#resigns(existing)) {
+      if (existing && replace) {
         record = await this.#resigned(id, existing, meaning, build, options.bytes ?? 0);
       } else {
         record = await this.#kept(id, identity, meaning, build, options.bytes ?? 0);
@@ -680,9 +717,12 @@ export class Custody {
         }
       }
       const signing = record.signings.length - 1;
+      const occurrence: DeliveryOccurrence = structuredClone({ identity: record.identity, attempt: record.attempt,
+        signing, intent: record.signings[signing]!.intent,
+        ...(record.signings[signing]!.authorization ? { authorization: record.signings[signing]!.authorization } : {}) });
       let answer: Answer;
       try {
-        answer = await this.#dispatch(() => deliver(record.envelope));
+        answer = await this.#dispatch(() => deliver(record.envelope, occurrence));
       } catch (error) {
         if (!(error instanceof Lost)) throw error;
         record.phase = "unknown";
@@ -909,15 +949,17 @@ export class Custody {
 }
 
 /** A store in memory: for a process that keeps nothing, and for a test in the Workers runtime. Each write is a whole copy, read back. */
-export function memoryStore(): ClientCustodyStore & { records: Map<string, string> } {
+export function memoryStore(): ClientCustodyStore & { records: Map<string, string>; authorizations: AuthorizationPort } {
   const records = new Map<string, string>();
   const segments = new Map<string, StoredOutcome[]>();
   const locks = new Set<string>();
   const observers = new Set<() => void>();
   let queue: Promise<unknown> = Promise.resolve();
+  const notify = () => { for (const changed of [...observers]) { try { changed(); } catch { /* an observer never owns a write */ } } };
+  const authorizations = memoryAuthorizations(notify);
   const parsed = (): [string, StoredCustodyRecord][] => [...records.entries()].map(([id, text]) => [id, JSON.parse(text) as StoredCustodyRecord]);
   return {
-    records,
+    records, authorizations,
     lock: async (id) => {
       if (locks.has(id)) return null;
       locks.add(id);
