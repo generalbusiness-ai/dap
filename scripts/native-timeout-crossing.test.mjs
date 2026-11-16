@@ -41,3 +41,18 @@ test("a refusal with another reason, and an abort that does not throw, print not
   new Quiet().abort(timeout);
   assert.deepEqual(lines, []);
 });
+
+test("step 1b: a timer that test A starts and that fires during test B names A", () => {
+  class Refusing { constructor() { this.signal = {}; } abort() { throw refusal(); } }
+  const owners = new WeakMap(), lines = [];
+  guardAbort(Refusing.prototype, (crossing, controller) => {
+    const owner = owners.get(controller.signal);
+    lines.push(crossingLine(crossing, owner.file, owner.name));
+  }, false);
+  const a = new Refusing(), b = new Refusing();
+  owners.set(a.signal, { file: "test/a.test.ts", name: "test A" });
+  owners.set(b.signal, { file: "test/b.test.ts", name: "test B" });
+  // Test B runs now; the timer of test A fires and aborts A's controller.
+  assert.throws(() => a.abort(timeout), /different Durable Object/);
+  assert.deepEqual(lines, ["[native-timeout-crossing] file=test/a.test.ts name=test A limit=30000ms kind=Test"]);
+});
