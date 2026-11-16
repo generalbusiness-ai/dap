@@ -212,6 +212,16 @@ export function environmentReads(source, file, { environmentTypes = new Set(), f
       }
       return;
     }
+    if (node.type === "BinaryExpression" && node.operator === "in" && isEnv(node.right, scope)) {
+      const receiver = unwrap(node.right), setting = unwrap(node.left);
+      const direct = receiver?.type === "Identifier" && scope.get(receiver.name) === true
+        || receiver?.type === "MemberExpression" && !receiver.computed
+          && receiver.object.type === "ThisExpression" && prop(receiver.property) === "env";
+      if (!direct || setting?.type !== "Literal" || typeof setting.value !== "string")
+        fail(file, node, "nonliteral or indirect environment presence check");
+      record(setting.value, node);
+      return;
+    }
     if (node.type === "MemberExpression" && isEnv(node.object, scope)) {
       if (node.computed && node.property.type !== "Literal") {
         if (!sandbox) fail(file, node, "dynamic environment lookup");

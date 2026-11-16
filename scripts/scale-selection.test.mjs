@@ -279,4 +279,11 @@ test("scale registration factories leave no unlisted fixed deadline", () => {
   assert.equal(archiveSource.split(archiveFactory).length, 2);
   const shadow = archiveSource.replace(archiveFactory, archiveFactory + '\nconst scaleDeadline = (ms: number) => ms;');
   assert.throws(() => inspectSource(archive, shadow), /Shadowed Scale registration binding: scaleDeadline/);
+
+  // Only a demanded, known boolean may select the follower registration.
+  // An unknown RHS after false must not become a guessed false condition.
+  const archiveCondition = 'if (scenario === "Grow production" || sharedScenario) {';
+  assert.equal(archiveSource.split(archiveCondition).length, 2);
+  const unknownCondition = archiveSource.replace(archiveCondition, 'if (scenario === "shared Base" || unresolvedArchiveSelection) {');
+  assert.throws(() => inspectSource(archive, unknownCondition), /Unresolved Scale registration condition/);
 });

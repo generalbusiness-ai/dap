@@ -24,6 +24,13 @@ function value(node, scope) {
     if (node.operator === "===") return left === right;
     if (node.operator === "+") return left + right;
   }
+  if (node.type === "LogicalExpression" && node.operator === "||") {
+    const left = value(node.left, scope);
+    if (typeof left !== "boolean") return unknown;
+    if (left) return true;
+    const right = value(node.right, scope);
+    return typeof right === "boolean" ? right : unknown;
+  }
   if (node.type === "ConditionalExpression") {
     const condition = value(node.test, scope);
     return typeof condition === "boolean" ? value(condition ? node.consequent : node.alternate, scope) : unknown;
@@ -38,7 +45,7 @@ function bind(pattern, data, scope) {
 }
 
 /** The current supported forms are literal tests, for/each, describe, static
- * for-of/if, and named local registration factories. New forms need review. */
+ * for-of/if with boolean ||, and named local registration factories. New forms need review. */
 export function scaleDeadlineRegistrations(root, owners, read = file => readFileSync(file, "utf8")) {
   const helper = resolve(root, "packages/scope/test/support/archive-scale-deadline.ts");
   const modules = new Map(), active = new Set(), rows = [];
