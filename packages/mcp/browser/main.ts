@@ -129,28 +129,33 @@ const CHANGED = "The card had changed, so this press sent nothing. It shows the 
 /** What the card knows when no answer came: only that it does not know. `what` names what that press can sign. */
 const NO_ANSWER = (what: string) => `The app gave no answer to this press, so the card does not know how it ended. The request may have gone, and ${what} may have been signed. The card read its view again. Check it before you press again.`;
 const LATE_REPLY = "A late reply arrived. Read the card again to check the original request.";
-async function read(move?: { page?: PageKind; position?: number; refresh?: boolean }) {
+type ReadMove = { page?: PageKind; position?: number; refresh?: boolean };
+async function read(move?: ReadMove) {
   if (busy || !alive) return;
   busy = true; notice = ""; readAgain = false; render();
-  try {
-    let data;
-    try { data = await bridge.tool("view_read", { view, ...(move ? { cut: display?.cut, ...move } : {}) }); }
-    catch (error) {
-      // A model input can advance this retained view between app polls.
-      // Recover its current server display; never repeat a stale navigation.
-      if (isAbsent(error)) {
-        await reopen();
-        data = await bridge.tool("view_read", { view });
-        if (move && !move.refresh) notice = NOT_REPEATED;
-      }
-      else if (!isStale(error)) throw error;
-      else {
-        data = await bridge.tool("view_read", { view });
-        if (move && !move.refresh) notice = CHANGED;
-      }
+  try { await readDisplay(move); }
+  finally { busy = false; render(); }
+}
+/** Read under the busy state already held by read() or act(). */
+async function readDisplay(move?: ReadMove) {
+  if (!alive) return;
+  let data;
+  try { data = await bridge.tool("view_read", { view, ...(move ? { cut: display?.cut, ...move } : {}) }); }
+  catch (error) {
+    // A model input can advance this retained view between app polls.
+    // Recover its current server display; never repeat a stale navigation.
+    if (isAbsent(error)) {
+      await reopen();
+      data = await bridge.tool("view_read", { view });
+      if (move && !move.refresh) notice = NOT_REPEATED;
     }
-    accept(data);
-  } finally { busy = false; render(); }
+    else if (!isStale(error)) throw error;
+    else {
+      data = await bridge.tool("view_read", { view });
+      if (move && !move.refresh) notice = CHANGED;
+    }
+  }
+  accept(data);
 }
 async function open() {
   if (!display?.card || !cardOpens(display.status)) return;
@@ -238,20 +243,23 @@ async function act(action: string, signs = "an act") {
     accept(data);
     const result = data["result"] as { structuredContent?: Record<string, unknown> } | undefined;
     accepted = result?.structuredContent?.["answer"] === "accepted";
+    if (accepted) {
+      let modeNotice = "";
+      const record = display.card?.declared?.kind === "record" || display.card?.declared?.kind === "log";
+      const requested = record ? display.card!.declared!.display : "inline";
+      try { if (await bridge.displayMode(requested) !== requested) modeNotice = "The host kept the previous display mode."; }
+      catch (error) { modeNotice = error instanceof Error ? error.message : String(error); }
+      if (alive) {
+        notice = ""; readAgain = false;
+        await readDisplay({ page: record ? "item" : "summary", position: display.position, refresh: true });
+      }
+      notice = modeNotice || notice;
+    }
   } finally {
     busy = false;
-    // A late reply can arrive while the uncertain-outcome reread still runs.
+    // A late reply can arrive while either reread still runs.
     if (lateReply && alive && view === requestedView) { readAgain = true; notice = LATE_REPLY; }
     render();
-  }
-  if (accepted) {
-    let modeNotice = "";
-    const record = display.card?.declared?.kind === "record" || display.card?.declared?.kind === "log";
-    const requested = record ? display.card!.declared!.display : "inline";
-    try { if (await bridge.displayMode(requested) !== requested) modeNotice = "The host kept the previous display mode."; }
-    catch (error) { modeNotice = error instanceof Error ? error.message : String(error); }
-    await read({ page: record ? "item" : "summary", position: display.position, refresh: true });
-    notice = modeNotice || notice; render();
   }
 }
 async function handoff() {
