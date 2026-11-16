@@ -1,35 +1,37 @@
 # Share room archive policy and wiring
 
-Current fixture repair is `d38275d047fdd8c44e5da5046ac301542ae2cc31`, tree
-`5b42dab41b6bdc213a6f0e6c45da09e974e491da`. Gate1 and Gate2 stay failed.
-Whole Node 206/206 and preflight2 passed at `1c01a94f0b80d87c4d45f1db4cc8322f2f4536f8`,
-tree `bfeb3ee0544507be4491d3a660303b936dd74390`. Native 102/Scale 2 and
-CS1 sandbox 10 remain dated 027b results. Attempt3 is UNRUN.
+Current code is `35de4110c8a694bf18f6327c70e17497a42bee05`, tree
+`d1fc38df0bc26402b054b48247e0a0d86693cc13`; new validation is UNRUN.
+Development at `da8a7337ac1e87a6d5432b6e73809df899da86d3`, tree
+`28c60e7095fe3715e6f45909891a80bd6cfa69f6`, passes both test compilers,
+1,541 corpus cases and 212 Native tests in 39 files. Two uncaught cross-DO log
+errors remain undiagnosed. Gate1 and Gate2 stay failed. Whole Node again fails
+205 pass/1 fail at da8a7337; preflight3/gate3 are UNRUN. Earlier passes retain their own bindings.
+Fixture repair: `d38275d047fdd8c44e5da5046ac301542ae2cc31`, tree
+`5b42dab41b6bdc213a6f0e6c45da09e974e491da`. Whole Node 206/206 and preflight2
+passed at `1c01a94f0b80d87c4d45f1db4cc8322f2f4536f8`, tree
+`bfeb3ee0544507be4491d3a660303b936dd74390`.
 
-Request 0c265d01/ruling 59767cd8/promise 43fa0d74 require shared installed-policy
-wiring, not Grow fallback: Scope driver, room/archive Artifacts adapter, Grow
-re-export. Admitted roots/Directory/Destination routes bind repositories;
-production imports no fixture packet or room/repository/release selector.
-Native catalog/runtime/capabilities exclude private roots. Package export
-requires immutable creation/install chain, real Rules install, signed release,
-current publisher trust and closed supported runtime policy. Digest/alias/
-declaration alone grants nothing; signature identifies publisher, not export.
+Request 0c265d01/ruling 59767cd8/promise 43fa0d74 require shared installed policy:
+Scope driver, room/archive Artifacts adapter and Grow re-export. Repository/
+Directory/Destination bindings and Native private-root exclusions remain exact.
+Export requires immutable birth/install chains, real Rules install, signed
+release, current trust and supported runtime policy. Signature identifies the
+publisher, not permission; digest/alias/declaration alone grants none.
 
-Namespace-only proof is bounded signed text/reason-only refusal, exact pin/codec,
-no ingress dispatch or cold repair. Sizes precede bodies; fresh validation
-precedes parse. One paid snapshot uses bounded queries and exact within-pass
-full-reference reuse only. Receiver prepays verification/work, checks birth/
-root/install/IDs/trust; RPC ownership survives caller deadline through settlement.
-Trust removal stops before provider work, preserving row/receipt and stopping
-wake; restored trust cannot clear terminal. Unsupported policy stops; pending
-install/unreadable reply retries without payload selection. Diagnostics disclose
-fixed reasons, not payloads/credentials. Artifacts retains exact-repository/scope/
-ref credentials/read-back; no AE1 mint or retarget. Security remains separate.
+The namespace proof uses bounded signed text/reason-only refusal, exact pin/
+codec and sizes/validation before parse. A paid bounded snapshot reuses exact
+full references within the pass only. Receiver prepays work and owns RPC through
+settlement past caller deadline. Trust removal stops provider work/wake while
+preserving row/receipt; restoration clears no terminal. Unsupported stops;
+pending install/unreadable replies retry without payload selection. There is
+no fixture selector, payload/credential diagnostic, ingress/cold repair, mint or
+retarget. Artifacts keeps exact credentials/read-back. The complete field/check
+correspondence remains in da8a7337's opening and Policy costs sections.
 
-Real Base/Grow installed witnesses and TEST-policy driver/row witnesses have
-different authority: the latter prove bounded refusal/terminal behavior, not
-signed install authority or complete fit. TEST peer/clock/scheduler and earlier
-failed acceptance remain dated below; neither source review nor seals prove fit.
+Real Base/Grow authority differs from TEST-policy driver/row refusal/terminal
+witnesses. TEST peer/clock/scheduler, source review and seals prove neither
+signed authority nor complete fit. Earlier failures and Security remain dated.
 
 ## Policy costs and proof limits
 
@@ -49,30 +51,25 @@ They grant no proof, trust, source or export permission. In this table,
 | Terminal overlay read | `forecastArchiveTerminalRead`: 1 call, M 512, W 4608 |
 | Terminal overlay and wake write | `forecastArchiveTerminalWrite(512)`: 2 calls, M 576, W 8192, prepaid once before policy work |
 
-Fixed sender work survives small replies. Birth admission additionally reserves
-one node/call, metadata E/work 8E, settles bytes n and pays work 32n before parse.
-Entry bounds add no allowance. Prices omit ancestor/local ProofBytes walks,
-scalar/birth queries, reference/flight bookkeeping and capability work. Adapter/
-target each pay birth; SQL metadata adds work, repeated trust stays charged.
-Host/catalog initialization and cold CPU stay outside pass. Caller/RPC counts
-exclude peer SQL. No price table proves ARC-1 cohort/pass multiplicity.
-
-25222294 bounds each chain sender independently; receiver pays reserved reply,
-measured decode/hop work, not sender ceiling. Signed proof keeps fixed price.
-Act bounds 18 hops/37 bodies/16MiB/36RPCs per walk/pass exclude target/package
-proof. Passes repeat walk; reuse grants no cross-pass trust permission.
-Birth bounds 10 s/16 calls/candidates/64KiB metadata/256KiB declaration/1MiB genesis;
-archive body 256 KiB. Exact sender: 5 SQL calls/4096-byte row/requested body bound.
-SB-1/836283176f960b8c886eeab41ee36ca4b83316e3 owns pre-budget alarm recovery
-full-metadata read; audit 853f63cf leaves that bound unproved/unrepaired.
-
-50ce6650 keeps immutable count refusal permanent (exact candidate sequence/hash,
-application-policy-unavailable/admission-limit), but shortage always retries
-limit/deferral, at every preparation position. Original-ledger prepaid terminal
-write and lookahead share deadline/charges: no second debit/ledger/allowance,
-marker/walk/reorder. Retry proves no eventual success. ARC-1 owns one-pass cohort/
-permanent outside stop, including discovery/save/mutable reply, warm table reset,
-trust rows/rechecks, retained row/manifests/frontier/parent, and selection/context.
+Fixed sender work survives short replies. Birth prepays node/call plus M E/
+W8E, settles bytes n and pays W32n before parse; entry bounds grant no top-up.
+These prices omit ancestor/local ProofBytes walks, scalar/birth queries,
+reference/flight/capability work. Both adapter/target pay birth; SQL metadata
+and repeated trust remain charged. Cold CPU/catalog startup and peer SQL stay
+outside caller/RPC counts; the table proves no ARC-1 cohort/pass multiplicity.
+25222294 bounds each sender separately; receiver pays reply/decode/hops, not
+sender ceiling. Each pass repeats 18-hop/37-body/16MiB/36RPC act walks, excluding
+package proof; reuse gives no cross-pass trust. Birth:10 s/16 calls/candidates/
+64KiB metadata/256KiB declaration/1MiB genesis. Archive body:256KiB; sender:
+5 SQL/4096-byte row/requested body bound. SB-1/
+836283176f960b8c886eeab41ee36ca4b83316e3 owns pre-budget alarm full-metadata
+recovery; audit853f63cf leaves it unproved/unrepaired.
+50ce6650 makes immutable candidate seq/hash count refusal permanent
+(application-policy-unavailable/admission-limit); shortage always retries
+limit/deferral at every position. Terminal/lookahead share prepaid ledger,
+deadline/charges, no second allowance/debit/marker/walk/reorder. Retry promises
+no eventual success. ARC-1 owns paid discovery/save/mutable replies, warm-table
+reset, trust/rechecks and retained row/manifest/frontier/parent/selection/context.
 
 Ruling `12115613` answers `59c2e3cb` with these closed reason-only refusals.
 They retain the original full reservation. Unreadable replies retain transient
@@ -87,22 +84,21 @@ behavior; terminal/activation diagnostics add proofReason with
 | `malformed-or-unsupported` | Stop. A fixed native pin, installation identity or signed digest cannot change through a pending installation event. |
 
 valuesOf retention accompanies draft; creation result precedes activation.
-Conflict-do-nothing cannot replace malformed data. Another install can fill
-an absent immutable key, but AE1 adds no old-terminal repair/resume. ff83b78d
-preserves native target/format/parent-before-proof order without refused payload/
-label/policy. Stop preserves prefix, leaves refused/later entries unarchived;
-ARC-1 owns the extra pre-provider predicate. No AE1 prefix scan.
-Joined-shell uses real Main/scripted Room/DOM, both notices/disclosures and
-no-key/no-settings-write checks; its ca1 pass is no layout/Native authority.
+Conflict-do-nothing never replaces malformed data. Another install may fill an
+absent immutable key, but AE1 repairs no old terminal. ff83b78d keeps native
+pin/format/parent-before-proof order, without refused payload/label/policy.
+Refusal preserves prefix, leaving later entries unarchived; ARC-1 owns the
+extra pre-provider predicate, no AE1 prefix scan. Joined-shell uses real Main,
+scripted Room/DOM and both notices/disclosures, no-key/no-settings writes;
+its ca1 pass grants no layout or Native authority.
 
 ## Validation scope
 
-The table preserves historical pending checks and failures. Operations dispatch
-and SqliteStore.markSent stay unchanged; Effects covers those functions, not
-archive lifecycle. AST seals supply no model/Security result. Initial AE1 changed
-no cap/format/staging/restore/deploy; the resumed ruling changes two caps only.
-ARC-1/b188f9e7 owns exact one-pass cohort/permanent stop including paid preparation;
-planner owns deployment and cutover. Security review remains owed.
+The evidence table keeps dated pending checks/failures. Dispatch and
+SqliteStore.markSent stay unchanged: Effects covers them, not this lifecycle.
+Seals grant no model/Security result. Initial AE1 changed no cap/format/staging/
+restore/deploy; the resumed ruling changes two caps. ARC-1/b188f9e7 owns paid
+one-pass cohort/permanent stops; planner owns deployment/cutover. Security is owed.
 
 ## Historical composition, attestations and failed acceptance
 
@@ -117,35 +113,28 @@ Five own replays preserve joint-chain trust and prepaid-write fixes:
 | `8353c4d7aaeb66e385f1a1afd37c2ea9f4461ea1` | `672a6b5ae8f426d95e76d17e5076f0a7e1c08aa6` |
 | `abf2f22330a1208a071a2db48483fa456704c794` | `04d62c3d57ceedf875dfe6471ccce592a92e9aec` |
 
-Dependency merge 20185343 stays excluded and original abf2f223 refs survive.
-First replay conflicts in Worker/Grow/installed owners; d257a67f/43fa0d74 selects
-shared wiring, no Directory setting/fallback. Earlier proof, unequal releases,
-native pins, tamper/private-root refusals, TEST packet and BASE_COHORT survive.
-Packets/IDs/trust/config/authority/kernel/models/lock stayed exact except obsolete
-Grow setting/Text rule. Dependencies/all validation were absent/UNRUN then;
-no publication/provider/deploy action followed.
+Dependency merge20185343 stays excluded; original abf2f223 refs survive.
+Worker/Grow/installed conflicts follow d257a67f/43fa0d74 shared wiring, without
+Directory fallback. At that dated step, dependencies/checks were UNRUN; no
+publication/provider/deploy ran. Earlier source decisions remain in this note
+at `da8a7337` under Historical composition; the commit map above is unchanged.
 
-At 9011b593/tree cfc137dc, CB1 adds only Python fixture/two notes, retaining 30
-AE1 blobs. ad4c61e3 uses optional APPLICATION_TRUST and unchanged portable
-parser to remove accidental Node R2Bucket dependency. Root reviewed 17 boundaries
-in 0258f47c before actual AST 20fd9346/f189 adoption: eight new/eight changed
-whole-file rows plus two named values, 18 values/17 files. object.ts retains
-$module/ScopeObject, two imports and namespace-only method, no separate selector,
-dispatch or cold repair. Raw hashes/review are no runtime/Security result.
-The first 12-case Security run fails inherited version-questions outside 17;
-expected 069eaf4c versus actual e13a31cf. It does not prove all 17 ran.
-Under 4d03ff1d, Register 28 enters only NoHost/SmokeOwnedPlan; BindingPolicy 25
-and includes stay exact. 5e8d adopts that seal/note only and then passes 12/12;
-no authority or Effects/SB1/ARC1 expansion follows.
+9011b593/tree cfc137dc retains 30 AE1 blobs; CB1 adds Python fixture/two notes.
+ad4c61e3 removes Node's R2Bucket dependency through optional trust/portable
+parsing. Root 0258f47c/AST 20fd9346/f189 source correspondence, module selectors
+and Register 28's NoHost/SmokeOwnedPlan-only change (BindingPolicy 25 unchanged)
+remain in the same da8a7337 history section. The exact AST17/Security rows below
+retain18 values/17 files, inherited expected 069eaf4c/actual e13a31cf failure and
+5e8d's12/12. Seals grant no proof all 17 selectors ran or authority/Effects/
+SB1/ARC1 expansion; 4d03ff1d authorizes only that inherited seal/note repair.
 
-Actual-main 336dd74e composition retains refs; only installed owner conflicts.
-GS1's registration wrapper around exact AE1 fixture preserves callbacks,
-assertions/budgets/deadlines: eight old scenarios then shared Base/Grow;
-Scale is the separate coupled producer/follower. Fixtures are not entries.
-Production/seals/helpers/main configs stay exact; generated MCP view matches.
-All 17 metadata/lock bytes matched f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54
-before one owned APFS copy; authentic stamp/15 relative local links survive.
-No install/download/restamp/global mutation; Page was then UNRUN.
+Actual-main 336dd74e keeps refs. GS1 wraps the same installed callbacks,
+assertions/budgets/deadlines: eight old scenarios plus Base/Grow, with a separate
+coupled Scale producer/follower. The same da8a7337 source history records the
+unchanged production/seals/configs/MCP view. Seventeen metadata/lock inputs match
+f2885ca573c095141efbca99a7260d211beb9ae38a7f1b139ce234dc79568b54 before one owned
+APFS copy; authentic stamp/15 relative links stay. No install/download/restamp/
+global mutation; Page was then UNRUN. Fixtures remain non-entries.
 
 | Root configuration and project | Exact owning files |
 |---|---|
@@ -154,8 +143,8 @@ No install/download/restamp/global mutation; Page was then UNRUN.
 | `vitest.plain.config.ts`, `lanes` | `apps/room/lanes/test/grow-archive.test.ts` |
 | `vitest.plain.config.ts`, `page` | `apps/room/page/test/joined-shell.test.ts`, `apps/room/page/test/publication.test.ts` |
 
-Fixture paths select no owner; monolithic/three-project commands exclude Scale.
-Budget/operator/build needed validation because imported planning changed.
+Fixture paths select no owner; monolithic/three-project commands omit Scale.
+Budget/operator/build enter through changed planning imports.
 
 | Compiler area | Committed configurations, in execution order |
 |---|---|
@@ -164,17 +153,16 @@ Budget/operator/build needed validation because imported planning changed.
 | Lanes | `apps/room/lanes/tsconfig.test.json`, `apps/room/lanes/tsconfig.scope.json` |
 | Page | `apps/room/page/tsconfig.json`, `apps/room/page/tsconfig.test.json`, `apps/room/page/tsconfig.scope.json` |
 
-Scope owns the split; lanes portable/Scope includes remain distinct, local-clone
-Node source unchanged. Nine ca1 passes/two 2740 Scope repeats bind exact inputs;
-Page/Scale/gate/Security review were UNRUN then. Later rows qualify actual work.
+Scope owns the split; lanes portable/Scope includes and Node local-clone stay
+distinct. Nine ca1 passes/two 2740 repeats bind only their exact inputs; later
+rows close the then-UNRUN Page/Scale/gate obligations, not Security review.
 
-At ca1/tree dbbff0e2, Native 69/5 has three primary/two dependent failures.
-Driver finishes fixed-next then attribution.complete fails: 64 retained sites,
-one dropped, only overflow, ledger reconciled. Terminal read/prepaid write add
-two legitimate sites. 2740/tree1193 recorder 66/overflow witness 67 preserves
-incomplete/settlement checks; observation 12 + driver 21 = 33 PASS reaches remaining
-privacy/margin/cap/head/foreign-source assertions. No budget/price/deadline or
-driver assertion changes; Native 74 stays failed.
+At ca1/tree dbbff0e2, the Native7 row retains three primary/two dependent
+failures. attribution.complete loses one of64 sites after fixed-next, despite
+reconciled ledger; terminal/prepaid-write add two sites. At 2740/tree1193,
+recorder 66/overflow 67 keeps incomplete/settlement checks and reaches remaining
+privacy/margin/cap/head/foreign assertions. The exact33-pass diagnostic row
+retains that outcome; budgets/prices/deadlines/assertions stay, Native 74 fails.
 
 Original caps 4096 entries/512 attempts/64 nodes/16384 calls/4194304 metadata/
 67108864 work/30s yield finish shortages: Base root 1 after 0 uses 35 nodes,
@@ -198,21 +186,23 @@ source checkpoints and verdicts; its old UNRUN row is dated history, not the
 current status of later completed work. `N` = `/opt/homebrew/bin/node`;
 `V` = `N node_modules/vitest/vitest.mjs run`. Exact path aliases:
 
-- `O`: `/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-development-attempt2/legacy-compiler-failures`.
-- `A`: `/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-development-attempt2`.
-- `I`: `/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-integrated-development-attempt1`.
-- `D`: `/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-diagnostic-development-attempt1`.
-- `G`: `/Users/hughpyle/play/artroom-evidence/2026-11-16-ae1-cs1-development-attempt1`.
-- `H`: `/Users/hughpyle/play/artroom-evidence/2026-11-16-ae1-cs1-development-attempt2`; actual safe exports, with private raw retained separately.
-- `G1`: `/Users/hughpyle/play/artroom-evidence/2026-11-16-ae1-cs1-gate-attempt1`.
-- `S`: `/Users/hughpyle/play/artroom-evidence/2026-11-16-ae1-scanner-repair-development-attempt1`.
-- `G2`: `/Users/hughpyle/play/artroom-evidence/2026-11-16-ae1-cs1-gate-attempt2`.
+`E` = `/Users/hughpyle/play/artroom-evidence`; E/ below names that exact root.
 
-Four legacy logs were copied byte-exact from preserved
-`/private/tmp/artroom-ae1-dev-20261114` originals to `O`, verifying table SHAs.
-Original argv/exit/wall remain unavailable; later `*.argv.json`/`*.result.json`
-retain commands/exits. `A` walls use `/usr/bin/time -p`; `I`/`D` use
-monotonic seconds. `EMPTY` = SHA-256
+- `O`: `E/2026-11-14-ae1-development-attempt2/legacy-compiler-failures`.
+- `A`: `E/2026-11-14-ae1-development-attempt2`.
+- `I`: `E/2026-11-14-ae1-integrated-development-attempt1`.
+- `D`: `E/2026-11-14-ae1-diagnostic-development-attempt1`.
+- `G`: `E/2026-11-16-ae1-cs1-development-attempt1`.
+- `H`: `E/2026-11-16-ae1-cs1-development-attempt2`; actual safe exports, with private raw retained separately.
+- `G1`: `E/2026-11-16-ae1-cs1-gate-attempt1`.
+- `S`: `E/2026-11-16-ae1-scanner-repair-development-attempt1`.
+- `G2`: `E/2026-11-16-ae1-cs1-gate-attempt2`.
+- `D3`: `/Users/hughpyle/play/artroom-private-evidence/2026-11-16-ae1-attempt3-development-attempt1`; private result/raw, no public export.
+- `N3`: `/Users/hughpyle/play/artroom-private-evidence/2026-11-16-ae1-node-stage-attempt2`; private result/streams.
+
+Four legacy logs are exact copies from `/private/tmp/artroom-ae1-dev-20261114`
+to O. Original argv/exit/wall are unknown; later argv/result files retain them.
+A uses `/usr/bin/time -p`, I/D monotonic seconds. EMPTY is SHA-256
 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
 
 | Checkpoint | Actual command | Result and wall | Retained output and SHA-256 |
@@ -249,21 +239,21 @@ monotonic seconds. `EMPTY` = SHA-256
 | Whole maintained Node at `1c01a94f` | Exact `fixedStages` Node descriptor alone; launcher argv in `G2/whole-node.result.json` | Exit 0; 206/206 pass, no fail/cancelled/skipped/todo; child 131.715873458 s, outer 131.811788792 s; child reaped/group empty | `G2/whole-node.result.json` SHA `d6284ab06873ffaba2ddb56e326e0706ded6cf8a3929a3f24dd146f23da47340`; stdout digest in record, stderr EMPTY; original streams stay private |
 | Preflight2 at `1c01a94f` | Fetch origin/main; `N scripts/check-shared-helpers.mjs`; `npm run typecheck`; `npm run pins`; exact argv in result | All four exit 0; helpers 0.634325500 s, whole TC 16.540657625 s, pins command 17.109324542 s; total 35.229670291 s; all groups empty | `G2/preflight.result.json` SHA `38cddba05839748f8cc463cf8a312ca0707208e89024966e6bf9e6ec2bf13e1e`; fetch stderr 99 B, other stderr EMPTY |
 | Gate2 at `1c01a94f`/tree `bfeb3ee0` | `npm run gate`; START `9ab6812709a5ad852417b34428a7c1a93730ef59`; END `8614277786e258be2a8396695b527527aea9d6a1` | **FAIL, exit 1**; child 1806.755506542 s, outer 1806.906823458 s; Kernel pass, Node 206, Counting 56, Plain 4913 pass/1 skip, Native 1171 pass/1 fail/2 skip. All 22 Scale cases pass in 13 owners; no separate Scale wall. Sole failure is the stale 64-node inventory expectation | `G2/gate.result.json` SHA `2de5dee8a4f5f44444271ae9c8d53833d72978c9ee869ff92af55d8de57d786a`; log `67baf048adc57046bf64665c5f26a62be19592b51c5908c45e54da42ef845c34`; child reaped/group empty. Native terminal evidence partial, 129 unknown/suite observations, zero contradictions |
+| Attempt3 development at `da8a7337` | `N node_modules/typescript/bin/tsc -p` Scope/Derive test configs; compat; whole Plain corpus; Native `scope`/`scope-stories`/`scope-scale` 39-file union. Exact argv/coverage in D3/result | All five exit 0; compilers 0.962397125/0.559877583 s, compat 0.086364583 s; corpus 1541 pass/2.805309125 s; Native 212 pass/39 files, child 466.359220208 s; outer 471.751190958 s. No pending/todo/missing/extra/duplicate file. Two uncaught cross-DO log errors remain undiagnosed; no harmlessness claim | PRIVATE `D3/result.json` SHA `ef3701ea4f981643c98f97ffc0b547287d49cb33ae98ef4bd7d3a0ef2c974796`; END `e85be982d960806ba9873db3b58519f77bc561e0`. Source clean, all groups reaped/empty; no runtime raw copied |
+| Whole Node again at `da8a7337` | Exact maintained `fixedStages` Node descriptor alone; argv in PRIVATE N3/result | **Exit 1; 205 pass/1 fail of 206**, zero cancel/skip/todo; child 133.845142459 s, outer 133.916273459 s. active-source.test.mjs:114 rejects Derive corpus import from dap-git/journal. Source clean; group reaped/empty, no cleanup actions | `N3/result.json` SHA `fa42d6e95a2735ee8a0fb9f71f7efceccf9fe2a7e3fcf97057804ca66caeccf3`; END `a8d20fcc91d8e7a57ee5d032642581f2faa74c6d`. Preflight3/gate3 did not run |
 
 `TITLE` is the exact single argument
 `archive install proof binds Base Rules, exact signed IDs and native retained byte limits without codec fallback`.
-Both controls run the whole unchanged two-case owner, without name filter,
-pending/todo, cancellation or skip. Each retains original helper, cleanup-only
-copy and one-line diff: original SHA
-`8d7ba44b672b1c84c2272dd185661c77ecc06b958e59fb83b5b4a0d0562aa818`,
-copy SHA `172b74d82244d6b93f5febcade352ce0c2fd67bdec609af0a63d7164beec5415`.
-Restored source SHA
-`98322b0ce019612c520df52a65241ba4f13f8d617c5782e4784ed747c679003e`,
-mode `0644`, matches exactly. No third green ran. Controls act:
-`cc682d8b499a77cac05b3edd46ae2716f93bbdd9`. Diagnostic END:
-`666921f396c74fd584830f0c20e00f3cb7821152`.
-This historical doc-only update ran no check; source, cap, price, deadline,
-expectation, release, model and operator values stayed unchanged.
+Both controls use the unchanged whole two-case owner, no name filter/pending/
+todo/cancel/skip. Original helper SHA
+`8d7ba44b672b1c84c2272dd185661c77ecc06b958e59fb83b5b4a0d0562aa818`;
+cleanup-only copy `172b74d82244d6b93f5febcade352ce0c2fd67bdec609af0a63d7164beec5415`
+and one-line diff stay retained. Restored source
+`98322b0ce019612c520df52a65241ba4f13f8d617c5782e4784ed747c679003e`/0644 is exact;
+no third green. Controls act `cc682d8b499a77cac05b3edd46ae2716f93bbdd9`;
+diagnostic END `666921f396c74fd584830f0c20e00f3cb7821152`. That historical
+note-only update ran no check or source/cap/price/deadline/expectation/release/
+model/operator change.
 
 ## Resumed source, 15 November 2026
 
@@ -273,39 +263,34 @@ Ruling `790afe00333dd0cd581b78a61ce37e434074628c` raises nodes 64→128 and inpu
 ## Failed runtime checkpoint, 16 November 2026
 
 At `7808c06482d61e27e1bda07f195d85f55da1ac16`, tree
-`69c0c36caea4aa06f505e6f072e72602e706cfb2`, compiler source `337c` differs only
-in reviewed Page assets. G retains 61 safe exact copies; retained-files.json
-SHA d6dd949183742627ae9ee8c1bbf6528f1eb8a057aeb10f0ec1fdb9ac3a4f84e2.
-Full Native output remains private. Hook/Bytes.same repair changes no guard;
-two actual seals were reviewed/adopted, not a Security pass. Old proof controls
-retain exact input correspondence and their limits.
+`69c0c36caea4aa06f505e6f072e72602e706cfb2`, compiler 337c differs only in Page
+assets. G's 61 safe exact copies have retained-files.json SHA
+d6dd949183742627ae9ee8c1bbf6528f1eb8a057aeb10f0ec1fdb9ac3a4f84e2. Native raw
+is private. Bytes.same changes no guard; reviewed/adopted seals and old proof-
+control correspondence grant no Security pass.
 
-Page production changes PAGE_JS by 313 B and OAUTH_JS by 55 B; both HTML exports
-stay exact. Both scripts change shared data reader, Page also disclosure/local
-minifier names. The offline unchanged-OAuth assumption was false, not a run.
-Root reviewed both differences and corrected the description without rerun.
+PAGE_JS grows 313 B/OAUTH_JS 55 B; both HTML exports stay exact. Both scripts
+change the shared reader, Page also disclosure/minifier names. The offline
+unchanged-OAuth claim was false, not a run; root corrected it after both diffs.
 
-END `2ae3212a80b1ca7680e2f38e583915d885ea4317` keeps 97 pass/4 fail.
+END `2ae3212a80b1ca7680e2f38e583915d885ea4317` retains the Native9 failure row.
 Base cutoff 0 retries unavailable, used [0,0,13,27,125538,7369823]. Grow cutoff 3
-stops input, used [2,42,41,143,1146690,79110748], confirmed through 2. Neither
-has capacity refusal; both command followers lack a producer session. These
-results alone identify neither root cause nor cap shortage. Confirmed diagnostics
-omit scope/cutoff identity; final admitted costs are not peaks or complete-case
-maxima. Fit, trust removal and public clone were then unproved. CS1 had
-11 Node passes; Scale, sandbox Native, pins, gate and review were then UNRUN.
+stops input, used [2,42,41,143,1146690,79110748], confirmed 2. Neither has capacity
+refusal; followers lack producer sessions. These facts identify neither cause
+nor cap shortage. Diagnostics omit scope/cutoff identity; final costs are not
+peaks/maxima. Fit/trust removal/clone and Scale/sandbox/pins/gate/review were
+unproved then; CS1 had only 11 Node passes.
 
 ## Reviewed producer repairs, 16 November 2026
 
-The one restored diagnostic is causal-only: exit 1/two selected failures/ten
-unselected, child 12.824149125s, outer 13.547464583s. H's safe summary binds raw
-hashes without exposing raw. Rulings 29f6b30a/cf8dba11/bb732 govern the repairs.
-Base Directory27/cutoff 0 directoryInput starts SELECT-newline; unchanged native
-SELECT-space guard refuses unavailable before SQL. Only separator changes;
-security guard/bindings/reservations/charges/stop stay exact.
-Grow root delivery 3 serialized[2,27,22,125,1103026,67270606] exceeds reader
-[4096,512,64,16384,4194304,67108864] by 161,742 work, not live
-[2,42,41,139,1145970,72757836]. Natural inputWork 67,270,606 is the actual
-operand, not earlier final 79,110,748.
+The H diagnostic row is causal-only: two selected failures/ten unselected,
+not fit. It retains exact walls/raw hashes; no raw output is exposed. Rulings
+29f6b30a/cf8dba11/bb732 govern repairs. Base Directory 27/cutoff 0 directoryInput
+starts SELECT-newline; the unchanged native SELECT-space guard refuses before
+SQL. Only the separator changes; guard/bindings/reservations/charges/stop stay.
+Grow delivery 3 serializes [2,27,22,125,1103026,67270606], exceeding reader
+[4096,512,64,16384,4194304,67108864] by 161,742 work. The operand is 67,270,606,
+not live [2,42,41,139,1145970,72757836] or final admitted 79,110,748.
 
 Six-path 8f7bd055 freezes the actual six queries; reversal restores old source
 except SELECT-space. Current entryPosition/currentRules/rulesDirectory/
@@ -317,41 +302,39 @@ in the case, as bb732 accepts. Old bodies/order/deadlines stay exact. Actual
 SELECT-newline control fails named directoryInput not.toThrow before SQL;
 helper0 and controller2 remain distinct in the table.
 
-Frozen JOURNAL_INVENTORY_CEILINGS exports through existing Git journal subpath.
-Reader/native share nodes 128/work 134217728; native permission was already there.
-Other four caps 4096/512/16384/4194304 and foreign-source grammar 64 stay exact.
-Existing-owner case pins vector equality/both numbers, including joint reversion;
-old debit tests stay. No charge/deadline/format/source/metadata permission changes.
+JOURNAL_INVENTORY_CEILINGS uses the existing Git journal export. Reader/native
+share nodes 128/work 134217728; native permission was already present. Other caps
+4096/512/16384/4194304 and foreign-source grammar64 stay. The existing case pins
+both vectors/numbers and joint reversion; debit cases and charge/deadline/
+format/source/metadata permissions stay exact.
 
-Full v1/v2 selection decoders compare fixed/live cost: journal-layout,
-journal-v2-layout/conversion, journal-anchor-legacy and Scope storedSelection.
-Local pending ArchiveMark/frontier copies can reach older Workers: old decoder
-refuses above-old cost as input; old native storedSelection can return null and
-rebuild refuse manifest. Earlier byte/time/source/work failures may differ;
-no migration/fallback exists. Retained-pass partial bookkeeping admits no cost.
-Public v1/v2 manifests omit inventory cost/private bookkeeping; public Git and
-Replay have no producer-cost operand to reject there. Their own byte/work/time/
-layout/source/replay limits remain: no universal old-reader success/failure.
-Foreign-source list stays 64; external installed API callers remain unenumerable.
-The full reviewed READERS audit retains these distinctions.
+V1/v2 selection readers compare fixed/live cost: journal-layout, journal-v2-
+layout/conversion, journal-anchor-legacy and Scope storedSelection. Pending local
+ArchiveMark/frontier can reach old Workers: above-old cost refuses input; old
+storedSelection may return null and rebuild may refuse manifest. Earlier byte/
+time/source/work failures can differ; no migration/fallback exists and retained-
+pass partial bookkeeping grants no cost. Public v1/v2 manifests omit producer
+cost/private bookkeeping, so Git/Replay has no such operand to reject. Their
+byte/work/time/layout/source/replay limits remain. No universal old-reader
+success/failure follows; foreign list64 stays, external callers are unenumerable.
+The reviewed READERS audit retains these distinctions.
 
-Portable pure Git export adds no Scope cycle, Replay/process edge, export-map
-or lock change. Compiler closure 14→16 adds Git production/Replay Node; old 337c
-passes do not validate that import. At 027b only reviewed actual budget seal
+The pure Git export adds no Scope cycle, Replay/process edge, export-map or
+lock change. Closure 14→16 adds Git production/Replay Node; old 337c passes do not
+validate it. At 027b only budget seal
 a35cc8c0e8cc4be8fc33bd4316906085173f19e1e68e12091803a5e3ce08f499 and package seal
 f4155b32056fef2ae38ac64b553b83a0de5427d97a7b30fceef76347c80edc9b change.
-Other selectors/rows remain; no diagnostic source lands. Later preflight/Gate1
-and scanner controls below supersede only their dated UNRUN obligations.
+Other rows/selectors stay; no diagnostic source lands. Later preflight/gates/
+scanner controls supersede only dated UNRUN obligations.
 
 ## Qualified positive checkpoint, 16 November 2026
 
 QUERY_TITLE is `archive package discovery queries pass the native read guard before SQL work`.
-NEW restores SELECT-newline in directoryInput; OLD is its SELECT-space prefix.
-Exact argv is retained. Controller2 is only its cache-file
-postguard, alongside helper0/direct assertion; no rerun, exact source restored.
-Native's same run confirms Base 36/proofReads 22 and Grow 37/proofReads 25. Each
-command yields 5 missing-dependency without trust and 5 consistent with trust.
-Authority/trust/revoke/repeated-terminal ledgers stay separate, never summed.
+NEW restores SELECT-newline; OLD is SELECT-space in directoryInput. The query
+control row keeps helper0/direct assertion versus controller2's cache postguard;
+no rerun, source restored. Same-run Base36/proofReads22 and Grow37/proofReads25
+remain separate. Each command gives 5 missing-dependency without trust and 5
+consistent with it; authority/trust/revoke/terminal ledgers are never summed.
 
 Final-admitted maxima are not peaks; settlement can lower work. Zero-based:
 Base nodes 63/pass 5 at sc_vnvj5vdrecvsjasoklm6zpzfzydzv3mqfmzgwkvgkh3j5tmvalwq,
@@ -373,36 +356,41 @@ Gate1 stays failed. G1/raw-gate-retention.json SHA
 files/6,203,032bytes privately. All preflight commands and Security’s 13 cases passed.
 Gate1 failed before Counting, Plain and Native started. Earlier owners retain their own meanings.
 
-The c8 five-path MJS/docs repair admits boolean || only: true short-circuits;
-false needs boolean RHS; demanded unknown refuses. Settings accepts canonical
-uppercase literals on direct env/immutable alias/this.env, not copied/dynamic
-keys. Docs cover eight deployment restarts/shared Worker, APPLICATION_TRUST's
-archive-packages reader and removal of unread/undeclared GROW_ARCHIVE_CONFIG.
-Runtime, fixtures, prices, caps, authority and deadlines stay unchanged.
-
-HELPER: /private/tmp/artroom-ae1-retained-query-control-20261116.mjs.
-S/result retains both faults; S/manifest SHA
-f5fb9b973ac64dc99282f0af01cc858e4511401218a0aa60df41818cdab065d8 binds logs/TAPs.
-Both distinguish, restore bytes/0644 and release groups without actions,
-raised deadlines or a third green.
-Planner 7be10b34 required whole Node before START2; 206/206 and preflight2
-passed at 1c01a94f. Neither erases either failed gate or raises owner deadlines.
-
+The c8 repair is boolean-|| only: true short-circuits, false needs boolean RHS,
+demanded unknown refuses. Settings accepts uppercase literals on env/immutable
+alias/this.env, rejecting copied/dynamic keys. Docs cover eight shared-Worker
+restarts, archive-packages APPLICATION_TRUST and unread GROW_ARCHIVE_CONFIG
+removal. Runtime/fixtures/prices/caps/authority/deadlines stay exact.
+HELPER=/private/tmp/artroom-ae1-retained-query-control-20261116.mjs;
+S/manifest SHA f5fb9b973ac64dc99282f0af01cc858e4511401218a0aa60df41818cdab065d8.
+Rows retain faults/verdicts/TAPs; bytes/0644 restore, no cleanup action, raised
+deadline or third green. Node 206/preflight2 at 1c meet 7be10b34's START2 rule,
+not either failed gate or a larger deadline.
 
 ## Gate2 failure and attempt3
 
 Gate2's private retention has 38 files/53,876,500 B, bound by
 `G2/raw-gate-retention.json` SHA `e3f4988723e59a7f671187ad72646d83a62abd6a7edfc0247d025944d2731490`; raw Native stays private.
 
-The d382 repair changes five test/doc paths: shared graph helper, Native case,
-raw corpus/mapping and driver words. Both graph consumers use the shared max.
-273 graph declarations (127+128+18), formerly 145 (63+64+18), are source
-arithmetic, not observed case counts. Per-root 17 and stronger 64 MiB assertions
-stay; no production/charge/deadline/ID/version/packet change. Driver wording is
-“Shared production ceilings apply.” Scanner repair remains `c8c308a710be130d4c55941ebeb20f88e80307e9`,
-tree `05acf39b48f3a735fb18509dfb9976ec2709c62b`.
+The d382 five test/doc repairs join the graph helper, Native boundary and raw
+corpus/mapping, plus driver words. At that dated head both graph consumers use
+the shared maximum: 273 declarations (127+128+18) versus 145 (63+64+18), source
+arithmetic, not observed cases. Per-root 17/stronger 64 MiB stay; no production/
+charge/deadline/ID/version/packet change. Driver says “Shared production ceilings
+apply.” Scanner source `c8c308a710be130d4c55941ebeb20f88e80307e9`, tree
+`05acf39b48f3a735fb18509dfb9976ec2709c62b`.
+Ruling `a1c5a189f33f49ef2c80f915e13476954aa94b94` requires whole inventory-reader
+owners/Node before START3. The 39-file Native check passed at da8a; Node then failed. Fresh
+preflight3/gate3/review/hosted remain owed. START3 still needs exact-head hit
+list and actual owner counts; the initial scan is pre-repair.
 
-Ruling `a1c5a189f33f49ef2c80f915e13476954aa94b94` requires the 39 whole Native
-files, whole Node again, exact-head old-form audit and fresh preflight3 before
-START3, then gate3. All are UNRUN. START3 names actual owners/counts and each
-hit disposition. The initial audit is pre-repair; review/hosted remain owed.
+## Post-Node layer disposition
+
+Ruling `c461110c34123bb5071324064a84f7ecf52c5799` keeps the ceiling in Git and
+the layer assertion/allowlist unchanged. Native passes it to the argument-only
+graph helper; Derive imports no dap-git and supplies its own TEST bound 53 to
+test a graph property, not the archive ceiling. The four test/doc repairs are committed at 35de;
+validation there is UNRUN. The ceiling move was withdrawn. If Derive production enforces
+this ceiling, stop for planner disposition. The earlier shared-corpus semantics
+and 39-file pass remain dated da8a, not validation of the successor. Whole Node
+must pass again before START3, with exact-head hit list and owner counts.
