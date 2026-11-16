@@ -26,13 +26,13 @@ function retainedRegisterSelector(config: Config, register: ScopeRef, key: KeyId
     if (!plan || !answersVersionQuestion(plan.definition, "cliRetainedInstallRegister") || !DIRECTORY_OF[plan.definition] || config.key !== "operator"
       || plan.service !== config.service || !isSignedIntentShape(plan.founding) || !verifySignedIntent(plan.founding)) return null;
     const intent = plan.founding.intent, definition = platform(plan.definition);
-    // The binding cohort keeps the same immutable register selector. Its
-    // original keys-policy operator must also occur in the signed founders.
-    const bindingFounder = answersVersionQuestion(plan.definition, "cliRetainedBindingFounderRegister") && intent.fields["policy"] === "keys"
-      && intent.fields["host"] === "none" && intent.fields["namespace"] === ""
-      && Array.isArray(intent.fields["founders"]) && intent.fields["founders"].includes(key);
+    // Reviewed installer-founder pins keep this selector with any host.
+    // The legacy binding pin keeps its host-none, empty-namespace limit.
+    const installerFounder = (answersVersionQuestion(plan.definition, "cliRetainedInstallerFounderRegister")
+      || answersVersionQuestion(plan.definition, "cliRetainedBindingFounderRegister") && intent.fields["host"] === "none" && intent.fields["namespace"] === "")
+      && intent.fields["policy"] === "keys" && Array.isArray(intent.fields["founders"]) && intent.fields["founders"].includes(key);
     if (!definition || definition.data.name !== "platform:register" || intent.actor !== key || intent.kind !== "install" || intent.to !== null || intent.on !== null
-      || Object.keys(intent.expected).length !== 0 || (intent.fields["policy"] !== "open" && !bindingFounder)) return null;
+      || Object.keys(intent.expected).length !== 0 || (intent.fields["policy"] !== "open" && !installerFounder)) return null;
     // These closed pins retain ordinary text/list/enum install fields;
     // PlatformAct's wider type also allows marks, which these fields omit.
     const shaped = readFields(definition.data.acts["install"]!.fields as ActType["fields"], intent.fields, PROPOSED_BOUNDS);

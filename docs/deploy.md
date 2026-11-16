@@ -76,12 +76,18 @@ install:
    and signs nothing new. `--again` signs a second creation, which makes a
    second repository.
 
-   Under policy `keys`, the command reads the register's summary before it
-   signs `found`. A key with no entry at the register in the last 900
-   seconds gets `forbidden`. The command prints
-   `Cannot read <register>: forbidden.` and signs nothing. So run the first
-   creation within 900 seconds of the install. Each accepted `found` restarts
-   those 900 seconds for the key that signed it.
+   On Register 28, the original installer named in its signed `founders`
+   can select a new creation from its exact retained, acknowledged install
+   custody after the 900-second read window. This works under policy `keys`
+   with or without a host. The selector supplies only the Register pin and
+   initial revision. Native `found` still decides authority and capacity.
+
+   A second founder, missing custody, an unsupported pin or mismatched proof
+   keeps the actual Summary read path. A key with no recent entry can then
+   get `Cannot read <register>: forbidden.` before signing `found`. An
+   accepted `found` restarts that key's 900-second read window. Retained
+   install selection grants no Summary permission and renews no install
+   deadline. It does not recover an unknown prior claim.
 
 If the seed's time passes before the CLI sends the install, the CLI
 refuses it as `plan-expired`:
@@ -97,10 +103,10 @@ If the CLI sent the install, or the service acknowledged it, run
 `install --planned` again from the original directory. An expired
 deadline does not allow a replacement.
 
-Finish the first room while the install is inside its 900-second read
-window. Before enrollment, the creation's read window also lasts 900
-seconds. The Worker does not renew an expired window. Do not sign a new
-creation to replace one whose window expired.
+After `found` is accepted, finish enrollment inside that creation's
+900-second read window. The retained-install selector does not renew an
+expired creation window. Continue an unknown pending claim with the same
+command. Do not sign a replacement merely because its window expired.
 
 ### Install without a plan
 

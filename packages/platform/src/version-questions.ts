@@ -81,6 +81,10 @@ const QUESTION_PINS = {
   cliRetainedBindingFounderRegister: [
     "platform:register@25",
   ],
+  /** CR-2: original installer in the signed founders list, with any host. */
+  cliRetainedInstallerFounderRegister: [
+    "platform:register@28",
+  ],
   cliRetainedUnpublishedNamespaceRegister: [
     "platform:register@21",
   ],

@@ -16,8 +16,8 @@ const standing = JSON.parse(readFileSync(new URL("./fixtures/version-standing-86
   rows: { pin: string; answer: boolean }[];
 };
 
-/** CF-1 adds one question, which no frozen pin answers. */
-const CUTOVER_QUESTIONS: readonly VersionQuestion[] = ["scopePublicationPrefixesDestination"];
+/** Later questions leave every frozen pin answer unchanged. */
+const CUTOVER_QUESTIONS: readonly VersionQuestion[] = ["scopePublicationPrefixesDestination", "cliRetainedInstallerFounderRegister"];
 
 test("the question owner covers every frozen predicate and catalog pin", () => {
   expect([...VERSION_QUESTIONS].sort()).toEqual([...frozen.questions.map(question => question.name), standing.question, ...CUTOVER_QUESTIONS].sort());
@@ -92,7 +92,7 @@ const CUTOVER_FAMILY_ANSWERS: Readonly<Record<string, readonly VersionQuestion[]
   "platform:register@28": [
     "archiveRegisterForeignCopy", "cliFailedClaimRegister", "cliImplicitSelectedPlanRegister", "cliNewInstallRegister",
     "celldPreparedNoHostRegister", "celldSmokeOwnedPlanRegister",
-    "cliNoHostInstallRegister", "cliOpenPolicyExplicitRegister", "cliRetainedInstallRegister",
+    "cliNoHostInstallRegister", "cliOpenPolicyExplicitRegister", "cliRetainedInstallRegister", "cliRetainedInstallerFounderRegister",
     "cliRetainedUnpublishedSelectionRegister", "cliScopeIndexDefaultCoveragePin", "cliScopeIndexSupportedLineagePin",
     "clientCreationOfferRegister", "clientSettlementClaimProjectionRegister", "pageRetainedCreationRegister",
     "scopeDemoCreationRegister", "scopeHostNoneCreationRegister", "scopeSettlementClaimRegister",
