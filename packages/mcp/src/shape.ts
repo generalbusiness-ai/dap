@@ -11,6 +11,7 @@ import type { FactRef, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/
 import { isFactRef, isRecord, textDigest } from "@generalbusiness/dap-bytes";
 import { FieldShapeError, shapeFieldsOf, type ShapeFaultCode, type ShapeField, type ShapeFieldType } from "@generalbusiness/dap-client";
 import type { ActLike } from "@generalbusiness/dap-client";
+import { expectedKeys } from "@generalbusiness/dap-derive";
 import { clip } from "./errors.ts";
 
 /** A value that is not of its declared shape. Nothing was signed. */
@@ -115,18 +116,14 @@ export function shapeAt(given: unknown): Record<string, number> | undefined {
 }
 
 /** Check coverage only when building a new envelope; a custody re-report retains its original subjects and revisions. */
-export function capturedExpected(at: Record<string, number> | undefined, fresh: Record<string, number>, act?: Pick<ActLike, "also">): Record<string, number> {
+export function capturedExpected(at: Record<string, number> | undefined, fresh: Record<string, number>, act?: Pick<ActLike, "step" | "also">): Record<string, number> {
   if (at === undefined) return fresh;
   // A subject the captured display showed may since have left the live summary: a superseded version is final. Its captured
-  // revision stays, so the scope refuses the stale act. An `also` name must be one this act binds. For `on`, the scope decides:
-  // it requires exactly the keys it reads, and it refuses an extra `on` as `bad-intent`.
-  const left = (name: string): boolean => {
-    if (act === undefined) return false;
-    if (name === "on") return true;
-    const rule = ownValue(act.also, name) as { code?: string } | undefined;
-    return rule !== undefined && rule.code === undefined;
-  };
-  if (Object.keys(fresh).some((name) => !Object.hasOwn(at, name)) || Object.keys(at).some((name) => !Object.hasOwn(fresh, name) && !left(name))) {
+  // revision stays, so the scope refuses the stale act. Only the shared expected-key rule admits a captured name.
+  const names = act === undefined ? Object.keys(fresh) : expectedKeys(act,
+    Object.entries(act.also).filter(([, rule]) => rule["code"] === undefined).map(([name]) => name));
+  const allowed = new Set(names);
+  if (Object.keys(fresh).some((name) => !Object.hasOwn(at, name)) || Object.keys(at).some(name => !allowed.has(name))) {
     throw new Unshaped("at", "does not name exactly the act's bound subjects", Object.keys(fresh).sort().join(", ") || "no bound subjects: {}");
   }
   return at;

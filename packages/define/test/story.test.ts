@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { format } from "prettier";
-import { define, final, grants, item, live, open, plusSeconds, time, timed, value } from "../src/index.ts";
+import { comment, define, final, grants, item, live, open, plusSeconds, time, timed, value } from "../src/index.ts";
 import { accepted, member, tell, writesNothing, type OutcomeAssertion, type StorySpec, type Teller } from "../src/story.ts";
 import { lendingStory, lendingStorySpec } from "../../../examples/lending/story.ts";
 
@@ -25,6 +25,25 @@ const beginAsserts: OutcomeAssertion = { entries: [{ input: { type: "act", kind:
   { effect: "open", item: 1, type: "timer", state: "open" }, { effect: "value", item: 1, slot: "until", value: "2026-11-10T00:00:05Z" },
 ], sends: [] }] };
 const begin = (story: Teller<typeof definition>, save?: string) => story.act("alice", "begin", { fields: {} }, accepted, beginAsserts, save);
+
+test("a comment story targets its item without an on key in expected", async () => {
+  const comments = define({ name: "comment-story", genesis: "establish", items: [root], acts: {
+    establish: open(root, grant.create),
+    comment: comment(root, grant.create),
+  } });
+  const commentSpec: StorySpec<typeof comments> = { ...spec, name: "comment-story", definition: comments };
+  const built = tell(commentSpec, story => {
+    story.act("alice", "comment", { on: 0, fields: {} }, accepted, { entries: [{
+      input: { type: "act", kind: "comment" }, effects: [], sends: [],
+    }] });
+  });
+  // The real judge must accept the comment entry with no item effects or sends.
+  await expect(built).resolves.toMatchObject({ steps: [{ expect: accepted }] });
+  const story = await built;
+  expect(story.steps).toEqual([{
+    act: { actor: "alice", kind: "comment", on: 0, expected: {}, fields: {} }, expect: accepted,
+  }]);
+});
 
 test("a story refuses unasserted timed work and accepts the exact firing at its step", async () => {
   await expect(tell(spec, story => { begin(story); story.advance("2026-11-10T00:00:06Z", writesNothing); })).rejects.toThrow("timed outcomes");

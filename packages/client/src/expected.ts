@@ -3,6 +3,7 @@
  * signed input and every expected revision at its own head.
  */
 import type { FactRef, FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
+import { expectedKeys } from "@generalbusiness/dap-derive";
 
 import { isFactRef, isRecord } from "@generalbusiness/dap-bytes";
 type ExpectedField = Readonly<Record<string, unknown>> & { type?: string };
@@ -56,15 +57,21 @@ function subjectsOf<R, I extends Address>(act: ExpectedAct, items: readonly Boun
  */
 export function expectedOf<A extends ExpectedAct, R = number, I extends Address = number>(act: A, items: readonly Bound<R, I>[], on: I | null, fields: Readonly<Record<string, FieldValue>>): Record<string, R> {
   const expected: Record<string, R> = {};
-  if (act.step === "transition" && on !== null) {
+  const revisions = new Map<string, { revision: R }>();
+  if (expectedKeys(act, []).includes("on") && on !== null) {
     const at = items.find((item) => item.id === on)?.revision;
-    if (at !== undefined) expected["on"] = at;
+    if (at !== undefined) revisions.set("on", { revision: at });
   }
   const { subject } = subjectsOf(act, items, on, fields);
+  const bound: string[] = [];
   for (const [name, rule] of Object.entries(act.also)) {
     if ((rule as { code?: string }).code !== undefined) continue;
     const item = subject(name);
-    if (item) put(expected, name, item.revision);
+    if (item) { bound.push(name); revisions.set(name, { revision: item.revision }); }
+  }
+  for (const name of expectedKeys(act, bound)) {
+    const found = revisions.get(name);
+    if (found) put(expected, name, found.revision);
   }
   return expected;
 }

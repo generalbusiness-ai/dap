@@ -13,6 +13,7 @@ export * from "./timed.ts";
 export * from "./fields.ts";
 export { valuePlaces } from "./validate/fields.ts";
 export * from "./handlers.ts";
+export { expectedKeys } from "./expected.ts";
 export * from "./judge.ts";
 export * from "./delivery.ts";
 export * from "./genesis.ts";

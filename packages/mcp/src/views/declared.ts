@@ -6,6 +6,7 @@ import { canonicalize, digestBytes, isLocalId, isMemberRef, parseStrict, unb64ur
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
 import { applicationProjectionId, applicationViewFactField, isApplicationJournalSource, readPublishedApplicationPackage2, type ApplicationView, type ApplicationViewAct, type PublishedPackedApplication2 } from "@generalbusiness/dap-platform/application-v2";
 import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule";
+import { expectedKeys } from "@generalbusiness/dap-derive";
 import { ViewError } from "./session.ts";
 import type { Card, CardAction, NativeCardAction, DeclaredSurface, Projection, ViewQuery, ViewSource } from "./types.ts";
 import { PRESENTATION } from "./generated.ts";
@@ -147,8 +148,8 @@ export class DeclaredViewSource implements ViewSource {
     const items = applicationItemSnapshot(projection, data).items;
     const expected = expectedOf(declaration, items, row.id, effectiveFields(declaration, control.args ?? {}, data.scope));
     // An absent secondary row is not permission to sign an incomplete set.
-    const names = Object.entries(declaration.also).filter(([, rule]) => rule["code"] === undefined).map(([name]) => name);
-    if (declaration.step === "transition") names.push("on");
+    const names = expectedKeys(declaration,
+      Object.entries(declaration.also).filter(([, rule]) => rule["code"] === undefined).map(([name]) => name));
     return names.every(name => Object.hasOwn(expected, name)) ? expected : null;
   }
   async #allowed(view: ApplicationView, row: ApplicationProjectionRow, data: ApplicationProjectionData, scope: ScopeRef, definition: Digest): Promise<NativeCardAction[]> {

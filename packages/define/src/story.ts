@@ -2,7 +2,7 @@
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition, Digest, Entry, FieldType, FieldValue, Grant, Intent, KeyId, MemberId, MemberRef, ObservationUse, ScopeKind, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, entryHash, intentDigest, type CheckedSequence, keyIdOfSecret, newGenesisNonce, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
-import { alsoItems, applyEntry, clockOf, entryOf, judgeAct, judgeGenesis, judgeTimed, MemoryState, nextDue, prepareRules, readFields, timeMs, timeOf, validateDefinition } from "@generalbusiness/dap-derive";
+import { alsoItems, applyEntry, clockOf, entryOf, expectedKeys, judgeAct, judgeGenesis, judgeTimed, MemoryState, nextDue, prepareRules, readFields, timeMs, timeOf, validateDefinition } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Draft, JudgeContext, Own, ValidDefinition } from "@generalbusiness/dap-derive";
 import { evaluateRules, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
@@ -194,11 +194,17 @@ export async function tell<const D extends DeclaredDefinition>(spec: StorySpec<D
           if (!act) throw new Error(`the story names no act ${request.kind}`);
           const fields = resolve(request.asked.fields) as Record<string, FieldValue>, ids: Record<string, number> = {};
           const on = request.asked.on;
-          if (on !== undefined) ids["on"] = on;
           const read = readFields(act.fields, fields, PROPOSED_BOUNDS);
           const bound = alsoItems(state, definition, act.also, read.ok ? read.fields : fields, on === undefined ? null : state.item(on));
           if (!bound.ok) throw new Error(`the story cannot resolve its also subjects: ${bound.detail}`);
-          for (const [alias, item] of bound.items) if (!bound.marked.has(alias)) ids[alias] = item.id;
+          const names = [...bound.items.keys()].filter(alias => !bound.marked.has(alias));
+          for (const name of expectedKeys(act, names)) {
+            if (name === "on") { if (on !== undefined) ids[name] = on; }
+            else {
+              const item = bound.items.get(name);
+              if (item) ids[name] = item.id;
+            }
+          }
           const revisions = Object.fromEntries(Object.entries(ids).map(([alias, id]) => {
             const item = state.item(id);
             if (!item) throw new Error(`the story expects absent item ${id}`);
