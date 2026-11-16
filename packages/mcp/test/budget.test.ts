@@ -732,6 +732,20 @@ describe("what a call costs, end to end", () => {
     await annotate(`resubmissions: 70 outcomes kept and readable; each resubmission ${reads(last)} read and ${posts(last)} post`);
   });
 
+  // Invariant: the scope's refusal of a submit for authority (`refused`, `unauthorized`) ends the held session, so the next call asks for a
+  // new one and with it the signer's standing; a refusal of another reason does not. The stand-in scripts each answer.
+  test("a refusal for authority ends the held session, and a refusal of a guard does not", async () => {
+    const s = roomOf("admin", [issueDemo]);
+    const judgedAt = { seq: 1, hash: `sha256:${"b".repeat(64)}` };
+    await s.service.page();
+    s.stand.answers.set("comment", () => ({ answer: "refused", reason: "guard-failed", name: "nope", judgedAt }));
+    await s.service.call("issue.comment", { target: 1, fields: { body: "One." }, idempotencyKey: "guard" });
+    expect(sessions((await counted(s, () => s.service.call("issue.comment", { target: 1, fields: { body: "Two." }, idempotencyKey: "guard-again" }))).requests)).toBe(0);
+    s.stand.answers.set("comment", () => ({ answer: "refused", reason: "unauthorized", judgedAt }));
+    await s.service.call("issue.comment", { target: 1, fields: { body: "Three." }, idempotencyKey: "authority" });
+    expect(sessions((await counted(s, () => s.service.call("issue.comment", { target: 1, fields: { body: "Four." }, idempotencyKey: "authority-again" }))).requests)).toBe(1);
+  });
+
   // Invariant: a subscribed client is told once per real change of the generation (an activation, a role change) and never for
   // an ordinary head advance; the watch reads only the generation inputs, and nothing when no client is subscribed.
   test("notifications: activation and standing refresh, and none for a head advance", async ({ annotate }) => {

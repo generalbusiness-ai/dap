@@ -30,9 +30,9 @@ import { describeAct } from "./describe.ts";
 import { grantAction, onOf, type ActLike, type DefinitionLike } from "@generalbusiness/dap-client";
 import { AFTER_INPUT, AFTER_WITH_NOW, AT_INPUT, NOW_INPUT, schemaOf } from "./input-schema.ts";
 import { answered, archivedAnswer, clip, earlierSaid, finding, type Earlier, type Finding, type Said } from "./errors.ts";
-import { Kept, definitionOf, readInventory, readPartitionIndexes, standingIn, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
+import { Kept, definitionOf, readInventory, readPartitionIndexes, standingFrom, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
 import { KIB, bytesOf, cursorOf, fromCursor, pageBy, sliceText } from "./paging.ts";
-import { ReadSessions, Reads, type AbsenceRecovery } from "@generalbusiness/dap-client";
+import { ReadSessions, Reads, authorityRefusal, type AbsenceRecovery } from "@generalbusiness/dap-client";
 import { Recent } from "./recent.ts";
 import { Unshaped, capturedExpected, needsOn, nowOf, shapeAfter, shapeAt, shapeFields, shapePresented, valuePlaces, type McpNow } from "./shape.ts";
 import { WORDS, type Words } from "./words.ts";
@@ -307,14 +307,13 @@ export class McpService {
       viewer: async () => {
         const room = await this.#applicationRoom(), session = await this.#reads.session(room.membership);
         if (!session || session.claims.key !== this.key || canonicalize(session.claims.membership) !== canonicalize(room.membership)) return null;
-        const { summary } = await this.#summary(room.membership.scope, room.membership);
-        const standing = standingIn(summary.items, this.key);
+        const standing = standingFrom(session, this.key, this.#now());
         if (!standing.known || standing.role === null) return null;
         return { member: { membership: session.claims.membership, member: session.claims.member }, grants: standing.actions };
       },
       actions: async () => {
-        const room = await this.#applicationRoom(), { summary } = await this.#summary(room.membership.scope, room.membership);
-        const standing = standingIn(summary.items, this.key);
+        const room = await this.#applicationRoom();
+        const standing = standingFrom(await this.#reads.session(room.membership), this.key, this.#now());
         return standing.known ? standing.actions : [];
       },
     }) : null;
@@ -897,7 +896,12 @@ export class McpService {
     const deliver = async (envelope: Envelope): Promise<Answer> => {
       const finish = dispatch ? await dispatch.prepare(identity, this.#port.dispatchSource ?? null) : null;
       this.#finishDispatch(finish);
-      try { return await this.#reads.transport.submit(scope, envelope.signed, [], envelope.beside); }
+      try {
+        const answer = await this.#reads.transport.submit(scope, envelope.signed, [], envelope.beside);
+        // The scope refused this key's authority: the standing in the held session may be out of date. The next read asks again.
+        if (membership !== null && authorityRefusal(answer)) this.#reads.forget(membership.scope);
+        return answer;
+      }
       catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
     };
     if (membership === null || !this.#keepsOriginals(s, membership)) return this.custody.send(identity, meaning, build, deliver, options);
@@ -950,7 +954,8 @@ export class McpService {
   /**
    * Whether this service keeps originals at `membership`: a person's local server. A standing that states an agent or a checker
    * ends this for the process, because a member's kind is fixed and a later failed read states no kind. A key whose reads have not
-   * stated its kind counts as a person, so it can keep rows until a read states its kind.
+   * stated its kind counts as a person, so it can keep rows until a read states its kind. The kind is the `kind` field of the member
+   * item in the membership summary that the inventory read (`standingFrom`). It decides no action here.
    */
   #keepsOriginals(s: Snapshot, membership: ScopeRef): boolean {
     if (!this.#port.originals) return false;

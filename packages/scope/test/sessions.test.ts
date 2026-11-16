@@ -10,7 +10,7 @@ import { platform } from "@generalbusiness/dap-platform";
 import { httpSource } from "@generalbusiness/dap-replay";
 import { requestSession, sessionRequest, type Fetch, type Session } from "@generalbusiness/dap-client";
 import type { Actor } from "@generalbusiness/dap-derive/testing";
-import { SqliteStore, Turns, Wakes, mintSession, production, sessionsOf } from "../src/index.ts";
+import { SqliteStore, Turns, Wakes, mintSession, production, readsOf, sessionsOf } from "../src/index.ts";
 import { later, net, soon } from "./net.ts";
 import { office, repository, rita, routed, una, type Platform } from "./repository.ts";
 import { reader } from "./fixtures-native.ts";
@@ -339,6 +339,76 @@ describe("read sessions (authority note, sections 3.9, 3.12 row W6, 5.3 and 5.5;
       const [good, away] = [await signedRequest(M, rita), await signedRequest((await office()).M, rita)];
       expect([await ask(owner, M, { ...good, request: { ...good.request, actor: una.key } }), await ask(owner, M, away), await ask(owner, M, await signedRequest(M, rita, 901)), unb64url(good.sig)?.length])
         .toEqual([{ ok: false, reason: "bad-request" }, { ok: false, reason: "misaddressed" }, { ok: false, reason: "bad-request" }, 64]);
+    } finally {
+      owner.close();
+    }
+  });
+
+  // ES-1. Invariant: `?standing=1` adds the standing that the issuance itself made. Without it the answer has three members.
+  test("ES-1: the option answers the signer's standing from the same issuance, beside the session; without it the answer keeps its three members; a malformed option uses no request", async () => {
+    const owner = beginSessionFixture({ secret: testSecret(), sessions: false, inspector: null });
+    onTestFinished(owner.close);
+    try {
+      const { M } = await repository();
+      const m = await M.at();
+      const post = async (path: string, signed: SignedSessionRequest) => {
+        const reply = await real(owner, () => routed(url(M, path), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(signed) }));
+        return { status: reply.status, body: await reply.json() as Record<string, unknown> };
+      };
+      // With the option: the three members, and the value of `standingOf` in the same issuance, at membership's head, with no `at` and no `fresh`.
+      const asked = await post("/sessions?standing=1", await signedRequest(M, rita));
+      expect([asked.status, Object.keys(asked.body).sort()]).toEqual([200, ["ok", "session", "standing", "token"]]);
+      const [standing, claims] = [asked.body["standing"] as Record<string, unknown>, asked.body["session"] as SessionClaims];
+      expect(Object.keys(standing).sort()).toEqual(["actions", "controller", "controllerActive", "definition", "head", "key", "keyState", "member", "memberState", "notAfter", "of", "role", "within"]);
+      expect(standing).toMatchObject({ of: m, head: await head(M), key: rita.key, keyState: "active", memberState: "active", within: { membership: m }, controller: null, controllerActive: null, notAfter: null });
+      // The claims and the value come from one value: the member, the key, and the reads of the actions.
+      expect([claims.member, claims.key, claims.reads]).toEqual([standing["member"], standing["key"], readsOf(standing["actions"] as string[])]);
+      // Without the option, the three members, whatever the object holds.
+      const plain = await post("/sessions", await signedRequest(M, rita));
+      expect([plain.status, Object.keys(plain.body).sort()]).toEqual([200, ["ok", "session", "token"]]);
+      // A `standing` that is not exactly one `1` is refused before the body is read: the same signed request is then answered once, as new.
+      const signed = await signedRequest(M, una);
+      for (const path of ["/sessions?standing=0", "/sessions?standing=", "/sessions?standing=1&standing=1"]) expect(await post(path, signed), path).toEqual({ status: 400, body: { error: "bad-request" } });
+      expect((await post("/sessions?standing=1", signed)).status).toBe(200);
+      expect((await post("/sessions?standing=1", signed)).body).toEqual({ ok: false, reason: "replayed" });
+      // The client's reader asks with the option and keeps a value that passes its checks.
+      const held = await session(owner, M, rita);
+      expect(held.standing).toMatchObject({ key: rita.key, of: m, keyState: "active" });
+    } finally {
+      owner.close();
+    }
+  });
+
+  // ES-1. Invariant: a new reader and an older strict reader both work against the Worker they meet in a rolling deployment.
+  // STAND-INS: no build of an older Worker runs in this harness. (a) The older route ignores the query, so the first case drops it
+  // before the real current route and object. (b) The older reader is a reduced copy of the member-count rule of the predicate at main
+  // 6728059, which accepts exactly three members of an answer. The Worker, the object, the signing and the new reader are real. A true
+  // rolling pair needs the older Worker build, as a second Worker bound to the same object namespace, and the older client build as the
+  // reader. THE LIMIT: this test does not run that pair. The planner runs it at the deployment, in both orders: the new client against the
+  // deployed older Worker before the deployment, and the client of `91610da9` against the new Worker after it. The default path, with no
+  // option, is the older behaviour by construction, and the test above pins it: with no option the answer has exactly the three members.
+  test("ES-1 rolling pair: a new reader against an answer of three members keeps a session with no standing; an older strict reader accepts the answer of a Worker that got no option", async () => {
+    const owner = beginSessionFixture({ secret: testSecret(), sessions: false, inspector: null });
+    onTestFinished(owner.close);
+    try {
+      const { M } = await repository();
+      const ignoring = (async (address: string, init?: RequestInit) => routed(address.replace("?standing=1", ""), init)) as unknown as Fetch;
+      const asked = await signedRequest(M, rita);
+      const older = await real(owner, () => requestSession(SERVICE, M.name, asked, { fetch: ignoring }));
+      expect(older.ok).toBe(true);
+      if (!older.ok) return;
+      expect(older.session.standing).toBeNull();
+      expect(await read(owner, M, "", older.session.reader())).toEqual([200, "ok"]);
+
+      const strictOlder = (v: unknown): boolean => {
+        if (typeof v !== "object" || v === null || Array.isArray(v)) return false;
+        const r = v as Record<string, unknown>, claims = r["session"] as Record<string, unknown> | undefined;
+        return r["ok"] === true && Object.keys(r).length === 3 && typeof r["token"] === "string" && typeof claims === "object" && claims !== null && claims["v"] === 1;
+      };
+      const body = async (path: string) => (await real(owner, async () => routed(url(M, path), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(await signedRequest(M, rita)) }))).json();
+      expect(strictOlder(await body("/sessions"))).toBe(true);
+      // The option is the reason it is separate: the same strict reader refuses the four-member answer.
+      expect(strictOlder(await body("/sessions?standing=1"))).toBe(false);
     } finally {
       owner.close();
     }

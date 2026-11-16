@@ -1,7 +1,7 @@
 /** Shared command outcomes and read/wait primitives. The stop has one identity. */
 import type { Answer, Created, KeyId, ReadMinimum, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, isFactRef, readMinimum, scopeIdOf, timeMs, timeOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { ScopeHandle, TransportError, httpTransport, signedReads, requestSession, signerSessionRequest, type OperationalApi, type ReadSigning, type Session, type Signer, type Signing, type Transport } from "@generalbusiness/dap-client";
+import { ScopeHandle, TransportError, authorityRefusal, httpTransport, signedReads, requestSession, signerSessionRequest, type OperationalApi, type ReadSigning, type Session, type Signer, type Signing, type Transport } from "@generalbusiness/dap-client";
 import { SourceError } from "@generalbusiness/dap-replay";
 import type { Context, Outcome } from "./command-context.ts";
 import type { ClaimStep, Config } from "./store.ts";
@@ -106,7 +106,7 @@ async function issueReadSession(ctx: Context, service: string, membership: Scope
   const now = () => ctx.now?.() ?? Date.now();
   const asked = await signerSessionRequest(membership, signer, timeOf(Math.floor(now() / 1000) * 1000 + 60_000), b64url(fresh(16)));
   checkReadOwner(current);
-  const answer = await requestSession(service, membership.scope, asked, ctx.fetch ? { fetch: ctx.fetch } : {});
+  const answer = await requestSession(service, membership.scope, asked, { standing: true, ...(ctx.fetch ? { fetch: ctx.fetch } : {}) });
   // This check precedes the cache owner's publication of the issued result.
   checkReadOwner(current);
   if (!answer.ok) throw new SessionRefused(answer.reason, answer.retryAfterSeconds, renewal);
@@ -217,7 +217,19 @@ function makeConnection(ctx: Context, service: string, membership: ScopeRef | un
     return owned;
   };
   const transport: Transport & OperationalApi = {
-    create: (...args) => base.create(...args), submit: (...args) => base.submit(...args),
+    create: (...args) => base.create(...args),
+    // The scope refused the signer's authority: this session's standing is out of date. End the session, so the next read asks again.
+    submit: async (...args) => {
+      const answer = await base.submit(...args);
+      if (authorityRefusal(answer) && selected) {
+        const ended = selected; selected = undefined;
+        try { await owned(() => ended.discard()); } catch (error) {
+          if (error instanceof ReadSessionCacheError) stopCommand(failed(error.message));
+          throw error;
+        }
+      }
+      return answer;
+    },
     prepare: (...args) => base.prepare(...args), settle: (...args) => base.settle(...args),
     summary: (scope, given, atLeast) => { const minimum = ownMinimum(atLeast); return dispatch(given, reader => signed.summary(scope, reader, minimum)); },
     items: (scope, given, type, cursor, atLeast) => { const minimum = ownMinimum(atLeast); return dispatch(given, reader => signed.items(scope, reader, type, cursor, minimum)); },

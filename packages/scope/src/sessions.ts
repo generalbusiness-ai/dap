@@ -79,7 +79,7 @@ import { readDeployment } from "./deployment-setting.ts";
  */
 
 import { SESSION_DOMAINS } from "@generalbusiness/dap-contract";
-import type { Head, ScopeRef, SessionAnswer, SessionClaims, SessionRefusal, SignedSessionRequest } from "@generalbusiness/dap-contract";
+import type { Head, KeyId, ObservationAnswer, ScopeRef, SessionAnswer, SessionClaims, SessionRefusal, SignedSessionRequest } from "@generalbusiness/dap-contract";
 import { hex } from "@generalbusiness/dap-bytes";
 import { b64url, canonicalBytes, canonicalize, hmacSha256, isKeyId, isMemberId, isSignature, parseStrict, taggedBytes, unb64url, utf8, verifySessionRequest } from "@generalbusiness/dap-bytes";
 import { isObject, isScopeRef, observedOf, same, timeMs, timeOf, type RecordedRef, type ScopeState, type StateView } from "@generalbusiness/dap-derive";
@@ -345,8 +345,16 @@ export function readsOf(actions: readonly string[]): readonly ReadName[] {
   return admin ? [...MEMBER_READS, ...ADMIN_READS] : MEMBER_READS;
 }
 
-/** Local admission metadata; the HTTP response keeps the contract's SessionAnswer body. */
-export type SessionIssueAnswer = Extract<SessionAnswer, { ok: true }>
+/** How the answer is shaped, outside the signed request. The route sets it from `?standing=1`. */
+export type SessionIssueOptions = { readonly standing?: true };
+/** The signer's standing that `standingOf` made in the issuance, with its membership head, and with no `at` and no `fresh`. */
+export type SessionKeyStanding = Extract<ObservationAnswer, { key: KeyId }>;
+/** The three members that every session answer has, and nothing more. */
+export type SessionLegacySuccess = Extract<SessionAnswer, { ok: true }> & { readonly standing?: never };
+/** The three members and the standing, for a request that asked. */
+export type SessionStandingSuccess = Extract<SessionAnswer, { ok: true }> & { readonly standing: SessionKeyStanding };
+/** Local admission metadata; the HTTP response keeps the contract's SessionAnswer body, and adds `standing` only on request. */
+export type SessionIssueAnswer = SessionLegacySuccess | SessionStandingSuccess
   | { ok: false; reason: Exclude<SessionRefusal, "rate-limited"> }
   | { ok: false; reason: "rate-limited"; retryAfterSeconds: number };
 
@@ -369,9 +377,16 @@ export type SessionIssueAnswer = Extract<SessionAnswer, { ok: true }>
  * answered, is worth nothing. One that was captured and never answered is
  * still a credential until its `notAfter`: it travels in a request's body,
  * never in a URL. With no `requests` given, no session is issued.
+ *
+ * **The standing on request.** With `options.standing`, the answer also holds
+ * the standing value that this issuance made for its checks and its claims,
+ * with the head it was read at. It is the same value, never a second read.
+ * With no option the answer has exactly its three members, so a newer object
+ * under an older Worker, which forwards the answer unchanged, answers as before.
  */
 export function issueSession(
   config: { sessions: Sessions | null; clock: Clock; requests: SessionRequests | null }, state: Pick<StateView, "scope" | "page" | "item">, pinned: { named: unknown } | null, asked: unknown,
+  options?: SessionIssueOptions,
 ): SessionIssueAnswer {
   const no = (reason: Exclude<SessionRefusal, "rate-limited">): SessionIssueAnswer => ({ ok: false, reason });
   if (!config.sessions || !config.requests) return no("sessions-unavailable");
@@ -396,7 +411,9 @@ export function issueSession(
   const session: SessionClaims = {
     v: 1, deployment: config.sessions.deployment, membership: scope.at, member: standing.member, key: actor, reads: readsOf(standing.actions), ends: timeOf(reading + SESSION_SECONDS * 1000),
   };
-  return { ok: true, token: mintSession(config.sessions, session), session };
+  const token = mintSession(config.sessions, session);
+  // Only the exact option adds the member. A runtime value that is not `true` is no option.
+  return options?.standing === true ? { ok: true, token, session, standing } : { ok: true, token, session };
 }
 
 /** The most requests of one key that have been answered and have not passed their `notAfter`. Configuration (I3 deltas, entry ES2). */

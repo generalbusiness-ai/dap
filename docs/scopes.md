@@ -796,6 +796,20 @@ what a session binds, how it ends, and the form of a signed read.
 [What a revoked key keeps](security/trust-boundaries.md#what-a-revoked-key-keeps)
 gives the end of each read after a revocation.
 
+A device may ask for its own standing with the session. A request to
+`POST /v1/scopes/<membership>/sessions?standing=1`, with the same signed
+body, gets `{ok, token, session, standing}`. `standing` is the key
+observation that membership made in that issuance, with its membership head
+and without `at` or `fresh`. A request without the option gets the three
+members `{ok, token, session}`. An older Worker ignores the option and gives
+the three members, so a reader that asks keeps the session and has no
+standing. The MCP server and the CLI ask. The room page, the application
+screens and the index command do not, and the sandbox gateway allows no
+query on this route. The query holds no credential. Any `standing` value
+other than one `1` is refused with `bad-request` before the request is used. The value
+settles no row of `observes`: a scope that observes membership still reads
+membership at its own head.
+
 Membership retains at most 64 answered session requests per key, each until
 its signed `notAfter`, which is at most 900 seconds ahead of membership's
 clock. At that limit the HTTP route returns 429 with the `rate-limited`

@@ -1,9 +1,9 @@
 import { setImmediate } from "node:timers/promises";
 import { expect, test } from "vitest";
-import type { Input, LogPage, Read, ScopeRef, SequenceEntry, SignedSessionRequest } from "@generalbusiness/dap-contract";
+import type { Input, Item, LogPage, Read, ScopeRef, SequenceEntry, SignedSessionRequest } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, intentDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { Custody, CustodyError, Lost, Reads, ReadSessions, identityId, meaningOf, memoryStore, secretSigner, signedIntent, type Identity } from "@generalbusiness/dap-client";
-import { Kept, readInventory } from "../src/inventory.ts";
+import { Kept, readInventory, standingFrom } from "../src/inventory.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";
 
 const START = Date.parse("2099-01-01T00:00:00Z");
@@ -180,7 +180,7 @@ test("concurrent reads share one issuance; completed credentials keep each reade
   const first = new Reads({ service: SERVICE, signer: key, sessions, now: () => clock.now, fetch: async (url, init) => {
     expect(closed, "a new reader must not reuse a closed collection's fetch").toBe(false);
     firstRequests++;
-    if (url.endsWith("/sessions")) { entered.release(); await release.wait; }
+    if (new URL(url).pathname.endsWith("/sessions")) { entered.release(); await release.wait; }
     return stand.fetch(url, init);
   } });
   const pending = [first.session(stand.membership), first.session(stand.membership), first.session(stand.membership)];
@@ -304,4 +304,56 @@ test("the shared credential cache evicts after 64 identities and reissues for th
   }
   expect(await reads.session(stand.membership)).not.toBeNull();
   expect(stand.requests.filter(route => route.endsWith("/sessions"))).toHaveLength(66);
+});
+
+// ES-1. Invariant: the inventory states standing from the value in the caller's session, and the shared value check (`judgeExploreGrant`)
+// judges each action. `role`, `handle` and `key` only show the value. `kind` is the fixed `kind` field of the caller's member item in the
+// membership summary that the inventory already read, and decides no action. With no value the standing is unknown. Stand-in: the
+// roster, member and key are scripted (the member's kind is `person`), and `changeStanding` stands for a value that membership states
+// differently. While the standing is unknown, the inventory has no role and no action for the caller: `room` lists the membership as
+// "your standing here is unknown" with the reason, and a tool that needs a grant is not listed.
+test("the inventory takes standing from the session's value, judges each action with the shared check, and is unknown with no value", async () => {
+  const key = signer();
+  const standingOf = async (script: (stand: StandIn) => void) => {
+    const stand = new StandIn(key.key); script(stand);
+    const reads = new Reads({ service: SERVICE, signer: key, now: () => START, fetch: stand.fetch });
+    return (await readInventory(reads, new Kept(), stand.config())).inventory.standing[stand.membership.scope];
+  };
+  const adminActions = ["membership.manage", "membership.invite", "rules.activate", "rules.publish", "destination.read-token", "issue.open", "inbox.own"];
+  expect(await standingOf(() => {})).toEqual({ known: true, role: "admin", handle: "@agent", key: key.key, actions: adminActions, kind: "person" });
+  // A Worker that gives no standing, a value that fails a check, and a value with no session to hold it: unknown.
+  expect(await standingOf(stand => { stand.standing = "ignore"; })).toEqual({ known: false, reason: "no-standing" });
+  expect(await standingOf(stand => { stand.changeStanding = value => ({ ...value, key: signer().key }); })).toEqual({ known: false, reason: "no-standing" });
+  expect(await standingOf(stand => { stand.sessions = "refuse"; })).toEqual({ known: false, reason: "no-session" });
+  // The shared check refuses every action of a key that is not active, and shows no role, no handle and no kind: known, and not eligible.
+  expect(await standingOf(stand => { stand.changeStanding = value => ({ ...value, keyState: "retired" }); }))
+    .toEqual({ known: true, role: null, handle: null, key: key.key, actions: [] });
+  // An agent whose controller is not active is refused each action but a comment. It still shows its role.
+  expect(await standingOf(stand => { stand.changeStanding = value => ({ ...value, role: "agent", actions: ["issue.open", "issue.comment"], controller: "@owner", controllerActive: false }); }))
+    .toEqual({ known: true, role: "agent", handle: "@agent", key: key.key, actions: ["issue.comment"], kind: "person" });
+  // The same agent with an active controller holds each action.
+  expect(await standingOf(stand => { stand.changeStanding = value => ({ ...value, role: "agent", actions: ["issue.open", "issue.comment"], controller: "@owner", controllerActive: true }); }))
+    .toEqual({ known: true, role: "agent", handle: "@agent", key: key.key, actions: ["issue.open", "issue.comment"], kind: "person" });
+});
+
+// ES-1. Invariant: `standingFrom` states `kind` from the member item of the summary it is given, and states none when it is given no
+// summary, or a summary with no active member for the key. It reads nothing itself, and the kind changes no action.
+test("the member kind is read from the held member item, and is absent when that item is not held", async () => {
+  const key = signer();
+  const stand = new StandIn(key.key);
+  const reads = new Reads({ service: SERVICE, signer: key, now: () => START, fetch: stand.fetch });
+  const session = await reads.session(stand.membership);
+  const roster = { id: 0, type: "roster", state: "active", values: {}, refs: {} };
+  const held = (kind: string, state = "active") => [roster,
+    { id: 1, type: "member", state, values: { handle: "@agent", role: "admin", kind }, refs: {} },
+    { id: 2, type: "key", state: "active", values: { id: key.key }, refs: { member: 1 } }] as unknown as Item[];
+  const without = standingFrom(session, key.key, START);
+  expect(without.known && Object.hasOwn(without, "kind")).toBe(false);
+  expect(standingFrom(session, key.key, START, held("person"))).toMatchObject({ known: true, kind: "person" });
+  expect(standingFrom(session, key.key, START, held("agent"))).toMatchObject({ known: true, kind: "agent" });
+  const removed = standingFrom(session, key.key, START, held("agent", "removed"));
+  expect(removed.known && Object.hasOwn(removed, "kind")).toBe(false);
+  // The kind does not change the actions: the shared check alone decides them.
+  const [asPerson, asAgent] = [standingFrom(session, key.key, START, held("person")), standingFrom(session, key.key, START, held("agent"))];
+  expect(asPerson.known && asAgent.known && asPerson.actions).toEqual(asAgent.known ? asAgent.actions : null);
 });

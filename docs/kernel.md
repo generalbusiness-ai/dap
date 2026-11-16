@@ -178,6 +178,31 @@ item and adds no scope kind, platform name, capability name, field type
 or reason code. Decision A needs its own ruling. `ScopeApi.explore` and
 its route remain held.
 
+The EK1 standing-value export is a second exception of the same form.
+Hugh approved it on 16 November 2026 under request
+`c4856f3a2eb594a5806cfa4e3fe6f41dc90adaa0`, and the planner accepted the
+design in act `77a253b93d5ea53d8ab4b4a23875fad617eb735e`. The exception
+covers one function export from `packages/derive`, `judgeExploreGrant`.
+Its caller outside `packages/derive` is the MCP inventory,
+`packages/mcp/src/inventory.ts:133`, which asks it once for each action
+of the caller's standing. No type is exported with it. Its signature
+writes the standing as `Omit<Observation, "at">` and the question as a
+`Pick` of `GrantAsked` with the `asOf` of `Clock`, both of types that the
+kernel exports today, and no caller outside `packages/derive` names a
+type of the value check. The function judges a standing value that has no
+freshness proof, by the same checks and in the same order as
+`judgeGrant`. The grant that it returns has no `fresh` member. That grant
+can enter only the unsigned body input of an Explore. It is never
+recordable authority, and it never serves a row of `observes`. The
+exception also widens the parameter of the existing export `revoked` to
+`Pick<Observation, "keyState" | "memberState">`, which every earlier
+caller still satisfies. Promise 9 requires one body of code because
+runtime, replay and Explore must share the meaning and the order of those
+checks, so the function cannot be a platform service. The condition
+binds the EK1 head: the runtime and replay judgments must give the same
+answers as the corpus before the split. The exception selects no
+standing source and releases neither E2 nor E3.
+
 A head adds to the kernel when it does any of these:
 
 - adds a file or an export to `packages/contract`, `packages/derive`, or

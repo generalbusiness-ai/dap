@@ -10,11 +10,15 @@ const START = Date.parse("2099-01-01T00:00:00Z"), SECRET = new Uint8Array(32).fi
 const M: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: textDigest("TEST genesis 1") };
 const TARGET: ScopeRef = { ...M, scope: `sc_${base32(new Uint8Array(32).fill(1))}` };
 const HEAD = { seq: 0, hash: textDigest("TEST cache head") };
+/** The value that membership states beside a session, when the request asks (`?standing=1`) and the fixture gives it. */
+const standingFor = (asked: SignedSessionRequest) => ({ of: asked.request.to, head: HEAD, key: asked.request.actor, keyState: "active", member: "@member", memberState: "active", role: "member",
+  actions: ["issue.open"], within: { membership: asked.request.to }, controller: null, controllerActive: null, notAfter: null, definition: "platform:membership@14" });
 async function fixture() {
   const store = memoryStore(); await store.keep("device", SECRET);
   const config: Config = { v: 2, service: "https://session.test", key: "device", repository: { directory: { ...M, genesis: textDigest("TEST directory genesis") }, membership: M, rules: TARGET.scope, destination: TARGET.scope } };
   await store.save(config);
   const state = { now: START, issued: 0, probes: 0, reads: 0, mutations: 0, denyTarget: false, denyAll: false,
+    standing: false, submitted: { answer: "refused", reason: "unauthorized", judgedAt: HEAD } as object,
     refused: null as null | { reason: "unauthorized" | "sessions-unavailable" | "rate-limited"; retry?: string },
     invalid: new Set<string>(), headerKinds: [] as string[] };
   const fetch: Fetch = async (url, init) => {
@@ -25,10 +29,11 @@ async function fixture() {
         headers: state.refused.retry === undefined ? {} : { "retry-after": state.refused.retry } });
       const asked = JSON.parse(init!.body!) as SignedSessionRequest;
       return Response.json({ ok: true, token: `TEST-private-cache-${state.issued}`, session: { v: 1, deployment: "TEST", membership: asked.request.to,
-        key: asked.request.actor, member: "@member", reads: ["summary", "entry", "history"], ends: timeOf(state.now + 600_000) } });
+        key: asked.request.actor, member: "@member", reads: ["summary", "entry", "history"], ends: timeOf(state.now + 600_000) },
+        ...(state.standing && new URL(url).searchParams.get("standing") === "1" ? { standing: standingFor(asked) } : {}) });
     }
     if (init?.method === "POST") {
-      state.mutations++; return Response.json({ answer: "refused", reason: "unauthorized", judgedAt: HEAD }, { status: 403 });
+      state.mutations++; return Response.json(state.submitted, { status: 403 });
     }
     const authorization = init?.headers?.["authorization"];
     state.headerKinds.push(authorization?.startsWith("Signed ") ? "signed" : authorization === "Session unrelated" ? "unrelated" : "session");
@@ -252,7 +257,7 @@ test("an ended temporary read owner discards late session issuance before cache 
   // This supplied transport deliberately finishes independently of abort.
   const fetch: Fetch = async (url, init) => {
     const response = await f.fetch(url, init);
-    if (url.endsWith("/sessions")) { entered(); await completion; }
+    if (new URL(url).pathname.endsWith("/sessions")) { entered(); await completion; }
     return response;
   };
   const flow = requiredReadsOf({ ...f.context(), fetch }, f.config.service, M, signer, () => current);
@@ -264,4 +269,41 @@ test("an ended temporary read owner discards late session issuance before cache 
   expect(await f.store.sessionCache!.read()).toBeNull();
   await expect(flow.session()).rejects.toBeInstanceOf(Stop);
   expect(f.state.issued).toBe(1);
+});
+
+// ES-1, items 3 and 4.
+const cached = async (f: Awaited<ReturnType<typeof fixture>>) => JSON.parse(new TextDecoder().decode((await f.store.sessionCache!.read())!)) as Record<string, unknown>;
+
+test("the private cache keeps the standing with its token; an entry with no standing, or with a standing that fails a check, restores a session with none", async () => {
+  const f = await fixture(); f.state.standing = true;
+  const issued = await sessionOf(f.context(), f.config);
+  expect(issued?.standing).toMatchObject({ key: keyIdOfSecret(SECRET), member: "@member", role: "member", actions: ["issue.open"] });
+  const record = await cached(f);
+  expect(Object.keys(record).sort()).toEqual(["service", "session", "standing", "token", "v"]);
+  // A fresh Context restores the value with the token, and asks for nothing.
+  expect((await sessionOf(f.context(), f.config))?.standing).toEqual(issued?.standing);
+  // An entry as an older reader wrote it has four members: it restores, with no standing.
+  await f.store.sessionCache!.replace(utf8(canonicalize(Object.fromEntries(Object.entries(record).filter(([name]) => name !== "standing")))));
+  expect((await sessionOf(f.context(), f.config))?.standing).toBeNull();
+  // A standing of another key fails the check: the session stays, and so does its token.
+  await f.store.sessionCache!.replace(utf8(canonicalize({ ...record, standing: { ...(record["standing"] as object), key: keyIdOfSecret(new Uint8Array(32).fill(18)) } })));
+  const restored = await sessionOf(f.context(), f.config);
+  expect([restored?.standing, restored?.reader()]).toEqual([null, "Session TEST-private-cache-1"]);
+  expect(f.state.issued).toBe(1);
+});
+
+test("a scope's refusal of a submit for authority ends the cached session; a submit that judged nothing leaves it", async () => {
+  const f = await fixture(); f.state.standing = true;
+  const connection = await managedReadsOf(f.context(), f.config);
+  expect((await connection.session())?.standing).not.toBeNull();
+  // An `unavailable` answer judged nothing about the key: nothing ends.
+  f.state.submitted = { answer: "unavailable", reason: "authority-unavailable" };
+  expect((await connection.transport.submit(TARGET.scope, {} as never, [], {})).answer).toBe("unavailable");
+  expect([await f.store.sessionCache!.read() === null, f.state.issued]).toEqual([false, 1]);
+  // A `refused` answer with `unauthorized` ends it: the cache is empty, and the next read asks again.
+  f.state.submitted = { answer: "refused", reason: "unauthorized", judgedAt: HEAD };
+  expect((await connection.transport.submit(TARGET.scope, {} as never, [], {})).answer).toBe("refused");
+  expect(await f.store.sessionCache!.read()).toBeNull();
+  expect((await connection.session())?.reader()).toBe("Session TEST-private-cache-2");
+  expect(f.state.issued).toBe(2);
 });

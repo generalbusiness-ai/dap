@@ -80,7 +80,7 @@ import { ScopeObject, type OutsideGiven, type Wiring } from "./object.ts";
 import type { Incident } from "./operator.ts";
 import type { OriginalBytes, OriginalEnded, OriginalKept, OriginalPage } from "./originals.ts";
 import type { Summary } from "./reads.ts";
-import { credentialInUrl, relay, sessionReaders, sessionsOf, type Opened, type SessionIssueAnswer, type Sessions, type StreamRefusal } from "./sessions.ts";
+import { credentialInUrl, relay, sessionReaders, sessionsOf, type Opened, type SessionIssueAnswer, type SessionIssueOptions, type Sessions, type StreamRefusal } from "./sessions.ts";
 import type { OutboxItem, Sealed } from "./store.ts";
 import type { ReadCredential } from "./destination-host.ts";
 import { gitHubOutside, type GitHubBindings } from "./github-wiring.ts";
@@ -210,7 +210,7 @@ interface Remote {
   retained(reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput>>;
   queryItems(encoded: unknown, reader: unknown): Promise<NativeItemQuery>;
   applicationProjection(encoded: unknown, reader: unknown, atLeast?: ReadMinimum): Promise<NativeApplicationProjection>;
-  session(asked: unknown): Promise<SessionIssueAnswer>;
+  session(asked: unknown, options?: SessionIssueOptions): Promise<SessionIssueAnswer>;
   stream(reader: unknown): Promise<Opened | StreamRefusal>;
   release(id: string): Promise<void>;
   incidents(reader: unknown, cursor?: Cursor): Promise<Read<readonly Incident[]>>;
@@ -230,7 +230,7 @@ interface StreamExchange { body: ReadableStream<Uint8Array>; close(): Promise<vo
 export interface Api extends ScopeApi {
   reservationSnapshot(scope: string, asked: SignedIntent): Promise<import("@generalbusiness/dap-contract").ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null>;
   stageSnapshot(scope: string, asked: SignedIntent): Promise<import("@generalbusiness/dap-platform").StageSnapshotReply>;
-  session(scope: string, asked: unknown): Promise<SessionIssueAnswer>;
+  session(scope: string, asked: unknown, options?: SessionIssueOptions): Promise<SessionIssueAnswer>;
   /** The body is the reader's side of the stream (`relay`): cancelling it releases the scope's subscription at once. */
   stream(scope: string, reader: unknown): Promise<ReadableStream<Uint8Array> | StreamRefusal | typeof MISSING>;
   /** Internal route ownership, not a public HTTP operation. */
@@ -399,7 +399,8 @@ function roomApi(binding: Binding, address: string | null, creationAdmission: Cr
     async outboxItem(scope: string, reader: unknown, outboxId: OutboxId): Promise<Read<OutboxItem>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.outboxItem(reader, outboxId)) ?? MISSING; },
     async log(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<LogPage>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.log(reader, cursor)) ?? MISSING; },
     async retained(scope: string, reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.retained(reader, kind, digest, domain)) ?? MISSING; },
-    async session(scope: string, asked: unknown): Promise<SessionIssueAnswer> { return (await at(scope)?.session(asked)) ?? MISSING; },
+    // With no option the second argument is not passed: an older object sees the call it always saw.
+    async session(scope: string, asked: unknown, options?: SessionIssueOptions): Promise<SessionIssueAnswer> { return (await (options ? at(scope)?.session(asked, options) : at(scope)?.session(asked))) ?? MISSING; },
     streamExchange: openStream,
     async stream(scope: string, reader: unknown) {
       const opened = await openStream(scope, reader);
@@ -539,6 +540,11 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
   // Only a retained input is named by two parts: its kind and its digest.
   if (what === "retained" ? which === undefined || last === undefined : last !== undefined) return json(404, { error: "not-found" });
   if ((what === "sessions" || what === "stream" || what === "incidents" || what === "requests") && (scope === undefined || which !== undefined)) return json(404, { error: "not-found" });
+  // `?standing=1` on the sessions route asks for the signer's standing beside the session. It is a representation hint, outside the signed body.
+  // Exactly one `standing` member with the value `1` asks. Any other `standing` is refused before the body is read, so no request identity is used.
+  const standings = url.searchParams.getAll("standing");
+  if (what === "sessions" && standings.length > 0 && (standings.length > 1 || standings[0] !== "1")) return json(400, { error: "bad-request" });
+  const standing = what === "sessions" && standings.length === 1;
   const minima = url.searchParams.getAll("atLeast");
   const atLeast = minima.length === 1 ? readMinimumParameter(minima[0]) : undefined;
   if (minima.length > 1 || minima.length === 1 && (!atLeast || atLeast.at.scope !== scope)) return json(400, { error: "bad-request" });
@@ -611,10 +617,12 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
     if (what === "acts") return answered(await scopes.submit(scope, given["signed"] as SignedIntent, (given["grants"] ?? []) as Grant[], beside), 200);
     if (what === "sessions") {
       // The whole body is the signed request. The answer holds a credential: it is marked so that nothing between here and the device stores it.
-      const answer = await scopes.session(scope, given);
+      const answer = await scopes.session(scope, given, standing ? { standing: true } : undefined);
       const headers: Record<string, string> = { "content-type": "application/json", "cache-control": "no-store" };
       if (!answer.ok && answer.reason === "rate-limited") headers["Retry-After"] = String(answer.retryAfterSeconds);
-      const body = answer.ok ? answer : { ok: false, reason: answer.reason };
+      // The route names each public member. Without the option the body has three, whatever an object returned. With it, `standing` is
+      // present only when the object returned one: an older object answers three members, and this route adds nothing of its own.
+      const body = answer.ok ? { ok: true, token: answer.token, session: answer.session, ...(standing && answer.standing !== undefined ? { standing: answer.standing } : {}) } : { ok: false, reason: answer.reason };
       return new Response(JSON.stringify(body), { status: answer.ok ? 200 : (SESSION_STATUS[answer.reason] ?? 400), headers });
     }
     if (what === "preparations") return answered(await scopes.prepare(scope, given["signed"] as SignedIntent, (given["grants"] ?? []) as Grant[], given["capability"] as string, given["step"] as string), 200);

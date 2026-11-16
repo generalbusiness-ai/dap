@@ -49,6 +49,12 @@ export class StandIn {
   sessions: "issue" | "refuse" | "forbid" = "issue";
   /** When an issued session ends. */
   sessionEnds = "2099-01-01T00:10:00Z";
+  /**
+   * Whether the session answer carries the signer's standing when the request asks for it (`?standing=1`): `give`, or `ignore`, as a
+   * Worker that has no such option does. A test may also change the stated value, to show how a reader treats a value that is not right.
+   */
+  standing: "give" | "ignore" = "give";
+  changeStanding: ((value: Record<string, unknown>) => Record<string, unknown>) | null = null;
   /** Timed entries written between a read token's act and its mint's outcome: a long history between them. */
   fillerBeforeOutcome = 0;
   membership!: ScopeRef; directory!: ScopeRef; rules!: ScopeRef; destination!: ScopeRef;
@@ -146,7 +152,17 @@ export class StandIn {
     const route = parts.slice(1);
     if (route[0] === "sessions") {
       if (this.sessions === "refuse") return json({ ok: false, reason: "unauthorized" });
-      return json({ ok: true, token: SESSION_TOKEN, session: { v: 1, deployment: "standin", membership: s.ref, member: "@agent", key: this.key, reads: [], ends: this.sessionEnds } });
+      // The value is what the scope's `standingOf` makes of the scripted roster, member and key. A scope that shows none of them states no value.
+      const key = s.items.find((i) => i.type === "key" && i.state === "active" && i.values["id"] === this.key);
+      const member = key && s.items.find((i) => i.type === "member" && i.state === "active" && i.id === key.refs["member"]);
+      const roster = s.items.find((i) => i.type === "roster");
+      const role = typeof member?.values["role"] === "string" ? member.values["role"] : null;
+      const handle = typeof member?.values["handle"] === "string" ? member.values["handle"] : "@agent";
+      const value = member && roster && role !== null && u.searchParams.get("standing") === "1" && this.standing === "give"
+        ? { of: s.ref, head: this.head(s), key: this.key, keyState: "active", member: handle, memberState: "active", role, actions: (roster.values[`${role}Actions`] as readonly string[] | null) ?? [],
+          within: { membership: s.ref }, controller: null, controllerActive: null, notAfter: null, definition: s.definition } : null;
+      return json({ ok: true, token: SESSION_TOKEN, session: { v: 1, deployment: "standin", membership: s.ref, member: handle, key: this.key, reads: [], ends: this.sessionEnds },
+        ...(value ? { standing: this.changeStanding ? this.changeStanding(value) : value } : {}) });
     }
     const authorization = (init?.headers as Record<string, string> | undefined)?.["authorization"];
     if (this.sessions === "forbid" && authorization?.includes(SESSION_TOKEN)) return json({ ok: false, reason: "forbidden" });

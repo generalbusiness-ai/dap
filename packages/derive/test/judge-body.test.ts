@@ -2,9 +2,10 @@
  * explicit stand-ins; no native commit, membership service or transport runs. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { ActType, Effect, Intent } from "@generalbusiness/dap-contract";
-import { judgeActBody, validateDefinition, RuleFault, type Capabilities, type CapabilityGiven } from "../src/index.ts";
+import type { ActType, Effect, Intent, Observation } from "@generalbusiness/dap-contract";
+import { judgeActBody, judgeExploreGrant, validateDefinition, RuleFault, type Capabilities, type CapabilityGiven } from "../src/index.ts";
 import { Scope, created, deskDefinition, directory, grantOf, keys, laneDefinition, on, otherLane, t, valid, variant } from "./fixtures.ts";
+import { keySeen, membership } from "./fixtures-entry.ts";
 import { gateRules, gateWith } from "./fixtures-marks.ts";
 import { Works, changed, works } from "./fixtures-holds.ts";
 import { deviceCommandFixture } from "./fixtures-device-command.ts";
@@ -38,6 +39,18 @@ test("the unsigned body shares consequences and authority checks without inventi
   expect(timed.result === "write" && timed.draft.judgesTime).toBe(true);
   expect(judgeActBody(scope.state, scope.definition, body,
     { ...scope.context({ reading: t(10) }), actor: rita.key, grants: [{ grant, current: true }] })).toMatchObject({ result: "refused", reason: "unauthorized" });
+  // EK1: a standing value with no proof signs the body, and is never recordable authority. The act has no row of `observes`, so it writes.
+  const { at: _began, ...standing } = { ...keySeen(rita.key, rita.member.member, 3).observation as Observation, actions: ["offer"] };
+  const explored = judgeExploreGrant(standing, { scope: scope.at, membership, key: rita.key, action: "offer", clock: { asOf: context.clock.asOf } });
+  if (explored.result !== "current") return expect.fail("the standing value must be current");
+  expect(Object.hasOwn(explored.grant, "fresh")).toBe(false);
+  expect(explored.grant.issued).toEqual({ at: standing.of, seq: standing.head.seq, hash: standing.head.hash });
+  const standingOnly = judgeActBody(scope.state, scope.definition, body, { ...context, membership, grants: [{ grant: explored.grant, current: true }] });
+  expect(standingOnly.result).toBe("write");
+  if (standingOnly.result !== "write") return expect.fail("the standing value must admit this act");
+  expect(standingOnly.signer).toEqual({ member: explored.grant.subject, principal: null });
+  expect(standingOnly.authority).toEqual([]);
+  expect(standingOnly.draft).toEqual(answer.draft);
   expect(scope.state.snapshot()).toBe(before);
 });
 

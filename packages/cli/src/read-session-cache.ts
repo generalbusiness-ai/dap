@@ -1,7 +1,11 @@
-/** Private, disposable read credentials. No token enters public Config or an error. */
+/**
+ * Private, disposable read credentials. No token enters public Config or an error.
+ * A record has its four members, and a fifth, `standing`, when the session came with one. A record with no standing, as an older
+ * reader wrote it, restores a session with no standing. A standing that fails a check restores the session without it.
+ */
 import type { KeyId, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isScopeRef, parseStrictBytes, timeMs, utf8 } from "@generalbusiness/dap-bytes";
-import { isSessionAnswer, Session } from "@generalbusiness/dap-client";
+import { isSessionAnswer, Session, sessionStanding } from "@generalbusiness/dap-client";
 import { READ_SESSION_CACHE_BYTES, type ReadSessionCache, type Store } from "./store.ts";
 
 export class ReadSessionCacheError extends Error {
@@ -29,12 +33,13 @@ function restored(bytes: Uint8Array, identity: ReadSessionIdentity): Session | n
   if (bytes.length > READ_SESSION_CACHE_BYTES) return null;
   try {
     const record = parseStrictBytes(bytes) as Record<string, unknown>;
-    if (!record || typeof record !== "object" || Array.isArray(record) || Object.keys(record).length !== 4 || record["v"] !== 1 || record["service"] !== identity.service) return null;
+    if (!record || typeof record !== "object" || Array.isArray(record) || !(Object.keys(record).length === 4 || Object.keys(record).length === 5 && Object.hasOwn(record, "standing")) || record["v"] !== 1 || record["service"] !== identity.service) return null;
     const answer = { ok: true, token: record["token"], session: record["session"] };
     if (!isSessionAnswer(answer) || !answer.ok || !isScopeRef(answer.session.membership)
       || canonicalize(answer.session.membership) !== canonicalize(identity.membership) || answer.session.key !== identity.key
       || typeof answer.session.deployment !== "string" || !answer.session.deployment || utf8(answer.session.deployment).length > 128) return null;
-    return new Session(answer.token, answer.session);
+    const standing = Object.hasOwn(record, "standing") ? sessionStanding(record["standing"], identity, answer.session) : null;
+    return new Session(answer.token, answer.session, standing);
   } catch { return null; }
 }
 /** Coordination is per Store in this process, not a cross-process lease.
@@ -59,7 +64,7 @@ export async function cachedReadSession(store: Store, identity: ReadSessionIdent
     if (!session) return null;
     if (!held) {
       try {
-        bytes = utf8(canonicalize({ v: 1, service: identity.service, token: session.reader().slice("Session ".length), session: session.claims }));
+        bytes = utf8(canonicalize({ v: 1, service: identity.service, token: session.reader().slice("Session ".length), session: session.claims, ...(session.standing === null ? {} : { standing: session.standing }) }));
         if (bytes.length > READ_SESSION_CACHE_BYTES) throw new ReadSessionCacheError();
         await storage.replace(bytes);
       } catch { throw new ReadSessionCacheError(); }

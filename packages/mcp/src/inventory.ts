@@ -1,4 +1,4 @@
-import { answersVersionQuestion, ROLE_LISTS, SIBLINGS_OF, platform, type Role } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, SIBLINGS_OF, platform } from "@generalbusiness/dap-platform";
 /**
  * The inventory: which scopes the server lists acts for, and the caller's
  * standing on each membership they use (plan 031, section 6). It is durable
@@ -14,6 +14,13 @@ import { answersVersionQuestion, ROLE_LISTS, SIBLINGS_OF, platform, type Role } 
  *   standing for it is read from. A root that is also one of the
  *   directory's applications is held once, as the application.
  *
+ * The caller's standing on a membership is the value that membership stated
+ * when it issued the caller's read session (`standingFrom`). A membership that
+ * gave no session, or a session with no value, leaves the standing unknown.
+ * Which actions the caller holds is the shared value check's answer
+ * (`judgeExploreGrant`, once for each action of the value), not a rule of
+ * this file.
+ *
  * Reads: the membership, directory and rules summaries, one summary per
  * root and per further membership. A scope's pinned definition never
  * changes, and a definition's bytes never change for a digest, so each is
@@ -21,9 +28,10 @@ import { answersVersionQuestion, ROLE_LISTS, SIBLINGS_OF, platform, type Role } 
  */
 
 import type { DeclaredDefinition, Digest, Head, Item, PlatformDefinition, Read, ScopeId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { definitionDigest, isDigest, isPlatformDefinition, parseStrict } from "@generalbusiness/dap-bytes";
+import { definitionDigest, isDigest, isPlatformDefinition, parseStrict, timeOf } from "@generalbusiness/dap-bytes";
+import { judgeExploreGrant } from "@generalbusiness/dap-derive";
 
-import { ScopeHandle, partitionIndexes } from "@generalbusiness/dap-client";
+import { ScopeHandle, partitionIndexes, type Session } from "@generalbusiness/dap-client";
 import type { Held, Inventory, Place, Standing } from "./catalogue.ts";
 import type { DefinitionLike } from "@generalbusiness/dap-client";
 import type { Reads } from "@generalbusiness/dap-client";
@@ -96,15 +104,36 @@ export const readPartitionIndexes = (reads: Reads, root: ScopeRef, membership: S
 }, root, membership);
 const isRef = (v: unknown): v is ScopeRef => typeof v === "object" && v !== null && typeof (v as ScopeRef).scope === "string" && typeof (v as ScopeRef).genesis === "string";
 
-/** The caller's standing in a membership summary: the role of the active member whose active key signs here, and that role's actions. */
-export function standingIn(items: readonly Item[], key: string): Standing {
-  const own = items.find((item) => item.type === "key" && item.state === "active" && item.values["id"] === key);
-  const member = own && items.find((item) => item.type === "member" && item.id === own.refs["member"] && item.state === "active");
-  const roster = items.find((item) => item.type === "roster");
-  const role = member?.values["role"] as Role | undefined;
-  if (!member || !roster || !role || !Object.hasOwn(ROLE_LISTS, role)) return { known: true, role: null, actions: [], handle: null, key };
-  const kind = member.values["kind"];
-  return { known: true, role, actions: (roster.values[ROLE_LISTS[role]] as readonly string[] | null) ?? [], handle: String(member.values["handle"]), key, ...(typeof kind === "string" ? { kind } : {}) };
+/** The `kind` of the active member whose active key is `key`, in a membership summary's items, or undefined. */
+function memberKind(items: readonly Item[] | undefined, key: string): string | undefined {
+  const own = items?.find((item) => item.type === "key" && item.state === "active" && item.values["id"] === key);
+  const member = own && items?.find((item) => item.type === "member" && item.id === own.refs["member"] && item.state === "active");
+  const kind = member?.values["kind"];
+  return typeof kind === "string" ? kind : undefined;
+}
+
+/**
+ * The caller's standing on a membership, from the value in the caller's read session. No session, or a session with no value, is
+ * unknown.
+ *
+ * - `actions` are the actions of the value for which `judgeExploreGrant` answers `current`, one call for each, at `now`. That value
+ *   check is the one judge of eligibility: it refuses an action for a key that is not active, a member that is removed, an agent
+ *   whose controller is not active (a comment excepted), and a role that does not hold the action. This function decides none of it.
+ * - `role`, `handle` and `key` project the value for display. A key or a member that is not active shows no role and no handle.
+ * - `kind` is the `kind` field of the caller's member item in the membership summary that the inventory already read for this
+ *   membership (`items`). The field is fixed for the member. It decides no action: eligibility goes only through
+ *   `judgeExploreGrant`. It is stated only for a key and a member that are active. The function reads nothing. If the summary is not
+ *   held (no `items`), or holds no such member item, `kind` is absent.
+ */
+export function standingFrom(session: Session | null, key: string, now: number, items?: readonly Item[]): Standing {
+  if (session === null) return { known: false, reason: "no-session" };
+  const value = session.standing;
+  if (value === null || value.key !== key) return { known: false, reason: "no-standing" };
+  const asOf = timeOf(now);
+  const actions = value.actions.filter((action) => judgeExploreGrant(value, { scope: value.of, membership: value.of, key: value.key, action, clock: { asOf } }).result === "current");
+  const shown = value.keyState === "active" && value.memberState === "active";
+  const kind = shown ? memberKind(items, key) : undefined;
+  return { known: true, role: shown ? value.role : null, actions, handle: shown ? value.member : null, key, ...(kind === undefined ? {} : { kind }) };
 }
 
 /** A definition by its pinned name or digest: the platform's, or one kept, or read once from a scope that retains it. */
@@ -169,7 +198,7 @@ export async function readInventory(reads: Reads, kept: Kept, config: McpConfig,
     const [membershipRead, directoryRead, rulesRead] = await Promise.all([summaryOf(M.scope, M), summaryOf(repository.directory.scope, M), summaryOf(repository.rules, M)]);
     if (membershipRead.ok) {
       heads[M.scope] = headText(membershipRead.at);
-      standing[M.scope] = standingIn(membershipRead.value.items, key);
+      standing[M.scope] = standingFrom(await reads.session(M), key, reads.now(), membershipRead.value.items);
     } else {
       standing[M.scope] = { known: false, reason: membershipRead.reason };
       unread.push({ scope: M.scope, reason: membershipRead.reason });
@@ -249,7 +278,7 @@ export async function readInventory(reads: Reads, kept: Kept, config: McpConfig,
     await hold("root", root.scope, root.membership, read.value);
     if (root.membership && standing[root.membership.scope] === undefined) {
       const m = await summaryOf(root.membership.scope, root.membership);
-      standing[root.membership.scope] = m.ok ? standingIn(m.value.items, key) : { known: false, reason: m.reason };
+      standing[root.membership.scope] = m.ok ? standingFrom(await reads.session(root.membership), key, reads.now(), m.value.items) : { known: false, reason: m.reason };
       if (m.ok) heads[root.membership.scope] = headText(m.at);
     }
   }

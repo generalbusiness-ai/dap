@@ -1,9 +1,9 @@
 import { observationRuntimeChange2 } from "./definition-corpus/forms-observes-variants.ts";
 import { describe, expect, test } from "vitest";
-import type { Entry, MemberId, ObservationUse, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Entry, MemberId, Observation, ObservationUse, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
-import { agrees, clockOf, entryOf, grantFrom, judgeAct, predictionGrant, type ActJudgment, type Presented, type RuleGiven } from "../src/index.ts";
-import { Scope, grantOf, keySeen, keys, laneDefinition, membership, on, fields, rulebook, stating, t, weigherRules, weigherWith } from "./fixtures-entry.ts";
+import { agrees, clockOf, entryOf, grantFrom, judgeAct, judgeActBody, judgeExploreGrant, predictionGrant, type ActJudgment, type Presented, type RuleGiven } from "../src/index.ts";
+import { Scope, grantOf, keySeen, keys, laneDefinition, memberSeen, membership, on, fields, rulebook, stating, t, weigherRules, weigherWith } from "./fixtures-entry.ts";
 
 const { rita, una } = keys;
 /** The membership that the scope records. The proven grant's `within` names it, so the scope's context states it. */
@@ -72,6 +72,16 @@ describe("a prediction with the stand-in grant", () => {
     const own = s.intent(una, "own", { on: 0, expected: { on: s.item(0).revision }, fields: { a: una.member } });
     const predicted = judgeAct(s.state, s.definition, own, s.context({ ...context, grants: [predictionGrant(s.definition, una, s.at)] }));
     expect([predicted.result, "reason" in predicted ? predicted.reason : null]).toEqual(["unavailable", "authority-unavailable"]);
+    // The body of an Explore, with a fresh read of her member at hand. The stand-in grant lets that separate read serve the row. A
+    // standing value with no proof stops the row, whatever else is at hand. The read is an in-memory fixture, not a Native proof.
+    const { at: _began, ...standing } = { ...keySeen(una.key, "@una" as MemberId, 3).observation as Observation, actions: ["weigher.set"] };
+    const explored = judgeExploreGrant(standing, { scope: s.at, membership, key: una.key, action: "weigher.set", clock: { asOf: s.now } });
+    if (explored.result !== "current") return expect.fail("the standing value must be current");
+    const body = { kind: "own", on: 0, expected: { on: s.item(0).revision }, fields: { a: una.member } };
+    const separate = { ...s.context({ ...context, observed: [memberSeen("@una" as MemberId, 7)] }), actor: una.key };
+    const bodyAnswer = (grants: Parameters<typeof judgeActBody>[3]["grants"]) => { const judged = judgeActBody(s.state, s.definition, body, { ...separate, grants }); return [judged.result, "reason" in judged ? judged.reason : null]; };
+    expect([bodyAnswer([predictionGrant(s.definition, una, s.at)]), bodyAnswer([{ grant: explored.grant, current: true }]), bodyAnswer(null)])
+      .toEqual([["write", null], ["unavailable", "authority-unavailable"], ["unavailable", "authority-unavailable"]]);
     expect(s.submit(own, { ...context, grants: [{ grant: { ...grantOf(una, s.at, ["weigher.set"]), fresh: proof }, current: true }] }).result).toBe("write");
   });
 });

@@ -169,6 +169,35 @@ no generation, and the server tells nothing. While a client is subscribed,
 the server reads the generation's inputs every 30 seconds. With no
 subscriber, it reads nothing.
 
+The server takes the caller's standing on each membership from the read
+session that membership issued to the caller's key. It asks with
+`POST /v1/scopes/<membership>/sessions?standing=1`, and the answer carries
+the role, the actions and the controller's state that membership read when
+it issued the session. The reader checks that value against the request and
+the session's claims. The value shows the role, the handle and the key. It
+decides no act: the server asks the shared value check, `judgeExploreGrant`
+in `packages/derive`, once for each action of the value, and holds the
+actions that the check answers `current` for. That check refuses every
+action for a key that is not active or a member that is removed, and every
+action but a comment for an agent whose controller is not active. The member's
+`kind` comes from its member item in the membership summary that the
+inventory already reads, and decides no act. If the server holds no such item,
+the standing has no `kind`.
+
+While the standing is unknown, the inventory has no role and no action for the
+caller. A membership that gives no session, a Worker that ignores the
+option, or a value that fails a check leaves the standing unknown. The
+`room` tool then lists the membership as "your standing here is unknown",
+with the reason `no-session` or `no-standing`. The list keeps every act
+that names a grant, and each description says that the standing is unknown
+and that the scope decides.
+
+When a scope refuses a submit with `unauthorized`, the server ends that
+session and asks again at the next read. `unauthorized` is the one reason
+that the scope's grant check gives: all seven of its failed conditions
+(`Unheld`, `packages/derive/src/grant.ts:257`) answer it
+(`packages/scope/src/core.ts:683`). `authority-unavailable` ends nothing.
+
 A page of `tools/list` is at most 256 KiB, with a cursor to the next page.
 A cursor of an earlier generation is refused, and the client lists again
 from the start.

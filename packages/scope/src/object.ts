@@ -76,7 +76,7 @@ import { SessionReferences, type SessionReferenceSource } from "./session-refere
 import { SessionPreparation, type QueryVisibility } from "./session-preparation.ts";
 import { SIGNER_INDEX_BOUNDS } from "./local-signers.ts";
 import { production, type Alarm, type Authority, type Clock, type Delivery, type Foreign, type Ports, type ReadName, type Readers, type Resolver, type SourceReadContext, type Transport } from "./ports.ts";
-import { SessionRequests, Streams, issueSession, type Opened, type SessionIssueAnswer, type Sessions, type StreamRefusal } from "./sessions.ts";
+import { SessionRequests, Streams, issueSession, type Opened, type SessionIssueAnswer, type SessionIssueOptions, type Sessions, type StreamRefusal } from "./sessions.ts";
 import { READ_BOUNDS, Reads, type ReadBounds, type Summary } from "./reads.ts";
 import { Chains, checkLocalSignedRead, checkSignedReadRequest, presentsSignedRead, signerOf, type SignedReading, type SignedReadObserver } from "./signed-reads.ts";
 import { LATE, sourceReadRemaining, within } from "./turn.ts";
@@ -915,10 +915,11 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   /**
    * A read session, for a device that asks with a signed request (authority note, section 3.9). Only an active membership scope
    * answers one, from its head and its own clock. It is an answer and no entry: nothing is written.
+   * `options` shapes the answer only: with none, the answer has its three members.
    */
-  session(asked: unknown): SessionIssueAnswer | RoomRetiredStop { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invokeSync("sessions", () => {
+  session(asked: unknown, options?: SessionIssueOptions): SessionIssueAnswer | RoomRetiredStop { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invokeSync("sessions", () => {
     this.#first();
-    const answer = issueSession({ sessions: this.#sessions(), clock: this.#clock, requests: this.#requests }, this.#store, this.#scope.pinned(), asked);
+    const answer = issueSession({ sessions: this.#sessions(), clock: this.#clock, requests: this.#requests }, this.#store, this.#scope.pinned(), asked, options);
     metric({ kind: "session", place: "sessions", end: answer.ok ? "issued" : "refused", reason: answer.ok ? "none" : answer.reason });
     return answer;
   }); }
