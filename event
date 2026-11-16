@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e92640733006721180c1f669a07e56ad39965a3c","text":"Merge retired a covered predecessor; the successor is at packages/client/test/c4-drafts.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:edcc20466422698be4a10270c9982cac2513f113","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-16-xd1-native-timeout-crossings.md."}
