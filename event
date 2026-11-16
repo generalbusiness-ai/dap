@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:56eecd585b4d7357ae98a5bb442b6568fbf014b2","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-14-lc1-lending-counter-releases.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:665954003ef91a7d27d00dc6f53e115023fe7cd2","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/application-release-reproduction.test.ts."}
