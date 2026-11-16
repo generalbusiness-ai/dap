@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b78840492a314dbb42dc8625988031f4918c84d3","text":"Merge retired a covered predecessor; the successor is at examples/lending/release-identifiers.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b7a65e334e4a491dabff20bed8de3c2f0e36ac84","text":"Merge retired a covered predecessor; the successor is at packages/scope/vitest.scale.config.ts."}
