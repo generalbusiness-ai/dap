@@ -5,7 +5,7 @@ import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
 import { Custody, envelopeOf, memoryStore } from "../src/custody.ts";
 import { requestStatus } from "../src/request-status.ts";
 import { scopeClient, request, clientReplica, clientIdle, type ScopeClient } from "../src/scope-client.ts";
-import { requestScene } from "./request-support.ts";
+import { REQUEST_DESCRIPTOR, checkSigningAuthorizations, requestScene } from "./request-support.ts";
 
 const SEEDS = 400, STEPS = 80;
 function random(seed: number): () => number {
@@ -28,7 +28,7 @@ test(`request invariants over ${SEEDS} seeds of ${STEPS} steps with independent 
       const record = await custody.find({ ...who, key: signed.intent.idempotencyKey });
       if (!record || !record.signings.some((_, index) => canonicalize(envelopeOf(record, index)?.signed ?? null) === canonicalize(signed))) unheld.push(signed);
     });
-    const open = (): ScopeClient<typeof s.handle.definition> => scopeClient(s.handle, { signer: s.signer, member, store, drafts: { read: async () => null }, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+    const open = (): ScopeClient<typeof s.handle.definition> => scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer, member, store, drafts: { read: async () => null }, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
     let client = open(), feed = true, ordinal = 0, key = `seed-${seed}-${ordinal}`;
     const intentions = new Set<string>();
     s.feed.current(s.scope); await client.read();
@@ -85,6 +85,7 @@ test(`request invariants over ${SEEDS} seeds of ${STEPS} steps with independent 
         if (entry) expect(["recorded", "other-recorded"]).toContain(status.status); // invariant 3
         if (status.status !== "recorded") expected.push({ key: row.key, ...status, predicted: entry ? { is: "recorded", fact: entry.fact } : predict(record.signings.length - 1) });
       }
+      await checkSigningAuthorizations(s, store); // invariant 8: no unreferenced instance signing is legacy.
       // Invariant 6: recompute the published request statuses from actual replica/store evidence and this clock.
       expect(client.view.requests.map(({ key, status, predicted, ...rest }) => ({ key, status, predicted, ...("why" in rest ? { why: rest.why } : {}) }))).toEqual(expected);
     }

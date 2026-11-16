@@ -3,7 +3,7 @@ import fs, { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, stat
 import { syncBuiltinESMExports } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 import type { Answer, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { signedIntent } from "@generalbusiness/dap-client";
@@ -12,6 +12,9 @@ import { blockedBy, fileStore, releaseLock, takeLock } from "../src/node.ts";
 import { STORE_FORMAT_FILE } from "../src/store-format.ts";
 import { StoreFormatError } from "../src/store-format-error.ts";
 import { T0, accepted, build, goldenRecord, identity, lane, notAfter, receiptOf, refused, resource, signer } from "./support/custody.ts";
+
+const authorizationGateCleanup = new Set<() => void>();
+afterEach(() => { for (const release of authorizationGateCleanup) release(); authorizationGateCleanup.clear(); });
 
 // The scope's answers here are scripted: `deliver` and `settle` are STAND-INs for a scope's submit and settlement. What a real
 // scope answers to a replay is shown in room.scope.test.ts; these cases show what the server keeps and sends.
@@ -58,6 +61,97 @@ function holdings(results: readonly { out: string }[]): { refused: number; insid
   return { refused: lines.filter((l) => l === "refused").length, inside };
 }
 const overlapping = (inside: readonly [number, number][]): number => inside.filter((h, i) => i > 0 && h[0] < inside[i - 1]![1]).length;
+
+// A port error may follow committed bytes. This scripted reservation tests the admission fence, not a provider's budget.
+test("a failed preparation preserves admission unless custody is proven absent", async () => {
+  for (const fault of ["after-persist", "before-persist", "unreadable"] as const) {
+    const base = memoryStore(), reserved = new Set<string>();
+    const who = identity(`uncertain-${fault}`), id = identityId(who), original = new Error("TEST signer stopped");
+    let inside = false, failed = false;
+    const store = { ...base,
+      exclusive: <T>(work: () => Promise<T>) => base.exclusive(async () => {
+        expect(inside).toBe(false); inside = true;
+        try { return await work(); } finally { inside = false; }
+      }),
+      admit: async (key: string) => { expect(inside).toBe(true); reserved.add(key); },
+      unadmit: async (key: string) => { expect(inside).toBe(true); reserved.delete(key); },
+      read: async (key: string) => {
+        if (failed) {
+          expect(inside).toBe(true);
+          if (fault === "unreadable") throw new Error("TEST reconciliation read failed");
+        }
+        return base.read(key);
+      },
+      write: async (...args: Parameters<typeof base.write>) => {
+        expect(inside).toBe(true);
+        if (fault === "after-persist") await base.write(...args);
+        failed = true; throw new Error("TEST write failed");
+      },
+    };
+    const custody = new Custody(store, () => timeOf(T0));
+    const value = await custody.keep(who, meaningOf("uncertain"), async () => {
+      if (fault === "unreadable") { failed = true; throw original; }
+      return build(who.key)();
+    }, notAfter).catch((error: unknown) => error);
+    // The post-persist row is the direct admission-guard control boundary.
+    expect(reserved.has(id)).toBe(fault !== "before-persist");
+    if (fault === "unreadable") expect(value).toBe(original);
+    else expect(value).toMatchObject({ why: { held: "unreadable" } });
+    expect((await base.read(id))?.phase ?? null).toBe(fault === "after-persist" ? "prepared" : null);
+  }
+});
+
+test("an escaped authorization callback drains launched I/O without holding the fence for its continuation", async () => {
+  const store = memoryStore(), custody = new Custody(store, () => timeOf(T0));
+  const exclusive = store.exclusive.bind(store), write = store.authorizations.write.bind(store.authorizations);
+  const read = store.authorizations.read.bind(store.authorizations), events: string[] = [];
+  let rawStarted!: () => void, releaseRaw!: () => void, releaseCallback!: () => void;
+  const started = new Promise<void>(done => { rawStarted = done; });
+  const rawAllowed = new Promise<void>(done => { releaseRaw = done; });
+  const callbackAllowed = new Promise<void>(done => { releaseCallback = done; });
+  const release = () => { releaseRaw(); releaseCallback(); };
+  authorizationGateCleanup.add(release);
+  let inside = false, rawWrites = 0, rawReads = 0, escaped!: Promise<unknown>;
+  store.exclusive = run => exclusive(async () => {
+    expect(inside).toBe(false); inside = true;
+    try { return await run(); } finally { inside = false; }
+  });
+  store.authorizations.write = async (...args) => {
+    rawStarted(); await rawAllowed;
+    expect(inside, "launched raw I/O must finish under its original custody fence").toBe(true);
+    await write(...args); rawWrites++; events.push("raw-write");
+  };
+  store.authorizations.read = async (...args) => { rawReads++; return read(...args); };
+  try {
+    const prepared = custody.keep(identity("escaped-callback"), meaningOf("escaped-callback"), async fence => {
+      escaped = fence.authorizations(async port => {
+        // This real port operation starts now; the arbitrary continuation remains separately held.
+        const writing = port.write(signer.key, lane, []);
+        void writing.catch(() => {});
+        await callbackAllowed;
+        return port.read(signer.key, lane);
+      });
+      void escaped.catch(() => {});
+      return build("escaped-callback")();
+    }, notAfter);
+    const refused = expect(prepared).rejects.toThrow("authorization work escaped its custody builder");
+    await started;
+    let nextEntered = false;
+    const next = store.exclusive(async () => { nextEntered = true; events.push("next-owner"); });
+    expect(nextEntered).toBe(false);
+    releaseRaw();
+    // The callback is still held: close must await raw I/O, not this arbitrary promise.
+    await refused; await next;
+    expect(events).toEqual(["raw-write", "next-owner"]);
+    expect(rawWrites).toBe(1);
+    expect(rawReads).toBe(0);
+    expect(store.records.size).toBe(0);
+    releaseCallback();
+    await expect(escaped).rejects.toThrow("the custody build fence is closed");
+    expect(rawReads).toBe(0);
+    expect(rawWrites).toBe(1);
+  } finally { release(); authorizationGateCleanup.delete(release); }
+});
 
 describe("custody keeps the exact envelope under the caller's key", { timeout: 60_000 }, () => {
   // Invariant: after a lost first reply, settle with the caller's key finds the receipt of the exact envelope, also after the

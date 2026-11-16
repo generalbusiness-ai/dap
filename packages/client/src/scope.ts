@@ -25,3 +25,10 @@ export type { ScopeClient, ClientOptions, ClientView, ClientRow, DraftRead, Pres
 export { requestStatus } from "./request-status.ts";
 export type { RequestStatus, RequestStatusAt, Why } from "./request-status.ts";
 export type { ClientClock } from "./request-schedule.ts";
+
+export type { Authorization, AuthorizationIdentity, AuthorizationVersion, AuthorizedAct, AuthorizationInput, AuthorizationPosition, MaterializedAct, SigningAuthorization } from "./authorization.ts";
+export { AuthorizationError, AUTHORIZATION_VERSIONS_MOST, signingPermitted } from "./authorization.ts";
+export type { AuthorizationPort } from "./authorization-store.ts";
+
+export { actVersion } from "./act-version.ts";
+export type { Source, ItemName, Revision } from "./act-types.ts";

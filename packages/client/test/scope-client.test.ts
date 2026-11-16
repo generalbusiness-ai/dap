@@ -1,20 +1,25 @@
 /** The in-memory judge/fold is real; the transport, observation and client clock are deterministic stand-ins. */
-import { expect, test } from "vitest";
-import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
+import { afterEach, expect, test } from "vitest";
+import { canonicalize, intentDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { Custody, identityId, memoryStore } from "../src/custody.ts";
-import { signedIntent } from "../src/intent.ts";
+import { secretSigner, signedIntent } from "../src/intent.ts";
+import { keys } from "@generalbusiness/dap-derive/testing";
 import { sendableAt } from "../src/originals.ts";
 import { intentMeaning, seamOf } from "../src/replica.ts";
-import { DeclaredHandle } from "../src/declared.ts";
+import { DeclaredHandle, shapeDeclaredAct } from "../src/declared.ts";
 import { ScopeHandle } from "../src/handle.ts";
 import { bindingTransport, type ServiceBinding } from "../src/binding.ts";
-import { SESSION } from "./replica-support.ts";
-import { scopeClient, request, clientReplica, clientIdle, type DraftRead } from "../src/scope-client.ts";
-import { requestScene } from "./request-support.ts";
+import { Feed, SESSION } from "./replica-support.ts";
+import { scopeClient, request, clientReplica, clientIdle, clientDelivery, type DraftRead } from "../src/scope-client.ts";
+import { REQUEST_DESCRIPTOR, checkSigningAuthorizations, requestScene } from "./request-support.ts";
+
+const authorizationAudits: { scene: ReturnType<typeof requestScene>; store: ReturnType<typeof memoryStore> }[] = [];
+afterEach(async () => { for (const audit of authorizationAudits.splice(0)) await checkSigningAuthorizations(audit.scene, audit.store); });
 
 function clientAt(s: ReturnType<typeof requestScene>, store = memoryStore(), drafts: DraftRead<typeof s.handle.definition> = { read: async () => null }, lifetimeSeconds = 60) {
   const member = { service: "https://requests.test", membership: s.actor.member.membership, member: s.actor.member.member, principal: s.actor.principal };
-  const client = scopeClient(s.handle, { signer: s.signer, member, store, drafts, observe: s.feed.observe, clock: s.clock, lifetimeSeconds });
+  authorizationAudits.push({ scene: s, store });
+  const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer, member, store, drafts, observe: s.feed.observe, clock: s.clock, lifetimeSeconds });
   const who = { service: member.service, membership: member.membership, signer: s.signer.key, target: s.handle.at };
   return { client, store, who };
 }
@@ -72,6 +77,7 @@ test("a failed journal read with the feed down cannot end a dead latest signing;
   const signed = await signedIntent(s.signer, { to: s.handle.at, kind: "remark", on: 0, fields: { text: "signed but not sent" } },
     { now: s.now(), idempotencyKey: "prepared", lifetimeSeconds: 60 });
   const custody = new Custody(store, () => timeOf(s.now())), identity = { ...who, key: "prepared" };
+  s.seedLegacy(signed);
   await custody.keep(identity, intentMeaning(signed.intent), async () => ({ binding: { definition: s.handle.definition.name, kind: "remark", declaration: s.handle.digest, pinned: s.handle.digest }, envelope: { signed, beside: {} } }), timeOf(s.now() + 30_000));
   s.feed.down();
   s.serving.refuse = () => ({ ok: false, reason: "unavailable" });
@@ -100,6 +106,7 @@ test("a page with a later wrong hash stops the replica without folding its prefi
   const signed = await signedIntent(s.signer, { to: s.handle.at, kind: "remark", on: 0, fields: { text: "kept before the page" } },
     { now, idempotencyKey: identity.key, lifetimeSeconds: 60 });
   const custody = new Custody(store, () => timeOf(now));
+  s.seedLegacy(signed);
   await custody.keep(identity, intentMeaning(signed.intent), async () => ({
     binding: { definition: s.handle.definition.name, kind: "remark", declaration: s.handle.digest, pinned: s.handle.digest },
     envelope: { signed, beside: {} },
@@ -188,7 +195,8 @@ test("alternating values reaches eight envelopes before signing and can submit a
   const s = requestScene(), store = memoryStore();
   let text = "A";
   const member = { service: "https://requests.test", membership: s.actor.member.membership, member: s.actor.member.member, principal: s.actor.principal };
-  const client = scopeClient(s.handle, { signer: s.signer, member, store, drafts: { read: async () => ({ kind: "remark", values: { on: 0, fields: { text } } }) }, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+  authorizationAudits.push({ scene: s, store });
+  const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer, member, store, drafts: { read: async () => ({ kind: "remark", values: { on: 0, fields: { text } } }) }, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
   s.feed.current(s.scope); await client.read(); s.mode("refused");
   for (let n = 0; n < 8; n++) { text = n % 2 ? "B" : "A"; await request(client, "eight", "remark", { on: 0, fields: { text } }); s.advance(1000); }
   const signs = s.signs(); text = "ninth values";
@@ -228,6 +236,7 @@ test("a post-death proof arriving at absence handoff ends the signing without an
   const prepare = async (key: string) => {
     const signed = await signedIntent(s.signer, { to: s.handle.at, kind: "remark", on: 0, fields: { text: key } },
       { now, idempotencyKey: key, lifetimeSeconds: 60 });
+    s.seedLegacy(signed);
     await custody.keep({ ...who, key }, intentMeaning(signed.intent), async () => ({
       binding: { definition: s.handle.definition.name, kind: "remark", declaration: s.handle.digest, pinned: s.handle.digest },
       envelope: { signed, beside: {} },
@@ -304,6 +313,7 @@ test("crossing death during draft read cannot turn the preceding journal read in
   s.feed.current(s.scope); await client.read();
   const signed = await signedIntent(s.signer, { to: s.handle.at, kind: "remark", on: 0, fields: { text: "prepared" } }, { now: s.now(), idempotencyKey: "death", lifetimeSeconds: 60 });
   const custody = new Custody(store, () => timeOf(s.now())), identity = { ...who, key: "death" };
+  s.seedLegacy(signed);
   await custody.keep(identity, intentMeaning(signed.intent), async () => ({ binding: { definition: s.handle.definition.name, kind: "remark", declaration: s.handle.digest, pinned: s.handle.digest }, envelope: { signed, beside: {} } }), timeOf(s.now() + 30_000));
   await client.read(); s.advance(110_000); s.feed.down();
   block = true;
@@ -347,7 +357,8 @@ test("a protocol refusal returns while reads fail, freezes another pending reque
   s.feed.current(s.scope); await client.read(); s.mode("unavailable");
   await request(client, "pending", "remark", { on: 0, fields: { text: "keep" } });
   s.serving.refuse = () => ({ ok: false, reason: "unavailable" }); s.mode("protocol");
-  await request(client, "protocol", "remark", { on: 0, fields: { text: "fault" } });
+  // The separate E4 "a second remark waits" witness covers same-subject local order.
+  await request(client, "protocol", "link", { fields: { target: s.handle.at, about: 0 } });
   expect(client.view.state).toEqual({ is: "stopped", cause: { by: "protocol", reason: "unknown-act" } });
   expect(client.view.requests.find(row => row.key === "protocol")).toMatchObject({ status: "refused", why: { by: "scope", reason: "unknown-act", class: "protocol" } });
   expect(client.view.requests.find(row => row.key === "pending")?.status).toBe("pending");
@@ -490,4 +501,239 @@ test("row by key keeps its selection from a marked prediction to the recorded it
   expect(recorded?.pending).toBeUndefined();
   expect(recorded!.id).toBeGreaterThan(predicted!.id);
   client.close();
+});
+
+// Invariant 8 / case 4: continuing a retained step cannot turn a second key into its owner.
+test("a second device cannot sign under the retained step owner", async () => {
+  const s = requestScene(), { client, store } = clientAt(s);
+  s.feed.current(s.scope); await client.read(); s.mode("unavailable");
+  await request(client, "owned", "remark", { on: 0, fields: { text: "original" } });
+  client.close();
+  const original = await store.authorizations.read(s.signer.key, s.handle.at);
+  const first = original.find(row => row.key === "owned")!;
+  const other = secretSigner(keys.vic.secret); let signatures = 0;
+  const second = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR,
+    signer: { key: other.key, sign: bytes => { signatures++; return other.sign(bytes); } },
+    member: { service: "https://requests.test", membership: s.actor.member.membership,
+      member: s.actor.member.member, principal: s.actor.principal },
+    store, drafts: { read: async () => null }, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+  try {
+    s.feed.current(s.scope); await second.read();
+    const result = await second.submitBoundAct({ key: first.key, owner: first.owner, scope: first.scope },
+      { kind: "remark", on: 0, fields: { text: "continued" }, expected: {} }).catch((error: unknown) => error);
+    // Keep this direct assertion before outcome wording: the owner control must reach it.
+    expect(signatures).toBe(0);
+    expect(result).toMatchObject({ reason: "owner" });
+    expect(await store.authorizations.read(s.signer.key, s.handle.at)).toEqual(original);
+    expect(await store.authorizations.read(other.key, s.handle.at)).toEqual([]);
+  } finally { second.close(); }
+});
+
+test("a changed descriptor may copy a live original but adds no version or signing", async () => {
+  const s = requestScene(), { client, store } = clientAt(s);
+  s.feed.current(s.scope); await client.read(); s.mode("unavailable");
+  const input = { on: 0, fields: { text: "same original" } };
+  await request(client, "descriptor", "remark", input);
+  const original = canonicalize(s.copies[0]), rows = await store.authorizations.read(s.signer.key, s.handle.at), signs = s.signs();
+  client.close();
+  const changed = scopeClient(s.handle, { descriptor: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    signer: s.signer, member: { service: "https://requests.test", membership: s.actor.member.membership,
+      member: s.actor.member.member, principal: s.actor.principal },
+    store, drafts: { read: async () => null }, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+  try {
+    s.feed.current(s.scope); await changed.read();
+    const copies = s.copies.length;
+    await request(changed, "descriptor", "remark", input);
+    expect(s.copies.length).toBe(copies + 1);
+    expect(canonicalize(s.copies.at(-1))).toBe(original);
+    expect(s.signs()).toBe(signs);
+    const result = await request(changed, "descriptor", "remark", { on: 0, fields: { text: "other fields" } }).catch((error: unknown) => error);
+    expect(result).toMatchObject({ reason: "descriptor-mismatch" });
+    expect(s.signs()).toBe(signs);
+    expect(await store.authorizations.read(s.signer.key, s.handle.at)).toEqual(rows);
+  } finally { changed.close(); }
+});
+
+// Case 6: distinct client instances share one actor and the same actual memory-store fence.
+test("a second remark waits behind the pending first remark without signing", async () => {
+  const s = requestScene(), { client, store } = clientAt(s), feed = new Feed();
+  const second = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
+    member: { service: "https://requests.test", membership: s.actor.member.membership,
+      member: s.actor.member.member, principal: s.actor.principal },
+    store, drafts: { read: async () => null }, observe: feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+  try {
+    s.feed.current(s.scope); feed.current(s.scope); await client.read(); await second.read();
+    s.mode("unavailable");
+    await request(client, "first-remark", "remark", { on: 0, fields: { text: "first" } });
+    const signs = s.signs(), posts = s.copies.length;
+    const result = await request(second, "second-remark", "remark", { on: 0, fields: { text: "second" } }).catch((error: unknown) => error);
+    expect(s.signs()).toBe(signs);
+    expect(s.copies.length).toBe(posts);
+    expect(result).toMatchObject({ reason: "source" });
+    const rows = await store.authorizations.read(s.signer.key, s.handle.at);
+    const first = rows.find(row => row.key === "first-remark")!, waiting = rows.find(row => row.key === "second-remark")!;
+    expect(waiting.versions[0]!.after).toEqual([{ key: first.key, version: first.versions[0]!.id }]);
+    expect(waiting.permissions).toEqual([]);
+    expect(waiting.materializations).toEqual([]);
+    const custody = new Custody(store, () => timeOf(s.now()));
+    const identity = { service: "https://requests.test", membership: s.actor.member.membership,
+      signer: s.signer.key, target: s.handle.at, key: "second-remark" };
+    expect(await custody.find(identity)).toBeNull();
+  } finally { second.close(); client.close(); }
+});
+
+test("two captured observed submits from stale views stop busy without a partial second authorization", async () => {
+  const s = requestScene(), { client, store } = clientAt(s), feed = new Feed();
+  const second = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
+    member: { service: "https://requests.test", membership: s.actor.member.membership,
+      member: s.actor.member.member, principal: s.actor.principal },
+    store, drafts: { read: async () => null }, observe: feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+  try {
+    s.feed.current(s.scope); feed.current(s.scope); await client.read(); await second.read();
+    await request(client, "cause", "remark", { on: 0, fields: { text: "real source entry" } });
+    const captured = { kind: "cite", on: 0, fields: { cause: s.scope.fact(s.scope.head.seq) },
+      expected: { on: s.scope.item(0).revision } } as const;
+    const identity = { owner: s.signer.key, scope: s.handle.at };
+    s.mode("unavailable");
+    await client.submitBoundAct({ ...identity, key: "first-cite" }, captured);
+    const before = await store.authorizations.read(s.signer.key, s.handle.at), signs = s.signs(), posts = s.copies.length;
+    const result = await second.submitBoundAct({ ...identity, key: "second-cite" }, captured).catch((error: unknown) => error);
+    expect(result).toMatchObject({ reason: "busy" });
+    expect(s.signs()).toBe(signs);
+    expect(s.copies.length).toBe(posts);
+    expect(await store.authorizations.read(s.signer.key, s.handle.at)).toEqual(before);
+  } finally { second.close(); client.close(); }
+});
+
+// A public gesture owns its input before the first store read can suspend it.
+test("a captured submit keeps its original input while the first store read waits", async () => {
+  const s = requestScene(), { client, store } = clientAt(s), reading = gate();
+  const byTarget = store.byTarget.bind(store);
+  try {
+    s.feed.current(s.scope); await client.read(); await clientIdle(client);
+    let armed = true;
+    store.byTarget = async target => {
+      if (armed) { armed = false; await reading.wait(); }
+      return byTarget(target);
+    };
+    const identity = { key: "captured-input", owner: s.signer.key, scope: s.handle.at };
+    const act = { kind: "remark", on: 0, fields: { text: "the authorized words" }, expected: {} };
+    const sent = client.submitBoundAct(identity, act);
+    const completed = expect(sent).resolves.toMatchObject({ answer: { answer: "accepted" } });
+    await reading.started;
+    identity.key = "later-caller-key";
+    act.fields.text = "later caller words";
+    reading.release(); await completed;
+    const rows = await store.authorizations.read(s.signer.key, s.handle.at);
+    expect(rows.map(row => row.key)).toEqual(["captured-input"]);
+    expect(rows[0]!.versions[0]!.act.fields).toEqual({ text: "the authorized words" });
+    expect(s.copies).toHaveLength(1);
+    expect(s.copies[0]!.intent.idempotencyKey).toBe("captured-input");
+    expect(s.copies[0]!.intent.fields["text"]).toBe("the authorized words");
+    expect(clientReplica(client).accepted(s.signer.key, "captured-input")).not.toBeNull();
+    expect(clientReplica(client).accepted(s.signer.key, "later-caller-key")).toBeNull();
+  } finally { reading.release(); store.byTarget = byTarget; client.close(); }
+});
+
+// Content digests may repeat; custody's occurrence, not equal bytes, names the third gesture.
+test("same-clock A B A launches the third signing's exact authorization position", async () => {
+  const s = requestScene(), { client, store, who } = clientAt(s);
+  try {
+    s.feed.current(s.scope); await client.read(); s.mode("refused");
+    const at = s.now(), signs = s.signs(), identity = { key: "same-clock", owner: s.signer.key, scope: s.handle.at };
+    for (const text of ["A", "B", "A"]) {
+      await client.submitBoundAct(identity, { kind: "remark", on: 0, fields: { text }, expected: {} });
+    }
+    expect(s.now()).toBe(at);
+    expect(s.signs()).toBe(signs + 3);
+    expect(s.copies).toHaveLength(3);
+    const record = await new Custody(store, () => timeOf(s.now())).find({ ...who, key: identity.key });
+    if (!record) expect.fail("the three real signings must remain in custody");
+    expect(record.signings).toHaveLength(3);
+    expect(record.signings[0]!.intent).toBe(record.signings[2]!.intent);
+    expect(intentDigest(s.copies[0]!.intent)).toBe(intentDigest(s.copies[2]!.intent));
+    expect(record.signings.map(signing => signing.authorization?.position)).toEqual([0, 1, 2]);
+    expect(clientDelivery(client)).toMatchObject({
+      identity: { ...who, key: identity.key }, signing: 2, intent: record.signings[2]!.intent,
+      authorization: { identity, position: 2 },
+    });
+    const [row] = await store.authorizations.read(s.signer.key, s.handle.at);
+    expect(row!.versions).toHaveLength(3);
+    expect(row!.versions[0]!.id).toBe(row!.versions[2]!.id);
+  } finally { client.close(); }
+});
+
+test("a live legacy copy expires while its launch waits for the shared fence", async () => {
+  const s = requestScene(), { client, store, who } = clientAt(s), held = gate();
+  const exclusive = store.exclusive.bind(store);
+  let now = s.now(); s.clock.now = () => now;
+  try {
+    const values = { on: 0, fields: { text: "kept legacy" } };
+    const shaped = shapeDeclaredAct(s.handle.definition, "remark", values);
+    const signed = await signedIntent(s.signer, { to: s.handle.at, kind: "remark", on: shaped.on,
+      fields: shaped.fields, expected: {} }, { now, idempotencyKey: "queued-legacy", lifetimeSeconds: 2 });
+    s.seedLegacy(signed);
+    const custody = new Custody(store, () => timeOf(now)), identity = { ...who, key: "queued-legacy" };
+    await custody.keep(identity, intentMeaning(signed.intent), async () => ({
+      binding: { definition: s.handle.definition.name, kind: "remark", declaration: s.handle.digest, pinned: s.handle.digest },
+      envelope: { signed, beside: shaped.beside },
+    }), timeOf(now + 30_000));
+    s.feed.current(s.scope); await client.read(); await clientIdle(client);
+    const signs = s.signs(), bytes = canonicalize(signed);
+    const blocker = exclusive(() => held.wait()); await held.started;
+    let entered!: () => void, armed = true;
+    const queued = new Promise<void>(done => { entered = done; });
+    store.exclusive = run => { if (armed) { armed = false; entered(); } return exclusive(run); };
+    const copied = request(client, identity.key, "remark", values);
+    const completed = expect(copied).resolves.toMatchObject({ lost: true });
+    await queued;
+    expect(s.copies).toEqual([]);
+    now = Date.parse(signed.intent.notAfter);
+    held.release(); await blocker; await completed;
+    expect(s.copies).toEqual([]);
+    expect(s.signs()).toBe(signs);
+    expect(canonicalize((await custody.find(identity))!.envelope.signed)).toBe(bytes);
+    expect(await store.authorizations.read(s.signer.key, s.handle.at)).toEqual([]);
+  } finally { held.release(); store.exclusive = exclusive; client.close(); }
+});
+
+test("cancellation or a newer position wins before a queued copy launches", async () => {
+  for (const change of ["cancel", "new-position"] as const) {
+    const s = requestScene(), { client, store } = clientAt(s), held = gate();
+    const exclusive = store.exclusive.bind(store);
+    try {
+      s.feed.current(s.scope); await client.read(); s.mode("unavailable");
+      const identity = { key: `launch-${change}`, owner: s.signer.key, scope: s.handle.at };
+      const act = { kind: "remark", on: 0, fields: { text: "same content" }, expected: {} };
+      await client.submitBoundAct(identity, act); await clientIdle(client);
+      const before = await client.authorization(identity);
+      if (!before) expect.fail("the first gesture must be retained");
+      const reference = { identity, position: 0 }, signs = s.signs(), posts = s.copies.length;
+      const launch = canonicalize(clientDelivery(client));
+      const blocker = exclusive(() => held.wait()); await held.started;
+      let next: (() => void) | null = null;
+      store.exclusive = run => { const signal = next; next = null; signal?.(); return exclusive(run); };
+      const dispatchQueued = new Promise<void>(done => { next = done; });
+      const copied = client.sendAuthorization(reference);
+      const completed = expect(copied).resolves.toMatchObject({ lost: true });
+      await dispatchQueued;
+      const mutationQueued = new Promise<void>(done => { next = done; });
+      const mutation = change === "cancel" ? client.cancelAuthorization(identity)
+        : client.retainAuthorizations([{ key: identity.key, act }]);
+      await mutationQueued;
+      held.release(); await blocker; await mutation; await completed;
+      expect(s.signs()).toBe(signs);
+      expect(s.copies.length).toBe(posts);
+      expect(canonicalize(clientDelivery(client))).toBe(launch);
+      const row = await client.authorization(identity);
+      if (!row) expect.fail("the retained history must survive the race");
+      expect(row.permissions).toEqual(before.permissions);
+      if (change === "cancel") expect(row.cancelledAt).toBeDefined();
+      else {
+        expect(row.versions).toHaveLength(2);
+        expect(row.versions[1]!.id).toBe(row.versions[0]!.id);
+        expect(row.versions[0]).toEqual(before.versions[0]);
+      }
+    } finally { held.release(); store.exclusive = exclusive; client.close(); }
+  }
 });

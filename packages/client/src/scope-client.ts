@@ -1,10 +1,10 @@
 /** Requests over a declared replica: custody owns bytes, the replica owns facts, and one schedule owns time. */
-import type { Answer, DeclaredDefinition, Digest, FieldValue, Head, Intent, MemberId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Answer, Beside, DeclaredDefinition, Digest, FieldValue, Head, MemberId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { REFUSAL_CLASSES, canonicalize, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { REFUSAL_CLASSES, canonicalize, intentDigest, isDigest, isLocalId, isRecord, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { changeItem, isItemEffect, newItem, validateDefinition, type PredictionActor, type ValidDefinition } from "@generalbusiness/dap-derive";
-import { Custody, CustodyError, Lost, envelopeOf, identityId, meaningOf, type ClientCustodyStore, type CustodyRecord, type Envelope, type Identity, type Outcome, type Sent } from "./custody.ts";
-import { shapeDeclaredAct, type AskedOf, type DeclaredHandle, type Kind, type ShapeFieldType } from "./declared.ts";
+import { Custody, CustodyError, Lost, envelopeOf, identityId, meaningOf, validKey, type BindingRecord, type ClientCustodyStore, type CustodyRecord, type DeliveryOccurrence, type Envelope, type Identity, type Outcome, type Sent } from "./custody.ts";
+import { ShapeError, shapeDeclaredAct, shapeFieldsOf, type AskedOf, type DeclaredHandle, type Kind, type ShapeFieldType } from "./declared.ts";
 import { effectiveFields, expectedOf } from "./expected.ts";
 import { DEFAULT_LIFETIME_SECONDS, signedIntent, type Signer } from "./intent.ts";
 import { sendableAt } from "./originals.ts";
@@ -12,6 +12,11 @@ import { scopeReplica, intentMeaning, type Replica, type ReplicaOptions, type Re
 import type { Judged } from "./replica-judged.ts";
 import { requestStatus, signingDead, type RequestStatus } from "./request-status.ts";
 import { RequestSchedule, wallClock, type ClientClock } from "./request-schedule.ts";
+import { AuthorizationError, AuthorizationTransaction, type Authorization, type AuthorizationIdentity, type AuthorizationInput, type AuthorizationPosition, type AuthorizedAct, type MaterializedAct, type RetainAuthorization, type SigningAuthorization } from "./authorization.ts";
+import type { AuthorizationPort, CustodyBuildFence } from "./authorization-store.ts";
+import type { ItemName, Source } from "./act-types.ts";
+import { actVersion } from "./act-version.ts";
+import { lowerActNames } from "./act-symbols.ts";
 
 /** Seat holds no principal and uses an origin; this port states the four facts C3 needs, each once (ruling e868dd08). */
 export interface ScopeMember { service: string; membership: ScopeRef; member: MemberId; principal: MemberRef | null }
@@ -24,7 +29,9 @@ export interface DraftRead<D extends DeclaredDefinition> {
 export interface ClientOptions<D extends DeclaredDefinition> extends ReplicaOptions {
   signer: Signer;
   member: ScopeMember;
-  store: ClientCustodyStore;
+  store: ClientCustodyStore & { authorizations: AuthorizationPort };
+  /** Fixed by the descriptor owner; E4 invents no descriptor or fallback digest. */
+  descriptor: Digest;
   drafts: DraftRead<D>;
   clock?: ClientClock;
   lifetimeSeconds?: number;
@@ -51,6 +58,9 @@ type RequestCall<D extends DeclaredDefinition> = <K extends Kind<D>>(key: string
 const requests = new WeakMap<object, unknown>();
 const replicas = new WeakMap<object, unknown>();
 const flushers = new WeakMap<object, () => Promise<void>>();
+const deliveries = new WeakMap<object, DeliveryOccurrence>();
+/** Last actual launch only; a bounded test correspondence seam, absent from scope.ts. */
+export const clientDelivery = (client: object): DeliveryOccurrence | null => structuredClone(deliveries.get(client) ?? null);
 /** Await actual queued memory-port work in owning tests; no clock advances and no package export. */
 export const clientIdle = (client: object): Promise<void> => flushers.get(client)!();
 /** Test-only correspondence seam; scope.ts does not export it. */
@@ -58,6 +68,7 @@ export const clientReplica = <D extends DeclaredDefinition>(client: ScopeClient<
 
 export class ScopeClient<D extends DeclaredDefinition> {
   readonly #handle: DeclaredHandle<D>;
+  readonly #at: ScopeRef;
   readonly #options: ClientOptions<D>;
   readonly #clock: ClientClock;
   readonly #schedule: RequestSchedule;
@@ -88,12 +99,15 @@ export class ScopeClient<D extends DeclaredDefinition> {
   #stopReplica: () => void;
 
   constructor(handle: DeclaredHandle<D>, options: ClientOptions<D>) {
+    options = { ...options, member: structuredClone(options.member),
+      signer: { key: options.signer.key, sign: options.signer.sign.bind(options.signer) } };
     this.#handle = handle; this.#options = options;
+    this.#at = structuredClone(handle.at);
     this.#clock = options.clock ?? wallClock;
     this.#schedule = new RequestSchedule(this.#clock);
     this.#custody = new Custody(options.store, () => timeOf(this.#clock.now()));
     this.#actor = { key: options.signer.key, member: { membership: options.member.membership, member: options.member.member }, principal: options.member.principal };
-    this.#who = { service: options.member.service, membership: options.member.membership, signer: options.signer.key, target: handle.at };
+    this.#who = { service: options.member.service, membership: options.member.membership, signer: options.signer.key, target: this.#at };
     const checked = validateDefinition(handle.definition, PROPOSED_BOUNDS);
     this.#definition = checked.ok ? checked.definition : null;
     const lifetime = options.lifetimeSeconds ?? DEFAULT_LIFETIME_SECONDS;
@@ -327,9 +341,193 @@ export class ScopeClient<D extends DeclaredDefinition> {
     for (const [key, held] of this.#held) if (unresolved(held.record)) this.#background(() => this.#copy(key));
   }
 
-  async #deliver(envelope: Envelope): Promise<Answer> {
-    try { return await this.#schedule.bounded(() => { this.#current(); return this.#handle.submit(envelope.signed, [], envelope.beside); }); }
-    catch { throw new Lost(); }
+  #authorization(port: AuthorizationPort): AuthorizationTransaction {
+    return new AuthorizationTransaction(port, { owner: this.#options.signer.key, scope: this.#at,
+      definition: this.#handle.digest, descriptor: this.#options.descriptor }, this.#replica);
+  }
+  #authorizationIdentity(key: string): AuthorizationIdentity {
+    return { key, owner: this.#options.signer.key, scope: this.#at };
+  }
+
+  #owner(identity: AuthorizationIdentity): void {
+    if (identity.owner !== this.#options.signer.key || canonicalize(identity.scope) !== canonicalize(this.#at)) throw new AuthorizationError("owner");
+    if (!validKey(identity.key)) throw new ShapeError("key", "is not a bounded request key");
+  }
+  #state(): void {
+    this.#current();
+    if (!["current", "behind"].includes(this.#replica.view.state.is)) throw new Error("the scope client cannot submit in this state");
+  }
+  #items() { return Object.keys(this.#handle.definition.items).flatMap(type => [...this.#replica.view.rows(type)]); }
+  async #pending(previous: Authorization): Promise<boolean> {
+    if (Date.parse(previous.versions.at(-1)!.deadline) <= this.#clock.now()) return false;
+    const record = await this.#custody.find({ ...this.#who, key: previous.key });
+    return !record || unresolved(record);
+  }
+
+  /** Derive reference/order data here. No public input contains an after graph or a selected subject list. */
+  async #retentionStep(input: AuthorizationInput, batch: readonly AuthorizationInput[], transaction: AuthorizationTransaction): Promise<RetainAuthorization> {
+    const act = input.act, declared = this.#handle.definition.acts[act.kind];
+    if (!declared || act.kind === this.#handle.definition.genesis) throw new ShapeError("kind", "is not an ordinary act kind");
+    if (!validKey(input.key)) throw new ShapeError("key", "is not a bounded request key");
+    const sources = new Map<string, Source>(), tokens = new Map<string, object>(), names = new Map<object, ItemName>();
+    const source = (value: unknown): Source => {
+      if (!isRecord(value) || Object.keys(value).length !== 2 || !Object.hasOwn(value, "key") || !Object.hasOwn(value, "version")
+        || !validKey(value["key"]) || !isDigest(value["version"])) throw new ShapeError("source", "is not a bounded step source");
+      const found = { key: value["key"] as string, version: value["version"] as Digest };
+      sources.set(canonicalize(found), found); return found;
+    };
+    const token = (found: Source): object => {
+      const key = canonicalize(found); let held = tokens.get(key);
+      if (!held) { held = Object.freeze({}); tokens.set(key, held); names.set(held, { output: found }); }
+      return held;
+    };
+    const output = (name: ItemName): number | object => {
+      if (typeof name === "number") { if (!isLocalId(name)) throw new ShapeError("item", "is not a local item name"); return name; }
+      if (!isRecord(name) || Object.keys(name).length !== 1 || !Object.hasOwn(name, "output")) throw new ShapeError("item", "is not an output source");
+      return token(source(name.output));
+    };
+    const capture = lowerActNames(act, declared.fields, { item: output });
+    const needs = declared.step !== "open" && declared.on !== null;
+    if (needs ? capture.on === null : capture.on !== null) throw new ShapeError("on", needs ? "is required" : "names no existing item");
+    for (const revision of Object.values(act.expected)) {
+      if (typeof revision === "number") { if (!Number.isSafeInteger(revision) || revision < 0 || Object.is(revision, -0)) throw new ShapeError("expected", "is not a revision"); }
+      else {
+        if (!isRecord(revision) || Object.keys(revision).length !== 1 || !Object.hasOwn(revision, "after")) throw new ShapeError("expected", "is not an after source");
+        source(revision.after);
+      }
+    }
+    // Only these validated owned tokens pass non-signing shape validation. No placeholder ID reaches a signing.
+    const shaped = shapeFieldsOf(declared.fields, capture.fields, { symbolicItems: new Set(tokens.values()) });
+    const resolve = new Map<object, number>();
+    for (const [name, held] of tokens) {
+      const found = await transaction.item(names.get(held)!);
+      if (typeof found === "number") resolve.set(held, found);
+      // The token remains private; subjects retain the public Source if it is not recorded yet.
+      if (!sources.has(name)) throw new AuthorizationError("source");
+    }
+    const items: { id: number | object; revision: number | object; type: string; refs: Readonly<Record<string, FieldValue | null>> }[] =
+      this.#items().map(item => ({ ...item, revision: item.id }));
+    const resolvedFields = Object.fromEntries(Object.entries(shaped.fields).map(([name, value]) => [name, typeof value === "object" && value !== null && resolve.has(value) ? resolve.get(value)! : value]));
+    const on = capture.on !== null && typeof capture.on === "object" && resolve.has(capture.on) ? resolve.get(capture.on)! : capture.on;
+    const opening = async (found: Source, type: string): Promise<void> => {
+      const proposed = batch.find(step => step.key === found.key && actVersion(step.act) === found.version)?.act;
+      const prior = proposed ? null : await transaction.find(this.#authorizationIdentity(found.key));
+      const origin = proposed ?? (prior?.versions.at(-1)?.id === found.version ? prior.versions.at(-1)!.act : null);
+      const declaration = origin ? this.#handle.definition.acts[origin.kind] : null;
+      if (!declaration || declaration.step !== "open" || declaration.on !== type) throw new AuthorizationError("source");
+      const held = token(found);
+      if (!items.some(item => item.id === held)) items.push({ id: held, revision: held, type, refs: {} });
+    };
+    if (on !== null && typeof on === "object" && declared.on !== null) {
+      await opening((names.get(on)! as { output: Source }).output, declared.on);
+    }
+    for (const [name, value] of Object.entries(declared.also)) {
+      const rule = value as { item?: string; by?: string; one?: true; via?: { of: string; slot: string }; code?: string };
+      if (rule.code !== undefined) continue;
+      if (rule.by && rule.item) {
+        const selected = resolvedFields[rule.by];
+        if (selected !== null && typeof selected === "object" && names.has(selected)) await opening((names.get(selected)! as { output: Source }).output, rule.item);
+      } else if (rule.one && rule.item && !items.some(item => item.type === rule.item)) {
+        const revision = act.expected[name];
+        if (revision && typeof revision !== "number") await opening(source(revision.after), rule.item);
+      }
+    }
+    // A pending source has no recorded reference slots. Do not project a via path.
+    const pendingSubject = (name: string, seen = new Set<string>()): boolean => {
+      name = name.replace(/^also\./, "");
+      if (name === "on") return on !== null && typeof on === "object";
+      if (seen.has(name)) return false;
+      seen.add(name);
+      const rule = declared.also[name] as { item?: string; by?: string; one?: true; via?: { of: string; slot: string }; code?: string } | undefined;
+      if (!rule || rule.code !== undefined) return false;
+      if (rule.by !== undefined) return typeof resolvedFields[rule.by] === "object" && resolvedFields[rule.by] !== null && names.has(resolvedFields[rule.by] as object);
+      if (rule.one) return typeof items.find(item => item.type === rule.item)?.id === "object";
+      return !!rule.via && pendingSubject(rule.via.of, seen);
+    };
+    for (const value of Object.values(declared.also)) {
+      const rule = value as { via?: { of: string; slot: string } };
+      if (rule.via && pendingSubject(rule.via.of)) throw new AuthorizationError("source");
+    }
+    const selected = expectedOf(declared, items, on, effectiveFields(declared, resolvedFields, this.#at));
+    const publicName = (item: number | object): ItemName => typeof item === "number" ? item : names.get(item) ?? (() => { throw new AuthorizationError("source"); })();
+    const subjects = Object.entries(selected).map(([name, item]) => ({ name, item: publicName(item) }));
+    if (on !== null && declared.on !== null && !subjects.some(subject => subject.name === "on")) subjects.push({ name: "on", item: publicName(on) });
+    return { key: input.key, act, sources: [...sources.values()], subjects };
+  }
+
+  /** One unsigned gesture batch; only the complete owner/scope replacement can commit. */
+  async retainAuthorizations(inputs: readonly AuthorizationInput[]): Promise<readonly AuthorizationPosition[]> {
+    const captured = structuredClone(inputs), gesture = this.#clock.now();
+    await this.read(); this.#state();
+    return this.#options.store.exclusive(async () => {
+      this.#state(); const transaction = this.#authorization(this.#options.store.authorizations);
+      const steps: RetainAuthorization[] = [];
+      for (const input of captured) steps.push(await this.#retentionStep(input, captured, transaction));
+      const held = await transaction.retain(steps, gesture, this.#options.lifetimeSeconds ?? DEFAULT_LIFETIME_SECONDS, row => this.#pending(row));
+      this.#state(); await transaction.commit(); return structuredClone(held);
+    });
+  }
+
+  /** Fill once using only this instance's checked source entries and post-entry revisions. */
+  async fillAuthorization(reference: AuthorizationPosition): Promise<MaterializedAct> {
+    const captured = structuredClone(reference); this.#owner(captured.identity);
+    await this.read(); this.#state();
+    return this.#options.store.exclusive(async () => {
+      this.#state(); const transaction = this.#authorization(this.#options.store.authorizations);
+      const materialized = await transaction.fill(captured.identity, captured.position, this.#handle.definition, this.#items());
+      this.#state(); await transaction.commit(); return structuredClone(materialized);
+    });
+  }
+
+  /** C4 supplies its captured act. This operation is always a new gesture, never an inferred copy. */
+  async submitBoundAct(identity: AuthorizationIdentity, act: AuthorizedAct): Promise<Sent> {
+    const captured = structuredClone({ identity, act }), gesture = this.#clock.now();
+    this.#owner(captured.identity);
+    return this.#submitCaptured(captured.identity, captured.act, gesture);
+  }
+
+  async authorization(identity: AuthorizationIdentity): Promise<Authorization | null> {
+    const captured = structuredClone(identity);
+    return this.#options.store.exclusive(() => this.#authorization(this.#options.store.authorizations).find(captured));
+  }
+  async cancelAuthorization(identity: AuthorizationIdentity): Promise<void> {
+    const captured = structuredClone(identity);
+    await this.#options.store.exclusive(async () => {
+      const transaction = this.#authorization(this.#options.store.authorizations);
+      await transaction.cancel(captured, this.#clock.now()); await transaction.commit();
+    });
+    await this.#sync();
+  }
+
+  async #deliver(envelope: Envelope, occurrence: DeliveryOccurrence): Promise<Answer> {
+    const captured = structuredClone(envelope), selected = structuredClone(occurrence);
+    try {
+      return await this.#schedule.bounded(async current => {
+        const launched = await this.#options.store.exclusive(async () => {
+          this.#current(); if (!current()) throw new Lost();
+          const key = captured.signed.intent.idempotencyKey;
+          const record = await this.#custody.find(selected.identity);
+          this.#current(); if (!current()) throw new Lost();
+          const signing = record?.signings[selected.signing], kept = record ? envelopeOf(record, selected.signing) : null;
+          if (!record || !signing || !kept || !unresolved(record) || record.attempt !== selected.attempt
+            || selected.signing !== record.signings.length - 1 || signing.intent !== selected.intent
+            || intentDigest(captured.signed.intent) !== selected.intent || canonicalize(kept) !== canonicalize(captured)
+            || canonicalize(signing.authorization ?? null) !== canonicalize(selected.authorization ?? null)
+            || canonicalize(record.identity) !== canonicalize(selected.identity)
+            || canonicalize(selected.identity) !== canonicalize({ ...this.#who, key })
+            || signing.dead !== undefined || signing.closed || this.#clock.now() >= Date.parse(signing.notAfter)
+            || this.#replica.accepted(this.#options.signer.key, key)) throw new Lost();
+          if (signing.authorization && !await this.#authorization(this.#options.store.authorizations).canCopy(signing.authorization, captured.signed, this.#clock.now())) throw new Lost();
+          this.#current(); if (!current()) throw new Lost();
+          // The authorization read can wait too; lifetime eligibility applies to legacy and referenced occurrences alike.
+          if (this.#clock.now() >= Date.parse(signing.notAfter) || this.#replica.accepted(this.#options.signer.key, key)) throw new Lost();
+          deliveries.set(this, structuredClone(selected));
+          // Launch under the fence; await the network after releasing it.
+          return { answer: this.#handle.submit(captured.signed, [], captured.beside) };
+        });
+        return launched.answer;
+      });
+    } catch { throw new Lost(); }
   }
   async #after(sent: Sent): Promise<void> {
     if (this.#closed || this.#stopping) return;
@@ -363,7 +561,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
     if (!record || !unresolved(record) || this.#clock.now() >= Date.parse(record.envelope.signed.intent.notAfter) || this.#replica.accepted(this.#options.signer.key, key)) return;
     this.#busy.add(key); this.#retry.delete(key);
     try {
-      const sent = await this.#custody.send(record.identity, record.meaning, neverBuild, envelope => this.#deliver(envelope), { notAfter: timeOf(this.#clock.now() + 30_000) });
+      const sent = await this.#custody.send(record.identity, record.meaning, neverBuild, (envelope, selected) => this.#deliver(envelope, selected), { notAfter: timeOf(this.#clock.now() + 30_000) });
       this.#busy.delete(key);
       await this.#after(sent);
     } catch (error) {
@@ -375,42 +573,148 @@ export class ScopeClient<D extends DeclaredDefinition> {
   #available(): boolean { return !this.#closed && !this.#stopping && this.#replica.view.state.is !== "stopped"; }
   #current(): void { if (!this.#available()) throw new Error("the scope client no longer owns this request"); }
 
-  async #request<K extends Kind<D>>(key: string, kind: K, values: AskedOf<D, K>): Promise<Sent> {
-    await this.read();
-    if (this.#closed || !["current", "behind"].includes(this.#replica.view.state.is)) throw new Error("the scope client cannot submit in this state");
+  async #signRetained(transaction: AuthorizationTransaction, reference: AuthorizationPosition, beside: Beside = {}) {
+    const materialized = await transaction.fill(reference.identity, reference.position, this.#handle.definition, this.#items(), beside);
+    const permit = await transaction.permit(reference.identity, reference.position, this.#clock.now());
+    this.#state();
+    if (this.#clock.now() >= Date.parse(permit.deadline)) throw new AuthorizationError("deadline");
+    await transaction.commit();
+    this.#state();
+    const now = this.#clock.now();
+    if (now >= Date.parse(permit.deadline)) throw new AuthorizationError("deadline");
+    const signed = await signedIntent(this.#options.signer, { to: this.#at, kind: materialized.kind,
+      on: materialized.on, fields: { ...materialized.fields }, expected: { ...materialized.expected } },
+      { idempotencyKey: reference.identity.key, now, lifetimeSeconds: (Date.parse(permit.deadline) - now) / 1000 });
+    this.#state();
+    if (this.#clock.now() >= Date.parse(permit.deadline)) throw new AuthorizationError("deadline");
+    return { binding: { definition: this.#handle.definition.name, kind: materialized.kind, declaration: this.#handle.digest, pinned: this.#handle.digest },
+      envelope: { signed, beside: materialized.beside }, authorization: permit.authorization };
+  }
+
+  async #stageGesture(transaction: AuthorizationTransaction, input: AuthorizationInput, gesture: number, beside: Beside) {
+    const step = await this.#retentionStep(input, [input], transaction);
+    const [reference] = await transaction.retain([step], gesture, this.#options.lifetimeSeconds ?? DEFAULT_LIFETIME_SECONDS, row => this.#pending(row));
+    try {
+      const materialized = await transaction.fill(reference!.identity, reference!.position, this.#handle.definition, this.#items(), beside);
+      return { reference: reference!, materialized };
+    } catch (error) {
+      if (!(error instanceof AuthorizationError) || error.reason !== "source") throw error;
+      return { reference: reference!, materialized: null };
+    }
+  }
+
+  async #submitCaptured(identity: AuthorizationIdentity, act: AuthorizedAct, gesture: number, beside: Beside = {}): Promise<Sent> {
+    const captured = structuredClone({ identity, act, beside });
+    this.#owner(captured.identity);
+    await this.read(); this.#state();
+    const key = captured.identity.key;
     if (this.#busy.has(key)) throw new CustodyError({ held: "locked" });
-    const shaped = shapeDeclaredAct(this.#handle.definition, kind, values), act = this.#handle.definition.acts[kind]!;
-    const items = Object.keys(this.#handle.definition.items).flatMap(type => [...this.#replica.view.rows(type)]);
-    const expected = expectedOf(act, items, shaped.on, effectiveFields(act, shaped.fields, this.#handle.at));
-    const asked = { to: this.#handle.at, kind, on: shaped.on, fields: shaped.fields, expected };
-    const meaning = intentMeaning(asked), identity = { ...this.#who, key };
-    const existing = await this.#custody.find(identity);
-    this.#current();
-    const equivalent = (intent: Intent) => canonicalize({ ...intent, notAfter: null }) === canonicalize({ v: 1, ...asked, actor: this.#options.signer.key, idempotencyKey: key, notAfter: null });
-    // Ruling 78016c59: reuse only the latest live signing. An earlier match becomes a new signing.
-    const latest = existing?.signings.at(-1);
-    const reuse = existing && latest && !signingDead(latest, this.#clock.now()) && equivalent(existing.envelope.signed.intent);
-    const build = async () => {
-      this.#current();
-      const signed = await signedIntent(this.#options.signer, asked, { idempotencyKey: key, now: this.#clock.now(), lifetimeSeconds: this.#options.lifetimeSeconds ?? DEFAULT_LIFETIME_SECONDS });
-      this.#current();
-      return { binding: { definition: this.#handle.definition.name, kind, declaration: this.#handle.digest, pinned: this.#handle.digest }, envelope: { signed, beside: shaped.beside } };
-    };
     this.#busy.add(key); this.#retry.delete(key);
     try {
-      const sent = await this.#custody.send(identity, meaning, build, envelope => this.#deliver(envelope), {
-        notAfter: timeOf(this.#clock.now() + 30_000), bytes: utf8(canonicalize(shaped)).length,
-        ...(reuse ? { resubmit: true } : { resign: true }),
+      // Preview derives ordinary custody meaning but retains nothing when ready.
+      // The real builder repeats this under admission and the signing fence.
+      const preview = await this.#options.store.exclusive(async () => {
+        this.#state(); const transaction = this.#authorization(this.#options.store.authorizations);
+        const candidate = await this.#stageGesture(transaction, { key, act: captured.act }, gesture, captured.beside);
+        if (!candidate.materialized) {
+          this.#state();
+          const row = await transaction.find(candidate.reference.identity);
+          if (this.#clock.now() >= Date.parse(row!.versions[candidate.reference.position]!.deadline)) throw new AuthorizationError("deadline");
+          await transaction.commit();
+        }
+        return candidate;
       });
-      this.#busy.delete(key);
-      await this.#after(sent);
-      return sent;
+      if (!preview.materialized) throw new AuthorizationError("source");
+      const meaning = intentMeaning(preview.materialized), identity = { ...this.#who, key };
+      const build = async (fence: CustodyBuildFence) => fence.authorizations(async port => {
+        this.#state(); const transaction = this.#authorization(port);
+        const candidate = await this.#stageGesture(transaction, { key, act: captured.act }, gesture, captured.beside);
+        if (!candidate.materialized) {
+          this.#state(); await transaction.commit(); throw new AuthorizationError("source");
+        }
+        if (canonicalize(candidate.materialized) !== canonicalize(preview.materialized)) throw new AuthorizationError("source");
+        return this.#signRetained(transaction, candidate.reference, captured.beside);
+      });
+      const sent = await this.#custody.send(identity, meaning, build, (envelope, selected) => this.#deliver(envelope, selected), {
+        notAfter: timeOf(this.#clock.now() + 30_000), bytes: utf8(canonicalize(preview.materialized)).length,
+        authorization: { kind: "gesture" },
+      });
+      this.#busy.delete(key); await this.#after(sent); return sent;
     } finally { this.#busy.delete(key); await this.#sync(); }
+  }
+
+  /** Resume this exact occurrence: first sign once, or reuse genuine kept bytes. It never appends a gesture. */
+  async sendAuthorization(reference: AuthorizationPosition): Promise<Sent> {
+    const captured = structuredClone(reference); this.#owner(captured.identity);
+    await this.read(); this.#state();
+    const key = captured.identity.key, identity = { ...this.#who, key };
+    if (this.#busy.has(key)) throw new CustodyError({ held: "locked" });
+    this.#busy.add(key); this.#retry.delete(key);
+    try {
+      const existing = await this.#custody.find(identity), latest = existing?.signings.at(-1);
+      const same = latest?.authorization && canonicalize({ identity: latest.authorization.identity, position: latest.authorization.position }) === canonicalize(captured);
+      const terminal = existing && !unresolved(existing) && existing.phase !== "refused";
+      let meaning: Digest;
+      let build: (fence: CustodyBuildFence) => Promise<{ binding: BindingRecord; envelope: Envelope; authorization?: SigningAuthorization }> = neverBuild;
+      if (existing && (same || terminal)) {
+        if (!terminal && latest && (latest.dead || latest.closed || this.#clock.now() >= Date.parse(latest.notAfter))) {
+          if (unresolved(existing)) throw new AuthorizationError("deadline");
+        }
+        meaning = existing.meaning;
+      } else {
+        const materialized = await this.#options.store.exclusive(async () => {
+          this.#state(); const transaction = this.#authorization(this.#options.store.authorizations);
+          const row = await transaction.find(captured.identity);
+          if (!row || row.versions.length - 1 !== captured.position) throw new AuthorizationError("version");
+          if (row.permissions.some(permission => permission.position === captured.position)) throw new AuthorizationError("authorization-used");
+          return transaction.fill(captured.identity, captured.position, this.#handle.definition, this.#items());
+        });
+        meaning = intentMeaning(materialized);
+        build = fence => fence.authorizations(async port => {
+          this.#state(); const transaction = this.#authorization(port);
+          const candidate = await transaction.fill(captured.identity, captured.position, this.#handle.definition, this.#items());
+          if (canonicalize(candidate) !== canonicalize(materialized)) throw new AuthorizationError("source");
+          return this.#signRetained(transaction, captured);
+        });
+      }
+      const live = latest && !latest.dead && !latest.closed && this.#clock.now() < Date.parse(latest.notAfter);
+      const sent = await this.#custody.send(identity, meaning, build, (envelope, selected) => this.#deliver(envelope, selected), {
+        notAfter: timeOf(this.#clock.now() + 30_000), resubmit: !!live,
+        authorization: { kind: "position", reference: captured },
+      });
+      this.#busy.delete(key); await this.#after(sent); return sent;
+    } finally { this.#busy.delete(key); await this.#sync(); }
+  }
+
+  /** C3's internal selector preserves its consecutive-live-content copy rule. Public submitBoundAct is always a gesture. */
+  async #request<K extends Kind<D>>(key: string, kind: K, values: AskedOf<D, K>): Promise<Sent> {
+    const captured = structuredClone(values), gesture = this.#clock.now();
+    await this.read(); this.#state();
+    const shaped = shapeDeclaredAct(this.#handle.definition, kind, captured), declared = this.#handle.definition.acts[kind]!;
+    const expected = expectedOf(declared, this.#items(), shaped.on, effectiveFields(declared, shaped.fields, this.#at));
+    const asked = { to: this.#at, kind, on: shaped.on, fields: shaped.fields, expected };
+    const existing = await this.#custody.find({ ...this.#who, key }), latest = existing?.signings.at(-1);
+    this.#state();
+    const equivalent = existing && canonicalize({ ...existing.envelope.signed.intent, notAfter: null })
+      === canonicalize({ v: 1, ...asked, actor: this.#options.signer.key, idempotencyKey: key, notAfter: null });
+    if (existing && latest && !signingDead(latest, this.#clock.now()) && equivalent) {
+      if (latest.authorization) return this.sendAuthorization({ identity: latest.authorization.identity, position: latest.authorization.position });
+      // Explicit legacy live-byte recovery invents no authorization.
+      if (this.#busy.has(key)) throw new CustodyError({ held: "locked" });
+      this.#busy.add(key);
+      try {
+        const sent = await this.#custody.send(existing.identity, existing.meaning, neverBuild, (envelope, selected) => this.#deliver(envelope, selected),
+          { resubmit: true, notAfter: timeOf(this.#clock.now() + 30_000) });
+        this.#busy.delete(key); await this.#after(sent); return sent;
+      } finally { this.#busy.delete(key); await this.#sync(); }
+    }
+    const act: AuthorizedAct = { kind, on: shaped.on, fields: (captured as { fields?: Readonly<Record<string, unknown>> }).fields ?? {}, expected };
+    return this.#submitCaptured(this.#authorizationIdentity(key), act, gesture, shaped.beside);
   }
 }
 
 export function scopeClient<const D extends DeclaredDefinition>(handle: DeclaredHandle<D>, options: ClientOptions<D>): ScopeClient<D> { return new ScopeClient(handle, options); }
-/** Internal C3 request seam. C4 calls it from submit; the package entry does not export it. */
+/** Internal C3 regression selector. C4 uses the explicit instance operations; scope.ts does not export this seam. */
 export function request<D extends DeclaredDefinition, K extends Kind<D>>(client: ScopeClient<D>, key: string, kind: K, values: AskedOf<D, K>): Promise<Sent> {
   return (requests.get(client) as RequestCall<D>)(key, kind, values);
 }
