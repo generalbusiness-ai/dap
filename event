@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7c65ad4ebcc30a557c0b17825ed23fca2589d741","text":"Merge retired a covered predecessor; the successor is at packages/client/test/scope-client.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:84f17bd3e41ed15463a1240c4dc72d60fffe7aba","text":"Merge retired a covered predecessor; the successor is at packages/client/test/support/c4-now-model.ts."}
