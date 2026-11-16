@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-11-14-subject-admission.md","body":{"commit":"53aeda160c649117df1b591d192bd8eafb9ca666","path":"notes/2026-11-14-subject-admission.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ad32737e809ed95654cf6ee23a5f6dd288d0d53d","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-14-subject-admission.md."}
