@@ -210,6 +210,12 @@ The planner settled the six points of the first run in ruling 09041476.
 
 ## DD-1 and outside adopters
 
+The digest covers the act's declaration and the item types, rules and
+capabilities that the act names directly. It does not follow an item type's
+`refs` or `values` to further types (ruling bc3a5516). A change to a type that
+only another type's refs name leaves each act's digest unchanged, and test B in
+`packages/client/test/act-descriptor.test.ts` pins it.
+
 No caller in this repository holds an old descriptor value. Every caller of
 `scopeClient` passed a test constant, and the instance now builds the digest of
 each act from its own definition. An outside adopter's retained authorization

@@ -66,6 +66,19 @@ describe("the digest of one act", () => {
     expect(changed(before, item)).toEqual(["offer-task", "report-task", "take-task"]);
   });
 
+  test("an item type that only another type's refs name leaves the digest unchanged (ruling bc3a5516)", () => {
+    const before = digests(room);
+    // `take-task` and `report-task` act on `task`. Its refs name `zone`, `device` and `alert`; neither act names them.
+    for (const name of ["zone", "device", "alert"]) expect((room.items["task"]!.refs as Record<string, { to: { of?: string } }>)[name]!.to.of).toBe(name);
+    for (const kind of ["take-task", "report-task"]) expect(JSON.stringify(room.acts[kind])).not.toMatch(/"(zone|device|alert)"/);
+    for (const name of ["zone", "device", "alert"]) {
+      const after = changed(before, digests(edited(room, value => { value.items[name].max += 1; })));
+      expect(after.length).toBeGreaterThan(0);
+      expect(after).not.toContain("take-task");
+      expect(after).not.toContain("report-task");
+    }
+  });
+
   test("the profile changes exactly the acts that name a rule", () => {
     const before = digests(room);
     const after = digests(edited(room, value => { value.profile.version += 1; }));
