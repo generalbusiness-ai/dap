@@ -52,15 +52,6 @@ export interface DraftExploreResult<D extends DeclaredDefinition, K extends Kind
 export type ExploreOperation<D extends DeclaredDefinition> =
   <K extends Kind<D>>(key: string, act: PartialAct<D, K>) => Promise<DraftExploreResult<D, K>>;
 const operations = new WeakMap<object, unknown>();
-const readers = new WeakMap<object, (session: Session) => boolean>();
-
-/** ScopeHandle registers the actual constructor reader. No token leaves this closure. */
-export function registerScopeReader(handle: object, reader: unknown): void {
-  readers.set(handle, session => typeof reader === "string" && reader === session.reader());
-}
-export function scopeUsesSession(handle: object, session: Session): boolean {
-  return readers.get(handle)?.(session) === true;
-}
 
 /** Constructors register only their own closure over the actual Replica. */
 export function registerExplore<D extends DeclaredDefinition>(owner: object, operation: ExploreOperation<D>): void {

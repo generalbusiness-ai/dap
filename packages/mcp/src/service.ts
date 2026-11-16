@@ -440,7 +440,9 @@ export class McpService {
       if (!at || at.g !== generation || !Number.isSafeInteger(at.i) || at.i < 0 || at.i > tools.length) throw new ListRestart();
       from = at.i;
     }
-    const { page, next } = pageBy(tools, from, this.#port.listPageBytes ?? LIST_PAGE_BYTES);
+    // The bound holds the page as sent: the tools and the envelope around them, with the longest cursor this list can need.
+    const envelope = bytesOf({ tools: [], nextCursor: cursorOf({ g: generation, i: tools.length }) }) - 2;
+    const { page, next } = pageBy(tools, from, (this.#port.listPageBytes ?? LIST_PAGE_BYTES) - envelope);
     return { tools: page, ...(next !== null ? { nextCursor: cursorOf({ g: generation, i: next }) } : {}), generation, ...(generation === s.generation ? {} : { catalogueGeneration: s.generation }) };
   }
 
