@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2f3957ac0507563a4ae108d3e0726b02cc910161","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-16-ek1-es1-standing.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:32f585f11b94bc73eee9bc78539da7f6ba92b1ba","text":"Merge retired a covered predecessor; the successor is at apps/views/test/j4-reads.golden.json."}
