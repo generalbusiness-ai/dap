@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:decfc132127b786268eecb055d5b2bdf84d512d8","text":"Merge retired a covered predecessor; the successor is at scripts/test-celld-proxy.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dfffa8194dce624b001f774eb5ce2dbe347a9cb9","text":"Merge retired a covered predecessor; the successor is at examples/lending/vitest.config.ts."}
