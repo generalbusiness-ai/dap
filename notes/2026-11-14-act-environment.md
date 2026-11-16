@@ -10,7 +10,9 @@ Explore yet. R landed as main `c6711b53` on the same day, and Lending
 Section 13 lists the build steps and their requests. Section 18 lists
 the rulings of step E1 that changed sections 3, 5 and 8. Section 19
 lists the rulings of steps E4 and C4, of 15 November 2026, that
-changed sections 6, 7, 13, 15 and 16. Step E4 is not on main.
+changed sections 5, 6, 7, 13, 15 and 16. Step E4 is not on main. One
+question of steps E2 and E3 is with the owner: the source of an
+instance's standing (section 5.7).
 
 A dap application has more than one interface. A member acts through a
 page, an agent acts through MCP tools, and an operator acts through the
@@ -406,7 +408,7 @@ scope, or a change of authority.
 | Placement | Judges on | Use |
 |---|---|---|
 | A local instance | Its replica and the owner's pending steps | Each frame of a drag, each key stroke, with no network |
-| The agent host | Its own replica of the scope, and the grants that it holds for its key | The MCP tool `explore` |
+| The agent host | Its own replica of the scope | The MCP tool `explore` |
 | The scope | Its own state at its head, with the standing that it reads for the caller | Held (section 16). A method `explore` on `ScopeApi`, with the route `POST /v1/scopes/<scope>/explore`. A read, with no entry |
 
 Each placement states its context. A placement that lacks an input
@@ -416,6 +418,37 @@ the act changes, and not the whole view.
 The contract of section 5.1 does not wait for a transport. Invariant 9
 of the suite (section 12) tests it in one process, against the
 in-memory scope.
+
+No placement outside the scope holds a grant today. The scope reads
+the caller's standing itself, and it ignores each grant that a caller
+presents (`packages/scope/src/authority.ts:538`). No read returns
+that standing to a member. So a local instance and the agent host
+state `standing` as null. An act that reaches the grant check answers
+`unavailable` with `authority-unavailable` (section 5.4). The judge
+runs the grant check before the guards, so the explorations of
+section 5.5 are `unavailable` too.
+
+Steps E2 and E3 need the standing. Two things are open, and neither
+step starts before the owner answers:
+
+- The grant guard `judgeGrant` takes the record of the scope's own
+  read, and a grant carries that record as its proof of freshness
+  (`packages/derive/src/grant.ts:305`). An instance holds no such
+  record and makes none. An exploration under real standing needs a
+  value check that `judgeGrant` shares, and a grant value with no
+  proof for the body. Both change `packages/derive`, so section 16
+  applies.
+- The source of the standing. A replica of the membership scope is
+  checked and follows each change. Its cost is a new owner of native
+  membership state in the client, and a whole membership journal with
+  no bound on memory. The answer to a session request can carry the
+  standing that `issueSession` reads
+  (`packages/scope/src/sessions.ts:389`). That value is small. No
+  journal checks it, and it is up to 600 seconds old.
+
+An instance never presents a guessed grant. The stand-in
+`predictionGrant` of step C2 stays in the prediction of the member's
+own pending acts, where the scope has the last word.
 
 ## 6. A draft keeps the basis that the member saw
 
@@ -454,6 +487,61 @@ internal operation that explores an act. The operation uses the real
 authority, owners and evidence, and it answers `unavailable` when it
 holds none. No raw state leaves the replica, and no second evaluator
 exists. Step E3 calls the same operation at each view and each tick.
+
+A context reader gives the operation its inputs. The reader is a port
+at the constructor of the client and of the replica. It receives the
+actor, the scope, the definition, the head and the act, and it
+returns checked inputs or the lacks of section 5.4. The first adapter
+is the replica alone: the member's session, the checked replica and
+the pinned declaration. Its `standing` is null (section 5.7), and it
+holds no foreign fact and no observation.
+
+Rule 3 holds with that adapter. The judge compares the expected basis
+before it checks the grant (`packages/derive/src/judge.ts`, the
+`revision-moved` refusal and the grant check after it). A stale draft
+gets the determinate answer that its basis moved, and it returns
+before any signature. A draft with an unchanged basis gets
+`unavailable`, and the submit proceeds to the scope. An `unavailable`
+exploration returns no draft and stops no submit. One test in the
+judge's owner pins the order of the two checks.
+
+### 6.1 A `ref` is a value
+
+A page copies its values. A card passes them across a frame, and a
+store serializes a model. So a copy of a `ref` is that `ref`. The
+instance keeps no private state behind a `ref` object, and a copy
+causes no error.
+
+**The basis of a subject is read when the draft first names that
+subject.**
+
+- A subject that the slot names by a `ref` takes `seen` from the
+  value of the `ref`, as the page gave it. If the row moved after the
+  page read it, the basis is stale, and the submit returns the draft
+  with `now`.
+- A subject that the act derives through `also.via`, `also.by` or
+  `one` takes its revision from the instance's checked view, at the
+  edit that first determines the subject. For most acts that edit is
+  the first edit of the empty slot. A change of the selecting field
+  reads again, for that subject only.
+- The draft store holds the basis from that write. A later view, a
+  new slot value and a reload change nothing in it. The instance does
+  not repair a stored basis from current rows. A basis that is
+  missing or damaged stops the draft with `shape`.
+- A slot is an address: the kind and the item names. Two slots with
+  equal names are one slot.
+- A page that shows a frozen copy of a row opens its draft when the
+  dialog opens, with an empty edit.
+- A `ref` whose name the view does not hold stops with `state`. A
+  derived subject that the view does not hold gets no basis. The
+  submit sends no guessed revision, and the scope judges the act.
+- A return takes `now` and the revisions of its derived subjects from
+  the cut of the exploration that decided the movement.
+
+One limit stays. A derived subject can move between the page's read
+and the edit that first names the subject, and the instance does not
+see that movement. The primary subject has no such gap, because its
+`seen` comes from the page.
 
 A draft that lacks a required field has values, and a page can show
 them. The map shows a pin at the draft's coordinates while the name is
@@ -973,7 +1061,8 @@ covers the acts that need no basis.
 | Rule 3: "The client signs only when the member submits. No timer signs" | The rule of section 7.1. With the default deadline, the behavior that a member sees is D12's |
 | Rule 5: the intent is built "at the replica's head" | A draft keeps the basis that it opened on, and a returned draft takes the basis `now` (section 6) |
 | Section 8, step 3: the stop `busy` | Stays for an `observed` subject whose pending step the act does not name. An act that names the step waits (section 7.4) |
-| Section 8: "A stop changes no store" | A stop of the signer or of the custody write changes no custody record. The authorization store keeps the version and its permission mark (section 7.1). Each earlier stop writes nothing |
+| Section 8: "A stop changes no store" | No stop leaves a custody record. Most stops write nothing. A `source` stop can leave a version with no mark and no signing. Three stops leave a version and its permission mark, with one call of the signer (section 7.1): a stop of the signer, a stop of the custody write, and `full` with the reason `bytes` after the build |
+| Section 8: the stops of a submit | Ten stops: `shape`, `state`, `busy`, `signer`, `store`, `full`, `taken`, `descriptor-mismatch`, `source` and `versions-full`. `full` keeps custody's reasons: `bytes`, `count`, `budget` and `signings`. An `unavailable` exploration is no stop |
 | Section 9: `ClientView` and `Judged` | The view gains `explore` and `offers`, and each row gains `ref` and `recorded`. `Judged` is the exploration of a signed version |
 | Section 10: no file and no export in `packages/contract` or `packages/derive` | Step E1 adds one export to `packages/derive` (section 16) |
 | Section 15: work offline for longer than one signing is not taken | Stays not taken in the first build. The rule of section 7.1 permits a later deadline (section 7.2) |
@@ -981,6 +1070,25 @@ covers the acts that need no basis.
 Steps C1 to C4 keep their order. C4 takes the changed rule 5 from its
 first build, so no build holds the old rule. E3 lands with C4, and E4
 with C3.
+
+Custody checks the size of a record two times: before the signing,
+on the caller's estimate, and after the build, on the record
+(`packages/client/src/custody.ts`, the two `bytes` checks of the
+first signing). The estimate is a lower bound. An act within the
+envelope's own bytes of the record bound passes the first check and
+fails the second, after the signer ran. The mark stays, the position
+permits no second call of the signer, and the member's next submit is
+a new position. Step C4 states the case as a limit and repairs
+nothing.
+
+The stop `source` is coarse. It means that the act names a source
+whose row the replica does not hold. The draft stays, and the page
+shows the stop. The page promises no success and starts no wait. Step
+E5 owns the waits, and it can narrow the stop. The stop
+`versions-full` means that the key holds 64 positions, and its remedy
+is a new request key. The how-to page of step C4 gives one table:
+each stop, each reason of `full`, the remedy, and what the stop
+wrote.
 
 ## 16. One part enters the kernel first, one enters last, and one waits
 
@@ -1121,5 +1229,11 @@ and the sections above hold the results.
 | `63f034d9` | A selection through a pending source stops before retention. Step E5 owns it | 7.4 |
 | `52b638a9` | The store keeps the history of a key, with at most 64 positions | 7.1 |
 | `d48ce431` | Step C4 owns the exploration at a submit and the basis of a draft. Step E4-B owns the browser store | 6, 7.1, 7.4, 13 |
+| `16211297` | A context reader at the constructor gives the exploration its inputs. An `unavailable` exploration stops no submit | 6 |
+| `13bbb177` | The first adapter is the replica alone, with `standing` null. The basis check comes before the grant check | 6 |
+| `22ae2bd0`, `850da1af` | A submit has ten stops. `source` is coarse, and `versions-full` is its own stop | 15 |
+| `9930cf7f` | A stop leaves one of three results. The second size check of custody can refuse after the signer ran | 15 |
+| `4dffc26a` | A `ref` is a value. The basis of a subject is read when the draft first names that subject | 6.1 |
+| `d038a2ee` | The standing of an instance is open. The owner decides the change of `packages/derive` | 5.7 |
 
 Request `4bd07278` holds step E4-B.
