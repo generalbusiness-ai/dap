@@ -15,6 +15,7 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { Readable } from "node:stream";
+import { StringDecoder } from "node:string_decoder";
 import { pipeline } from "node:stream/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
@@ -25,36 +26,63 @@ const failureMetadata = { stage: "preflight", signal: null, exchange: null };
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
 const MAX_REPLY = 4 * 1024 * 1024;
 export const BACKEND_TAIL_LINES = 12, BACKEND_TAIL_LINE_BYTES = 512;
-/** Last twelve lines, at most 512 UTF-8 bytes of text each. Full raw output stays private. */
-export function backendTail() {
-  const lines = []; let pending = Buffer.alloc(0), truncated = false, complete = false;
-  const line = () => {
-    let text = "", bytes = 0, cut = truncated;
-    for (const character of pending.toString("utf8")) {
-      const width = Buffer.byteLength(character);
-      if (bytes + width > BACKEND_TAIL_LINE_BYTES) { cut = true; break; }
-      text += character; bytes += width;
+/** Exact run-secret replacement precedes the unchanged public line/byte bounds.
+ * Carry holds only a possible known-secret prefix and incomplete UTF-8 bytes. */
+export function backendTail(secrets = []) {
+  const lines = [], decoder = new StringDecoder("utf8");
+  let pending = "", bytes = 0, truncated = false, complete = false, carry = "";
+  const append = (state, text) => {
+    let from = 0;
+    while (from < text.length) {
+      const newline = text.indexOf("\n", from), end = newline < 0 ? text.length : newline;
+      if (!state.truncated) for (const character of text.slice(from, end)) {
+        const width = Buffer.byteLength(character);
+        if (state.bytes + width > BACKEND_TAIL_LINE_BYTES) { state.truncated = true; break; }
+        state.pending += character; state.bytes += width;
+      }
+      if (newline < 0) break;
+      state.lines.push({ text: state.pending, truncated: state.truncated });
+      if (state.lines.length > BACKEND_TAIL_LINES) state.lines.shift();
+      state.pending = ""; state.bytes = 0; state.truncated = false; from = newline + 1;
     }
-    return { text, truncated: cut };
+  };
+  const replace = (text, final, emit) => {
+    const known = [...new Set(secrets)].filter(value => value.length).sort((a, b) => b.length - a.length);
+    if (!known.length) { emit(text); return ""; }
+    const longest = known[0].length;
+    let from = 0, plain = 0;
+    while (from < text.length) {
+      // Defer a shorter complete encoding if a longer one can still finish.
+      if (!final && text.length - from < longest && known.some(secret => secret.length > text.length - from && secret.startsWith(text.slice(from)))) {
+        emit(text.slice(plain, from)); return text.slice(from);
+      }
+      const match = known.find(secret => text.startsWith(secret, from));
+      if (!match) { from++; continue; }
+      emit(text.slice(plain, from));
+      emit("[run secret redacted]");
+      from += match.length; plain = from;
+    }
+    emit(text.slice(plain)); return "";
+  };
+  const current = () => ({ lines, pending, bytes, truncated });
+  const consume = (text, final) => {
+    const state = current();
+    carry = replace(carry + text, final, piece => append(state, piece));
+    ({ pending, bytes, truncated } = state);
   };
   return {
-    add(chunk) {
-      let from = 0;
-      while (from < chunk.length) {
-        const newline = chunk.indexOf(10, from), end = newline < 0 ? chunk.length : newline;
-        const room = BACKEND_TAIL_LINE_BYTES - pending.length, part = chunk.subarray(from, end);
-        pending = Buffer.concat([pending, part.subarray(0, room)]);
-        truncated ||= part.length > room;
-        if (newline < 0) break;
-        lines.push(line()); if (lines.length > BACKEND_TAIL_LINES) lines.shift();
-        pending = Buffer.alloc(0); truncated = false; from = newline + 1;
-      }
+    add(chunk) { consume(decoder.write(chunk), false); },
+    end() { if (!complete) consume(decoder.end(), true); complete = true; },
+    snapshot() {
+      const state = { ...current(), lines: [...lines] };
+      // Preview the observed suffix without consuming its future match state.
+      replace(carry, true, piece => append(state, piece));
+      return { lineLimit: BACKEND_TAIL_LINES, lineByteLimit: BACKEND_TAIL_LINE_BYTES, complete,
+        lines: [...state.lines, ...(state.pending.length || state.truncated ? [{ text: state.pending, truncated: state.truncated }] : [])].slice(-BACKEND_TAIL_LINES) };
     },
-    end: () => { complete = true; },
-    snapshot() { return { lineLimit: BACKEND_TAIL_LINES, lineByteLimit: BACKEND_TAIL_LINE_BYTES, complete,
-      lines: [...lines, ...(pending.length || truncated ? [line()] : [])].slice(-BACKEND_TAIL_LINES) }; },
   };
 }
+const secretTextsOf = secret => ["base64url", "base64", "hex"].map(encoding => Buffer.from(secret).toString(encoding));
 /** This explicit backend-only exception quotes bounded output and infers nothing from it. */
 export function backendOutputFor(owner, output) {
   if (owner !== "celldbackend") return null;
@@ -218,7 +246,7 @@ async function run() {
   await writeFile(join(directory, "worker.ts"), shim, { mode: 0o600, flag: "wx" });
   configuration.main = "worker.ts";
   const home = join(directory, "custody");
-  const sessionSecret = randomBytes(32).toString("base64url");
+  const sessionSecret = randomBytes(32).toString("base64url"), backendSecrets = [sessionSecret];
   await writeFile(join(directory, ".dev.vars"), `SESSION_SECRET=${sessionSecret}\n`, { mode: 0o600, flag: "wx" });
   const proxy = createTlsServer({ key, cert: ca }, (request, response) => {
     const rejected = interrupted ? "interrupted" : ++counters.requests > 4096 ? "request-budget"
@@ -355,7 +383,7 @@ async function run() {
     const ended = new Promise((resolve, reject) => { child.once("error", reject); child.once("close", (exit, signal) => resolve({ exit, signal })); });
     void ended.catch(() => {});
     const number = ++serial;
-    const tails = { stdout: backendTail(), stderr: backendTail() };
+    const tails = { stdout: backendTail(backendSecrets), stderr: backendTail(backendSecrets) };
     const pipes = [child.stdout, child.stderr];
     let collectorFailed = false, collectorFailure;
     const logs = Promise.allSettled(pipes.map(async (stream, index) => {
@@ -400,16 +428,26 @@ async function run() {
     }
     throw Error("celld startup bound exceeded; private logs retained");
   };
-  let client = null, operatorSecret = null, backendForFailure = null;
+  let client = null, operatorSecret = null, plannedOperatorSecret = null, backendForFailure = null;
   try {
     owned.check(); proxyPort = await listen(proxy); networkClosed = false; base = `https://127.0.0.1:${proxyPort}`;
     owned.check(); failureMetadata.stage = "plan";
     const plan = await runCelldSmoke({ phase: "plan", base, home, fetch: transport });
+    owned.check();
+    // The plan already owns this private key, including on the initial install failure.
+    const context = await contextForCelldSmoke({ base, home, fetch: transport });
+    owned.check();
+    const planned = await context.store.config();
+    owned.check();
+    must(planned && typeof planned.key === "string", "Owned smoke plan key required before backend start");
+    plannedOperatorSecret = await context.store.secret(planned.key);
+    owned.check();
+    must(plannedOperatorSecret && plannedOperatorSecret.length === 32, "Owned smoke plan secret required before backend start");
+    backendSecrets.push(...secretTextsOf(plannedOperatorSecret));
     await start(plan.register, true);
     owned.check(); failureMetadata.stage = "smoke";
     const smoke = await runCelldSmoke({ phase: "run", base, home, fetch: transport });
     owned.check(); failureMetadata.stage = "hosted-setup";
-    const context = await contextForCelldSmoke({ base, home, fetch: transport });
     const cliRequire = createRequire(join(ROOT, "packages/cli/package.json"));
     const { tsImport } = await import(pathToFileURL(cliRequire.resolve("tsx/esm/api")).href);
     const load = path => tsImport(pathToFileURL(join(ROOT, path)).href, import.meta.url);
@@ -419,6 +457,7 @@ async function run() {
     const config = await context.store.config(), secret = await context.store.secret(config.key);
     must(secret && config.repository && config.handle === "@owner", "Actual owned smoke admin custody required");
     operatorSecret = secret;
+    backendSecrets.push(...secretTextsOf(secret));
     const membership = config.repository.membership;
     const fresh = async label => {
       owned.check();
@@ -541,6 +580,7 @@ async function run() {
     ]) { try { await close(); } catch { closeFailed = true; } }
     if (backendForFailure) failureMetadata.backendOutput = backendOutputFor(failureMetadata.exchange.owner, backendForFailure.tails);
     operatorSecret?.fill(0);
+    plannedOperatorSecret?.fill(0);
     must(!closeFailed, "Owned closure failed; private TEST state retained");
     must(children.size === 0 && exchanges.size === 0, "Owned process/transport closure incomplete; private scratch retained");
     owned.check();
