@@ -48,9 +48,17 @@ through unchanged. In step 1 the run behaves as before.
 [native-timeout-crossing] file=<path> name=<test name> limit=<N>ms kind=<Test|Hook>
 ```
 
-- `file` is the test file path.
-- `name` is the current test's full name. It reads `(no test)` for a hook
-  outside a test.
+- `file` is the file of the test that owns the timer.
+- `name` is the full name of the test that owns the timer. It reads
+  `(no owner)` when no test context registered the controller.
+
+The owner is the test whose context created the aborted controller. Vitest
+aborts the controller of the test's own context, and a `beforeEach` in the
+setup file maps each test's `signal` to that test (step 1b, ruling
+925778a5). A timer of test A that fires while test B runs names A. Before
+step 1b, the line named the test that ran when the timer fired. Gate 3 on
+the C4 head printed two such lines, for cases that took 5287 ms and 6646 ms
+against limits of 20000 ms and 30000 ms.
 - `limit` is the limit from vitest's timeout message.
 - `kind` is `Test` or `Hook`.
 
@@ -70,6 +78,7 @@ workerd refusal:
   rejection.
 - With `swallow`, the wrapper returns, so vitest's rejection runs (step 3).
 - Another reason, or an abort that does not throw, prints nothing.
+- A timer that test A starts and that fires during test B names A.
 
 The control does not prove that workerd refuses in a real run. A gate's
 crossing count is the Native witness. A gate with a count of 0 shows no

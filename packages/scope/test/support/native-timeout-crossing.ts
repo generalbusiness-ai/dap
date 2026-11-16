@@ -18,17 +18,17 @@ export function crossingLine(crossing: Crossing, file: string, name: string): st
   return `${CROSSING_PREFIX} file=${file} name=${name.replace(/\s+/g, " ").trim() || "(no test)"} limit=${crossing.limit}ms kind=${crossing.kind}`;
 }
 
-/** Wrap `abort` on the prototype. A refused abort with a timeout reason reports once, then rethrows,
- * or with `swallow` returns so that vitest rejects the test (step 3). Other refusals rethrow unchanged. */
-export function guardAbort(prototype: { abort(reason?: unknown): void }, report: (crossing: Crossing) => void, swallow: boolean): void {
+/** Wrap `abort` on the prototype. A refused abort with a timeout reason reports once, with the controller whose timer fired,
+ * then rethrows, or with `swallow` returns so that vitest rejects the test (step 3). Other refusals rethrow unchanged. */
+export function guardAbort<C extends { abort(reason?: unknown): void }>(prototype: C, report: (crossing: Crossing, controller: C) => void, swallow: boolean): void {
   const original = prototype.abort;
-  prototype.abort = function abort(this: unknown, reason?: unknown): void {
+  prototype.abort = function abort(this: C, reason?: unknown): void {
     try {
       original.call(this, reason);
     } catch (error) {
       const crossing = timeoutOf(reason);
       if (!crossing) throw error;
-      report(crossing);
+      report(crossing, this);
       if (!swallow) throw error;
     }
   };
