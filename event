@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:346401541698406e286f8cc87bd75bcb2b638c12","text":"Merge retired a covered predecessor; the successor is at packages/scope/vitest.denial.config.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3a7e1ffac87d80ab540c13301ca03c0ec18df767","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-16-c4-general-now.md."}
