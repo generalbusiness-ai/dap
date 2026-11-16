@@ -50,7 +50,15 @@ that time, and `defer` kept no count, so the delay never grew.
   `ArchiveDriver.run()` reads the stored wake. If the wake is missing or not
   in the future, the driver writes a backed-off wake through `defer()`. It
   uses its own small budget, as `committed()` does, so a pass that spent its
-  allowance still leaves a future wake.
+  allowance still leaves a future wake. If the stored wake is in the future,
+  the in-memory fallback takes that wake, so it never fires earlier.
+- **A pass that is not due reads only the wake index.** Every scope alarm
+  runs the archive, whichever owner set the alarm: outside effects,
+  dispatch retries, credential expiry and signer maintenance. After the
+  terminal check, a pass reads the stored wake index, about 256 bytes of
+  local SQL. A future wake returns `retry` with that wake and calls no
+  policy, target or provider port. A missing, cleared, due or stopped wake
+  continues to the full pass.
 
 A pass that confirms new entries still continues at once: `#confirmed`
 returns the current time when the head moved past the Mark. That pass did
@@ -60,18 +68,31 @@ A deferred wake is pending, and `signal()` does not shorten it. An act in a
 room whose archive cannot start therefore waits for the backoff, up to an
 hour, before the archive tries again.
 
+A cleared wake still runs the full pass. On an idle room, that pass is how
+the archive notices work that no act signalled: a revoked policy or removed
+trust, which stops the archive, and a stored-row migration after a
+deployment. A first version of AR-1 also returned `idle` on a cleared wake
+without a full pass. It failed 17 archive tests of exactly those kinds, so
+this head keeps the full pass.
+
 ## The ceiling
 
 `packages/scope/test/archive-wake-rate.test.ts` runs one idle room with the
 archive wired through the production `archive` seam, for a simulated hour.
 The object, its alarms, SQLite and eviction are real. The policy, target
-and provider ports are stand-ins that count calls. Four cases run:
+and provider ports are stand-ins that count calls. Twelve cases run. The
+archive either has a pending policy or a missing target. Each starts with
+no wake or with the wake that the code before AR-1 left: a deferred
+one-second retry already in the past, with no retry count. The live rooms
+hold such wakes when the archive comes back on. Each runs in three modes:
 
-- the policy stays pending;
-- the target stays missing;
-- each of those two, with the wake that the code before AR-1 left: a
-  deferred one-second retry already in the past, with no retry count. The
-  live rooms hold such wakes when the archive comes back on.
+- `evicted`: the object restarts before every wake, so only stored state
+  carries the backoff;
+- `resident`: the object stays in memory, so the in-memory fallback takes
+  part;
+- `other-alarms`: the object stays in memory, and another owner's alarm
+  fires every 30 seconds between the archive's wakes. Each of those passes
+  must call no port and must leave the alarm at the archive's stored wake.
 
 In each case the room passes at 0, 60, 180, 420, 900 and 1860 seconds.
 The next wake, at 3780 seconds, falls after the hour. The ceiling is 6
@@ -81,10 +102,17 @@ the Directory scope: the room's birth, its creator hops, Rules,
 Destination and two item queries. That is at most about 36 Directory calls
 for each such room in its first hour, and about 6 an hour after.
 
-The same test against the code before AR-1 fails in all four cases. The
-pending-policy room passed again 0.25 seconds after each pass, once for
-each simulated pass duration. The missing-target room passed every second.
-Both reached the test's stop at 100 passes.
+The same test against the code before AR-1 fails in all four `evicted`
+cases. The pending-policy room passed again 0.25 seconds after each pass,
+once for each simulated pass duration. The missing-target room passed every
+second. Both reached the test's stop at 100 passes.
+
+The two pending-policy `other-alarms` cases fail against the first AR-1
+head, d9bf1a5f: the first alarm from another owner made a Directory call
+before the archive was due. There, policy preparation ran before the due
+check, and its in-memory retry of 60 seconds could undercut the stored
+backoff. The other ten cases pass against d9bf1a5f. Its missing-target path
+returned at the due check before it called the target.
 
 ## The expected rate on a Worker
 
@@ -99,9 +127,22 @@ calls on the Directory scope, so up to about 7 Durable Object requests.
 
 For example, the dap-grow census of 2026-11-13 counted 11 scopes. If all 11
 cannot start, the first hour costs at most about 460 requests and each
-later hour at most about 77. A room whose archive confirms and stays idle
-clears its wake and costs nothing. A room with new acts runs one pass for
-each act, and the count above does not include those passes.
+later hour at most about 77. A room with new acts runs one pass for each
+act, and the count above does not include those passes.
+
+A room that has other alarms adds no Directory calls through the archive
+while its archive is backed off. Each of those alarms runs an archive pass
+that is not due. That pass reads the stored wake index from the room's own
+SQLite and calls no port, so it makes no Durable Object request beyond the
+alarm that the other owner already pays for.
+
+A room whose archive confirmed and cleared its wake is different. Each of
+its other alarms runs a full pass, with up to about six Directory calls,
+before the pass finds nothing to write. For M such alarms an hour on a
+Worker, that is up to about 6 × M Directory requests an hour. AR-1 does not
+measure M. The rate of about 48 requests a minute on dap-grow before AE-1
+and after the hotfix was measured with the archive off, so it does not
+include this cost.
 
 Before AR-1, the two Workers made about 250,000 requests an hour.
 

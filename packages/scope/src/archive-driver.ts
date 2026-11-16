@@ -143,17 +143,18 @@ export class ArchiveDriver {
       return result;
     }).finally(() => { this.#running = null; });
   }
-  /** AR-1: a retry pass never leaves the stored wake at or before now. A
-   * pass can return before it writes a wake (an unreadable pin, a pending
-   * policy, a caught failure), and `wake()` would then return the earlier
-   * stored time, so the alarm would fire again at once. This persists a
-   * backed-off wake with its own small budget, as `committed()` does. */
+  /** AR-1: a retry pass never leaves the stored wake at or before now, and
+   * the in-memory fallback never undercuts a stored future wake. A pass can
+   * return before it writes a wake (an unreadable pin, a pending policy, a
+   * caught failure), and `wake()` would then return the earlier stored time,
+   * so the alarm would fire again at once. This persists a backed-off wake
+   * with its own small budget, as `committed()` does. */
   #retryWake(next: Timestamp | null): Timestamp | null {
     try {
       const rows = this.#store(), now = timeMs(this.#options.clock());
       if (!rows || now === null) return next ?? this.#later(0);
       const stored = rows.wake();
-      if (stored !== null && timeMs(stored)! > now) return next !== null && timeMs(next)! > now ? next : null;
+      if (stored !== null && timeMs(stored)! > now) return stored;
       return rows.defer(retries => this.#later(retries)) ?? this.#later(0);
     } catch { return this.#later(0); }
   }
@@ -202,6 +203,16 @@ export class ArchiveDriver {
       const at = { ...current.at }, through = { ...current.head };
       const terminal = rows.terminal(budget);
       if (terminal) return done({ state: "stopped", next: null, reason: terminal.reason });
+      // AR-1: every scope alarm runs the archive, whoever set the alarm. A
+      // pass whose stored wake is in the future reads only that wake index
+      // and calls no policy, target or provider port. A missing, cleared,
+      // due or stopped wake continues to the full pass below: an idle room
+      // still detects a policy change or a pending migration there.
+      step = "wake-check";
+      const stored = rows.storedWake(budget), clock = timeMs(this.#options.clock());
+      if (stored && !stored.stopped && stored.next !== null && clock !== null && timeMs(stored.next)! > clock) {
+        detail = "not-due"; return done({ state: "retry", next: stored.next });
+      }
       // The original ledger pays once before any policy work. Every later
       // outer lookahead starts with this write already removed from its
       // available allowance; failure need not leave spare write capacity.

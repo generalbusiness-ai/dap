@@ -374,7 +374,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "300e4a3f51f23b93a2ce026b98993700e3c0b8947d35b68de195adc5c522ae45",
   "packages/scope/src/archive-publication.ts": "6c13c9f864b559e26d75982eca85c058975a12f18ad00b660c227577aae76d9b",
   "packages/scope/src/archive-build.ts": "bf1c79debbe0141140174c9a3d79f63d1952b874bce1d8713207dea8c817b8a0", // Actual pin SQL payload settles; final identity fence unchanged.
-  "packages/scope/src/archive-driver.ts": "38447822f38bca35a2fd92f764803c447428df414f3367965894f4e37a5dccab", // AR-1 bounds every archive retry (60 s floor, one-hour cap, persisted retry count) and leaves no stored wake in the past; actual maintained AST output.
+  "packages/scope/src/archive-driver.ts": "8281cebc4bb9e20d7f091f0b94c2d6da344c6777a36beeeea98fa1a28275bb26", // AR-1 bounds every archive retry (60 s floor, one-hour cap, persisted retry count), leaves no stored wake in the past, and returns before policy work while the stored wake is in the future; actual maintained AST output.
   "packages/scope/src/archive-row.ts": "0b69533c7387fd730e8a5717cc6dfce1269ba22db199303f76eeff6ed32ad3f3", // AR-1 adds the bounded retry count to the wake record; defer takes the delay as a function of it; actual maintained AST output.
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],

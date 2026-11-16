@@ -22,15 +22,21 @@ const PASS_MS = 250;
 const CEILING = 6;
 /** Stop a loop that does not back off, so the failure names the count. */
 const RUNAWAY = 100;
+/** In `other-alarms` mode, another owner's alarm fires this often. */
+const OTHER_MS = 30_000;
 
 // `old`: the room carries the wake that the code before AR-1 left, a
 // deferred one-second retry already in the past with no retry count, as on
 // the live rooms when the archive comes back on.
-const cases = [
-  { kind: "policy-pending", old: false }, { kind: "target-missing", old: false },
-  { kind: "policy-pending", old: true }, { kind: "target-missing", old: true },
-] as const;
-test.each(cases)("an idle room whose archive stays $kind (old wake: $old) wakes at most 6 times in an hour", async ({ kind, old }) => {
+// `mode`: `evicted` restarts the object before every wake, so only stored
+// state carries the backoff. `resident` keeps the object in memory, so the
+// in-memory fallback takes part. `other-alarms` also keeps it in memory and
+// fires an alarm every 30 s between archive wakes, as outside effects,
+// dispatch retries and signer maintenance do. Every scope alarm runs the
+// archive, so each of those passes is one that is not due.
+const kinds = ["policy-pending", "target-missing"] as const, modes = ["evicted", "resident", "other-alarms"] as const;
+const cases = kinds.flatMap(kind => modes.flatMap(mode => [false, true].map(old => ({ kind, mode, old }))));
+test.each(cases)("an idle room whose archive stays $kind ($mode, old wake: $old) wakes at most 6 times in an hour", async ({ kind, mode, old }) => {
   // A platform lane: its object honours the production `archive` wiring.
   const lane = await createNativeArchiveApplicationLane(), host = new ScriptedHost("sha1");
   let directoryCalls = 0;
@@ -43,23 +49,34 @@ test.each(cases)("an idle room whose archive stays $kind (old wake: $old) wakes 
   // One member act stores a wake at its commit time. Then the room is idle.
   await lane.did(rita, "remark", { on: 0, fields: { text: "one act, then the room is idle" } });
   const start = Date.parse(lane.c.clock.now), passes: number[] = [];
+  let notDue = 0, last = start;
   if (old) await lane.inside(async state => {
     state.storage.sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", "archive-wake-1",
       canonicalize({ pending: true, stopped: false, next: timeOf(start - 1000) }));
     await state.storage.setAlarm(start - 1000);
   });
   for (let at = await lane.alarmAt(); at !== null && at < start + HOUR_MS && passes.length <= RUNAWAY; at = await lane.alarmAt()) {
-    const now = Math.max(at, Date.parse(lane.c.clock.now));
-    lane.c.clock.now = timeOf(now);
-    // Eviction between wakes: only stored state carries the backoff.
-    await lane.restart();
+    const due = Math.max(at, Date.parse(lane.c.clock.now));
+    if (mode === "other-alarms" && last + OTHER_MS < due) {
+      // Another owner's alarm before the archive is due: no port call, and
+      // the archive's wake stays where it was.
+      last += OTHER_MS; lane.c.clock.now = timeOf(last);
+      const calls = directoryCalls;
+      expect(await lane.alarm()).toBe(true);
+      expect(directoryCalls, "a pass that is not due calls no policy or target port").toBe(calls);
+      expect(await lane.alarmAt(), "a pass that is not due keeps the stored wake").toBe(at);
+      notDue++; continue;
+    }
+    lane.c.clock.now = timeOf(due);
+    if (mode === "evicted") await lane.restart();
     expect(await lane.alarm()).toBe(true);
-    passes.push(now - start);
-    lane.c.clock.now = timeOf(now + PASS_MS);
+    passes.push(due - start);
+    last = due + PASS_MS; lane.c.clock.now = timeOf(last);
   }
   const gaps = passes.slice(1).map((at, index) => (at - passes[index]!) / 1000);
   expect(gaps, "each retry without progress doubles from the floor").toEqual([1, 2, 4, 8, 16].map(factor => factor * ARCHIVE_RETRY_FLOOR_SECONDS));
   expect(passes.length).toBeLessThanOrEqual(CEILING);
   expect(directoryCalls).toBe(passes.length);
+  if (mode === "other-alarms") expect(notDue, "other alarms fell between the archive wakes").toBeGreaterThan(50);
   expect(host.mintCalls).toBe(0); expect(host.sends).toEqual([]);
-}, 30_000);
+}, 60_000);

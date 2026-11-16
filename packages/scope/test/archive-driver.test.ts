@@ -86,6 +86,9 @@ test("policy proof retry and permanent metadata stop preserve the confirmed nati
   expect(retry).toMatchObject({ state: "retry", reason: "unavailable" }); expect(retry.next).not.toBeNull();
   expect(afterRetry.terminal).toBeNull(); expect(afterRetry.bytes).toEqual(before); expect(afterRetry.confirmed).toEqual(confirmed);
   expect(ownerCalls).toBe(1); expect(targetCalls).toBe(0); expect(providerCalls).toBe(0);
+  // AR-1: before the retry is due, a pass reads only the stored wake.
+  expect(await run()).toEqual({ state: "retry", next: retry.next }); expect(ownerCalls).toBe(1);
+  lane.c.clock.now = retry.next!;
   pending = false;
   expect(await run()).toMatchObject({ state: "stopped", reason: "application-policy-unavailable", next: null });
   const stopped = await inspect();
@@ -289,7 +292,7 @@ test("a pre-Mark target failure survives eviction and new native input without l
       expect(record["fixedFinish"]).toBeNull();
       expect(record["sourceFailure"]).toBeNull();
       expect(record["parentRead"]).toEqual({ ordinal: 0, type: "none", maximum: 0, phase: "none", refusal: "none" });
-      expect(["row-load", "pin", "due-check", "target", "format", "pending-readback", "parent", "bootstrap", "sources", "rebuild", "plan", "frontier", "mark", "copy", "mint", "send", "readback", "confirm"]).toContain(record["step"]);
+      expect(["row-load", "wake-check", "pin", "due-check", "target", "format", "pending-readback", "parent", "bootstrap", "sources", "rebuild", "plan", "frontier", "mark", "copy", "mint", "send", "readback", "confirm"]).toContain(record["step"]);
       expect(["none", "not-due", "wake-not-due", "target-missing", "target-different"]).toContain(record["detail"]);
       expect(["unknown", "absent", "stopped", "pending", "confirmed", "target"]).toContain(record["rowPhaseAtLoad"]);
       expect(["idle", "disabled", "retry", "stopped", "confirmed", "threw"]).toContain(record["state"]);
