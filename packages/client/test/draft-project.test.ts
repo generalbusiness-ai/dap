@@ -33,7 +33,9 @@ type Definition = typeof definition;
 const digest = (hex: string): Digest => `sha256:${hex.repeat(64)}`;
 const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: digest("a") };
 const TEST_DESCRIPTOR = digest("d"), TEST_PREVIOUS_DESCRIPTOR = digest("e");
-const binding: DraftBinding = { owner: keys.rita.key, scope, definition: definitionDigest(definition), descriptor: TEST_DESCRIPTOR };
+const binding: DraftBinding = { owner: keys.rita.key, scope, definition: definitionDigest(definition), descriptors: { choose: TEST_DESCRIPTOR } };
+/** The stored fields of a row under this binding: the binding without its lookup, and the digest of its own act. */
+const rowBase = { owner: binding.owner, scope, definition: binding.definition, descriptor: TEST_DESCRIPTOR };
 const who: Omit<Identity, "key"> = { service: "https://draft.test", membership: { scope: `sc_${"b".repeat(51)}a`, genesis: digest("b") },
   signer: binding.owner, target: scope };
 const primary = (name: number, seen = 1) => ({ name, seen, assumes: [] });
@@ -44,7 +46,7 @@ const CUT = { head: { seq: 9, hash: digest("9") }, rows: [
 ] };
 function draft(key: string, name: number, placement: "slot" | "waiting" = "slot", suppliedPeer = false): StoredDraft {
   const on = primary(name), peer = primary(2, 3);
-  return { ...binding, is: "draft", key, slot: { kind: "choose", on: name, items: suppliedPeer ? { peer: 2 } : {} },
+  return { ...rowBase, is: "draft", key, slot: { kind: "choose", on: name, items: suppliedPeer ? { peer: 2 } : {} },
     act: { kind: "choose", on: name, fields: { on: "member words", ...(suppliedPeer ? { peer: 2 } : {}) }, expected: { on: 1, peer: 3 } },
     capture: { on: { is: "ref", ref: on }, peer: { is: suppliedPeer ? "ref" : "derived", ref: peer } },
     namedRefs: { on, fields: suppliedPeer ? { peer } : {} }, placement };
@@ -144,7 +146,7 @@ test("one owned candidate routes each intention once and keeps partial Slot valu
   expect(withoutEntry).toEqual({ is: "held-intention", reason: "another-descriptor", key: "history", descriptor: TEST_PREVIOUS_DESCRIPTOR });
   // Planner 6d3b979f item 4: a stored definition digest that differs shows `another-definition`, with the key and that digest only.
   // The definition is checked first, so a row that differs in both shows it too, and a row that differs in the definition alone does too.
-  for (const descriptor of [TEST_PREVIOUS_DESCRIPTOR, binding.descriptor]) {
+  for (const descriptor of [TEST_PREVIOUS_DESCRIPTOR, TEST_DESCRIPTOR]) {
     const otherDefinition = projectDrafts({ ...input, stored: input.stored.map((source): ProjectStoredKey<Definition> => source.is === "historical"
       ? { is: "historical", stored: { ...historical, definition: digest("f"), descriptor },
         evidence: { is: "absent", identity: { ...who, key: historical.key } } } : source) });

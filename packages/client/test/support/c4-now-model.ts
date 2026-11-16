@@ -2,7 +2,7 @@
  * stored drafts built from that oracle. The oracle reads rows by hand. It never calls `draftNowOf`, `selectDraftSubjects`
  * or `expectedOf`, so a disagreement with the pure pieces is a real finding. No journal, signature or scope runs. */
 import type { Digest, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
+import { actDescriptorDigest, canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import type { ActRef, Revision } from "../../src/act-types.ts";
 import type { DraftSelectionRow } from "../../src/draft-selection.ts";
@@ -12,7 +12,10 @@ import { selection } from "./c4-selection.ts";
 export const digest = (hex: string): Digest => `sha256:${hex.repeat(64)}`;
 export const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: digest("a") };
 export const definition = selection;
-export const binding: DraftBinding = { owner: keys.rita.key, scope, definition: definitionDigest(definition), descriptor: digest("d") };
+export const binding: DraftBinding = { owner: keys.rita.key, scope, definition: definitionDigest(definition),
+  descriptors: Object.fromEntries(Object.keys(definition.acts).map(kind => [kind, actDescriptorDigest(definition, kind)])) };
+/** The stored fields that the binding admits for one act: the binding without its lookup, and the digest of that act. */
+export const boundAct = (kind: string) => ({ owner: binding.owner, scope: binding.scope, definition: binding.definition, descriptor: binding.descriptors[kind]! });
 
 /** Anchor 0 points at target 2 or 3, or at none. Targets 2 and 3 exist for the whole run: a final row stays in the replica. */
 export type World = { rows: DraftSelectionRow[] };
@@ -57,7 +60,7 @@ export function draftAt(w: World, kind: ModelKind, on: number, key: string): Sto
   const pointed = rowOf(w, 0).values["target"];
   const capture: Record<string, DraftCapture> = { on: { is: "ref", ref: primary } };
   if (kind === "touch") capture["target"] = typeof pointed === "number" ? { is: "derived", ref: refAt(w, pointed) } : { is: "absent" };
-  return refineDraft({ ...binding, is: "draft", key, slot: { kind, on, items: {} },
+  return refineDraft({ ...boundAct(kind), is: "draft", key, slot: { kind, on, items: {} },
     act: { kind, on, fields: kind === "touch" ? { label: "words" } : { n: 1 }, expected: base },
     capture, namedRefs: { on: primary, fields: {} }, placement: "slot" }, binding, definition);
 }

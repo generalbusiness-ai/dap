@@ -17,14 +17,16 @@ function fixture() {
   const definition: DeclaredDefinition = { ...citing, acts: { ...citing.acts,
     assign: { ...assign, also: { intent: { item: "intent", via: { of: "on", slot: "intent" } } } },
   } };
-  const binding: DraftBinding = { owner: keys.rita.key, scope, definition: definitionDigest(definition), descriptor: digest("d") };
+  const common = { owner: keys.rita.key, scope, definition: definitionDigest(definition), descriptor: digest("d") };
+  const binding: DraftBinding = { owner: common.owner, scope, definition: common.definition,
+    descriptors: { assign: common.descriptor, offer: common.descriptor, remark: common.descriptor } };
   const on = { name: 2, seen: 1, assumes: [] };
   const capture: Record<string, DraftCapture> = { on: { is: "ref", ref: on }, intent: { is: "absent" } };
   const fields: Record<string, unknown> = {};
-  const row = { ...binding, scope: { ...scope }, is: "draft" as const, key: "editing", slot: { kind: "assign", on: 2, items: {} },
+  const row = { ...common, scope: { ...scope }, is: "draft" as const, key: "editing", slot: { kind: "assign", on: 2, items: {} },
     act: { kind: "assign", on: 2, fields, expected: { on: 1 } }, capture,
     namedRefs: { on, fields: {} }, placement: "slot" as const };
-  return { definition, binding, row };
+  return { definition, binding, row, common };
 }
 function dismissal(row: ReturnType<typeof fixture>["row"]): DraftDismissal {
   return { is: "dismissed", key: row.key, owner: row.owner, scope: row.scope,
@@ -136,9 +138,9 @@ test("present fields use the shared shaper while omitted required fields remain 
 });
 
 test("copied Source refs validate without a numeric stand-in or changed authored fields", () => {
-  const { binding } = fixture(), source = { key: "retained-open", version: digest("b") };
+  const { binding, common } = fixture(), source = { key: "retained-open", version: digest("b") };
   const reference = { name: { output: source }, seen: { after: source }, assumes: [source] };
-  const row = { ...binding, is: "draft" as const, key: "symbolic", slot: { kind: "offer", on: null, items: { intent: reference.name } },
+  const row = { ...common, is: "draft" as const, key: "symbolic", slot: { kind: "offer", on: null, items: { intent: reference.name } },
     act: { kind: "offer", on: null, fields: { intent: reference.name }, expected: { intent: reference.seen } },
     capture: { intent: { is: "ref" as const, ref: reference } }, namedRefs: { on: null, fields: { intent: reference } }, placement: "slot" as const };
   const sameBinding = { ...binding, definition: definitionDigest(citing) };
@@ -156,7 +158,7 @@ test("historical descriptor rows survive reads and cannot be promoted into new c
   const { binding, row, definition } = fixture(), port = memoryDrafts();
   await port.write(binding.owner, binding.scope, [row]);
   const bytes = canonicalize(await port.read(binding.owner, binding.scope));
-  expect(() => refineDraft(row, { ...binding, descriptor: digest("e") }, definition)).toThrow("descriptor-mismatch");
+  expect(() => refineDraft(row, { ...binding, descriptors: { assign: digest("e") } }, definition)).toThrow("descriptor-mismatch");
   expect(canonicalize(await port.read(binding.owner, binding.scope))).toBe(bytes);
 });
 

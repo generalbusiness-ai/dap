@@ -5,7 +5,7 @@ import type { ActRef, Revision } from "./act-types.ts";
 import { UnavailableActSource } from "./act-symbols.ts";
 import { ShapeError } from "./declared.ts";
 import { selectDraftSubjects, type DraftSelectionRow, type DraftSubjects } from "./draft-selection.ts";
-import { readDraftRef, refineDraft, type DraftBinding, type DraftCapture, type DraftSlot, type StoredDraft } from "./draft-store.ts";
+import { descriptorFor, readDraftRef, refineDraft, type DraftBinding, type DraftCapture, type DraftSlot, type StoredDraft } from "./draft-store.ts";
 
 interface DraftEditBase {
   readonly binding: DraftBinding;
@@ -166,7 +166,9 @@ export function prepareDraftEdit(input: PrepareDraftEdit): DraftEditResult {
   if (current && (current.key !== input.key || !same(current.slot, input.slot))) return bad("slot", "does not match the editing occurrence");
   const declared = declaration(input.definition, input.slot.kind), patch = ownDraftPatch(declared, input.patch);
   const fixed = ownedFields(Object.fromEntries(Object.entries(input.slot.items)));
-  const row: StoredDraft = current ?? { ...input.binding, is: "draft", key: input.key, slot: input.slot,
+  const bound = input.binding;
+  const row: StoredDraft = current ?? { owner: bound.owner, scope: bound.scope, definition: bound.definition,
+    descriptor: descriptorFor(bound, input.slot.kind)!, is: "draft", key: input.key, slot: input.slot,
     act: { kind: input.slot.kind, on: input.slot.on, fields: fixed, expected: {} }, capture: {},
     namedRefs: input.namedRefs, placement: "slot" };
   const fields = ownedFields({ ...row.act.fields, ...patch });

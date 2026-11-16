@@ -5,14 +5,14 @@ import { memoryStore } from "../src/custody.ts";
 import { memoryDrafts } from "../src/draft-store.ts";
 import { scopeClient, request, clientIdle } from "../src/scope-client.ts";
 import { Feed } from "./replica-support.ts";
-import { REQUEST_DESCRIPTOR, checkSigningAuthorizations, requestScene } from "./request-support.ts";
+import { checkSigningAuthorizations, requestScene } from "./request-support.ts";
 
 const audits: { scene: ReturnType<typeof requestScene>; store: ReturnType<typeof memoryStore> }[] = [];
 afterEach(async () => { for (const audit of audits.splice(0)) await checkSigningAuthorizations(audit.scene, audit.store); });
 
 function tab(s: ReturnType<typeof requestScene>, store: ReturnType<typeof memoryStore>, drafts: ReturnType<typeof memoryDrafts>, feed = s.feed) {
   const member = { service: "https://requests.test", membership: s.actor.member.membership, member: s.actor.member.member, principal: s.actor.principal };
-  const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer, member, store, drafts,
+  const client = scopeClient(s.handle, { signer: s.signer, member, store, drafts,
     observe: feed.observe, clock: s.clock, lifetimeSeconds: 60 });
   return { client, slot: () => client.slot("remark", { on: { name: 0, seen: s.scope.item(0).revision, assumes: [] } }) };
 }

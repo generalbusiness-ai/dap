@@ -35,7 +35,7 @@ function fixture(withDefault = true) {
     } },
   };
   const binding: DraftBinding = { owner: keys.rita.key, scope,
-    definition: definitionDigest(definition), descriptor: digest("d") };
+    definition: definitionDigest(definition), descriptors: { choose: digest("d") } };
   const row = (id: number, type: string, revision: number, next?: number): DraftSelectionRow => ({
     id, type, revision, refs: {}, values: { ...(type === "target" ? { n: 0 } : {}), ...(next === undefined ? {} : { next }) },
   });

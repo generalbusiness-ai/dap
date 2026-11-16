@@ -9,7 +9,7 @@ import { composeDraftCandidate } from "../src/draft-submit.ts";
 import { requestStatus } from "../src/request-status.ts";
 import { scopeClient, request, clientReplica, clientIdle, type ScopeClient } from "../src/scope-client.ts";
 import { bump, definition as nowDefinition, draftAt, judge, repoint, scope as nowScope, truth, world, type ModelKind } from "./support/c4-now-model.ts";
-import { REQUEST_DESCRIPTOR, checkSigningAuthorizations, requestScene } from "./request-support.ts";
+import { checkSigningAuthorizations, requestScene } from "./request-support.ts";
 
 const SEEDS = 400, STEPS = 80;
 function random(seed: number): () => number {
@@ -32,7 +32,7 @@ test(`request invariants over ${SEEDS} seeds of ${STEPS} steps with independent 
       const record = await custody.find({ ...who, key: signed.intent.idempotencyKey });
       if (!record || !record.signings.some((_, index) => canonicalize(envelopeOf(record, index)?.signed ?? null) === canonicalize(signed))) unheld.push(signed);
     });
-    const open = (): ScopeClient<typeof s.handle.definition> => scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer, member, store, drafts, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+    const open = (): ScopeClient<typeof s.handle.definition> => scopeClient(s.handle, { signer: s.signer, member, store, drafts, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
     let client = open(), feed = true, ordinal = 0, key = `seed-${seed}-${ordinal}`;
     const intentions = new Set<string>();
     s.feed.current(s.scope); await client.read();
@@ -173,7 +173,7 @@ test(`general now through the real ScopeClient.submit over ${REAL_SEEDS} seeds: 
   for (let seed = 1; seed <= REAL_SEEDS; seed++) {
     const next = random(seed), s = requestScene(), store = memoryStore(), drafts = memoryDrafts();
     const member = { service: "https://generated.test", membership: s.actor.member.membership, member: s.actor.member.member, principal: s.actor.principal };
-    const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer, member, store, drafts, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+    const client = scopeClient(s.handle, { signer: s.signer, member, store, drafts, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
     try {
       // Each move needs its own remark: `cite` is refused when its cause equals the cause that item 0 already holds.
       let remarks = 0;

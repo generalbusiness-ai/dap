@@ -7,7 +7,7 @@ import { expectedKeys } from "@generalbusiness/dap-derive";
 import type { ActRef, ItemName, Revision } from "./act-types.ts";
 import { ShapeError } from "./declared-shape.ts";
 import { nowExpected, type DraftNow, type DraftNowView } from "./draft-now.ts";
-import { refineDraft, type DraftCapture, type StoredDraft, type StoredDraftEntry } from "./draft-store.ts";
+import { refineDraft, type DraftBinding, type DraftCapture, type StoredDraft, type StoredDraftEntry } from "./draft-store.ts";
 
 /** The one stop of this module. The member's `shape` stop, with the path and the reason. */
 export interface DraftShapeStop { readonly ok: false; readonly stop: "shape"; readonly field: string; readonly what: string }
@@ -111,7 +111,9 @@ export function composeDraftCandidate(input: {
   const next: StoredDraft = { ...kept, act: { ...stored.act, expected }, capture,
     namedRefs: { on: stored.namedRefs.on === null ? null : now.primary, fields } };
   try {
-    const adopted = refineDraft(next, stored, definition);
+    // The stored row is its own binding here: the caller checked it against the client's binding before this step (DD-1).
+    const binding: DraftBinding = { owner: stored.owner, scope: stored.scope, definition: stored.definition, descriptors: { [stored.act.kind]: stored.descriptor } };
+    const adopted = refineDraft(next, binding, definition);
     return { ok: true, adopted, candidate: { kind: stored.act.kind, on: stored.act.on, fields: stored.act.fields, expected } };
   } catch (error) {
     if (error instanceof ShapeError) return stopped("now", "does not fit the draft's own refs");

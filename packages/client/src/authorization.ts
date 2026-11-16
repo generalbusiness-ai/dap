@@ -92,7 +92,8 @@ export interface AuthorizationNamespace {
   readonly owner: KeyId;
   readonly scope: ScopeRef;
   readonly definition: Digest;
-  readonly descriptor: Digest;
+  /** The digest of each act of the definition, by kind. A row holds the digest of its own act. */
+  readonly descriptors: Readonly<Record<string, Digest>>;
 }
 
 /** Every call runs under the coordinating store fence; this class never reacquires it. */
@@ -134,9 +135,13 @@ export class AuthorizationTransaction {
     return (await this.records()).find(row => row.key === captured.key) ?? null;
   }
 
+  #descriptor(kind: string): Digest | undefined {
+    return Object.hasOwn(this.namespace.descriptors, kind) ? this.namespace.descriptors[kind] : undefined;
+  }
+
   #matching(row: Authorization): void {
     if (row.definition !== this.namespace.definition) stop("definition-mismatch");
-    if (row.descriptor !== this.namespace.descriptor) stop("descriptor-mismatch");
+    if (row.descriptor !== this.#descriptor(row.versions[0]!.act.kind)) stop("descriptor-mismatch");
     if (row.cancelledAt !== undefined) stop("cancelled");
   }
 
@@ -151,6 +156,8 @@ export class AuthorizationTransaction {
       if (keys.has(step.key)) stop("version");
       keys.add(step.key);
       const existing = rows.find(row => row.key === step.key);
+      // One key holds versions of one kind. This check runs before any digest is compared.
+      if (existing && existing.versions[0]!.act.kind !== step.act.kind) stop("version");
       if (existing) this.#matching(existing);
       if (existing && existing.versions.length >= AUTHORIZATION_VERSIONS_MOST) stop("versions-full");
       const after = new Map(step.sources.map(source => [canonicalize(source), source]));
@@ -171,8 +178,11 @@ export class AuthorizationTransaction {
       const version: AuthorizationVersion = { id: actVersion(step.act), act: structuredClone(step.act),
         after: [...after.values()], at: timeOf(at), deadline: timeOf(Math.floor((at + lifetimeSeconds * 1000) / 1000) * 1000),
         subjects: structuredClone(step.subjects) };
+      const descriptor = this.#descriptor(step.act.kind);
+      if (!existing && descriptor === undefined) stop("version");
       const row: Authorization = existing ? { ...existing, versions: [...existing.versions, version] }
-        : { key: step.key, ...this.namespace, versions: [version], materializations: [], permissions: [] };
+        : { key: step.key, owner: this.namespace.owner, scope: this.namespace.scope, definition: this.namespace.definition,
+          descriptor: descriptor!, versions: [version], materializations: [], permissions: [] };
       const index = rows.findIndex(held => held.key === row.key);
       if (index < 0) rows.push(row); else rows[index] = row;
       result.push({ identity: { key: row.key, owner: row.owner, scope: row.scope }, position: row.versions.length - 1 });
