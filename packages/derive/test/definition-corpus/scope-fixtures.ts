@@ -21,7 +21,6 @@ import { indexedStandingData } from "../../../scope/test/definition-corpus-data.
 /** Scope raw fixture declarations. This shard never opens a Durable Object. */
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
 import { definitionDigest } from "@generalbusiness/dap-bytes";
-import { JOURNAL_INVENTORY_CEILINGS } from "@generalbusiness/dap-git/journal";
 import { RULE_PROFILES } from "../../src/rule/index.ts";
 import type { DefinitionCorpusRow } from "./row.ts";
 import { scopeData, scopeLaneData, scopeArchiveData, scopeFactoryData, scopeScaleData, scopeInventoryData, scopeReceiverData,
@@ -46,8 +45,11 @@ const native = (name: string, origins: readonly string[], declaration: () => Dec
   row(`${name} fixture validation`, origins, declaration), row(`${name} native validation`, origins, declaration, RULE_PROFILES),
 ];
 const inventoryParents = ["scouted-child", "planned-declaration-child", "missing-scout-child", "late-child"] as const;
-/** Same actual graph constructor arguments as archive-inventory's boundary
- * tests, but each edge is named from raw bytes rather than a valid() result. */
+/** Independent TEST bound: three full 17-node chains and a tail. */
+export const INVENTORY_CORPUS_TEST_BOUND = 53;
+export const inventoryCorpusGraphs = archiveInventoryBoundaryGraphs(INVENTORY_CORPUS_TEST_BOUND);
+/** Same raw graph recipe as archive-inventory, with the corpus's own TEST bound.
+ * Each edge is named from raw bytes rather than a valid() result. */
 function graphDefinitions(lengths: readonly number[]) {
   return lengths.flatMap((length, group) => {
     const nodes: { position: number; data: DeclaredDefinition }[] = [];
@@ -83,9 +85,9 @@ export const scopeFixtureDefinitions: readonly DefinitionCorpusRow[] = [
   row("Scope/inventory covered root", ["packages/scope/test/archive-inventory.test.ts#good"], () => archiveLeafData("covered-root")),
   row("Scope/inventory uncovered root", ["packages/scope/test/archive-inventory.test.ts#uncovered"], () => archiveLeafData("uncovered-final-root")),
   ...native("Scope/inventory rule root", ["packages/scope/test/archive-inventory.test.ts#root always"], () => scopeData(scopeInventoryData(), archiveInventoryAlwaysChange())),
-  ...([...archiveInventoryBoundaryGraphs(JOURNAL_INVENTORY_CEILINGS.nodes), [18]]).flatMap(lengths => graphDefinitions(lengths).map(({ group, position, data }) =>
+  ...([...inventoryCorpusGraphs, [18]]).flatMap(lengths => graphDefinitions(lengths).map(({ group, position, data }) =>
     row(`Scope/inventory graph ${lengths.join("+")}/${group}/${position}`,
-      [`packages/scope/test/archive-inventory.test.ts#graph([${lengths.join(",")}])/group=${group}/position=${position}`], () => structuredClone(data)))),
+      [`packages/derive/test/definition-corpus/scope-fixtures.ts#graphDefinitions([${lengths.join(",")}])/group=${group}/position=${position}`], () => structuredClone(data)))),
   ...native("Scope/wrong foreign producer", ["packages/scope/test/archive-source-pins.test.ts#wrongDeclaration"], () => scopeData(scopeLaneData(), archiveWrongProducerChange())),
   ...native("Scope/archive detached text", ["packages/scope/test/archive-text.test.ts#definition"], () => scopeData(scopeArchiveData(), archiveTextChange())),
   ...([

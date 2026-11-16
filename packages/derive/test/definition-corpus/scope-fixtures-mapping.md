@@ -25,7 +25,7 @@ fixture `changedDraft`; it returns raw bytes' data, never a validation result.
 | archive-inventory.test.ts leaf(name,child?) | archiveLeafData | direct names scouted-child, planned-declaration-child, missing-scout-child, late-child, covered-root, uncovered-final-root |
 | archive-inventory.test.ts four parents | archiveInventoryParentChange(child) | four separate exact child digests, same original pushes |
 | archive-inventory.test.ts root always | archiveInventoryAlwaysChange | same true rule |
-| archive-inventory.test.ts graph boundary cases | archiveInventoryBoundaryGraphs(maximum) / archiveLeafData | Native owner and raw corpus both pass JOURNAL_INVENTORY_CEILINGS.nodes to the same exact/overflow graph-pair helper, plus unchanged [18]; raw child digest linkage reconstructed in original reverse order, each actual group/position named |
+| archive-inventory.test.ts raw graph recipe; scope-fixtures.ts actual corpus constructor | archiveInventoryBoundaryGraphs(maximum) / archiveLeafData | Native inventory passes its shared ceiling. The raw corpus independently passes INVENTORY_CORPUS_TEST_BOUND=53, giving chains [17,17,17,1] and [17,17,17,2], plus unchanged [18]. Origins name the actual graphDefinitions arguments, not the current Native graph identity. Child digest linkage keeps the original reverse order; the existing registration-integrity case checks sum+local root and chain lengths1..17. |
 | archive-source-pins.test.ts wrongDeclaration | archiveWrongProducerChange | negative source admission still uses a complete positive different-name declaration |
 | archive-text.test.ts definition | archiveTextChange | same whole-scope capacity and detached text1024 |
 
