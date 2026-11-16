@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/test-celld-proxy.mjs","body":{"commit":"29c4fcc0d109cd60776d97d91b7cc923b958a093","path":"scripts/test-celld-proxy.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:398843bd1641530e3e50829d5c36e8457933ced4","text":"Merge retired a covered predecessor; the successor is at scripts/celld-smoke.test.mjs."}
