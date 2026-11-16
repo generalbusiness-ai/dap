@@ -55,15 +55,16 @@ test("Grow, Lending and Counter reproduce their reviewed definition and presenta
       .replace(/^\s*\/\/.*$/gm, ""));
     const trust = readApplicationTrust(deployment.vars.APPLICATION_TRUST);
     const installed = [
-      { name: "Lending", application: "ai.generalbusiness.lending", path: "examples/lending/releases/0.3.0/application.dap.json", identifiers: "examples/lending/release-identifiers.json", config: "examples/lending/dap.application.json" },
-      { name: "Counter", application: "ai.generalbusiness.counter", path: "apps/counter/releases/0.3.0/application.dap.json", identifiers: "apps/counter/release-identifiers.json", config: "apps/counter/dap.application.json" },
+      { name: "Lending", application: "ai.generalbusiness.lending", version: "0.3.0", path: "examples/lending/releases/0.3.0/application.dap.json", identifiers: "examples/lending/release-identifiers.json", config: "examples/lending/dap.application.json" },
+      { name: "Lending", application: "ai.generalbusiness.lending", version: "0.4.0", path: "examples/lending/releases/0.4.0/application.dap.json", identifiers: "examples/lending/release-identifiers.json", config: "examples/lending/dap.application.json" },
+      { name: "Counter", application: "ai.generalbusiness.counter", version: "0.4.0", path: "apps/counter/releases/0.4.0/application.dap.json", identifiers: "apps/counter/release-identifiers.json", config: "apps/counter/dap.application.json" },
     ];
     const packets = new Map<string, { source: typeof installed[number]; bytes: Uint8Array }>();
     for (const source of installed) {
       const bytes = new Uint8Array(await readFile(new URL(`../../../${source.path}`, import.meta.url)));
       const packet = readPublishedApplicationPackage2(bytes, null);
       expect(packet.package.release.manifest.name, source.path).toBe(source.application);
-      expect(packet.package.release.manifest.version, source.path).toBe("0.3.0");
+      expect(packet.package.release.manifest.version, source.path).toBe(source.version);
       expect(packets.has(packet.ids.release), "Each committed packet must name a distinct release").toBe(false);
       packets.set(packet.ids.release, { source, bytes });
     }

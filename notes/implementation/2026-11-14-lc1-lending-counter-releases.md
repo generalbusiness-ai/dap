@@ -298,3 +298,23 @@ configuration, tests, generated assets, packet bytes and dependencies match
 the gated tree `66ccd762db65d34a8f9e95f59071984a32c2c7be` exactly. The source
 checkpoint records the final commit and tree. The document-only follow-up
 rule requires no repeated gate, typecheck, owner, control or producer.
+
+
+## LC4 source continuation, 15 November
+
+LC4 request `7c37e2fd5784d8b896345731dffc36c8a4007a9d` carries the signed 0.4.0 packets in the LS5 head. Planner acts `b0173954186ed015e0c9faf51ee6665c95b2b2b6` and `950bb11d3446361e2c055819113069e3ca81ab93` set this order. Root reported the existing reproduction rule before source in `2d5f5930137385ab42df556a9171b3457b54a017`. The LC1 and LC2 history above remains unchanged.
+
+Signing act `1f3b7e76db2be57e47e0b918101deaf368066337` records both packets from published main `7a6fcadf5c317269650c574233c13ba8158861d8`. Root matched their bytes and blobs in its retained provenance record. This source draft uses those exact packet references and adds no signer, identifiers baseline or codec exception:
+
+- `examples/lending/releases/0.4.0/application.dap.json`: 2,508,522 bytes, blob `a69cbc3aa478f4de16ce3a0bca02bb275e0a0ff7`, SHA-256 `4692366a86cfba9ad613c6c124c91d56c5b211ec880a39e833243548e3d5c546`, release `sha256:1a5128d47487e9888228c64aa2b36e366b1d4b72b0f210b610ad3f14caf25ede`.
+- `apps/counter/releases/0.4.0/application.dap.json`: 2,594,218 bytes, blob `b7e8f1b8383ed988143e999ebf51b8658d950b94`, SHA-256 `a2a19f98f5be932ebf9210961f5cfb88845966dc8535226239d7e8b94249d972`, release `sha256:e8f8471e85b39db69fbd8fac57f4c231481d3cc89cdc97fbfcd8167146fa08a1`.
+
+Both use publisher `key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI` and host `github.com`. The three dap-lending trust rows now name Lending 0.3.0, Lending 0.4.0 and Counter 0.4.0. Lending's installed 0.3.0 library keeps its exact packet, row and screen-host settings. Counter 0.3.0 has no installed room, so its row and packet leave this head. All other Worker configuration stays unchanged. The formatter and its existing owner protect the two Grow packets and these three retained packet paths.
+
+The reproduction rule stays the same. Every run reproduces all three current canonical tuples against their checked identifiers. Every retained signed packet still passes the strict published reader, its exact application/version assertion and its trust-row release, publisher and host checks. Its signed stored tuple remains authoritative for that historical packet. When the packet version equals current authored source, the owner additionally requires its tuple to match current checked identifiers. Each inventory row now names its own version instead of sharing the old 0.3.0 assertion.
+
+At this LS5 head, Lending 0.4.0 and Counter 0.4.0 must match current source. A mismatch stops for the planner. No identifier adoption belongs to LC4. Lending 0.3.0 keeps its stored signed presentation rather than rebuilding it from newer source. The later E4/A1/CR2 head opens the changed applications at 0.5.0 and keeps the same three packets and trust rows. The same conditional then validates their signed historical tuples while current-source reproduction checks 0.5.0. That later head adds no 0.5.0 packet or trust row. Grow keeps its current rule and version unless its identifiers change under the planner's ruling.
+
+All LC4 validation is UNRUN at this draft. The existing CLI test compiler (`node node_modules/typescript/bin/tsc -p packages/cli/tsconfig.test.json`), whole formatter owner (`node --test scripts/format-json.test.mjs`) and whole canonical reproduction owner remain owed. The named missing-packet control changes only one actual trust release to the valid zero digest and runs that whole owner. It must fail by the direct trust/packet assertion, with exact source/mode restoration. Its baseline supplies the positive reproduction result without a duplicate green. The dated LC2 equal-version control remains history; the conditional has not changed.
+
+LS5 and LC4 owe one gate, then a green planner Linux smoke at the gated head, then review. The planner owns the later Worker deployment and, after E4/A1/CR2 lands, the new 0.4.0 rooms and installs. This source update claims no new compiler, owner, control, gate, installation or deployment result.
