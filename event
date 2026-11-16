@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:05bf148d28f1d9e8dbbaff27ef4f0aa638344b48","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-14-act-environment.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0de1c5f22b1968668fbceb5479413a340bd01516","text":"Merge retired a covered predecessor; the successor is at packages/client/src/scope-reader.ts."}
