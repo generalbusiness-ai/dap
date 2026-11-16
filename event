@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dac516ef744dc0289ef44dcc4ffc1ff52b4bbb34","text":"Merge retired a covered predecessor; the successor is at docs/scopes.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e1a0a3277ac9e2bec1eb9387f2de89939684a9a4","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/read-session-cache.ts."}
