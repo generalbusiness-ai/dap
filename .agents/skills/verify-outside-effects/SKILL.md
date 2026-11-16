@@ -12,7 +12,9 @@ A duplicate mutation could repeat a Git push or child-creation request.
 
 ## Coverage
 
-The correspondence review covers commit `99ed4a7e143f`, the identifier cutover. In the protected functions the cutover changes one line: `Operations.#pass` passes `ownOf(store, this.#scope.localSequence()!)` to `beforeSend`. See the [cutover note](../../../notes/implementation/cd-dropped-kind-checks.md#gate-and-the-effects-model). Before the cutover the review covered `c9f4dff6267d12d89d1215a0d894e7ec2f5f2435`. `verification/state-machines/coverage.json` records exact source hashes. BR13 moves the publication-origin version query outside the protected functions; those functions stay byte-identical to the S4 correspondence. The 9 November model and T19 source checks pass. Planner ruling `12c4f5fb` requires no repeated fault control for this unchanged boundary. See the [BR13 note](../../../notes/implementation/2026-11-09-br13-version-questions.md) for the comparison and retained evidence.
+The correspondence review covers `6728059211cee75dc0f6fdd104ef52a44c5f7da0`. CV1 reviews ten operations commits and twelve SQLite commits, including every merge parent. The five model-listed function bodies match the recorded identifier-cutover sync bytes at `99ed4a7e143f82ba9ca946b9d98f21bbaf09efe2`. Historical merges restore the already-covered pre-Mark `beforeSend` Own input and publication/outcome evidence premises. Those contacts are not unrelated changes. Later CDF retained-byte accounting and scope-full result detail remain outside the one-attempt model and do not change its durable-mark, readback, or dispatch order. A trusted late answer does not prove quota availability or payload authentication. See the [CV1 note](../../../notes/implementation/2026-11-16-cv1-source-correspondence.md) for every parent comparison.
+
+The earlier model and T19 source checks, source controls, and the 13 November cutover results remain historical at their recorded source cuts. Planner ruling `12c4f5fb` addressed the unchanged protected boundary at that time. CV1's source review and metadata refresh add no fresh model or control result. The [BR13 note](../../../notes/implementation/2026-11-09-br13-version-questions.md) and [cutover note](../../../notes/implementation/cd-dropped-kind-checks.md#gate-and-the-effects-model) retain their earlier evidence.
 
 - `packages/scope/src/operations.ts`: `Operations.#pass`, `Operations.#send`, `Operations.#answer`, `Operations.#offer`.
 - `packages/scope/src/sqlite.ts`: `markSent`.
@@ -21,7 +23,7 @@ S4 extracts `ParkedAttempts` and `ReplyCustody` as memory-only owners. `Operatio
 
 Rules: `AtMostOneSend`, `MarkBeforeEffect`.
 
-One opened attempt, two possible send counts, arbitrary restarts. Mark and dispatch are separate actions. Durable storage survives restart; in-memory permission does not. Safe recovery reads, additional attempts, selection, parked scans and retained-reply paging are outside this model. A decisive answer must authenticate the exact original attempt. Send counts calls from Operations to its outside port, not provider-internal retries.
+One opened attempt, two possible send counts, arbitrary restarts. Mark and dispatch are separate actions. Durable storage survives restart; in-memory permission does not. Safe recovery reads, additional attempts, selection, parked scans and retained-reply paging are outside this model. A decisive answer must authenticate the exact original attempt. Send counts calls from Operations to its outside port, not provider-internal retries. The reviewed identifier and evidence premises restore the known sync source. Later retained-payload accounting and scope-full result detail lie outside this one-attempt model; trusted late-answer evidence does not prove quota availability or payload authentication.
 
 ## Run the check
 
@@ -38,6 +40,12 @@ node verification/state-machines/check.mjs Effects
 The command checks source drift, runs TLC in scratch storage, then runs the real-source witness. A zero exit means both checks passed. Missing tools, drift and failed assertions fail the command. To diagnose only the source witness, append `--source`.
 
 Copy the model, config and `view.mjs` into a new scratch folder outside the checkout. Use `/statechart` on that copy, with its view module. Read the report and show its Mermaid chart. It hides stuttering waits and same-label steps, not user choices. Only modeled terminal states stutter. TLC checks active phases for deadlocks, but no fairness or liveness property guarantees external completion.
+
+## Refresh reviewed source metadata
+
+Pins compare all eight mapped files without importing source or running TLC. A mismatch names the file and its model. Before a deliberate refresh, confirm that the changed file still meets the Effects model's premises. State that confirmation in the body of the commit that carries the refreshed record. If those premises changed, repair the model or correspondence first. A missing statement is a review finding; the script does not check that prose.
+
+Commit the reviewed source, then run `node scripts/check-formal-source-hashes.mjs --refresh Effects`. Only this route reads Git. It refuses without a write if any mapped file differs from its bytes at the recorded HEAD, then updates this model's hashes and sync commit together. The refresh adds no model or source-control PASS. The existing `--source` check skips the hash guard and keeps its current source-witness behavior.
 
 ## Review a change
 

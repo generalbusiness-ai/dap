@@ -12,14 +12,16 @@ Premature progress could present an unverified change as recorded.
 
 ## Coverage
 
-The correspondence review covers commit `8dc1381c732132be8a6d378697e0b87191bd2801`. `verification/state-machines/coverage.json` records exact source hashes. F accepts both reviewed `rulesScope` operand spellings in `supports`, outside `continueEdit`. Both protected functions remain byte-identical to the BR13 correspondence at `c9f4dff6`. The 10 November model check, real-source witness and statechart pass. The model reaches seven distinct states, with no deadlock or `EvidenceBeforeProgress` violation. Planner ruling `12c4f5fb` requires no repeated fault control for this unchanged boundary. The [BR13 note](../../../notes/implementation/2026-11-09-br13-version-questions.md) retains the earlier comparison and evidence. See the [F implementation note](../../../notes/implementation/2026-11-10-canonical-spelling.md) for the 10 November Editor evidence.
+The correspondence review covers `6728059211cee75dc0f6fdd104ef52a44c5f7da0`. CV1 reviews all 19 exported data-file commits and every parent edge. The reducer matches the stored sync bytes at all five exported cuts. `continueEdit`, `runStep`, `verifyStep`, `keepStep`, and `checkEditRequest` retain their exact bodies and receipt-before-progress order. The identifier cutover changes source identity guards on that call tree; this review does not prove those predicates equivalent or authenticate source contents. The executed source probe exercises `transitionEdit` only. See the [CV1 note](../../../notes/implementation/2026-11-16-cv1-source-correspondence.md) for the history and source anchors.
+
+The 10 November model check, reducer witness, and statechart PASS remain historical at `8dc1381c732132be8a6d378697e0b87191bd2801`. That run reached seven states without a deadlock or `EvidenceBeforeProgress` violation. Planner ruling `12c4f5fb` addressed the unchanged boundary at that time. CV1's source review and metadata refresh add no fresh model or control result. The [BR13 note](../../../notes/implementation/2026-11-09-br13-version-questions.md) and [F note](../../../notes/implementation/2026-11-10-canonical-spelling.md) retain their earlier evidence.
 
 - `apps/room/page/src/retained-editor-state.ts`: `transitionEdit: attempted, answer, receipt-verified, step-recorded`.
 - `apps/room/page/src/retained-editor-data.ts`: `continueEdit`.
 
 Rules: `EvidenceBeforeProgress`.
 
-One request step. Repeat this obligation at opening, rules, source and manifest stages. Receipt verification is a trusted input from the network executor. This model does not prove signatures, workflow stage order, reload persistence or source contents.
+One request step. Repeat this obligation at opening, rules, source and manifest stages. Receipt verification is a trusted input from the network executor. This model does not prove signatures, workflow stage order, reload persistence or source contents. The reviewed executor awaits receipt verification before progress; the executed source probe exercises the reducer only. Source identity checks and their payloads remain outside this receipt-verification abstraction.
 
 ## Run the check
 
@@ -36,6 +38,12 @@ node verification/state-machines/check.mjs Editor
 The command checks source drift, runs TLC in scratch storage, then runs the real-source witness. A zero exit means both checks passed. Missing tools, drift and failed assertions fail the command. To diagnose only the source witness, append `--source`.
 
 Copy the model, config and `view.mjs` into a new scratch folder outside the checkout. Use `/statechart` on that copy, with its view module. Read the report and show its Mermaid chart. It hides stuttering waits and same-label steps, not user choices. Only modeled terminal states stutter. TLC checks active phases for deadlocks, but no fairness or liveness property guarantees external completion.
+
+## Refresh reviewed source metadata
+
+Pins compare all eight mapped files without importing source or running TLC. A mismatch names the file and its model. Before a deliberate refresh, confirm that the changed file still meets the Editor model's premises. State that confirmation in the body of the commit that carries the refreshed record. If those premises changed, repair the model or correspondence first. A missing statement is a review finding; the script does not check that prose.
+
+Commit the reviewed source, then run `node scripts/check-formal-source-hashes.mjs --refresh Editor`. Only this route reads Git. It refuses without a write if any mapped file differs from its bytes at the recorded HEAD, then updates this model's hashes and sync commit together. The refresh adds no model or source-control PASS. The existing `--source` check skips the hash guard and keeps its current source-witness behavior.
 
 ## Review a change
 
