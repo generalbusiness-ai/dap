@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2857e1743efc88e6c4f091a3b1d613d742e27eb3","text":"Merge retired a covered predecessor; the successor is at scripts/pins.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:524b2ee172d4ce16e08a183d347e066d939560e6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-16-cv1-source-correspondence.md."}
