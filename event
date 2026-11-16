@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Deliver scripts/security-entry-points.test.mjs at d880e599fdec8ad893b15c355dfed885953d1450 on builder/ls5-owned-room-tables-20261115. ","body":{"commit":"d880e599fdec8ad893b15c355dfed885953d1450","path":"scripts/security-entry-points.test.mjs"}}
+{"kind":"artifact","text":"Deliver scripts/fixtures/room-format-table-history.json at d880e599fdec8ad893b15c355dfed885953d1450 on builder/ls5-owned-room-tables-20261115. ","body":{"commit":"d880e599fdec8ad893b15c355dfed885953d1450","path":"scripts/fixtures/room-format-table-history.json"}}
