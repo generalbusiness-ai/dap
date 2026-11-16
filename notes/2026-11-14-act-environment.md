@@ -9,8 +9,8 @@ Explore yet. R landed as main `c6711b53` on the same day, and Lending
 0.3.0 holds the reservation definition. No other step is built.
 Section 13 lists the build steps and their requests. Section 18 lists
 the rulings of step E1 that changed sections 3, 5 and 8. Section 19
-lists the rulings of steps E4 and C4, of 15 November 2026, that
-changed sections 5, 6, 7, 13, 15 and 16. Step E4 is not on main. One
+lists the rulings of steps E4 and C4, of 15 and 16 November 2026,
+that changed sections 5, 6, 7, 13, 15 and 16. Step E4 is not on main. One
 question of steps E2 and E3 is with the owner: the source of an
 instance's standing (section 5.7).
 
@@ -466,20 +466,65 @@ This is D12 step C4, with one rule changed and one added.
    basis has moved, the draft returns before any signature. Its view
    holds the reason, the member's changed fields, and `now`, the `ref`
    of the row in the view that carries the return.
-4. **A submit of a returned draft is a new version.** The member has
-   the current row and the reason on the page. The member's next
+4. **A submit of a draft that rule 3 returned is a new version.** The
+   member has the current row and the reason on the page. The member's next
    submit authorizes the changed fields, as they are then, on the basis
    `now`. The version takes no basis from a later view. It keeps the
    request's key, as D12 rules 2 and 6 say.
 
 Another member can act between any two submits. If the item moved
-again after `now`, the new version returns in the same way. A refusal
-by the scope follows the same path: the draft returns when the replica
-holds the head of the refusal (D12 section 6.1), and `now` is the row
-at that view.
+again after `now`, the new version returns in the same way.
+
+**A return has two forms, and the view names the form.**
+
+- A return by an exploration holds the reason, the changed fields
+  and `now`. Rule 3 makes it.
+- A return by a request that ended refused or withdrawn holds the
+  exact cause and no `now`. The draft keeps the basis that it had.
+  The draft returns when the replica holds the head of the refusal
+  (D12 section 6.1). The view shows the return from the custody
+  record, and no step writes it or reads a row for it.
+
+A submit of a draft of the second form explores first, as each submit
+does. A moved basis returns the draft in the first form. An unchanged
+basis makes a new version on the kept basis.
+
+The second form has one case that a member can notice. Member A
+explores at head 39. The act of member B takes effect at head 40
+before the scope judges the request of A, and the scope refuses with
+`revision-moved`. The draft of A returns with the cause. The next
+submit of A explores, finds the moved basis, and returns the draft
+with `now`. The submit after that signs. The member makes one submit
+more than a return by an exploration needs.
+
+One rule pays for that submit. **A draft changes only by a call of the
+member.** No background step writes to the draft store. So two clients
+of one member never race to store a return, and a stop between the
+custody write and a draft write leaves nothing to repair. An act that
+makes a new item has no row, so its refusal has no `now` in any
+design.
+
+The same rule governs a request with the status `other-recorded`: an
+earlier version of the request took effect after its return. The
+request waits in the list of requests with its present values, also
+when its slot is empty. `restore(key)` makes the new draft with the
+new key, and `dismiss(key)` removes the request. The earlier version
+is on the record. For an act that makes a new item, a submit of the
+present values makes a second item, so the member decides it and no
+view decides it for the member.
 
 Rule 4 is the member's own act. It is the only way that a step gets a
 new basis.
+
+The client takes one draft store, the option `drafts`, and the option
+is required. The client makes no memory store for a caller. A
+constructor call with no store throws before any storage, and it is
+no stop. The client reads the present values of a request and the
+change by another client from that store.
+
+Each call validates and copies its inputs before its first wait: the
+slot, the patch and the names of a clear. A page can change its own
+objects after the call, and the call does not see the change.
 
 Step C4 builds rules 1 to 4, with the exploration of rule 3. The
 replica keeps its checked state private, so the replica owns one
@@ -535,8 +580,52 @@ subject.**
 - A `ref` whose name the view does not hold stops with `state`. A
   derived subject that the view does not hold gets no basis. The
   submit sends no guessed revision, and the scope judges the act.
-- A return takes `now` and the revisions of its derived subjects from
-  the cut of the exploration that decided the movement.
+- A return by an exploration takes `now` and the revisions of its
+  derived subjects from the cut of the exploration that decided the
+  movement.
+
+**An optional item field can stay absent in a slot.**
+
+- The address holds the item refs that the page gave, and no other. A
+  required item field needs its `ref`.
+- An absent field and an explicit `ref` are two addresses, also when
+  a declared default selects the same item. The client evaluates no
+  default to compare two addresses. The two signed acts differ in the
+  same way.
+- A subject that an absent or defaulted field selects is a derived
+  subject, and it takes its basis as the list above says.
+- The decoder of a stored draft accepts an absent optional item
+  field. It refuses an absent required item field, and it refuses
+  `null`.
+
+**An edit is a patch of values, and a patch never clears.**
+
+- A field with a valid value sets that value. An omitted field keeps
+  its value.
+- An own property with the value `undefined` is an omitted field. A
+  form gives `undefined` for an input that the member did not touch,
+  and a copy through JSON drops such a property. So the patch means
+  the same before and after a copy.
+- `null` stops with `shape`.
+
+**Clearing is its own call, `clear(slot, fields)`.** A member who
+selects the wrong item must be able to select none. The other way is a
+discard and a new draft, and a new draft takes a later basis that the
+member did not see.
+
+- The call removes each named field from the draft, so the act omits
+  the field. No `undefined` enters the stored draft.
+- The call applies to the fields outside the address. A name of an
+  address field or an unknown name stops with `shape` and changes
+  nothing.
+- The call follows the state rule of `edit`: it changes only a draft
+  in the state `editing`, and it stops with `taken` otherwise.
+- A cleared field that selected a subject removes the basis of each
+  subject that only that field selected. A subject that the cleared
+  draft now selects by a default takes its basis at this write. No
+  other basis changes.
+- A draft with no field left stays a draft with its key, as after
+  `edit(slot, {})`.
 
 One limit stays. A derived subject can move between the page's read
 and the edit that first names the subject, and the instance does not
@@ -1059,8 +1148,9 @@ covers the acts that need no basis.
 | D12 | Change |
 |---|---|
 | Rule 3: "The client signs only when the member submits. No timer signs" | The rule of section 7.1. With the default deadline, the behavior that a member sees is D12's |
-| Rule 5: the intent is built "at the replica's head" | A draft keeps the basis that it opened on, and a returned draft takes the basis `now` (section 6) |
+| Rule 5: the intent is built "at the replica's head" | A draft keeps the basis that it opened on. A draft that an exploration returned takes the basis `now`. A draft that a refusal returned keeps its basis (section 6) |
 | Section 8, step 3: the stop `busy` | Stays for an `observed` subject whose pending step the act does not name. An act that names the step waits (section 7.4) |
+| Section 8: an `other-recorded` request enters an empty slot as a new draft | The request waits in the list, also when its slot is empty. The new key starts at the `restore` in each case (section 6) |
 | Section 8: "A stop changes no store" | No stop leaves a custody record. Most stops write nothing. A `source` stop can leave a version with no mark and no signing. Three stops leave a version and its permission mark, with one call of the signer (section 7.1): a stop of the signer, a stop of the custody write, and `full` with the reason `bytes` after the build |
 | Section 8: the stops of a submit | Ten stops: `shape`, `state`, `busy`, `signer`, `store`, `full`, `taken`, `descriptor-mismatch`, `source` and `versions-full`. `full` keeps custody's reasons: `bytes`, `count`, `budget` and `signings`. An `unavailable` exploration is no stop |
 | Section 9: `ClientView` and `Judged` | The view gains `explore` and `offers`, and each row gains `ref` and `recorded`. `Judged` is the exploration of a signed version |
@@ -1089,6 +1179,13 @@ E5 owns the waits, and it can narrow the stop. The stop
 is a new request key. The how-to page of step C4 gives one table:
 each stop, each reason of `full`, the remedy, and what the stop
 wrote.
+
+**A call reports what the store holds.** A write that committed
+returns its key, also when `close` arrived during the write. The
+client publishes no view after `close`, and the next client reads the
+draft from the store. A stop that follows a commit in the same call
+names the commit. The table's write column states that case for
+`state` and for `taken`.
 
 ## 16. One part enters the kernel first, one enters last, and one waits
 
@@ -1218,8 +1315,8 @@ and A `04e4438e`. Request `6b6def0a` holds the review after step E3.
 ## 19. Rulings of steps E4 and C4
 
 The build of step E4 and the plan of step C4 found points that this
-note did not settle. The planner ruled on each on 15 November 2026,
-and the sections above hold the results.
+note did not settle. The planner ruled on each on 15 and 16 November
+2026, and the sections above hold the results.
 
 | Ruling | Point | Section |
 |---|---|---|
@@ -1235,5 +1332,9 @@ and the sections above hold the results.
 | `9930cf7f` | A stop leaves one of three results. The second size check of custody can refuse after the signer ran | 15 |
 | `4dffc26a` | A `ref` is a value. The basis of a subject is read when the draft first names that subject | 6.1 |
 | `d038a2ee` | The standing of an instance is open. The owner decides the change of `packages/derive` | 5.7 |
+| `c1b26daf` | An optional item field can stay absent in a slot. An edit is a patch that never clears. `clear(slot, fields)` is its own call | 6.1 |
+| `bbee5700` | The client takes one required draft store. A call owns its inputs before its first wait. A call reports what the store holds | 6, 15 |
+| `ff578fef`, `481aac4e` | A return has two forms. A draft that a refusal returned holds the cause and keeps its basis. A draft changes only by a call of the member | 6, 15 |
+| `fc765743` | An `other-recorded` request waits in the list, and `restore(key)` starts the new key | 6, 15 |
 
 Request `4bd07278` holds step E4-B.
