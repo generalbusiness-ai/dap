@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:64a611f9eb0d73ec9345159f1f191c2383dbbba6","text":"Merge retired a covered predecessor; the successor is at packages/client/test/draft-edit.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:705de59acac34fa4253346926ece6938d5f1a51d","text":"Merge retired a covered predecessor; the successor is at apps/counter/release-identifiers.json."}
