@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d17e6a6ed46fd76cbcbd633296cfc5cab593135b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-15-ls5-owned-room-tables.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d9a7c1e13861029f05a2e2b0fd777149ecd1e000","text":"Merge retired a covered predecessor; the successor is at scripts/format-json.mjs."}
