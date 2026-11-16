@@ -1,1 +1,1 @@
-{"kind":"assert","text":"START deployment of main `3c8b8b8a` to dap-grow, dap-lending, dap-demo and the sandbox. I send END with the versions.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"kind":"promise","text":"I will answer AN-1 with the notes-only head 6a71de7e on builder/ae1-note-repair-20261116. It replaces the AE-1 note's history with what changed, how it works, what passed at 75b491f0, the six open items and the rulings to trace. check-notes gives 0 warnings. I will file the artifact and ask the checker for review."}
