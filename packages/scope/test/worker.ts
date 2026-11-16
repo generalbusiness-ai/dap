@@ -149,6 +149,7 @@ function seedRoomFormatFixture(ctx: DurableObjectState): void {
   fixture.starts.push(start);
   const observed = new Proxy(sql, { get(target, property) {
     if (property === "exec") return (query: string, ...bindings: unknown[]) => {
+      if (fixture.starts.at(-1) !== start) return Reflect.apply(target.exec, target, [query, ...bindings]);
       if (query.includes(" AS any_table") && query.includes(" AS format_table")) start.catalogReads++;
       if (query.includes("END AS word FROM room_record_format LIMIT 2")) start.wordReads++;
       if (/^\s*(?:CREATE|INSERT|UPDATE|DELETE|ALTER|DROP)\b/i.test(query)) start.writes++;
@@ -171,6 +172,7 @@ export class CreationVersionScope extends DeployedScope {
       trace.starts.push(start);
       const sql = new Proxy(ctx.storage.sql, { get(target, property) {
         if (property === "exec") return (query: string, ...bindings: unknown[]) => {
+          if (trace.starts.at(-1) !== start) return Reflect.apply(target.exec, target, [query, ...bindings]);
           if (query.includes(" AS any_table") && query.includes(" AS format_table")) start.catalogReads++;
           if (query.includes("END AS word FROM room_record_format LIMIT 2")) start.wordReads++;
           if (query.startsWith("CREATE TABLE room_record_format") || query.startsWith("INSERT INTO room_record_format")) start.formatWrites++;
