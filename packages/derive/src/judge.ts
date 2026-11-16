@@ -389,7 +389,7 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
   for (const [name, item] of also.items) {
     subjects.set(`also.${name}`, item);
   }
-  const expects = expectedKeys(act, [...also.items.keys()].filter(name => !also.marked.has(name)));
+  const expects = expectedKeys(act, also.items.map(([name]) => name).filter(name => !also.marked.has(name)));
   // No aliases: each subject is one distinct item, so its expected revision is checked once and it rises once.
   if (new Set([...subjects.values()].map((i) => i.id)).size !== subjects.size) return refused("alias", "two names resolve to one item");
   if (Object.keys(intent.expected).length !== expects.length || expects.some((k) => !Object.hasOwn(intent.expected, k))) return refused("bad-intent", `expected has one key for each of: ${expects.join(", ")}`);

@@ -197,11 +197,12 @@ export async function tell<const D extends DeclaredDefinition>(spec: StorySpec<D
           const read = readFields(act.fields, fields, PROPOSED_BOUNDS);
           const bound = alsoItems(state, definition, act.also, read.ok ? read.fields : fields, on === undefined ? null : state.item(on));
           if (!bound.ok) throw new Error(`the story cannot resolve its also subjects: ${bound.detail}`);
-          const names = [...bound.items.keys()].filter(alias => !bound.marked.has(alias));
+          const items = new Map(bound.items);
+          const names = [...items.keys()].filter(alias => !bound.marked.has(alias));
           for (const name of expectedKeys(act, names)) {
             if (name === "on") { if (on !== undefined) ids[name] = on; }
             else {
-              const item = bound.items.get(name);
+              const item = items.get(name);
               if (item) ids[name] = item.id;
             }
           }
