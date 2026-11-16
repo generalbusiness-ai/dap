@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { encode } from "gpt-tokenizer/encoding/o200k_base";
-import type { DeclaredDefinition, Item, Request, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, Head, Item, Request, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, intentDigest, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { secretSigner, TransportError, type Fetch } from "@generalbusiness/dap-client";
 import { FIRST_ACTIONS_OF } from "@generalbusiness/dap-platform";
@@ -736,7 +736,7 @@ describe("what a call costs, end to end", () => {
   // new one and with it the signer's standing; a refusal of another reason does not. The stand-in scripts each answer.
   test("a refusal for authority ends the held session, and a refusal of a guard does not", async () => {
     const s = roomOf("admin", [issueDemo]);
-    const judgedAt = { seq: 1, hash: `sha256:${"b".repeat(64)}` };
+    const judgedAt: Head = { seq: 1, hash: `sha256:${"b".repeat(64)}` };
     await s.service.page();
     s.stand.answers.set("comment", () => ({ answer: "refused", reason: "guard-failed", name: "nope", judgedAt }));
     await s.service.call("issue.comment", { target: 1, fields: { body: "One." }, idempotencyKey: "guard" });

@@ -372,8 +372,9 @@ describe("read sessions (authority note, sections 3.9, 3.12 row W6, 5.3 and 5.5;
       expect((await post("/sessions?standing=1", signed)).status).toBe(200);
       expect((await post("/sessions?standing=1", signed)).body).toEqual({ ok: false, reason: "replayed" });
       // The client's reader asks with the option and keeps a value that passes its checks.
-      const held = await session(owner, M, rita);
-      expect(held.standing).toMatchObject({ key: rita.key, of: m, keyState: "active" });
+      const asking = await real(owner, async () => requestSession(SERVICE, M.name, await signedRequest(M, rita), { fetch: routed as unknown as Fetch, standing: true }));
+      if (!asking.ok) return expect.fail(`no session: ${asking.reason}`);
+      expect(asking.session.standing).toMatchObject({ key: rita.key, of: m, keyState: "active" });
     } finally {
       owner.close();
     }
