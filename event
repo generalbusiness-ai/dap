@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:da0b677a14d092192ed50e710b46aa6370dd0ca1","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e82c381e2aea8c68519ce40f7d26153fa983cc79","text":"Merge retired a covered predecessor; the successor is at apps/counter/releases/0.4.0/application.dap.json."}
