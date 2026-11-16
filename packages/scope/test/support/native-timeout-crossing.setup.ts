@@ -1,18 +1,20 @@
-import { beforeEach } from "vitest";
-import { crossingLine, guardAbort } from "./native-timeout-crossing.ts";
+import { afterEach, beforeEach } from "vitest";
+import { guardAbort, type Owner } from "./native-timeout-crossing.ts";
 
-// Step 1 of XD-1: print one line for each Native timeout that workerd refused to abort.
-// Step 3 sets this to true: the guard then returns, and vitest fails the test with its own timeout.
-const SWALLOW_CROSSING = false;
+// XD-1: print one line for each Native timeout abort that workerd refuses, with its class (rulings 925778a5 and 6ba49430).
+// Vitest aborts the controller of the test's own context, so each test's signal maps to that test. `afterEach` marks the
+// test finished: a timer that fires after it is `stale`, and one that fires while the test runs is `lost`.
 
 const installed = Symbol.for("dap.nativeTimeoutCrossingGuard");
 const holder = globalThis as unknown as Record<symbol, unknown>;
+const owners = ((holder[Symbol.for("dap.nativeTimeoutCrossingOwners")] ??= new WeakMap()) as WeakMap<AbortSignal, { file: string; name: string; finished: boolean }>);
 
-// Step 1b (ruling 925778a5): the line names the test that owns the timer. Vitest aborts the controller of the test's own
-// context, so each test's signal maps to that test. A timer that fires while a later test runs still names its owner.
-const owners = ((holder[Symbol.for("dap.nativeTimeoutCrossingOwners")] ??= new WeakMap()) as WeakMap<AbortSignal, { file: string; name: string }>);
 beforeEach(context => {
-  owners.set(context.signal, { file: context.task.file?.filepath ?? "(unknown)", name: fullName(context.task) });
+  owners.set(context.signal, { file: context.task.file?.filepath ?? "(unknown)", name: fullName(context.task), finished: false });
+});
+afterEach(context => {
+  const owner = owners.get(context.signal);
+  if (owner) owner.finished = true;
 });
 
 function fullName(task: { name: string; suite?: { name: string; suite?: unknown } | undefined }): string {
@@ -24,8 +26,5 @@ function fullName(task: { name: string; suite?: { name: string; suite?: unknown 
 // Setup files run again for each file, and isolate: false keeps one global.
 if (!holder[installed]) {
   holder[installed] = true;
-  guardAbort(AbortController.prototype, (crossing, controller) => {
-    const owner = owners.get(controller.signal);
-    console.error(crossingLine(crossing, owner?.file ?? "(unknown)", owner?.name ?? "(no owner)"));
-  }, SWALLOW_CROSSING);
+  guardAbort(AbortController.prototype, (controller): Owner | undefined => owners.get(controller.signal), line => console.error(line));
 }

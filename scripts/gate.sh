@@ -85,6 +85,11 @@ if [ "$failed" = 0 ]; then
 fi
 if [ -f "$out/test.log" ]; then
   grep -h "Tests \|ℹ pass\|Test evidence:\|plain timing:\|native timing:\|plain progress:\|native progress:" "$out/test.log" | sed 's/^ */  /'
-  echo "  native timeout crossings: $(grep -cF '[native-timeout-crossing] file=' "$out/test.log")"
+  # XD-1 (ruling 6ba49430): a lost timeout fails the gate; a stale timer or a timer with no owner does not.
+  for class in lost stale no-owner; do
+    count=$(grep -cF "[native-timeout-crossing] class=$class " "$out/test.log")
+    echo "  native timeout crossings, $class: $count"
+    if [ "$class" = lost ] && [ "$count" != 0 ] && [ "$failed" = 0 ]; then failed=1; fi
+  done
 fi
 exit "$failed"
