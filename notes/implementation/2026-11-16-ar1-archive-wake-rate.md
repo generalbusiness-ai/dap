@@ -144,6 +144,22 @@ measure M. The rate of about 48 requests a minute on dap-grow before AE-1
 and after the hotfix was measured with the archive off, so it does not
 include this cost.
 
+### The ceiling after the deployment
+
+The planner chose to keep the full pass for a cleared wake (decision
+d0be1aeb), so revocation and migration do not wait for an act. The planner
+measures M after the deployment against this ceiling, in the first hour:
+
+| Worker | Ceiling, sustained over 10 minutes |
+|---|---|
+| dap-grow | 150 Durable Object requests a minute, about three times today's 48 |
+| dap-lending | 50 Durable Object requests a minute |
+
+If either Worker exceeds its ceiling, the planner rolls both Workers back at
+once to their hotfix versions, grow cef83935 and lending 70571e5b, and files
+the measure. If the measure shows that M matters, a cheap check on an idle
+room gets its own request and design.
+
 Before AR-1, the two Workers made about 250,000 requests an hour.
 
 ## Turning the archive back on
