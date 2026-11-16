@@ -152,8 +152,8 @@ test("a refresh that swaps two keyed actions rebuilds the card; a press runs the
   class NodePort extends EventTarget {
     nodeType = 1; parentNode: NodePort | null = null; childNodes: NodePort[] = []; nodeValue: string | null = null; connected = false;
     get isConnected(): boolean { return this.connected || (this.parentNode?.isConnected ?? false); }
-    get firstChild() { return this.childNodes[0] ?? null; }
-    get nextSibling() { const siblings = this.parentNode?.childNodes ?? []; return siblings[siblings.indexOf(this) + 1] ?? null; }
+    get firstChild(): NodePort | null { return this.childNodes[0] ?? null; }
+    get nextSibling(): NodePort | null { const siblings = this.parentNode?.childNodes ?? []; return siblings[siblings.indexOf(this) + 1] ?? null; }
     insertBefore(node: NodePort, before: NodePort | null) {
       node.parentNode?.removeChild(node); const at = before ? this.childNodes.indexOf(before) : -1;
       this.childNodes.splice(at < 0 ? this.childNodes.length : at, 0, node); node.parentNode = this; return node;
@@ -179,7 +179,7 @@ test("a refresh that swaps two keyed actions rebuilds the card; a press runs the
   const root = new ElementPort(); root.connected = true;
   const pressed: string[] = [];
   const card = (order: readonly string[], surface?: ElementPort) => {
-    const fragment = new NodePort(), actions = keyed(new ElementPort(), "actions");
+    const fragment = new NodePort(), actions = new ElementPort(); keyed(actions as unknown as Node, "actions");
     for (const id of order) {
       const control = new ButtonPort(); control.setAttribute("data-label", id);
       bindControl(control as unknown as HTMLButtonElement, `action:${id}`, () => () => { pressed.push(id); });
