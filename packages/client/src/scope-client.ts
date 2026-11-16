@@ -1,42 +1,55 @@
 /** Requests over a declared replica: custody owns bytes, the replica owns facts, and one schedule owns time. */
 import type { Answer, Beside, DeclaredDefinition, Digest, FieldValue, Head, MemberId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { REFUSAL_CLASSES, canonicalize, intentDigest, isDigest, isLocalId, isRecord, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { REFUSAL_CLASSES, canonicalize, intentDigest, isDigest, isLocalId, isRecord, same, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { changeItem, isItemEffect, newItem, validateDefinition, type PredictionActor, type ValidDefinition } from "@generalbusiness/dap-derive";
-import { Custody, CustodyError, Lost, envelopeOf, identityId, meaningOf, validKey, type BindingRecord, type ClientCustodyStore, type CustodyRecord, type DeliveryOccurrence, type Envelope, type Identity, type Outcome, type Sent } from "./custody.ts";
+import { Custody, CustodyError, Lost, envelopeOf, meaningOf, validKey, type BindingRecord, type ClientCustodyStore, type CustodyRecord, type DeliveryOccurrence, type Envelope, type Identity, type Outcome, type Sent } from "./custody.ts";
 import { ShapeError, shapeDeclaredAct, shapeFieldsOf, type AskedOf, type DeclaredHandle, type Kind, type ShapeFieldType } from "./declared.ts";
+import { shapeDeclaredValues } from "./declared-shape.ts";
 import { effectiveFields, expectedOf } from "./expected.ts";
-import { DEFAULT_LIFETIME_SECONDS, signedIntent, type Signer } from "./intent.ts";
+import { DEFAULT_LIFETIME_SECONDS, newIdempotencyKey, signedIntent, type Signer } from "./intent.ts";
 import { sendableAt } from "./originals.ts";
-import { scopeReplica, intentMeaning, type Replica, type ReplicaOptions, type ReplicaView, type Row, type TypeOf } from "./replica.ts";
+import { scopeReplica, intentMeaning, type Replica, type ReplicaOptions, type ReplicaView, type Row, type SignedEntry, type TypeOf } from "./replica.ts";
 import type { Judged } from "./replica-judged.ts";
 import { requestStatus, signingDead, type RequestStatus } from "./request-status.ts";
 import { RequestSchedule, wallClock, type ClientClock } from "./request-schedule.ts";
 import { AuthorizationError, AuthorizationTransaction, type Authorization, type AuthorizationIdentity, type AuthorizationInput, type AuthorizationPosition, type AuthorizedAct, type MaterializedAct, type RetainAuthorization, type SigningAuthorization } from "./authorization.ts";
 import type { AuthorizationPort, CustodyBuildFence } from "./authorization-store.ts";
-import type { ItemName, Source } from "./act-types.ts";
+import type { ItemName, PartialAct, Source } from "./act-types.ts";
 import { actVersion } from "./act-version.ts";
 import { lowerActNames } from "./act-symbols.ts";
+import { exploreReplica, registerExplore, type DraftExploreResult, type ReadExploreInputs } from "./replica-explore.ts";
+import { openDraftCustodyCut, type DraftCustodyObservation } from "./draft-custody.ts";
+import { prepareDraftClear, prepareDraftEdit } from "./draft-edit.ts";
+import { ownDraftClearInputs, ownDraftEditInputs } from "./draft-preflight.ts";
+import { draftNowOf, readDraftNow, type DraftNow, type DraftViewCut } from "./draft-now.ts";
+import { projectDrafts } from "./draft-project.ts";
+import { adoptionBatch, checkDraftNow, composeDraftCandidate, type DraftCandidate } from "./draft-submit.ts";
+import type { DraftKeyEvidence, DraftProjection, DraftRequestListEntry, DraftRequestStatus, DraftViewKinds, HistoricalKeyEvidence,
+  LocalDraftActivity, ProjectStoredKey } from "./draft-project-types.ts";
+import type { DraftSelectionRow } from "./draft-selection.ts";
+import { ownDraftSlot, slotAddress, slotFor, type ClearField, type DraftIndex, type EditPatch, type Slot, type SlotInput } from "./draft-slot.ts";
+import { readStoredDrafts, refineDraft, type DraftBinding, type DraftDismissal, type DraftPort, type DraftSlot, type StoredDraft, type StoredDraftEntry } from "./draft-store.ts";
 
 /** Seat holds no principal and uses an origin; this port states the four facts C3 needs, each once (ruling e868dd08). */
 export interface ScopeMember { service: string; membership: ScopeRef; member: MemberId; principal: MemberRef | null }
 export interface PresentRequest<D extends DeclaredDefinition> { kind: Kind<D>; values: AskedOf<D, Kind<D>> }
-/** C4 owns slots and writes. C3 reads a request's present values and changes by another client. */
-export interface DraftRead<D extends DeclaredDefinition> {
-  read(key: string): Promise<PresentRequest<D> | null>;
-  observe?(changed: () => void): () => void;
-}
-export interface ClientOptions<D extends DeclaredDefinition> extends ReplicaOptions {
+export interface ClientOptions<D extends DeclaredDefinition> extends Omit<ReplicaOptions<D>, "exploration"> {
+  /** Read authentication for the one Replica-owned partial exploration context. */
+  exploration?: ReadExploreInputs<D>;
   signer: Signer;
   member: ScopeMember;
   store: ClientCustodyStore & { authorizations: AuthorizationPort };
   /** Fixed by the descriptor owner; E4 invents no descriptor or fallback digest. */
   descriptor: Digest;
-  drafts: DraftRead<D>;
+  /** The one raw whole-batch draft port. A member call writes it under the store's exclusive fence; background work never does. */
+  drafts: DraftPort;
   clock?: ClientClock;
   lifetimeSeconds?: number;
 }
+/** The request arm of the list. Planner 6d3b979f item 3: every reader narrows the list with one switch on `is`. */
 export type RequestView<D extends DeclaredDefinition> = RequestStatus & {
+  is: "request";
   key: string;
   kind: Kind<D>;
   values: AskedOf<D, Kind<D>>;
@@ -45,11 +58,39 @@ export type RequestView<D extends DeclaredDefinition> = RequestStatus & {
 export type ClientRow<D extends DeclaredDefinition, T extends TypeOf<D> = TypeOf<D>> = Row<D, T> & { pending?: { key: string } };
 export interface ClientView<D extends DeclaredDefinition> extends Omit<ReplicaView<D>, "row" | "rows"> {
   rows<T extends TypeOf<D>>(type: T): readonly ClientRow<D, T>[];
-  requests: readonly RequestView<D>[];
+  /** Custody requests, partial draft entries in the list, and held stored intentions. Recorded requests leave this list. */
+  requests: readonly DraftRequestListEntry<D>[];
+  /** Editing and submitting drafts by slot address. Waiting drafts appear in `requests`. */
+  drafts: DraftIndex<D, DraftViewKinds<D>>;
   row(ref: { item: number } | { key: string }): ClientRow<D> | null;
 }
 interface ReadProof { began: number; head: Head }
-interface Held<D extends DeclaredDefinition> { record: CustodyRecord; outcomes: Outcome[]; present: PresentRequest<D>; meaning: Digest }
+interface Held { record: CustodyRecord; outcomes: Outcome[] }
+/** One member call's stop. `committed` names the key of a draft that this call changed: a write that already took effect in the same call.
+ * A submit that an exploration returns (`revision-moved`) stops with `state` and `committed: key`; the view then shows the
+ * return and its `now`. A submit that stops after its adoption write names the key too. */
+export type DraftStop = { readonly stop: "shape"; readonly path: string; readonly message: string }
+  | { readonly stop: "state" | "taken" | "descriptor-mismatch" | "definition-mismatch" };
+export type DraftCall<T> = { readonly ok: true; readonly value: T }
+  | { readonly ok: false; readonly stop: DraftStop; readonly committed?: string };
+/** The raw batch and finite custody observations one candidate decides from. */
+interface Cut { entries: readonly StoredDraftEntry[]; seen: ReadonlyMap<string, DraftCustodyObservation> }
+interface Classified { status: RequestStatus; predicted: Judged }
+/** One member call's reads. `key` is the editing key, or the one allocated key of a new intention. */
+interface Context { entries: readonly StoredDraftEntry[]; rows: readonly StoredDraft[]; seen: ReadonlyMap<string, DraftCustodyObservation>; key: string }
+interface Assembled<D extends DeclaredDefinition> {
+  held: Map<string, Held>;
+  classes: Map<string, Classified>;
+  projection: DraftProjection<D>;
+}
+/** A publication candidate ended because the client closed. It is not an error of the caller. */
+class CandidateClosed extends Error {}
+const completed = (record: CustodyRecord): boolean => ["accepted", "archived", "settled"].includes(record.phase);
+const stopped = (error: unknown): DraftStop | null => {
+  if (error instanceof ShapeError) return { stop: "shape", path: error.path, message: error.message };
+  if (error instanceof AuthorizationError && (error.reason === "descriptor-mismatch" || error.reason === "definition-mismatch")) return { stop: error.reason };
+  return null;
+};
 const unresolved = (record: CustodyRecord): boolean => ["prepared", "sent", "unknown"].includes(record.phase);
 const retryDelay = (copies: number): number => copies <= 5 ? 1000 * 2 ** Math.max(0, copies - 1) : 30_000;
 const unanswered = (outcome: Outcome): boolean => "lost" in outcome || "answer" in outcome && outcome.answer.answer === "unavailable";
@@ -84,8 +125,13 @@ export class ScopeClient<D extends DeclaredDefinition> {
   readonly #retryAt = new Map<string, number>();
   readonly #retryTokens = new Map<string, object>();
   readonly #deathTokens = new Map<string, object>();
-  #held = new Map<string, Held<D>>();
+  readonly #binding: DraftBinding;
+  /** The occurrence that `submit` owns between its adoption write and the end of step 7. Another member call on that key stops `taken`. */
+  readonly #submitting = new Map<string, StoredDraft>();
+  #held = new Map<string, Held>();
   #view: ClientView<D>;
+  #folding = false;
+  #foldAgain = false;
   #closed = false;
   #stopping = false;
   #halted = false;
@@ -99,10 +145,16 @@ export class ScopeClient<D extends DeclaredDefinition> {
   #stopReplica: () => void;
 
   constructor(handle: DeclaredHandle<D>, options: ClientOptions<D>) {
-    options = { ...options, member: structuredClone(options.member),
+    // First, before any storage, schedule, Replica or observation: the Replica constructor already starts a read.
+    const drafts = options.drafts as DraftPort | undefined;
+    if (!drafts || typeof drafts.read !== "function" || typeof drafts.write !== "function" || typeof drafts.observe !== "function") {
+      throw new TypeError("ClientOptions.drafts requires a DraftPort");
+    }
+    options = { ...options, drafts, member: structuredClone(options.member),
       signer: { key: options.signer.key, sign: options.signer.sign.bind(options.signer) } };
     this.#handle = handle; this.#options = options;
     this.#at = structuredClone(handle.at);
+    this.#binding = { owner: options.signer.key, scope: this.#at, definition: handle.digest, descriptor: options.descriptor };
     this.#clock = options.clock ?? wallClock;
     this.#schedule = new RequestSchedule(this.#clock);
     this.#custody = new Custody(options.store, () => timeOf(this.#clock.now()));
@@ -112,7 +164,11 @@ export class ScopeClient<D extends DeclaredDefinition> {
     this.#definition = checked.ok ? checked.definition : null;
     const lifetime = options.lifetimeSeconds ?? DEFAULT_LIFETIME_SECONDS;
     if (!(lifetime > 0 && lifetime <= PROPOSED_BOUNDS.intentLifetimeSeconds)) throw new RangeError("the client signing lifetime exceeds its bound");
-    this.#replica = scopeReplica(handle, { observe: emit => options.observe(state => {
+    this.#replica = scopeReplica(handle, { exploration: { actor: options.signer.key,
+      member: { membership: options.member.membership, member: options.member.member },
+      clock: () => timeOf(this.#clock.now()), active: () => this.#available(),
+      ...(options.exploration ? { read: options.exploration.bind(options) } : {}) },
+      observe: emit => options.observe(state => {
       const returned = state.status === "streaming" && !this.#feed;
       if (state.status === "streaming" || state.status === "current") this.#feed = true;
       else if (!["connecting", "refreshing", "retained"].includes(state.status) || state.status === "retained" && state.reason === "subscription-ended") this.#feed = false;
@@ -120,9 +176,10 @@ export class ScopeClient<D extends DeclaredDefinition> {
       if (returned) this.#background(() => this.#reconnected());
     }) });
     replicas.set(this, this.#replica);
-    this.#view = this.#compute();
+    registerExplore<D>(this, (key, act) => exploreReplica(this.#replica, key, act));
+    this.#view = this.#compute(this.#assemble({ entries: [], seen: new Map() }));
     this.#stopStore = options.store.observe(() => { this.#background(() => this.#sync()); });
-    this.#stopDrafts = options.drafts.observe?.(() => { this.#background(() => this.#sync()); }) ?? (() => {});
+    this.#stopDrafts = options.drafts.observe(() => { this.#background(() => this.#sync()); });
     this.#stopReplica = this.#replica.subscribe(() => { this.#background(() => this.#sync()); });
     flushers.set(this, () => this.#idle());
     const call: RequestCall<D> = (key, kind, values) => this.#request(key, kind, values);
@@ -159,6 +216,313 @@ export class ScopeClient<D extends DeclaredDefinition> {
     for (const listener of [...this.#listeners]) listener(this.#view);
   }
 
+  // ---------------------------------------------------------------- C4 member calls
+  // Each call owns its inputs before its first await, takes the store's one exclusive fence, reads the raw draft
+  // batch once and each relevant exact custody identity once, decides synchronously, and joins one whole-batch write.
+  // A submit reads two times, around its exploration, which waits outside the fence.
+
+  /** A Slot is a value: the kind, the primary ref and every supplied item ref. It reads and captures nothing. */
+  slot<const K extends Kind<D>>(kind: K, input: SlotInput<D, K>): Slot<D, K> { return slotFor(this.#handle.definition, kind, input); }
+
+  /** Patch the draft in this slot, or create it. Omitted and own-undefined fields keep their values. */
+  async edit<K extends Kind<D>>(slot: Slot<D, K>, values: EditPatch<D, K>): Promise<DraftCall<string>> {
+    let owned;
+    try { owned = ownDraftEditInputs(this.#handle.definition, slot, values); } catch (error) { return this.#refused(error); }
+    const address = slotAddress(this.#handle.definition, owned.slot), displayed = this.#displayed(owned.slot);
+    return this.#member(async (): Promise<DraftCall<string>> => {
+      const context = await this.#acquire(address, displayed, true);
+      if ("stop" in context) return { ok: false, stop: context.stop };
+      // Final synchronous decision: no await separates it from the write below.
+      const decided = this.#decide(context, displayed);
+      if ("stop" in decided) return { ok: false, stop: decided.stop };
+      if (!this.#acceptable()) return { ok: false, stop: { stop: "state" } };
+      const prepared = prepareDraftEdit({ binding: this.#binding, definition: this.#handle.definition, rows: this.#selectionRows(),
+        slot: address, namedRefs: structuredClone({ on: owned.slot.on, fields: owned.slot.fields }) as unknown as StoredDraft["namedRefs"],
+        current: decided.current, key: context.key, patch: owned.patch });
+      if (!prepared.ok) return { ok: false, stop: { stop: prepared.stop } };
+      await this.#options.drafts.write(this.#binding.owner, this.#at, this.#placed(context.entries, address, prepared.draft));
+      return { ok: true, value: context.key };
+    });
+  }
+
+  /** Remove named non-address fields from the editing draft. It never creates a draft and keeps the key. */
+  async clear<K extends Kind<D>>(slot: Slot<D, K>, fields: readonly ClearField<D, K>[]): Promise<DraftCall<string>> {
+    let owned;
+    try { owned = ownDraftClearInputs(this.#handle.definition, slot, fields); } catch (error) { return this.#refused(error); }
+    const address = slotAddress(this.#handle.definition, owned.slot), displayed = this.#displayed(owned.slot);
+    if (displayed === null) return { ok: false, stop: { stop: "taken" } };
+    return this.#member(async (): Promise<DraftCall<string>> => {
+      const context = await this.#acquire(address, displayed, false);
+      if ("stop" in context) return { ok: false, stop: context.stop };
+      const decided = this.#decide(context, displayed);
+      if ("stop" in decided) return { ok: false, stop: decided.stop };
+      if (!decided.current) return { ok: false, stop: { stop: "taken" } };
+      if (!this.#acceptable()) return { ok: false, stop: { stop: "state" } };
+      const prepared = prepareDraftClear({ binding: this.#binding, definition: this.#handle.definition, rows: this.#selectionRows(),
+        current: decided.current, names: owned.names });
+      if (!prepared.ok) return { ok: false, stop: { stop: prepared.stop } };
+      await this.#options.drafts.write(this.#binding.owner, this.#at, this.#placed(context.entries, address, prepared.draft));
+      return { ok: true, value: context.key };
+    });
+  }
+
+  /** Remove the editing draft in this slot. It cancels no request. */
+  async discard<K extends Kind<D>>(slot: Slot<D, K>): Promise<DraftCall<void>> {
+    let owned;
+    try { owned = ownDraftSlot(this.#handle.definition, slot); } catch (error) { return this.#refused(error); }
+    const address = slotAddress(this.#handle.definition, owned), displayed = this.#displayed(owned);
+    if (displayed === null) return { ok: false, stop: { stop: "taken" } };
+    return this.#member(async (): Promise<DraftCall<void>> => {
+      const context = await this.#acquire(address, displayed, false);
+      if ("stop" in context) return { ok: false, stop: context.stop };
+      const decided = this.#decide(context, displayed);
+      if ("stop" in decided) return { ok: false, stop: decided.stop };
+      if (!decided.current) return { ok: false, stop: { stop: "taken" } };
+      await this.#options.drafts.write(this.#binding.owner, this.#at, context.entries.filter(entry => entry.key !== context.key));
+      return { ok: true, value: undefined };
+    });
+  }
+
+  /** Put an unsent intention back. A held or other-recorded one starts a new key; a returned one keeps its key. */
+  restore(key: string): Promise<DraftCall<void>> { return this.#dispose(key, "restore"); }
+  /** Suppress the notice of an unsent intention. A historical-descriptor row is removed. No custody record changes. */
+  dismiss(key: string): Promise<DraftCall<void>> { return this.#dispose(key, "dismiss"); }
+
+  /** The one submit of a draft. Steps 1 to 7 are the check order of `general-now-call-shape-20261116/PROPOSAL.md` section (b).
+   * `now` is the value that the returned draft showed. An editing draft takes none. There is no hidden retry: a scope
+   * refusal after step 5 leaves the draft returned (form 2) with a new `now` in the view, and the member submits again. */
+  async submit<K extends Kind<D>>(slot: Slot<D, K>, now?: DraftNow | null): Promise<DraftCall<string>> {
+    const definition = this.#handle.definition;
+    // Step 1: copy and validate `slot` and `now` before any `await`. An ill-shaped value stops with `shape`.
+    let owned: Slot<D, K>, passed: DraftNow | null | undefined;
+    try {
+      owned = ownDraftSlot(definition, slot);
+      passed = now === undefined || now === null ? now : readDraftNow(now);
+    } catch (error) { return this.#refused(error); }
+    const address = slotAddress(definition, owned), displayed = this.#displayed(owned);
+    if (displayed === null) return { ok: false, stop: { stop: "taken" } };
+    // Two fenced sections surround the exploration, which waits for the network outside any fence. The first decides and
+    // composes the candidate (steps 2 to 4). The second reads the batch again and requires the same stored draft (step 5 on).
+    const first = await this.#member<{ stored: StoredDraft; candidate: DraftCandidate; adopted: StoredDraft | null }>(async () => {
+      // Step 2: under the one exclusive fence, read the raw batch and the key's occurrence once; apply `taken`, then `state`.
+      // `taken` outranks every `now` check below.
+      const context = await this.#acquire(address, displayed, false);
+      if ("stop" in context) return { ok: false, stop: context.stop };
+      const decided = this.#decide(context, displayed);
+      if ("stop" in decided) return { ok: false, stop: decided.stop };
+      const stored = decided.current;
+      if (!stored) return { ok: false, stop: { stop: "taken" } };
+      if (!this.#acceptable()) return { ok: false, stop: { stop: "state" } };
+      // Step 3: decide whether the draft is returned from this call's own rows, then compare `now` with that fact.
+      // A returned draft whose view lacks a subject stops with `state` before any `now` comparison.
+      const cut = this.#viewCut();
+      const shown = projectDrafts<D>({ definition, binding: this.#binding, identity: this.#who, state: this.#replica.view.state, cut,
+        stored: [this.#cell(stored, context.seen.get(stored.key)!, new Map())], custodyOnly: [] }).drafts.get(owned);
+      const returned = shown !== undefined && shown.state === "editing" && shown.returned !== undefined;
+      const checked = checkDraftNow({ definition, stored, returned, view: draftNowOf({ definition, stored, scope: this.#at, cut }), now: passed });
+      if (!checked.ok) return { ok: false, stop: checked.stop === "state" ? { stop: "state" } : { stop: "shape", path: checked.field, message: checked.what } };
+      // Step 4: the candidate in memory, from the stored act with `expected` replaced from `now`. No edit default, no recapture.
+      // An editing draft has no `now`: its stored act is the candidate and nothing is adopted.
+      let candidate: DraftCandidate;
+      let adopted: StoredDraft | null = null;
+      if (checked.now === null) candidate = { kind: stored.act.kind, on: stored.act.on, fields: stored.act.fields, expected: stored.act.expected };
+      else {
+        const composed = composeDraftCandidate({ definition, stored, now: checked.now });
+        if (!composed.ok) return { ok: false, stop: { stop: "shape", path: composed.field, message: composed.what } };
+        candidate = composed.candidate; adopted = composed.adopted;
+      }
+      return { ok: true, value: { stored, candidate, adopted } };
+    });
+    if (!first.ok) return first;
+    const { stored, candidate, adopted } = first.value;
+    // Step 5: `actExplore` over the candidate through the Replica's one registered exploration, outside the fence. It signs
+    // nothing, and its `result.act` is never taken: it can autofill an omitted key. The reader may wait for the network, so
+    // other member calls run meanwhile.
+    let explored: DraftExploreResult<D, K>;
+    try {
+      explored = await exploreReplica(this.#replica, stored.key, candidate as unknown as PartialAct<D, K>);
+      this.#current();
+    } catch (error) { return this.#refused(error); }
+    const launch = await this.#member<{ key: string; act: AuthorizedAct; adopted: boolean }>(async () => {
+      // Step 5, second section: the batch holds the same stored draft in the same slot. Any difference stops with `state`
+      // and writes nothing. A replica head that moved is no difference: the scope judges the act.
+      const context = await this.#acquire(address, displayed, false);
+      if ("stop" in context) return { ok: false, stop: { stop: "state" } };
+      const again = this.#decide(context, displayed);
+      if ("stop" in again || !again.current || !same(again.current, stored)) return { ok: false, stop: { stop: "state" } };
+      if (!this.#acceptable()) return { ok: false, stop: { stop: "state" } };
+      // `revision-moved` writes the genuine form 1 return and ends.
+      if (explored.exploration.is === "refused" && explored.exploration.reason === "revision-moved") {
+        const marked: StoredDraft = { ...stored, returned: { cause: { by: "exploration", reason: "revision-moved", class: "head" },
+          expected: stored.act.expected, capture: stored.capture, againstCustody: null } };
+        await this.#options.drafts.write(this.#binding.owner, this.#at, context.entries.map(entry => entry.key === stored.key ? marked : entry));
+        // The draft changed and nothing was submitted. `committed` names the write; the view shows the new return and `now`.
+        return { ok: false, stop: { stop: "state" }, committed: stored.key };
+      }
+      // Step 6: one member batch adopts the passed refs (`expected`, `capture`, `namedRefs`) and retires the return marker.
+      // A rejected write throws; nothing signs. An editing draft has nothing to adopt and writes nothing.
+      if (adopted) await this.#options.drafts.write(this.#binding.owner, this.#at, adoptionBatch(context.entries, adopted));
+      // The occurrence belongs to this call until step 7 ends. The fence cannot hold across the signing, which takes it itself.
+      this.#submitting.set(stored.key, adopted ?? stored);
+      return { ok: true, value: { key: stored.key, act: { kind: candidate.kind, on: candidate.on, fields: candidate.fields, expected: candidate.expected }, adopted: adopted !== null } };
+    });
+    if (!launch.ok) return launch;
+    const { key, act } = launch.value;
+    try {
+      // Step 7: retain and sign the same candidate. `submitBoundAct` is one gesture, never an inferred copy. A scope refusal
+      // is a returned request in the view (form 2), not a stop here, and nothing retries it.
+      await this.submitBoundAct(this.#authorizationIdentity(key), act);
+      return { ok: true, value: key };
+    } catch (error) {
+      const stop = stopped(error);
+      if (!stop) throw error;
+      return { ok: false, stop, ...(adopted !== null ? { committed: key } : {}) };
+    } finally {
+      this.#submitting.delete(key);
+      this.#background(() => this.#sync());
+    }
+  }
+
+  #refused(error: unknown): DraftCall<never> {
+    const stop = stopped(error);
+    if (!stop) throw error;
+    return { ok: false, stop };
+  }
+  #acceptable(): boolean { return this.#replica.view.state.is === "current" || this.#replica.view.state.is === "behind"; }
+  /** The occupant this view shows now, captured before any await. */
+  #displayed<K extends Kind<D>>(slot: Slot<D, K>): { key: string; submitting: boolean } | null {
+    const shown = this.#view.drafts.get(slot);
+    return shown ? { key: shown.key, submitting: shown.state === "submitting" } : null;
+  }
+  #selectionRows(): readonly DraftSelectionRow[] { return this.#items() as unknown as readonly DraftSelectionRow[]; }
+  /** The one cut of a render: the replica's head and every held row, final rows included. Null when the replica holds no head. */
+  #viewCut(): DraftViewCut | null {
+    const view = this.#replica.view;
+    if (view.head === null) return null;
+    const rows = Object.keys(this.#handle.definition.items).flatMap(type => [...view.rows(type)]);
+    return { head: view.head, rows: rows as unknown as readonly DraftSelectionRow[] };
+  }
+  async #readEntries(): Promise<readonly StoredDraftEntry[]> {
+    const entries = readStoredDrafts(await this.#options.drafts.read(this.#binding.owner, this.#at), this.#binding);
+    this.#current();
+    return entries;
+  }
+  /** The one member fence. A committed write starts a separate read-only publication. */
+  async #member<T>(work: () => Promise<DraftCall<T>>): Promise<DraftCall<T>> {
+    this.#current();
+    try {
+      const result = await this.#options.store.exclusive(async () => { this.#current(); return work(); });
+      if (result.ok) this.#background(() => this.#sync());
+      return result;
+    } catch (error) { return this.#refused(error); }
+  }
+  /** Observe each distinct finite key once, in order. The caller may add one allocated key afterwards. */
+  async #finite(keys: readonly string[]): Promise<{ cut: ReturnType<typeof openDraftCustodyCut>; seen: Map<string, DraftCustodyObservation> }> {
+    const cut = openDraftCustodyCut(this.#custody, this.#who, keys, () => this.#current());
+    const seen = new Map<string, DraftCustodyObservation>();
+    for (const key of cut.keys) seen.set(key, await cut.acquire(key));
+    return { cut, seen };
+  }
+  #slotRows(entries: readonly StoredDraftEntry[], address: DraftSlot): StoredDraft[] {
+    return entries.filter((entry): entry is StoredDraft => entry.is === "draft" && entry.placement === "slot" && same(entry.slot, address));
+  }
+  /** The raw rows that hold the address can be old taken intentions. Classification decides which, if any, still edits. */
+  #logicalOccupant(rows: readonly StoredDraft[], seen: ReadonlyMap<string, DraftCustodyObservation>): StoredDraft | null {
+    if (rows.length === 0) return null;
+    const classes = new Map<string, Classified>();
+    const stored = rows.map(row => this.#cell(row, seen.get(row.key)!, classes));
+    const projection = projectDrafts<D>({ definition: this.#handle.definition, binding: this.#binding, identity: this.#who,
+      state: this.#replica.view.state, cut: this.#viewCut(), stored, custodyOnly: [] });
+    const found = projection.routing.find(route => route.route === "slot");
+    return found && found.from === "stored" && found.source.is === "current" ? found.source.stored : null;
+  }
+  /** Raw batch, finite custody observations, and for a new intention its one allocated key. */
+  async #acquire(address: DraftSlot, displayed: { key: string; submitting: boolean } | null, allocate: boolean): Promise<Context | { stop: DraftStop }> {
+    const entries = await this.#readEntries(), rows = this.#slotRows(entries, address);
+    const { cut, seen } = await this.#finite(rows.map(row => row.key));
+    const context: Context = { entries, rows, seen, key: displayed?.key ?? "" };
+    const first = this.#decide(context, displayed);
+    if ("stop" in first) return first;
+    if (displayed === null && allocate) {
+      context.key = newIdempotencyKey();
+      // One generated key, one direct observation, no reroll. A found record is never adopted.
+      if ((await cut.admitAllocatedKey(context.key)).is === "collision") return { stop: { stop: "taken" } };
+    }
+    return context;
+  }
+  /** Synchronous. A null display cannot replace a newer editor; a displayed key can patch only its own live occupant. */
+  #decide(context: Context, displayed: { key: string; submitting: boolean } | null): { stop: DraftStop } | { current: StoredDraft | null } {
+    this.#current();
+    const occupant = this.#logicalOccupant(context.rows, context.seen);
+    if (displayed === null) return occupant ? { stop: { stop: "taken" } } : { current: null };
+    if (displayed.submitting || !occupant || occupant.key !== displayed.key || this.#submitting.has(occupant.key)) return { stop: { stop: "taken" } };
+    return { current: occupant };
+  }
+  /** One replacement batch: unrelated rows stay exact and a displaced raw occupant of the address waits. */
+  #placed(entries: readonly StoredDraftEntry[], address: DraftSlot, draft: StoredDraft): readonly StoredDraftEntry[] {
+    const next = entries.map((entry): StoredDraftEntry => {
+      if (entry.key === draft.key) return draft;
+      return entry.is === "draft" && entry.placement === "slot" && same(entry.slot, address) ? { ...entry, placement: "waiting" } : entry;
+    });
+    return entries.some(entry => entry.key === draft.key) ? next : [...next, draft];
+  }
+
+  async #dispose(key: string, mode: "restore" | "dismiss"): Promise<DraftCall<void>> {
+    if (typeof key !== "string" || !validKey(key)) return { ok: false, stop: { stop: "shape", path: "key", message: "is not a bounded request key" } };
+    // The displayed form selects the route. A held key is never observed in custody.
+    const shown = this.#view.requests.find(entry => entry.key === key);
+    if (!shown) return { ok: false, stop: { stop: "state" } };
+    const status = shown.is === "draft" ? ("status" in shown ? shown.status : "waiting") : null;
+    return this.#member(async (): Promise<DraftCall<void>> => {
+      const entries = await this.#readEntries(), row = entries.find(entry => entry.key === key);
+      if (!row || row.is !== "draft") return { ok: false, stop: { stop: "state" } };
+      const write = async (next: readonly StoredDraftEntry[]): Promise<DraftCall<void>> => {
+        await this.#options.drafts.write(this.#binding.owner, this.#at, next);
+        return { ok: true, value: undefined };
+      };
+      if (row.definition !== this.#binding.definition || row.descriptor !== this.#binding.descriptor) {
+        // A historical row keeps its stored bytes. Restore promotes nothing; dismiss removes exactly this row.
+        // Planner 6d3b979f item 4: the definition is checked first, so a row that differs in both stops with `definition-mismatch`.
+        if (mode === "dismiss") return write(entries.filter(entry => entry !== row));
+        return { ok: false, stop: { stop: row.definition !== this.#binding.definition ? "definition-mismatch" : "descriptor-mismatch" } };
+      }
+      if (shown.is === "request") return { ok: false, stop: { stop: "state" } };
+      const dismissal: DraftDismissal = { is: "dismissed", owner: row.owner, scope: row.scope, definition: row.definition,
+        descriptor: row.descriptor, key: row.key, slot: row.slot };
+      if (mode === "dismiss") return write(entries.map(entry => entry === row ? dismissal : entry));
+      if (status === "pending") return { ok: false, stop: { stop: "taken" } };
+      // Restore: the target address must be logically empty once the held key itself is excluded.
+      const others = this.#slotRows(entries, row.slot).filter(other => other.key !== key);
+      const waiting = status === "waiting";
+      const { cut, seen } = await this.#finite([...others.map(other => other.key), ...(waiting ? [key] : [])]);
+      const decide = (): boolean => {
+        this.#current();
+        if (this.#logicalOccupant(others, seen)) return false;
+        if (!waiting) return true;
+        // An ordinary returned waiter keeps its key only while its own custody still shows it unsent.
+        const alone = projectDrafts<D>({ definition: this.#handle.definition, binding: this.#binding, identity: this.#who,
+          state: this.#replica.view.state, cut: this.#viewCut(), stored: [this.#cell(row, seen.get(key)!, new Map())], custodyOnly: [] });
+        const only = alone.requests[0];
+        return alone.requests.length === 1 && only !== undefined && only.is === "draft" && "state" in only;
+      };
+      if (!decide()) return { ok: false, stop: { stop: "taken" } };
+      let draft: StoredDraft;
+      if (waiting) draft = { ...row, placement: "slot" };
+      else {
+        const fresh = newIdempotencyKey();
+        if ((await cut.admitAllocatedKey(fresh)).is === "collision") return { ok: false, stop: { stop: "taken" } };
+        // The continuation names the earlier key. The old key's occurrence marker does not belong to the new key.
+        const { returned, ...rest } = row;
+        draft = { ...rest, key: fresh, placement: "slot", after: key,
+          ...(returned ? { returned: { ...returned, againstCustody: null } } : {}) };
+      }
+      if (!decide() || !this.#acceptable()) return { ok: false, stop: { stop: "taken" } };
+      const placed = refineDraft(draft, this.#binding, this.#handle.definition);
+      // A continuation disposes of the earlier notice in the same batch; a promoted waiter keeps its key.
+      return write(this.#placed(waiting ? entries : entries.map(entry => entry === row ? dismissal : entry), row.slot, placed));
+    });
+  }
+
   #background(run: () => Promise<unknown>): void {
     // A background store failure cannot publish a partial view. A later member call reads the store again and can throw it.
     const work = Promise.resolve().then(run);
@@ -174,6 +538,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
     }
   }
 
+  /** One read-only publication pass. It writes no draft and holds no member fence. */
   async #sync(): Promise<void> {
     if (this.#closed || this.#halted) return;
     if (this.#running) { this.#again = true; return this.#running; }
@@ -182,34 +547,60 @@ export class ScopeClient<D extends DeclaredDefinition> {
         do {
           this.#again = false;
           const replica = this.#replica.view;
-          const held = new Map<string, Held<D>>();
-          for (const row of await this.#options.store.byTarget(this.#who)) {
-            const identity = { ...this.#who, key: row.key };
-            let record = await this.#custody.find(identity);
-            if (!record || record.standalone) continue;
-            const entry = this.#replica.accepted(this.#options.signer.key, row.key);
-            if (entry && record.phase !== "accepted" && record.phase !== "archived" && record.phase !== "settled") {
-              try { record = await this.#custody.folded(identity, entry) ?? record; }
-              catch (error) { if (error instanceof CustodyError && error.why.held === "locked") return; throw error; }
-            }
-            const outcomes = await this.#custody.outcomes(identityId(identity), record);
-            const draft = await this.#options.drafts.read(row.key);
-            const present = draft ?? this.#present(record);
-            held.set(row.key, { record, outcomes, present, meaning: draft ? this.#presentMeaning(present) : record.meaning });
-          }
+          const cut = await this.#publicationCut();
           if (this.#closed) return;
           // A store, draft or replica change during an await invalidates this whole candidate view.
           if (this.#again || this.#replica.view !== replica) { this.#again = true; continue; }
-          this.#held = held;
+          // Everything from here is synchronous: one projection from one cut, then one publication.
+          const assembled = this.#assemble(cut), view = this.#compute(assembled);
+          this.#held = assembled.held;
           this.#arm();
-          this.#publish();
+          this.#publish(view);
+          this.#scheduleFold();
         } while (this.#again && !this.#closed);
+      } catch (error) {
+        if (!(error instanceof CandidateClosed)) throw error;
       } finally {
         // Release ownership with the final pending-work decision, including early returns.
         this.#running = null;
       }
     })();
     return this.#running;
+  }
+
+  /** The finite publication read: one raw batch, one byTarget discovery, and one find and outcomes read per distinct key. */
+  async #publicationCut(): Promise<Cut> {
+    const entries = readStoredDrafts(await this.#options.drafts.read(this.#binding.owner, this.#at), this.#binding);
+    const discovered = await this.#options.store.byTarget(this.#who);
+    // Stored keys cover archived records that discovery omits; a discovery miss never proves absence.
+    const keys = [...new Set([...entries.map(entry => entry.key), ...discovered.map(row => row.key)])];
+    const cut = openDraftCustodyCut(this.#custody, this.#who, keys, () => { if (this.#closed) throw new CandidateClosed(); });
+    const seen = new Map<string, DraftCustodyObservation>();
+    for (const key of cut.keys) seen.set(key, await cut.acquire(key));
+    return { entries, seen };
+  }
+
+  /** Custody folding is its own reconciliation. It reads and writes custody only, and its failure changes no publication. */
+  #scheduleFold(): void {
+    // Schedule only for a held record that an accepted entry can still fold. Each publication calls this, and an idle wait
+    // that finds fresh background work after every publication never drains.
+    if (![...this.#held].some(([key, held]) => !completed(held.record) && this.#replica.accepted(this.#options.signer.key, key))) return;
+    if (this.#folding) { this.#foldAgain = true; return; }
+    this.#folding = true;
+    this.#background(async () => {
+      try {
+        do {
+          this.#foldAgain = false;
+          for (const [key, held] of [...this.#held]) {
+            if (this.#closed) return;
+            const entry = this.#replica.accepted(this.#options.signer.key, key);
+            if (!entry || completed(held.record)) continue;
+            try { await this.#custody.folded({ ...this.#who, key }, entry); }
+            catch (error) { if (!(error instanceof CustodyError && error.why.held === "locked")) throw error; }
+          }
+        } while (this.#foldAgain && !this.#closed);
+      } finally { this.#folding = false; }
+    });
   }
 
   #present(record: CustodyRecord): PresentRequest<D> {
@@ -228,27 +619,92 @@ export class ScopeClient<D extends DeclaredDefinition> {
     const values = { on: intent.on, fields, ...(record.envelope.beside.presented ? { presented: record.envelope.beside.presented } : {}) } as unknown as AskedOf<D, Kind<D>>;
     return { kind: intent.kind as Kind<D>, values };
   }
-  #presentMeaning(present: PresentRequest<D>): Digest {
-    try { const shaped = shapeDeclaredAct(this.#handle.definition, present.kind, present.values); return intentMeaning({ kind: present.kind, on: shaped.on, fields: shaped.fields }); }
-    catch { return meaningOf(present); }
+  /** The old whole-input presentation route over a stored draft: shape it completely, or fall back to the authored facade. */
+  #draftMeaning(draft: StoredDraft): Digest {
+    const values = { on: draft.act.on, fields: draft.act.fields };
+    try { const shaped = shapeDeclaredValues(this.#handle.definition, draft.act.kind, values); return intentMeaning({ kind: draft.act.kind, on: shaped.on, fields: shaped.fields }); }
+    catch { return meaningOf({ kind: draft.act.kind, values }); }
   }
   #predict(record: CustodyRecord, index: number): Judged {
     const envelope = envelopeOf(record, index);
     return envelope ? this.#replica.judged(envelope.signed, { actor: this.#actor, reading: timeOf(this.#clock.now()), texts: envelope.beside.texts ?? [] }) : { is: "not-judged" };
   }
-  #compute(): ClientView<D> {
-    const replica = this.#replica.view, byKey = new Map<string, ClientRow<D>>(), view: RequestView<D>[] = [];
+  #statusFor(entry: SignedEntry | null, record: CustodyRecord, outcomes: readonly Outcome[], meaning: Digest): Classified {
+    const status = requestStatus({ entry, record, outcomes, presentMeaning: meaning, head: this.#replica.view.head, now: this.#clock.now(), predict: index => this.#predict(record, index) });
+    return { status, predicted: entry ? { is: "recorded", fact: entry.fact } : this.#predict(record, record.signings.length - 1) };
+  }
+  #requestView(key: string, record: CustodyRecord, classified: Classified): RequestView<D> {
+    const present = this.#present(record);
+    return { is: "request", key, kind: present.kind, values: present.values, ...classified.status, predicted: classified.predicted };
+  }
+  /** Evidence for one stored row from one finite observation. No record is invented and no custody is read here. */
+  #cell(row: StoredDraftEntry, observation: DraftCustodyObservation, classes: Map<string, Classified>): ProjectStoredKey<D> {
+    const entry = this.#replica.accepted(this.#options.signer.key, row.key), identity = observation.identity;
+    const verified = entry ? { verifiedEntry: entry } : {};
+    // The definition is checked first (planner 6d3b979f item 4); a row of another definition never reaches current refinement.
+    if (row.is === "draft" && row.definition === this.#binding.definition && row.descriptor === this.#binding.descriptor) {
+      const stored = refineDraft(row, this.#binding, this.#handle.definition), meaning = this.#draftMeaning(stored);
+      let evidence: DraftKeyEvidence;
+      if (observation.is === "absent") evidence = entry ? { identity, is: "entry", entry, presentMeaning: meaning, observed: { is: "absent" } } : { identity, is: "absent" };
+      else if (observation.is === "standalone") evidence = { identity, is: "non-request", occurrence: observation.occurrence, excludedBy: "standalone", ...verified };
+      else if (entry) evidence = { identity, is: "entry", entry, presentMeaning: meaning, observed: { is: "found", occurrence: observation.occurrence } };
+      else {
+        const classified = this.#classified(row.key, observation, row, classes);
+        if (classified.status.status === "recorded" || classified.status.status === "other-recorded") throw new TypeError("a request without an entry has an entry status");
+        evidence = { identity, is: "request", occurrence: observation.occurrence, status: classified.status as DraftRequestStatus, predicted: classified.predicted };
+      }
+      const submitting = this.#submitting.get(row.key);
+      const local: LocalDraftActivity = submitting ? { is: "submitting", against: submitting } : { is: "idle" };
+      return { is: "current", stored, evidence, local };
+    }
+    // A historical or dismissed row never reaches current refinement; its kept request shows genuine custody presentation only.
+    let evidence: HistoricalKeyEvidence<D>;
+    if (observation.is === "absent") evidence = { identity, is: "absent", ...verified };
+    else if (observation.is === "standalone") evidence = { identity, is: "non-request", occurrence: observation.occurrence, excludedBy: "standalone", ...verified };
+    else evidence = { identity, is: "ordinary", occurrence: observation.occurrence,
+      view: this.#requestView(row.key, observation.record, this.#classified(row.key, observation, row, classes)) };
+    return row.is === "draft" ? { is: "historical", stored: row, evidence } : { is: "dismissed", stored: row, evidence };
+  }
+  /** One C3 classification per ordinary key and candidate. A current stored row supplies the present meaning. */
+  #classified(key: string, observation: Extract<DraftCustodyObservation, { is: "ordinary" }>, row: StoredDraftEntry | null, classes: Map<string, Classified>): Classified {
+    let found = classes.get(key);
+    if (!found) {
+      const entry = this.#replica.accepted(this.#options.signer.key, key);
+      const meaning = row?.is === "draft" && row.descriptor === this.#binding.descriptor ? this.#draftMeaning(row) : observation.record.meaning;
+      found = this.#statusFor(entry, observation.record, observation.outcomes, meaning);
+      classes.set(key, found);
+    }
+    return found;
+  }
+
+  /** Pure derivation from a finished cut: classification, held records and the projection. Nothing here awaits. */
+  #assemble(cut: Cut): Assembled<D> {
+    const classes = new Map<string, Classified>(), held = new Map<string, Held>(), byKey = new Map(cut.entries.map(entry => [entry.key, entry]));
+    for (const [key, observation] of cut.seen) {
+      if (observation.is === "ordinary") {
+        this.#classified(key, observation, byKey.get(key) ?? null, classes);
+        held.set(key, { record: observation.record, outcomes: [...observation.outcomes] });
+      }
+    }
+    const stored = cut.entries.map(row => this.#cell(row, cut.seen.get(row.key)!, classes));
+    const custodyOnly: RequestView<D>[] = [];
+    for (const [key, { record }] of held) if (!byKey.has(key)) custodyOnly.push(this.#requestView(key, record, classes.get(key)!));
+    const projection = projectDrafts<D>({ definition: this.#handle.definition, binding: this.#binding, identity: this.#who,
+      state: this.#replica.view.state, cut: this.#viewCut(), stored, custodyOnly });
+    return { held, classes, projection };
+  }
+
+  #compute(assembled: Assembled<D>): ClientView<D> {
+    const replica = this.#replica.view, byKey = new Map<string, ClientRow<D>>();
     const byType = new Map<string, ClientRow<D>[]>(), byItem = new Map<number, ClientRow<D>>();
     for (const type of Object.keys(this.#handle.definition.items)) {
       const rows = [...replica.rows(type)] as ClientRow<D>[];
       byType.set(type, rows); for (const row of rows) byItem.set(row.id, row);
     }
-    for (const [key, held] of this.#held) {
-      const { record, outcomes, present } = held;
+    for (const [key, { record }] of assembled.held) {
+      const { status, predicted } = assembled.classes.get(key)!;
       const entry = this.#replica.accepted(this.#options.signer.key, key);
-      const status = requestStatus({ entry, record, outcomes, presentMeaning: held.meaning, head: replica.head, now: this.#clock.now(), predict: index => this.#predict(record, index) });
       // The entry closes custody before publication. In particular no mismatch view publishes not-judged (aa12ecdd).
-      const predicted = entry ? { is: "recorded" as const, fact: entry.fact } : this.#predict(record, record.signings.length - 1);
       const target = entry?.opened ?? record.envelope.signed.intent.on;
       if (entry && target !== null) {
         const row = replica.row({ item: target }); if (row) byKey.set(key, row);
@@ -270,13 +726,16 @@ export class ScopeClient<D extends DeclaredDefinition> {
           if (!opened) byItem.set(row.id, row);
         }
       }
-      if (status.status !== "recorded") view.push({ key, kind: present.kind, values: present.values, ...status, predicted });
     }
-    return { ...replica, requests: view,
+    const { drafts, requests } = assembled.projection;
+    return { ...replica, requests, drafts,
       rows: <T extends TypeOf<D>>(type: T) => (byType.get(type) ?? []) as unknown as readonly ClientRow<D, T>[],
       row: ref => "item" in ref ? byItem.get(ref.item) ?? null : byKey.get(ref.key) ?? null };
   }
-  #publish(): void { this.#view = this.#halted ? { ...this.#view, state: this.#replica.view.state } : this.#compute(); for (const listener of [...this.#listeners]) listener(this.#view); }
+  #publish(next?: ClientView<D>): void {
+    this.#view = this.#halted ? { ...this.#view, state: this.#replica.view.state } : next ?? this.#view;
+    for (const listener of [...this.#listeners]) listener(this.#view);
+  }
 
   #token(map: Map<string, object>, key: string): object { let token = map.get(key); if (!token) { token = {}; map.set(key, token); } return token; }
   #arm(): void {
@@ -296,7 +755,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
     }
   }
 
-  #retryAfterRead(key: string, held: Held<D>): void {
+  #retryAfterRead(key: string, held: Held): void {
     const copies = held.outcomes.filter(outcome => outcome.attempt === held.record.attempt && unanswered(outcome));
     this.#retry.add(key);
     this.#retryAt.set(key, this.#clock.now() + retryDelay(copies.length));

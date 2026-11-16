@@ -221,6 +221,8 @@ fields under `fields`, so a field named like a control never collides:
 | `idempotencyKey` | Required. 1 to 128 bytes of UTF-8, chosen by the caller. One key is one meaning. |
 | `resubmit` | Send a refused intent again, deliberately. |
 | `at` | Optional captured revisions, keyed by exactly the act's bound subjects (`on` and the `also` aliases). Omit it to read current revisions. |
+| `after` | Optional. The `idempotencyKey` of a refused request of yours. Always with `now`. |
+| `now` | Optional. The `now` that the refused result returned, copied unchanged. Always with `after`; never with `at`. |
 | `fields` | The act's fields, as the description lists them. A member is `@handle`. |
 | `texts` | Detached texts, when a field gives a text's digest in place of the text. Only for acts with a detached text. |
 | `presented` | The facts the act presents, by name. Only for acts that present one. |
@@ -252,6 +254,40 @@ explicit captured set is part of the custody meaning: another set under
 the same key conflicts. A repeated call with the original set returns its
 kept intent even after the current state moves. Omission preserves the
 existing fresh-read behavior and custody meaning.
+
+A refused act result with the reason `revision-moved` or `bad-intent` carries
+`now`: the basis of a fresh read, taken after the refusal. Another refusal, such
+as `guard-failed`, was judged on rows that did not move, so its result carries
+no `now`; `settle` gives one for it. It holds `of` (the refused request's `idempotencyKey`), `target`,
+`kind`, `primary` (the item the act is on and its revision, or `null`), `at`
+(the revisions the read binds, keyed as `at` is) and `head` (the head of that
+read). `settle` returns the same object for a kept refused request. The server
+stores none of it. The result carries `now` only when the read holds the
+revision of every subject of the act. Otherwise it carries `lacks` and no `now`.
+`lacks` names the subject: `on` for the item the act is on, or the name of an
+`also` subject.
+
+To submit the refused request again, call the same tool with `after` set to the
+refused request's key, `now` copied unchanged from the result, and a new
+`idempotencyKey`. Leave `at` out. The call signs the `at` of `now` unchanged, so
+it signs only the revisions the result showed. If a row moves again, the scope
+refuses the act as `revision-moved`, and the new result carries a new `now`.
+Each such race costs one more submit. The server never retries.
+
+Before it signs, the server checks these facts. A failed check ends the call with
+a `shape` error, and nothing is signed.
+
+- `after` and `now` appear together, and `at` is absent.
+- `idempotencyKey` differs from `after`.
+- `now.of` equals `after`, and `after` names a refused request of your key for
+  the same scope and kind.
+- `now.target`, `now.kind` and `now.primary` name this call's scope, kind and item.
+- `now.at` names only subjects the act binds, and holds the revision of `now.primary`
+  under `on`.
+
+A call without `after` and `now` is a fresh act with its own key. It reads the
+current revisions, or takes `at`, as before. A host that drops tool output gives
+the model no `now`. The model then sends a fresh act.
 
 An error the server finds itself (a shape, a target, custody, a read) is
 `error`, `message` and `next`. A fragment of what the caller gave, such as
@@ -879,6 +915,80 @@ Creates a scope with no existing target, and records it in your configuration so
         "type": "integer",
         "minimum": 0,
         "maximum": 9007199254740991
+      },
+      "now": {
+        "type": "object",
+        "description": "The basis of this refused request, from a fresh read. To submit it again, call act with after (this request's idempotencyKey), a new idempotencyKey and this object as now, copied unchanged.",
+        "properties": {
+          "of": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "primary": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "item": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "item",
+              "revision"
+            ]
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "head": {
+            "type": "object",
+            "properties": {
+              "seq": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hash": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "seq",
+              "hash"
+            ]
+          }
+        },
+        "required": [
+          "of",
+          "target",
+          "kind",
+          "primary",
+          "at",
+          "head"
+        ]
+      },
+      "lacks": {
+        "type": "string",
+        "description": "The subject the fresh read could not render, so this result has no now. Send a fresh act."
       }
     },
     "required": [
@@ -1073,6 +1183,80 @@ Joins a room with an invitation link from dap invite (artroom-invite:...), as da
         "type": "integer",
         "minimum": 0,
         "maximum": 9007199254740991
+      },
+      "now": {
+        "type": "object",
+        "description": "The basis of this refused request, from a fresh read. To submit it again, call act with after (this request's idempotencyKey), a new idempotencyKey and this object as now, copied unchanged.",
+        "properties": {
+          "of": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "primary": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "item": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "item",
+              "revision"
+            ]
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "head": {
+            "type": "object",
+            "properties": {
+              "seq": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hash": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "seq",
+              "hash"
+            ]
+          }
+        },
+        "required": [
+          "of",
+          "target",
+          "kind",
+          "primary",
+          "at",
+          "head"
+        ]
+      },
+      "lacks": {
+        "type": "string",
+        "description": "The subject the fresh read could not render, so this result has no now. Send a fresh act."
       }
     },
     "required": [
@@ -1498,7 +1682,7 @@ Waits at most 60 seconds until one of: a scope's head reaches seq; an item reach
 
 ### `settle`
 
-What is known about the envelope under idempotencyKey on target (or the creation of definition): the act's phase and kept outcome, the scope's settlement for an act that is not final, and each preparation step apart. Signs and submits no ACT. Read-session authentication may sign its existing request.
+What is known about the envelope under idempotencyKey on target (or the creation of definition): the act's phase and kept outcome, the scope's settlement for an act that is not final, and each preparation step apart. Signs and submits no ACT. Read-session authentication may sign its existing request. A refused result carries `now`, and `act` takes it with `after`.
 
 ```json
 {
@@ -1760,6 +1944,87 @@ Signs one act of a scope by its native kind, under the same custody and binding 
         },
         "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
       },
+      "after": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "description": "The idempotencyKey of a refused request of yours. Give it with now to submit that request again on the basis its result showed, under a new idempotencyKey. Without after and now, the act is a fresh act."
+      },
+      "now": {
+        "type": "object",
+        "description": "The now object that the refused result of the request in after returned. Copy it unchanged. It is not taken with at. If your host drops tool output, you have no now: send a fresh act instead.",
+        "properties": {
+          "of": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "target": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "primary": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "item": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "item",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "head": {
+            "type": "object",
+            "properties": {
+              "seq": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hash": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "seq",
+              "hash"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "of",
+          "target",
+          "kind",
+          "primary",
+          "at",
+          "head"
+        ],
+        "additionalProperties": false
+      },
       "fields": {
         "type": "object"
       },
@@ -1794,7 +2059,15 @@ Signs one act of a scope by its native kind, under the same custody and binding 
       "digest",
       "idempotencyKey"
     ],
-    "additionalProperties": false
+    "additionalProperties": false,
+    "dependentRequired": {
+      "after": [
+        "now"
+      ],
+      "now": [
+        "after"
+      ]
+    }
   },
   "outputSchema": {
     "type": "object",
@@ -1949,6 +2222,80 @@ Signs one act of a scope by its native kind, under the same custody and binding 
         "type": "integer",
         "minimum": 0,
         "maximum": 9007199254740991
+      },
+      "now": {
+        "type": "object",
+        "description": "The basis of this refused request, from a fresh read. To submit it again, call act with after (this request's idempotencyKey), a new idempotencyKey and this object as now, copied unchanged.",
+        "properties": {
+          "of": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "primary": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "item": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "item",
+              "revision"
+            ]
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "head": {
+            "type": "object",
+            "properties": {
+              "seq": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hash": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "seq",
+              "hash"
+            ]
+          }
+        },
+        "required": [
+          "of",
+          "target",
+          "kind",
+          "primary",
+          "at",
+          "head"
+        ]
+      },
+      "lacks": {
+        "type": "string",
+        "description": "The subject the fresh read could not render, so this result has no now. Send a fresh act."
       }
     },
     "required": [

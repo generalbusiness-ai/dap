@@ -21,6 +21,7 @@ import type {
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, utf8, readMinimum, isReceipt, definitionDigest, entryHash, encodeItemQueryParameter, readItemQueryParameter, itemQueryReadFor, within, LATE, isDigest, parseStrict, textDigest, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { encodeApplicationProjectionQuery, readApplicationProjectionQuery, readApplicationProjectionReplyText } from "@generalbusiness/dap-platform/application-v2";
+import { registerScopeReader } from "./scope-reader.ts";
 
 /** How a handle reaches a scope service: the contract's `ScopeApi`. `http.ts` and `binding.ts` each make one. */
 export type Transport = ScopeApi;
@@ -88,6 +89,7 @@ export class ScopeHandle {
     this.#transport = transport;
     this.scope = scope;
     this.#reader = reader;
+    registerScopeReader(this, reader);
   }
 
   /**

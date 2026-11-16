@@ -6,6 +6,7 @@ import { decisive } from "./custody.ts";
 import { sendableAt } from "./originals.ts";
 import type { Judged } from "./replica-judged.ts";
 import type { SignedEntry } from "./replica.ts";
+import { requestEntryDecision } from "./request-entry-decision.ts";
 
 export type Why = { by: "scope"; reason: RefusalReason; name?: string; class: RefusalClass }
   | { by: "client"; reason: "unsent" };
@@ -31,7 +32,8 @@ export interface RequestStatusAt {
 /** First matching rule wins. In particular, a replica entry wins over every custody answer and local clock. */
 export function requestStatus(at: RequestStatusAt): RequestStatus {
   const { entry, record, presentMeaning, head, now } = at;
-  if (entry) return { status: entry.meaning === presentMeaning ? "recorded" : "other-recorded" }; // 1, 2
+  const recorded = requestEntryDecision(entry, presentMeaning);
+  if (recorded) return recorded; // 1, 2
   if (record.phase === "accepted" || record.phase === "mismatch") return { status: "pending" }; // 3
   const decision = decisive(at.outcomes, record.attempt);
   const answer = decision?.answer;

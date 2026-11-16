@@ -178,7 +178,7 @@ const namedOwners = {
     "packages/cli/src/command-issues.ts:linking": "e425a12db2c6e4da95f28b73f366215f4347592d6b868d3fd943fab497766280"
   },
   "packages/mcp/src/service.ts": {
-    "packages/mcp/src/service.ts:$module": "0bc0e0888680b197c404d7b691d983e99dd6371e0ee1c9746bf550e971312105", // CE2 adds local custody findings without changing Native answer shapes.
+    "packages/mcp/src/service.ts:$module": "53d8fb5b768cc517d8aae86b593441c94a837fda20733b7aefd999921e5b619f", // CE2 adds local custody findings without changing Native answer shapes.
     "packages/mcp/src/service.ts:ListRestart": "83803f5cf365099c3ed7ad6d12153b68e7616977007feffed4ca4b01bd4ca95d",
     "packages/mcp/src/service.ts:SERVER_NAME": "1a22dd379fec10cbed8b5938dfd522ce9e8cffe176de5f4554e3cad8668764e2",
     "packages/mcp/src/service.ts:SERVER_VERSION": "93926c4b4205a41211c5dfd2e083d8a5d4eed978060ba4d0781fb54d9d3eb366",
@@ -212,7 +212,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:scopeRefArg": "54eb8fcb90bd3e5dbacec1eb71f853e5a3b578aae10d11a24d3c0ee0d69a88b3",
     "packages/mcp/src/service.ts:memberRefArg": "80b4a7634bee92e5b6d8b03dea6102cbf701fcab94198e54de219783961ee281",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "5b326661e862845861a3157315b42d596d4201f1e36446c703f27c34e617ac3a", // E4 forwards the actual fence-capable custody builder type; existing settle and Card paths stay unchanged.
+    "packages/mcp/src/service.ts:McpService": "ecd6e9be07b5831c4d8b723c54faa0b601db487a83af59e2fd8fb227e792d70c", // E4 forwards the actual fence-capable custody builder type; existing settle and Card paths stay unchanged.
     "packages/mcp/src/service.ts:commitIdFault": "36b75703f0eb36b5abca60906629f23df18a233d26c395f0b61c792eddabe405",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
@@ -343,8 +343,8 @@ const seals = {
   "packages/mcp/src/hosted-tools.ts": "bea3d3cea128bd76102e36d0876992c1b77a5bf2263f376082c1f329d2035a60", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
   "packages/mcp/src/catalogue.ts": "0ee898b27949f5450f991f70e0fe1fc9f0820e6fb45aa97afe1a04a593a98d24", // Reviewed R5 admission owner; NF-4 imports declarationDigest from the client install module.
-  "packages/mcp/src/input-schema.ts": "592587b6ecfaff69854b3bc9d9945f35876a833d53da93127b37a5ab7ea2b647", // Moved MCP schema derivation; actual maintained parser output.
-  "packages/mcp/src/act-result.ts": "1af469f7a77c6bebc58dc2e19b69c93aeab0ddcbaed18acaf6d577887990b904", // Moved MCP answer projection and act output schema; actual maintained parser output.
+  "packages/mcp/src/input-schema.ts": "6d6e4d779fbbcc39d3eaf899d487e9ca9008aff0f0f2bb26490a6ceebbfe979e", // Moved MCP schema derivation; actual maintained parser output.
+  "packages/mcp/src/act-result.ts": "7aea1e7880d479e4170f35d447254eabdddb4816dd20f8f5b38421cb4b6fadfb", // Moved MCP answer projection and act output schema; actual maintained parser output.
   "packages/mcp/src/describe.ts": "a1708220ef2656a34c466037223cf0ab31133bc442919d92d04fe8a37ebada92", // Moved bounded MCP tool description; actual maintained parser output.
   "packages/mcp/src/inventory.ts": "9f5492ea706ef49c4555f81c83de78319916630075036ef574b7a067a4518c9c", // Reviewed parallel authority reads and target-only discovery; standing still reads fresh; NF-4 reader import.
   "packages/mcp/src/http.ts": "773765a2edab34cfd675038a9bf5bbd51ef671379a0ce379d48725ea1b61b3b9", // Reviewed Mcp-Name binding for prompts/get.
@@ -403,7 +403,7 @@ const pendingR8Seals = {
   "packages/client/src/describe.ts": "5fd433d592d3849baa7d88d1d831d23be4df073000a803931bf8dd44065bae5f", // Moved portable full/compact declaration and schema derivations; actual maintained parser output.
   "packages/client/src/mark-descriptions.ts": "7e22b5140e2a808e091b02d80acaa439f3d57d8c323a2480bfb994db9c063664", // Moved platform mark descriptions, own-property fallbacks and refusal names; actual maintained parser output.
   "packages/mcp/src/description-context.ts": "ef86ba4f8fc9e67f792d10510b9e9c20132b80c3d8915774fede7de714c4be17", // Private native-to-plain catalogue binding; NF-4 moved it to the client install module.
-  "packages/client/src/expected.ts": "d510e63f137da02563758e525a87e4db5254f93ee692d3d89ed4952819ce6ecf", // A1 shares expectedKeys while preserving sparse, prototype-safe subject resolution.
+  "packages/client/src/expected.ts": "2bfd1c5df978e5e3549e6747382fe5151cb79c5dad627300793d2ff0fd2b545c", // A1 shares expectedKeys while preserving sparse, prototype-safe subject resolution.
   "packages/cli/src/claim.ts": "99d3f75a1caf5b86d6f8a5f2d6fa94ea2adf26d9ba33c05196687aa98757f4dc", // CR2 admits the signed original installer-founder at register28; legacy binding25 keeps host-none limits.
   "packages/cli/src/command-support.ts": "d583fdc077383d497a92b4ec452dc4c316da1b6b665a73c917d2c5cd3407af1c", // Moved shared read, session and signing support; actual maintained parser output.
   "packages/cli/src/read-session-cache.ts": "12a5cf131a166001f66672bc3c4b6daf70070645255c61db7b93f18b6fbb83b7", // Reviewed CLI session or verification boundary; actual maintained parser output.

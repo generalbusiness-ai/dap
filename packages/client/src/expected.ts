@@ -89,6 +89,27 @@ export function viaLeft<A extends ExpectedAct>(act: A, items: readonly Bound[], 
   });
 }
 
+/**
+ * The first subject whose item the caller's `items` do not hold, or null. The act's primary lacks when `on` names no held row.
+ * A subject that a field names lacks when the field names no held row. A subject that a `via` selects lacks when its slot names
+ * an item that `items` does not hold. Such a subject is not absent: the scope selects an item for it, and the caller cannot
+ * give its revision. A subject whose rule selects nothing is absent, and this function never names it. One rule serves the
+ * client's `now` and the MCP result's `now`.
+ */
+export function lackedSubject<A extends ExpectedAct>(act: A, items: readonly Bound[], on: number | null, fields: Readonly<Record<string, FieldValue>>): string | null {
+  if (expectedKeys(act, []).includes("on") && on !== null && !items.some(item => item.id === on)) return "on";
+  const { subject, viaId } = subjectsOf(act, items, on, fields);
+  for (const [name, value] of Object.entries(act.also)) {
+    const rule = value as Rule;
+    if (rule.code !== undefined) continue;
+    if (rule.by !== undefined) {
+      const named = ownValue(fields, rule.by);
+      if (typeof named === "number" && !items.some(item => item.id === named)) return name;
+    } else if (rule.via !== undefined && rule.item !== undefined && typeof viaId(rule) === "number" && subject(name) === null) return name;
+  }
+  return null;
+}
+
 /** The final states an item type declares, byte-sorted, as an item query takes them. An undeclared type has none. */
 export function finalStates(declared: unknown): string[] {
   const states = isRecord(declared) ? declared["states"] : undefined;

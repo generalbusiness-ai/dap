@@ -999,7 +999,9 @@ test(`EXPLICIT AT: the server signs a given at unchanged and reads nothing for i
     const done = await answering(plain, "change.resolve-finding-any", { target: change, on: earlier[0], at: expected });
     expect(reply(done.answer), `AT: answerAt answers it: ${JSON.stringify(done.answer)}`).toEqual(["accepted"]);
     expect(done.signed.map(intent => intent.expected), "AT: the intent binds what was given").toEqual([expected]);
-    expect([moved.queries, short.queries, done.queries], "AT: a given at takes no read of a final item").toEqual([0, 0, 0]);
+    // A given at takes no read of a final item before the signing. A `revision-moved` or `bad-intent` refusal reads once
+    // afterwards, for its `now` (C4, ruling 892d1abf).
+    expect([moved.queries, short.queries, done.queries], "AT: a given at takes no read of a final item; a refusal reads one for now").toEqual([1, 1, 0]);
   } finally { await f.room.done(); }
 }, 240_000);
 
@@ -1008,6 +1010,7 @@ test(`THE SCOPE JUDGES: with no at, an author of the earlier version reaches the
   try {
     const done = await answering(plain, "change.resolve-finding-any", { target: change, on: earlier[0] });
     expect(reply(done.answer), `GUARD: ${JSON.stringify(done.answer)}`).toEqual(["refused", "guard-failed", "author-cannot-answer"]);
+    // A guard refusal reads no basis after the answer (ruling 892d1abf): one read, for the version the guard reads.
     expect(done.queries, "GUARD: the server read the version the guard reads").toBe(1);
     const finding = ((await plain.ok("inspect", { scope: change }))["items"] as Item[]).find(item => item.id === earlier[0]);
     expect(finding, "GUARD: the finding stays open").toMatchObject({ state: "open", refs: { version: first } });

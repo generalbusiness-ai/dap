@@ -775,6 +775,19 @@ describe("what a call costs, end to end", () => {
     await annotate(`notifications: 2 told for an activation and a role change, 0 for a head advance; each watch run ${watchReads} reads`);
   });
 
+  // Invariant: a `revision-moved` refusal of an act reads the target lane once more after the post, for the `now` that its
+  // result carries (ruling 892d1abf). A guard refusal reads nothing more (above).
+  test("a revision-moved refusal reads the lane once more for now", async () => {
+    const s = roomOf("admin", [issueDemo]);
+    s.stand.answers.set("comment", () => ({ answer: "refused", reason: "revision-moved", judgedAt: { seq: 1, hash: `sha256:${"b".repeat(64)}` } }));
+    await s.service.page();
+    const sent = await counted(s, () => s.service.call("issue.comment", { target: 1, fields: { body: "Moved." }, idempotencyKey: "moved" }));
+    expect(sent.result.structuredContent["answer"], JSON.stringify(sent.result.structuredContent)).toBe("refused");
+    expect([reads(sent.requests), posts(sent.requests), sessions(sent.requests)], sent.requests.join(", ")).toEqual([5, 1, 0]);
+    expect(sent.requests.filter(request => request === `GET /v1/scopes/${laneOf(s, 1).ref.scope}`)).toHaveLength(2);
+    expect("now" in sent.result.structuredContent || "lacks" in sent.result.structuredContent).toBe(true);
+  });
+
   // Invariant: tools/list is measured as sent, per role: one page at most 256 KiB, and the totals are reported, with no gate on
   // the whole. Token counts are by gpt-tokenizer 3.4.0 with the o200k_base encoding, a proxy: an agent host's own count differs.
   test("the list per role, in bytes and tokens", async ({ annotate }) => {

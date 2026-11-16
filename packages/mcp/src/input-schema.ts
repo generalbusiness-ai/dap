@@ -35,6 +35,27 @@ function presentedSchema(declared: NonNullable<ActLike["presents"]>): Schema {
 /** The controls of an act tool, at the top level; the declared fields under `fields`, so no field can collide with a control. */
 export const AT_INPUT = { type: "object", additionalProperties: { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER }, description: "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides." };
 
+/** Submit again after a refusal: the key of the refused request. The pair `after` and `now` appears together or not at all. */
+export const AFTER_INPUT = { type: "string", minLength: 1, maxLength: 128, description: "The idempotencyKey of a refused request of yours. Give it with now to submit that request again on the basis its result showed, under a new idempotencyKey. Without after and now, the act is a fresh act." };
+const REVISION = { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER } as const;
+/** The basis a refused result showed. A host that validates can check its shape. The server checks it again before it signs. */
+export const NOW_INPUT = {
+  type: "object",
+  description: "The now object that the refused result of the request in after returned. Copy it unchanged. It is not taken with at. If your host drops tool output, you have no now: send a fresh act instead.",
+  properties: {
+    of: { type: "string", minLength: 1, maxLength: 128 },
+    target: { type: "string" },
+    kind: { type: "string" },
+    primary: { type: ["object", "null"], properties: { item: REVISION, revision: REVISION }, required: ["item", "revision"], additionalProperties: false },
+    at: { type: "object", additionalProperties: REVISION },
+    head: { type: "object", properties: { seq: REVISION, hash: { type: "string" } }, required: ["seq", "hash"], additionalProperties: false },
+  },
+  required: ["of", "target", "kind", "primary", "at", "head"],
+  additionalProperties: false,
+} as const;
+/** Advice for a host that validates. The server enforces the pair at run time, because hosts do not validate. */
+export const AFTER_WITH_NOW = { dependentRequired: { after: ["now"], now: ["after"] } } as const;
+
 /** The JSON Schema of one field type. It carries the same facts as the words, for a host that validates. */
 export function schemaOf(type: FieldLike, setting: Setting): Schema {
   const description = typeWords(type, setting);
@@ -84,6 +105,8 @@ export function actInputSchema(form: ActForm, setting: Setting, target: "require
     idempotencyKey: { type: "string", minLength: 1, maxLength: 128, description: "Your key for this one meaning, 1 to 128 bytes. Keep it: settle with it after a lost reply." },
     resubmit: { type: "boolean", description: "Send a refused envelope again, deliberately. The default is false." },
     at: AT_INPUT,
+    after: AFTER_INPUT,
+    now: NOW_INPUT,
     fields: { type: "object", properties: Object.fromEntries(fields.map(([n, f]) => [n, schemaOf(f, setting)])), required: fields.filter(([, f]) => f.required).map(([n]) => n), additionalProperties: false },
     ...(beside.texts ? { texts: { type: "array", items: { type: "string" }, description: "Detached texts whose digests the fields name." } } : {}),
     ...(beside.presented ? { presented: presentedSchema(form.presents) } : {}),
@@ -91,5 +114,5 @@ export function actInputSchema(form: ActForm, setting: Setting, target: "require
   };
   const required = ["idempotencyKey", ...(target === "required" ? ["target"] : []), ...(form.on === "required" ? ["on"] : []), ...(fields.some(([, f]) => f.required) ? ["fields"] : []),
     ...(Object.values(form.presents).some((p) => p.required) ? ["presented"] : [])];
-  return { type: "object", properties, required, additionalProperties: false };
+  return { type: "object", properties, required, ...AFTER_WITH_NOW, additionalProperties: false };
 }

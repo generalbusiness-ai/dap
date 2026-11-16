@@ -88,6 +88,28 @@ describe("every activity is reachable, and every act renders", () => {
     }
   });
 
+  // Invariant: every act tool and the generic act tool list `after` and `now` beside `at`, and say they appear together.
+  // docs/mcp-tools.json holds the same inputs, so a stale file fails the next test as well.
+  test("input schema lists after and now", async () => {
+    const mcp = new McpService({ service: "https://x", signer: fixedSigner(0), config: { read: async () => ({ service: "https://x" }), addRoot: async () => {} }, custody: memoryStore(), mode: "add" });
+    const generic = (await mcp.page()).tools.find((t) => t.name === "act")!;
+    const inventory = demoInventory("admin");
+    const acts = bindingsOf(inventory, WORDS).filter((b) => listed(b, inventory)).map((b) => actTool(b, inventory, "default"));
+    expect(acts.length).toBeGreaterThan(0);
+    const shaped = (t: { name: string; inputSchema: unknown }) => {
+      const schema = t.inputSchema as { properties: Record<string, unknown>; required: string[]; dependentRequired?: unknown };
+      expect(Object.keys(schema.properties), t.name).toEqual(expect.arrayContaining(["at", "after", "now"]));
+      expect(schema.dependentRequired, t.name).toEqual({ after: ["now"], now: ["after"] });
+      expect(schema.required, t.name).not.toContain("after");
+      expect(schema.required, t.name).not.toContain("now");
+      return schema;
+    };
+    for (const t of [generic, ...acts]) shaped(t);
+    const listed_ = parseStrict(readFileSync(new URL("../../../docs/mcp-tools.json", import.meta.url), "utf8")) as { tools: { name: string; inputSchema: { properties: Record<string, unknown> } }[] };
+    // `prepare` takes `at` for a capability step and no `after`: a step is not a submit of a returned request.
+    for (const t of listed_.tools) if (t.name !== "prepare" && Object.hasOwn(t.inputSchema.properties, "at")) shaped(t);
+  });
+
   // Invariant: the tool reference of docs/mcp.md is what tools/list sends: each generic tool's description and schemas verbatim,
   // each native table description as sent, and docs/mcp-tools.json the whole list for an admin of the demo room.
   // MCP_WRITE_DOCS=1 writes the JSON file from the derivation.

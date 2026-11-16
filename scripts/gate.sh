@@ -85,5 +85,6 @@ if [ "$failed" = 0 ]; then
 fi
 if [ -f "$out/test.log" ]; then
   grep -h "Tests \|ℹ pass\|Test evidence:\|plain timing:\|native timing:\|plain progress:\|native progress:" "$out/test.log" | sed 's/^ */  /'
+  echo "  native timeout crossings: $(grep -cF '[native-timeout-crossing] file=' "$out/test.log")"
 fi
 exit "$failed"

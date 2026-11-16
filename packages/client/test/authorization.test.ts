@@ -3,6 +3,7 @@ import { expect, test } from "vitest";
 import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
 import { AuthorizationTransaction, type RetainAuthorization } from "../src/authorization.ts";
 import { Custody, memoryStore } from "../src/custody.ts";
+import { memoryDrafts } from "../src/draft-store.ts";
 import { scopeClient, request, clientReplica } from "../src/scope-client.ts";
 import { actVersion } from "../src/scope.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
@@ -57,7 +58,7 @@ test("a failed signer or uncertain custody write keeps one permission and never 
       } },
       member: { service: "https://authorization.test", membership: s.actor.member.membership,
         member: s.actor.member.member, principal: s.actor.principal },
-      store, drafts: { read: async () => null }, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+      store, drafts: memoryDrafts(), observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
     try {
       s.feed.current(s.scope); await client.read(); s.mode("unavailable");
       await request(client, "uncertain", "remark", { on: 0, fields: { text: "kept gesture" } }).catch(() => null);
@@ -98,7 +99,7 @@ test("one unsigned instance batch fills from its real recorded source and signs 
   const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
     member: { service: "https://fill.test", membership: s.actor.member.membership,
       member: s.actor.member.member, principal: s.actor.principal },
-    store, drafts: { read: async () => null }, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+    store, drafts: memoryDrafts(), observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
   try {
     s.feed.current(s.scope); await client.read();
     const open = { kind: "offer", on: null, fields: { intent: 0 }, expected: { intent: s.scope.item(0).revision } };
@@ -157,7 +158,7 @@ test("a pending via selector stops before either store changes, while its record
   const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
     member: { service: "https://via.test", membership: s.actor.member.membership,
       member: s.actor.member.member, principal: s.actor.principal },
-    store, drafts: { read: async () => null }, observe: s.feed.observe, clock: s.clock });
+    store, drafts: memoryDrafts(), observe: s.feed.observe, clock: s.clock });
   try {
     s.feed.current(s.scope); await client.read();
     const open = { kind: "offer", on: null, fields: { intent: 0 }, expected: { intent: s.scope.item(0).revision } };
@@ -188,7 +189,7 @@ test("unsigned retention owns the whole input batch before an authorization read
   const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
     member: { service: "https://batch.test", membership: s.actor.member.membership,
       member: s.actor.member.member, principal: s.actor.principal },
-    store, drafts: { read: async () => null }, observe: s.feed.observe, clock: s.clock });
+    store, drafts: memoryDrafts(), observe: s.feed.observe, clock: s.clock });
   const read = store.authorizations.read.bind(store.authorizations);
   let entered!: () => void, release!: () => void, armed = true;
   const started = new Promise<void>(done => { entered = done; });
@@ -221,7 +222,7 @@ test("64 unsigned positions retain history and the next gesture stops without a 
   const client = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
     member: { service: "https://bound.test", membership: s.actor.member.membership,
       member: s.actor.member.member, principal: s.actor.principal },
-    store, drafts: { read: async () => null }, observe: s.feed.observe, clock: s.clock });
+    store, drafts: memoryDrafts(), observe: s.feed.observe, clock: s.clock });
   try {
     s.feed.current(s.scope); await client.read();
     const input = { key: "bounded", act: { kind: "remark", on: 0, fields: { text: "same content" }, expected: {} } };

@@ -6,6 +6,7 @@ import { scopeScaleFiles } from "./vitest.scale-files.ts";
 export default defineConfig({
   plugins: [cloudflareTest({ main: "./test/worker.ts", wrangler: { configPath: "./wrangler.test.jsonc" } })],
   test: {
+    setupFiles: ["./test/support/native-timeout-crossing.setup.ts"],
     globalSetup: ["./test/support/local-clone-setup.ts", "./test/support/maintained-applications-setup.ts"],
     include: ["test/**/*.test.ts"],
     exclude: ["test/operation-denial.test.ts", "test/lending.test.ts", ...scopeScaleFiles],

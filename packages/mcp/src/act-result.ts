@@ -2,6 +2,7 @@
 import type { Answer, Archived, FactRef, Head, OutboxId } from "@generalbusiness/dap-contract";
 import type { ArchivedSettlement, Phase } from "@generalbusiness/dap-client";
 import { archivedAnswer } from "./errors.ts";
+import type { McpNow } from "./shape.ts";
 
 export type ActResult = {
   answer: Answer["answer"];
@@ -20,6 +21,10 @@ export type ActResult = {
   phase?: Phase;
   effects?: number;
   item?: number;
+  /** A refused act's basis from a fresh read, to pass back with `after`. */
+  now?: McpNow;
+  /** The subject that the fresh read lacks, so there is no `now`. */
+  lacks?: string;
 }
 export interface AnswerContext {
   scope?: string;
@@ -52,11 +57,17 @@ export function projectAnswer(input: { answer: Answer } | { archivedSettlement: 
 }
 
 /** The key map checks presence; the explicit schemas below constrain each advertised shape. */
-type JsonSchema = { type?: string | readonly string[]; enum?: readonly string[]; description?: string; properties?: Record<string, JsonSchema>; required?: readonly string[]; items?: JsonSchema; minimum?: number; maximum?: number; additionalProperties?: boolean };
+type JsonSchema = { type?: string | readonly string[]; enum?: readonly string[]; description?: string; properties?: Record<string, JsonSchema>; required?: readonly string[]; items?: JsonSchema; minimum?: number; maximum?: number; additionalProperties?: boolean | JsonSchema };
 const answers = { accepted: true, archived: true, refused: true, unavailable: true, mismatch: true } satisfies Record<Answer["answer"], true>;
 const phases = { prepared: true, sent: true, unknown: true, accepted: true, archived: true, refused: true, mismatch: true, settled: true } satisfies Record<Phase, true>;
 const integer = { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER } satisfies JsonSchema;
 const head = { type: "object", properties: { seq: integer, hash: { type: "string" } }, required: ["seq", "hash"] } satisfies JsonSchema;
+const now = {
+  type: "object", description: "The basis of this refused request, from a fresh read. To submit it again, call act with after (this request's idempotencyKey), a new idempotencyKey and this object as now, copied unchanged.",
+  properties: { of: { type: "string" }, target: { type: "string" }, kind: { type: "string" }, primary: { type: ["object", "null"], properties: { item: integer, revision: integer }, required: ["item", "revision"] },
+    at: { type: "object", additionalProperties: integer }, head },
+  required: ["of", "target", "kind", "primary", "at", "head"],
+} satisfies JsonSchema;
 const properties = {
   answer: { type: "string", enum: Object.keys(answers), description: "The room's Native decision: accepted, archived, refused, unavailable, or mismatch. A lost reply remains a separate custody finding." },
   sentence: { type: "string" }, next: { type: "string" },
@@ -67,6 +78,7 @@ const properties = {
   retained: { type: "boolean", description: "true when this is a terminal outcome kept under custody, and nothing was sent" },
   archived: { type: "object", properties: { floor: integer, commit: { type: "string" }, through: head }, required: ["floor", "commit", "through"] },
   phase: { type: "string", enum: Object.keys(phases), description: "The state of this client's kept request. Acceptance records the request; it does not prove that the installation workflow finished." }, effects: integer, item: integer,
+  now, lacks: { type: "string", description: "The subject the fresh read could not render, so this result has no now. Send a fresh act." },
 } satisfies Record<keyof ActResult, JsonSchema>;
 type RequiredKeys<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? never : K }[keyof T];
 const required = { answer: true } satisfies Record<RequiredKeys<ActResult>, true>;

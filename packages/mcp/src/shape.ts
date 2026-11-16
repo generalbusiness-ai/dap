@@ -7,9 +7,9 @@
  * scope judges those, and checks every field again with its own bounds.
  */
 
-import type { FactRef, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { isFactRef, isRecord, textDigest } from "@generalbusiness/dap-bytes";
-import { FieldShapeError, shapeFieldsOf, type ShapeFaultCode, type ShapeField, type ShapeFieldType } from "@generalbusiness/dap-client";
+import type { FactRef, FieldValue, Head, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import { isFactRef, isHead, isRecord, textDigest } from "@generalbusiness/dap-bytes";
+import { FieldShapeError, shapeFieldsOf, validKey, type ShapeFaultCode, type ShapeField, type ShapeFieldType } from "@generalbusiness/dap-client";
 import type { ActLike } from "@generalbusiness/dap-client";
 import { expectedKeys } from "@generalbusiness/dap-derive";
 import { clip } from "./errors.ts";
@@ -139,4 +139,94 @@ export function valuePlaces(act: ActLike, fields: Readonly<Record<string, FieldV
     if (type.type === "digest" && isRecord(value) && typeof value["domain"] === "string" && typeof digest === "string") out.push({ name, domain: value["domain"], digest });
   }
   return out;
+}
+
+/**
+ * The basis a refused result showed, to pass back with `after`. `of` is the idempotencyKey of the refused request. `at` holds
+ * exactly the subjects the view bound, by the names `at` takes. The server stores none of it: each result computes it from a
+ * fresh read, and the call that carries it checks its shape and identity before anything is signed.
+ */
+export interface McpNow {
+  of: string;
+  target: string;
+  kind: string;
+  /** Null for an act on no item: an open act, or a comment on none. */
+  primary: { item: number; revision: number } | null;
+  at: Record<string, number>;
+  head: Head;
+}
+
+const NOW_DECLARED = "the now object that the refused result showed, copied unchanged";
+const nonnegative = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+
+/** The closed reader of `now`. An extra or missing member, or a value of another shape, stops the call before anything is signed. */
+export function shapeNow(given: unknown): McpNow {
+  if (!isRecord(given)) throw new Unshaped("now", "is not an object", NOW_DECLARED);
+  const members = ["of", "target", "kind", "primary", "at", "head"];
+  const extra = Object.keys(given).find(name => !members.includes(name));
+  if (extra !== undefined) throw new Unshaped(`now.${clip(extra)}`, "is not a member of now", NOW_DECLARED);
+  for (const name of members) if (!Object.hasOwn(given, name)) throw new Unshaped(`now.${name}`, "is missing", NOW_DECLARED);
+  const { of, target, kind, primary, head } = given as Record<string, unknown>;
+  if (typeof of !== "string" || !validKey(of)) throw new Unshaped("now.of", "is not an idempotencyKey", "the key of the refused request");
+  if (typeof target !== "string") throw new Unshaped("now.target", "is not a scope ID", "the scope of the refused request");
+  if (typeof kind !== "string") throw new Unshaped("now.kind", "is not an act kind", "the kind of the refused request");
+  if (!isHead(head)) throw new Unshaped("now.head", "is not a head: { seq, hash }", NOW_DECLARED);
+  let on: McpNow["primary"] = null;
+  if (primary !== null) {
+    if (!isRecord(primary) || Object.keys(primary).length !== 2 || !nonnegative(primary["item"]) || !nonnegative(primary["revision"])) {
+      throw new Unshaped("now.primary", "is not null or { item, revision }", "the item the act is on and its revision");
+    }
+    on = { item: primary["item"], revision: primary["revision"] };
+  }
+  let at: Record<string, number> | undefined;
+  try { at = shapeAt(given["at"]); }
+  catch (error) { if (error instanceof Unshaped) throw new Unshaped(`now.${error.field}`, error.what, error.declared); throw error; }
+  if (at === undefined) throw new Unshaped("now.at", "is missing", NOW_DECLARED);
+  return { of, target, kind, primary: on, at, head };
+}
+
+/**
+ * The gate of `after` with `now`: the server's step before it builds an envelope. It returns the revisions to sign, or
+ * `undefined` for a call that gives neither. Each fault stops the call with `shape` before `signedIntent`:
+ * one without the other; `at` beside them; `after` equal to this call's own key; a `now` of another request, scope, kind or
+ * item; a name `now.at` binds that the act does not. The scope still judges the revisions: a subject that moved is refused.
+ */
+export function shapeAfter(args: { after: unknown; now: unknown; at: unknown }, call: { key: string; target: string; kind: string; on: number | null; act: Pick<ActLike, "step" | "also"> }): Record<string, number> | undefined {
+  const { after, now } = args;
+  if (after === undefined && now === undefined) return undefined;
+  if (after === undefined) throw new Unshaped("after", "is required with now", "the idempotencyKey of the refused request");
+  if (now === undefined) throw new Unshaped("now", "is required with after", NOW_DECLARED);
+  if (typeof after !== "string" || !validKey(after)) throw new Unshaped("after", "is not an idempotencyKey", "the key of the refused request");
+  if (args.at !== undefined) throw new Unshaped("at", "is not taken with after and now", "omit at: now carries the captured revisions");
+  if (after === call.key) throw new Unshaped("idempotencyKey", "must differ from after", "a new key for this submit; the same key with another meaning conflicts");
+  const read = shapeNow(now);
+  if (read.of !== after) throw new Unshaped("now.of", "is not the request named by after", `the key ${clip(after)}`);
+  if (read.target !== call.target) throw new Unshaped("now.target", "is not this call's target", call.target);
+  if (read.kind !== call.kind) throw new Unshaped("now.kind", "is not this call's kind", call.kind);
+  if ((read.primary === null) !== (call.on === null) || (read.primary !== null && read.primary.item !== call.on)) {
+    throw new Unshaped("now.primary", "does not name the item this call is on", call.on === null ? "null: this act is on no item" : `the item ${call.on}`);
+  }
+  const allowed = new Set(expectedKeys(call.act, Object.entries(call.act.also).filter(([, rule]) => rule["code"] === undefined).map(([name]) => name)));
+  if (Object.keys(read.at).some(name => !allowed.has(name))) {
+    throw new Unshaped("now.at", "names a subject that the act does not bind", [...allowed].sort().join(", ") || "no bound subjects: {}");
+  }
+  if (read.primary !== null && Object.hasOwn(read.at, "on") && read.at["on"] !== read.primary.revision) {
+    throw new Unshaped("now.at.on", "is not the revision of now.primary", String(read.primary.revision));
+  }
+  return read.at;
+}
+
+/**
+ * The `now` of a result, from one fresh read: the expected revisions that `expectedOf` gives (with the final `via` rows
+ * added), the primary's revision and the head of that read. The result carries `now` only when the read holds the revision
+ * of every subject of the act. Otherwise it carries `lacks`, the subject that `lackedSubject` names (the client's rule for
+ * `draftNowOf`): the primary as `on`, or an `also` subject by its name. The primary's own missing revision always says `on`.
+ */
+export function nowOf(input: { of: string; target: string; kind: string; on: number | null; primaryRevision: number | undefined; expected: Record<string, number>; head: Head; lacking?: string | null }): { now: McpNow } | { lacks: string } {
+  if (input.on !== null && input.primaryRevision === undefined) return { lacks: "on" };
+  if (input.lacking !== undefined && input.lacking !== null) return { lacks: input.lacking };
+  const at: Record<string, number> = {};
+  for (const [name, revision] of Object.entries(input.expected)) put(at, name, revision);
+  return { now: { of: input.of, target: input.target, kind: input.kind,
+    primary: input.on === null ? null : { item: input.on, revision: input.primaryRevision! }, at, head: structuredClone(input.head) } };
 }

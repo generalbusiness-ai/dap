@@ -20,14 +20,22 @@
 
 import type { DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Head, Intent, Item, KeyId, RefusalReason, SignedIntent } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { REFUSAL_CLASSES, intentDigest } from "@generalbusiness/dap-bytes";
-import { MemoryState, applyEntry, validateDefinition, type ValidDefinition } from "@generalbusiness/dap-derive";
-import type { DeclaredHandle, ValueOf } from "./declared.ts";
+import { REFUSAL_CLASSES, canonicalize, intentDigest, timeMs } from "@generalbusiness/dap-bytes";
+import { MemoryState, applyEntry, clockOf, membershipOf, validateDefinition, type ValidDefinition } from "@generalbusiness/dap-derive";
+import type { DeclaredHandle, Kind, ValueOf } from "./declared.ts";
 import { LogProtocolError } from "./handle.ts";
 import { meaningOf } from "./custody.ts";
 import type { Observation, ObservationState } from "./observe.ts";
 import { HeldEntries } from "./replica-own.ts";
 import { judgedOn, type Judged, type Judging } from "./replica-judged.ts";
+import { actExplore } from "./act-explore.ts";
+import { missingActInputs } from "./act-input.ts";
+import type { Act, ActRef, Context, Exploration, Lack, PartialAct, UnavailableContext } from "./act-types.ts";
+import { scopeUsesSession } from "./scope-reader.ts";
+import { registerExplore, type DraftExploreResult, type DraftSelection, type ReplicaExploration } from "./replica-explore.ts";
+import { Session } from "./session.ts";
+import { UnavailableActSource } from "./act-symbols.ts";
+import { selectDraftSubjects, type DraftSubjects } from "./draft-selection.ts";
 
 // ---------------------------------------------------------------- the types
 
@@ -77,8 +85,10 @@ export interface SignedEntry {
 /** The observation of the scope's head, as `observeScope` gives it, with the replica's own `emit`. */
 export type Observe = (emit: (state: ObservationState<unknown>) => void) => Observation;
 
-export interface ReplicaOptions {
+export interface ReplicaOptions<D extends DeclaredDefinition = DeclaredDefinition> {
   observe: Observe;
+  /** The one partial-context reader. It acquires no grant or foreign evidence. */
+  exploration?: ReplicaExploration<D>;
 }
 
 /** The meaning of an intent: a digest of its kind, the item that it is on and its fields, which hold the digest of each detached text. */
@@ -100,7 +110,13 @@ export class Replica<D extends DeclaredDefinition> {
   readonly #definition: ValidDefinition | null;
   readonly #held = new HeldEntries(PROPOSED_BOUNDS.entryBytes);
   #state = new MemoryState();
+  /** The revisions after each source entry that `authorizationSource` folded, by the entry's hash.
+   * The answer for an entry never changes, so the key needs no head. A fold again from genesis clears it. */
+  readonly #sources = new Map<Digest, Readonly<Record<number, number>>>();
   readonly #listeners = new Set<Listener<D>>();
+  readonly #exploration: ReplicaExploration<D> | null;
+  /** Actual journal-read and stop transitions only, not view ticks. */
+  #explorationGeneration = 0;
   #observation: Observation | null = null;
   #view: ReplicaView<D>;
 
@@ -116,8 +132,13 @@ export class Replica<D extends DeclaredDefinition> {
   #reading: Promise<boolean> | null = null;
   #again = false;
 
-  constructor(handle: DeclaredHandle<D>, options: ReplicaOptions) {
+  constructor(handle: DeclaredHandle<D>, options: ReplicaOptions<D>) {
     this.#handle = handle;
+    const exploration = options.exploration;
+    this.#exploration = exploration ? { actor: exploration.actor, member: structuredClone(exploration.member),
+      clock: exploration.clock.bind(exploration), ...(exploration.read ? { read: exploration.read.bind(exploration) } : {}),
+      ...(exploration.active ? { active: exploration.active.bind(exploration) } : {}) } : null;
+    if (this.#exploration) registerExplore<D>(this, (key, act) => this.#explore(key, act));
     seams.set(this, { held: this.#held, state: () => this.#state });
     const checked = validateDefinition(handle.definition, PROPOSED_BOUNDS);
     this.#definition = checked.ok && checked.definition.digest === handle.digest ? checked.definition : null;
@@ -180,6 +201,8 @@ export class Replica<D extends DeclaredDefinition> {
     if (this.#stopped || !this.#definition) return null;
     const entry = this.accepted(actor, key);
     if (!entry) return null;
+    const kept = this.#sources.get(entry.fact.hash);
+    if (kept) return { entry: structuredClone(entry), revisions: { ...kept } };
     const state = new MemoryState();
     const complete = this.#held.foldThrough(entry.fact.seq, (held, own) => {
       applyEntry(state, this.#definition!, held.entry, held.hash, { bounds: PROPOSED_BOUNDS, own });
@@ -188,7 +211,9 @@ export class Replica<D extends DeclaredDefinition> {
     const scope = state.scope();
     if (!scope || scope.at.scope !== entry.fact.at.scope || scope.at.genesis !== entry.fact.at.genesis
       || scope.head.seq !== entry.fact.seq || scope.head.hash !== entry.fact.hash) return null;
-    return { entry: structuredClone(entry), revisions: Object.fromEntries(state.all().items.map(item => [item.id, item.revision])) };
+    const revisions: Readonly<Record<number, number>> = Object.fromEntries(state.all().items.map(item => [item.id, item.revision]));
+    this.#sources.set(entry.fact.hash, revisions);
+    return { entry: structuredClone(entry), revisions: { ...revisions } };
   }
 
   /** A refusal of class `protocol` stops the replica. Returns whether it stopped. */
@@ -200,6 +225,89 @@ export class Replica<D extends DeclaredDefinition> {
 
   /** Stop the replica and cancel the observation. */
   close(): void { this.#stop({ by: "close" }); }
+
+  /** The operation stays inside this closure; no caller receives the state or Own. */
+  async #explore<K extends Kind<D>>(key: string, input: PartialAct<D, K>): Promise<DraftExploreResult<D, K>> {
+    const binding = this.#exploration;
+    if (!binding) throw new TypeError("exploration requires its constructor identity binding");
+    // Own input before the reader's first await. It receives a separate copy.
+    const captured = structuredClone(input);
+    const missing = missingActInputs(this.#handle.definition, captured);
+    if (missing.length > 0 || captured.kind === undefined) return { exploration: { is: "incomplete", act: captured, missing }, movement: null };
+    const act = { kind: captured.kind, on: captured.on ?? null, fields: captured.fields ?? {},
+      ...(captured.expected === undefined ? {} : { expected: captured.expected }) } as Act<D, K>;
+    const state = this.#state, scope = state.scope(), generation = this.#explorationGeneration;
+    let reading = binding.clock();
+    const unavailable = (lacks: readonly Lack[]): DraftExploreResult<D, K> => {
+      const context: Context | UnavailableContext = {
+        scope: structuredClone(this.#handle.at), definition: this.#handle.digest,
+        head: scope ? structuredClone(scope.head) : null,
+        actor: binding.actor, assumes: [], standing: null, clock: reading, evidence: [],
+      };
+      return { exploration: { is: "unavailable", act, context, lacks }, movement: null };
+    };
+    const current = (): boolean => {
+      const actual = this.#state.scope(), head = this.#held.head;
+      return this.#definition !== null && this.#definition.digest === this.#handle.digest
+        && !this.#stopped && this.#reading === null
+        && (binding.active?.() ?? true)
+        && this.#status().is === "current" && this.#state === state && this.#explorationGeneration === generation
+        && scope !== null && actual !== null && canonicalize(actual.head) === canonicalize(scope.head)
+        && canonicalize(scope.at) === canonicalize(this.#handle.at)
+        && head !== null && head.seq === scope.head.seq && head.hash === scope.head.hash;
+    };
+    if (!current()) return unavailable(["source"]);
+    if (!binding.read) return unavailable(["authority-unavailable"]);
+    const read = await binding.read({ actor: binding.actor, member: structuredClone(binding.member),
+      scope: structuredClone(this.#handle.at), definition: this.#handle.digest, head: structuredClone(scope!.head),
+      key, act: structuredClone(captured) });
+    reading = binding.clock();
+    if (!current()) return unavailable(["source"]);
+    if (read.is === "unavailable") return unavailable(read.lacks.length ? read.lacks : ["source"]);
+    const session = read.session, claims = session instanceof Session ? session.claims : null;
+    const genesis = this.#held.at(0)?.entry.input;
+    const membership = genesis?.type === "genesis" ? membershipOf(genesis, scope!.at) : null;
+    if (!claims || !membership || claims.key !== binding.actor || claims.member !== binding.member.member
+      || canonicalize(claims.membership) !== canonicalize(binding.member.membership)
+      || canonicalize(membership) !== canonicalize(binding.member.membership)
+      || !scopeUsesSession(this.#handle.scope, session) || session.endedBy(reading)
+      || timeMs(reading) === null) return unavailable(["authority-unavailable"]);
+
+    // A remote request is not a local outside operation. Inspect actual local
+    // operation/record inventory as well as the pinned capability declarations.
+    const snapshot = state.all();
+    if (this.#definition!.declared.capabilities.length > 0 || snapshot.operations.length > 0
+      || (snapshot.records?.length ?? 0) > 0) return unavailable(["source"]);
+    const context = { actor: binding.actor, scope: structuredClone(this.#handle.at),
+      clock: clockOf(state, reading), bounds: PROPOSED_BOUNDS, facts: [], prepared: [],
+      own: this.#held.own, grants: null, membership, owners: null, evidence: [] };
+    this.#held.take();
+    let result: Exploration<D, K>;
+    try { result = actExplore(this.#definition!, state, { key, act: captured, context }); }
+    catch (error) {
+      if (this.#held.take().length > 0) return unavailable(["source"]);
+      throw error;
+    }
+    if (this.#held.take().length > 0) return unavailable(["source"]);
+    if (result.is !== "refused" || result.reason !== "revision-moved") return { exploration: result, movement: null };
+
+    // No await separates the body judgment from these recorded selections.
+    // This is owned return data, not a later Client view or a hidden ref cut.
+    const declared = this.#handle.definition.acts[act.kind]!;
+    let selection: DraftSubjects;
+    try { selection = selectDraftSubjects({ declaration: declared, scope: scope!.at, rows: snapshot.items, values: act }); }
+    catch (error) { if (error instanceof UnavailableActSource) return unavailable(["source"]); throw error; }
+    const reference = (id: number): ActRef | null => {
+      const row = snapshot.items.find(item => item.id === id);
+      return row ? { name: row.id, seen: row.revision, assumes: [] } : null;
+    };
+    const subjects: Readonly<Record<string, DraftSelection>> = Object.fromEntries(selection.names.map((name): [string, DraftSelection] => {
+      const ref = Object.hasOwn(selection.selected, name) ? reference(selection.selected[name]!) : null;
+      return [name, ref ? { is: "present", ref } : { is: "absent" }];
+    }));
+    return { exploration: result, movement: structuredClone({ head: scope!.head,
+      now: selection.on === null ? null : reference(selection.on), subjects }) };
+  }
 
   // ------------------------------------------------------------ reads and the fold
 
@@ -218,6 +326,7 @@ export class Replica<D extends DeclaredDefinition> {
   }
 
   async #readOnce(): Promise<boolean> {
+    this.#explorationGeneration++;
     let cursor = this.#held.size === 0 ? undefined : String(this.#held.size);
     for (;;) {
       let reply: Awaited<ReturnType<DeclaredHandle<D>["scope"]["log"]>>;
@@ -267,6 +376,7 @@ export class Replica<D extends DeclaredDefinition> {
     this.#folding = true;
     this.#state = new MemoryState();
     this.#held.clear();
+    this.#sources.clear();
     this.#again = true;
     this.#publish();
     return false;
@@ -293,6 +403,7 @@ export class Replica<D extends DeclaredDefinition> {
 
   #stop(cause: Stopped): void {
     if (this.#stopped) return;
+    this.#explorationGeneration++;
     this.#stopped = cause;
     this.#feed = false;
     const observation = this.#observation;
@@ -340,6 +451,6 @@ export class Replica<D extends DeclaredDefinition> {
 }
 
 /** The replica of the scope that `handle` checked. It starts its first read at once. */
-export function scopeReplica<const D extends DeclaredDefinition>(handle: DeclaredHandle<D>, options: ReplicaOptions): Replica<D> {
+export function scopeReplica<const D extends DeclaredDefinition>(handle: DeclaredHandle<D>, options: ReplicaOptions<D>): Replica<D> {
   return new Replica(handle, options);
 }

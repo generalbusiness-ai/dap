@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 import type { FactRef, FieldType, ScopeRef } from "@generalbusiness/dap-contract";
 import { scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
-import { effectiveFields, expectedOf, finalStates, viaLeft, type ActLike } from "@generalbusiness/dap-client";
-import { capturedExpected, shapeAt, shapeFields, Unshaped } from "../src/shape.ts";
+import { effectiveFields, expectedOf, finalStates, lackedSubject, viaLeft, type ActLike } from "@generalbusiness/dap-client";
+import { capturedExpected, nowOf, shapeAfter, shapeAt, shapeFields, shapeNow, Unshaped, type McpNow } from "../src/shape.ts";
 
 const scopeOf = (cause: string) => scopeIdOf({ v: 1, kind: "lane", definition: "platform:issue@1", creator: null, cause: textDigest(cause), ordinal: 0 } as never);
 const genesisOf = (n: number) => textDigest(`TEST genesis ${n}`);
@@ -113,4 +113,86 @@ test("MCP field shaping preserves its words, nested paths and explicit value ada
 
   // This call is compiled but not run: MCP must accept the whole Contract union, not a duplicated list of known types.
   void ((type: FieldType) => shapeFields({ ...act, fields: { field: { ...type, required: true } } }, { field: null }, [], here));
+});
+
+// Invariant: `after` with `now` is checked before anything is signed. Each fault is an `Unshaped` naming its field; a
+// call with neither stays a fresh act. `now.at` carries the passed revisions, and only names the act binds.
+describe("after with now", () => {
+  const key = "again";
+  const head = { seq: 9, hash: `sha256:${"b".repeat(64)}` as const };
+  const now: McpNow = { of: "stale", target: here.scope, kind: "fill", primary: { item: 0, revision: 4 }, at: { on: 4, selected: 7 }, head };
+  const call = { key, target: here.scope, kind: "fill", on: 0 as number | null, act: act as Pick<ActLike, "step" | "also"> };
+  const fault = (args: { after: unknown; now: unknown; at: unknown }, field: string, over: Partial<typeof call> = {}): void => {
+    let caught: unknown;
+    try { shapeAfter(args, { ...call, ...over }); } catch (error) { caught = error; }
+    expect(caught, field).toBeInstanceOf(Unshaped);
+    expect((caught as Unshaped).field).toBe(field);
+  };
+
+  test("a call with neither stays a fresh act, and a valid pair returns its at", () => {
+    expect(shapeAfter({ after: undefined, now: undefined, at: undefined }, call)).toBeUndefined();
+    expect(shapeAfter({ after: undefined, now: undefined, at: { on: 1 } }, call)).toBeUndefined();
+    const given = JSON.parse(JSON.stringify(now));
+    const at = shapeAfter({ after: "stale", now: given, at: undefined }, call);
+    given.at.on = 99;
+    expect(at).toEqual({ on: 4, selected: 7 });
+  });
+
+  test("each fault names its field", () => {
+    fault({ after: "stale", now: undefined, at: undefined }, "now");
+    fault({ after: undefined, now, at: undefined }, "after");
+    fault({ after: "", now, at: undefined }, "after");
+    fault({ after: "stale", now, at: { on: 4 } }, "at");
+    fault({ after: key, now: { ...now, of: key }, at: undefined }, "idempotencyKey");
+    fault({ after: "stale", now: { ...now, of: "other" }, at: undefined }, "now.of");
+    fault({ after: "stale", now: { ...now, target: "other" }, at: undefined }, "now.target");
+    fault({ after: "stale", now: { ...now, kind: "other" }, at: undefined }, "now.kind");
+    fault({ after: "stale", now: { ...now, primary: { item: 1, revision: 4 } }, at: undefined }, "now.primary");
+    fault({ after: "stale", now: { ...now, primary: null }, at: undefined }, "now.primary");
+    fault({ after: "stale", now: { ...now, at: { on: 4, ghost: 1 } }, at: undefined }, "now.at");
+    fault({ after: "stale", now: { ...now, at: { on: 5, selected: 7 } }, at: undefined }, "now.at.on");
+    fault({ after: "stale", now: { ...now, at: { on: -1 } }, at: undefined }, "now.at.on");
+    fault({ after: "stale", now: { ...now, extra: 1 }, at: undefined }, "now.extra");
+    fault({ after: "stale", now: { ...now, head: { seq: 1 } }, at: undefined }, "now.head");
+    fault({ after: "stale", now: { ...now, primary: { item: 0 } }, at: undefined }, "now.primary");
+    fault({ after: "stale", now: [], at: undefined }, "now");
+    fault({ after: "stale", now: { of: "stale" }, at: undefined }, "now.target");
+    // An act on no item takes a null primary only.
+    fault({ after: "stale", now, at: undefined }, "now.primary", { on: null });
+  });
+
+  test("now is built from one fresh read and lacks only the primary", () => {
+    const built = nowOf({ of: "stale", target: here.scope, kind: "fill", on: 0, primaryRevision: 4, expected: { on: 4, selected: 7 }, head });
+    expect(built).toEqual({ now });
+    expect(nowOf({ of: "k", target: here.scope, kind: "fill", on: 0, primaryRevision: undefined, expected: {}, head })).toEqual({ lacks: "on" });
+    expect(nowOf({ of: "k", target: here.scope, kind: "open", on: null, primaryRevision: undefined, expected: { only: 2 }, head }))
+      .toEqual({ now: { of: "k", target: here.scope, kind: "open", primary: null, at: { only: 2 }, head } });
+    const open = { step: "open", also: { only: { item: "jar", one: true } } } as unknown as ActLike;
+    expect(shapeAfter({ after: "stale", now: { ...now, kind: "open", primary: null, at: { only: 2 } }, at: undefined }, { ...call, kind: "open", on: null, act: open }))
+      .toEqual({ only: 2 });
+    expect(shapeNow(JSON.parse(JSON.stringify(now)))).toEqual(now);
+  });
+
+  // Ruling 09041476 item 5b: one rule for both adapters. A result carries `now` only when the read holds every subject's row.
+  test("lacks names an also subject that the read does not hold, by the client's rule", () => {
+    const shelf = { id: 0, type: "shelf", revision: 4, refs: {} }, jar = { id: 2, type: "jar", revision: 7, refs: {} };
+    type Held = Parameters<typeof lackedSubject>[1];
+    const named = effectiveFields(act, { jarFact: fact(here, 2) } as never, here);
+    // The field names jar 2 and the read holds it: no subject lacks, and `now` has both revisions.
+    expect(lackedSubject(act, [shelf, jar] as Held, 0, named)).toBeNull();
+    // The read holds the primary but not jar 2: `selected` lacks, where `on` alone would have said nothing.
+    expect(lackedSubject(act, [shelf] as Held, 0, named)).toBe("selected");
+    const expected = expectedOf(act, [shelf] as Held, 0, named);
+    expect(nowOf({ of: "k", target: here.scope, kind: "fill", on: 0, primaryRevision: 4, expected, head, lacking: "selected" })).toEqual({ lacks: "selected" });
+    // The primary's own row missing says `on` first.
+    expect(lackedSubject(act, [jar] as Held, 0, named)).toBe("on");
+    // A field that names no item selects nothing: the subject is absent, not lacking.
+    expect(lackedSubject(act, [shelf] as Held, 0, effectiveFields(act, {} as never, here))).toBeNull();
+    // A via subject whose slot names a row the read does not hold lacks, and a via subject with an empty slot is absent.
+    const viaAct = { step: "transition", on: "finding", fields: {}, also: { version: { item: "manifest", via: { of: "on", slot: "version" } } } } as unknown as ActLike;
+    const finding = { id: 9, type: "finding", revision: 1, refs: { version: { at: {}, seq: 4, hash: "h" } } };
+    expect(lackedSubject(viaAct, [finding] as unknown as Held, 9, {})).toBe("version");
+    expect(lackedSubject(viaAct, [finding, { id: 4, type: "manifest", revision: 2, refs: {} }] as unknown as Held, 9, {})).toBeNull();
+    expect(lackedSubject(viaAct, [{ ...finding, refs: {} }] as unknown as Held, 9, {})).toBeNull();
+  });
 });

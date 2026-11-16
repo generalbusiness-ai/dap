@@ -519,3 +519,56 @@ test("a checked source prefix exposes only successfully applied earlier rows and
     expect(held.foldThrough(s.head.seq, () => { expect.fail("a lacking prefix supplies no source evidence"); })).toBe(false);
   } finally { replica.close(); }
 });
+
+describe("the revisions after a source entry (E4-C, ruling 01c542cc)", () => {
+  const random = (seed: number) => () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+
+  test("for generated journals, the kept answer for each source entry equals a fresh fold", async () => {
+    for (let seed = 1; seed <= 24; seed++) {
+      const next = random(seed), s = laneScope(), sources: { who: Actor; key: string }[] = [{ who: rita, key: "k0" }, { who: una, key: "k1" }];
+      const act = () => {
+        const who = next() < 0.5 ? rita : una, key = `g${seed}-${sources.length}`;
+        s.did(who, "remark", { on: 0, fields: { text: `t${sources.length}` }, idempotencyKey: key });
+        sources.push({ who, key });
+      };
+      for (let i = Math.floor(next() * 6); i > 0; i--) act();
+      const { replica, feed } = await started(s);
+      const before = sources.map(({ who, key }) => replica.authorizationSource(who.key, key)!.revisions);
+      for (let i = 1 + Math.floor(next() * 6); i > 0; i--) act();
+      feed.current(s);
+      await replica.read();
+      const fresh = (await started(s)).replica;
+      for (const [index, { who, key }] of sources.entries()) {
+        const kept = replica.authorizationSource(who.key, key)!, folded = fresh.authorizationSource(who.key, key)!;
+        expect(kept).toEqual(folded);
+        if (index < before.length) expect(kept.revisions).toEqual(before[index]);
+      }
+      replica.close(); fresh.close();
+    }
+  });
+
+  test("repeated calls for one source entry fold one time, and a fold again from genesis clears the map", async () => {
+    const s = laneScope();
+    const { replica, feed, serving } = await started(s);
+    const folds = vi.spyOn(HeldEntries.prototype, "foldThrough");
+    const first = replica.authorizationSource(una.key, "k1")!;
+    (first.revisions as Record<number, number>)[0] = -1; // a caller's copy; the kept answer does not change
+    expect(replica.authorizationSource(una.key, "k1")!.revisions).not.toEqual(first.revisions);
+    replica.authorizationSource(una.key, "k1");
+    expect(folds).toHaveBeenCalledTimes(1);
+    s.did(una, "remark", { on: 0, fields: { text: "next" } });
+    serving.replace.set(s.head.seq, { ...s.last, prev: s.entries[0]!.hash } as Entry);
+    feed.current(s);
+    await replica.read();
+    expect(replica.view.state.is).toBe("current");
+    replica.authorizationSource(una.key, "k1");
+    expect(folds).toHaveBeenCalledTimes(2);
+    folds.mockRestore();
+    replica.close();
+  });
+});

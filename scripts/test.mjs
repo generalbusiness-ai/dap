@@ -49,6 +49,7 @@ export const nodeFiles = [
   'scripts/test-phases.test.mjs',
   'scripts/scale-selection.test.mjs',
   'scripts/test-selection.test.mjs',
+  'scripts/native-timeout-crossing.test.mjs',
 ];
 
 // Tracked test files that no gate step selects. scripts/test-selection.test.mjs
