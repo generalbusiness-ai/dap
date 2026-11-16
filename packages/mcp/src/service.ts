@@ -28,13 +28,13 @@ import { Custody, CustodyError, Lost, TERMINAL, identityId, meaningOf, validKey,
 import { StoreFormatError, effectiveFields, expectedOf, finalStates, viaLeft } from "@generalbusiness/dap-client";
 import { describeAct } from "./describe.ts";
 import { grantAction, onOf, type ActLike, type DefinitionLike } from "@generalbusiness/dap-client";
-import { AT_INPUT, schemaOf } from "./input-schema.ts";
+import { AFTER_INPUT, AFTER_WITH_NOW, AT_INPUT, NOW_INPUT, schemaOf } from "./input-schema.ts";
 import { answered, archivedAnswer, clip, earlierSaid, finding, type Earlier, type Finding, type Said } from "./errors.ts";
 import { Kept, definitionOf, readInventory, readPartitionIndexes, standingIn, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
 import { KIB, bytesOf, cursorOf, fromCursor, pageBy, sliceText } from "./paging.ts";
 import { ReadSessions, Reads, type AbsenceRecovery } from "@generalbusiness/dap-client";
 import { Recent } from "./recent.ts";
-import { Unshaped, capturedExpected, needsOn, shapeAt, shapeFields, shapePresented, valuePlaces } from "./shape.ts";
+import { Unshaped, capturedExpected, needsOn, nowOf, shapeAfter, shapeAt, shapeFields, shapePresented, valuePlaces, type McpNow } from "./shape.ts";
 import { WORDS, type Words } from "./words.ts";
 import { custodyMetrics, McpMetrics, observedFetch, type McpMetricOptions } from "./metrics.ts";
 import { ViewResources, type PresentationPackage } from "./views/resources.ts";
@@ -144,7 +144,7 @@ interface Snapshot {
 
 type Preparing = { resource: unknown; capability: string; step: string };
 type PreparedStep = { step: { resource: string; capability: string; step: string; phase: import("@generalbusiness/dap-client").Step["phase"]; answer: ActResult | null }; act: { phase: import("@generalbusiness/dap-client").Phase; intent: Digest }; sentence: string; next: string };
-type CustodyReport = { answer: Answer["answer"] | "not-found" | "unknown" | "settled"; sentence: string; next: string; phase?: import("@generalbusiness/dap-client").Phase; reason?: string; name?: string; checkAfter?: string; fact?: Receipt["fact"] };
+type CustodyReport = { answer: Answer["answer"] | "not-found" | "unknown" | "settled"; sentence: string; next: string; phase?: import("@generalbusiness/dap-client").Phase; reason?: string; name?: string; checkAfter?: string; fact?: Receipt["fact"]; now?: McpNow; lacks?: string };
 type Args = Record<string, unknown>;
 type Copies = ReturnType<typeof originalsAt>;
 type SentBefore = { earlier: boolean; stepped: boolean };
@@ -777,13 +777,22 @@ export class McpService {
     const valuesGiven = Array.isArray(args["values"]) ? args["values"].filter((v): v is string => typeof v === "string") : [];
     const presentedGiven = isRecord(args["presented"]) ? args["presented"] : undefined;
     let at: Record<string, number> | undefined;
-    try { at = shapeAt(args["at"]); }
+    // `after` with `now` is the submit of a returned request: its checks run here, before any envelope is built or signed.
+    // A bare act stays a fresh act with its own key and keeps its read-current behaviour.
+    try { at = shapeAfter({ after: args["after"], now: args["now"], at: args["at"] }, { key: key as string, target: scope, kind, on: on as number | null, act }) ?? shapeAt(args["at"]); }
     catch (error) {
       if (error instanceof Unshaped) return failed({ error: "shape", field: error.field, what: error.what, declared: error.declared });
       throw error;
     }
     const meaning = meaningOf({ kind, on, fields: fieldsGiven, texts: textsGiven.map(textDigest).sort(), values: valuesGiven.map((v) => digestBytes(utf8(v))).sort(), presented: presentedGiven ?? {}, ...(at === undefined ? {} : { at }) });
     const identity: Identity = { service: this.#service, membership, signer: this.#port.signer.key, target: summary.scope, key: key as string };
+    if (args["after"] !== undefined) {
+      // The key must name a request of this identity that the scope refused, for this kind.
+      const prior = await this.custody.find({ ...identity, key: args["after"] as string });
+      if (prior === null || prior.phase !== "refused" || prior.envelope.signed.intent.kind !== kind) {
+        return failed({ error: "shape", field: "after", what: "names no refused request of yours for this scope and kind", declared: "the idempotencyKey of a request that the scope refused" });
+      }
+    }
     const items = summary.items;
     const build = async (): Promise<{ binding: CustodyRecord["binding"]; envelope: Envelope }> => {
       let shaped: { fields: Record<string, FieldValue>; texts: string[] };
@@ -844,9 +853,35 @@ export class McpService {
       if (isPlatformDefinition(summary.definition) && platform(summary.definition)?.data.name === "platform:membership") this.#reads.forget(summary.scope.scope);
       void this.check();
     }
-    const result = ok(projectAnswer({ answer: kept.answer }, { scope, kind, tool, retained: kept.retained, said, phase: kept.record.phase }));
+    // Every refused result carries the basis to answer with `after`, from a fresh read. The server keeps none of it.
+    const basis = kept.answer.answer === "refused" ? await this.#nowFor(s, scope, membership, kept.record) : {};
+    const result = ok({ ...projectAnswer({ answer: kept.answer }, { scope, kind, tool, retained: kept.retained, said, phase: kept.record.phase }), ...basis });
     if (kept.answer.answer === "accepted") this.#readReceipts.set(result, kept.answer.receipt);
     return this.#withSigner(result, kept.record, s);
+  }
+
+  /**
+   * The `now` of a refused act request, from one fresh read: the revisions `expectedOf` gives over the live items and the final
+   * rows a `via` names, the primary's revision and that read's head. It signs nothing and stores nothing. A read that fails
+   * gives no `now`, and the refusal stands as it is: the model sends a fresh act. An act on an item the read lacks says `lacks: "on"`.
+   */
+  async #nowFor(s: Snapshot, scope: ScopeId, membership: ScopeRef | null, record: CustodyRecord): Promise<{ now: McpNow } | { lacks: string } | Record<string, never>> {
+    const intent = record.envelope.signed.intent;
+    if (record.standalone || record.envelope.creation !== undefined || intent.to === null) return {};
+    try {
+      const { summary, at } = await this.#summary(scope, membership);
+      const definition = await this.#definition(s, summary.definition, scope, membership);
+      const act = Object.hasOwn(definition.acts, intent.kind) && intent.kind !== definition.genesis ? definition.acts[intent.kind] : undefined;
+      if (!act) return {};
+      const effective = effectiveFields(act, intent.fields, summary.scope);
+      const known = [...summary.items, ...await this.#viaFinal(definition, act, summary.items, intent.on, effective, summary.scope, membership)];
+      return nowOf({ of: intent.idempotencyKey, target: scope, kind: intent.kind, on: intent.on,
+        primaryRevision: intent.on === null ? undefined : summary.items.find(item => item.id === intent.on)?.revision,
+        expected: expectedOf(act, known, intent.on, effective), head: at.at });
+    } catch (error) {
+      if (error instanceof Stop) return {};
+      throw error;
+    }
   }
 
   /**
@@ -1023,8 +1058,8 @@ export class McpService {
       tool("actions", "The acts of one scope, as act tools would describe them: each kind with its derived description, input schema, binding and the definition digest to give to act. For a host that lists few tools.",
         { scope: scopeArg, cursor: { type: "string" } }, ["scope"], READ, (a) => this.#actions(a)),
       tool("act", "Signs one act of a scope by its native kind, under the same custody and binding checks as an act tool. digest: the definition digest actions gave; fields as actions describes; idempotencyKey required.",
-        { target: scopeArg, kind: { type: "string" }, digest: { type: "string" }, on: { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER }, at: AT_INPUT, fields: { type: "object" }, texts: { type: "array", items: { type: "string" } }, presented: { type: "object" }, values: { type: "array", items: { type: "string" } }, idempotencyKey: keyArg, resubmit: { type: "boolean" } },
-        ["target", "kind", "digest", "idempotencyKey"], WRITE, (a, dispatch) => (typeof a["kind"] === "string" ? this.#perform(null, a, a["kind"], undefined, undefined, undefined, dispatch) : Promise.resolve(failed({ error: "shape", field: "kind", what: "is missing", declared: "a native act kind" }))), ACT_OUTPUT),
+        { target: scopeArg, kind: { type: "string" }, digest: { type: "string" }, on: { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER }, at: AT_INPUT, after: AFTER_INPUT, now: NOW_INPUT, fields: { type: "object" }, texts: { type: "array", items: { type: "string" } }, presented: { type: "object" }, values: { type: "array", items: { type: "string" } }, idempotencyKey: keyArg, resubmit: { type: "boolean" } },
+        ["target", "kind", "digest", "idempotencyKey"], WRITE, (a, dispatch) => (typeof a["kind"] === "string" ? this.#perform(null, a, a["kind"], undefined, undefined, undefined, dispatch) : Promise.resolve(failed({ error: "shape", field: "kind", what: "is missing", declared: "a native act kind" }))), ACT_OUTPUT, AFTER_WITH_NOW),
     ]);
   }
 
@@ -1358,12 +1393,13 @@ export class McpService {
     const unknownNext = !card ? "Call the same tool again with the same idempotencyKey: it resends the same envelope."
       : expired ? "The scope gave no answer. Check the original request again." : `Check the original request again after ${timeOf(expiry)}. The scope then answers for good.`;
     const refusal = card && last?.answer?.answer === "refused" ? { reason: last.answer.reason, ...(last.answer.name ? { name: last.answer.name } : {}) } : {};
+    const basis = answer === "refused" && scope !== null && !record.standalone ? await this.#nowFor(s, scope, membership, record) : {};
     const result = ok({ answer, phase: record.phase, sentence, next: recoveryWords?.next ?? (answer === "unknown" ? unknownNext : "Nothing more is needed."), ...refusal,
       ...(card && answer === "unknown" && !expired ? { checkAfter: timeOf(expiry) } : {}),
       ...(archived ? { ...archivedAnswer(archived.archived, archived.fact), archived: archived.archived, ...(archived.fact ? { fact: archived.fact } : {}) } : {}),
       ...(receipt ? { fact: receipt.fact, outboxIds: receipt.sends } : {}), outcomes: record.count, attempt: record.attempt,
       last: last ? { at: last.at, ...(last.archivedSettlement ? projectAnswer({ archivedSettlement: last.archivedSettlement }) : projectAnswer({ answer: last.answer })) } : null,
-      steps, ...(nextStep !== null ? { cursor: cursorOf({ i: nextStep }), more: `Steps ${fromStep + 1} to ${nextStep} of ${allSteps.length}; call settle with cursor for the rest.` } : {}) });
+      steps, ...(nextStep !== null ? { cursor: cursorOf({ i: nextStep }), more: `Steps ${fromStep + 1} to ${nextStep} of ${allSteps.length}; call settle with cursor for the rest.` } : {}), ...basis });
     if (receipt) this.#readReceipts.set(result, receipt);
     return this.#withSigner(result, record, s);
   }

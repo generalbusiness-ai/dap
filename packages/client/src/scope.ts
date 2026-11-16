@@ -21,7 +21,11 @@ export function judged<D extends DeclaredDefinition>(replica: Replica<D>, signed
 }
 
 export { scopeClient } from "./scope-client.ts";
-export type { ScopeClient, ClientOptions, ClientView, ClientRow, DraftRead, PresentRequest, RequestView, ScopeMember } from "./scope-client.ts";
+export type { ScopeClient, ClientOptions, ClientView, ClientRow, DraftCall, DraftStop, PresentRequest, RequestView, ScopeMember } from "./scope-client.ts";
+export type { DraftPort } from "./draft-store.ts";
+export type { DraftNow, DraftNowView } from "./draft-now.ts";
+export type { ClearField, DraftIndex, EditableValues, EditPatch, Slot, SlotInput } from "./draft-slot.ts";
+export type { DraftListView, DraftRequestListEntry, DraftViewKinds, HeldStoredIntention } from "./draft-project-types.ts";
 export { requestStatus } from "./request-status.ts";
 export type { RequestStatus, RequestStatusAt, Why } from "./request-status.ts";
 export type { ClientClock } from "./request-schedule.ts";

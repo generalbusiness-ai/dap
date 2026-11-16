@@ -71,19 +71,21 @@
  */
 
 import type { Answer, Beside, DeclaredDefinition, Digest, FactRef, Head, KeyId, PlatformDefinition, Receipt, RefusalReason, ScopeRef, Settlement, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
-import { REFUSAL_CLASSES, canonicalize, digestBytes, intentDigest, isDefinitionName, isDigest, isFactRef, isHead, isKeyId, isReceipt, isRecord, isScopeRef, isSignedIntentShape, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { REFUSAL_CLASSES, canonicalize, digestBytes, intentDigest, isDefinitionName, isDigest, isFactRef, isHead, isReceipt, isRecord, isScopeRef, isSignedIntentShape, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { ANSWERS } from "./answers.ts";
 import { sendableAt } from "./originals.ts";
 import { StoreFormatError } from "./store-format-error.ts";
 import { authorizationBuildFence, memoryAuthorizations, type AuthorizationPort, type CustodyBuildFence } from "./authorization-store.ts";
 import type { AuthorizationPosition, SigningAuthorization } from "./authorization.ts";
+import { KEY_BYTES, validKey, isCustodyIdentity } from "./custody-identity.ts";
+import { deliveryOccurrenceOf } from "./custody-occurrence.ts";
+export { KEY_BYTES, validKey };
 
 export const UNRESOLVED_MOST = 256;
 export const OUTCOMES_INLINE = 64;
 /** The most canonical bytes the inline outcomes hold before the oldest spill to the segment (the hosted design, section 3.6). */
 export const OUTCOMES_INLINE_BYTES = 256 * 1024;
 export const RECORD_BYTES = 2 * 1024 * 1024;
-export const KEY_BYTES = 128;
 /** The most outcomes the search for a record's decisive outcome reads from its segment at once. */
 export const DECIDED_SLICE = 64;
 /** The most envelopes one record holds: the latest signing's, and each earlier signing's until it is closed. */
@@ -277,9 +279,6 @@ export class CustodyError extends Error {
 /** No answer could be read for a sending, so its outcome is unknown. The record says `unknown`. */
 export class Lost extends Error {}
 
-const keyBytes = (key: unknown): boolean => typeof key === "string" && utf8(key).length >= 1 && utf8(key).length <= KEY_BYTES;
-export const validKey = keyBytes;
-
 /** Admit store-owned structure, not authority. Receipt and signature proof still belongs to the caller's trusted ports. */
 export function readStoredOutcome(value: unknown): StoredOutcome {
   const natural = (n: unknown): n is number => Number.isSafeInteger(n) && !Object.is(n, -0) && (n as number) >= 0;
@@ -304,9 +303,7 @@ export function readStoredCustodyRecord(value: unknown): StoredCustodyRecord {
   const envelope = (v: unknown): v is Envelope => isRecord(v) && isRecord(v["beside"]) && isSignedIntentShape(v["signed"]);
   if (!isRecord(value) || (value["v"] !== 1 && value["v"] !== 2)) return bad();
   const identity = value["identity"], binding = value["binding"];
-  if (!isRecord(identity) || typeof identity["service"] !== "string" || !isKeyId(identity["signer"]) || !validKey(identity["key"]) ||
-    (identity["membership"] !== null && !isScopeRef(identity["membership"])) ||
-    !(isScopeRef(identity["target"]) || (isRecord(identity["target"]) && isDefinitionName(identity["target"]["create"]))) ||
+  if (!isCustodyIdentity(identity) ||
     !isRecord(binding) || typeof binding["definition"] !== "string" || typeof binding["kind"] !== "string" || !isDefinitionName(binding["pinned"]) ||
     (binding["declaration"] !== null && !isDigest(binding["declaration"])) || !isDigest(value["meaning"]) || !envelope(value["envelope"]) ||
     !["prepared", "sent", "unknown", "accepted", "archived", "refused", "mismatch", "settled"].includes(value["phase"] as string) ||
@@ -716,10 +713,7 @@ export class Custody {
           await this.#write(id, record, true, previous);
         }
       }
-      const signing = record.signings.length - 1;
-      const occurrence: DeliveryOccurrence = structuredClone({ identity: record.identity, attempt: record.attempt,
-        signing, intent: record.signings[signing]!.intent,
-        ...(record.signings[signing]!.authorization ? { authorization: record.signings[signing]!.authorization } : {}) });
+      const occurrence = deliveryOccurrenceOf(record), signing = occurrence.signing;
       let answer: Answer;
       try {
         answer = await this.#dispatch(() => deliver(record.envelope, occurrence));
