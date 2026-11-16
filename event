@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:df967603642a64ff22090c0f7848649eaa916456","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-16-c4-general-now.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dff10271029ff676ef5c245f774e7dcbeaebaced","text":"Merge retired a covered predecessor; the successor is at packages/client/test/c4-drafts.test.ts."}
