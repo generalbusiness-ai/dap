@@ -3,7 +3,8 @@
  * Worker. Generated CA/key/session secret and CLI custody are TEST-only,
  * owner-only scratch data. No global trust change or deployed proxy claim.
  * Run only after source review, with an explicit root-supplied CELLD_BIN.
- * Output is closed public metadata; child logs remain private, never echoed. */
+ * Output is closed public metadata except approved backend-only bounded tails;
+ * full child logs remain private. */
 import assert from "node:assert/strict";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -17,12 +18,112 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
-import { celldSmokeDetail, celldSmokeOperation, contextForCelldSmoke, runCelldSmoke } from "./celld-smoke.mjs";
+import { celldSmokeDetail, celldSmokeOperation, celldSmokeStatusClass, celldSmokeTransport, contextForCelldSmoke, runCelldSmoke } from "./celld-smoke.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const failureMetadata = { stage: "preflight", scratch: null, signal: null };
+const failureMetadata = { stage: "preflight", signal: null, exchange: null };
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
 const MAX_REPLY = 4 * 1024 * 1024;
+export const BACKEND_TAIL_LINES = 12, BACKEND_TAIL_LINE_BYTES = 512;
+/** Last twelve lines, at most 512 UTF-8 bytes of text each. Full raw output stays private. */
+export function backendTail() {
+  const lines = []; let pending = Buffer.alloc(0), truncated = false, complete = false;
+  const line = () => {
+    let text = "", bytes = 0, cut = truncated;
+    for (const character of pending.toString("utf8")) {
+      const width = Buffer.byteLength(character);
+      if (bytes + width > BACKEND_TAIL_LINE_BYTES) { cut = true; break; }
+      text += character; bytes += width;
+    }
+    return { text, truncated: cut };
+  };
+  return {
+    add(chunk) {
+      let from = 0;
+      while (from < chunk.length) {
+        const newline = chunk.indexOf(10, from), end = newline < 0 ? chunk.length : newline;
+        const room = BACKEND_TAIL_LINE_BYTES - pending.length, part = chunk.subarray(from, end);
+        pending = Buffer.concat([pending, part.subarray(0, room)]);
+        truncated ||= part.length > room;
+        if (newline < 0) break;
+        lines.push(line()); if (lines.length > BACKEND_TAIL_LINES) lines.shift();
+        pending = Buffer.alloc(0); truncated = false; from = newline + 1;
+      }
+    },
+    end: () => { complete = true; },
+    snapshot() { return { lineLimit: BACKEND_TAIL_LINES, lineByteLimit: BACKEND_TAIL_LINE_BYTES, complete,
+      lines: [...lines, ...(pending.length || truncated ? [line()] : [])].slice(-BACKEND_TAIL_LINES) }; },
+  };
+}
+/** This explicit backend-only exception quotes bounded output and infers nothing from it. */
+export function backendOutputFor(owner, output) {
+  if (owner !== "celldbackend") return null;
+  return { sentence: "backend, cause not observed", stdout: output.stdout.snapshot(), stderr: output.stderr.snapshot() };
+}
+const observationFields = {
+  clientPhase: ["not-started", "request-construction", "request-buffer", "tls-request-construction", "tls-await-headers", "response-headers", "response-body-adapter", "response-construction", "response-stream", "response-complete"],
+  firstFailure: ["none", "client-request", "client-tls-request", "client-tls-exchange", "client-response-headers", "client-response-body-adapter", "client-response-construction", "client-response-stream", "proxy-admission", "proxy-request-construction", "proxy-request-stream", "proxy-response-headers", "upstream-request", "upstream-response-stream", "downstream-response", "relay-unclassified"],
+  errorClass: ["none", "connection-refused", "connection-reset", "broken-pipe", "timeout", "tls-certificate", "tls-protocol", "http-parser", "type", "range", "abort", "other-error", "non-error"],
+  proxyDecision: ["not-seen", "forwarded", "interrupted", "request-budget", "invalid-request-target"],
+  upstreamPhase: ["not-started", "request-created", "request-ended", "response-headers", "response-complete"],
+  upstreamEnd: ["none", "error", "aborted", "complete"], downstreamEnd: ["none", "error", "closed-before-finish", "finished"],
+  clientBodyEnd: ["not-started", "complete", "error", "cancelled"], clientStop: ["none", "deadline", "reply-byte-bound", "owned-interruption", "unclassified-abort"],
+  upstreamStatus: ["none", "1xx", "2xx", "3xx", "4xx", "5xx", "invalid"], clientStatus: ["none", "1xx", "2xx", "3xx", "4xx", "5xx", "invalid"],
+  startupHealth: ["not-observed", "http-200", "http-503"], startupSessions: ["not-observed", "ok", "unavailable"],
+  proxy: ["not-started", "listening", "closed"], worker: ["not-started", "running", "exited"],
+};
+const errorCodes = new Map([
+  ["ECONNREFUSED", "connection-refused"], ["ECONNRESET", "connection-reset"], ["EPIPE", "broken-pipe"], ["ETIMEDOUT", "timeout"],
+  ...["ERR_TLS_CERT_ALTNAME_INVALID", "DEPTH_ZERO_SELF_SIGNED_CERT", "SELF_SIGNED_CERT_IN_CHAIN", "UNABLE_TO_VERIFY_LEAF_SIGNATURE", "CERT_HAS_EXPIRED"].map(code => [code, "tls-certificate"]),
+  ["ERR_SSL_WRONG_VERSION_NUMBER", "tls-protocol"], ...["HPE_INVALID_CONSTANT", "HPE_INVALID_STATUS", "HPE_INVALID_HEADER_TOKEN", "HPE_INVALID_CONTENT_LENGTH"].map(code => [code, "http-parser"]),
+]);
+function errorClass(error) {
+  try {
+    if (error === null) return "none";
+    return errorCodes.get(error?.code) ?? (error instanceof TypeError ? "type" : error instanceof RangeError ? "range"
+      : error instanceof Error ? "other-error" : "non-error");
+  } catch { return "non-error"; }
+}
+
+/** Closed observations only. No error object, response body or request identifier is retained. */
+export function proxyFailureObservation() {
+  const state = Object.fromEntries(Object.entries(observationFields).map(([key, values]) => [key, values[0]]));
+  let armed = false;
+  const note = (key, value) => {
+    if (!Object.hasOwn(observationFields, key)) return;
+    const values = observationFields[key];
+    if (values?.includes(value) && (!(key === "clientPhase" || key === "upstreamPhase") || values.indexOf(value) >= values.indexOf(state[key]))) state[key] = value;
+  };
+  const fault = (site, error = null) => {
+    if (armed && state.firstFailure === "none" && observationFields.firstFailure.includes(site)) {
+      state.firstFailure = site; state.errorClass = errorClass(error);
+    }
+  };
+  return {
+    arm: () => { if (armed) return false; armed = true; return true; }, active: () => armed, note, fault,
+    snapshot(proxy, worker, transport) {
+      note("proxy", proxy); note("worker", worker);
+      if (transport?.kind === "deadline") note("clientStop", "deadline");
+      if (transport?.kind === "reply-too-large") note("clientStop", "reply-byte-bound");
+      let faultBoundary = state.clientPhase === "not-started" ? "client-adapter" : state.proxyDecision === "not-seen" ? "tls-to-proxy"
+        : ["request-ended", "response-headers"].includes(state.upstreamPhase) ? "backend-endpoint" : "proxy-forwarding";
+      if (state.clientStop === "owned-interruption") faultBoundary = "owned-interruption";
+      else if (["interrupted", "request-budget", "invalid-request-target"].includes(state.proxyDecision)) faultBoundary = "proxy-admission";
+      else if (["client-request", "client-tls-request", "client-response-headers", "client-response-body-adapter", "client-response-construction", "client-response-stream"].includes(state.firstFailure)) faultBoundary = "client-adapter";
+      else if (state.firstFailure === "client-tls-exchange" && state.proxyDecision === "not-seen") faultBoundary = "tls-to-proxy";
+      else if (transport?.kind === "reply-too-large" && state.proxyDecision === "forwarded" && state.upstreamStatus !== "none") faultBoundary = "backend-reply";
+      else if (state.clientStop === "deadline" && state.upstreamPhase === "request-ended") faultBoundary = "backend-endpoint";
+      else if (["upstream-request", "upstream-response-stream"].includes(state.firstFailure)) faultBoundary = "backend-endpoint";
+      else if (["proxy-request-construction", "proxy-request-stream", "proxy-response-headers", "downstream-response"].includes(state.firstFailure)) faultBoundary = "proxy-forwarding";
+      else if (state.firstFailure === "relay-unclassified") faultBoundary = "proxy-forwarding";
+      else if (state.upstreamEnd === "complete" && state.downstreamEnd === "finished" && ["reply-not-answer", "reply-too-large"].includes(transport?.kind)) faultBoundary = "backend-reply";
+      else if (state.clientBodyEnd === "complete" && transport?.kind === "unclassified") faultBoundary = "cli-answer-validation";
+      const owner = ["client-adapter", "cli-answer-validation"].includes(faultBoundary) ? "clientadapter"
+        : ["backend-endpoint", "backend-reply"].includes(faultBoundary) ? "celldbackend" : "proxy";
+      return { ...state, faultBoundary, owner };
+    },
+  };
+}
 const must = (condition, label) => assert.ok(condition, label);
 function celldVersionOf(pin) {
   const match = typeof pin === "string" ? /^(v[0-9]+\.[0-9]+\.[0-9]+)\n$/.exec(pin) : null;
@@ -74,7 +175,8 @@ async function run() {
   const versionPin = await readFile(join(ROOT, "apps/room/celld/celld.version"), "utf8");
   const expectedVersion = celldVersionOf(versionPin);
   const directory = await mkdtemp(join(tmpdir(), "artroom-celld-proxy-"));
-  failureMetadata.scratch = directory;
+  const observation = proxyFailureObservation();
+  const note = (key, value) => { if (observation.active()) observation.note(key, value); };
   await chmod(directory, 0o700); await mkdir(join(directory, "home"), { mode: 0o700 });
   const exchanges = new Set(), children = new Set(), childClosures = new Map();
   let interrupted = false, forceTimer = null, networkClosed = true;
@@ -89,6 +191,7 @@ async function run() {
   const abandon = signal => {
     if (interrupted) return;
     interrupted = true; failureMetadata.signal = signal;
+    note("clientStop", "owned-interruption");
     for (const exchange of exchanges) exchange.destroy();
     for (const child of children) child.kill("SIGTERM");
     forceTimer = setTimeout(() => { for (const child of children) child.kill("SIGKILL"); }, 5000);
@@ -118,48 +221,105 @@ async function run() {
   const sessionSecret = randomBytes(32).toString("base64url");
   await writeFile(join(directory, ".dev.vars"), `SESSION_SECRET=${sessionSecret}\n`, { mode: 0o600, flag: "wx" });
   const proxy = createTlsServer({ key, cert: ca }, (request, response) => {
-    if (interrupted || ++counters.requests > 4096 || !request.url?.startsWith("/") || request.url.startsWith("//")) { response.writeHead(503); response.end(); return; }
+    const rejected = interrupted ? "interrupted" : ++counters.requests > 4096 ? "request-budget"
+      : !request.url?.startsWith("/") || request.url.startsWith("//") ? "invalid-request-target" : null;
+    if (rejected) { note("proxyDecision", rejected); observation.fault("proxy-admission"); response.writeHead(503); response.end(); return; }
+    note("proxyDecision", "forwarded");
     // This explicit TEST proxy supplies the actual local transport address.
     // Host is deliberately different from PUBLIC_ORIGIN. Forwarded identity
     // headers travel unchanged and remain untrusted by the Worker.
-    const upstream = httpRequest({ host: "127.0.0.1", port: backendPort, path: request.url, method: request.method,
+    let upstream;
+    try { upstream = httpRequest({ host: "127.0.0.1", port: backendPort, path: request.url, method: request.method,
       headers: { ...request.headers, host: "different-host.example", "cf-connecting-ip": "127.0.0.1" } }, incoming => {
-      counters.forwarded++; response.writeHead(incoming.statusCode ?? 502, incoming.headers);
-      void pipeline(incoming, response).catch(() => response.destroy());
-    });
+      note("upstreamPhase", "response-headers"); note("upstreamStatus", celldSmokeStatusClass(incoming.statusCode));
+      incoming.once("end", () => { note("upstreamPhase", "response-complete"); note("upstreamEnd", "complete"); });
+      incoming.once("error", error => { note("upstreamEnd", "error"); observation.fault("upstream-response-stream", error); });
+      incoming.once("aborted", () => { note("upstreamEnd", "aborted"); observation.fault("upstream-response-stream"); });
+      counters.forwarded++;
+      try { response.writeHead(incoming.statusCode ?? 502, incoming.headers); }
+      catch (error) { observation.fault("proxy-response-headers", error); incoming.destroy(); if (!response.headersSent) response.writeHead(502); response.end(); return; }
+      void pipeline(incoming, response).catch(error => { observation.fault("relay-unclassified", error); response.destroy(); });
+    }); } catch (error) {
+      observation.fault("proxy-request-construction", error); response.writeHead(502); response.end(); return;
+    }
+    note("upstreamPhase", "request-created");
+    upstream.once("finish", () => note("upstreamPhase", "request-ended"));
     exchanges.add(upstream); upstream.once("close", () => exchanges.delete(upstream));
     upstream.setTimeout(30_000, () => upstream.destroy());
-    upstream.on("error", () => { counters.backendErrors++; if (!response.headersSent) response.writeHead(502); response.end(); });
-    request.on("aborted", () => upstream.destroy()); response.on("close", () => upstream.destroy());
-    void pipeline(request, upstream).catch(() => upstream.destroy());
+    upstream.on("error", error => { observation.fault("upstream-request", error); counters.backendErrors++; if (!response.headersSent) response.writeHead(502); response.end(); });
+    request.on("error", error => observation.fault("proxy-request-stream", error));
+    request.on("aborted", () => { observation.fault("proxy-request-stream"); upstream.destroy(); });
+    response.on("error", error => { note("downstreamEnd", "error"); observation.fault("downstream-response", error); });
+    response.on("finish", () => note("downstreamEnd", "finished"));
+    response.on("close", () => { if (!response.writableFinished) note("downstreamEnd", "closed-before-finish"); upstream.destroy(); });
+    void pipeline(request, upstream).catch(error => { observation.fault("proxy-request-stream", error); upstream.destroy(); });
   });
   proxy.maxConnections = 32;
   let proxyPort = 0, base = "";
   // Per-client generated trust only. Nothing changes NODE_EXTRA_CA_CERTS,
   // system trust, rejectUnauthorized, or a user's configuration.
   const transport = async (input, init) => {
+    const tracked = failureMetadata.stage === "smoke" && init?.method === "POST" && input === base + "/v1/scopes" && observation.arm();
+    const step = value => { if (tracked) note("clientPhase", value); };
+    const fault = (site, error) => { if (tracked) observation.fault(site, error); };
+    step("request-construction");
+    let request, url, body;
+    try {
     owned.check();
-    const request = new Request(input, init), url = new URL(request.url);
+    request = new Request(input, init); url = new URL(request.url);
     must(url.origin === base && !url.username && !url.password, "TEST transport refuses another origin");
-    const body = request.body ? Buffer.from(await request.arrayBuffer()) : null;
+    step("request-buffer");
+    body = request.body ? Buffer.from(await request.arrayBuffer()) : null;
     owned.check();
     must(body === null || body.length <= 1024 * 1024, "TEST request body bound exceeded");
+    } catch (error) { fault("client-request", error); throw error; }
     return new Promise((resolve, reject) => {
-      const outbound = httpsRequest(url, { method: request.method, headers: Object.fromEntries(request.headers), ca, rejectUnauthorized: true }, incoming => {
+      let outbound;
+      step("tls-request-construction");
+      try { outbound = httpsRequest(url, { method: request.method, headers: Object.fromEntries(request.headers), ca, rejectUnauthorized: true }, incoming => {
+        let site = "client-response-headers";
+        try {
+        step("response-headers");
+        if (tracked) note("clientStatus", celldSmokeStatusClass(incoming.statusCode));
         const headers = new Headers();
         for (const [name, value] of Object.entries(incoming.headers)) for (const part of Array.isArray(value) ? value : value === undefined ? [] : [value]) headers.append(name, part);
         const noBody = request.method === "HEAD" || [204, 205, 304].includes(incoming.statusCode);
         if (noBody) incoming.resume();
-        resolve(new Response(noBody ? null : Readable.toWeb(incoming), { status: incoming.statusCode, headers }));
-      });
+        site = "client-response-body-adapter"; step("response-body-adapter");
+        const source = noBody ? null : Readable.toWeb(incoming);
+        let reader, cancelled = false;
+        const stream = source && tracked ? new ReadableStream({
+          async pull(controller) {
+            step("response-stream");
+            try {
+              reader ??= source.getReader();
+              const result = await reader.read();
+              if (cancelled) return;
+              if (result.done) { note("clientBodyEnd", "complete"); step("response-complete"); controller.close(); }
+              else controller.enqueue(result.value);
+            } catch (error) { if (!cancelled) { note("clientBodyEnd", "error"); fault("client-response-stream", error); controller.error(error); } }
+          },
+          async cancel(reason) {
+            cancelled = true; note("clientBodyEnd", "cancelled");
+            try { reader ??= source.getReader(); await reader.cancel(reason); }
+            catch (error) { fault("client-response-stream", error); throw error; }
+          },
+        }) : source;
+        site = "client-response-construction"; step("response-construction");
+        const response = new Response(stream, { status: incoming.statusCode, headers });
+        if (noBody && tracked) { note("clientBodyEnd", "complete"); step("response-complete"); }
+        resolve(response);
+        } catch (error) { fault(site, error); incoming.destroy(); reject(error); }
+      }); } catch (error) { fault("client-tls-request", error); reject(error); return; }
+      step("tls-await-headers");
       exchanges.add(outbound);
-      const abort = () => outbound.destroy(new Error("TEST exchange aborted"));
+      const abort = () => { if (tracked) note("clientStop", interrupted ? "owned-interruption" : "unclassified-abort"); outbound.destroy(new Error("TEST exchange aborted")); };
       request.signal.addEventListener("abort", abort, { once: true });
-      outbound.setTimeout(30_000, abort);
-      outbound.once("error", reject);
+      outbound.setTimeout(30_000, () => { abort(); if (tracked) note("clientStop", "deadline"); });
+      outbound.once("error", error => { fault("client-tls-exchange", error); reject(error); });
       outbound.once("close", () => { exchanges.delete(outbound); request.signal.removeEventListener("abort", abort); });
-      if (request.signal.aborted) abort();
-      else outbound.end(body);
+      try { if (request.signal.aborted) abort(); else outbound.end(body); }
+      catch (error) { fault("client-tls-request", error); outbound.destroy(); reject(error); }
     });
   };
   const readJson = async response => {
@@ -195,28 +355,52 @@ async function run() {
     const ended = new Promise((resolve, reject) => { child.once("error", reject); child.once("close", (exit, signal) => resolve({ exit, signal })); });
     void ended.catch(() => {});
     const number = ++serial;
-    const logs = Promise.all([child.stdout, child.stderr].map(async (stream, index) => {
+    const tails = { stdout: backendTail(), stderr: backendTail() };
+    const pipes = [child.stdout, child.stderr];
+    let collectorFailed = false, collectorFailure;
+    const logs = Promise.allSettled(pipes.map(async (stream, index) => {
+      try {
       const parts = []; let bytes = 0;
-      for await (const chunk of stream) { bytes += chunk.length; if (bytes <= 16 * 1024 * 1024) parts.push(chunk); else child.kill("SIGKILL"); }
+      const tail = index ? tails.stderr : tails.stdout;
+      for await (const chunk of stream) { tail.add(chunk); bytes += chunk.length; if (bytes <= 16 * 1024 * 1024) parts.push(chunk); else child.kill("SIGKILL"); }
+      if (stream.readableEnded) tail.end();
       const retained = Buffer.concat(parts), path = `celld-${number}.${index ? "stderr" : "stdout"}.log`;
       await writeFile(join(directory, path), retained, { mode: 0o600, flag: "wx" });
       must(bytes <= 16 * 1024 * 1024, "celld log bound exceeded; private logs retained");
       return { path, bytes: retained.length, sha256: digest(retained) };
-    }));
+      } catch (error) {
+        if (!collectorFailed) { collectorFailed = true; collectorFailure = error; }
+        // Reuse the raw-overflow abort: stop the owned child and close both
+        // readers so a peer without EOF cannot hold the settlement join.
+        // Existing stop/forced-close deadlines still own child termination.
+        child.kill("SIGKILL");
+        for (const pipe of pipes) pipe.destroy();
+        throw error;
+      }
+    })).then(async settled => {
+      try {
+        await writeFile(join(directory, `celld-${number}.tail.json`), JSON.stringify({ stdout: tails.stdout.snapshot(), stderr: tails.stderr.snapshot() }) + "\n", { mode: 0o600, flag: "wx" });
+      } catch (error) { if (!collectorFailed) throw error; }
+      // Preserve the first collector failure even if saving the tail fails.
+      if (collectorFailed) throw collectorFailure;
+      return settled.map(result => result.value);
+    });
     void logs.catch(() => {});
-    backend = { child, ended, logs, argv, started, configured, configurationSha256: digest(configBytes) };
+    backend = { child, ended, logs, tails, argv, started, configured, configurationSha256: digest(configBytes) };
     // Bounded startup polling observes actual readiness JSON. An absent
     // Register may honestly return503 before the planned install; success
     // later requires the smoke's actual ready200, never this startup poll.
     for (let round = 0; round < 150; round++) {
       owned.check();
       must(child.exitCode === null && child.signalCode === null, "celld exited during startup; private logs retained");
-      try { const response = await transport(base + "/health"); const body = await readJson(response); if ([200, 503].includes(response.status) && ["ok", "unavailable"].includes(body.sessions)) return; } catch { /* Not accepting yet. */ }
+      try { const response = await transport(base + "/health"); const body = await readJson(response); if ([200, 503].includes(response.status) && ["ok", "unavailable"].includes(body.sessions)) {
+        observation.note("startupHealth", response.status === 200 ? "http-200" : "http-503"); observation.note("startupSessions", body.sessions); return;
+      } } catch { /* Not accepting yet. */ }
       await delay(100);
     }
     throw Error("celld startup bound exceeded; private logs retained");
   };
-  let client = null, operatorSecret = null;
+  let client = null, operatorSecret = null, backendForFailure = null;
   try {
     owned.check(); proxyPort = await listen(proxy); networkClosed = false; base = `https://127.0.0.1:${proxyPort}`;
     owned.check(); failureMetadata.stage = "plan";
@@ -337,6 +521,16 @@ async function run() {
     return { version: 1, qualification: "Actual generated-CA TLS client/proxy/celld and real Worker/Native/registry/agent; private owned TEST custody. No deployed proxy, production TLS profile, supervisor or global trust claim.",
       celld: { pin: expectedVersion, binarySha256: digest(await readFile(binary)), versionReceipt: version.receipt, shim: { sha256: digest(shim), productionEntry } },
       smoke, controls: { configuredCreate: configured.status, unsetCreate: unset.status, forwardedOnlyCreate: forwarded.status, wrongServiceCreate: wrong.status, hostDifferent: true, initializedSessions: 2, roomToolCalls: 2, rotation: rotated.status, retirement: retired.status, retirementPending: retired.value.pending, retiredBearer: retiredBearer.status }, proxy: counters, processReceipts };
+  } catch (error) {
+    if (celldSmokeOperation(error) === "install") {
+      failureMetadata.exchange = observation.snapshot(proxy.listening ? "listening" : "closed",
+        !backend ? "not-started" : backend.child.exitCode === null && backend.child.signalCode === null ? "running" : "exited", celldSmokeTransport(error));
+      if (failureMetadata.exchange.owner === "celldbackend") {
+        backendForFailure = backend;
+        failureMetadata.backendOutput = backendOutputFor("celldbackend", backend?.tails ?? { stdout: backendTail(), stderr: backendTail() });
+      }
+    }
+    throw error;
   } finally {
     let closeFailed = false;
     for (const close of [
@@ -345,6 +539,7 @@ async function run() {
       stop,
       async () => { if (!networkClosed) { await boundedJoin(closeServer(proxy), 5000, "TEST TLS proxy did not close"); networkClosed = true; } },
     ]) { try { await close(); } catch { closeFailed = true; } }
+    if (backendForFailure) failureMetadata.backendOutput = backendOutputFor(failureMetadata.exchange.owner, backendForFailure.tails);
     operatorSecret?.fill(0);
     must(!closeFailed, "Owned closure failed; private TEST state retained");
     must(children.size === 0 && exchanges.size === 0, "Owned process/transport closure incomplete; private scratch retained");
@@ -369,7 +564,7 @@ async function run() {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const failed = error => {
-    process.stderr.write(JSON.stringify({ error: "celld-proxy-witness-failed", ...failureMetadata, operation: celldSmokeOperation(error), detail: celldSmokeDetail(error), qualification: "Private TEST state retained; no automatic operation retry." }) + "\n");
+    process.stderr.write(JSON.stringify({ error: "celld-proxy-witness-failed", ...failureMetadata, operation: celldSmokeOperation(error), detail: celldSmokeDetail(error), transport: celldSmokeTransport(error), qualification: "Private TEST state retained; no automatic operation retry." }) + "\n");
     process.exitCode = 1;
   };
   run().then(result => { if (failureMetadata.signal !== null) failed(); else process.stdout.write(JSON.stringify(result) + "\n"); }, failed);

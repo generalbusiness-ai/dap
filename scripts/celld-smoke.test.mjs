@@ -4,8 +4,8 @@ import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { configOf } from "./security-settings.mjs";
-import { CelldSmokeError, celldReference, celldSmokeDetail, celldSmokeOperation, contextForCelldSmoke, runCelldSmoke, sameCelldReference, smokeSettings } from "./celld-smoke.mjs";
-import { matchesCelldVersion } from "./test-celld-proxy.mjs";
+import { CelldSmokeError, celldReference, celldSmokeDetail, celldSmokeOperation, celldSmokeTransport, contextForCelldSmoke, runCelldSmoke, sameCelldReference, smokeSettings } from "./celld-smoke.mjs";
+import { BACKEND_TAIL_LINES, BACKEND_TAIL_LINE_BYTES, backendOutputFor, backendTail, matchesCelldVersion, proxyFailureObservation } from "./test-celld-proxy.mjs";
 
 test("the proxy compares the maintained celld pin as a whole version token without a hidden release literal", async () => {
   const pin = await readFile(new URL("../apps/room/celld/celld.version", import.meta.url), "utf8");
@@ -204,4 +204,80 @@ test("proxy errors expose only a maintained smoke operation and never arbitrary 
     new CelldSmokeError("plan", { code: 1, lines: ["Refused: bad-field. The request was refused."] }),
     new Error(sentinel), { stage: "install", detail: "creation-refused", message: sentinel }, null, undefined])
     assert.equal(celldSmokeDetail(foreign), null);
+  const backend = proxyFailureObservation(); backend.arm();
+  backend.note("proxyDecision", "forwarded"); backend.note("upstreamPhase", "request-ended");
+  backend.fault("upstream-request", Object.assign(Error(sentinel), { code: "ECONNREFUSED" }));
+  backend.fault("downstream-response", Error(sentinel));
+  backend.note("clientStatus", "5xx");
+  const failed = backend.snapshot("listening", "running", { kind: "reply-not-answer", status: "5xx" });
+  assert.equal(failed.firstFailure, "upstream-request"); assert.equal(failed.errorClass, "connection-refused");
+  assert.equal(failed.faultBoundary, "backend-endpoint");
+  assert.equal(failed.owner, "celldbackend");
+  const response = proxyFailureObservation(); response.arm();
+  for (const [key, value] of Object.entries({ proxyDecision: "forwarded", upstreamEnd: "complete", downstreamEnd: "finished", clientBodyEnd: "complete", upstreamStatus: "5xx", clientStatus: "5xx" })) response.note(key, value);
+  const completed = response.snapshot("listening", "running", { kind: "reply-not-answer", status: "5xx" });
+  assert.equal(completed.faultBoundary, "backend-reply");
+  assert.equal(completed.owner, "celldbackend");
+  assert.notDeepEqual(completed, failed, "a relayed backend reply is not a proxy-generated 502");
+  response.note("clientPhase", sentinel); response.note(sentinel, sentinel); response.fault(sentinel, Error(sentinel));
+  assert.equal(JSON.stringify(response.snapshot(sentinel, sentinel, { kind: sentinel, status: sentinel })).includes(sentinel), false);
+  const foreign = new CelldSmokeError("install", { code: 1, lines: [`No answer: ${sentinel}`] });
+  foreign.transport = { kind: sentinel, status: "5xx" }; assert.equal(celldSmokeTransport(foreign), null);
+  foreign.transport = { kind: "no-reply", status: sentinel }; assert.equal(celldSmokeTransport(foreign), null);
+  const adapter = proxyFailureObservation(); adapter.arm(); adapter.fault("client-request", new TypeError(sentinel));
+  assert.equal(adapter.snapshot("listening", "running", { kind: "no-reply", status: "none" }).owner, "clientadapter");
+  const proxy = proxyFailureObservation(); proxy.arm(); proxy.note("proxyDecision", "request-budget"); proxy.fault("proxy-admission");
+  assert.equal(proxy.snapshot("listening", "running", { kind: "reply-not-answer", status: "5xx" }).owner, "proxy");
+  const output = { stdout: backendTail(), stderr: backendTail() };
+  output.stdout.add(Buffer.from(`${sentinel}\n`));
+  for (let i = 0; i < BACKEND_TAIL_LINES + 2; i++) output.stdout.add(Buffer.from(`line-${i}\n`));
+  output.stdout.add(Buffer.from("x".repeat(BACKEND_TAIL_LINE_BYTES * 8)));
+  output.stderr.add(Buffer.from(sentinel + "\u{1f642}".repeat(BACKEND_TAIL_LINE_BYTES))); output.stderr.end();
+  const quoted = backendOutputFor("celldbackend", output);
+  assert.equal(quoted.sentence, "backend, cause not observed");
+  assert.equal(quoted.stdout.lines.length, BACKEND_TAIL_LINES);
+  assert.equal(quoted.stdout.lines.at(-1).truncated, true);
+  for (const line of [...quoted.stdout.lines, ...quoted.stderr.lines]) assert.ok(Buffer.byteLength(line.text) <= BACKEND_TAIL_LINE_BYTES);
+  assert.equal(JSON.stringify(quoted.stdout).includes(sentinel), false, "older stdout lines leave the fixed tail");
+  assert.equal(JSON.stringify(quoted.stderr).includes(sentinel), true, "backend-only output quotes text without interpreting it");
+  assert.equal(backendOutputFor("proxy", output), null);
+  for (const owner of ["clientadapter", "proxy", sentinel, null, undefined]) {
+    assert.equal(backendOutputFor(owner, { get stdout() { throw Error(sentinel); }, get stderr() { throw Error(sentinel); } }), null);
+  }
+});
+
+test("the actual planned CLI classifies five transport replies without leaking text or replacing attempted custody", async () => {
+  const sentinel = "Private transport body error path and key sentinel";
+  const replies = [
+    { name: "throw", send: () => { throw Error(sentinel); }, detail: "transport-no-answer", transport: { kind: "no-reply", status: "none" } },
+    { name: "empty-502", send: () => new Response(null, { status: 502 }), detail: "transport-no-answer", transport: { kind: "reply-not-answer", status: "5xx" } },
+    { name: "invalid-200", send: () => new Response(sentinel, { status: 200 }), detail: "transport-no-answer", transport: { kind: "reply-not-answer", status: "2xx" } },
+    { name: "oversized", send: () => new Response("x".repeat(4 * 1024 * 1024 + 1), { status: 200 }), detail: "transport-no-answer", transport: { kind: "reply-too-large", status: "2xx" } },
+    { name: "refused", send: () => Response.json({ answer: "refused", reason: "bad-field" }, { status: 422 }), detail: "creation-refused", transport: null },
+  ];
+  for (const specimen of replies) {
+    const home = await mkdtemp(join(tmpdir(), "dap-celld-transport-")), base = "https://localhost:9877";
+    let calls = 0;
+    const fetch = async () => { calls++; return specimen.send(); };
+    try {
+      await runCelldSmoke({ phase: "plan", base, home, fetch });
+      const planned = JSON.parse(await readFile(join(home, "config.json"), "utf8"));
+      assert.equal(calls, 0);
+      await assert.rejects(() => runCelldSmoke({ phase: "run", base, home, fetch }), error => {
+        assert.equal(celldSmokeOperation(error), "install", specimen.name);
+        assert.equal(celldSmokeDetail(error), specimen.detail, specimen.name);
+        const projected = celldSmokeTransport(error);
+        assert.deepEqual(projected, specimen.transport, specimen.name);
+        assert.equal(JSON.stringify({ detail: celldSmokeDetail(error), transport: projected }).includes(sentinel), false);
+        assert.equal(Object.hasOwn(error, "lines"), false);
+        return true;
+      });
+      assert.equal(calls, 1);
+      const kept = JSON.parse(await readFile(join(home, "config.json"), "utf8"));
+      assert.deepEqual(kept.plan.founding, planned.plan.founding);
+      assert.equal(kept.plan.register, planned.plan.register);
+      assert.match(kept.plan.attempted, /^sha256:[0-9a-f]{64}$/);
+      assert.equal(kept.register, undefined);
+    } finally { await rm(home, { recursive: true, force: true }); }
+  }
 });
