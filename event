@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8a4d54f07e66da24f80bd9c38e4f34bbcd2d227e","text":"Merge retired a covered predecessor; the successor is at packages/client/src/replica-own.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8f3b195b861cf01b6e84bbc61ea3e11a7e5918a5","text":"Merge retired a covered predecessor; the successor is at packages/mcp/browser/main.ts."}
