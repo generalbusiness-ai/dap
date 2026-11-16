@@ -855,8 +855,9 @@ export class McpService {
       if (isPlatformDefinition(summary.definition) && platform(summary.definition)?.data.name === "platform:membership") this.#reads.forget(summary.scope.scope);
       void this.check();
     }
-    // Every refused result carries the basis to answer with `after`, from a fresh read. The server keeps none of it.
-    const basis = kept.answer.answer === "refused" ? await this.#nowFor(s, scope, membership, kept.record) : {};
+    // A refusal whose basis is stale by definition carries a fresh basis to answer with `after`. A guard refusal is judged on
+    // rows that did not move, so its result reads nothing more; `settle` gives a basis for it. The server keeps none of it.
+    const basis = kept.answer.answer === "refused" && (kept.answer.reason === "revision-moved" || kept.answer.reason === "bad-intent") ? await this.#nowFor(s, scope, membership, kept.record) : {};
     const result = ok({ ...projectAnswer({ answer: kept.answer }, { scope, kind, tool, retained: kept.retained, said, phase: kept.record.phase }), ...basis });
     if (kept.answer.answer === "accepted") this.#readReceipts.set(result, kept.answer.receipt);
     return this.#withSigner(result, kept.record, s);

@@ -212,7 +212,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:scopeRefArg": "54eb8fcb90bd3e5dbacec1eb71f853e5a3b578aae10d11a24d3c0ee0d69a88b3",
     "packages/mcp/src/service.ts:memberRefArg": "80b4a7634bee92e5b6d8b03dea6102cbf701fcab94198e54de219783961ee281",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "e6a59b89490566c351620f1f7d963f3b65d8e9fdd93aa7b1ee724c7ebffff3ce", // E4 forwards the actual fence-capable custody builder type; existing settle and Card paths stay unchanged.
+    "packages/mcp/src/service.ts:McpService": "ecd6e9be07b5831c4d8b723c54faa0b601db487a83af59e2fd8fb227e792d70c", // E4 forwards the actual fence-capable custody builder type; existing settle and Card paths stay unchanged.
     "packages/mcp/src/service.ts:commitIdFault": "36b75703f0eb36b5abca60906629f23df18a233d26c395f0b61c792eddabe405",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",

@@ -255,8 +255,10 @@ the same key conflicts. A repeated call with the original set returns its
 kept intent even after the current state moves. Omission preserves the
 existing fresh-read behavior and custody meaning.
 
-A refused act result carries `now`: the basis of a fresh read, taken after the
-refusal. It holds `of` (the refused request's `idempotencyKey`), `target`,
+A refused act result with the reason `revision-moved` or `bad-intent` carries
+`now`: the basis of a fresh read, taken after the refusal. Another refusal, such
+as `guard-failed`, was judged on rows that did not move, so its result carries
+no `now`; `settle` gives one for it. It holds `of` (the refused request's `idempotencyKey`), `target`,
 `kind`, `primary` (the item the act is on and its revision, or `null`), `at`
 (the revisions the read binds, keyed as `at` is) and `head` (the head of that
 read). `settle` returns the same object for a kept refused request. The server

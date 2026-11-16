@@ -179,6 +179,11 @@ The planner settled the six points of the first run in ruling 09041476.
    - The `settle` description says that a refused result carries `now` and
      that `act` takes it with `after`. `docs/mcp.md` and `docs/mcp-tools.json`
      hold the same text.
+   - An `act` reads the target lane once more after a refusal only for
+     `revision-moved` and `bad-intent`, whose basis is stale by definition
+     (ruling 892d1abf). A guard refusal is judged on rows that did not move,
+     so its result carries no `now` and costs no read. `settle` reads a basis
+     for a refused record of any reason.
    - One rule serves both adapters (`lackedSubject` in `expected.ts`). A
      result carries `now` only when the read holds the revision of every
      subject of the act. Otherwise `lacks` names the subject: `on` for the
