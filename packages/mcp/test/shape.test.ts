@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { FactRef, FieldType, ScopeRef } from "@generalbusiness/dap-contract";
 import { scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
-import { effectiveFields, expectedOf, finalStates, viaLeft, type ActLike } from "@generalbusiness/dap-client";
+import { effectiveFields, expectedOf, finalStates, lackedSubject, viaLeft, type ActLike } from "@generalbusiness/dap-client";
 import { capturedExpected, nowOf, shapeAfter, shapeAt, shapeFields, shapeNow, Unshaped, type McpNow } from "../src/shape.ts";
 
 const scopeOf = (cause: string) => scopeIdOf({ v: 1, kind: "lane", definition: "platform:issue@1", creator: null, cause: textDigest(cause), ordinal: 0 } as never);
@@ -171,5 +171,28 @@ describe("after with now", () => {
     expect(shapeAfter({ after: "stale", now: { ...now, kind: "open", primary: null, at: { only: 2 } }, at: undefined }, { ...call, kind: "open", on: null, act: open }))
       .toEqual({ only: 2 });
     expect(shapeNow(JSON.parse(JSON.stringify(now)))).toEqual(now);
+  });
+
+  // Ruling 09041476 item 5b: one rule for both adapters. A result carries `now` only when the read holds every subject's row.
+  test("lacks names an also subject that the read does not hold, by the client's rule", () => {
+    const shelf = { id: 0, type: "shelf", revision: 4, refs: {} }, jar = { id: 2, type: "jar", revision: 7, refs: {} };
+    type Held = Parameters<typeof lackedSubject>[1];
+    const named = effectiveFields(act, { jarFact: fact(here, 2) } as never, here);
+    // The field names jar 2 and the read holds it: no subject lacks, and `now` has both revisions.
+    expect(lackedSubject(act, [shelf, jar] as Held, 0, named)).toBeNull();
+    // The read holds the primary but not jar 2: `selected` lacks, where `on` alone would have said nothing.
+    expect(lackedSubject(act, [shelf] as Held, 0, named)).toBe("selected");
+    const expected = expectedOf(act, [shelf] as Held, 0, named);
+    expect(nowOf({ of: "k", target: here.scope, kind: "fill", on: 0, primaryRevision: 4, expected, head, lacking: "selected" })).toEqual({ lacks: "selected" });
+    // The primary's own row missing says `on` first.
+    expect(lackedSubject(act, [jar] as Held, 0, named)).toBe("on");
+    // A field that names no item selects nothing: the subject is absent, not lacking.
+    expect(lackedSubject(act, [shelf] as Held, 0, effectiveFields(act, {} as never, here))).toBeNull();
+    // A via subject whose slot names a row the read does not hold lacks, and a via subject with an empty slot is absent.
+    const viaAct = { step: "transition", on: "finding", fields: {}, also: { version: { item: "manifest", via: { of: "on", slot: "version" } } } } as unknown as ActLike;
+    const finding = { id: 9, type: "finding", revision: 1, refs: { version: { at: {}, seq: 4, hash: "h" } } };
+    expect(lackedSubject(viaAct, [finding] as unknown as Held, 9, {})).toBe("version");
+    expect(lackedSubject(viaAct, [finding, { id: 4, type: "manifest", revision: 2, refs: {} }] as unknown as Held, 9, {})).toBeNull();
+    expect(lackedSubject(viaAct, [{ ...finding, refs: {} }] as unknown as Held, 9, {})).toBeNull();
   });
 });

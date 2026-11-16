@@ -260,8 +260,10 @@ refusal. It holds `of` (the refused request's `idempotencyKey`), `target`,
 `kind`, `primary` (the item the act is on and its revision, or `null`), `at`
 (the revisions the read binds, keyed as `at` is) and `head` (the head of that
 read). `settle` returns the same object for a kept refused request. The server
-stores none of it. If the read does not hold the item the act is on, the result
-carries `lacks: "on"` and no `now`.
+stores none of it. The result carries `now` only when the read holds the
+revision of every subject of the act. Otherwise it carries `lacks` and no `now`.
+`lacks` names the subject: `on` for the item the act is on, or the name of an
+`also` subject.
 
 To submit the refused request again, call the same tool with `after` set to the
 refused request's key, `now` copied unchanged from the result, and a new
@@ -1678,7 +1680,7 @@ Waits at most 60 seconds until one of: a scope's head reaches seq; an item reach
 
 ### `settle`
 
-What is known about the envelope under idempotencyKey on target (or the creation of definition): the act's phase and kept outcome, the scope's settlement for an act that is not final, and each preparation step apart. Signs and submits no ACT. Read-session authentication may sign its existing request.
+What is known about the envelope under idempotencyKey on target (or the creation of definition): the act's phase and kept outcome, the scope's settlement for an act that is not final, and each preparation step apart. Signs and submits no ACT. Read-session authentication may sign its existing request. A refused result carries `now`, and `act` takes it with `after`.
 
 ```json
 {

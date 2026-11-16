@@ -66,7 +66,9 @@ export interface ClientView<D extends DeclaredDefinition> extends Omit<ReplicaVi
 }
 interface ReadProof { began: number; head: Head }
 interface Held { record: CustodyRecord; outcomes: Outcome[] }
-/** One member call's stop. `committed` names the key of a draft write that already took effect in the same call. */
+/** One member call's stop. `committed` names the key of a draft that this call changed: a write that already took effect in the same call.
+ * A submit that an exploration returns (`revision-moved`) stops with `state` and `committed: key`; the view then shows the
+ * return and its `now`. A submit that stops after its adoption write names the key too. */
 export type DraftStop = { readonly stop: "shape"; readonly path: string; readonly message: string }
   | { readonly stop: "state" | "taken" | "descriptor-mismatch" | "definition-mismatch" };
 export type DraftCall<T> = { readonly ok: true; readonly value: T }

@@ -25,7 +25,7 @@ import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob 
 import { SendStop, applicationInstallation, applicationRoom, installApplication, type InstallHandle, type InstallRefusal, type InstallRoom, type InstallRoomConfig, type PackageBytes, type RoomRefusal } from "@generalbusiness/dap-client/install";
 import { actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, TERMINAL, identityId, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity, type Sent } from "@generalbusiness/dap-client";
-import { StoreFormatError, effectiveFields, expectedOf, finalStates, viaLeft } from "@generalbusiness/dap-client";
+import { StoreFormatError, effectiveFields, expectedOf, finalStates, lackedSubject, viaLeft } from "@generalbusiness/dap-client";
 import { describeAct } from "./describe.ts";
 import { grantAction, onOf, type ActLike, type DefinitionLike } from "@generalbusiness/dap-client";
 import { AFTER_INPUT, AFTER_WITH_NOW, AT_INPUT, NOW_INPUT, schemaOf } from "./input-schema.ts";
@@ -863,7 +863,7 @@ export class McpService {
   /**
    * The `now` of a refused act request, from one fresh read: the revisions `expectedOf` gives over the live items and the final
    * rows a `via` names, the primary's revision and that read's head. It signs nothing and stores nothing. A read that fails
-   * gives no `now`, and the refusal stands as it is: the model sends a fresh act. An act on an item the read lacks says `lacks: "on"`.
+   * gives no `now`, and the refusal stands as it is: the model sends a fresh act. A read that lacks the revision of a subject says `lacks` with that subject's name (`on` for the primary).
    */
   async #nowFor(s: Snapshot, scope: ScopeId, membership: ScopeRef | null, record: CustodyRecord): Promise<{ now: McpNow } | { lacks: string } | Record<string, never>> {
     const intent = record.envelope.signed.intent;
@@ -877,7 +877,8 @@ export class McpService {
       const known = [...summary.items, ...await this.#viaFinal(definition, act, summary.items, intent.on, effective, summary.scope, membership)];
       return nowOf({ of: intent.idempotencyKey, target: scope, kind: intent.kind, on: intent.on,
         primaryRevision: intent.on === null ? undefined : summary.items.find(item => item.id === intent.on)?.revision,
-        expected: expectedOf(act, known, intent.on, effective), head: at.at });
+        expected: expectedOf(act, known, intent.on, effective), head: at.at,
+        lacking: lackedSubject(act, known, intent.on, effective) });
     } catch (error) {
       if (error instanceof Stop) return {};
       throw error;
@@ -1049,7 +1050,7 @@ export class McpService {
         { scope: scopeArg, kind: { enum: ["definition", "entry", "rule", "text", "snapshot", "value", "birth"] }, digest: { type: "string" }, domain: { type: "string" }, offset: { type: "integer", minimum: 0 } }, ["scope", "kind", "digest"], READ, (a) => this.#text(a)),
       tool("wait", "Waits at most 60 seconds until one of: a scope's head reaches seq; an item reaches one of states; the scopes an entry created (entry) and the scopes their genesis created exist and are active; a send (outboxId) has a result. Returns what it saw and whether it timed out. Never writes.",
         { scope: scopeArg, seq: { type: "integer", minimum: 0 }, item: { type: "integer", minimum: 0 }, type: { type: "string", description: "the item's type; with item, a final item is found among the retained ones" }, states: { type: "array", items: { type: "string" } }, entry: { type: "integer", minimum: 0 }, outboxId: { type: "string" }, seconds: { type: "integer", minimum: 1, maximum: WAIT_MOST_SECONDS } }, ["scope"], READ, (a) => this.#wait(a)),
-      tool("settle", "What is known about the envelope under idempotencyKey on target (or the creation of definition): the act's phase and kept outcome, the scope's settlement for an act that is not final, and each preparation step apart. Signs and submits no ACT. Read-session authentication may sign its existing request.",
+      tool("settle", "What is known about the envelope under idempotencyKey on target (or the creation of definition): the act's phase and kept outcome, the scope's settlement for an act that is not final, and each preparation step apart. Signs and submits no ACT. Read-session authentication may sign its existing request. A refused result carries `now`, and `act` takes it with `after`.",
         { target: scopeArg, definition: { type: ["string", "object"] }, membership: membershipArg, idempotencyKey: keyArg, cursor: { type: "string" } }, ["idempotencyKey"], READ, (a, dispatch) => this.#settle(a, undefined, dispatch), undefined, { anyOf: [{ required: ["target"] }, { required: ["definition"] }] }),
       tool("credential", "The one-time read credential for a read-token act your key signed (entry: its seq at the destination), read once from the destination's credential route with your session. Its result is a secret: the credential appears once in the text content. The structured content holds only the remote URL, expiry, and entry. Use it with Git; it is not kept here.",
         { entry: { type: "integer", minimum: 1 }, target: scopeArg }, ["entry"], { ...READ, idempotentHint: false }, (a) => this.#credential(a), undefined, undefined, { ui: { visibility: ["model"] } }),

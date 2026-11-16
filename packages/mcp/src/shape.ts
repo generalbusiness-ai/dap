@@ -218,11 +218,13 @@ export function shapeAfter(args: { after: unknown; now: unknown; at: unknown }, 
 
 /**
  * The `now` of a result, from one fresh read: the expected revisions that `expectedOf` gives (with the final `via` rows
- * added), the primary's revision and the head of that read. An act on an item that the read does not hold has no `now`.
- * It says `on` instead: the subject it lacks.
+ * added), the primary's revision and the head of that read. The result carries `now` only when the read holds the revision
+ * of every subject of the act. Otherwise it carries `lacks`, the subject that `lackedSubject` names (the client's rule for
+ * `draftNowOf`): the primary as `on`, or an `also` subject by its name. The primary's own missing revision always says `on`.
  */
-export function nowOf(input: { of: string; target: string; kind: string; on: number | null; primaryRevision: number | undefined; expected: Record<string, number>; head: Head }): { now: McpNow } | { lacks: string } {
+export function nowOf(input: { of: string; target: string; kind: string; on: number | null; primaryRevision: number | undefined; expected: Record<string, number>; head: Head; lacking?: string | null }): { now: McpNow } | { lacks: string } {
   if (input.on !== null && input.primaryRevision === undefined) return { lacks: "on" };
+  if (input.lacking !== undefined && input.lacking !== null) return { lacks: input.lacking };
   const at: Record<string, number> = {};
   for (const [name, revision] of Object.entries(input.expected)) put(at, name, revision);
   return { now: { of: input.of, target: input.target, kind: input.kind,

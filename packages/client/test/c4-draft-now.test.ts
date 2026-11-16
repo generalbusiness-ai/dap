@@ -119,6 +119,15 @@ test("a view without now says which subject it lacks, and the submit check stops
   expect(checkDraftNow({ ...lacking, returned: false, view: { is: "lacks", subject: "on" } })).toEqual({ ok: true, now: null });
 });
 
+// Ruling 09041476 item 5d: `absent` means an empty selection in the rows the cut holds. A via slot that names a row the cut lacks is `lacks`.
+test("a via subject that names a row the cut does not hold lacks, and an empty selection is absent", () => {
+  const w = world(2), stored = draftAt(w, "touch", 0, "via-lacks");
+  const withoutTarget = { ...w, rows: w.rows.filter(row => row.id !== 2) };
+  expect(draftNowOf({ definition, stored, scope, cut: cutOf(withoutTarget) })).toEqual({ is: "lacks", subject: "target" });
+  const none = world(null), empty = draftAt(none, "touch", 0, "via-absent");
+  expect(shownNow(empty, none).subjects["target"]).toEqual({ is: "absent" });
+});
+
 test("the view computation reads its input and leaves it unchanged", () => {
   const w = world(2), stored = draftAt(w, "touch", 0, "pure");
   const input = { definition, stored, scope, cut: cutOf(w) }, before = canonicalize(input);
@@ -458,3 +467,101 @@ test("a subject that moved after the view returns form 1 with no signature", asy
   } finally { client.close(); runtime.close(); }
 });
 const LENDING_DESCRIPTOR = "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" as const;
+
+// ---------------------------------------------------------------- order of checks and the signing after the fence
+// Ruling 09041476 item 4: the form of the inputs, then `taken`, then `state`, then a missing or foreign `now`.
+test("an ill-shaped now stops with shape even when the slot is taken", async () => {
+  const { s, store, drafts, client } = realOwner();
+  s.feed.current(s.scope); await client.read(); await clientIdle(client);
+  // No draft holds this slot, so a well-formed call would stop with `taken`. Control first.
+  const slot = client.slot("remark", { on: { name: 0, seen: s.scope.item(0).revision, assumes: [] } });
+  const wellFormed = { key: "alien", kind: "remark", address: { kind: "remark", on: 0, items: {} }, head: s.scope.head,
+    primary: { name: 0, seen: s.scope.item(0).revision, assumes: [] }, subjects: {} };
+  expect(await client.submit(slot, wellFormed)).toEqual({ ok: false, stop: { stop: "taken" } });
+  const signs = s.signs(), batch = canonicalize(await drafts.read(s.signer.key, s.handle.at)), records = [...store.records];
+  const ill = { ...wellFormed, extra: 1 } as unknown as DraftNow;
+  expect(await client.submit(slot, ill)).toMatchObject({ ok: false, stop: { stop: "shape", path: "now" } });
+  expect([s.signs(), canonicalize(await drafts.read(s.signer.key, s.handle.at)), [...store.records]]).toEqual([signs, batch, records]);
+  client.close();
+});
+
+/** A draft that the scope refused (form 2) with a moved basis, and the `now` that its view shows. */
+async function returnedRace() {
+  const owner = realOwner(), { s, client } = owner;
+  s.scope.did(s.actor, "remark", { on: 0, fields: { text: "first cause" } });
+  s.scope.did(s.actor, "remark", { on: 0, fields: { text: "second cause" } });
+  s.feed.current(s.scope); await client.read();
+  const basis = s.scope.item(0).revision, slot = client.slot("cite", { on: { name: 0, seen: basis, assumes: [] } });
+  const edited = await client.edit(slot, { cause: s.scope.fact(2) });
+  if (!edited.ok) return expect.fail("the edit creates the draft");
+  await clientIdle(client);
+  s.scope.did(s.actor, "cite", { on: 0, expected: { on: basis }, fields: { cause: s.scope.fact(3) } });
+  expect(await client.submit(slot)).toEqual({ ok: true, value: edited.value }); // the scope refuses revision-moved
+  await clientIdle(client);
+  const returned = returnedOf(client, slot);
+  if (returned?.by !== "request" || returned.now.is !== "now") return expect.fail("the refusal returns the draft with a now");
+  return { ...owner, slot, basis, key: edited.value, shown: returned.now.now, moved: s.scope.item(0).revision, signed: s.signs() };
+}
+
+// Ruling 09041476 item 2: step 7 signs after the fence. A stop between step 6 and step 7 leaves the adopted draft.
+test("a stop between the adoption write and the signing leaves the draft, and the next submit signs once", async () => {
+  const { s, store, drafts, client, who, slot, key, shown, moved, signed } = await returnedRace();
+  const write = drafts.write.bind(drafts);
+  let stopAfter = true;
+  drafts.write = async (owner, at, entries) => {
+    await write(owner, at, entries);
+    if (stopAfter) { stopAfter = false; throw new Error("stopped after the adoption write"); }
+  };
+  await expect(client.submit(slot, shown)).rejects.toThrow("stopped after the adoption write");
+  await clientIdle(client);
+  // The batch holds the adopted basis, and nothing signed.
+  const [row] = readStoredDrafts(await drafts.read(s.signer.key, s.handle.at), { owner: s.signer.key, scope: s.handle.at });
+  if (row?.is !== "draft") return expect.fail("the adopted draft stays stored");
+  expect([row.key, row.returned, row.act.expected, s.signs()]).toEqual([key, undefined, { on: moved }, signed]);
+  const again = returnedOf(client, slot);
+  if (again?.by !== "request" || again.now.is !== "now") return expect.fail("the view still shows a now");
+  expect(await client.submit(slot, again.now.now)).toEqual({ ok: true, value: key });
+  await clientIdle(client);
+  expect(s.signs()).toBe(signed + 1);
+  const record = await new Custody(store, () => timeOf(s.now())).find({ ...who, key });
+  expect(record!.phase).toBe("accepted");
+  expect(record!.signings.length).toBe(2); // the refused signing, then this one
+  const [kept] = readStoredDrafts(await drafts.read(s.signer.key, s.handle.at), { owner: s.signer.key, scope: s.handle.at });
+  expect(kept?.is === "draft" ? kept.act.expected : null).toEqual({ on: moved });
+  client.close();
+});
+
+test("a second client that submits the same key between the adoption write and the signing makes one signing", async () => {
+  const { s, store, drafts, client, who, slot, basis, key, shown, moved, signed } = await returnedRace();
+  const feed = new Feed();
+  const second = scopeClient(s.handle, { descriptor: REQUEST_DESCRIPTOR, signer: s.signer,
+    member: { service: who.service, membership: who.membership, member: s.actor.member.member, principal: s.actor.principal },
+    store, drafts, observe: feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+  feed.current(s.scope); await second.read(); await clientIdle(second);
+  const slotB = second.slot("cite", { on: { name: 0, seen: basis, assumes: [] } });
+  // Hold the first client at the first fence it takes after its adoption write: that is the start of step 7.
+  let adopted = false, release!: () => void, entered!: () => void;
+  const started = new Promise<void>(resolve => { entered = resolve; }), held = new Promise<void>(resolve => { release = resolve; });
+  const write = drafts.write.bind(drafts), exclusive = store.exclusive.bind(store);
+  let armed = true;
+  drafts.write = async (owner, at, entries) => { await write(owner, at, entries); if (armed) adopted = true; };
+  store.exclusive = async work => { if (adopted && armed) { armed = false; entered(); await held; } return exclusive(work); };
+  let first: ReturnType<typeof client.submit> | undefined;
+  try {
+    first = client.submit(slot, shown);
+    await started;
+    const shownB = returnedOf(second, slotB);
+    if (shownB?.by !== "request" || shownB.now.is !== "now") return expect.fail("the second client shows the same now");
+    const other = await second.submit(slotB, shownB.now.now);
+    expect(other).toEqual({ ok: true, value: key });
+    await clientIdle(second);
+  } finally { release(); await Promise.allSettled([first]); store.exclusive = exclusive; }
+  await clientIdle(client); await clientIdle(second);
+  // Custody admitted one signing for the key after the refusal, whichever client held it.
+  expect(s.signs()).toBe(signed + 1);
+  const record = await new Custody(store, () => timeOf(s.now())).find({ ...who, key });
+  expect(record!.signings.length).toBe(2);
+  expect(record!.phase).toBe("accepted");
+  expect(s.copies.at(-1)!.intent).toMatchObject({ idempotencyKey: key, expected: { on: moved } });
+  client.close(); second.close();
+});

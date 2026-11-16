@@ -4,7 +4,7 @@ This note records how C4 builds one submit for a returned draft and for an MCP
 request that a scope refused. The rules are in section 6 of
 [the act environment note](../2026-11-14-act-environment.md): one submit, the
 value `now`, the list arms and the three reasons of a held intention. This note
-states how the code meets them, what the first run found, and what stays open.
+states how the code meets them, what the first run found, and how the planner settled the open points.
 The planner's ruling a6f98773 ("Apply them") and the rulings 6d3b979f and
 77a253b9 govern it.
 
@@ -31,7 +31,8 @@ holds the row.
 The member passes the `now` that the view showed. The call checks and acts in
 this order. Each step ends the call before the next.
 
-1. Copy `slot` and `now` before the first `await` (`readDraftNow`).
+1. Check the form of `slot` and `now` and copy them before the first `await`
+   (`readDraftNow`). An ill-shaped `now` stops with `shape` here, before `taken`.
 2. Under custody's fence, read the raw batch and the key's occurrence. The
    existing priorities (`taken`, `state`) apply first.
 3. Decide whether the draft is returned, and recompute the view
@@ -66,8 +67,9 @@ head. The server stores none of it.
 unchanged. A bare `act` stays a fresh act with its own key. The checks run before
 `signedIntent` and stop with `shape` through the existing `Unshaped` path.
 
-`now` appears on every refused act result. If the fresh read does not hold the
-item the act is on, the result carries `lacks: "on"` and no `now`.
+`now` appears on every refused act result when the fresh read holds the
+revision of every subject of the act. Otherwise the result carries `lacks`,
+which names the subject, and no `now`.
 
 ## Limit
 
@@ -126,16 +128,55 @@ these defects. Each repair is in this head.
 - Twenty-two type errors, all in tests except an unused import and one list
   entry cast in `draft-project.ts`.
 
-## Open
+## Rulings
 
-These points rest on guesses made while composing. The planner has not ruled on
-them.
+The planner settled the six points of the first run in ruling 09041476.
 
-1. A form 1 return answers `{ ok: false, stop: "state", committed: key }`.
-2. Step 7 signs after the fence releases. A second tab can see the adopted
-   row for a moment before the custody record exists.
-3. `actExplore` runs inside the fence.
-4. An ill-shaped `now` stops with `shape` before the `taken` check would apply.
-5. From the `now` lane: the description of `settle`, `lacks` naming only `on`,
-   the `UnavailableActSource` fallback, and a `via` subject that reads `absent`.
-6. Notes that mention `RequestView` were not edited.
+1. **Form 1 return.** A return by an exploration answers
+   `{ ok: false, stop: "state", committed: key }`. A page has one path for each
+   stop: it shows the view, and the view holds the reason and `now`.
+   `committed` names a draft that the call changed. The doc comment of
+   `DraftStop` in `scope-client.ts` says so. No page under `docs` documents the
+   draft stops, so no page changed.
+2. **Step 7 signs after the fence.** Both views are valid: a draft on the
+   adopted basis, then the request. A stop between step 6 and step 7 leaves an
+   adopted draft with its key, and the next submit signs once. A second client
+   that submits the same key in that moment meets custody, which admits one
+   signing. Two cases in `c4-draft-now.test.ts` pin both.
+3. **`actExplore` and the fence.** The ruling asks this note to state that
+   `exploreReplica` makes no call to the scope and waits for no read. The source
+   does not support that sentence. `Replica.#explore` awaits `binding.read`
+   (`replica.ts` line 260), which is the `exploration` reader that the caller
+   passes to `scopeClient` (`scope-client.ts` line 168). A reader can wait for
+   the network, for example to issue a read session. `actExplore` itself is
+   synchronous. The call stays inside the fence until the planner rules on
+   that wait.
+4. **Order of checks.** The call checks the form of its inputs before its first
+   wait: `slot`, the patch, and `now`. An ill-shaped `now` is a fault of the
+   caller, and no state of the store changes that. The order is then `taken`,
+   `state`, and a missing or foreign `now`. A `shape` stop comes before any
+   signature. A test pins an ill-shaped `now` on a taken slot.
+5. **The `now` lane.**
+   - The `settle` description says that a refused result carries `now` and
+     that `act` takes it with `after`. `docs/mcp.md` and `docs/mcp-tools.json`
+     hold the same text.
+   - One rule serves both adapters (`lackedSubject` in `expected.ts`). A
+     result carries `now` only when the read holds the revision of every
+     subject of the act. Otherwise `lacks` names the subject: `on` for the
+     primary, or the name of an `also` subject. The MCP result no longer names
+     only `on`.
+   - An unavailable symbolic source maps to no one subject. The view says
+     `lacks` with a null subject, as `DraftStateStop` allows. A page then says
+     that the client lacks a row that the act reads.
+   - `absent` means that the selection is empty in the rows that the cut holds.
+     A `via` subject whose slot names a row that the cut does not hold is
+     `lacks`. As `absent` it would add no key to `expected`, and the member would
+     sign with no basis for a row that exists. When a subject is absent at the
+     signing and selected at the judgment, `judgeActBody` counts the keys of
+     `expected` against the subjects it binds (`packages/derive/src/judge.ts`
+     lines 392 to 395). The count differs, so the scope refuses `bad-intent`
+     ("expected has one key for each of: ..."), not `revision-moved`.
+6. **D12.** `notes/2026-11-13-scope-client.md` stays as written. The act
+   environment note lists each change to D12 in section 15. Its row for D12
+   section 9 now says that `requests` holds three arms, each with `is`. No
+   page under `docs` names `RequestView`.

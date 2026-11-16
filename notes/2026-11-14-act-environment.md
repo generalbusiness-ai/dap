@@ -1328,7 +1328,7 @@ covers the acts that need no basis.
 | Section 8: an `other-recorded` request enters an empty slot as a new draft | The request waits in the list, also when its slot is empty. The new key starts at the `restore` in each case (section 6) |
 | Section 8: "A stop changes no store" | No stop leaves a custody record. Most stops write nothing. A `source` stop can leave a version with no mark and no signing. Three stops leave a version and its permission mark, with one call of the signer (section 7.1): a stop of the signer, a stop of the custody write, and `full` with the reason `bytes` after the build |
 | Section 8: the stops of a submit | Ten stops: `shape`, `state`, `busy`, `signer`, `store`, `full`, `taken`, `descriptor-mismatch`, `source` and `versions-full`. `full` keeps custody's reasons: `bytes`, `count`, `budget` and `signings`. An `unavailable` exploration is no stop |
-| Section 9: `ClientView` and `Judged` | The view gains `explore` and `offers`, and each row gains `ref` and `recorded`. `Judged` is the exploration of a signed version |
+| Section 9: `ClientView` and `Judged` | The view gains `explore` and `offers`, and each row gains `ref` and `recorded`. `Judged` is the exploration of a signed version. `requests` holds three arms, each with `is`: `request`, `draft` and a held intention (section 6) |
 | Section 10: no file and no export in `packages/contract` or `packages/derive` | Step E1 adds one export to `packages/derive`, and request EK-1 adds `judgeExploreGrant` (section 16) |
 | Section 15: work offline for longer than one signing is not taken | Stays not taken in the first build. The rule of section 7.1 permits a later deadline (section 7.2) |
 

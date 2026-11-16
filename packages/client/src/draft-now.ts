@@ -4,6 +4,7 @@ import type { ActType, DeclaredDefinition, Head, ScopeRef } from "@generalbusine
 import { canonicalize, isHead, isRecord, parseStrict, same, wellFormed } from "@generalbusiness/dap-bytes";
 import type { ActRef, Revision } from "./act-types.ts";
 import { UnavailableActSource } from "./act-symbols.ts";
+import { lackedSubject } from "./expected.ts";
 import { validKey } from "./custody.ts";
 import { ShapeError } from "./declared-shape.ts";
 import { selectDraftSubjects, type DraftSelectionRow } from "./draft-selection.ts";
@@ -25,10 +26,11 @@ export interface DraftNow {
   readonly subjects: Readonly<Record<string, DraftSelection>>;
 }
 
-/** A view that holds the rows gives `now`. A view that lacks a row names the subject. No cut names nothing. */
+/** A view that holds the rows gives `now`. A view that lacks a row names the subject, or null when no one subject maps to
+ * the missing row (an unheld symbolic source). No cut names nothing. */
 export type DraftNowView =
   | { readonly is: "now"; readonly now: DraftNow }
-  | { readonly is: "lacks"; readonly subject: string }
+  | { readonly is: "lacks"; readonly subject: string | null }
   | { readonly is: "no-cut" };
 
 /** The checked cut of one render: its head and every row it holds, final rows included. */
@@ -100,7 +102,7 @@ export function draftNowOf(input: DraftNowInput): DraftNowView {
   const rowOf = (name: unknown): DraftSelectionRow | undefined =>
     typeof name === "number" ? cut.rows.find(row => row.id === name) : undefined;
   const refOf = (row: DraftSelectionRow): ActRef => ({ name: row.id, seen: row.revision, assumes: [] });
-  const lacks = (subject: string): DraftNowView => ({ is: "lacks", subject });
+  const lacks = (subject: string | null): DraftNowView => ({ is: "lacks", subject });
   let primary: ActRef | null = null;
   if (declared.step !== "open" && declared.on !== null) {
     const row = rowOf(stored.act.on);
@@ -117,15 +119,14 @@ export function draftNowOf(input: DraftNowInput): DraftNowView {
     selected = selectDraftSubjects({ declaration: declared, scope, rows: cut.rows,
       values: { on: stored.act.on, fields: stored.act.fields } });
   } catch (error) {
-    // An unheld symbolic source other than an item name: the first subject stands for it.
-    if (error instanceof UnavailableActSource) return lacks(Object.keys(declared.also)[0] ?? "on");
+    // An unheld symbolic source maps to no one subject: the view lacks a row that the act reads, and names none.
+    if (error instanceof UnavailableActSource) return lacks(null);
     throw error;
   }
-  for (const [name, rule] of Object.entries(declared.also)) {
-    if ("code" in rule || !("by" in rule)) continue;
-    const named = Object.hasOwn(selected.effectiveFields, rule.by) ? selected.effectiveFields[rule.by] : undefined;
-    if (typeof named === "number" && rowOf(named) === undefined) return lacks(name);
-  }
+  // One rule for every adapter (`lackedSubject`): a `by` or `via` subject that names a row the cut does not hold is lacking,
+  // never absent. `absent` is left for a selection that is empty in the rows the cut holds.
+  const missing = lackedSubject(declared, cut.rows.map(row => ({ ...row, refs: { ...row.values, ...row.refs } })), selected.on, selected.effectiveFields);
+  if (missing !== null) return lacks(missing);
   const subjects: Record<string, DraftSelection> = {};
   for (const name of selected.names) {
     const id = Object.hasOwn(selected.selected, name) ? selected.selected[name] : undefined;
