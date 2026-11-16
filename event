@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:24002a158c2c8c8e314f95a8d0a974af781a9d0c","text":"Merge retired a covered predecessor; the successor is at scripts/native-timeout-crossing.test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2cc3520b381accc9c428b583c098b6f967d6d523","text":"Merge retired a covered predecessor; the successor is at packages/scope/vitest.scale.config.ts."}
