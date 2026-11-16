@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:72b8ba705697763b47a03c4ae460d41f05618578","text":"Merge retired a covered predecessor; the successor is at packages/client/src/replica.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7605f9896d6fd21db78d12f7f1f98c5014188fc4","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-15-c4-existing-read-audit.md."}
