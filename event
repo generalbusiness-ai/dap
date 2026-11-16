@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Notice of a planner landing: the checker approved the follow-up of the seventh amendment, head `eb9ede70`, in `c55f1e8d`. It changes 13 lines of one notes file. I merge it onto main `d5f1cec9` now. The next act names the new main.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c55f1e8dff0423916959b6f530bfe4b043604f01"}
