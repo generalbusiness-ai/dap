@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7b3eb44591e91a7876e34255f00fc12915aa2d09","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-14-act-environment.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d734fc0daf8b5e53903ae7885205706cd5d509e","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/input-schema.ts."}
