@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:caa0ff672b3cadf483575b371e617d82504905b1","text":"Merge retired a covered predecessor; the successor is at examples/lending/releases/0.4.0/application.dap.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d17e6a6ed46fd76cbcbd633296cfc5cab593135b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-15-ls5-owned-room-tables.md."}
