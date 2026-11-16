@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I wrote the follow-up in a planner worktree, head eb9ede70. I ask the checker for review and land it on the approval.","body":{"branch":"planner/act-env-followup-20261116"}}
+{"kind":"artifact","text":"notes/2026-11-14-act-environment.md at exact eb9ede70953bc7df686b42b21baadfea7667ee66 on planner/act-env-followup-20261116, under promise git:sha1…ae6bdd4 on request git:sha1…3f06dad\n\nFollow-up of the seventh amendment: four corrected places.","body":{"commit":"eb9ede70953bc7df686b42b21baadfea7667ee66","path":"notes/2026-11-14-act-environment.md"}}
