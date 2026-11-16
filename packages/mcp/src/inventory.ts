@@ -113,6 +113,18 @@ function memberKind(items: readonly Item[] | undefined, key: string): string | u
 }
 
 /**
+ * The session of `membership`, with a standing at the membership head `at` that the caller read (ruling c1fd1293). A held session
+ * whose standing names another head is forgotten, and the session is asked for once more. An unmoved membership costs no request.
+ */
+export async function sessionAt(reads: Reads, membership: ScopeRef, at: Head): Promise<Session | null> {
+  const held = await reads.session(membership);
+  const head = held?.standing?.head;
+  if (!head || (head.seq === at.seq && head.hash === at.hash)) return held;
+  reads.forget(membership.scope);
+  return reads.session(membership);
+}
+
+/**
  * The caller's standing on a membership, from the value in the caller's read session. No session, or a session with no value, is
  * unknown.
  *
@@ -198,7 +210,7 @@ export async function readInventory(reads: Reads, kept: Kept, config: McpConfig,
     const [membershipRead, directoryRead, rulesRead] = await Promise.all([summaryOf(M.scope, M), summaryOf(repository.directory.scope, M), summaryOf(repository.rules, M)]);
     if (membershipRead.ok) {
       heads[M.scope] = headText(membershipRead.at);
-      standing[M.scope] = standingFrom(await reads.session(M), key, reads.now(), membershipRead.value.items);
+      standing[M.scope] = standingFrom(await sessionAt(reads, M, membershipRead.at), key, reads.now(), membershipRead.value.items);
     } else {
       standing[M.scope] = { known: false, reason: membershipRead.reason };
       unread.push({ scope: M.scope, reason: membershipRead.reason });
@@ -278,7 +290,7 @@ export async function readInventory(reads: Reads, kept: Kept, config: McpConfig,
     await hold("root", root.scope, root.membership, read.value);
     if (root.membership && standing[root.membership.scope] === undefined) {
       const m = await summaryOf(root.membership.scope, root.membership);
-      standing[root.membership.scope] = m.ok ? standingFrom(await reads.session(root.membership), key, reads.now(), m.value.items) : { known: false, reason: m.reason };
+      standing[root.membership.scope] = m.ok ? standingFrom(await sessionAt(reads, root.membership, m.at), key, reads.now(), m.value.items) : { known: false, reason: m.reason };
       if (m.ok) heads[root.membership.scope] = headText(m.at);
     }
   }

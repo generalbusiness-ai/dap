@@ -5,7 +5,7 @@ Base: main `d6c863bb`, after C4. EK-1 (`f976e00b`) and ES-1 (`41cafc07`) share o
 ## What the head changes
 
 1. `packages/derive` splits the value checks of the grant guard out of `judgeGrant`. One private function, `checkGrantValue`, runs them. `judgeGrant` calls it and runs the use guards between its first and second part. A new export, `judgeExploreGrant`, calls it with no use guards, for a standing that the caller supplies. The grant that it returns has no `fresh` member. That grant can sign the unsigned body of an Explore (`judgeActBody`). It is never recordable authority and never serves a row of `observes`.
-2. A session answer carries the signer's standing when the request asks for it with `?standing=1`. The scope returns the value that it already computed for the session's checks and claims. The client keeps the value with the token. The CLI cache keeps it with the token. The MCP inventory reads its standing from it.
+2. A session answer carries the signer's standing when the request asks for it with `?standing=1`. The scope returns the value that it already computed for the session's checks and claims. The client keeps the value with the token. The CLI cache keeps it with the token. The MCP inventory reads its standing from it, at the head of the membership read of the same moment.
 3. The MCP inventory asks `judgeExploreGrant` for each action of the value. `standingFrom` only shows the value (role, handle, key). It decides no action.
 
 ## Kernel surface
@@ -21,6 +21,10 @@ A submit that the scope refuses for authority ends the cached session, so the ne
 The set is therefore one reason: `unauthorized`. `AUTHORITY_REFUSALS` (`packages/client/src/reads.ts:49`) holds it, and `authorityRefusal` (`reads.ts:52`) tests an answer against it. The CLI connection (`packages/cli/src/command-support.ts:224`) and the MCP service (`packages/mcp/src/service.ts:863`) call it. The seven names of `Unheld` do not travel in the answer.
 
 `authority-unavailable` is an `unavailable` answer. The scope judged nothing about the key, so nothing ends (`authority.ts:339`, `judge.ts:458,468`).
+
+## How fresh the inventory's standing is
+
+The inventory's standing matches the membership read of the same moment, as on main (ruling c1fd1293). Main computed the standing from the membership summary on each read. This head reads it from the held session, which can last up to ten minutes. So `readInventory` compares the head of the membership summary that it already reads with the head of the held standing (`sessionAt` in `packages/mcp/src/inventory.ts`). When they differ, it forgets the session and asks once more. A list with no membership move asks for no session. A membership act that leaves the caller's role unchanged costs one session request on the next list, and no extra summary read. `packages/mcp/test/budget.test.ts` pins both costs. Its notification case pins that a role change raises one notification at the next watch run.
 
 ## The member kind
 
@@ -39,6 +43,19 @@ The standing is unknown when the membership gave no session (`no-session`), when
 Only the MCP server and the CLI ask, through `requestSession(..., { standing: true })`. The room page, the application screens, the joining flow and the index command send the request that they sent before. The sandbox gateway allows no query on the sessions route (`packages/client/src/application-gateway.ts`), so a screen in the sandbox must not ask, and the gateway refuses `standing` (`docs/security/entry-points.md`, sandbox row). E2 opens the gateway to it.
 
 The rolling pair is not run in the test harness. The owner test uses two stand-ins: the old route is the current route with the query dropped, and the old reader is a copy of its three-member rule. The planner runs the true pair at the deployment, in both orders: the new client against the deployed older Worker before the deployment, and the client of `91610da9` against the new Worker after it. The default path, with no option, is the older behaviour by construction.
+
+## What the first run found
+
+The source draft was written before any of it ran. The first compile and run found these defects. Each repair is in this head.
+
+- **A fixture head did not type.** `budget.test.ts` hoisted a judged head into a `const`, which widened its hash to `string`. It is typed as `Head`.
+- **The Native ES-1 case asked without the option.** Its last check read the client's held standing through the shared helper, which passes no option, so the standing was null. The case now asks with `standing: true`, as the opt-in ruling (bb2f7f17) requires.
+- **A body cannot pass a platform rule.** The new body assertions of the prediction-grant case judged `own`, whose `sees` guard is a platform rule. A body has no signed intent, so the rule cannot run, and the answer was `unavailable` for every grant. The body assertions now use a scope whose `own` has no guard. The case's first assertions keep the guarded act.
+- **The inventory's standing went stale.** Two MCP cases failed: a role change raised no notification, and a withdrawn action stayed listed. The held session kept the standing of its issuance. The section above states the repair.
+- **The application tools read standing from the summary.** `viewer` and `actions` in `service.ts` still read the membership summary for standing. They now take the session through `sessionAt` in `inventory.ts`, the one check the inventory uses, at the head of a membership read.
+- **The read counts grew.** Each MCP tool answer in the J4 golden reads counts 727 more bytes, with the same number of requests. The session answer now carries the signer's standing. The golden file changes only in its 12 `bytes` counters.
+- **The session reader names the platform package.** `sessionStanding` asks whether a standing's definition answers the session question, as `answers.ts` asks its own question. `scripts/active-source.test.mjs` lists `packages/client/src/session.ts` among the exact client files that name the platform package.
+- **The open presentations moved.** The client change moves the Lending and Counter browser scripts. Both declare the open version 0.5.0, so only their `presentation` identifiers change.
 
 ## Tests
 

@@ -789,6 +789,24 @@ describe("what a call costs, end to end", () => {
     await annotate(`notifications: 2 told for an activation and a role change, 0 for a head advance; each watch run ${watchReads} reads`);
   });
 
+  // Invariant: the inventory's standing matches the membership read of the same moment (ruling c1fd1293). A list with no
+  // membership move asks for no session. A membership act that leaves this key's role unchanged costs one session request on
+  // the next list, and no extra read of the membership summary.
+  test("the inventory asks for a session again only when membership moved", async ({ annotate }) => {
+    const s = roomOf("admin", [issueDemo]);
+    const membership = s.stand.scopes.get(s.stand.membership.scope)!;
+    const list = async () => { const before = s.stand.requests.length; await s.service.snapshot(); return s.stand.requests.slice(before); };
+    const summaries = (requests: readonly string[]) => requests.filter((r) => r === `GET /v1/scopes/${membership.ref.scope}`).length;
+    await list();
+    const still = await list();
+    expect(sessions(still), still.join(", ")).toBe(0);
+    s.stand.append(membership, { type: "timed", item: 0, rule: "stand-in", due: "2099-01-01T00:00:00Z" } as never);
+    const moved = await list();
+    expect([sessions(moved), summaries(moved)], moved.join(", ")).toEqual([1, summaries(still)]);
+    expect((await list()).filter((r) => r.endsWith("/sessions"))).toEqual([]);
+    await annotate(`standing freshness: an unmoved list asks for 0 sessions; a moved membership costs 1 session and ${summaries(moved)} summary read`);
+  });
+
   // Invariant: a `revision-moved` refusal of an act reads the target lane once more after the post, for the `now` that its
   // result carries (ruling 892d1abf). A guard refusal reads nothing more (above).
   test("a revision-moved refusal reads the lane once more for now", async () => {

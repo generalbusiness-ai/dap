@@ -12,7 +12,7 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 const namedOwners = {
   "packages/scope/src/object.ts": {
     "packages/scope/src/object.ts:$module": "61e64e92aebf2a3c602365b09d982b68ab0d7a348a1bc2b6232455b2bbf2079e",
-    "packages/scope/src/object.ts:ScopeObject": "4c656dbca3dfb49f958e81ca12acb83e5b748482b67d7c70d64204d5294add92"
+    "packages/scope/src/object.ts:ScopeObject": "92fa6b7c21573229c9b994a64131373ff403eb799fc71ffea2aedf59cd3c9436"
   },
   "packages/scope/src/object-archive.ts": {
     "packages/scope/src/object-archive.ts:$module": "7d7c0da57c8b69bc953c19a59e3bd6af25a5f02863bac10ef6fd839fc9dd5adc",
@@ -28,7 +28,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:ROOM_RPC_METHODS": "f3d87e46eba68eacb7f390d1d2a221127794af44f017f976b0c8636fae5a54ba",
     "packages/scope/src/worker.ts:retiredRoomAnswer": "8fe669ecc7f0f242aa4d01b2fece28c68ccb5e6c1bc878609b07dc63372a5ae2",
     "packages/scope/src/worker.ts:api": "1a91c1253cbff547b01353c554e2ea425cbcb432e9f7e2a545f96d490082eff6",
-    "packages/scope/src/worker.ts:roomApi": "42bb380c60e0b3822c5566f19e7c677f2c993009fc064db98d49c678dd20a6a4",
+    "packages/scope/src/worker.ts:roomApi": "d12c8e662484c14bf899b60b22b6e5f80b99fa9134f8640dd94364ea3add1150",
     "packages/scope/src/worker.ts:BODY_BYTES": "158a6579a52843b40416a1f4d27e7bffb5e0f5df07105254bd3e87c3d3d203fd",
     "packages/scope/src/worker.ts:answered": "f1c36263f63cc8977a334b803d6c89c4863d2e078704d7cdffdce1c3dc2eaea0",
     "packages/scope/src/worker.ts:READ_STATUS": "d8b56891bb8825791d082b46be7845faa2cb7094dee8f758a0ed59ba51e2c51b",
@@ -44,7 +44,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:PROJECTION_STATUS": "a4e03bbeb2eacbb5e02d3228366fea9c7ffc218d5f814f72f4a1b3b291760742",
     "packages/scope/src/worker.ts:projectionResponse": "e17f1f4aa800bc06b4f8d065f77e8a594c2738c77873a52671fa7f1b22bf249b",
     "packages/scope/src/worker.ts:route": "631ced1082eca113b04fd2e53f96c8ccd02a9bcebb7c7e9ee8fb8b74230774c4",
-    "packages/scope/src/worker.ts:routedRequest": "73baacbcfccec81a0cf945ee85bb1eccd8d28362a9c85156c93d0514d2e00044",
+    "packages/scope/src/worker.ts:routedRequest": "66fabe2c600aabb0dc9755436617c7ea3267e4ab61f8c901b9b77bd692e34341",
     "packages/scope/src/worker.ts:outsideOf": "81fd747eaf5d1d22d8a445fa3348d87ddf9079699e75a59b329022bcd6985b9e",
     "packages/scope/src/worker.ts:sessionWiring": "efbb51a65f5a24f3d1bfc006206deaf61d3e35f55e6ff611dd710e466db787eb",
     "packages/scope/src/worker.ts:snapshotReaderOf": "24485585bf55db1edb79dbde6d2617c6606541a245dd24a778b8e269d6b19669",
@@ -178,7 +178,7 @@ const namedOwners = {
     "packages/cli/src/command-issues.ts:linking": "e425a12db2c6e4da95f28b73f366215f4347592d6b868d3fd943fab497766280"
   },
   "packages/mcp/src/service.ts": {
-    "packages/mcp/src/service.ts:$module": "53d8fb5b768cc517d8aae86b593441c94a837fda20733b7aefd999921e5b619f", // CE2 adds local custody findings without changing Native answer shapes.
+    "packages/mcp/src/service.ts:$module": "6645f739bedb8e071e32c52d0860deb022ffdeac9ac38ba77d4e4e2cb84af90e", // C4 adds after, now and #nowFor; EK-1 reads standing from the held session at the membership head and ends it on an authority refusal.
     "packages/mcp/src/service.ts:ListRestart": "83803f5cf365099c3ed7ad6d12153b68e7616977007feffed4ca4b01bd4ca95d",
     "packages/mcp/src/service.ts:SERVER_NAME": "1a22dd379fec10cbed8b5938dfd522ce9e8cffe176de5f4554e3cad8668764e2",
     "packages/mcp/src/service.ts:SERVER_VERSION": "93926c4b4205a41211c5dfd2e083d8a5d4eed978060ba4d0781fb54d9d3eb366",
@@ -212,7 +212,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:scopeRefArg": "54eb8fcb90bd3e5dbacec1eb71f853e5a3b578aae10d11a24d3c0ee0d69a88b3",
     "packages/mcp/src/service.ts:memberRefArg": "80b4a7634bee92e5b6d8b03dea6102cbf701fcab94198e54de219783961ee281",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "ecd6e9be07b5831c4d8b723c54faa0b601db487a83af59e2fd8fb227e792d70c", // E4 forwards the actual fence-capable custody builder type; existing settle and Card paths stay unchanged.
+    "packages/mcp/src/service.ts:McpService": "e6dbfd46c1d590110a7638a5e32793e703703a3e7ee34f9d6b11ee24da4335da", // C4 adds after, now and #nowFor; EK-1 takes the application standing from sessionAt and forgets the session on an authority refusal.
     "packages/mcp/src/service.ts:commitIdFault": "36b75703f0eb36b5abca60906629f23df18a233d26c395f0b61c792eddabe405",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
@@ -312,8 +312,8 @@ const seals = {
   "packages/scope/src/core.ts": namedOwners["packages/scope/src/core.ts"],
   "packages/scope/src/applications/act-admission.ts": "bd0aba219f02c47c143e8a86b4204e1923d7c48d10cd4a873c93a40987f2eea9", // Exact native provenance and current trust; actual maintained parser output.
   "packages/derive/src/genesis.ts": "d2a6165d424376a9057cc9390e721a1970341ad937d739a6f94eb9575d9f1cc2",
-  "packages/derive/src/judge.ts": "0336279062131ca01f725c4d2d4f29a5a9009abbe58bdb9583748e7853380997", // A1 derives expected names through shared expectedKeys without changing judgment order.
-  "packages/scope/src/sessions.ts": "d701c671e110dae78d0b9a73cfd6229dc9b4a1bb89bdc97e76228c53168dd68d",
+  "packages/derive/src/judge.ts": "2abf7ccdf023c74e33616ad88ec238ac23d7795d0c94c58e0df4414fb6512688", // A1 derives expected names through shared expectedKeys without changing judgment order.
+  "packages/scope/src/sessions.ts": "12254a4ccbc51fb5b16eabc0bce84c4c764bb233e023cefd788b99dcf5189af8",
   "packages/scope/src/originals.ts": "f6091ac370a3346c493eb795ef72b2392217708a00492c59fcaf1f3df9903ac4", // Reviewed J1 owner: the member compare, the signature and actor check, and the caps.
   "packages/client/src/originals.ts": "4b77af1b7f1d97f573f072efbe278cd3fa38ee4809b031d648fa57c5d5d17cf4", // Reviewed J1 owner: the bytes that a second device verifies before it sends them again.
   "packages/scope/src/reads.ts": "27fb18acf08aee7b2c9f9abda0f0b8387f8dab4aab7cd5545efabacc29da6cb0",
@@ -346,7 +346,7 @@ const seals = {
   "packages/mcp/src/input-schema.ts": "6d6e4d779fbbcc39d3eaf899d487e9ca9008aff0f0f2bb26490a6ceebbfe979e", // Moved MCP schema derivation; actual maintained parser output.
   "packages/mcp/src/act-result.ts": "7aea1e7880d479e4170f35d447254eabdddb4816dd20f8f5b38421cb4b6fadfb", // Moved MCP answer projection and act output schema; actual maintained parser output.
   "packages/mcp/src/describe.ts": "a1708220ef2656a34c466037223cf0ab31133bc442919d92d04fe8a37ebada92", // Moved bounded MCP tool description; actual maintained parser output.
-  "packages/mcp/src/inventory.ts": "9f5492ea706ef49c4555f81c83de78319916630075036ef574b7a067a4518c9c", // Reviewed parallel authority reads and target-only discovery; standing still reads fresh; NF-4 reader import.
+  "packages/mcp/src/inventory.ts": "4bbbf22863db4c36546b0c8283a3d2b3e5c501a64b0cc4ccf9c56695ed4300dc", // Reviewed parallel authority reads and target-only discovery; NF-4 reader import; EK-1 reads standing from the held session at the membership head (sessionAt) and judges each action with judgeExploreGrant.
   "packages/mcp/src/http.ts": "773765a2edab34cfd675038a9bf5bbd51ef671379a0ce379d48725ea1b61b3b9", // Reviewed Mcp-Name binding for prompts/get.
   "packages/client/src/application-trust.ts": "137391c8b1ed6f59f66e9368012c1355ed77325fdb16f67b73296be1ccc856b3", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "packages/client/src/application-install.ts": "f6c69d8f3abb87eaaecdaf25360deaaca98eec3ca6cb57a5912d72121cb1000c", // Reviewed R10 trust-before-fetch owner; actual maintained parser output. CF-1 changes it; actual maintained parser output.
@@ -405,8 +405,8 @@ const pendingR8Seals = {
   "packages/mcp/src/description-context.ts": "ef86ba4f8fc9e67f792d10510b9e9c20132b80c3d8915774fede7de714c4be17", // Private native-to-plain catalogue binding; NF-4 moved it to the client install module.
   "packages/client/src/expected.ts": "2bfd1c5df978e5e3549e6747382fe5151cb79c5dad627300793d2ff0fd2b545c", // A1 shares expectedKeys while preserving sparse, prototype-safe subject resolution.
   "packages/cli/src/claim.ts": "99d3f75a1caf5b86d6f8a5f2d6fa94ea2adf26d9ba33c05196687aa98757f4dc", // CR2 admits the signed original installer-founder at register28; legacy binding25 keeps host-none limits.
-  "packages/cli/src/command-support.ts": "d583fdc077383d497a92b4ec452dc4c316da1b6b665a73c917d2c5cd3407af1c", // Moved shared read, session and signing support; actual maintained parser output.
-  "packages/cli/src/read-session-cache.ts": "12a5cf131a166001f66672bc3c4b6daf70070645255c61db7b93f18b6fbb83b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
+  "packages/cli/src/command-support.ts": "6f118ded23c539916d6038009eb1a118da8c294f0dc430e5f9d55fb93009794c", // Moved shared read, session and signing support; ES-1 asks for standing and ends the cached session on an authority refusal.
+  "packages/cli/src/read-session-cache.ts": "701cdbeb0a804490b29cccf98ee3f5d2a6dcebf5fd94b7d8d08f455a59699e93", // Reviewed CLI session or verification boundary; ES-1 keeps a checked standing as an optional fifth member.
   "packages/cli/src/verification.ts": "4875139168f453ff917ff565deefccc60b377ab529b42a236c6025bc7bf429d9", // Reviewed unique-entry ledger, source conflicts and owner retirement; actual maintained output.
   "packages/cli/src/files.ts": "692ad5257d940da6eefe571283600befb1db3323510d2ab2065654dcc2e780e7", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/store.ts": "e710dc929252a3f413fb889344fc4fdad1bc2bc3340b9fd4e91a57c4891295a5", // Reviewed CLI session or verification boundary; actual maintained parser output.
@@ -415,7 +415,7 @@ const pendingR8Seals = {
   "packages/cli/src/scope-index-applications-command.ts": "5af0f495fb9af7ba04b64deda0019e39649c81971196c3999ab60d1d75a26571", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-manifest.ts": "4bd67e5543b060c24e235a15f03983ad590ee77fc94a8a96627e2ad1adcd0155", // Preserve trusted session refusal outcomes; actual maintained parser output.
   "packages/cli/src/status-report.ts": "6167375d4e69a8be6614b9445f2d2d5262d0b2ea59145628de9f183e94a60d5d", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "packages/client/src/session.ts": "0199b1f70200d0d5a6d724a7caa413c360f99bd95317a38a8db717aeee200a9a", // Reviewed CLI session or verification boundary; actual maintained parser output.
+  "packages/client/src/session.ts": "6e4a3c47ba2a2fc26e2df8a15cdb1e2f64a4dc9e1cb271ec6ea118752338ecfd", // Reviewed CLI session or verification boundary; ES-1 asks for standing on request and keeps it only after sessionStanding checks form and agreement.
   "apps/sandbox/worker.ts": "758b28ea299eddad07022a913d4b94d632814aa51f2868810300a582ee833f51", // Inject the reply window; retain the existing Native lifetime close on an observed HTTP disconnect.
   "packages/client/src/application-gateway.ts": "daa1d28c02085bd6be7a9698a7120cd106cc7233aad92565aaa05e67427878ef",
   "packages/client/src/application-route.ts": "62660d1d37d6d75f350d338a3efbb69c37ebcf8fd9d6dd2a27e21472e2d9c23b",

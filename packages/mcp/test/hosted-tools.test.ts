@@ -98,6 +98,8 @@ test("actual-target standing and definition selection refuse before signing, cus
   // Standing is read anew after an earlier list; the peer is scripted, not a native grant oracle.
   const activeMembership = peer.scopes.get(peer.membership.scope)!;
   activeMembership.items[0] = { ...activeMembership.items[0]!, values: { ...activeMembership.items[0]!.values, agentActions: [] } };
+  // A real roster change moves the membership head; the inventory reads standing at that head (ruling c1fd1293).
+  peer.append(activeMembership, { type: "timed", item: 0, rule: "stand-in", due: "2099-01-01T00:00:00Z" } as never);
   const withdrawn = await service.call("rules.publish", { on: 0, fields: publishFields, idempotencyKey: "standing-withdrawn" });
   expect(withdrawn.structuredContent["error"]).toBe("unknown-tool");
   expect(signedBytes.some(bytes => bytes.includes('"kind":"publish"'))).toBe(false);

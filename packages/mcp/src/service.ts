@@ -30,7 +30,7 @@ import { describeAct } from "./describe.ts";
 import { grantAction, onOf, type ActLike, type DefinitionLike } from "@generalbusiness/dap-client";
 import { AFTER_INPUT, AFTER_WITH_NOW, AT_INPUT, NOW_INPUT, schemaOf } from "./input-schema.ts";
 import { answered, archivedAnswer, clip, earlierSaid, finding, type Earlier, type Finding, type Said } from "./errors.ts";
-import { Kept, definitionOf, readInventory, readPartitionIndexes, standingFrom, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
+import { Kept, definitionOf, readInventory, readPartitionIndexes, sessionAt, standingFrom, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
 import { KIB, bytesOf, cursorOf, fromCursor, pageBy, sliceText } from "./paging.ts";
 import { ReadSessions, Reads, authorityRefusal, type AbsenceRecovery } from "@generalbusiness/dap-client";
 import { Recent } from "./recent.ts";
@@ -305,15 +305,16 @@ export class McpService {
       projection: async (query, minimum) => this.#reads.projection((await this.#applicationRoom()).membership, query, minimum),
       members: scope => readMembershipDisplay(this.#reads, scope),
       viewer: async () => {
-        const room = await this.#applicationRoom(), session = await this.#reads.session(room.membership);
+        const room = await this.#applicationRoom(), { at } = await this.#summary(room.membership.scope, room.membership);
+        const session = await sessionAt(this.#reads, room.membership, at.at);
         if (!session || session.claims.key !== this.key || canonicalize(session.claims.membership) !== canonicalize(room.membership)) return null;
         const standing = standingFrom(session, this.key, this.#now());
         if (!standing.known || standing.role === null) return null;
         return { member: { membership: session.claims.membership, member: session.claims.member }, grants: standing.actions };
       },
       actions: async () => {
-        const room = await this.#applicationRoom();
-        const standing = standingFrom(await this.#reads.session(room.membership), this.key, this.#now());
+        const room = await this.#applicationRoom(), { at } = await this.#summary(room.membership.scope, room.membership);
+        const standing = standingFrom(await sessionAt(this.#reads, room.membership, at.at), this.key, this.#now());
         return standing.known ? standing.actions : [];
       },
     }) : null;
