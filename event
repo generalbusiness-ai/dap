@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bec1551c9fe8ca73e42996c70af665c95f487bf2","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-16-xd1-native-timeout-crossings.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d0f51ed52ab3f95d388e8a41355703834ea39a58","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/native-timeout-crossing.setup.ts."}
