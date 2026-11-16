@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c6d8ea537591859c56fa895b0d28e1c578c2a08e","text":"Merge retired a covered predecessor; the successor is at packages/client/src/draft-slot.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c91800a4922efcfc5a1bb37629be4cb377cdbfe8","text":"Merge retired a covered predecessor; the successor is at packages/client/src/custody-occurrence.ts."}
