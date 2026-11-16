@@ -4,13 +4,13 @@
  * policy, target and provider ports are TEST stand-ins. They count the calls
  * that a production pass makes to the shared Directory scope. */
 import { expect, onTestFinished, test } from "vitest";
-import { timeOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
 import { ArchivePolicyPending } from "../src/archive-budget.ts";
 import { ARCHIVE_RETRY_FLOOR_SECONDS } from "../src/archive-driver.ts";
 import { ScriptedHost } from "./support/archive-driver.ts";
 import { rita } from "./fixtures-native.ts";
-import { archiveAuthorityPolicies, createNativeArchiveLane } from "./support/archive-native-authority.ts";
-import { archiveDefinition, archivePolicies } from "./support/archive.ts";
+import { archiveAuthorityPolicies, createNativeArchiveApplicationLane } from "./support/archive-native-authority.ts";
+import { archivePolicies } from "./support/archive.ts";
 import { roomArchiveWiring } from "./worker.ts";
 
 const HOUR_MS = 3_600_000;
@@ -23,8 +23,16 @@ const CEILING = 6;
 /** Stop a loop that does not back off, so the failure names the count. */
 const RUNAWAY = 100;
 
-test.each(["policy-pending", "target-missing"] as const)("an idle room whose archive stays %s wakes at most 6 times in an hour", async kind => {
-  const lane = await createNativeArchiveLane({}, {}, archiveDefinition), host = new ScriptedHost("sha1");
+// `old`: the room carries the wake that the code before AR-1 left, a
+// deferred one-second retry already in the past with no retry count, as on
+// the live rooms when the archive comes back on.
+const cases = [
+  { kind: "policy-pending", old: false }, { kind: "target-missing", old: false },
+  { kind: "policy-pending", old: true }, { kind: "target-missing", old: true },
+] as const;
+test.each(cases)("an idle room whose archive stays $kind (old wake: $old) wakes at most 6 times in an hour", async ({ kind, old }) => {
+  // A platform lane: its object honours the production `archive` wiring.
+  const lane = await createNativeArchiveApplicationLane(), host = new ScriptedHost("sha1");
   let directoryCalls = 0;
   roomArchiveWiring.set(lane.name, () => ({ production: "room-binding", provider: host,
     policies: { registry: archiveAuthorityPolicies(lane, archivePolicies) }, admit: () => true,
@@ -35,6 +43,11 @@ test.each(["policy-pending", "target-missing"] as const)("an idle room whose arc
   // One member act stores a wake at its commit time. Then the room is idle.
   await lane.did(rita, "remark", { on: 0, fields: { text: "one act, then the room is idle" } });
   const start = Date.parse(lane.c.clock.now), passes: number[] = [];
+  if (old) await lane.inside(async state => {
+    state.storage.sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", "archive-wake-1",
+      canonicalize({ pending: true, stopped: false, next: timeOf(start - 1000) }));
+    await state.storage.setAlarm(start - 1000);
+  });
   for (let at = await lane.alarmAt(); at !== null && at < start + HOUR_MS && passes.length <= RUNAWAY; at = await lane.alarmAt()) {
     const now = Math.max(at, Date.parse(lane.c.clock.now));
     lane.c.clock.now = timeOf(now);

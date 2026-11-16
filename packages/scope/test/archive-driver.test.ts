@@ -6,7 +6,7 @@
  * admission/authority are explicit stand-ins. Actual adapter enforcement
  * and alarm wiring have separate obligations. No external provider runs. */
 import { expect, onTestFinished, test, vi } from "vitest";
-import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { platform } from "@generalbusiness/dap-platform";
 import { CAPABILITY_CODE } from "../src/ports.ts";
@@ -421,8 +421,13 @@ test.each([0, 1])("a native archive shortage at %s entries retries the same head
 // Real Native alarms and eviction; the existing host and policy are TEST
 // stand-ins. Literal observed delays distinguish reset, escalation and cap.
 test("capacity deferrals survive eviction, cap at one hour and reset after progress", async () => {
-  const host = new ScriptedHost("sha1"); let shortage = true;
+  // The deferrals below span about four hours, longer than a credential
+  // dated at the fixed fixture time lasts, so this host dates its
+  // credentials by the lane clock.
+  let hostNow = (): Timestamp => timeOf(0);
+  const host = new ScriptedHost("sha1", () => hostNow()); let shortage = true;
   const lane = await alarmFixture(host, undefined, false, { budget: () => new ArchiveBudget(shortage ? { entries: 0 } : {}) });
+  hostNow = () => lane.c.clock.now;
   const head = await lane.head(), delays = [120, 240, 480, 960, 1920, ARCHIVE_RETRY_MAX_SECONDS, ARCHIVE_RETRY_MAX_SECONDS, ARCHIVE_RETRY_MAX_SECONDS];
   let deferred: Awaited<ReturnType<typeof row>> = null;
   for (const [index, seconds] of delays.entries()) {

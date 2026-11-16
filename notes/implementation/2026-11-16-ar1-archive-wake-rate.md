@@ -65,10 +65,13 @@ hour, before the archive tries again.
 `packages/scope/test/archive-wake-rate.test.ts` runs one idle room with the
 archive wired through the production `archive` seam, for a simulated hour.
 The object, its alarms, SQLite and eviction are real. The policy, target
-and provider ports are stand-ins that count calls. Two cases run:
+and provider ports are stand-ins that count calls. Four cases run:
 
 - the policy stays pending;
-- the target stays missing.
+- the target stays missing;
+- each of those two, with the wake that the code before AR-1 left: a
+  deferred one-second retry already in the past, with no retry count. The
+  live rooms hold such wakes when the archive comes back on.
 
 In each case the room passes at 0, 60, 180, 420, 900 and 1860 seconds.
 The next wake, at 3780 seconds, falls after the hour. The ceiling is 6
@@ -78,8 +81,29 @@ the Directory scope: the room's birth, its creator hops, Rules,
 Destination and two item queries. That is at most about 36 Directory calls
 for each such room in its first hour, and about 6 an hour after.
 
-Before AR-1, the pending-policy case passed once for each pass duration, and
-the missing-target case passed every second: about 3,600 passes an hour.
+The same test against the code before AR-1 fails in all four cases. The
+pending-policy room passed again 0.25 seconds after each pass, once for
+each simulated pass duration. The missing-target room passed every second.
+Both reached the test's stop at 100 passes.
+
+## The expected rate on a Worker
+
+The rate depends on how many rooms on a Worker cannot start their archive.
+Take N such rooms. Each pass costs one alarm on the room and up to about six
+calls on the Directory scope, so up to about 7 Durable Object requests.
+
+| Period | Passes on the Worker | Durable Object requests on the Worker |
+|---|---|---|
+| First hour after the deployment | at most 6 × N | at most about 42 × N |
+| Each later hour | at most N | at most about 7 × N |
+
+For example, the dap-grow census of 2026-11-13 counted 11 scopes. If all 11
+cannot start, the first hour costs at most about 460 requests and each
+later hour at most about 77. A room whose archive confirms and stays idle
+clears its wake and costs nothing. A room with new acts runs one pass for
+each act, and the count above does not include those passes.
+
+Before AR-1, the two Workers made about 250,000 requests an hour.
 
 ## Turning the archive back on
 
