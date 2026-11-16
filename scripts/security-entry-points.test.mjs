@@ -177,7 +177,7 @@ const namedOwners = {
     "packages/cli/src/command-issues.ts:linking": "e425a12db2c6e4da95f28b73f366215f4347592d6b868d3fd943fab497766280"
   },
   "packages/mcp/src/service.ts": {
-    "packages/mcp/src/service.ts:$module": "cbd7d615614dc643187a36ce6e1f5702b2a195d2111dc4d9f4a991e49dbee8ae", // Reviewed exact-read context; NF-4 install request in the client; admission stays here.
+    "packages/mcp/src/service.ts:$module": "0bc0e0888680b197c404d7b691d983e99dd6371e0ee1c9746bf550e971312105", // CE2 adds local custody findings without changing Native answer shapes.
     "packages/mcp/src/service.ts:ListRestart": "83803f5cf365099c3ed7ad6d12153b68e7616977007feffed4ca4b01bd4ca95d",
     "packages/mcp/src/service.ts:SERVER_NAME": "1a22dd379fec10cbed8b5938dfd522ce9e8cffe176de5f4554e3cad8668764e2",
     "packages/mcp/src/service.ts:SERVER_VERSION": "93926c4b4205a41211c5dfd2e083d8a5d4eed978060ba4d0781fb54d9d3eb366",
@@ -196,6 +196,8 @@ const namedOwners = {
     "packages/mcp/src/service.ts:ok": "d01886e75962cf47a06a28e6b04a6effed273dc3ca1e9f7e3bbb2867a3e22fda",
     "packages/mcp/src/service.ts:ERROR_BYTES": "3cf4f0d3c6271b3cef45b42e64e8d210f063b480addfd1f4f1d26d73c3e64d04",
     "packages/mcp/src/service.ts:failed": "077c51d8c07a4c662635309cdfcd35ff6ebad85e8d8d1ba725ab23253a8cb483",
+    "packages/mcp/src/service.ts:unsentRequest": "941a98977b07cd10d13e3d81f324e01f6c37412f02947e2eb2473182f664df02",
+    "packages/mcp/src/service.ts:absenceRecovery": "aa13014bb25619393c0d0756d5533b90e948594bc345904346978d9a7cc439e6",
     "packages/mcp/src/service.ts:configDigest": "db445c9209d8d937f49e2016f1a7ef2eb7ab57a189a05093d2ce8d61e49ff5db",
     "packages/mcp/src/service.ts:Stop": "3840d5e60335bd1fb067b0b5e9df4b8ed78ff61b739729ba2cc69672c97f1cc7",
     "packages/mcp/src/service.ts:applicationPackageBytes": "505ea3aede390299e67669f8d600f2b33e6866a7c498858b47c91edf3a5dfc5d", // NF-4: the public HTTPS Git read of exact package bytes.
@@ -209,7 +211,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:scopeRefArg": "54eb8fcb90bd3e5dbacec1eb71f853e5a3b578aae10d11a24d3c0ee0d69a88b3",
     "packages/mcp/src/service.ts:memberRefArg": "80b4a7634bee92e5b6d8b03dea6102cbf701fcab94198e54de219783961ee281",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "1f0c9985472351824c1be640a03c0643c6e867d7895286296b1a4ccf77112706", // Reviewed exact-read context; NF-4 maps client install refusals; admission stays here.
+    "packages/mcp/src/service.ts:McpService": "75b8ec6b08351957201fe0538d19871036ce72244051197723f581d2ffec74aa", // Public settle alone proves absence; every Card check keeps its Native answer path.
     "packages/mcp/src/service.ts:commitIdFault": "36b75703f0eb36b5abca60906629f23df18a233d26c395f0b61c792eddabe405",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",

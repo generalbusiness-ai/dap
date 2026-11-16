@@ -91,9 +91,9 @@ test("archived submit and settlement stay explicit and terminal without inventin
   expect(said.sentence).not.toContain("accepted");
 });
 
-// Real MCP custody and scripted transport only. The MCP service holds no replica, so it cannot project a fold that another
-// client of the same store made, or an absence ending: it reads the record as unreadable, and sends and settles nothing.
-test.each(["folded", "unsent"] as const)("a store that holds a %s record gives the MCP service unreadable", async ending => {
+// Real MCP custody and scripted transport only. An existing absence ending is a local finding without a Native answer.
+// Folded projection remains separate. Neither ending makes the service send or settle again.
+test.each(["folded", "unsent"] as const)("a retained %s ending remains distinct from a Native answer without another send or settlement", async ending => {
   const signer = fixedSigner(23), stand = new StandIn(signer.key), store = memoryStore();
   let now = Date.parse("2099-01-01T00:00:00Z");
   let posts = 0, settlements = 0;
@@ -119,9 +119,12 @@ test.each(["folded", "unsent"] as const)("a store that holds a %s record gives t
   for (const [tool, given] of [["settle", { target: "destination", idempotencyKey: "folded-elsewhere" }], ["repository.read-token", args]] as const) {
     // A call that throws instead of giving a finding fails here by the assertion, not by the throw.
     const result = await service.call(tool, given).catch((error: unknown) => ({ isError: true, structuredContent: { error: "thrown", message: String(error) } }));
-    // The custody finding of state `unreadable` says so in its message.
     expect([result.isError, result.structuredContent["error"], String(result.structuredContent["message"])])
-      .toEqual([true, "custody", expect.stringContaining("This server cannot say whether an earlier send under this key went.")]);
+      .toEqual([true, "custody", expect.stringContaining(ending === "unsent"
+        ? "Custody keeps an absence proof for this expired request."
+        : "This server cannot say whether an earlier send under this key went.")]);
+    expect(result.structuredContent).not.toHaveProperty("answer");
+    expect(result.structuredContent).not.toHaveProperty("fact");
   }
   expect([posts, settlements]).toEqual(counted);
 });

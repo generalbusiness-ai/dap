@@ -155,6 +155,16 @@ export interface CustodySigning {
   closed?: true;
 }
 
+/** The latest ordinary signing whose journal proof a caller is about to read. */
+export interface AbsenceSnapshot {
+  index: number;
+  attempt: number;
+  intent: Digest;
+  meaning: Digest;
+  notAfter: Timestamp;
+  pinned: Digest | PlatformDefinition;
+}
+
 interface RecordFields {
   identity: Identity;
   binding: BindingRecord;
@@ -806,16 +816,42 @@ export class Custody {
       const fresh = (await this.#read(id))!;
       const signing = fresh.signings[index];
       if (FINAL.has(fresh.phase) || !signing || signing.closed || !this.dead(signing)) return fresh;
-      const previous = fresh.phase;
-      this.#close(fresh, index);
-      if (index === fresh.signings.length - 1 && UNRESOLVED.has(fresh.phase)) {
-        await this.#outcome(id, fresh, { at: this.now(), unsent: head, attempt: fresh.attempt, signing: index });
-        fresh.phase = "refused";
-      }
-      fresh.updated = this.now();
-      await this.#write(id, fresh, false, fresh.phase === previous ? undefined : previous);
-      return fresh;
+      return this.#endAbsent(id, fresh, index, head);
     });
+  }
+
+  /** Commit a proof only while its entire latest-signing snapshot still matches. No reads of the scope run under this lock. */
+  async absentIf(identity: Identity, expected: AbsenceSnapshot, head: Head): Promise<{ applied: boolean; record: CustodyRecord | null }> {
+    const who = structuredClone(identity), snapshot = { ...expected }, checkedHead = { ...head };
+    const id = identityId(who), record = await this.#read(id);
+    if (!record) return { applied: false, record: null };
+    return this.#locked(id, record.envelope.signed.intent.notAfter, async () => {
+      const fresh = await this.#read(id);
+      if (!fresh) return { applied: false, record: null };
+      const signing = fresh.signings[snapshot.index], intent = fresh.envelope.signed.intent;
+      if (!isHead(checkedHead) || canonicalize(fresh.identity) !== canonicalize(who)
+        || !UNRESOLVED.has(fresh.phase) || fresh.standalone || fresh.envelope.creation || !isScopeRef(who.target)
+        || snapshot.index !== fresh.signings.length - 1 || fresh.attempt !== snapshot.attempt
+        || !signing || signing.closed || !this.dead(signing) || signing.intent !== snapshot.intent
+        || signing.meaning !== snapshot.meaning || fresh.meaning !== snapshot.meaning
+        || signing.notAfter !== snapshot.notAfter || fresh.binding.pinned !== snapshot.pinned
+        || intentDigest(intent) !== snapshot.intent || intent.notAfter !== snapshot.notAfter
+        || intent.actor !== who.signer || intent.idempotencyKey !== who.key
+        || canonicalize(intent.to) !== canonicalize(who.target)) return { applied: false, record: fresh };
+      return { applied: true, record: await this.#endAbsent(id, fresh, snapshot.index, checkedHead) };
+    });
+  }
+
+  async #endAbsent(id: string, record: CustodyRecord, index: number, head: Head): Promise<CustodyRecord> {
+    const previous = record.phase;
+    this.#close(record, index);
+    if (index === record.signings.length - 1 && UNRESOLVED.has(record.phase)) {
+      await this.#outcome(id, record, { at: this.now(), unsent: head, attempt: record.attempt, signing: index });
+      record.phase = "refused";
+    }
+    record.updated = this.now();
+    await this.#write(id, record, false, record.phase === previous ? undefined : previous);
+    return record;
   }
 
   /**

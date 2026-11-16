@@ -16,9 +16,10 @@ import { applicationTrustForSource, readApplicationTrust } from "./application-t
 import { ApplicationPackageError } from "./application-types.ts";
 import { readApplicationReleaseUri, type ApplicationReleaseUri } from "./application-uri.ts";
 import { commonsInstallCheck } from "./commons.ts";
-import { CustodyError, Lost, meaningOf, validKey, type ArchivedSettlement, type Custody, type Envelope, type Identity, type Phase } from "./custody.ts";
+import { CustodyError, Lost, TERMINAL, identityId, meaningOf, validKey, type ArchivedSettlement, type Custody, type Envelope, type Identity, type Phase, type Sent } from "./custody.ts";
 import { descriptionsOf, type DefinitionLike } from "./describe.ts";
 import { ScopeHandle, TransportError, type Transport } from "./handle.ts";
+import type { AbsenceFailure, AbsenceRecovery } from "./reads.ts";
 import type { Signer } from "./signer.ts";
 
 // ---------------------------------------------------------------- the declaration digest
@@ -113,6 +114,8 @@ export interface InstallOptions {
   admit?: (target: InstallTarget) => Promise<boolean>;
   /** Custody's send, or a caller's wrapper with its signature. A wrapper may stop the call with `SendStop`. */
   send: Custody["send"];
+  /** Recover an existing dead signing without sending. A fresh terminal record supplies its retained result. */
+  recoverAbsent?: (identity: Identity) => Promise<AbsenceRecovery>;
   /** The package bytes at an address, at most `limit` bytes. The host fetches them itself as well. */
   packageBytes: (address: ApplicationReleaseUri, limit: number) => Promise<PackageBytes>;
 }
@@ -144,6 +147,10 @@ export type InstallRefusal = RoomRefusal
   | { refused: "receipt" }
   | { refused: "entry-unread" }
   | { refused: "entry" }
+  | { refused: "recovery"; state: "unproved"; why: AbsenceFailure }
+  | { refused: "recovery"; state: Exclude<AbsenceRecovery["state"], "unproved"> }
+  | { refused: "unsent" }
+  | { refused: "not-found" }
   | { refused: "accepted-unread"; scope: ScopeId };
 
 export type InstallRequest =
@@ -249,7 +256,30 @@ export async function installApplication(handle: InstallHandle, custody: Custody
   try { trustForBuild(); }
   catch { return refused({ refused: "trust" }); }
   const identity: Identity = { service: handle.service, membership: room.membership, signer: handle.signer.key, target: room.rules, key: key as string };
-  const meaning = meaningOf(selected);
+  const meaning = meaningOf(selected), scope = room.rules.scope;
+  if (options.recoverAbsent) {
+    const record = await custody.find(identity), latest = record?.signings.at(-1);
+    if (record && record.meaning === meaning && isScopeRef(record.identity.target) && record.envelope.creation === undefined
+      && record.envelope.signed.intent.to !== null && !record.standalone
+      && (record.phase === "prepared" || record.phase === "sent" || record.phase === "unknown")
+      && latest && !latest.closed && custody.dead(latest)) {
+      const recovery = await options.recoverAbsent(identity);
+      // The callback can settle or race this record. Report custody now, never its snapshot, and never send after recovery.
+      const fresh = await custody.find(identity);
+      if (!fresh) return refused({ refused: "not-found" });
+      if (fresh.meaning !== meaning) throw new CustodyError({ held: "conflicting", recorded: `install-application on ${scope}` });
+      if (TERMINAL.has(fresh.phase)) {
+        const decided = await custody.decided(identityId(identity), fresh);
+        if (!decided) throw new CustodyError({ held: "unreadable" });
+        return project({ record: fresh, ...decided, retained: true }, room);
+      }
+      if (canonicalize(fresh) === canonicalize(record)) {
+        if (recovery.state === "unproved") return refused({ refused: "recovery", state: "unproved", why: recovery.why });
+        if (recovery.state === "present") return refused({ refused: "recovery", state: "present" });
+      }
+      return refused({ refused: "recovery", state: "changed" });
+    }
+  }
   const build = async () => {
     // Recheck after custody awaits; an earlier list or policy read is no authority.
     const allowed = trustForBuild();
@@ -270,7 +300,6 @@ export async function installApplication(handle: InstallHandle, custody: Custody
       : await prepare(handle.signer, bytes, selected, { idempotencyKey: key as string, now: handle.now() }, allowed.publisher);
     return { binding: { definition: "platform:rules", kind: "install-application", declaration: declarationDigest(definition, "install-application", pin), pinned: pin }, envelope: { signed: prepared.signed, beside: prepared.beside } };
   };
-  const scope = room.rules.scope;
   const deliver = async (envelope: Envelope): Promise<Answer> => {
     try { return await options.reader.transport.submit(scope, envelope.signed, [], envelope.beside); }
     catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
@@ -288,21 +317,26 @@ export async function installApplication(handle: InstallHandle, custody: Custody
     if (record && record.phase !== "prepared") return refused({ refused: "stopped", scope });
     return refused({ refused: "unprepared", why: error instanceof PackageUnavailable && error.reason === "unsupported-object-format" ? "unsupported-object-format" : error instanceof ApplicationPackageError ? "package" : "unavailable" });
   }
-  if ("lost" in kept) return refused({ refused: "lost", scope });
-  if ("archivedSettlement" in kept) return { outcome: "archived", rules: room.rules, archivedSettlement: kept.archivedSettlement };
-  // A folded or unsent record holds no answer for the install caller to project here.
-  if ("folded" in kept || "unsent" in kept) throw new CustodyError({ held: "unreadable" });
-  if (kept.answer.answer !== "accepted") return { outcome: "answered", rules: room.rules, answer: kept.answer, retained: kept.retained, phase: kept.record.phase };
-  const receipt = kept.answer.receipt;
-  if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return refused({ refused: "receipt" });
-  let read;
-  try { read = await options.reader.read(room.membership, (t, r) => t.entry(scope, r, receipt.fact.seq, { at: receipt.fact.at, head: { seq: receipt.fact.seq, hash: receipt.fact.hash } })); }
-  catch (error) { if (error instanceof TransportError) return refused({ refused: "accepted-unread", scope }); throw error; }
-  if (!read.ok || !read.complete || read.next !== undefined) return refused({ refused: "entry-unread" });
-  if (read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
-    || !("genesis" in read.value.entry) || read.value.entry.genesis !== room.rules.genesis || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
-    || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return refused({ refused: "entry" });
-  return { outcome: "accepted", rules: room.rules, answer: kept.answer, item: receipt.fact.seq, retained: kept.retained, phase: kept.record.phase };
+  return project(kept, room);
+
+  async function project(kept: Sent, room: InstallRoom): Promise<InstallRequest> {
+    if ("lost" in kept) return refused({ refused: "lost", scope });
+    if ("archivedSettlement" in kept) return { outcome: "archived", rules: room.rules, archivedSettlement: kept.archivedSettlement };
+    if ("unsent" in kept) return refused({ refused: "unsent" });
+    // A folded record holds no answer for the install caller to project here.
+    if ("folded" in kept) throw new CustodyError({ held: "unreadable" });
+    if (kept.answer.answer !== "accepted") return { outcome: "answered", rules: room.rules, answer: kept.answer, retained: kept.retained, phase: kept.record.phase };
+    const receipt = kept.answer.receipt;
+    if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return refused({ refused: "receipt" });
+    let read;
+    try { read = await options.reader.read(room.membership, (t, r) => t.entry(scope, r, receipt.fact.seq, { at: receipt.fact.at, head: { seq: receipt.fact.seq, hash: receipt.fact.hash } })); }
+    catch (error) { if (error instanceof TransportError) return refused({ refused: "accepted-unread", scope }); throw error; }
+    if (!read.ok || !read.complete || read.next !== undefined) return refused({ refused: "entry-unread" });
+    if (read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
+      || !("genesis" in read.value.entry) || read.value.entry.genesis !== room.rules.genesis || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
+      || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return refused({ refused: "entry" });
+    return { outcome: "accepted", rules: room.rules, answer: kept.answer, item: receipt.fact.seq, retained: kept.retained, phase: kept.record.phase };
+  }
 }
 
 // ---------------------------------------------------------------- the installation read

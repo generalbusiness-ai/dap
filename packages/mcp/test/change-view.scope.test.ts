@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { DOMAINS, type FactRef, type Intent, type Item, type MemberRef, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, keyIdOfSecret, signInvitationProof, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { INVITATION_LINK, invitationIssueFields, secretSigner } from "@generalbusiness/dap-client";
@@ -15,7 +15,7 @@ import { changeSubject } from "../../../apps/views/src/change.ts";
 import { decisionSource, questionSubject } from "../../../apps/views/src/decision.ts";
 import { RepoInAi } from "../../../apps/views/src/repo-in-ai.ts";
 import type { ReviewStore } from "../../../apps/views/src/review-store.ts";
-import { memoryStore, type CustodyStore } from "@generalbusiness/dap-client";
+import { memoryStore, Reads, type CustodyStore } from "@generalbusiness/dap-client";
 import { McpService, ReadSessions, type Display, type McpConfig } from "../src/index.ts";
 import { created, mcpRoom, type Agent, type Room } from "./fixtures-native.ts";
 
@@ -66,8 +66,11 @@ async function roomOf(fault?: (request: EffectRequest) => EffectAnswer | null | 
 function application(f: Fixture, custody: CustodyStore = memoryStore(), as?: Agent) {
   const config = structuredClone((as ?? f.owner).config), signer = secretSigner(as?.secret ?? f.person.secret);
   const readSessions = new ReadSessions(), requests: { method: string; path: string }[] = [];
+  const actRequests: { path: string; body: string | null }[] = [];
   const fetch: typeof f.room.fetch = async (url, init) => {
-    requests.push({ method: init?.method ?? "GET", path: new URL(url).pathname });
+    const method = init?.method ?? "GET", path = new URL(url).pathname;
+    requests.push({ method, path });
+    if (method === "POST" && path.endsWith("/acts")) actRequests.push({ path, body: typeof init?.body === "string" ? init.body : null });
     return f.room.fetch(url, init);
   };
   const app = new RepoInAi({ readSessions, service: config.service, signer, config: async () => structuredClone(config), fetch, now: f.room.now, reviewStore, brief: BRIEF });
@@ -77,7 +80,7 @@ function application(f: Fixture, custody: CustodyStore = memoryStore(), as?: Age
     readDiff: read => diffWithCredential(read, f.room.git.fetch), readInterdiff: read => interdiffWithCredential(read, f.room.git.fetch), readFile: read => fileWithCredential(read, f.room.git.fetch), now: f.room.now, every: () => () => {}, pause: async waiting => { f.room.advance(1000); await f.room.pause(waiting); },
     config: { read: async () => structuredClone(config), addRoot: async () => { throw new Error("no new root"); } } });
   const call = (name: string, args: Record<string, unknown>) => f.room.wait(() => service.call(name, args));
-  return { service, custody, signed, call, requests };
+  return { service, custody, signed, call, requests, actRequests };
 }
 
 
@@ -672,6 +675,7 @@ test("after a lost reply and a restart, a fresh card over the same custody offer
 
 test("an act that never arrived: a retained card signs nothing, the check sends nothing before notAfter, and after it the scope's refusal frees the card", async () => {
   const f = await roomOf();
+  const recoverAbsent = vi.spyOn(Reads.prototype, "recoverAbsent");
   try {
     const lane = await changeLane(f, "TEST never arrived");
     await proposeFile(f, lane);
@@ -683,18 +687,46 @@ test("an act that never arrived: a retained card signs nothing, the check sends 
     expect([ready.card!.actions.map(action => action.id), retained.card!.actions.map(action => action.id)]).toEqual([["merge"], ["merge"]]);
     const merges = async () => (await f.owner.ok("items", { scope: lane.scope, type: "merge" }))["items"];
 
+    const initialPosts = a.actRequests.length;
     f.room.dropNextRequest("/acts");
     const lost = await press(a, "merge", ready, "merge");
     expect(lost.answer["error"], JSON.stringify(lost.answer)).toBe("transport");
     expect(await merges(), "the merge never arrived").toEqual([]);
     const signed = a.signed.length;
+    const originalPosts = a.actRequests.slice(initialPosts);
+    expect(originalPosts).toHaveLength(1);
+    const originalPost = originalPosts[0];
+    if (!originalPost || originalPost.body === null) expect.fail("The original ACT needs its actual encoded POST body.");
+    expect(originalPost.path).toBe(`/v1/scopes/${lane.scope}/acts`);
+    const open = await custody.unresolved();
+    expect(open).toHaveLength(1);
+    const pending = open[0];
+    if (!pending) expect.fail("The lost original must remain under custody.");
+    const stored = await custody.read(pending.id);
+    if (!stored) expect.fail("The original custody record must remain readable.");
+    const original = await a.service.custody.find(stored.identity);
+    if (!original) expect.fail("The lost original must remain a valid custody record.");
+    const noAbsence = async (using: ReturnType<typeof application>, fromRequest: number, phase: "unknown" | "refused") => {
+      expect(recoverAbsent, "a Card check never asks for an absence proof").not.toHaveBeenCalled();
+      expect(using.requests.slice(fromRequest).filter(request => request.path.endsWith("/log")), "a Card check never reads the full journal").toEqual([]);
+      const kept = await using.service.custody.find(original.identity);
+      if (!kept) expect.fail("The Card check must retain the original record.");
+      expect(kept.phase).toBe(phase);
+      expect(kept.envelope).toEqual(original.envelope);
+      expect(kept.signings).toHaveLength(original.signings.length);
+      expect((await using.service.custody.outcomes(pending.id, kept)).some(outcome => "unsent" in outcome), "a Card check creates no unsent ending").toBe(false);
+      return kept;
+    };
+    await noAbsence(a, 0, "unknown");
 
     // A retained card over the same custody: no second merge is signed, although no guard at the scope would stop it.
     const held = await other.call("view_act", { view: "retained", cut: retained.cut, action: "merge" });
     expect([held.isError, held.structuredContent["reason"]], JSON.stringify(held.structuredContent)).toEqual([true, "stale"]);
     expect(other.signed).toEqual([]);
+    await noAbsence(other, 0, "unknown");
 
     // Before notAfter the act could still land. The check says when to ask again, and sends nothing.
+    const earlyFrom = a.requests.length;
     const early = await press(a, "merge", lost.display, lost.display.card!.actions[0]!.id);
     expect([early.answer["answer"], typeof early.answer["checkAfter"]], JSON.stringify(early.answer)).toEqual(["unknown", "string"]);
     expect(early.answer["next"]).toContain("Check the original request again after");
@@ -702,22 +734,52 @@ test("an act that never arrived: a retained card signs nothing, the check sends 
     expect(early.display.receipt).toContain(`check the original request after ${String(early.answer["checkAfter"])}`);
     expect(early.display.card!.actions.map(action => action.purpose)).toEqual(["check-original"]);
     expect(await merges(), "the check sent nothing").toEqual([]);
+    expect(a.actRequests).toHaveLength(initialPosts + 1);
+    await noAbsence(a, earlyFrom, "unknown");
 
     // Just past notAfter, inside the clock margin, the check still sends nothing.
     const checkAfter = Date.parse(String(early.answer["checkAfter"]));
     const intentEnds = Date.parse(a.signed.at(-1)!.notAfter);
     expect(checkAfter - intentEnds).toBe(60_000);
     f.room.advance(intentEnds + 1000 - f.room.now());
+    const marginFrom = a.requests.length;
     const margin = await press(a, "merge", early.display, early.display.card!.actions[0]!.id);
     expect([margin.answer["answer"], typeof margin.answer["checkAfter"]], JSON.stringify(margin.answer)).toEqual(["unknown", "string"]);
+    expect(a.actRequests).toHaveLength(initialPosts + 1);
+    await noAbsence(a, marginFrom, "unknown");
 
-    // Past the margin the same bytes go once, and the scope refuses them: an answer, and no inference from the clock.
+    // Restart on the same custody. A lost late resend exercises the recursive
+    // resendExpired:false check while the original remains expired and unresolved.
     f.room.advance(checkAfter + 1000 - f.room.now());
     await f.room.pause([lane.scope]);
-    const late = await press(a, "merge", margin.display, margin.display.card!.actions[0]!.id);
+    const restarted = application(f, custody);
+    const resumed = await card(restarted, "restarted", "view_change", changeSubject(lane));
+    expect(resumed.card!.unresolvedOriginal).toBe(true);
+    expect(resumed.card!.actions.map(action => action.purpose)).toEqual(["check-original"]);
+    await noAbsence(restarted, 0, "unknown");
+    const lostLateFrom = restarted.requests.length, lostLatePosts = restarted.actRequests.length;
+    f.room.dropNextRequest("/acts");
+    const unanswered = await press(restarted, "restarted", resumed, resumed.card!.actions[0]!.id);
+    const stillKept = await noAbsence(restarted, lostLateFrom, "unknown");
+    expect([unanswered.answer["answer"], unanswered.answer["phase"]], JSON.stringify(unanswered.answer)).toEqual(["unknown", "unknown"]);
+    expect(unanswered.display.card!.actions.map(action => action.purpose)).toEqual(["check-original"]);
+    expect(restarted.actRequests.slice(lostLatePosts), "one late check attempts only the exact original envelope").toEqual([originalPost]);
+    const latest = stillKept.signings.at(-1);
+    if (!latest) expect.fail("The expired original must retain its latest signing.");
+    expect(latest.closed).toBeUndefined();
+    expect([a.signed.length, other.signed, restarted.signed], "a lost late check signs no new ACT").toEqual([signed, [], []]);
+    expect(await merges(), "the lost late resend still did not arrive").toEqual([]);
+
+    // A later deliberate check sends those same bytes once. Native refuses
+    // expired: this is an answer, not an inference from the local clock.
+    const lateFrom = restarted.requests.length, latePosts = restarted.actRequests.length;
+    const late = await press(restarted, "restarted", unanswered.display, unanswered.display.card!.actions[0]!.id);
     expect([late.answer["answer"], late.answer["phase"], late.answer["reason"]], JSON.stringify(late.answer)).toEqual(["refused", "refused", "expired"]);
     expect(late.display.receipt).toContain("refused (expired)");
     expect(a.signed.length, "the check signs nothing").toBe(signed);
+    expect(restarted.signed, "the restarted checks sign no ACT").toEqual([]);
+    expect(restarted.actRequests.slice(latePosts), "the deliberate check sends the exact original envelope once").toEqual([originalPost]);
+    await noAbsence(restarted, lateFrom, "refused");
     expect(await merges(), "the expired act took no effect").toEqual([]);
 
     // Custody holds an outcome now, so a fresh card offers its acts, and a new merge is a new request.
@@ -726,7 +788,7 @@ test("an act that never arrived: a retained card signs nothing, the check sends 
     expect(fresh.card!.actions.map(action => action.id)).toEqual(["merge"]);
     const merged = await press(other, "fresh", fresh, "merge");
     expect(merged.answer["answer"], JSON.stringify(merged.answer)).toBe("accepted");
-  } finally { await f.room.done(); }
+  } finally { recoverAbsent.mockRestore(); await f.room.done(); }
 }, 120_000);
 
 /**

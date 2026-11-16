@@ -1,6 +1,6 @@
 /** CLI entry to the client's native install request and installation read, under the persistent custody that MCP shares. */
-import { timeOf } from "@generalbusiness/dap-bytes";
-import { Custody, CustodyError, Reads, secretSigner, type CustodyStore } from "@generalbusiness/dap-client";
+import { isScopeRef, timeOf } from "@generalbusiness/dap-bytes";
+import { Custody, CustodyError, Lost, Reads, TransportError, secretSigner, type CustodyStore } from "@generalbusiness/dap-client";
 import { applicationInstallation, installApplication, type InstallationRefusal, type InstallHandle, type InstallRefusal, type PackageBytes } from "@generalbusiness/dap-client/install";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
 import type { Context, Outcome } from "./commands.ts";
@@ -37,10 +37,27 @@ async function call(ctx: Context, store: CustodyStore, applicationFetch: ((reque
     if (name === "install_application") {
       const custody = new Custody(store, () => timeOf(now()));
       const installed = await installApplication(handle, custody, { uri: args["uri"], release: args["release"], roles: args["roles"], values: args["values"], owner: args["owner"], idempotencyKey: args["idempotencyKey"] }, {
-        reader, send: (...sent) => custody.send(...sent), packageBytes: (address, limit) => packageBytes(address, limit, applicationFetch),
+        reader,
+        recoverAbsent: async identity => {
+          // A lost reply may hide an accepted install. Ask for its Native settlement before trying absence.
+          const target = identity.target;
+          if (isScopeRef(target)) await custody.settle(identity, async envelope => {
+            try {
+              const read = await reader.transport.settle(target.scope, envelope.signed);
+              return read.ok ? read.value : read.reason === "archived" ? read : null;
+            } catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
+          });
+          return reader.recoverAbsent(custody, identity);
+        },
+        send: (...sent) => custody.send(...sent), packageBytes: (address, limit) => packageBytes(address, limit, applicationFetch),
       });
       switch (installed.outcome) {
-        case "refused": return { code: 1, lines: [installRefused(installed.refusal), ...(early(installed.refusal) ? await earlier(store, config.service, signer.key, args["idempotencyKey"]) : [])] };
+        case "refused": return { code: 1, lines: [
+          ...(installed.refusal.refused === "recovery" && installed.refusal.state !== "absent"
+            ? [installRefused({ refused: "lost", scope: config.repository.rules })] : []),
+          installRefused(installed.refusal),
+          ...(early(installed.refusal) ? await earlier(store, config.service, signer.key, args["idempotencyKey"]) : []),
+        ] };
         case "archived": return { code: 1, lines: ["Install request: archived. The exact original is retained."] };
         case "answered": return { code: 1, lines: [`Install request: ${installed.answer.answer}${"reason" in installed.answer ? ` (${installed.answer.reason})` : ""}. The exact original is retained.`] };
         case "accepted": return { code: 0, lines: [`Install request recorded: item ${installed.item}.`, `Read its result with: dap application ${installed.item}`, "Acceptance records the request. Native fetch, admission, grants and creation may still be pending or refused."] };
@@ -73,7 +90,7 @@ function roomRefused(refusal: Extract<InstallRefusal, { refused: "unconfigured" 
 
 /** A refusal before this command signed: an earlier request under the same key can still be open. */
 function early(refusal: InstallRefusal): boolean {
-  return !["stopped", "lost", "receipt", "accepted-unread", "entry-unread", "entry"].includes(refusal.refused);
+  return !["stopped", "lost", "receipt", "accepted-unread", "entry-unread", "entry", "recovery", "unsent", "not-found"].includes(refusal.refused);
 }
 
 /** What request custody holds under this key for this key holder and service, read with no lock, as MCP states it. */
@@ -92,6 +109,19 @@ async function earlier(store: CustodyStore, service: string, signer: string, key
 
 function installRefused(refusal: InstallRefusal): string {
   switch (refusal.refused) {
+    case "not-found": return "No install request is kept under this key. This command signed and submitted no ACT. Keep the original request key and arguments.";
+    case "unsent": return "Custody keeps an absence proof for this expired install request. It retains the original envelope. This command signed and submitted no ACT. Do not resend the expired envelope. Use a new request key only for a new request.";
+    case "recovery":
+      if (refusal.state === "absent") return installRefused({ refused: "unsent" });
+      if (refusal.state === "unproved" && refusal.why?.kind === "head-before-expiry")
+        return `The verified scope journal has no entry at or past this install request's expiry. Custody keeps the original record and its capacity charge. This command signed and submitted no ACT. ${KEEP} Repeat the command after the scope records a later entry at or past the request's expiry.`;
+      if (refusal.state === "present")
+        return `The checked scope journal holds this actor and request key, but the scope supplied no settlement for the exact kept envelope. This command signed and submitted no ACT. ${KEEP} Repeat the command to ask for the original outcome.`;
+      if (refusal.state === "unproved") {
+        const why = refusal.why.kind === "read" ? `read: ${refusal.why.reason}` : refusal.why.kind;
+        return `This command could not prove the expired install request absent (${why}). Custody keeps the original record and its capacity charge. This command signed and submitted no ACT. ${KEEP} Restore complete session-authorized journal reads, then repeat the command.`;
+      }
+      return `The custody record changed before absence recovery completed. This command signed and submitted no ACT and claims no new outcome. ${KEEP} Repeat the command to read the current record.`;
     case "unconfigured": case "read": case "room-siblings": case "rules-sibling": case "commons-membership": return roomRefused(refusal);
     case "key": return `The request key must be 1 to 128 bytes of UTF-8. ${NOTHING}`;
     case "unknown-tool": return `This room does not offer application installs to this key. ${NOTHING}`;

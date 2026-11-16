@@ -14,9 +14,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, expect, test } from "vitest";
-import { b64url } from "@generalbusiness/dap-bytes";
-import { secretSigner } from "@generalbusiness/dap-client";
+import { DOMAINS, type Receipt, type Settlement, type SignedIntent, type SignedSessionRequest } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { secretSigner, type CustodyRecord, type Fetch } from "@generalbusiness/dap-client";
+import { fileStore as diskCustody } from "@generalbusiness/dap-client/node";
+import { checkpointOf, clockOf, judgeCheckpoint, resolvedEntryEffects } from "@generalbusiness/dap-derive";
+import { keys } from "@generalbusiness/dap-derive/testing";
+import { installGraph } from "../../platform/test/support-application-install.ts";
+import { receiptOf } from "../../scope/src/core.ts";
 import { GIT_HOST, installRoom, type InstallRoom } from "../../mcp/test/support/install-room.ts";
+import { command, type Context } from "../src/index.ts";
+import { applicationCommands } from "../src/application-install-runtime.ts";
+import { fileStore } from "../src/files.ts";
 
 const CLI = fileURLToPath(new URL("../bin/dap.js", import.meta.url));
 const secret = new Uint8Array(32).fill(71);
@@ -118,4 +127,158 @@ test("dap refuses an untrusted release in its own words, and fetches, signs and 
   expect([refused.code, refused.err.trimEnd()]).toEqual([1, "APPLICATION_TRUST does not list this release and Git host. This command fetched, signed and sent nothing."]);
   expect([room.stand.requests.filter(request => request.endsWith("/acts")).length, room.wants.length]).toEqual([posts, wanted]);
   expect(refused.modules.filter(mcpModule)).toEqual([]);
+});
+
+// This scenario reopens real files and command runtimes, but starts no new process.
+// Read-session authorization is scripted here; no Native Worker session authority runs.
+test.each(["absent", "landed"] as const)("a repeated install reopens file custody: %s original needs a judged absence proof or its actual Native settlement", async mode => {
+  const { D, M, A, G } = installGraph();
+  const localHome = mkdtempSync(join(tmpdir(), "cli-install-absence-")), service = "https://cli-absence.test";
+  const initial = fileStore(localHome);
+  await initial.keep("operator", keys.rita.secret);
+  await initial.save({ v: 2, key: "operator", service,
+    repository: { directory: D.at, membership: M.at, rules: A.at.scope, destination: G.at.scope } });
+  const custodyHome = join(localHome, "private", "mcp-custody");
+  const requestKey = `TEST-cli-${mode}`, argv = ["install", room.uri, "--release", room.release, "--request", requestKey, "--values", '{"target":7}'];
+  let now = Date.parse(A.last.time), actSignatures = 0, submissions = 0, original: CustodyRecord | undefined;
+  let receipt: Receipt | null = null;
+  let nativeJudgment: ReturnType<typeof A.submit> | undefined, nativeThrown: unknown;
+  let originalText = "", recordPath = "", packageWants = 0, terminalText = "";
+  const initialHead = { ...A.head }, initialHistory = canonicalize(A.entries);
+  const unknownLine = `The reply from ${A.at.scope} was lost, so the outcome is unknown. The request is under custody. Repeat the same command to settle it.`;
+  const unsent = "Custody keeps an absence proof for this expired install request. It retains the original envelope. This command signed and submitted no ACT. Do not resend the expired envelope. Use a new request key only for a new request.";
+
+  const steps = mode === "absent" ? ["lost", "earlier-head", "proved", "terminal-repeat"] as const
+    : ["lost", "native-settle", "terminal-repeat"] as const;
+  for (const step of steps) {
+    if (step === "proved") {
+      A.now = original!.envelope.signed.intent.notAfter;
+      A.take(judgeCheckpoint(A.state, A.definition, checkpointOf(A.state), {
+        clock: clockOf(A.state, A.now), bounds: A.bounds,
+      }));
+      expect(A.last.input.type).toBe("checkpoint");
+      expect(A.last.time).toBe(original!.envelope.signed.intent.notAfter);
+    }
+    const routes: string[] = [], sessionToken = b64url(new Uint8Array(32).fill(83));
+    const fetch: Fetch = async (url, init) => {
+      const path = new URL(url).pathname, method = init?.method ?? "GET";
+      routes.push(`${method} ${path}`);
+      if (path === `/v1/scopes/${M.at.scope}/sessions`) {
+        expect(method).toBe("POST");
+        const asked = JSON.parse(init!.body!) as SignedSessionRequest;
+        expect(asked.request).toMatchObject({ action: "read-session", to: M.at, actor: keys.rita.key });
+        return Response.json({ ok: true, token: sessionToken, session: { v: 1, deployment: "TEST CLI session route", membership: M.at,
+          member: "@rita", key: asked.request.actor, reads: ["summary", "entry", "log"], ends: asked.request.notAfter } });
+      }
+      if (path === `/v1/scopes/${A.at.scope}/acts`) {
+        submissions++;
+        expect(step).toBe("lost");
+        const sent = JSON.parse(init!.body!) as { signed: SignedIntent; values?: readonly string[]; texts?: readonly string[] };
+        expect(sent.signed.intent).toMatchObject({ to: A.at, kind: "install-application", idempotencyKey: requestKey });
+        if (mode === "landed") {
+          const texts = new Map<string, number>((sent.texts ?? []).map(text => [textDigest(text), utf8(text).length] as const));
+          try {
+            nativeJudgment = A.submit(sent.signed, { platform: A.authority, membership: M.at, values: sent.values, texts: digest => texts.get(digest) });
+          } catch (error) { nativeThrown = error; throw error; }
+          if (nativeJudgment.result !== "write") throw Error("TEST install did not produce a native write");
+          const sealed = A.entries.at(-1)!;
+          expect(sealed.entry.input).toMatchObject({ type: "act", signed: sent.signed });
+          receipt = receiptOf(sealed, A.named, A.at, resolvedEntryEffects(A.state, A.definition, sealed.entry, A.at));
+        }
+        // The absent original never reaches Rules; the landed original loses its reply after the real judgment and seal.
+        throw Error("TEST install reply lost");
+      }
+      if (path === `/v1/scopes/${A.at.scope}/settle`) {
+        expect(method).toBe("POST");
+        expect(JSON.parse(init!.body!)).toEqual({ signed: original!.envelope.signed });
+        const settlement: Settlement = mode === "landed" ? { ok: true, at: A.head, complete: true, value: receipt! }
+          : { ok: false, reason: "not-found" };
+        return Response.json(settlement);
+      }
+      expect(init?.headers?.["authorization"]).toBe(`Session ${sessionToken}`);
+      if (mode === "landed" && receipt !== null && path === `/v1/scopes/${A.at.scope}/entries/${receipt.fact.seq}`) {
+        expect(["native-settle", "terminal-repeat"]).toContain(step);
+        return Response.json({ ok: true, at: A.head, complete: true, value: A.entries[receipt!.fact.seq] });
+      }
+      const node = [D, A].find(node => path === `/v1/scopes/${node.at.scope}`);
+      if (node) {
+        const snapshot = node.state.all();
+        return Response.json({ ok: true, at: node.head, complete: true, value: { scope: node.at, status: node.state.scope()!.status,
+          definition: node.named, time: node.last.time, items: snapshot.items, counts: snapshot.counts } });
+      }
+      if (path === `/v1/scopes/${A.at.scope}/log`) {
+        expect(new URL(url).searchParams.has("cursor")).toBe(false);
+        return Response.json({ ok: true, at: A.head, complete: true, value: { scope: A.at, definition: A.named,
+          entries: A.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })) } });
+      }
+      throw Error(`Unexpected CLI recovery route: ${method} ${path}`);
+    };
+    const files = fileStore(localHome), custody = diskCustody(custodyHome, undefined, () => now);
+    const ctx: Context = { store: { ...files, signer: async name => {
+      const secret = await files.secret(name);
+      if (!secret) return null;
+      const signer = secretSigner(secret);
+      return { key: signer.key, sign: async (bytes: Uint8Array) => {
+        if (new TextDecoder().decode(bytes).startsWith(`${DOMAINS.intent}\n`)) actSignatures++;
+        return signer.sign(bytes);
+      } };
+    } }, fetch, now: () => now };
+    ctx.applicationCommand = applicationCommands(ctx, custody, room.applicationFetch, room.trust);
+    const outcome = await command(ctx, argv);
+    if (mode === "landed" && step === "lost") {
+      const thrown = nativeThrown instanceof Error ? { name: nativeThrown.name, message: nativeThrown.message } : nativeThrown;
+      expect({ judgment: nativeJudgment, thrown }, JSON.stringify({ judgment: nativeJudgment, thrown }))
+        .toMatchObject({ judgment: { result: "write" }, thrown: undefined });
+    }
+    expect(outcome.code).toBe(mode === "landed" && step !== "lost" ? 0 : 1);
+    expect(routes.slice(0, 3)).toEqual([`POST /v1/scopes/${M.at.scope}/sessions`, `GET /v1/scopes/${D.at.scope}`, `GET /v1/scopes/${A.at.scope}`]);
+    expect([actSignatures, submissions]).toEqual([1, 1]);
+    expect(A.entries.filter(({ entry }) => entry.input.type === "act" && entry.input.signed.intent.idempotencyKey === requestKey)).toHaveLength(mode === "landed" ? 1 : 0);
+    if (step === "lost") {
+      expect(outcome.lines).toEqual([unknownLine]);
+      expect(routes.slice(3)).toEqual([`GET /v1/scopes/${D.at.scope}`, `POST /v1/scopes/${A.at.scope}/acts`]);
+      const records = readdirSync(join(custodyHome, "records"));
+      expect(records).toHaveLength(1);
+      recordPath = join(custodyHome, "records", records[0]!);
+      originalText = readFileSync(recordPath, "utf8"); original = JSON.parse(originalText) as CustodyRecord;
+      expect(original.phase).toBe("unknown"); expect(original.signings).toHaveLength(1);
+      expect(original.signings[0]!.closed).toBeUndefined();
+      expect(original.outcomes).toMatchObject([{ lost: true }]);
+      if (mode === "absent") expect(canonicalize(A.entries)).toBe(initialHistory);
+      packageWants = room.wants.length;
+      now = Date.parse(original.envelope.signed.intent.notAfter) + 60_000;
+    } else {
+      expect(room.wants).toHaveLength(packageWants);
+      if (mode === "landed") {
+        const ended = JSON.parse(readFileSync(recordPath, "utf8")) as CustodyRecord;
+        expect(ended).toMatchObject({ phase: "accepted", envelope: original!.envelope, attempt: original!.attempt });
+        expect(ended.signings).toHaveLength(1);
+        expect(ended.outcomes.at(-1)).toMatchObject({ settled: receipt, signing: 0 });
+        expect(ended.outcomes.some(held => "unsent" in held)).toBe(false);
+        expect(outcome.lines).toEqual([`Install request recorded: item ${receipt!.fact.seq}.`, `Read its result with: dap application ${receipt!.fact.seq}`,
+          "Acceptance records the request. Native fetch, admission, grants and creation may still be pending or refused."]);
+        if (step === "native-settle") {
+          expect(routes.slice(3)).toEqual([`POST /v1/scopes/${A.at.scope}/settle`, `GET /v1/scopes/${A.at.scope}/entries/${receipt!.fact.seq}`]);
+          terminalText = readFileSync(recordPath, "utf8");
+        } else {
+          expect(routes.slice(3)).toEqual([`GET /v1/scopes/${A.at.scope}/entries/${receipt!.fact.seq}`]);
+          expect(readFileSync(recordPath, "utf8")).toBe(terminalText);
+        }
+      } else if (step === "earlier-head") {
+        expect(outcome.lines).toEqual([unknownLine, "The verified scope journal has no entry at or past this install request's expiry. Custody keeps the original record and its capacity charge. This command signed and submitted no ACT. Keep the original request key and arguments. Repeat the command after the scope records a later entry at or past the request's expiry."]);
+        expect(readFileSync(recordPath, "utf8")).toBe(originalText);
+        expect(A.head).toEqual(initialHead);
+      } else {
+        expect(outcome.lines).toEqual([unsent]);
+        const ended = JSON.parse(readFileSync(recordPath, "utf8")) as CustodyRecord;
+        expect(ended).toMatchObject({ phase: "refused", envelope: original!.envelope, attempt: original!.attempt });
+        expect(ended.signings).toHaveLength(1); expect(ended.signings[0]!.closed).toBe(true);
+        expect(ended.outcomes.at(-1)).toMatchObject({ unsent: A.head, signing: 0 });
+        expect(ended.outcomes.some(held => "answer" in held)).toBe(false);
+        if (step === "proved") terminalText = readFileSync(recordPath, "utf8");
+        else expect(readFileSync(recordPath, "utf8")).toBe(terminalText);
+      }
+      if (mode === "absent") expect(routes.slice(3)).toEqual(step === "terminal-repeat" ? [] : [`POST /v1/scopes/${A.at.scope}/settle`, `GET /v1/scopes/${A.at.scope}`, `GET /v1/scopes/${A.at.scope}/log`]);
+    }
+  }
 });

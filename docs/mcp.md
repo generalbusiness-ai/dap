@@ -1498,7 +1498,7 @@ Waits at most 60 seconds until one of: a scope's head reaches seq; an item reach
 
 ### `settle`
 
-What is known about the envelope under idempotencyKey on target (or the creation of definition): the act's phase and kept outcome, the scope's settlement for an act that is not final, and each preparation step apart. Signs nothing and sends no act.
+What is known about the envelope under idempotencyKey on target (or the creation of definition): the act's phase and kept outcome, the scope's settlement for an act that is not final, and each preparation step apart. Signs and submits no ACT. Read-session authentication may sign its existing request.
 
 ```json
 {
