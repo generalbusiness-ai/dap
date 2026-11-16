@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:05fcabe076677eeebc0a9d87a32b43e908ebc34f","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-16-ls6-lending-shelf-screen-host.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0809699487044c7a3f97b3f84c095e8571a9979b","text":"Merge retired a covered predecessor; the successor is at scripts/deploy-smoke.test.mjs."}
