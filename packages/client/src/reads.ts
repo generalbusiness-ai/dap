@@ -7,7 +7,7 @@
  * anywhere: `Session` keeps it out of its JSON and text.
  */
 
-import type { Digest, Head, ReadRefusal, ReadMinimum, ItemQueryRead, Read, ScopeId, ScopeRef, ApplicationProjectionQuery, ApplicationProjectionRead } from "@generalbusiness/dap-contract";
+import type { Answer, Digest, Head, ReadRefusal, RefusalReason, ReadMinimum, ItemQueryRead, Read, ScopeId, ScopeRef, ApplicationProjectionQuery, ApplicationProjectionRead } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, intentDigest, isDefinitionName, isDigest, isEntry, isEntryOf, isHead, isRecord, isScopeRef, parseStrict, timeMs, timeOf, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { LogProtocolError, TransportError, ScopeHandle, type Transport } from "./handle.ts";
 import type { AbsenceSnapshot, Custody, CustodyRecord, Folded, Identity } from "./custody.ts";
@@ -36,6 +36,20 @@ export type AbsenceRecovery =
   | { state: "present"; record: CustodyRecord; found: Folded }
   | { state: "changed"; record: CustodyRecord | null }
   | { state: "absent"; record: CustodyRecord; head: Head };
+
+/**
+ * The refusal reasons of a submit that the scope's grant check gives. The check is `judgeGrant` (`packages/derive/src/grant.ts:357`).
+ * It fails for seven conditions (`Unheld`, `grant.ts:257`: key, revoked, key-state, action, within, not-after, controller). The scope
+ * collects them as an empty list of grants (`packages/scope/src/authority.ts:336`) and answers each one the same way: `refused` with
+ * `unauthorized` (`packages/scope/src/core.ts:683`). The judge of an act answers a missing grant or a rule that does not pass the key
+ * with the same reason (`packages/derive/src/judge.ts:459,469`). No other reason of `RefusalReason` is the grant check's, and none
+ * of the seven names travels in the answer. A refusal in this set means that the standing in the signer's session is out of date.
+ * `authority-unavailable` is not in it: the answer is `unavailable`, nothing was judged, and nothing ends.
+ */
+export const AUTHORITY_REFUSALS: readonly RefusalReason[] = ["unauthorized"];
+
+/** Whether the scope's answer to a submit is a refusal of the signer's authority (`AUTHORITY_REFUSALS`). The session then ends, so the next read asks again. */
+export function authorityRefusal(answer: Answer): boolean { return answer.answer === "refused" && AUTHORITY_REFUSALS.includes(answer.reason); }
 
 /** How long a membership that refused a session is not asked again, in milliseconds. */
 const REFUSED_FOR_MS = 60_000;
@@ -119,7 +133,7 @@ export class Reads {
     try {
       const notAfter = timeOf(Math.floor(now / 1000) * 1000 + 60_000);
       const asked = await signerSessionRequest(membership, this.#port.signer, notAfter, crypto.randomUUID());
-      const answer = await requestSession(this.#port.service, membership.scope, asked, this.#port.fetch ? { fetch: this.#port.fetch } : {});
+      const answer = await requestSession(this.#port.service, membership.scope, asked, { standing: true, ...(this.#port.fetch ? { fetch: this.#port.fetch } : {}) });
       if (!this.#sessions.current(held)) return null;
       if (answer.ok) { held.session = answer.session; this.#refused.delete(held); }
       else this.#refused.set(held, now);

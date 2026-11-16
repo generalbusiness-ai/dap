@@ -61,7 +61,7 @@ export function windowOf(definition: ValidDefinition, kind: ScopeKind, act: stri
 }
 
 /** True when the answer can never become untrue: the key is revoked, or its member is removed (authority note, section 3.3, G10). */
-export const revoked = (observation: Observation): boolean =>
+export const revoked = (observation: Pick<Observation, "keyState" | "memberState">): boolean =>
   observation.keyState === "retired" || observation.keyState === "compromised" || observation.memberState === "removed";
 
 /**
@@ -140,8 +140,12 @@ export function observationOf(answer: unknown, at: Timestamp): Observation | nul
  * The proof is the member `fresh`, so the entry retains it.
  */
 export function grantFrom(use: ObservationUse): Grant {
-  const o = use.observation as Observation;
-  return { issued: { at: o.of, seq: o.head.seq, hash: o.head.hash }, subject: { membership: o.of, member: o.member }, key: o.key, principal: null, actions: o.actions, within: o.within, notAfter: o.notAfter, fresh: use };
+  return { ...valueGrant(use.observation as Observation), fresh: use };
+}
+
+/** The seven members of a grant that a standing gives, with no proof. `grantFrom` adds its `fresh`; `judgeExploreGrant` adds none. */
+function valueGrant(o: Omit<Observation, "at">): Omit<Grant, "fresh"> {
+  return { issued: { at: o.of, seq: o.head.seq, hash: o.head.hash }, subject: { membership: o.of, member: o.member }, key: o.key, principal: null, actions: o.actions, within: o.within, notAfter: o.notAfter };
 }
 
 /** The key that a prediction stands in for, the member it acts as, and the member it acts for. */
@@ -266,6 +270,51 @@ export type GrantJudgment =
   | { result: "unauthorized"; failed: Unheld }
   | { result: "authority-unavailable"; failed: Discarded };
 
+/** Check 9's value checks run in this order, with the guards of the observation between the first part and the second. */
+type ValueChecked<D extends Discarded> =
+  | { result: "valid" }
+  | { result: "unauthorized"; failed: Unheld }
+  | { result: "authority-unavailable"; failed: "of" | D };
+
+/** What the value checks are asked: the part of `GrantAsked` that the value decides, and the one time that its end is compared with. */
+type ValueAsked = Pick<GrantAsked, "scope" | "membership" | "key" | "action" | "scopeGrant"> & { readonly clock: Pick<Clock, "asOf"> };
+
+const refuse = (failed: Unheld): { result: "unauthorized"; failed: Unheld } => ({ result: "unauthorized", failed });
+
+/**
+ * The one value check of a standing, private to this file. It runs in three
+ * parts, in the order of the authority note, section 3.3:
+ *
+ * 1. Whose answer it is: the scope and incarnation, the signing key, and
+ *    a revocation, which refuses whatever the age.
+ * 2. `between`: the guards of an observation's use. The caller supplies them
+ *    and this function runs them here, after part 1 and before part 3, so
+ *    that a revoked answer refuses before it is judged old, and an old
+ *    answer is discarded before the role's actions are read. `between` is
+ *    synchronous and private; it is no port and no source of authority.
+ * 3. The condition of the grant: key state, action, `within`, end time and
+ *    controller.
+ *
+ * It reads no clock but `asOf`, no proof and no use.
+ */
+function checkGrantValue<D extends Discarded>(o: Omit<Observation, "at">, asked: ValueAsked, between: () => D | null): ValueChecked<D> {
+  if (!observedOf(o.of, asked.membership)) return { result: "authority-unavailable", failed: "of" };
+  // Where the scope records no incarnation yet, the entry that retains this observation fixes it: the reference is `of`.
+  const membership = fixedBy(asked.membership, o.of)!;
+  if (o.key !== asked.key) return refuse("key");
+  if (revoked(o)) return refuse("revoked");
+
+  const discarded = between();
+  if (discarded !== null) return { result: "authority-unavailable", failed: discarded };
+
+  if (o.keyState !== "active") return refuse("key-state");
+  if (!asked.scopeGrant && !o.actions.includes(asked.action)) return refuse("action");
+  if (!covers(o.within, asked.scope, membership)) return refuse("within");
+  if (o.notAfter !== null && timeMs(asked.clock.asOf)! >= (timeMs(o.notAfter) ?? -Infinity)) return refuse("not-after");
+  if ((o.controller !== null || o.controllerActive !== null) && o.controllerActive !== true && !COMMENTS.includes(asked.action)) return refuse("controller");
+  return { result: "valid" };
+}
+
 /**
  * The commit guards of an observation and the grant guard, in the order of
  * section 16.1, "The guards, in the commit", and then of the authority
@@ -301,37 +350,53 @@ export type GrantJudgment =
  * ED5). A grant's `notAfter` is then compared with the previous entry's
  * time, as section 4.2 says. An entry is never clamped, so a replay never
  * meets this.
+ *
+ * Guards 1 to 3 and 8 are the one value check, `checkGrantValue`; guards 4
+ * to 7 are the use guards that it runs between them.
  */
 export function judgeGrant(use: ObservationUse, asked: GrantAsked): GrantJudgment {
   const o = use.observation as Observation;
   const { clock, window, last } = asked;
-  const discard = (failed: Discarded): GrantJudgment => ({ result: "authority-unavailable", failed });
-  const refuse = (failed: Unheld): GrantJudgment => ({ result: "unauthorized", failed });
+  const checked = checkGrantValue(o, asked, (): Discarded | null => {
+    if (window.once && use.use !== "fresh") return "once";
+    const reading = timeMs(clock.reading)!;
+    if (last === null) {
+      if (use.use !== "fresh" || use.prior !== null) return "use";
+    } else {
+      if (use.use !== "reused" || !same(use.prior, last.entry) || !same(o, last.observation)) return "use";
+      if (!clock.behind && reading <= timeMs(last.time)!) return "moved";
+    }
+    const began = timeMs(o.at);
+    if (began === null) return "age";
+    const age = reading - began;
+    if (!clock.behind && (age < 0 || age >= window.seconds * 1000)) return "age";
+    if (asked.highest !== null && o.head.seq < asked.highest) return "older";
+    return null;
+  });
+  return checked.result === "valid" ? { result: "current", grant: grantFrom(use) } : checked;
+}
 
-  if (!observedOf(o.of, asked.membership)) return discard("of");
-  // Where the scope records no incarnation yet, the entry that retains this observation fixes it: the reference is `of`.
-  const membership = fixedBy(asked.membership, o.of)!;
-  if (o.key !== asked.key) return refuse("key");
-  if (revoked(o)) return refuse("revoked");
-
-  if (window.once && use.use !== "fresh") return discard("once");
-  const reading = timeMs(clock.reading)!;
-  if (last === null) {
-    if (use.use !== "fresh" || use.prior !== null) return discard("use");
-  } else {
-    if (use.use !== "reused" || !same(use.prior, last.entry) || !same(o, last.observation)) return discard("use");
-    if (!clock.behind && reading <= timeMs(last.time)!) return discard("moved");
-  }
-  const began = timeMs(o.at);
-  if (began === null) return discard("age");
-  const age = reading - began;
-  if (!clock.behind && (age < 0 || age >= window.seconds * 1000)) return discard("age");
-  if (asked.highest !== null && o.head.seq < asked.highest) return discard("older");
-
-  if (o.keyState !== "active") return refuse("key-state");
-  if (!asked.scopeGrant && !o.actions.includes(asked.action)) return refuse("action");
-  if (!covers(o.within, asked.scope, membership)) return refuse("within");
-  if (o.notAfter !== null && timeMs(clock.asOf)! >= (timeMs(o.notAfter) ?? -Infinity)) return refuse("not-after");
-  if ((o.controller !== null || o.controllerActive !== null) && o.controllerActive !== true && !COMMENTS.includes(asked.action)) return refuse("controller");
-  return { result: "current", grant: grantFrom(use) };
+/**
+ * The value checks of `judgeGrant`, with no use guard, for a standing that
+ * the caller supplies (EK1). The order is the same: whose answer it is, a
+ * revocation, then key state, action, `within`, end time and controller.
+ *
+ * The standing is an observation without the time that its read began. The
+ * grant that it gives has the seven members of `grantFrom` and no own
+ * `fresh` member, not `null` and not `undefined`. It is no `Grant`, no
+ * `Presented` and no recordable authority: it is input to the unsigned body
+ * of an Explore (`judgeActBody`) and to nothing else. The refusals are
+ * `judgeGrant`'s `unauthorized` ones, and a standing of another scope
+ * (`of`).
+ *
+ * This function judges the value. It does not show where the value came
+ * from, that its head is current, or that it was read at all; those are
+ * the caller's, and no entry records the grant that it returns.
+ */
+export function judgeExploreGrant(
+  standing: Omit<Observation, "at">,
+  asked: Pick<GrantAsked, "scope" | "membership" | "key" | "action"> & { readonly clock: Pick<Clock, "asOf"> },
+): { result: "current"; grant: Omit<Grant, "fresh"> } | Extract<GrantJudgment, { result: "unauthorized" }> | { result: "authority-unavailable"; failed: "of" } {
+  const checked = checkGrantValue<never>(standing, asked, () => null);
+  return checked.result === "valid" ? { result: "current", grant: valueGrant(standing) } : checked;
 }

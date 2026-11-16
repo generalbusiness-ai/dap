@@ -97,7 +97,7 @@ test("the page's data functions against the Worker's routes as deployed: join wi
     // not received a later state notice; opening the record below reads the
     // actual published merge. No lane summary/detail fan-out supplies rows.
     expect(readme).toMatchObject({ kind: "pr", state: "open" });
-    expect(listed.filter(url => !url.endsWith("/sessions"))).toHaveLength(1);
+    expect(listed.filter(url => !new URL(url).pathname.endsWith("/sessions"))).toHaveLength(1);
     expect(listed.find(url => url.includes("/query-items?"))).toContain(`/v1/scopes/${d.D.name}/query-items?`);
     let change = await loadChange(forUna, readme.scope);
     expect(change.proposal).toEqual(expect.any(Number));

@@ -33,7 +33,7 @@ test("remote reads the recorded repository; missing Git and the pinned @1 withou
       archived: { floor: 2, commit: "c".repeat(40), through: { seq: 3, hash: `sha256:${"d".repeat(64)}` } },
     } : { answer: category, reason: category === "unavailable" ? "busy" : "idempotency-mismatch" });
     }
-    if (url.endsWith("/sessions")) {
+    if (new URL(url).pathname.endsWith("/sessions")) {
       if (sessionMode === "absent") return new Response(JSON.stringify({ ok: false, reason: "sessions-unavailable" }));
       const asked = JSON.parse(init!.body!) as SignedSessionRequest;
       return Response.json({ ok: true, token: "scripted-reader", session: { v: 1, deployment: "scripted", membership, member: "@operator", key: asked.request.actor, reads: ["summary"], ends: asked.request.notAfter } });
@@ -54,7 +54,7 @@ test("remote reads the recorded repository; missing Git and the pinned @1 withou
   const known = await command({ ...context, git: { run: async (args) => { gitCalls.push([...args]); return 0; } } }, ["clone", "here"]);
   expect(known).toEqual({ code: 1, lines: [`The destination definition ${DESTINATION} does not support read-token. An explicitly versioned destination and membership integration is required.`] });
   expect(gitCalls).toEqual([["--version"]]);
-  expect(calls.every((url) => url.endsWith("/sessions") || url.endsWith(`/${at.scope}`))).toBe(true);
+  expect(calls.every((url) => new URL(url).pathname.endsWith("/sessions") || url.endsWith(`/${at.scope}`))).toBe(true);
   expect(await store.config()).toEqual(config);
   // Real key derivation/signature code, SCRIPTED session and summary replies:
   // an issued session needs only its request's derivation, while a refused
@@ -149,7 +149,7 @@ test("unpublished remote names its mode and repository commands stop before Git,
   const git = vi.fn(async () => 0), files = vi.fn(), read = vi.fn();
   const fetch: Fetch = async (url) => {
     calls.push(new URL(url).pathname);
-    if (url.endsWith("/sessions")) return Response.json({ ok: false, reason: "sessions-unavailable" });
+    if (new URL(url).pathname.endsWith("/sessions")) return Response.json({ ok: false, reason: "sessions-unavailable" });
     return Response.json({ ok: true, at: { seq: 0, hash: `sha256:${"a".repeat(64)}` }, complete: true,
       value: { scope: at, status: "active", definition, time: "2026-10-07T12:00:00Z", counts: [],
         items: [{ id: 0, type: "branch", state, revision: 0, opened: null, parties: {}, refs: {}, attributed: [], values: { repository: null, head: null, token: null } }] } });

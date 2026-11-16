@@ -1,9 +1,15 @@
 import { describe, expect, test } from "vitest";
-import type { Observation, ObservationUse } from "@generalbusiness/dap-contract";
-import { MISMATCHES, MemoryState, WINDOWS, actionsOf, agrees, covers, headsOf, highestHead, judgeGrant, observationOf, prefer, windowOf, type GrantAsked, type GrantJudgment, type RoleTable } from "../src/index.ts";
+import type { Grant, Input, Observation, ObservationUse } from "@generalbusiness/dap-contract";
+import { canonicalize, isGrant } from "@generalbusiness/dap-bytes";
+import { MISMATCHES, MemoryState, WINDOWS, actionsOf, agrees, covers, grantFrom, headsOf, highestHead, judgeActBody, judgeExploreGrant, judgeGrant, observationOf, prefer, windowOf, type GrantAsked, type GrantJudgment, type JudgeContext, type Presented, type RoleTable } from "../src/index.ts";
 import { d, keys, laneDefinition, membership, otherLane, t } from "./fixtures-entry.ts";
 
 const { rita, una } = keys;
+// `judgeExploreGrant` is the one export of the Explore value check. Its types have no names outside this package, so the test takes them from it.
+type ExploreAsked = Parameters<typeof judgeExploreGrant>[1];
+type ExploreJudgment = ReturnType<typeof judgeExploreGrant>;
+type ExploreGrant = Extract<ExploreJudgment, { result: "current" }>["grant"];
+type BodyGrants = Parameters<typeof judgeActBody>[3]["grants"];
 
 /** A made-up role table, as data: the membership scope's value at one head. */
 const ROLES: RoleTable = { member: ["issue.comment", "issue.open"], checker: ["change.check"] };
@@ -78,6 +84,9 @@ describe("the grant guard and the commit guards of an observation (authority not
       ["the same scope: a filter that names another incarnation than the one that answered", of({ within: { membership: reborn } }), { membership: { scope: membership.scope, pending: true } }, "unauthorized: within"],
       ["revoked as retired: refused, also long past the window", of({ keyState: "retired" }), { clock: at(9000) }, "unauthorized: revoked"],
       ["the member removed", of({ memberState: "removed" }), {}, "unauthorized: revoked"],
+      // The order of the three parts: whose answer it is, then the use guards, then the value's own conditions.
+      ["the wrong key, revoked and old: the key answers first", of({ keyState: "retired" }), { key: una.key, clock: at(9000) }, "unauthorized: key"],
+      ["old and missing the action: the age discards the answer before its role's actions are read", of({ role: "checker", actions: actionsOf(ROLES, "checker") }), { clock: at(9000) }, "authority-unavailable: age"],
       ["a key that membership does not hold", of({ keyState: "unknown" }), {}, "unauthorized: key-state"],
       ["a role without the grant", of({ role: "checker", actions: actionsOf(ROLES, "checker") }), {}, "unauthorized: action"],
       ["a grant's end time, at its bound", of({ notAfter: t(299) }), {}, "unauthorized: not-after"],
@@ -102,6 +111,78 @@ describe("the grant guard and the commit guards of an observation (authority not
     expect([agrees(grant), agrees({ ...grant, actions: [...grant.actions, "change.merge"] })]).toEqual([true, false]);
     // What a replay calls a history that holds an entry with each failed guard.
     expect(MISMATCHES).toEqual({ once: "observation-reused", moved: "observation-not-moved", older: "observation-older" });
+  });
+
+  test("the Explore value check: the order of judgeGrant without its use guards, and a grant with no proof", () => {
+    const { at: _began, ...value } = standing;
+    const explored = (change: Partial<Observation>, over: Partial<ExploreAsked> = {}): ExploreJudgment =>
+      judgeExploreGrant({ ...value, ...change }, { scope: asked.scope, membership: asked.membership, key: asked.key, action: asked.action, clock: { asOf: at(299).asOf }, ...over });
+    const exploredSaid = (judged: ExploreJudgment) => (judged.result === "current" ? "current" : `${judged.result}: ${judged.failed}`);
+    const cases: readonly (readonly [name: string, change: Partial<Observation>, key: typeof rita.key, expected: string])[] = [
+      ["a standing inside its end", {}, rita.key, "current"],
+      ["the wrong key", {}, una.key, "unauthorized: key"],
+      ["another incarnation of membership", { of: reborn }, rita.key, "authority-unavailable: of"],
+      ["revoked as retired", { keyState: "retired" }, rita.key, "unauthorized: revoked"],
+      ["the member removed", { memberState: "removed" }, rita.key, "unauthorized: revoked"],
+      ["the wrong key and revoked: the key answers first", { keyState: "retired" }, una.key, "unauthorized: key"],
+      ["revoked and missing the action: the revocation answers first", { keyState: "retired", role: "checker", actions: actionsOf(ROLES, "checker") }, rita.key, "unauthorized: revoked"],
+      ["an unknown key state and a missing action: the key state answers first", { keyState: "unknown", role: "checker", actions: actionsOf(ROLES, "checker") }, rita.key, "unauthorized: key-state"],
+      ["a role without the action", { role: "checker", actions: actionsOf(ROLES, "checker") }, rita.key, "unauthorized: action"],
+      ["`within` names another incarnation", { within: { membership: reborn } }, rita.key, "unauthorized: within"],
+      ["an end time at its bound", { notAfter: t(299) }, rita.key, "unauthorized: not-after"],
+      ["an agent whose controller is not active signs a comment", { controller: "@paul", controllerActive: false }, rita.key, "current"],
+    ];
+    const expected = cases.map(([, , , answer]) => answer);
+    expect(cases.map(([, change, key]) => exploredSaid(explored(change, { key })))).toEqual(expected);
+    // Inside the window and with no use to judge, the answers are judgeGrant's own.
+    expect(cases.map(([, change, key]) => said(judgeGrant(of(change), { ...asked, key })))).toEqual(expected);
+
+    // No use guard: an answer that judgeGrant discards for its age is judged on its value, and the value's refusals keep their order.
+    const old = { clock: { asOf: at(9000).asOf } };
+    expect([said(judgeGrant(fresh, { ...asked, clock: at(9000) })), exploredSaid(explored({}, old))]).toEqual(["authority-unavailable: age", "current"]);
+    expect([exploredSaid(explored({ keyState: "retired" }, old)), exploredSaid(explored({ role: "checker", actions: actionsOf(ROLES, "checker") }, old))]).toEqual(["unauthorized: revoked", "unauthorized: action"]);
+
+    // The grant has the seven members of grantFrom, in its order, and no own `fresh`: not null, not undefined.
+    const judged = explored({}), proven = judgeGrant(fresh, asked);
+    if (judged.result !== "current" || proven.result !== "current") return expect.fail("both answers must be current");
+    expect(Object.hasOwn(judged.grant, "fresh")).toBe(false);
+    expect(Object.keys(judged.grant)).toEqual(Object.keys(proven.grant).filter((name) => name !== "fresh"));
+    expect(judged.grant).toEqual({ issued: { at: standing.of, seq: standing.head.seq, hash: standing.head.hash }, subject: rita.member, key: rita.key, principal: null, actions: standing.actions, within: standing.within, notAfter: null });
+    expect([isGrant(judged.grant), isGrant(proven.grant)]).toEqual([false, true]);
+
+    // Compile-only: the value is no Grant, no Presented, no authority of an entry and no grant of a judge's context. A body context takes it.
+    const rejected = (grant: ExploreGrant): void => {
+      // @ts-expect-error a grant with no proof is no contract Grant
+      const asGrant: Grant = grant;
+      // @ts-expect-error nor a presented grant
+      const asPresented: Presented = { grant, current: true };
+      // @ts-expect-error nor the authority that an entry records
+      const asAuthority: Extract<Input, { type: "act" }>["authority"] = [grant];
+      // @ts-expect-error nor a grant of the context that the runtime and a replay pass
+      const asContext: JudgeContext["grants"] = [{ grant, current: true }];
+      const asBody: BodyGrants = [{ grant, current: true }, { grant: proven.grant, current: false }];
+      void [asGrant, asPresented, asAuthority, asContext, asBody];
+    };
+    void rejected;
+  });
+
+  // EK1 changed `grantFrom` to spread `valueGrant`. The recorded bytes of a grant must not change. The expected text is written from the body of
+  // `grantFrom` before the change: eight members (`issued` with `at`, `seq` and `hash`; `subject` with `membership` and `member`; `key`;
+  // `principal` null; `actions`; `within`; `notAfter`; `fresh` as given), read from this fixture's observation. `canonicalize` sorts the
+  // members by name, so the text does not show their order; `Object.keys` does, and keeps the order that `grantFrom` returned before.
+  test("the bytes of a recorded grant are the bytes that grantFrom gave before the Explore value split", () => {
+    const M = canonicalize(membership);
+    const expected = (proof: string) => `{"actions":["issue.comment","issue.open"],${proof}"issued":{"at":${M},"hash":${JSON.stringify(standing.head.hash)},"seq":40},"key":${JSON.stringify(rita.key)},`
+      + `"notAfter":null,"principal":null,"subject":{"member":"@rita","membership":${M}},"within":{"membership":${M}}}`;
+    const granted = grantFrom(fresh);
+    expect(canonicalize(granted)).toBe(expected(`"fresh":${canonicalize(fresh)},`));
+    expect(Object.keys(granted)).toEqual(["issued", "subject", "key", "principal", "actions", "within", "notAfter", "fresh"]);
+    expect(granted.fresh).toBe(fresh);
+    // The value check gives the same text without the proof.
+    const { at: _began, ...value } = standing;
+    const explored = judgeExploreGrant(value, { scope: asked.scope, membership: asked.membership, key: asked.key, action: asked.action, clock: { asOf: at(299).asOf } });
+    if (explored.result !== "current") return expect.fail("the standing value must be current");
+    expect(canonicalize(explored.grant)).toBe(expected(""));
   });
 
   test("the window is the definition's: an act that opens a hold is a ten-second kind; a revoked answer stays; and an answer that is not a whole standing is none", () => {

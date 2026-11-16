@@ -97,6 +97,19 @@ export interface JudgeContext extends Reading {
 }
 
 /**
+ * The context of an unsigned body (`judgeActBody`) only: `JudgeContext`, with
+ * one more kind of grant. A grant with no `fresh` member, made by
+ * `judgeExploreGrant`, can sign the body of an Explore. It is no `Grant`, so
+ * no recorded act, runtime port or replay accepts it, and the body never
+ * returns it as authority. The type is private to this file: no caller
+ * outside `packages/derive` names it.
+ */
+type BodyJudgeContext = Omit<JudgeContext, "grants"> & { grants: readonly (Presented | { grant: Omit<Grant, "fresh">; current: true })[] | null };
+
+/** True for a grant with its own `fresh` member, which includes the prediction's `null`. Only a value of `judgeExploreGrant` has none. */
+const hasProof = (grant: Grant | Omit<Grant, "fresh">): grant is Grant => Object.hasOwn(grant, "fresh");
+
+/**
  * An input that is not judged now. `missing` (revision 20, section 16.1,
  * "In the commit"): the commit's subject list names these subjects, and no
  * observation at hand passes the guards for them. The commit stops, nothing
@@ -223,7 +236,7 @@ interface ActBodyFrame {
 
 /** The same body as a recorded act, without signature, key or lifetime checks.
  * A reached need for its absent signed input leaves no partial consequences. */
-export function judgeActBody(view: StateView, definition: ValidDefinition, body: Pick<Intent, "kind" | "on" | "fields" | "expected">, context: JudgeContext & { actor: KeyId; provenance?: Provenance }): ExploredBodyJudgment {
+export function judgeActBody(view: StateView, definition: ValidDefinition, body: Pick<Intent, "kind" | "on" | "fields" | "expected">, context: BodyJudgeContext & { actor: KeyId; provenance?: Provenance }): ExploredBodyJudgment {
   let missing: "intent" | "entry" | null = null;
   const selfRefs: number[] = [];
   const recordRefs: EmittedRecordSelfRef[] = [];
@@ -309,7 +322,7 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   return { result: "write", draft: { input, ...body.draft } };
 }
 
-function actBodyJudged(view: StateView, definition: ValidDefinition, intent: ActBody, context: JudgeContext,
+function actBodyJudged(view: StateView, definition: ValidDefinition, intent: ActBody, context: BodyJudgeContext,
   scope: NonNullable<ReturnType<StateView["scope"]>>, frame: ActBodyFrame,
   declared = declarationOf(definition), asOf = timeMs(context.clock.asOf)!): BodyJudgment {
   const refused = (reason: RefusalReason, detail: string): Refused => ({ result: "refused", reason, detail, judgedAt: scope.head });
@@ -457,7 +470,11 @@ function actBodyJudged(view: StateView, definition: ValidDefinition, intent: Act
     }
     signer = answer.member && { member: answer.member, principal: null };
   }
-  const granted = presented?.grant ?? null;
+  // A standing value with no `fresh` member signed the body above, and goes no further: it is no recordable authority, so `granted`
+  // is null for it, as for a rule that passed. It serves no row of `observes`, whatever else is at hand (EK1).
+  const selected = presented?.grant ?? null;
+  const granted = selected !== null && hasProof(selected) ? selected : null;
+  if (selected !== null && granted === null && rows.length > 0) return { result: "unavailable", reason: "authority-unavailable" };
   // Section 16.1: for each subject of the list, one observation at hand that passes the six guards, with the row's window and use.
   // The signer's own member is served by the grant's observation where that passes the row's window and use. A subject with no such
   // observation stops the commit: the scope reads what is missing and the turn starts again, and the act is answered
