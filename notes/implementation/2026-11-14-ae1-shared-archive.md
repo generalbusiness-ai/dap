@@ -1,5 +1,8 @@
 # Share room archive policy and wiring
 
+16 November: Native passed 97 and failed 4 of 101; complete shared fit
+remains unproved.
+
 Initial AE-1 request 0c265d01/ruling 59767cd8; updated promise 43fa0d74
 requires one combined head to preserve Grow answers until installed policy
 exists. Dated composition limits follow. Through `2740e6d1` (2026-11-14),
@@ -392,16 +395,18 @@ yields `malformed-or-unsupported`, so direct `metadata-limit` assertion fails
 before later zero-read assertion. Controls distinguish recipient binding and
 combined pre-read admission, not installed-export/trust-removal acceptance.
 
-## Evidence checkpoints on 2026-11-14
+## Evidence checkpoints
 
 These development checks/controls are not a gate result. The table preserves
-source checkpoints and verdicts. `N` = `/opt/homebrew/bin/node`;
+source checkpoints and verdicts; its old UNRUN row is dated history, not the
+current status of later completed work. `N` = `/opt/homebrew/bin/node`;
 `V` = `N node_modules/vitest/vitest.mjs run`. Exact path aliases:
 
 - `O`: `/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-development-attempt2/legacy-compiler-failures`.
 - `A`: `/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-development-attempt2`.
 - `I`: `/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-integrated-development-attempt1`.
 - `D`: `/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-diagnostic-development-attempt1`.
+- `G`: `/Users/hughpyle/play/artroom-evidence/2026-11-16-ae1-cs1-development-attempt1`.
 
 Four legacy logs were copied byte-exact from preserved
 `/private/tmp/artroom-ae1-dev-20261114` originals to `O`, verifying table SHAs.
@@ -428,6 +433,12 @@ monotonic seconds. `EMPTY` = SHA-256
 | `2740e6d1` compatibility | `N scripts/cloudflare-pool-compat.mjs` | Exit 0; 0.073 s | `D/03-compat.stdout.log` `e6455ec422a4d281a56a4a8b272bc95acdd9aa50a553127506a5e87c855e6c43`; stderr `EMPTY` |
 | `2740e6d1` diagnostic follow-up | `V --config vitest.native.config.ts --project scope packages/scope/test/archive-capacity-observation.test.ts packages/scope/test/archive-driver.test.ts --reporter=default --reporter=json --outputFile.json=D/04-native.report.json` | Exit 0; observation 12 + driver 21 = 33 pass; 23.727 s; full callback reached | `D/04-native.report.json` `b7330108fc7ad4085412752da65547220ec4f2093ae6b1995013c34780756f5a`; stdout `2457b4f93eaa6a3427ee4e32387f98e844a4a9b044d0ae63fdf2919fd0e33870`; stderr `EMPTY` |
 | Scale, assets, gate, Security review | Coupled `archive-installed-scale.test.ts`; page build; `npm run gate`; exact-head review | **UNRUN** | No pass or Security conclusion claimed |
+| 2026-11-16 hook/refactor | Normal commit; actual argv in the two records | Hook exit 1, 1.067950 s; duplicate `same` refused. Import existing identical Bytes helper; normal commit exit 0, 1.014624 s | `G/pre-commit-refusal/result.json` `52f908b2fd9a1a0a23da005928c427ae209459e7afb58a319deeb95a29412e17`; `G/shared-same/commit-result.json` `da52894698d0a8cd2c5f58e3c1dd1d30510c6a4bec1fd043c14eea8992914155` |
+| 2026-11-16 two AST seals | `N /private/tmp/artroom-ae1-two-source-seals-once-20261116.mjs` | Exit 0, 0.148725 s at `c6a0d992`; root reviewed two actual values before `4b11bf35` adoption; unrelated rows unchanged | `G/seals/stdout.json` `f5d01cde4b7c7a0811f643bef2bd908dd815760c81450e41625a390ac1c169c5`; `G/seals/commit-result.json` `be84d0fdc2751984415170b5a7c611430e7f4bcecb783306261170a9fd1746cd` |
+| 2026-11-16 fourteen compilers | `N node_modules/typescript/bin/tsc -p CONFIG`; all 14 configs/argv in result | All exit 0 at `337c5566`; outer 7.804130 s; every stdout/stderr EMPTY. Later runtime source differs only in reviewed generated `assets.ts` | `G/compilers/result.json` `d29447e3386bd247f527e000e3f5c6d886c4a0c7aba6ebb7de97974d2f199161` |
+| 2026-11-16 Page producer | `npm run build --workspace @generalbusiness/dap-page` | Exit 0, 0.639458 s at `337c5566`; only `assets.ts` changes; actual two-script review/corrected description below | `G/page/result.json` `8570135078f62120f2352fdb5e25c8eaf3b9c9beb0b88ebe276d14307d59b74a`; `G/page/generated-review.json` `2b1f73cd694793e0fdad50d7116bd9ff965a0b06f54da649f04e38f17d2d5a15` |
+| 2026-11-16 Plain3 | Compatibility, then same three Plain owner paths/projects as the `ca1efcea` row; full actual argv in result | Compatibility exit 0, 0.079700 s; whole three files / four cases pass, exit 0, 2.010108 s; outer 3.015831 s at `7808c064` | `G/plain/result.json` `190d697076456ad4177161445c7eba7fcaff052c0b3cdceb5a42d0e7f7b8ccce`; `G/plain/plain.report.json` `a9743bf5f9b5546b0363235086183ccaccde5ccb9b149ec747af2401f5338695` |
+| 2026-11-16 Native9 | `V --config vitest.native.config.ts --project scope` with the seven Native paths above plus `packages/scope/test/archive-capacity-observation.test.ts` and `packages/scope/test/archive-host.test.ts`; full actual argv in summary | **Exit 1; 97 pass / 4 fail of 101**, zero pending/todo; child 63.814107250 s, outer 64.347450708 s; no retry; source unchanged | `G/native-failure-summary.json` `966d94a68e704577e9d0d251757219b18ffc1235c90d237708844180c91cea87`; original full Native raw stays PRIVATE, paths/hashes in this safe summary |
 
 `TITLE` is the exact single argument
 `archive install proof binds Base Rules, exact signed IDs and native retained byte limits without codec fallback`.
@@ -447,3 +458,40 @@ expectation, release, model and operator values stayed unchanged.
 ## Resumed source, 15 November 2026
 
 Ruling `790afe00333dd0cd581b78a61ce37e434074628c` raises nodes 64 to 128 and inputWork 67,108,864 to 134,217,728. Other caps, charges, cases and deadlines stay unchanged; composition preserves target source outside AE1. New-cap fit, compilers, assets, seal adoption and gate remain UNRUN. At this dated checkpoint, gate awaited three approved landings.
+
+
+## Current composition and failed Native, 16 November 2026
+
+Runtime source is `7808c06482d61e27e1bda07f195d85f55da1ac16`, tree
+`69c0c36caea4aa06f505e6f072e72602e706cfb2`. Compiler source `337c5566`
+differs only by reviewed Page assets; the result names all fourteen contexts.
+`G/retained-files.json` preserves 61 safe exact copies, manifest SHA-256
+`d6dd949183742627ae9ee8c1bbf6528f1eb8a057aeb10f0ec1fdb9ac3a4f84e2`.
+Full Native streams/report remain private; this update copies none.
+
+The hook rejected duplicate `same`; importing Bytes' identical equality
+changed no guard. The two reviewed AST values
+are reader `e261d7d0e052702daf16b07eba0a7457df30f7a9591ba1a13524456c27a4ee2e`
+and budget `07351068919cbbe84974992e7d30bc03003ee3a31a7552bee90b823490bee1a8`.
+Their adoption is not a whole Security-owner pass. Both old proof controls
+retain exact source/witness correspondence and original limitations; no repeat ran.
+
+Page production changes PAGE_JS by 313 bytes and OAUTH_JS by 55; both HTML
+exports stay exact. Both scripts change the shared data reader; Page also
+changes room disclosure and local minifier names. Offline review wrongly
+assumed OAuth unchanged; no producer/test ran there. Root read both differences
+and corrected the commit description before owners, without a production rerun.
+
+Native END `2ae3212a80b1ca7680e2f38e583915d885ea4317` preserves four failures.
+The Base producer's failed scope cutoff 0 returns `retry/unavailable`, used
+`[0,0,13,27,125538,7369823]` in `[entries,attempts,nodes,calls,metadata,inputWork]`.
+Grow's failed scope cutoff 3 stops `input`, used
+`[2,42,41,143,1146690,79110748]`, with a confirmed prefix through 2.
+Both show no capacity refusal. Their public-command followers lack a producer
+session and fail dependently. Neither failure establishes a new cap shortage or root cause.
+The summary's confirmed diagnostics omit successful scope/cutoff identity;
+its final admitted costs are not instantaneous peaks or complete-case maxima.
+Complete shared fit, trust-removal and public-clone acceptance stay unproved.
+
+CS1's separate note records its eleven-pass Node owner. Scale, CS1 sandbox
+Native, pins, gate and review remain UNRUN. No automatic rerun follows.
