@@ -14,10 +14,7 @@ let native: ArchivePolicyRegistry | undefined;
 export class DeployedScope<E extends Env = Env> extends Base<E> {
   protected override [scopeWiring](name: string | undefined): Wiring {
     const deployed = super[scopeWiring](name), config = roomArchiveConfiguration(this.env);
-    // HOTFIX 2026-11-16: the AE-1 archive driver drove about 250,000 Durable Object
-    // requests an hour across dap-lending and dap-grow. Archive wiring stays off
-    // until a reviewed fix bounds its wake rate.
-    if (config !== undefined) return deployed;
+    if (!config) return deployed;
     native ??= nativeArchivePolicies();
     return { ...deployed, archiveHost: config,
       ...("ARCHIVE_RESTART_DIRECTIVE" in this.env ? { archiveRestart: this.env.ARCHIVE_RESTART_DIRECTIVE } : {}),

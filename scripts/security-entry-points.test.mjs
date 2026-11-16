@@ -279,7 +279,7 @@ const seals = {
   "apps/room/celld/worker.ts": "d1bc465525bd0af046fa0703464f14aeaaee8286b88415dfec3b9e03869fb644", // H1 reviewed production entry or public-origin gate owner.
   "packages/scope/src/public-origin.ts": "d6e867fc859db69b6fcf2d465d387a032966331cbae04310ea4c24cda3773269", // H1 reviewed production entry or public-origin gate owner.
   "packages/platform/src/versions.ts": "6b9b184d22fbffaa617049e1b6ec01bc64fd6039b068ac534d0adaf443868962", // Closed native publication protocol policy; actual maintained parser output.
-  "apps/room/worker.ts": "2128850ac47fa5068b261852c9436bb5973722676bd86f9fd14d46850e7644c3", // AR-1a: hotfix 32866453 returns the deployed wiring before archive wiring; actual maintained parser output.
+  "apps/room/worker.ts": "0460fe0647f5494a0ed8fb38ff49a09bdf5d7c89b2fadf988ffd446be8aa465d", // AR-1 restores the archive wiring as before hotfix 32866453, now with a bounded wake rate; actual maintained parser output.
   "apps/room/worker.commons.ts": "c525a1b0d13e6243099d03b80c5207b76f082c71432db2b8ecaf86ccf8cb1160", // Reviewed separate deployment entry; actual maintained parser output.
   "apps/room/fetch.ts": "83b2a56552c5f6874935d1491f487fd7d2b9e2651a9acceb87d731139897ad2c", // Forward the HTTP context to the existing scope route; dispatcher gates stay fixed.
   "apps/room/demo-creation.ts": "18124da145e98edf887394d92a1d3e37f2e350127c4e268e16729acfe8cdfc23",
@@ -374,8 +374,8 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "300e4a3f51f23b93a2ce026b98993700e3c0b8947d35b68de195adc5c522ae45",
   "packages/scope/src/archive-publication.ts": "6c13c9f864b559e26d75982eca85c058975a12f18ad00b660c227577aae76d9b",
   "packages/scope/src/archive-build.ts": "bf1c79debbe0141140174c9a3d79f63d1952b874bce1d8713207dea8c817b8a0", // Actual pin SQL payload settles; final identity fence unchanged.
-  "packages/scope/src/archive-driver.ts": "388b95a5509123b3d2247b1fef682081fb05d748e67b03e8a2e0bc71db256545", // AE-1 current policy and prepaid terminal owner; actual maintained AST output.
-  "packages/scope/src/archive-row.ts": "0dd79bd4d3c519457a1fc232d7c1f33d48f04aa6569ee4c8bdc0072a737519a9", // AE-1 bounded terminal preserves the row and confirmed receipt; actual maintained AST output.
+  "packages/scope/src/archive-driver.ts": "8281cebc4bb9e20d7f091f0b94c2d6da344c6777a36beeeea98fa1a28275bb26", // AR-1 bounds every archive retry (60 s floor, one-hour cap, persisted retry count), leaves no stored wake in the past, and returns before policy work while the stored wake is in the future; actual maintained AST output.
+  "packages/scope/src/archive-row.ts": "0b69533c7387fd730e8a5717cc6dfce1269ba22db199303f76eeff6ed32ad3f3", // AR-1 adds the bounded retry count to the wake record; defer takes the delay as a function of it; actual maintained AST output.
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "packages/scope/src/object-archive.ts": namedOwners["packages/scope/src/object-archive.ts"],

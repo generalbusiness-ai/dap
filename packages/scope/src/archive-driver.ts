@@ -87,6 +87,13 @@ export interface FixtureArchiveDriverOptions {
 }
 export interface ArchivePass { readonly state: "idle" | "disabled" | "retry" | "stopped" | "confirmed"; readonly next: Timestamp | null; readonly reason?: string }
 
+/** AR-1: no archive retry wakes sooner than this. On 2026-11-16 a retry of
+ * one second, and a stored wake left in the past, woke idle rooms several
+ * times a second. */
+export const ARCHIVE_RETRY_FLOOR_SECONDS = 60;
+/** AR-1: the backoff stops growing at one hour. */
+export const ARCHIVE_RETRY_MAX_SECONDS = 3600;
+
 export class ArchiveDriver {
   readonly #options: FixtureArchiveDriverOptions | RoomArchiveDriverOptions;
   readonly #maximum: number;
@@ -132,16 +139,32 @@ export class ArchiveDriver {
   }
   run(): Promise<ArchivePass> {
     return this.#running ??= this.#pass().then(result => {
-      this.#fallback = result.state === "retry" ? result.next : null;
+      this.#fallback = result.state === "retry" ? this.#retryWake(result.next) : null;
       return result;
     }).finally(() => { this.#running = null; });
   }
+  /** AR-1: a retry pass never leaves the stored wake at or before now, and
+   * the in-memory fallback never undercuts a stored future wake. A pass can
+   * return before it writes a wake (an unreadable pin, a pending policy, a
+   * caught failure), and `wake()` would then return the earlier stored time,
+   * so the alarm would fire again at once. This persists a backed-off wake
+   * with its own small budget, as `committed()` does. */
+  #retryWake(next: Timestamp | null): Timestamp | null {
+    try {
+      const rows = this.#store(), now = timeMs(this.#options.clock());
+      if (!rows || now === null) return next ?? this.#later(0);
+      const stored = rows.wake();
+      if (stored !== null && timeMs(stored)! > now) return stored;
+      return rows.defer(retries => this.#later(retries)) ?? this.#later(0);
+    } catch { return this.#later(0); }
+  }
+  /** Every archive retry waits at least ARCHIVE_RETRY_FLOOR_SECONDS and
+   * doubles with `attempts`, up to ARCHIVE_RETRY_MAX_SECONDS (AR-1). */
   #later(attempts: number): Timestamp | null {
     try {
       const now = timeMs(this.#options.clock());
       if (now === null) return null;
-      const { dispatchRetrySeconds: first, dispatchRetryMaxSeconds: last } = this.#options.bounds;
-      const delay = Math.min(last, first * 2 ** Math.min(32, attempts)) * 1000;
+      const delay = Math.min(ARCHIVE_RETRY_MAX_SECONDS, ARCHIVE_RETRY_FLOOR_SECONDS * 2 ** Math.min(32, attempts)) * 1000;
       return Number.isSafeInteger(delay) && delay > 0 ? timeOf(now + delay) : null;
     } catch { return null; }
   }
@@ -180,6 +203,16 @@ export class ArchiveDriver {
       const at = { ...current.at }, through = { ...current.head };
       const terminal = rows.terminal(budget);
       if (terminal) return done({ state: "stopped", next: null, reason: terminal.reason });
+      // AR-1: every scope alarm runs the archive, whoever set the alarm. A
+      // pass whose stored wake is in the future reads only that wake index
+      // and calls no policy, target or provider port. A missing, cleared,
+      // due or stopped wake continues to the full pass below: an idle room
+      // still detects a policy change or a pending migration there.
+      step = "wake-check";
+      const stored = rows.storedWake(budget), clock = timeMs(this.#options.clock());
+      if (stored && !stored.stopped && stored.next !== null && clock !== null && timeMs(stored.next)! > clock) {
+        detail = "not-due"; return done({ state: "retry", next: stored.next });
+      }
       // The original ledger pays once before any policy work. Every later
       // outer lookahead starts with this write already removed from its
       // available allowance; failure need not leave spare write capacity.
@@ -232,9 +265,9 @@ export class ArchiveDriver {
           if (scheduled === null) return done({ state: "retry", next: null, reason: "unavailable" });
           row = rows.attempt(scheduled, budget); attempted = true;
         } else {
-          scheduled = this.#later(0);
+          scheduled = rows.defer(retries => this.#later(retries), budget);
           if (scheduled === null) return done({ state: "retry", next: null, reason: "unavailable" });
-          rows.defer(scheduled, budget); deferred = true;
+          deferred = true;
         }
       }
       step = "target";
@@ -245,9 +278,9 @@ export class ArchiveDriver {
       }
       if (!row) {
         if (!deferred) {
-          scheduled = this.#later(0);
+          scheduled = rows.defer(retries => this.#later(retries), budget);
           if (scheduled === null) return done({ state: "retry", next: null, reason: "unavailable" });
-          rows.defer(scheduled, budget); deferred = true;
+          deferred = true;
         }
         const repository = productionTarget ?? await budget.wait(() => this.#options.target.resolve(at, { ...pin.seed, creator: pin.seed.creator ? { ...pin.seed.creator } : null }, budget));
         if (!repository) return done({ state: "retry", next: this.#later(0), reason: "unavailable" });
@@ -303,9 +336,10 @@ export class ArchiveDriver {
         rows.clearWake(budget); this.#fallback = null; return done({ state: "idle", next: null });
       }
       if (!row.pending && !deferred) {
-        scheduled ??= this.#later(0);
+        const fixed = scheduled;
+        scheduled = rows.defer(retries => fixed ?? this.#later(retries), budget);
         if (scheduled === null) return done({ state: "retry", next: null, reason: "unavailable" });
-        rows.defer(scheduled, budget); deferred = true;
+        deferred = true;
       }
       step = "parent";
       const base = pendingFrontier !== null ? pendingFrontier.base : row.confirmed?.layout === 2

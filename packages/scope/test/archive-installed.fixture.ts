@@ -23,7 +23,7 @@ import { command as dapCommand, memoryStore as cliMemoryStore } from "../../cli/
 import { artifactsOutside } from "../src/artifacts-wiring.ts";
 import type { ArtifactsNamespace } from "../src/artifacts-host.ts";
 import { archiveInput } from "../src/archive-input.ts";
-import { ArchiveDriver } from "../src/archive-driver.ts";
+import { ARCHIVE_RETRY_FLOOR_SECONDS, ArchiveDriver } from "../src/archive-driver.ts";
 import { ArchiveFrontiers } from "../src/archive-frontier-store.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { readArchiveRestart } from "../src/archive-restart.ts";
@@ -462,7 +462,7 @@ for (const scenario of scenarios) {
       await life.wait(() => (D.object as unknown as { readiness(): Promise<unknown> }).readiness());
       expect(await life.wait(() => runDurableObjectAlarm(D.object))).toBe(true);
       const retry = await alarm(D); expect(retry).not.toBeNull(); expect(retry).toBeGreaterThan(life.now());
-      const deferredWake = { pending: true, stopped: false, next: timeOf(retry!) };
+      const deferredWake = { pending: true, stopped: false, next: timeOf(retry!), retries: 1 };
       expect(await wakeIndex(D)).toEqual(deferredWake);
       expect(threwPrebindTarget).toBe(scenario === "Grow activation evicted");
       expect(await life.wait(() => runInDurableObject(D.object, (_instance, state) => new ArchiveRows(archiveSql(state), directory).load()))).toBeNull();
@@ -493,7 +493,7 @@ for (const scenario of scenarios) {
       expect(roomArchiveConstructions.get(A.name)).toBe(1);
       expect(interruptedFirstSources).toBe(true);
       const sourceRetry = await alarm(D); expect(sourceRetry).not.toBeNull(); expect(sourceRetry).toBeGreaterThan(life.now());
-      const sourceWake = { pending: true, stopped: false, next: timeOf(sourceRetry!) };
+      const sourceWake = { pending: true, stopped: false, next: timeOf(sourceRetry!), retries: 1 };
       expect(await wakeIndex(D)).toEqual(sourceWake);
       const targetOnly = await life.wait(() => runInDurableObject(D.object, (_instance, state) => new ArchiveRows(archiveSql(state), directory).load()));
       expect(targetOnly).toMatchObject({ repository, pending: null, confirmed: null });
@@ -1404,7 +1404,7 @@ for (const scenario of scenarios) {
             expect(initial.pending?.through).toEqual(cutoff);
             const commit = initial.pending!.commit;
             await life.wait(() => scope.restart());
-            life.active(); net.clock.now = timeOf(life.now() + PROPOSED_BOUNDS.dispatchRetrySeconds * 1000);
+            life.active(); net.clock.now = timeOf(life.now() + ARCHIVE_RETRY_FLOOR_SECONDS * 1000);
             outcome = await run();
             expect(outcome.confirmed?.commit).toBe(commit);
             expect(peer.posts[1]).toEqual(peer.posts[0]);
@@ -1458,7 +1458,7 @@ for (const scenario of scenarios) {
       }));
       expect(concurrentIdle.result.state).toBe("retry"); expect(concurrentIdle.result.next).toBe(concurrentIdle.wake);
       expect(timeMs(concurrentIdle.wake!)).toBeGreaterThan(life.now());
-      expect(concurrentIdle.index).toEqual({ pending: true, stopped: false, next: concurrentIdle.wake });
+      expect(concurrentIdle.index).toEqual({ pending: true, stopped: false, next: concurrentIdle.wake, retries: 1 });
       expect(peer.minted.filter(token => token.scope === "write")).toHaveLength(writesBeforeIdleGuard);
       (context.task.meta as Record<string, unknown>)["productionIdleWake"] = { idleNativeWake, concurrentIdle,
         qualification: "An actual production ScopeObject alarm cleared its archive wake on confirmed idle. During another real target await a genuine checkpoint/onSealed advanced the Native head; a charged fresh identity/head frame preserved the actual pending index. No Mark, write token or send for that tail. The global alarm can independently belong to another Native owner." };

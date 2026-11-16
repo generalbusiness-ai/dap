@@ -29,6 +29,9 @@ interface ArchiveWake {
   /** Absent on old wakes and after progress. Saturation bounds storage,
    * never the number of retries or the lifetime of the archive writer. */
   readonly capacityDeferrals?: number;
+  /** Consecutive pre-Mark retries without progress, at most 32 (AR-1).
+   * Absent on old wakes and after any write that records progress. */
+  readonly retries?: number;
 }
 type Format = "sha1" | "sha256";
 export interface ArchivedPosition { readonly commit: string; readonly through: Head; readonly layout?: 2; readonly anchorsPublished?: true }
@@ -375,8 +378,10 @@ export class ArchiveRows {
     let value: unknown;
     try { value = parseStrict(bytes); if (canonicalize(value) !== bytes) return refuse("unavailable"); }
     catch { return refuse("unavailable"); }
-    if (!isRecord(value) || !fields(value, Object.hasOwn(value, "capacityDeferrals") ? "capacityDeferrals,next,pending,stopped" : "next,pending,stopped")
-      || Object.hasOwn(value, "capacityDeferrals") && (!natural(value["capacityDeferrals"]) || value["capacityDeferrals"] === 0 || value["capacityDeferrals"] > 32)
+    if (!isRecord(value)) return refuse("unavailable");
+    const counts = ["capacityDeferrals", "retries"].filter(key => Object.hasOwn(value, key));
+    if (!fields(value, [...counts, "next", "pending", "stopped"].sort().join(","))
+      || counts.some(key => !natural(value[key]) || value[key] === 0 || (value[key] as number) > 32)
       || typeof value["pending"] !== "boolean" || typeof value["stopped"] !== "boolean" || value["next"] !== null && (typeof value["next"] !== "string" || timeMs(value["next"]) === null)) return refuse("unavailable");
     return value as unknown as ArchiveWake;
   }
@@ -393,16 +398,20 @@ export class ArchiveRows {
   }
   /** Persist a pre-Mark retry before a target or parent lookup can await.
    * The pending flag protects this backoff from new entry notifications;
-   * it does not introduce a second commit or selection. */
-  defer(at: Timestamp, budget = new ArchiveBudget()): void {
-    this.#sql.transaction(() => {
-      if (timeMs(at) === null) return refuse("unavailable");
-      const previous = this.#wake(budget);
-      if (previous?.stopped) return;
+   * it does not introduce a second commit or selection. `later` receives
+   * the count of earlier consecutive retries without progress, so each one
+   * waits longer (AR-1). Returns the wake time, or null when `later` has none. */
+  defer(later: (retries: number) => Timestamp | null, budget = new ArchiveBudget()): Timestamp | null {
+    return this.#sql.transaction(() => {
+      const previous = this.#wake(budget), retries = previous?.retries ?? 0, at = later(retries);
+      if (at === null || timeMs(at) === null) return null;
+      if (previous?.stopped) return at;
       budget.spend({ calls: 1, inputWork: 4096 }); budget.check();
       this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", WAKE,
-        canonicalize({ pending: true, stopped: false, next: at, ...(previous?.capacityDeferrals ? { capacityDeferrals: previous.capacityDeferrals } : {}) })).toArray();
+        canonicalize({ pending: true, stopped: false, next: at, retries: Math.min(32, retries + 1),
+          ...(previous?.capacityDeferrals ? { capacityDeferrals: previous.capacityDeferrals } : {}) })).toArray();
       budget.check();
+      return at;
     });
   }
   /** Reserve this tiny transition before adaptive lookahead can consume the

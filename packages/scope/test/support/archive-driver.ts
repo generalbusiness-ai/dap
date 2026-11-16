@@ -2,7 +2,7 @@
  * and policy remain explicitly labelled test stand-ins. Opted-in lanes use
  * actual Native Membership authority with separately prepared fixture pins. */
 import { expect } from "vitest";
-import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Timestamp } from "@generalbusiness/dap-contract";
 import type { JournalFormat } from "@generalbusiness/dap-git/journal";
 import type { ArchiveBudget } from "../../src/archive-budget.ts";
 import { ArchiveDriver } from "../../src/archive-driver.ts";
@@ -14,7 +14,8 @@ import { archiveAuthorityBasis, archiveAuthorityPolicies } from "./archive-nativ
 import { archivePolicies, archiveRepository, archiveSql } from "./archive.ts";
 
 export class ScriptedHost extends ScriptedArchiveHost {
-  constructor(format: JournalFormat) { super(format, () => atTime); }
+  /** `clock` dates minted credentials; by default every credential ends one hour after `at(0)`. */
+  constructor(format: JournalFormat, clock: () => Timestamp = () => atTime) { super(format, clock); }
 }
 const atTime = at(0);
 export function driver(lane: Lane, state: DurableObjectState, host: ScriptedHost, budget?: () => ArchiveBudget, after?: number, policies: ArchivePolicyRegistry = archivePolicies, sql: Sql = archiveSql(state)) {
