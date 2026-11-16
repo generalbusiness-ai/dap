@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b11489eab8945440233af3fb044c53c5ac635321","text":"Merge retired a covered predecessor; the successor is at scripts/scale-deadline-registrations.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b67b17ef80c2bcdad1beaff61a066a6ad211189b","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/scope-fixtures.ts."}
