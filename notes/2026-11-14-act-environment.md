@@ -247,7 +247,7 @@ interface Context {
 	head: Head                            // the recorded head
 	assumes: readonly Source[]            // the owner's pending steps, applied first and in order
 	actor: KeyId
-	standing: readonly FactRef[] | null   // the grants at hand. Null: no grant was read
+	standing: readonly FactRef[] | null   // the grants at hand. Null: no grant was read. Request ES-1 replaces this field (section 5.7)
 	clock: Timestamp
 	evidence: readonly Digest[]           // the facts, observations and values at hand
 }
@@ -528,8 +528,9 @@ basis that the view renders for every subject of the act: the
 primary, each `also` and each `via`. The view computes `now` each
 time, from the kept basis and the rows that it holds, for both
 causes. The view stores nothing. So `now` is never older than the row
-on the page. For an act that makes a new item, `now` has no primary
-row and holds the basis of the other subjects.
+on the page. An act that makes a new item has no primary row, and
+neither has an act that names no item. For each, `now` holds the
+basis of the other subjects.
 
 **The page passes `now` back whole: `submit(slot, now)`.** The client
 explores the act on that basis. A subject that moved after that view
@@ -843,7 +844,9 @@ descriptor supplies the real value. An instance whose option differs
 from the value of a retained authorization stops with
 `descriptor-mismatch`. It adds no version and no signing to that
 step. It can send the live bytes of the last position again, and it
-can settle the step.
+can settle the step. Request DD-1 replaces the one option with the
+digest of each act (section 10), and its proposal states how the
+instance gets that digest.
 
 **A signing carries a reference to its authorization and position.**
 A signing with no reference is `legacy`: custody held it before step
@@ -1497,7 +1500,7 @@ above hold the results.
 | `d038a2ee` | The standing of an instance is open. The owner decides the change of `packages/derive` | 5.7 |
 | `c1b26daf` | An optional item field can stay absent in a slot. An edit is a patch that never clears. `clear(slot, fields)` is its own call | 6.1 |
 | `bbee5700` | The client takes one required draft store. A call owns its inputs before its first wait. A call reports what the store holds | 6, 15 |
-| `ff578fef`, `481aac4e` | A return has two forms. A draft that a refusal returned holds the cause and keeps its basis. A draft changes only by a call of the member | 6, 15 |
+| `ff578fef`, `481aac4e` | A draft changes only by a call of the member. The two stored forms of a return that these rulings set are replaced by `77a253b9` | 6, 15 |
 | `fc765743` | An `other-recorded` request waits in the list, and `restore(key)` starts the new key | 6, 15 |
 | `77a253b9`, `a6f98773` | One submit. The view computes `now` for every subject of the act, and the page passes it back. A return has one stored shape and two causes. No hidden retry | 6, 6.1, 15 |
 | `e19f27b5`, `357c2195`, `c79545a3`, `bc447034`, `6d3b979f` | A held intention has three reasons and the optional place of a verified entry | 6 |
