@@ -4,7 +4,7 @@ import { canonicalize, digestBytes, isDigest, same, utf8 } from "@generalbusines
 import type { Bounds, Head, SequenceRef, Seed, Timestamp } from "@generalbusiness/dap-contract";
 import { isSequenceRef, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { captureJournalParentFrontier, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
-import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, type ArchiveCapacityRefusal } from "./archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, ArchivePolicyStopped, ArchiveChainLimit, type ArchiveCapacityRefusal, type ArchivePolicyStopDetails } from "./archive-budget.ts";
 import { archiveParent, copyArchiveObjects } from "./archive-parent.ts";
 import { ArchiveFrontiers, type ArchiveFrontierBase, type ArchiveFrontierPrepared } from "./archive-frontier-store.ts";
 import { archiveFrontierRowContextBound } from "./archive-frontier-cost.ts";
@@ -14,6 +14,7 @@ import { planAdaptiveArchivePass, planRootAdaptiveArchivePass, planRootFixedArch
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { archiveOwnReplayContext, type ArchiveReplayContext } from "./archive-publication.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, archivePinReadBytes, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
+import { archivePinValidationWork } from "./archive-inventory-cost.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { ArchiveRows, type ArchiveMark, type ArchiveRow } from "./archive-row.ts";
 import { finishArchiveParentRead, startArchiveParentReadPass } from "./archive-parent-read-diagnostic.ts";
@@ -63,6 +64,10 @@ export interface RoomArchiveDriverOptions extends Omit<FixtureArchiveDriverOptio
   readonly target: ArchiveTarget;
   readonly provider: ArchiveProvider;
   readonly admit: (at: SequenceRef, seed: Seed) => boolean;
+  /** Paid per-pass installed policy preparation, before provider work. */
+  readonly preparePolicies?: (at: SequenceRef, seed: Seed, budget: ArchiveBudget) => Promise<{ readonly stop: string } | void>;
+  readonly policyCurrent?: () => boolean;
+
   /** Fresh bounded source identity preparation, charged to the same pass. */
   readonly sources?: (after: Head | null, through: Head, budget: ArchiveBudget, exact: boolean) => Promise<{ readonly pins: FixtureArchiveSourcePins; readonly replayScopes?: readonly SequenceRef[]; readonly replayContext?: ArchiveReplayContext; readonly prepare?: (seq: number, budget: ArchiveBudget) => Promise<void> }>;
 }
@@ -155,6 +160,8 @@ export class ArchiveDriver {
     let capacityRefusal: ArchiveCapacityRefusal | null = null;
     let fixedFinish: ArchiveFixedFinish | null = null;
     let sourceFailure: ArchiveSourceFailure | null = null;
+    let policyStop: ArchivePolicyStopDetails | null = null;
+    let halt: ReturnType<ArchiveRows["prepareHalt"]> | null = null;
     // Capture codes: 0 no planner, 1 adaptive, 2 fixed published,
     // 3 fixed unpublished, 4 conversion, 5 pending rebuild.
     let captureStrategy = 0, captureThrough: number | null = null, captureSelected: number | null = null;
@@ -164,13 +171,37 @@ export class ArchiveDriver {
     const observed: { outcome?: ArchivePass } = {};
     const done = (value: ArchivePass): ArchivePass => { observed.outcome = value; return value; };
     let active = true, credential: ArchiveCredential | null = null, scheduled: Timestamp | null = null, deferred = false, attempted = false;
-    const allowed = (): boolean => { if (!active) return false; try { budget.check(); return true; } catch { return false; } };
+    const allowed = (): boolean => { if (!active || "production" in this.#options && this.#options.policyCurrent?.() === false) return false; try { budget.check(); return true; } catch { return false; } };
     try {
       const rows = this.#store();
       if (!rows || this.#options.policies.registry.size === 0) return done({ state: "disabled", next: null });
-      budget.spend({ inputWork: 4 * (ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES) });
+      budget.spend({ inputWork: archivePinValidationWork() });
       const current = this.#options.current()!;
       const at = { ...current.at }, through = { ...current.head };
+      const terminal = rows.terminal(budget);
+      if (terminal) return done({ state: "stopped", next: null, reason: terminal.reason });
+      // The original ledger pays once before any policy work. Every later
+      // outer lookahead starts with this write already removed from its
+      // available allowance; failure need not leave spare write capacity.
+      if ("production" in this.#options) halt = rows.prepareHalt(budget);
+      let policySeed: Seed | null = null;
+      if ("production" in this.#options && this.#options.preparePolicies) {
+        step = "policy"; detail = "own-preparation";
+        // Policy denial must not depend on decoding a large old pending row.
+        // This metadata pin grants no body/export admission: the normal pin
+        // and row checks still run below before any provider work.
+        budget.spend({ inputWork: archivePinValidationWork() });
+        const initial = readArchivePinAfterReceipt(budget.native(this.#options.sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }), archivePinReadBytes), at);
+        if (!initial) return done({ state: "retry", next: this.#later(0), reason: "unavailable" });
+        policySeed = initial.seed;
+        const prepare = this.#options.preparePolicies;
+        const prepared = await budget.wait(() => prepare(at, initial.seed, budget));
+        if (prepared?.stop) {
+          halt!(prepared.stop);
+          return done({ state: "stopped", next: null, reason: prepared.stop });
+        }
+        detail = "none";
+      }
       let row = rows.load(budget);
       phase = !row ? "absent" : row.stopped ? "stopped" : row.pending ? "pending" : row.confirmed ? "confirmed" : "target";
       confirmed = row?.confirmed?.through.seq ?? null; pending = row?.pending?.through.seq ?? null;
@@ -181,6 +212,7 @@ export class ArchiveDriver {
       const pin = readPin(budget.native(this.#options.sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }), archivePinReadBytes), at);
       budget.check();
       if (!pin) return done({ state: "retry", next: this.#later(0), reason: "unavailable" });
+      if (policySeed && !same(policySeed, pin.seed)) return done({ state: "retry", next: this.#later(0), reason: "unavailable" });
       if ("production" in this.#options && !this.#options.admit(at, pin.seed)) { this.#disabled = true; return done({ state: "disabled", next: null }); }
       const policy = this.#options.policies.registry.get(pin.seed.definition);
       if (!policy || !policy.review || policy.support.named !== pin.seed.definition) { this.#disabled = true; return done({ state: "disabled", next: null }); }
@@ -449,6 +481,21 @@ export class ArchiveDriver {
       if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return done({ state: "stopped", next: null, reason: "conflict" }); }
       return done({ state: "retry", next });
     } catch (error) {
+      if (error instanceof ArchivePolicyStopped || error instanceof ArchiveChainLimit) {
+        const reason = error instanceof ArchivePolicyStopped ? error.policyReason : "application-policy-unavailable";
+        policyStop = error instanceof ArchivePolicyStopped ? error.details
+          : { chainReason: "admission-limit", ...(error.position ? { position: { ...error.position } } : {}) };
+        if (halt) {
+          try { halt(reason, policyStop); return done({ state: "stopped", next: null, reason }); }
+          catch (writeError) {
+            // Prepayment preserves work capacity, not extra time. An
+            // elapsed original deadline cannot persist a late terminal.
+            if (!(writeError instanceof ArchiveStopped)) throw writeError;
+            this.#fallback = scheduled ?? this.#later(0);
+            return done({ state: "retry", next: this.#fallback, reason: writeError.reason });
+          }
+        }
+      }
       if (error instanceof ArchivePrefixStopped) sourceFailure = error.sourceFailure ?? null;
       // Preserve a terminal planner debit if a subsequent row stop encounters
       // that same stopped budget; never borrow an exploratory refusal.
@@ -463,7 +510,7 @@ export class ArchiveDriver {
       if (credential) { try { budget.check(); await budget.wait(() => this.#options.provider.revokeArchive(credential!)); } catch { /* The short-lived credential may expire; it is never recorded. */ } }
       try {
         const reason = observed.outcome?.reason;
-        const known = ["limit", "timeout", "unavailable", "conflict", "mismatch", "parent", "missing-input", "rebuild-mismatch", "unsupported-archive-cohort", "foreign-source-unavailable"];
+        const known = ["application-policy-revoked", "application-policy-unavailable", "limit", "timeout", "unavailable", "conflict", "mismatch", "parent", "missing-input", "rebuild-mismatch", "unsupported-archive-cohort", "foreign-source-unavailable"];
         const position = (value: number | null) => value !== null && Number.isSafeInteger(value) && value >= 0 ? value : null;
         const cost = budget.admitted();
         const states = ["idle", "disabled", "retry", "stopped", "confirmed"];
@@ -491,7 +538,7 @@ export class ArchiveDriver {
           attempted, state: observed.outcome?.state ?? "threw", reason: reason === undefined ? "none" : known.includes(reason) ? reason : "other",
           caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost,
           reservationCosts: ArchiveBudget.prototype.reservationCosts.call(budget),
-          parentRead, capacityRefusal, fixedFinish, sourceFailure, capacityObservation,
+          parentRead, capacityRefusal, fixedFinish, sourceFailure, capacityObservation, ...(policyStop ? { policyStop } : {}),
         });
       } catch { /* Observation cannot replace the original archive result. */ }
     }

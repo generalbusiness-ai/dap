@@ -83,6 +83,22 @@ binds `VERSION_METADATA`, as Grow and Demo do. Wrangler supplies its value
 on deployment. Health reports `unknown` when the binding or a valid version
 ID is absent.
 
+The Lending Worker serves separate installed screens for two rooms. The
+0.3.0 `lending-library` keeps `https://lending.inguz.space`. The 0.4.0
+`lending-shelf` uses `https://lending-shelf.inguz.space`. The sandbox maps
+both to the existing `LENDING` service binding to `dap-lending`. Each screen
+origin names one installation.
+
+These two new nonsecret rows name the shelf's active installation at item 2:
+
+| Setting and source | Screen origin | Installation descriptor |
+| --- | --- | --- |
+| `APPLICATION_SCREEN_HOSTS` in [`wrangler.lending.jsonc`](../../apps/room/wrangler.lending.jsonc) | `https://lending-shelf.inguz.space` | Room `https://dap-lending.inguz.workers.dev`, directory `sc_a7fawlxbqabykqatabrx2ldhx4ufji2s4wlm6l4mh5krmqvrzrta`, item 2, presentation `sha256:188f7b84e6b1ba29c2090265f4d7884a29884beff6ea58774a34ce8fbeef9f81` |
+| `SCREEN_HOSTS` in [`wrangler.rollout.jsonc`](../../apps/sandbox/wrangler.rollout.jsonc) | `https://lending-shelf.inguz.space` | The same descriptor with `service: "LENDING"` |
+
+The conservative sandbox `wrangler.jsonc` keeps its empty mapping. These
+tracked rows establish configuration, not DNS, deployment or hosted acceptance.
+
 `SCOPE_INDEX_MODE=register` is a transition mode. A scope that the index
 does not know can still start, so that its own verified genesis registers
 it. `enforce` refuses an unknown existing scope before the Worker looks it
@@ -149,7 +165,7 @@ failure behavior, health visibility and the other readers.
 | `APPLICATION_CONTENT` | binding | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `APPLICATION_SCREEN_HOSTS` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `APPLICATION_TRUST` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `ARCHIVE_RESTART_DIRECTIVE` | text | `dap-grow` | [`apps/room/worker.grow.ts`](../../apps/room/worker.grow.ts) |
+| `ARCHIVE_RESTART_DIRECTIVE` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`apps/room/worker.ts`](../../apps/room/worker.ts) |
 | `ARTIFACTS` | binding | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `ARTIFACTS_CONFIG` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `ARTIFACTS_NAMESPACE` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
@@ -162,7 +178,6 @@ failure behavior, health visibility and the other readers.
 | `GITHUB_READ_TOKEN` | secret | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `GITHUB_REPOSITORY_BINDINGS` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `GROW` | binding | `dap-application-sandbox` | [`apps/sandbox/worker.ts`](../../apps/sandbox/worker.ts) |
-| `GROW_ARCHIVE_CONFIG` | text | `dap-grow` | [`apps/room/archive.ts`](../../apps/room/archive.ts) |
 | `GROW_BINDING` | text | `dap-grow-simulator` | [`examples/grow/simulator-host.ts`](../../examples/grow/simulator-host.ts) |
 | `GROW_CLIMATE_SECRET` | secret | `dap-grow-simulator` | [`examples/grow/simulator-host.ts`](../../examples/grow/simulator-host.ts) |
 | `GROW_SENSORS_SECRET` | secret | `dap-grow-simulator` | [`examples/grow/simulator-host.ts`](../../examples/grow/simulator-host.ts) |
@@ -888,7 +903,8 @@ failure behavior, health visibility and the other readers.
         "packages/scope/src/worker.ts",
         "packages/scope/src/applications/route.ts",
         "packages/scope/src/applications/wiring.ts",
-        "packages/scope/src/worker-mcp.ts"
+        "packages/scope/src/worker-mcp.ts",
+        "apps/room/archive-packages.ts"
       ],
       "parser": "readApplicationTrust validates the supported exact release/publisher/host trust rows; later package checks still authenticate bytes and semantics.",
       "missing": "No package admitted or served; fresh acts under installed releases refuse application-revoked.",
@@ -1078,28 +1094,20 @@ failure behavior, health visibility and the other readers.
     },
     {
       "deployments": [
-        "dap-grow"
-      ],
-      "name": "GROW_ARCHIVE_CONFIG",
-      "kind": "text",
-      "status": "read",
-      "readers": [
-        "apps/room/archive.ts"
-      ],
-      "parser": "growArchiveConfiguration: strict exact policy/release/directory/repositoryName JSON, at most 2048 characters, with valid pinned Artifacts configuration.",
-      "missing": "Grow archive wiring remains absent.",
-      "invalid": "Grow archive wiring remains absent; no generic fixture driver fallback.",
-      "health": "Not reported; archive diagnostic is separate."
-    },
-    {
-      "deployments": [
+        "dap-self-host",
+        "artroom-scope",
+        "dap-connect",
+        "dap-celld-local",
+        "dap-demo",
+        "dap-commons",
+        "dap-lending",
         "dap-grow"
       ],
       "name": "ARCHIVE_RESTART_DIRECTIVE",
       "kind": "text",
       "status": "read",
       "readers": [
-        "apps/room/worker.grow.ts"
+        "apps/room/worker.ts"
       ],
       "parser": "readArchiveRestart: canonical closed directive at most 8 KiB, exact fullScope/repository/confirmed receipt/digest/generation and absolute expiry; private row CAS checks admission.",
       "missing": "No deployment-requested restart.",

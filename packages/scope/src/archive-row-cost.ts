@@ -83,3 +83,14 @@ export function forecastArchiveBookkeeping(shape: ArchiveBookkeepingFootprint): 
   if (![metadata, inputWork].every(natural)) throw new ArchiveStopped("unavailable");
   return { ok: true, cost: Object.freeze({ entries: 0, attempts: 0, nodes: 0, calls: loads * 2 + (saves - 1) * save.calls + confirmedSave.calls + newRetained * 2, metadata, inputWork }) };
 }
+
+/** Provider-independent terminal state has no archive selection body. */
+export const archiveTerminalReadReservation = (): Readonly<{ metadata: number; inputWork: number }> => ({ metadata: 512, inputWork: 4096 });
+export function forecastArchiveTerminalRead(): Readonly<ArchiveCost> {
+  const held = archiveTerminalReadReservation();
+  return { entries: 0, attempts: 0, nodes: 0, calls: 1, metadata: held.metadata, inputWork: held.inputWork + held.metadata };
+}
+export function forecastArchiveTerminalWrite(units: number): Readonly<ArchiveCost> {
+  if (!natural(units) || units > 512) throw new ArchiveStopped("unavailable");
+  return { entries: 0, attempts: 0, nodes: 0, calls: 2, metadata: units + 64, inputWork: units * 8 + 4096 };
+}

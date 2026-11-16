@@ -338,9 +338,10 @@ account. Two copies can exist outside the Worker:
   full journal of every scope.
 - **The journal archive.** A room's directory can bind a journal archive,
   which copies entries into the repository under
-  `refs/artroom/journal/*`. Today the archive engine runs only for the
-  demo room on the hosted `dap-grow` Worker. Other rooms cannot yet join
-  an archive.
+  `refs/artroom/journal/*`. The shared room Worker archives directories with an Artifacts archive
+  binding and an admitted policy. A room under host `none` has no archive;
+  other repository providers remain unavailable. GitHub archive custody
+  belongs to CB-2.
 
 To keep a copy of a room's repository:
 
@@ -377,6 +378,57 @@ To keep a copy of a room's repository:
 No command backs up a Worker's Durable Object storage yet, and no restore
 procedure or restore drill exists yet. A room under host `none` has no copy
 outside the Worker.
+
+## Verify a room from its archive
+
+The archive copies only native journals and installed package definitions
+that have a reviewed policy. It excludes private Register, Membership and
+Inbox root journals. A package needs its authenticated native installation,
+retained signed release proof and a current matching `APPLICATION_TRUST`
+row. Removing that row stops the archive of every scope of that release
+with `application-policy-revoked`. Confirmed coverage stays intact. The
+scope stops scheduling retries; restoring trust alone does not clear its
+stored terminal state. `archive-pass-diagnostic-v1` and the activation's
+`archive-row-diagnostic-v1` report the named stop without payloads or tokens.
+`application-policy-unavailable` means the authenticated package has no
+supported runtime archive policy or its proof cannot become usable through
+the pending installation. The diagnostic's `proofReason` distinguishes
+`retained-proof-missing`, `metadata-limit`, and `malformed-or-unsupported`.
+These states stop the wake and preserve confirmed coverage. An installation
+that is not active yet retries while its native creation result can arrive.
+An unreadable namespace reply also retries. Neither case selects archive
+payload or grants export permission.
+
+`chainReason: admission-limit` marks a permanent creator-proof count limit.
+For a stopped native journal, the diagnostic also names the refused entry's
+`position`. Its confirmed prefix stays intact; that entry and later entries
+of the journal do not archive. Until ARC-1 adds its supported-cohort check,
+a creator walk that exceeds the remaining pass budget can report `limit`
+on every retry. The existing archive diagnostic shows the failing site.
+
+Use an independently enumerated and verified list of the room's expected
+public native and application scope references. Exclude private root
+journals according to policy, not because a ref is absent from the clone.
+Let `N` be the number in that list. Fetching refs does not establish `N`.
+
+```sh
+dap clone <dir> --archive
+artroom-replay --git <clone> --all --expect-journals N --json
+```
+
+Compare the replay's journals with that exact list and examine every
+incomplete, mismatch or missing journal. The entry and genesis hashes must
+match the independently held scope references. A successful Git transfer
+alone proves neither complete replay nor the room's expected journal set.
+
+No archive restore procedure belongs to this feature. ARC-1 separately
+owns the one-pass supported cohort and a permanent named stop before
+provider calls for an entry outside it.
+Under ruling `790afe00333dd0cd581b78a61ce37e434074628c`, AE-1 raises
+`nodes` from 64 to 128 and `inputWork` from 67,108,864 to 134,217,728.
+All other caps, charges, and the format stay unchanged. AE-1 adds no
+provider staging. Only the planner deploys and binds the new rooms after
+cutover; the builder does not deploy them.
 
 ## Rotate secrets
 

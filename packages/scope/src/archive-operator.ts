@@ -4,13 +4,14 @@ import type { ScopeId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract
 import { canonicalize, digestBytes, isHead, isRecord, isScopeRef, natural, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_SCOPE_METADATA_BYTES } from "./archive-pin.ts";
-import { ArchiveRows, archiveRestartEligible, type ArchivedPosition, type ArchiveMark, type ArchiveStoredWake } from "./archive-row.ts";
+import { ArchiveRows, archiveRestartEligible, type ArchivedPosition, type ArchiveMark, type ArchiveStoredWake, type ArchiveTerminal } from "./archive-row.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import type { Sql } from "./sqlite.ts";
 
 type Observation<T> = { readonly state: "absent" } | { readonly state: "unknown" } | ({ readonly state: "present" } & T);
-const reasons = ["limit", "timeout", "unavailable", "format", "object-id", "missing-object", "object-mismatch", "tree", "commit", "timestamp", "manifest", "input", "missing-input", "input-mismatch", "parent", "rebuild-mismatch", "conflict", "incomplete", "mismatch", "foreign-source-unavailable", "foreign-source-mismatch", "unsupported-credential-cohort", "unsupported-archive-cohort", "unsupported-custom-domain", "unsupported-foreign-copy"] as const;
+const reasons = ["application-policy-revoked", "application-policy-unavailable", "limit", "timeout", "unavailable", "format", "object-id", "missing-object", "object-mismatch", "tree", "commit", "timestamp", "manifest", "input", "missing-input", "input-mismatch", "parent", "rebuild-mismatch", "conflict", "incomplete", "mismatch", "foreign-source-unavailable", "foreign-source-mismatch", "unsupported-credential-cohort", "unsupported-archive-cohort", "unsupported-custom-domain", "unsupported-foreign-copy"] as const;
 export type ArchiveOperatorReason = typeof reasons[number] | "unknown";
+type OperatorTerminal = Omit<ArchiveTerminal, "reason"> & { readonly reason: ArchiveOperatorReason };
 export interface ArchiveOperatorRow {
   readonly at: ScopeRef;
   readonly rowDigest: string | null;
@@ -28,6 +29,7 @@ export interface ArchiveOperatorRow {
 export type ArchiveOperatorView = { readonly state: "absent" }
   | { readonly state: "unknown"; readonly reason: "scope" }
   | { readonly state: "read"; readonly row: Observation<ArchiveOperatorRow>;
+    readonly terminal?: Observation<OperatorTerminal>;
     readonly storedWake: Observation<ArchiveStoredWake>;
     readonly platformAlarm: Observation<{ readonly at: number }> };
 const fields = (value: Record<string, unknown>, expected: string): boolean => Object.keys(value).sort().join(",") === expected;
@@ -61,6 +63,9 @@ export async function archiveOperatorState(sql: Pick<Sql, "exec">, name: ScopeId
   // load() owns the existing strict, canonical, bounded ArchiveRow decoder.
   // Its synchronous frame is read-only; never construct SqliteStore here.
   const rows = new ArchiveRows({ exec: sql.exec.bind(sql), transaction: read => read() }, at);
+  let terminal: Observation<OperatorTerminal> = { state: "absent" };
+  try { const value = rows.terminal(budget); if (value !== null) terminal = { state: "present", ...value, reason: (reasons as readonly string[]).includes(value.reason) ? value.reason as ArchiveOperatorReason : "unknown" }; }
+  catch { terminal = { state: "unknown" }; }
   let storedWake: Observation<ArchiveStoredWake>;
   try { const wake = rows.storedWake(budget); storedWake = wake === null ? { state: "absent" } : { state: "present", pending: wake.pending, stopped: wake.stopped, next: wake.next }; }
   catch { storedWake = { state: "unknown" }; }
@@ -81,8 +86,8 @@ export async function archiveOperatorState(sql: Pick<Sql, "exec">, name: ScopeId
       const restartGeneration = rows.restartReceipt(budget).generation;
       const pending = value.pending;
       row = { state: "present", rowDigest, restartGeneration, at: { ...value.at }, repository: { ...value.repository }, format: value.format,
-        phase: value.stopped ? "stopped" : pending ? "pending" : value.confirmed !== null ? "confirmed" : "target",
-        reason: value.stopped === null ? null : (reasons as readonly string[]).includes(value.stopped.reason) ? value.stopped.reason as ArchiveOperatorReason : "unknown",
+        phase: terminal.state === "present" || value.stopped ? "stopped" : pending ? "pending" : value.confirmed !== null ? "confirmed" : "target",
+        reason: terminal.state === "present" ? terminal.reason : value.stopped === null ? null : (reasons as readonly string[]).includes(value.stopped.reason) ? value.stopped.reason as ArchiveOperatorReason : "unknown",
         confirmed: value.confirmed === null ? null : position(value.confirmed),
         pendingMark: pending === null ? null : { commit: pending.commit, parent: pending.parent, through: { ...pending.through }, markedAt: pending.markedAt, ...(pending.layout === 2 ? { layout: 2 as const } : {}) }, attempts: value.attempts, next: value.next };
     }
@@ -90,7 +95,7 @@ export async function archiveOperatorState(sql: Pick<Sql, "exec">, name: ScopeId
   let platformAlarm: Observation<{ readonly at: number }>;
   try { const alarm = await getAlarm(); platformAlarm = alarm === null ? { state: "absent" } : Number.isSafeInteger(alarm) && alarm >= 0 ? { state: "present", at: alarm } : { state: "unknown" }; }
   catch { platformAlarm = { state: "unknown" }; }
-  return { state: "read", row, storedWake, platformAlarm };
+  return { state: "read", row, ...(terminal.state !== "absent" ? { terminal } : {}), storedWake, platformAlarm };
 }
 
 /** Fixed, secret-free tail projection. Metadata is captured synchronously
@@ -105,8 +110,11 @@ export async function archiveRowDiagnostic(sql: Pick<Sql, "exec">, name: ScopeId
     confirmed: "unknown", pendingMark: "unknown", storedWake: "unknown", rowDigest: "unknown", restartGeneration: "unknown",
     platformAlarm: alarm === null ? "absent" : Number.isSafeInteger(alarm) && alarm! >= 0 ? alarm! : "unknown" };
   const row = view.row;
-  return { scope: name, rowDigest: row.state === "present" ? row.rowDigest : row.state, restartGeneration: row.state === "present" ? row.restartGeneration : "unknown", state: row.state, phase: row.state === "present" ? row.phase : row.state,
-    reason: row.state === "present" ? row.reason : row.state === "unknown" ? "unknown" : null,
+  return { scope: name, rowDigest: row.state === "present" ? row.rowDigest : row.state, restartGeneration: row.state === "present" ? row.restartGeneration : "unknown", state: view.terminal?.state === "present" ? "present" : row.state, phase: view.terminal?.state === "present" ? "stopped" : row.state === "present" ? row.phase : row.state,
+    reason: view.terminal?.state === "present" ? view.terminal.reason : view.terminal?.state === "unknown" ? "unknown" : row.state === "present" ? row.reason : row.state === "unknown" ? "unknown" : null,
+    ...(view.terminal?.state === "present" && view.terminal.proofReason ? { proofReason: view.terminal.proofReason } : {}),
+    ...(view.terminal?.state === "present" && view.terminal.chainReason ? { chainReason: view.terminal.chainReason } : {}),
+    ...(view.terminal?.state === "present" && view.terminal.position ? { position: { ...view.terminal.position } } : {}),
     confirmed: row.state === "present" ? row.confirmed === null ? "absent" : { commit: row.confirmed.commit, through: { ...row.confirmed.through } } : row.state,
     pendingMark: row.state === "present" ? row.pendingMark === null ? "absent" : { commit: row.pendingMark.commit, through: { ...row.pendingMark.through } } : row.state,
     storedWake: view.storedWake.state === "present" ? { pending: view.storedWake.pending, stopped: view.storedWake.stopped, next: view.storedWake.next } : view.storedWake.state,

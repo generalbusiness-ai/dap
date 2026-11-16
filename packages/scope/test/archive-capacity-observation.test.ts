@@ -177,16 +177,18 @@ test("site and refusal caps keep the native ledger while declaring lost attribut
     () => budget.spend({ metadata: 1 }),
     () => budget.spend({ metadata: 1 }),
     () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
   ];
   for (const spend of spenders) spend();
   for (let index = 0; index < 17; index++) expect(budget.canSpend({ metadata: ARCHIVE_BOUNDS.metadata + 1 })).toBe(false);
   const report = readArchiveCapacityObservation(budget, { throughSeq: null })!;
-  expect(report.sites).toHaveLength(64);
+  expect(report.sites).toHaveLength(66);
   expect(report.refusals).toHaveLength(16);
   expect(report.droppedSiteCalls).toBeGreaterThan(0);
   expect(report.droppedRefusals).toBe(1);
-  expect(report.admitted?.metadata).toBe(65);
-  expect(report.admittedDelta.metadata).toBe(65);
+  expect(report.admitted?.metadata).toBe(67);
+  expect(report.admittedDelta.metadata).toBe(67);
   expect(report.ledgerReconciled).toBe(true);
   expect(report.observationComplete).toBe(false);
   expect(report.debitAttributionComplete).toBe(false);
@@ -195,7 +197,7 @@ test("site and refusal caps keep the native ledger while declaring lost attribut
   const handle = budget.reserve({ metadata: 8, inputWork: 16 });
   budget.settle(handle, 2);
   const settled = readArchiveCapacityObservation(budget, { throughSeq: null })!;
-  expect(settled.admitted?.metadata).toBe(67);
+  expect(settled.admitted?.metadata).toBe(69);
   expect(settled.unattributedAdmittedDelta.metadata).toBe(3);
   expect(settled.unattributedSettlementReduction).toMatchObject({ metadata: 6, inputWork: 12 });
   expect(settled.ledgerReconciled).toBe(true);

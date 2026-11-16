@@ -64,6 +64,22 @@ test("setting reads follow immutable lexical aliases and refuse unsupported esca
   assert.throws(() => environmentReads(nested.replace("function invoke", "[accept] = replacements; function invoke"), "nested.ts", options), /callable identity reassignment/);
   const loop = environmentReads("function run(env: Env) { for (const env of []) {} return env.NEW_SETTING; }", "specimen.ts", options);
   assert.deepEqual(loop.map(row => row.name), ["NEW_SETTING"]);
+  const presence = environmentReads(`
+    function run(env: Env) {
+      const owned = env;
+      void ("ARCHIVE_RESTART_DIRECTIVE" in env);
+      void ("ARCHIVE_RESTART_DIRECTIVE" in owned);
+    }
+    class Worker { run() { return "ARCHIVE_RESTART_DIRECTIVE" in this.env; } }
+  `, "presence.ts", options);
+  assert.deepEqual(presence.map(row => row.name), ["ARCHIVE_RESTART_DIRECTIVE", "ARCHIVE_RESTART_DIRECTIVE", "ARCHIVE_RESTART_DIRECTIVE"],
+    "Literal presence checks record the Env root, immutable alias, and direct this.env receiver");
+  assert.throws(() => environmentReads('function run(env: Env) { return "SETTING" in { ...env, COPY: env.SECURITY_SETTINGS_UNDOCUMENTED }; }', "presence.ts", options), /unsupported setting syntax/,
+    "A copied environment presence check cannot hide its nested undocumented setting read");
+  for (const body of ['return key in env;', 'return "notCanonical" in env;', 'return 1 in env;',
+    'return env in other;', 'return "SETTING" in (env || {});', 'return "SETTING" in [env];']) {
+    assert.throws(() => environmentReads(`function run(env: Env) { ${body} }`, "presence.ts", options), /unsupported setting syntax/);
+  }
 });
 
 test("the real Worker source inventory rejects an undocumented setting read", () => {

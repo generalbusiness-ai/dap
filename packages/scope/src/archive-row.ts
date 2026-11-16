@@ -3,22 +3,25 @@
  * only preserves its exact bytes and compares outstanding identities. */
 import { natural, same } from "@generalbusiness/dap-bytes";
 import type { Head, SequenceRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, isDigest, isRecord, isSequenceRef, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, isDigest, isHead, isRecord, isSequenceRef, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import type { ArchiveRestartDirective } from "./archive-restart.ts";
 import type { DestinationRepository } from "./destination-host.ts";
-import { ArchiveBudget } from "./archive-budget.ts";
+import { ArchiveBudget, type ArchivePolicyStopDetails } from "./archive-budget.ts";
 import { archiveFrontierRowContextBound, archiveFrontierRowCompareCost, archiveFrontierSnapshotCost } from "./archive-frontier-cost.ts";
 import type { Sql } from "./sqlite.ts";
 import { confirmRetainedArchivePass } from "./archive-retained-pass.ts";
 import { archiveReplayScopeRefs, archiveReplayScopeUnits, readArchivePublication } from "./archive-publication.ts";
 import { ARCHIVE_ROW_MANIFEST_BYTES as MANIFEST_BYTES, ARCHIVE_ROW_BYTES, ARCHIVE_CONFIRMED_ROW_BYTES, ARCHIVE_ROW_SIZE_METADATA,
   ARCHIVE_ROW_SAVE_FIXED_WORK, archiveRowLoadWork, archivePendingManifestWork, archiveMarkWork,
-  archiveRowSaveReservation, archiveConfirmedRowSaveReservation } from "./archive-row-cost.ts";
+  archiveRowSaveReservation, archiveConfirmedRowSaveReservation, archiveTerminalReadReservation, forecastArchiveTerminalWrite } from "./archive-row-cost.ts";
 export { ARCHIVE_ROW_BYTES } from "./archive-row-cost.ts";
 
 const KEY = "archive-row-1";
 const WAKE = "archive-wake-1";
 const RESTART = "archive-restart-1";
+const TERMINAL = "archive-terminal-1";
+const proofReasons = ["installation-not-active", "retained-proof-missing", "metadata-limit", "malformed-or-unsupported"] as const;
+export interface ArchiveTerminal { readonly reason: string; readonly proofReason?: typeof proofReasons[number]; readonly chainReason?: "admission-limit"; readonly position?: Head }
 interface ArchiveWake {
   readonly pending: boolean;
   readonly stopped: boolean;
@@ -147,7 +150,7 @@ export class ArchiveRows {
   }
   constructor(sql: Sql, at: SequenceRef) {
     if (!isSequenceRef(at)) refuse("unavailable");
-    this.#sql = sql; this.#at = { ...at };
+    this.#sql = sql; this.#at = { scope: at.scope, genesis: at.genesis };
   }
   #load(budget: ArchiveBudget): { row: ArchiveRow; bytes: string } | null {
     const sql = budget.native(this.#sql, () => ({ metadata: ARCHIVE_ROW_SIZE_METADATA, inputWork: 0 }));
@@ -316,6 +319,53 @@ export class ArchiveRows {
       if (!previous) return refuse("unavailable");
       return this.#save({ ...previous, next: null, stopped: { reason, where } }, budget);
     });
+  }
+  /** A policy stop needs no repository, provider format or fabricated row.
+   * It preserves any existing confirmed receipt and prevents scheduling. */
+  terminal(budget = new ArchiveBudget()): ArchiveTerminal | null {
+    const rows = budget.native(this.#sql, archiveTerminalReadReservation).exec("SELECT v FROM meta WHERE k = ? AND typeof(v) = 'text' AND octet_length(v) <= 512 LIMIT 1", TERMINAL).toArray();
+    if (!rows.length) return null;
+    const bytes = rows[0]?.["v"];
+    if (typeof bytes !== "string") return refuse("unavailable");
+    const value: unknown = parseStrict(bytes);
+    if (!isRecord(value) || !fields(value, ["at", "reason", "v", ...["proofReason", "chainReason", "position"].filter(key => Object.hasOwn(value, key))].sort().join(",")) || value["v"] !== 1 || !same(value["at"], this.#at)
+      || Object.hasOwn(value, "proofReason") && !(proofReasons as readonly unknown[]).includes(value["proofReason"])
+      || Object.hasOwn(value, "chainReason") && value["chainReason"] !== "admission-limit"
+      || Object.hasOwn(value, "position") && (!isHead(value["position"]) || !fields(value["position"] as unknown as Record<string, unknown>, "hash,seq"))
+      || typeof value["reason"] !== "string" || !/^[a-z][a-z0-9-]{0,127}$/.test(value["reason"]) || canonicalize(value) !== bytes) return refuse("unavailable");
+    return { reason: value["reason"], ...(Object.hasOwn(value, "proofReason") ? { proofReason: value["proofReason"] as typeof proofReasons[number] } : {}),
+      ...(value["chainReason"] === "admission-limit" ? { chainReason: "admission-limit" as const } : {}),
+      ...(isHead(value["position"]) ? { position: { seq: value["position"].seq, hash: value["position"].hash } } : {}) };
+  }
+  /** Pay once in the original ledger, before policy work and outside its
+   * later lookahead. A count/proof refusal can then write with no remaining
+   * allowance. This does not revive a stopped budget or extend its deadline. */
+  prepareHalt(budget = new ArchiveBudget()): (reason: string, details?: ArchivePolicyStopDetails) => void {
+    budget.spend(forecastArchiveTerminalWrite(512));
+    let used = false;
+    return (reason, details = {}) => {
+      if (used || !/^[a-z][a-z0-9-]{0,127}$/.test(reason)
+        || details.proofReason !== undefined && !(proofReasons as readonly string[]).includes(details.proofReason)
+        || details.chainReason !== undefined && details.chainReason !== "admission-limit"
+        || details.position !== undefined && !isHead(details.position)) return refuse("unavailable");
+      this.#sql.transaction(() => {
+        budget.check();
+        // Preserve a potentially large pending row byte-for-byte. Only the
+        // closed terminal and tiny wake index consume the prepaid two calls.
+        const value = canonicalize({ v: 1, at: this.#at, reason,
+          ...(details.proofReason !== undefined ? { proofReason: details.proofReason } : {}),
+          ...(details.chainReason !== undefined ? { chainReason: details.chainReason } : {}),
+          ...(details.position !== undefined ? { position: { seq: details.position.seq, hash: details.position.hash } } : {}) });
+        if (value.length > 512 || utf8(value).length > 512) return refuse("limit");
+        this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO NOTHING", TERMINAL, value).toArray();
+        this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", WAKE, canonicalize({ pending: false, stopped: true, next: null })).toArray();
+        budget.check();
+      });
+      used = true;
+    };
+  }
+  halt(reason: string, budget = new ArchiveBudget(), details?: ArchivePolicyStopDetails): void {
+    this.prepareHalt(budget)(reason, details);
   }
   #wake(budget: ArchiveBudget): ArchiveWake | null {
     const rows = budget.native(this.#sql, () => ({ metadata: 256, inputWork: 4096 })).exec("SELECT v FROM meta WHERE k = ? AND typeof(v) = 'text' AND octet_length(v) <= 256 LIMIT 1", WAKE).toArray();

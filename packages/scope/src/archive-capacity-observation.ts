@@ -7,7 +7,7 @@ import { isDigest, natural } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 
 const AXES = ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const;
-const MAX_SITES = 64, MAX_REFUSALS = 16, MAX_FRAMES = 2;
+const MAX_SITES = 66, MAX_REFUSALS = 16, MAX_FRAMES = 2;
 const FLAGS = { unknownSite: 1, sites: 2, refusals: 4, malformed: 8, observer: 16, counter: 32, ledger: 64, custom: 128 } as const;
 const zero = (): ArchiveCost => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
 type NumericFields<K extends string> = Readonly<Partial<Record<K, number>>>;

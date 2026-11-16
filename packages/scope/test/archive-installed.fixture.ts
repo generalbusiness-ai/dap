@@ -1,8 +1,9 @@
 import { scaleDeadline } from "./support/archive-scale-deadline.ts";
-/** Native installed TEST application, declared root/child creation, issued
- * session reads and SQLite. Package peer, clock, scheduler and reviewed
- * archive policy are explicit fixtures. No provider or production admission.
- * Device replies are explicit TEST owner input, not physical execution. */
+/** Native installed TEST applications, root/child creation, issued session
+ * reads and SQLite. Package peer, clock, scheduler and remote service are
+ * explicit fixtures. The shared Base/Grow cases prepare production policy from
+ * retained proof; older diagnostic cases label their fixture policies.
+ * Device replies are TEST owner input, not physical or hosted execution. */
 import { env, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test, vi } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FactRef, type Head, type Input, type PlatformDefinition, type ScopeId, type ScopeRef, type Sealed } from "@generalbusiness/dap-contract";
@@ -30,9 +31,14 @@ import { archiveSourceReferences, archiveSourceWindow } from "../src/archive-sou
 import { stopArchivePrefix } from "../src/archive-prefix.ts";
 import { ArchiveArtifactsPeer } from "./support/archive-artifacts.ts";
 import { observeDirectoryFinish } from "./support/archive-finish-observer.ts";
-import { growArchivePolicies, type GrowArchiveRelease } from "../../../apps/room/archive-policy.ts";
+import { growArchivePolicies, nativeArchivePolicies, type GrowArchiveRelease } from "../../../apps/room/archive-policy.ts";
+import { roomArchivePackages } from "../../../apps/room/archive-packages.ts";
+import { archiveInstallationIdentity } from "../../../apps/room/archive-identity.ts";
+import { ApplicationActAdmission, APPLICATION_ACT_ADMISSION_BOUNDS } from "../src/applications/act-admission.ts";
+import { ReadPreparation } from "../src/read-preparation.ts";
+import { ProofBytes } from "../src/proof-bytes.ts";
 import { demoDefinitions } from "../../../examples/grow/demo-definitions.ts";
-import { growArchiveDriver } from "../../../apps/room/archive.ts";
+import { growArchiveDriver, roomArchiveDriver } from "../../../apps/room/archive.ts";
 import { EARLIER_GROW_ARCHIVE_RELEASE } from "./support/earlier-grow-release.ts";
 import { archiveHostWiring, roomArchiveWiring, roomArchiveConstructions } from "./worker.ts";
 import type { OutsideGiven } from "../src/object.ts";
@@ -180,12 +186,18 @@ function commandReportDiagnostic(value: unknown) {
 interface NativeCommandHandoff { producer: string; id: string; lines: readonly string[]; refs: readonly { ref: string; id: string }[] }
 export function registerArchiveInstalledCases(scenarios: readonly string[]) {
 for (const scenario of scenarios) {
-  const producerTitle = scenario === "Grow Room A shape"
+  const sharedScenario = scenario === "shared Base" || scenario === "shared Grow";
+  const producerTitle = scenario === "shared Base"
+    ? "installed non-Grow Base room archives through shared retained-proof policy and preserves coverage on trust removal"
+    : scenario === "shared Grow"
+    ? "installed signed Grow room exports accepted device answers through shared retained-proof policy"
+    : scenario === "Grow Room A shape"
     ? "installed old R17 Grow advances a published thirty-seven-pass history from sequence 146 with an exact remainder"
     : `installed ${scenario} scopes export genesis zero after a late native membership directory binding`;
   let retainedCommand: NativeCommandHandoff | null = null;
   test(producerTitle, { timeout: scaleDeadline(30_000) }, async context => {
-  const activationScenario = scenario.startsWith("Grow activation"), productionScenario = scenario === "Grow production" || scenario === "Grow Room A shape" || activationScenario, kind = scenario === "fixture" ? "fixture" : "Grow";
+  const sharedBaseScenario = scenario === "shared Base", activationScenario = scenario.startsWith("Grow activation"), productionScenario = scenario === "Grow production" || scenario === "Grow Room A shape" || scenario === "shared Grow" || activationScenario,
+    kind = scenario === "fixture" || sharedBaseScenario ? "fixture" : "Grow";
   let roomAFan: number | null = null;
   const prepared = kind === "fixture" ? await applicationOwnedScopesPacket() : await (async () => {
     const captured = inject("maintainedApplications")[productionScenario ? "growDemoSource" : "grow"], bytes = unb64url(captured.bytes);
@@ -218,14 +230,14 @@ for (const scenario of scenarios) {
     expect([rootId, childId]).toEqual([definitionDigest(demo.site), definitionDigest(demo.room)]);
   }
   const trusted: GrowArchiveRelease = productionScenario ? { release: packet.ids.release, publisher: packet.package.release.manifest.publisher, entry: rootId } : EARLIER_GROW_ARCHIVE_RELEASE;
-  const C = scenario === "Grow base" ? BASE_COHORT : scenario === "Grow failed-claim" ? FAILED_CLAIM_COHORT : scenario === "Grow publication" ? ARCHIVE_DEVICE_PUBLICATION_COHORT
+  const C = scenario === "Grow base" || sharedBaseScenario ? BASE_COHORT : scenario === "Grow failed-claim" ? FAILED_CLAIM_COHORT : scenario === "Grow publication" ? ARCHIVE_DEVICE_PUBLICATION_COHORT
     : kind === "fixture" ? ARCHIVE_DECLARED_APPLICATION_COHORT : ARCHIVE_DEVICE_APPLICATION_COHORT;
   const replayPlatform = replayFamily ? ARCHIVE_REPLAY_CODE.platform : platform;
   // Original byte-cost receipts use whole-second timestamps. Other native
   // witnesses may advance this shared clock by milliseconds. Advance it
   // monotonically before creating any scope; keep its identity and history.
   if (kind === "Grow") net.clock.now = timeOf(Math.ceil(timeMs(net.clock.now)! / 1000) * 1000);
-  const platformHost = productionScenario ? { host: "artifacts", namespace: "artroom-demo" } : undefined;
+  const platformHost = productionScenario || sharedScenario ? { host: "artifacts", namespace: "artroom-demo" } : undefined;
   const { life, R, D, children } = await sessionRoom(C.register, undefined, platformHost), [M, A, G] = children;
   if (!M || !A || !G) throw Error("The declared cohort requires three siblings.");
   let productionPeer: ArchiveArtifactsPeer | undefined;
@@ -362,7 +374,7 @@ for (const scenario of scenarios) {
       }
     }
     const configuredRepository = (await life.wait(() => D.item(0))).values["repository"] as { host: string; namespace: string };
-    const hostConfig: ArchiveHostConfiguration = { registerScope: R.name, host: configuredRepository.host, namespace: configuredRepository.namespace, directory: D.name };
+    const hostConfig: ArchiveHostConfiguration = { registerScope: R.name, host: configuredRepository.host, namespace: configuredRepository.namespace };
     const hostQueries: string[] = [];
     const hostRead = (where: ScopeRef, ask: ArchiveHostItemAsk, config = hostConfig) => life.wait(() => runInDurableObject(life.platform(where.scope).object, (_instance, state) => {
       const sql = archiveSql(state), store = new SqliteStore(sql), ports = production();
@@ -390,7 +402,7 @@ for (const scenario of scenarios) {
       const host = new ArchiveArtifactsPeer(repository, life.now), policies = growArchivePolicies(new TextDecoder().decode(packet.bytes), trusted);
       const environment = { ARTIFACTS: host.binding,
         ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: repository.namespace, host: "service.invalid", maxBytes: 8 * 1024 * 1024, credentialIdentity: "adapter-attempt" }),
-        GROW_ARCHIVE_CONFIG: canonicalize({ policy: "grow-room-archive-1", release: trusted.release, directory: D.name, repositoryName: repository.name }) };
+         };
       const reads: { owner: string; source: string }[] = [];
       let threwPrebindTarget = false, interruptedFirstSources = false;
       const ledgers: { owner: string; budget: ArchiveBudget; targetBefore?: ArchiveCost; targetAfter?: ArchiveCost; resolved?: boolean }[] = [];
@@ -501,6 +513,215 @@ for (const scenario of scenarios) {
     const issued = await life.owner.required(() => requestSession(port.service, M.name, sessionRequest(membership, rita.secret, soon(60), crypto.randomUUID()), { fetch: routed }));
     if (!issued.ok) throw Error("Native membership must issue the fixture read session.");
     const handle = (scope: typeof rootScope.name) => new ScopeHandle(httpTransport(port.service, { fetch: routed }), scope, issued.session.reader());
+    if (sharedScenario) {
+      // AE-1: each signed installed package uses the same room adapter as every
+      // Worker. Only the Artifacts service/HTTP peer, clock and one-entry
+      // selection schedule are stand-ins; no package policy is injected.
+      const repository = (await life.wait(() => D.item(0))).values["repository"] as unknown as DestinationRepository;
+      const host = new ArchiveArtifactsPeer(repository, life.now), nativePolicies = nativeArchivePolicies();
+      let providerCalls = 0, proofReads = 0;
+      const artifacts: ArtifactsNamespace = { ...host.binding, get: async name => { providerCalls++; return host.binding.get(name); } };
+      const environment = { ARTIFACTS: artifacts,
+        ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: repository.namespace, host: "service.invalid", maxBytes: 8 * 1024 * 1024, credentialIdentity: "adapter-attempt" }),
+        APPLICATION_TRUST: bindings.APPLICATION_TRUST };
+      const binding = { idFromName: (name: string) => env.PLATFORM.idFromName(name), get: (id: DurableObjectId) => {
+        const target = env.PLATFORM.get(id);
+        return new Proxy(target, { get(peer, key) {
+          if (key !== "applicationArchiveProofBytes") return Reflect.get(peer, key);
+          return async (where: ScopeRef, job: number) => {
+            proofReads++;
+            return (target as unknown as { applicationArchiveProofBytes(directory: ScopeRef, item: number): Promise<unknown> }).applicationArchiveProofBytes(where, job);
+          };
+        } });
+      } };
+      for (const scope of [D, G]) {
+        archiveHostWiring.set(scope.name, hostConfig); life.cleanup(() => { archiveHostWiring.delete(scope.name); });
+        await life.wait(() => scope.restart());
+      }
+      // Independent expected journal set comes from actual Native creations,
+      // before the provider has any refs. Private Register/Membership stay out.
+      const eligible = [rootScope, childScope, D, A, G];
+      expect(new Set(eligible.map(scope => scope.name)).size).toBe(5);
+      expect(eligible.some(scope => scope.name === R.name || scope.name === M.name)).toBe(false);
+      const records = await Promise.all(eligible.map(async scope => ({ scope, at: await life.wait(() => scope.at()), rows: await life.wait(() => scope.sealed()) })));
+      const chainAgreement: unknown[] = [];
+      if (sharedBaseScenario) {
+        // Both real walks consume the same actual root/child creation bytes.
+        // Admission hides its release; the current-trust probe distinguishes
+        // that exact release from an unrelated trusted one. The only fault
+        // substitutes a genuine Rules birth at the wrong parent address.
+        const rulesAt = records.find(record => record.scope.name === A.name)!.at;
+        for (const record of records.filter(record => record.scope.name === rootScope.name || record.scope.name === childScope.name)) {
+          for (const wrongParent of [false, true]) chainAgreement.push(await life.wait(() => runInDurableObject(record.scope.object, async (_instance, state) => {
+            const sql = archiveSql(state), store = new SqliteStore(sql), core = new Scope(record.at.scope, store, production(), PROPOSED_BOUNDS);
+            const first = record.rows[0]!.entry.input;
+            if (first.type !== "genesis") throw Error("The chain fixture must start at actual genesis");
+            let senderCalls = 0;
+            const selected = { idFromName: binding.idFromName, get: (id: DurableObjectId) => {
+              const target = binding.get(id);
+              return new Proxy(target, { get(peer, key) {
+                if (key !== "nativeBirth" && key !== "proofSource") return Reflect.get(peer, key);
+                const method = Reflect.get(peer, key) as (...args: unknown[]) => Promise<unknown>;
+                return (...args: unknown[]) => {
+                  senderCalls++;
+                  if (wrongParent && key === "nativeBirth") return (A.object as unknown as {
+                    nativeBirth(at: ScopeRef, milliseconds: number, maximum: number): Promise<unknown>;
+                  }).nativeBirth(rulesAt, args[1] as number, args[2] as number);
+                  return Reflect.apply(method, peer, args);
+                };
+              } });
+            } };
+            let trust = canonicalize(f.trust);
+            const peers = namespace(selected), preparation = new ReadPreparation(sql, {
+              policy: () => "TEST joint immutable archive/admission chain",
+              declared: bytes => core.validate(bytes), platform: named => core.platform(named),
+            });
+            const admission = new ApplicationActAdmission({ preparation, local: new ProofBytes(sql), births: peers.births, proofs: peers.proofs, trust: () => trust });
+            const admitted = await admission.read(), admissionCalls = senderCalls;
+            senderCalls = 0;
+            const budget = new ArchiveBudget(), archived = await archiveInstallationIdentity(record.at, first.seed, sql, selected, PROPOSED_BOUNDS, budget);
+            if (wrongParent) { expect(admitted).toBeNull(); expect(archived).toBeNull(); }
+            else {
+              expect(admitted?.current()).toBe("allowed");
+              if (!archived || archived === "unpackaged") throw Error("The archive must prove the actual installed release");
+              expect(archived.ids.release).toBe(packet.ids.release);
+              trust = canonicalize(f.trust.map(row => ({ ...row,
+                release: row.release === packet.ids.release ? textDigest("TEST unrelated trusted release") : row.release })));
+              expect(admitted?.current()).toBe("application-revoked");
+            }
+            expect(admissionCalls).toBeLessThanOrEqual(APPLICATION_ACT_ADMISSION_BOUNDS.rpcs);
+            expect(senderCalls).toBeLessThanOrEqual(APPLICATION_ACT_ADMISSION_BOUNDS.rpcs);
+            return { at: record.at, wrongParent, release: archived && archived !== "unpackaged" ? archived.ids.release : null,
+              admission: admitted === null ? "refused" : "exact-release-trust-probed", admissionCalls, archiveCalls: senderCalls, cost: budget.admitted() };
+          })));
+        }
+      }
+      if (scenario === "shared Grow") {
+        const rows = records.find(record => record.scope.name === childScope.name)!.rows;
+        expect(rows.some(row => row.entry.input.type === "preparation" && row.entry.input.capability === DEVICE_COMMAND && row.entry.input.step === "answer")).toBe(true);
+        expect(rows.flatMap(row => row.entry.effects)).toContainEqual(expect.objectContaining({ effect: "record", capability: DEVICE_COMMAND, kind: "command" }));
+      }
+      const run = (scope: typeof rootScope, cutoff: Head) => life.wait(() => runInDurableObject(scope.object, async (_instance, state) => {
+        const sql = archiveSql(state), store = new SqliteStore(sql), given = archiveGiven(store);
+        const policies = new Map(nativePolicies), owner = roomArchivePackages(given, sql, binding, environment, policies, PROPOSED_BOUNDS);
+        expect(policies.has(rootId)).toBe(false); expect(policies.has(childId)).toBe(false);
+        const options = roomArchiveDriver(given, sql, binding, environment, policies, PROPOSED_BOUNDS,
+          request => { providerCalls++; return host.fetch(request); }, owner);
+        if (!options) throw Error("Shared Artifacts archive adapter must admit this installed room");
+        const at = store.scope()!.at, budget = new ArchiveBudget();
+        const result = await new ArchiveDriver({ ...options, sql, current: () => ({ at, head: cutoff }),
+          clock: () => timeOf(life.now()), bounds: PROPOSED_BOUNDS, budget: () => budget }).run();
+        const rows = new ArchiveRows(sql, at);
+        return { result, cost: budget.admitted(), confirmed: rows.load()?.confirmed ?? null, terminal: rows.terminal() };
+      }));
+      const passes: unknown[] = [];
+      for (const record of records) for (const sealed of record.rows) {
+        const cutoff = { seq: sealed.entry.seq, hash: sealed.hash }, outcome = await run(record.scope, cutoff);
+        passes.push({ scope: record.scope.name, cutoff, ...outcome });
+        expect(outcome.result, JSON.stringify(passes.at(-1))).toMatchObject({ state: "confirmed" });
+        expect(outcome.confirmed?.through).toEqual(cutoff);
+        for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof ArchiveCost)[]) expect(outcome.cost[key]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
+      }
+      expect(proofReads).toBeGreaterThan(0);
+      const expectedRefs = eligible.map(scope => journalRef(scope.name)).sort();
+      expect([...host.refs.keys()].sort()).toEqual(expectedRefs);
+      const rootRecord = records.find(record => record.scope.name === rootScope.name)!, final = rootRecord.rows.at(-1)!;
+      const rootHead = { seq: final.entry.seq, hash: final.hash };
+      const confirmed = await life.wait(() => runInDurableObject(rootScope.object, (_instance, state) => new ArchiveRows(archiveSql(state), rootRecord.at).load()!.confirmed));
+      let sameDefinitionAuthority: unknown = null;
+      if (sharedBaseScenario) {
+        // A second genuine installation exists only to distinguish scope
+        // authority from a policy map that already contains its definition.
+        const second = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release,
+          roles: ["admin"], values: {}, idempotencyKey: "TEST-archive-same-definition-second-install" }));
+        expect(second.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
+        await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
+        const secondCreate = (await life.wait(() => D.entries())).flatMap(entry => entry.sends)
+          .find(send => isSeed(send.to) && send.to.definition === rootId && scopeIdOf(send.to) !== rootScope.name);
+        if (!secondCreate || !isSeed(secondCreate.to)) throw Error("Second native installation must create its own root");
+        const otherRoot = life.platform(scopeIdOf(secondCreate.to));
+        await driveFixture([R, D, M, A, G, otherRoot], life.wait);
+        const otherAt = await life.wait(() => otherRoot.at()), otherRows = await life.wait(() => otherRoot.sealed());
+        const otherGenesis = otherRows[0]!.entry.input, firstGenesis = rootRecord.rows[0]!.entry.input;
+        if (otherGenesis.type !== "genesis" || firstGenesis.type !== "genesis") throw Error("Both real installed roots must retain genesis");
+        expect(otherAt).not.toEqual(rootRecord.at); expect(otherGenesis.seed.definition).toBe(rootId);
+        const otherBirth = await life.wait(() => namespace(env.PLATFORM).births.read(otherAt, 10_000, PROPOSED_BOUNDS.entryBytes));
+        if (!otherBirth) throw Error("Second installed root must expose its real bounded birth proof");
+        const firstInstall = (await life.wait(() => A.sealed())).find(row => row.entry.input.type === "act"
+          && row.entry.input.signed.intent.kind === "install-application"
+          && row.entry.input.signed.intent.idempotencyKey === "TEST-archive-installed-scopes");
+        if (!firstInstall) throw Error("First native installation act must remain available");
+        sameDefinitionAuthority = await life.wait(() => runInDurableObject(rootScope.object, async (_instance, state) => {
+          let substituteFirst = true;
+          const guarded = { idFromName: binding.idFromName, get: (id: DurableObjectId) => {
+            const target = binding.get(id);
+            return new Proxy(target, { get(peer, key) {
+              if (key !== "applicationArchiveProofBytes") return Reflect.get(peer, key);
+              return (where: ScopeRef, item: number) => (target as unknown as { applicationArchiveProofBytes(directory: ScopeRef, item: number): Promise<unknown> })
+                .applicationArchiveProofBytes(where, substituteFirst ? firstInstall.entry.seq : item);
+            } });
+          } };
+          const sql = archiveSql(state), store = new SqliteStore(sql), policies = new Map(nativePolicies), budget = new ArchiveBudget();
+          const owner = roomArchivePackages(archiveGiven(store), sql, guarded, environment, policies, PROPOSED_BOUNDS);
+          await owner.prepare(rootRecord.at, firstGenesis.seed, budget);
+          expect(policies.has(rootId)).toBe(true);
+          const birth = { bytes: otherBirth.proof.bytes, hash: otherBirth.proof.fact.hash };
+          const substituted = await owner.source(otherAt, otherGenesis.seed, birth, budget);
+          expect(substituted).toBe(false); expect(policies.has(rootId)).toBe(true);
+          substituteFirst = false;
+          const genuine = await owner.source(otherAt, otherGenesis.seed, birth, budget);
+          expect(genuine).toBe(true);
+          return { first: rootRecord.at, second: otherAt, definition: rootId, substituted, genuine, cost: budget.admitted() };
+        }));
+      }
+      bindings.APPLICATION_TRUST = "[]"; environment.APPLICATION_TRUST = bindings.APPLICATION_TRUST;
+      const calls = providerCalls;
+      const revoked = await run(rootScope, rootHead);
+      expect(revoked.result).toMatchObject({ state: "stopped", reason: "application-policy-revoked", next: null });
+      expect(revoked.terminal).toEqual({ reason: "application-policy-revoked" }); expect(revoked.confirmed).toEqual(confirmed);
+      const repeated = await run(rootScope, rootHead);
+      expect(repeated.result).toMatchObject({ state: "stopped", reason: "application-policy-revoked", next: null });
+      expect(repeated.confirmed).toEqual(confirmed); expect(providerCalls).toBe(calls);
+      // Native bytes, Git clone and public replay command use one coherent
+      // provider object/ref set; no fixture policy reaches the offline path.
+      const bridge = localClone(inject("localClone"));
+      const cloned = await life.wait(() => bridge.archive([...host.data.values()].map(object => ({ id: object.id, type: object.type, data: b64url(object.data) })),
+        [...host.refs].map(([ref, id]) => ({ ref, id }))));
+      expect(cloned.fsckPassed).toBe(true);
+      expect(cloned.refs.map(row => row.ref).sort()).toEqual(expectedRefs);
+      const commandSession = await life.wait(() => bridge.archiveCommand(cloned.objects, cloned.refs,
+        `https://archive-command.invalid/git/${repository.namespace}/${repository.name}.git`));
+      let commandTransferred = false;
+      context.onTestFinished(async () => { if (!commandTransferred) await bridge.archiveClose(commandSession.id); });
+      let mints = 0;
+      const readBinding: ArtifactsNamespace = {
+        get: async name => ({ createToken: async (scope, seconds) => {
+          expect(scope).toBe("read"); expect(seconds).toBe(3600); expect(++mints).toBe(1);
+          return { id: "public-test-command-read", plaintext: commandSession.token, scope, expiresAt: timeOf(life.now() + seconds * 1000) };
+        }, revokeToken: async () => true, info: async () => ({ name, remote: commandSession.remote }) }),
+        create: async () => { throw Error("No creation in shared archive command witness"); }, delete: async () => false,
+      };
+      life.outside(G.name, (given, sql) => {
+        const outside = artifactsOutside(given, sql, { ARTIFACTS: readBinding, ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: repository.namespace, host: "archive-command.invalid", maxBytes: 8 * 1024 * 1024, credentialIdentity: "adapter-attempt" }) });
+        return { ...outside, accepts: (owner, operation) => operation === "mint-read" && outside.accepts(owner, operation),
+          send: request => request.kind === "mint-read" ? outside.send(request) : Promise.resolve(null) };
+      });
+      await life.wait(() => G.restart());
+      const saved = cliMemoryStore(); await saved.keep("member", rita.secret);
+      await saved.save({ v: 2, service: port.service, key: "member", repository: { directory, membership, rules: A.name, destination: G.name } });
+      const command = await life.wait(() => dapCommand({ store: saved, fetch: routed, now: life.now,
+        pause: async () => { await driveFixture([G], life.wait); },
+        git: { run: (args, env) => life.wait(() => bridge.archiveRun(commandSession.id, args, env)),
+          archiveRun: (args, env) => life.wait(() => bridge.archiveRun(commandSession.id, args, env)) },
+      }, ["clone", commandSession.directory, "--hours", "1", "--archive"]));
+      expect(command.code, command.lines.join("\n")).toBe(0); expect(mints).toBe(1);
+      retainedCommand = { producer: producerTitle, id: commandSession.id, lines: [...command.lines], refs: cloned.refs };
+      commandTransferred = true;
+      Object.assign(context.task.meta, { [scenario === "shared Grow" ? "sharedGrowArchive" : "sharedBaseArchive"]: { passes, proofReads, revoked, repeated, sameDefinitionAuthority, chainAgreement,
+        expectedScopes: records.map(({ at }) => at),
+        qualification: `${scenario === "shared Grow" ? "Actual signed TEST Grow demo installed through its native cohort, distinct enrolled agents and accepted device answer" : "Actual non-Grow Base room and normal signed ordinary package installation"}; genuine root/child and namespace-only retained proof RPC; native-only initial policy map; shared roomArchivePackages/roomArchiveDriver, actual Artifacts token and Git adapter, real clone and public replay command. Binding/HTTP peer, clock and per-entry cutoff scheduler are TEST stand-ins. Every pass retains original caps/deadline; no alarm-cadence or hosted claim.` } });
+      return;
+    }
     const histories: { scope: typeof rootScope; read: { value: readonly Sealed[]; at: Head } }[] = [];
     for (const scope of [rootScope, childScope]) {
       const read = await life.owner.required(() => handle(scope.name).history());
@@ -556,7 +777,7 @@ for (const scenario of scenarios) {
       if (productionScenario) expect(await wrongQueryScope.resolveRoom(childAt, childSeed, new ArchiveBudget())).toBeNull();
       const unrelated = await sessionRepository(life, C.register, "journal", platformHost), unrelatedDirectory = await life.wait(() => unrelated.D.at());
       const unrelatedQuery = encodeItemQueryParameter({ v: 1, scope: unrelatedDirectory, type: "repository", states: ["open"], ids: null, limit: 1, cursor: null })!;
-      expect(await hostRead(unrelatedDirectory, { ...ask, query: unrelatedQuery, directory: unrelatedDirectory }, { ...hostConfig, directory: unrelated.D.name })).toEqual({ ok: false, reason: "forbidden" });
+      expect(await hostRead(unrelatedDirectory, { ...ask, query: unrelatedQuery, directory: unrelatedDirectory }, hostConfig)).toEqual({ ok: false, reason: "forbidden" });
     }
     // Native TEST exports of the room's native producer scopes.
     // These self-journal reads use the fixture inspector, not a new grant.
@@ -810,7 +1031,7 @@ for (const scenario of scenarios) {
       }
       const environment = { ARTIFACTS: archivePeer.binding,
         ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: repository.namespace, host: "service.invalid", maxBytes: 8 * 1024 * 1024, credentialIdentity: "adapter-attempt" }),
-        GROW_ARCHIVE_CONFIG: canonicalize({ policy: "grow-room-archive-1", release: trusted.release, directory: D.name, repositoryName: repository.name }) };
+         };
       const runPass = (shortage = false) => life.wait(() => runInDurableObject(childScope.object, async (_instance, state) => {
           const sql = archiveSql(state), store = new SqliteStore(sql), events: unknown[] = [];
           const stack = () => (new Error("TEST budget observation").stack ?? "").split("\n").slice(1, 12).join("\n").slice(0, 3072);
@@ -1076,7 +1297,7 @@ for (const scenario of scenarios) {
       const peer = productionPeer;
       const environment = { ARTIFACTS: peer.binding,
         ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: repository.namespace, host: "service.invalid", maxBytes: 8 * 1024 * 1024, credentialIdentity: "adapter-attempt" }),
-        GROW_ARCHIVE_CONFIG: canonicalize({ policy: "grow-room-archive-1", release: trusted.release, directory: D.name, repositoryName: repository.name }),
+
       };
       const defaultAsk = { query: encodeItemQueryParameter({ v: 1, scope: directory, type: "repository", states: ["open"], ids: null, limit: 1, cursor: null })!, archiving: childAt, directory };
       expect(await life.wait(() => (D.object as unknown as { archiveItem(ask: ArchiveHostItemAsk): Promise<unknown> }).archiveItem(defaultAsk))).toEqual({ ok: false, reason: "forbidden" });
@@ -1544,7 +1765,7 @@ for (const scenario of scenarios) {
       const repository = (await life.wait(() => D.item(0))).values["repository"] as unknown as DestinationRepository;
       const environment = { ARTIFACTS:peer.binding,
         ARTIFACTS_CONFIG:canonicalize({registerScope:R.name,namespace:repository.namespace,host:"service.invalid",maxBytes:8*1024*1024,credentialIdentity:"adapter-attempt"}),
-        GROW_ARCHIVE_CONFIG:canonicalize({policy:"grow-room-archive-1",release:trusted.release,directory:D.name,repositoryName:repository.name}) };
+         };
       const beforeHead = (await life.wait(() => rootScope.summary())).at;
       const reportSite = async () => {
         const openAlerts=(await life.wait(()=>childScope.summary())).value.items.filter(item=>item.type==="alert" && ["open","held","authorized"].includes(item.state)).length;
@@ -1673,7 +1894,9 @@ for (const scenario of scenarios) {
   } finally { life.release(); }
   });
 
-  if (scenario === "Grow production") {
+  if (scenario === "Grow production" || sharedScenario) {
+    // Shared cases reuse this bounded command follower; the older Grow
+    // timings below are not observations of their new Native producers.
     // BR-4: prior sealed runs took 25,668 and 29,457 ms. Three times
     // their median is 82,687.5 ms. Each concurrent replay child gets 90 s;
     // the follower leaves another 10 s for reporting and joined cleanup.

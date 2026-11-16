@@ -58,7 +58,7 @@ test("joined room/account clicks disclose identity without leaving the room, and
   const place = { directory: "directory", membership: { scope: "membership", genesis: textDigest("TEST genesis 17") } };
   const publicKey = keyIdOfSecret(secret), unexpectedKeyOperation = uiKeys([publicKey]);
   const signer = { key: publicKey, sign: unexpectedKeyOperation };
-  const room = { session: { service: location.origin, signer }, ...place, name: "Hugh's room" as string | undefined, key: keyIdOfSecret(secret), me: { handle: "@hugh-web", role: "member", actions: [] }, reader: {}, rules: "rules", destination: "destination", publication: "repository" };
+  const room = { session: { service: location.origin, signer }, ...place, name: "Hugh's room" as string | undefined, key: keyIdOfSecret(secret), me: { handle: "@hugh-web", role: "member", actions: [] }, reader: {}, rules: "rules", destination: "destination", publication: "repository", publicationHost: undefined as string | undefined };
   const saved = JSON.stringify({ place, publicKey });
   const setItem = vi.fn();
   vi.doMock("../src/data.ts", async () => ({
@@ -109,10 +109,38 @@ test("joined room/account clicks disclose identity without leaving the room, and
     back.click(); expect(location.hash).toBe("#/");
     redraw(); await fixture.wait(() => main.workbenchLifecycle.idle());
     expect(root.all().some(e => e.tag === "a" && e.textContent === "Pages")).toBe(true);
+    // Real Main renders both disclosures over these scripted Room/DOM ports.
+    // This checks markup and handlers, not browser layout or Native authority.
+    const noArchive = "No archive: this room has no repository.";
+    const unavailable = "Archive unavailable for this repository provider.";
+    for (const [host, expected, opposite] of [
+      ["none", noArchive, unavailable],
+      ["github.com", unavailable, noArchive],
+      ["artifacts", null, null],
+    ] as const) {
+      room.publicationHost = host;
+      redraw(); await fixture.wait(() => main.workbenchLifecycle.idle());
+      const disclosures = root.all().filter(node => node.tag === "details" && (node.attrs["class"] ?? "").split(" ").includes("room-disclosure"));
+      expect(disclosures).toHaveLength(2);
+      for (const disclosure of disclosures) {
+        disclosure.all().find(node => node.tag === "summary")!.click();
+        expect(disclosure.hasAttribute("open")).toBe(true);
+        const paragraphs = disclosure.all().filter(node => node.tag === "p").map(node => node.textContent);
+        if (expected !== null) {
+          expect(paragraphs.filter(text => text === expected)).toHaveLength(1);
+          expect(paragraphs).not.toContain(opposite);
+        } else {
+          expect(paragraphs).not.toContain(noArchive);
+          expect(paragraphs).not.toContain(unavailable);
+        }
+      }
+    }
     room.publication = "unpublished";
     room.name = undefined;
     redraw(); await fixture.wait(() => main.workbenchLifecycle.idle());
     expect(root.textContent).toContain("No publication");
+    expect(root.all().filter(node => node.tag === "p" && node.textContent === noArchive)).toHaveLength(2);
+    expect(root.textContent).not.toContain(unavailable);
     expect(root.all().some(e => e.tag === "a" && e.attrs["href"]?.startsWith("/site/"))).toBe(false);
     expect(root.all().some(e => e.tag === "a" && e.textContent === "Pages")).toBe(false);
     root.all().find(e => e.tag === "a" && e.textContent === "Change connection")!.click();

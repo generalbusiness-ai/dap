@@ -142,7 +142,8 @@ or caller authority.
 
 The Durable Object binding also has internal namespace methods that are not
 HTTP routes: `jobState`, `workSourceState`, `stageSnapshot`,
-`nativeBirthByName` and `archiveItem`. [Route notes](#route-notes)
+`nativeBirthByName`, `archiveItem` and `applicationArchiveProofBytes`.
+[Route notes](#route-notes)
 describes them.
 
 ## Serving windows
@@ -506,7 +507,10 @@ valid. Application redirects require `APPLICATION_SCREEN_HOSTS`. Sandbox
 rendering also requires `APPLICATION_TRUST`. Demo offers require
 `DEMO_START_CONFIG`. Missing or invalid settings refuse those families.
 
-The wrapper also gives its Durable Object class explicit archive wiring.
+The shared room Worker gives its Durable Object class explicit archive
+wiring. Grow re-exports that same Worker. Generic and lending entries use
+the same adapter when their Artifacts binding, provider configuration and
+installed register roots are valid.
 For public journals that the archive accepts, object activation and sealed
 entries schedule bounded archive work through the existing alarm. That work
 can read checked births and the accepted directory and destination items,
@@ -514,9 +518,11 @@ keep retry and mark bookkeeping, mint a short-lived Artifacts write token,
 send Git objects, and read back the ref. It uses the archive bounds and the
 per-pass allowance. These background effects can follow an activation even
 when the scope refuses the caller's HTTP read. They give the caller no
-archive access. Register and membership journals are excluded. Generic and
-lending entries do not enable this wiring, and production retained floors
-are off.
+archive access. Register and membership journals are excluded, and
+production retained floors are off. Each checked Directory supplies its
+recorded archive binding; no setting selects one room or package release.
+A room with host `none` has no archive. The current adapter does not archive
+a repository served by another provider.
 
 Birth proofs, target item replies, pin SQL payloads, migration reply
 buffers and parent-frontier ownership reserve their full read ceiling
@@ -535,6 +541,30 @@ with outstanding reservations at their full ceilings, and
 `unsettledMetadata` names that outstanding part. `settlementRefusal` is
 `none`, `invalid-received` or `unknown-reservation`. These values and the
 observation's net site attribution grant no authority.
+
+The internal `applicationArchiveProofBytes` namespace port returns one
+bounded signed installation proof or one closed, reason-only refusal. It
+has no HTTP route and runs neither first-ingress dispatch nor cold-pin
+repair. The sender checks Rules/job metadata sizes before reading their
+records, and retained value sizes before reading their bodies. Exact
+native Rules fields select the v1 or v2 codec without fallback.
+
+This reply alone grants no export permission. The receiver reserves its
+full reply and validation cost before the namespace call, authenticates
+the Rules birth and immutable creator/install chain, checks exact scope,
+root and signed IDs, and checks current deployment publisher trust. Each
+pass owns its installed policies. Equal declaration bytes in another scope
+or release do not reuse that scope's installation proof. An outstanding
+proof task remains owned until its underlying promise settles.
+
+Own package-policy preparation precedes archive-row decoding and provider
+work. Native Rules/Directory candidates discover their installation proof
+during source preparation; their earlier target, format and parent reads
+carry no refused entry payload. A permanent proof or trust refusal stores
+a bounded terminal reason, preserves the existing confirmed receipt and
+stops the wake. No provider call follows that refusal. Pending installation
+and pass-budget shortage remain retries. A prepaid terminal write adds no
+time or allowance to the original ledger.
 
 The internal `archiveItem` namespace port has no HTTP route. Its raw helper
 takes trusted host input. The complete target birth walk and the accepted

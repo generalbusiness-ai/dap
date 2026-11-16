@@ -1,6 +1,6 @@
 /** Pure internal archive composition. No local process or Replay dependency. */
 export { buildJournalArchive, type JournalArchive, type JournalLayoutResult, type JournalInputSource } from "./journal-layout.ts";
-export { JOURNAL_SELECTION_BYTES, journalSelection, journalPassSelection, type JournalSelection, type JournalPassSelection } from "./journal-selection.ts";
+export { JOURNAL_SELECTION_BYTES, JOURNAL_INVENTORY_CEILINGS, journalSelection, journalPassSelection, type JournalSelection, type JournalPassSelection } from "./journal-selection.ts";
 export { forecastJournalSelection, journalOrderingInputWork, type JournalSelectionFootprint, type JournalSelectionForecast } from "./journal-selection-cost.ts";
 export { forecastJournalCommit, type JournalCommitForecast } from "./journal-commit-cost.ts";
 export { forecastJournalAppendFixed, type JournalAppendFixedFootprint, type JournalAppendForecast } from "./journal-append-cost.ts";
