@@ -18,7 +18,7 @@ import { memoryStore } from "@generalbusiness/dap-client";
 import { McpService, OAuthClients, OAuthError } from "../src/index.ts";
 import { MCP_REQUEST_WINDOW_CALLS, MCP_REQUEST_WINDOW_IDENTITIES, MCP_REQUEST_WINDOW_MS } from "../src/request-window.ts";
 import worker from "../../../apps/room/worker.ts";
-import { creationTest, hostedRegistries, hostedTest, platformNet, type PlatformMcpAgent, type PlatformScope } from "../../scope/test/worker.ts";
+import { creationTest, hostedRegistries, hostedTest, platformNet, roomFormatFixtures, type RoomFormatFixture, type PlatformMcpAgent, type PlatformScope } from "../../scope/test/worker.ts";
 import { startupTest, StartupOwner, startupSnapshot, startupReport, type StartupServingIndex } from "../../scope/test/support/serving-startup.ts";
 import { DEFAULT_SERVING_LIMITS } from "../../scope/src/serving-limits.ts";
 import { SCOPE_INDEX_NAME, type ScopeIndexPort } from "../../scope/src/scope-index.ts";
@@ -2697,4 +2697,38 @@ test("a controller's pending retire keeps no seed or replacement revoke and comp
     const listed = await room.wait(() => post(`/mcp/agents/${bot.agent}/connections`, control(room, rita.secret, "connections", M, bot.agent, "{}", "TEST-retired-connections"), "{}"));
     expect([listed.status, await listed.json()]).toEqual([200, { agent: bot.agent, handle: "@retire-controlled", state: "retired", connections: [] }]);
   } finally { done(room); }
+});
+
+test("an earlier agent table keeps the actual hosted agent retired without initialization", async () => {
+  const name = `TEST LS5 earlier agent ${crypto.randomUUID()}`;
+  const id = env.AGENTS.idFromName(name);
+  const fixture: RoomFormatFixture = { seed: "agent", seeded: false, starts: [] };
+  roomFormatFixtures.set(name, fixture);
+  const object = () => env.AGENTS.get(id);
+  const state = () => (object() as unknown as Pick<PlatformMcpAgent, "agentState">).agentState();
+  const snapshot = () => runInDurableObject(object(), (_instance, storage) => ({
+    host: storage.storage.kv.get("TEST LS5 host marker"),
+    schema: storage.storage.sql.exec("SELECT sql FROM sqlite_master WHERE type='table' AND name='agent'").toArray(),
+    rows: storage.storage.sql.exec("SELECT * FROM agent").toArray(),
+    initialized: storage.storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('control','record','session','room_record_format')").toArray(),
+  }));
+  try {
+    expect(await state()).toEqual({ stop: "retired" });
+    const before = await snapshot();
+    expect(before.host).toBe("retained");
+    expect(before.schema).toHaveLength(1);
+    expect(before.rows).toEqual([]);
+    expect(before.initialized).toEqual([]);
+    expect(fixture.starts).toEqual([{ catalogReads: 1, wordReads: 0, writes: 0 }]);
+    await evictDurableObject(object());
+    expect(await state()).toEqual({ stop: "retired" });
+    expect(await snapshot()).toEqual(before);
+    expect(fixture.starts).toEqual([
+      { catalogReads: 1, wordReads: 0, writes: 0 },
+      { catalogReads: 1, wordReads: 0, writes: 0 },
+    ]);
+  } finally {
+    try { await evictDurableObject(object()); }
+    finally { roomFormatFixtures.delete(name); }
+  }
 });

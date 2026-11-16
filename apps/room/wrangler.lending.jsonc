@@ -23,7 +23,7 @@
     // The planner creates this private content bucket before deployment.
     // Lending's active 0.3.0 installation at item 2 serves this screen host.
     "APPLICATION_SCREEN_HOSTS": "[{\"v\":1,\"screenOrigin\":\"https://lending.inguz.space\",\"roomOrigin\":\"https://dap-lending.inguz.workers.dev\",\"directory\":\"sc_5hagamavauu5lcejxqxqkd6xl3ol26bke2ipkhaiwxtxono2gujq\",\"item\":2,\"presentation\":\"sha256:7217583c00c0548755faa3a83ee9fef194a354624dd29dccf62a7c79cbfd48ef\"}]",
-    "APPLICATION_TRUST": "[{\"release\":\"sha256:51f8afe2fd6728c121dfe18597808d529f642722634987144712bfedecfbb204\",\"publisher\":\"key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI\",\"host\":\"github.com\"},{\"release\":\"sha256:0b3e5038f96e69cfb7942c9d7fc3dbbb67d49a71ba737aaec9fcc129a1e619ed\",\"publisher\":\"key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI\",\"host\":\"github.com\"}]",
+    "APPLICATION_TRUST": "[{\"release\":\"sha256:51f8afe2fd6728c121dfe18597808d529f642722634987144712bfedecfbb204\",\"publisher\":\"key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI\",\"host\":\"github.com\"},{\"release\":\"sha256:1a5128d47487e9888228c64aa2b36e366b1d4b72b0f210b610ad3f14caf25ede\",\"publisher\":\"key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI\",\"host\":\"github.com\"},{\"release\":\"sha256:e8f8471e85b39db69fbd8fac57f4c231481d3cc89cdc97fbfcd8167146fa08a1\",\"publisher\":\"key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI\",\"host\":\"github.com\"}]",
     "SERVING_CREATION_KEY_PER_HOUR": "10",
     "SERVING_CREATION_ADDRESS_PER_HOUR": "30",
     "SERVING_READ_KEY_PER_MINUTE": "240",
