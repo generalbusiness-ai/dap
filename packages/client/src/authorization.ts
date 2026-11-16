@@ -64,7 +64,7 @@ export class AuthorizationError extends Error {
   override readonly name = "AuthorizationError";
   constructor(readonly reason: AuthorizationStop) { super(`authorization: ${reason}`); }
 }
-const stop = (reason: AuthorizationStop): never => { throw new AuthorizationError(reason); };
+function stop(reason: AuthorizationStop): never { throw new AuthorizationError(reason); }
 const equal = (a: unknown, b: unknown): boolean => canonicalize(a) === canonicalize(b);
 const sameScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.genesis === b.genesis;
 const meaning = (act: Pick<MaterializedAct, "kind" | "on" | "fields">): Digest =>
