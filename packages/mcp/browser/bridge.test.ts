@@ -96,3 +96,52 @@ test.each(["initialize", "input", "tool"] as const)("teardown while %s waits set
     coreMessages(peer.messages);
   } finally { bridge.close(); }
 });
+
+// Scripted native-control/event ports exercise the actual binding lifecycle, not browser default activation.
+test("a held activation key keeps its first binding through repeats, cancellation and physical release", async () => {
+  class ControlPort extends EventTarget { disabled = false; isConnected = true; childNodes = []; }
+  const windowPort = new EventTarget(), listeners = new Map<string, Set<EventListenerOrEventListenerObject>>();
+  const add = windowPort.addEventListener.bind(windowPort), remove = windowPort.removeEventListener.bind(windowPort);
+  vi.spyOn(windowPort, "addEventListener").mockImplementation((type, listener, options) => {
+    if (listener) { const rows = listeners.get(type) ?? new Set(); rows.add(listener); listeners.set(type, rows); }
+    add(type, listener, options);
+  });
+  vi.spyOn(windowPort, "removeEventListener").mockImplementation((type, listener, options) => {
+    if (listener) listeners.get(type)?.delete(listener);
+    remove(type, listener, options);
+  });
+  vi.stubGlobal("window", windowPort); vi.stubGlobal("HTMLElement", ControlPort); vi.stubGlobal("HTMLButtonElement", ControlPort);
+  const { bindControl, updateControlBinding, retireControls } = await import("./reconcile.ts");
+  const element = new HTMLButtonElement(), activations: string[] = [], captures: string[] = [];
+  const bind = (revision: string) => {
+    bindControl(element, "report", () => { captures.push(revision); return () => { activations.push(revision); }; });
+    updateControlBinding(element, element);
+  };
+  const emit = (target: EventTarget, type: string, fields: Record<string, unknown> = {}) => {
+    const event = new Event(type, { cancelable: true });
+    Object.defineProperties(event, Object.fromEntries(Object.entries(fields).map(([key, value]) => [key, { value }])));
+    target.dispatchEvent(event);
+  };
+  const down = (key: string, repeat = false) => emit(element, "keydown", { key, repeat });
+  const up = (key: string) => emit(windowPort, "keyup", { key, composedPath: () => [element, windowPort] });
+  const click = () => emit(element, "click", { detail: 0 }); // Explicitly scripted; this is not proof of native keyboard activation.
+  try {
+    bind("A"); down(" "); bind("B"); down(" ", true); down(" "); up("Shift"); up(" "); click();
+    expect(activations, "Space's repeat and unrelated release must not replace A with B").toEqual(["A"]);
+    expect(captures).toEqual(["A"]);
+    bind("C"); down("Enter"); click(); bind("D"); down("Enter", true); click(); down("Enter"); click();
+    expect(activations, "Enter's repeated native-click port must not become a fresh D activation").toEqual(["A", "C"]);
+    up("Enter"); click();
+    expect(activations).toEqual(["A", "C", "D"]);
+    bind("E"); down("Enter"); emit(windowPort, "blur"); bind("F"); down("Enter", true); click();
+    expect(activations, "A cancelled held key cannot recapture after refresh/re-enable").toEqual(["A", "C", "D"]);
+    click(); // No active gesture: an assistive-style activation reads F.
+    expect(activations).toEqual(["A", "C", "D", "F"]);
+    bind("G"); down(" "); emit(windowPort, "blur"); bind("H"); down(" "); up(" "); click();
+    expect(activations, "A fresh nonrepeat start after a missed release must not remain latched").toEqual(["A", "C", "D", "F", "H"]);
+    bind("I"); down(" "); retireControls(element);
+    expect(listeners.get("keyup")?.size ?? 0, "Retirement removes the last window release listener").toBe(0);
+    expect(listeners.get("blur")?.size ?? 0).toBe(0);
+    expect(captures).toEqual(["A", "C", "D", "E", "F", "G", "H", "I"]);
+  } finally { retireControls(element); }
+});
