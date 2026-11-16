@@ -137,10 +137,34 @@ test('a publication collision removes only this invocation\'s new key and preser
   mkdirSync(bin);
   // Real OpenSSL generates the pair. The wrapper models another creator
   // publishing the certificate after validation and before exclusive open.
-  writeFileSync(join(bin, 'openssl'), '#!/bin/bash\n/usr/bin/openssl "$@" || exit $?\nif [[ "$1" == req ]]; then printf "other creator\\n" > "$COLLIDING_CERT"; fi\n', { mode: 0o700 });
+  writeFileSync(join(bin, 'openssl'), [
+    '#!/bin/bash',
+    '/usr/bin/openssl "$@" || exit $?',
+    'if [[ "$1" == req ]]; then',
+    '  output=',
+    '  while [[ $# -gt 0 ]]; do',
+    '    if [[ "$1" == -out ]]; then',
+    '      [[ $# -ge 2 ]] || exit 1',
+    '      output=$2',
+    '      break',
+    '    fi',
+    '    shift',
+    '  done',
+    '  [[ -n "$output" ]] || exit 1',
+    '  printf "unexpected staging entry\\n" > "${output%/*}/unexpected-marker"',
+    '  printf "other creator\\n" > "$COLLIDING_CERT"',
+    'fi',
+    '',
+  ].join('\n'), { mode: 0o700 });
   const result = generate(paths, ['--name', 'localhost'], { PATH: `${bin}${delimiter}${process.env.PATH}`, COLLIDING_CERT: paths.cert });
   assert.notEqual(result.status, 0);
   assert.equal(existsSync(paths.key), false);
   assert.equal(readFileSync(paths.cert, 'utf8'), 'other creator\n');
   assert.deepEqual(readdirSync(paths.staging), []);
+  const retained = readdirSync(paths.dir).filter(name => name.startsWith('.dap-certificate.'));
+  assert.equal(retained.length, 1);
+  const retainedStage = join(paths.dir, retained[0]);
+  assert.deepEqual(readdirSync(retainedStage), ['unexpected-marker']);
+  assert.equal(readFileSync(join(retainedStage, 'unexpected-marker'), 'utf8'), 'unexpected staging entry\n');
+  assert.match(result.stderr, /^certificate.sh: cleanup incomplete; preserve remaining files and report the stop$/m);
 });

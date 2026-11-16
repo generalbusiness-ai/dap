@@ -104,15 +104,36 @@ openssl_bin=$(command -v openssl) || fail 'openssl is required'
 
 stage= cert_stage= key_open=false cert_open=false complete=false
 cleanup() {
-  local result=$?
+  local result=$? cleanup_failed=false file
   trap - EXIT
   if [[ "$complete" != true ]]; then
     # Retain another creator's file if either pathname changed after creation.
-    if [[ "$cert_open" == true && "$cert_stage/cert.pem" -ef "$cert" ]]; then rm -f "$cert"; fi
-    if [[ "$key_open" == true && "$stage/key.pem" -ef "$key" ]]; then rm -f "$key"; fi
+    if [[ "$cert_open" == true && "$cert_stage/cert.pem" -ef "$cert" ]]; then
+      /bin/unlink "$cert" 2>/dev/null || cleanup_failed=true
+    fi
+    if [[ "$key_open" == true && "$stage/key.pem" -ef "$key" ]]; then
+      /bin/unlink "$key" 2>/dev/null || cleanup_failed=true
+    fi
   fi
-  [[ -z "$stage" ]] || rm -rf "$stage"
-  [[ -z "$cert_stage" ]] || rm -rf "$cert_stage"
+  if [[ -n "$stage" ]]; then
+    for file in "$stage/request.cnf" "$stage/key.pem"; do
+      if [[ -e "$file" || -L "$file" ]]; then
+        /bin/unlink "$file" 2>/dev/null || cleanup_failed=true
+      fi
+    done
+    /bin/rmdir "$stage" 2>/dev/null || cleanup_failed=true
+  fi
+  if [[ -n "$cert_stage" ]]; then
+    file="$cert_stage/cert.pem"
+    if [[ -e "$file" || -L "$file" ]]; then
+      /bin/unlink "$file" 2>/dev/null || cleanup_failed=true
+    fi
+    /bin/rmdir "$cert_stage" 2>/dev/null || cleanup_failed=true
+  fi
+  if [[ "$cleanup_failed" == true ]]; then
+    printf 'certificate.sh: cleanup incomplete; preserve remaining files and report the stop\n' >&2 || :
+    if [[ "$result" == 0 ]]; then result=1; fi
+  fi
   exit "$result"
 }
 trap cleanup EXIT
