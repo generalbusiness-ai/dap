@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:749707604edb0ac2613a1fad867109c622267d00","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/claim.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:79528bd88e688d74bb9960d0012a1727d3bbfac3","text":"Merge retired a covered predecessor; the successor is at packages/mcp/browser/main.ts."}
