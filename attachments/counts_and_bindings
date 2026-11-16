@@ -1,0 +1,391 @@
+{
+  "status": "ACTUAL_JSON_METADATA_COUNTS_SOURCE_ONLY",
+  "root": "/Users/hughpyle/play/artroom",
+  "gitHead": "not read or inferred",
+  "method": "json.loads actual definition bytes; ordinary names are exactly acts keys minus the single genesis name; no normalization/validation/runtime evaluation",
+  "currentAuthoredDefinitions": [
+    {
+      "path": "examples/grow/definitions/site.json",
+      "scopeLabel": "grow-site",
+      "genesis": "establish",
+      "actsIncludingGenesis": 5,
+      "ordinaryCount": 4,
+      "ordinaryActs": [
+        "arrive",
+        "create-room",
+        "leave",
+        "provision-presence"
+      ],
+      "ordinarySteps": {
+        "open": 2,
+        "transition": 2
+      }
+    },
+    {
+      "path": "examples/grow/definitions/room.json",
+      "scopeLabel": "grow-room",
+      "genesis": "establish",
+      "actsIncludingGenesis": 31,
+      "ordinaryCount": 30,
+      "ordinaryActs": [
+        "apply",
+        "approve-watering",
+        "authorize",
+        "bind-zone-devices",
+        "close-incident",
+        "commission-bench",
+        "commission-device",
+        "commission-zone",
+        "configure-watering",
+        "decline-watering",
+        "fulfill-watering",
+        "hold",
+        "observe",
+        "offer-task",
+        "open-incident",
+        "probe",
+        "propose-restoration",
+        "raise-alert",
+        "report-device",
+        "report-site",
+        "report-task",
+        "report-zone",
+        "request-watering",
+        "set-band",
+        "set-fan",
+        "set-heater",
+        "set-vent",
+        "set-water-policy",
+        "take-task",
+        "water"
+      ],
+      "ordinarySteps": {
+        "comment": 2,
+        "open": 9,
+        "transition": 19
+      }
+    },
+    {
+      "path": "examples/lending/definition.json",
+      "scopeLabel": "lending",
+      "genesis": "establish",
+      "actsIncludingGenesis": 9,
+      "ordinaryCount": 8,
+      "ordinaryActs": [
+        "borrow",
+        "cancel",
+        "donate",
+        "publish",
+        "release",
+        "release-by-staff",
+        "reserve",
+        "return"
+      ],
+      "ordinarySteps": {
+        "open": 2,
+        "transition": 6
+      }
+    },
+    {
+      "path": "apps/counter/commitments.json",
+      "scopeLabel": "counting-commitments",
+      "genesis": "establish",
+      "actsIncludingGenesis": 14,
+      "ordinaryCount": 13,
+      "ordinaryActs": [
+        "activate",
+        "cancel",
+        "commit",
+        "deactivate",
+        "fail",
+        "force-deactivate",
+        "fulfill",
+        "initialize",
+        "participate",
+        "pause",
+        "remove-participant",
+        "reset",
+        "start"
+      ],
+      "ordinarySteps": {
+        "open": 3,
+        "transition": 10
+      }
+    }
+  ],
+  "normalConfigReferences": [
+    {
+      "path": "examples/grow/check/dap.application.json",
+      "entry": "site.json",
+      "definitions": [
+        "site.json",
+        "room.json"
+      ],
+      "connections": [
+        {
+          "from": "site.json",
+          "item": "room",
+          "slot": "scope",
+          "to": "room.json"
+        },
+        {
+          "from": "room.json",
+          "item": "room",
+          "slot": "site",
+          "to": "site.json"
+        }
+      ],
+      "versionForIdentificationOnly": "0.3.0"
+    },
+    {
+      "path": "examples/lending/dap.application.json",
+      "entry": "examples/lending/definition.json",
+      "definitions": [
+        "examples/lending/definition.json"
+      ],
+      "connections": [
+        {
+          "from": "examples/lending/definition.json",
+          "item": "library",
+          "slot": "destination",
+          "to": "outside"
+        }
+      ],
+      "versionForIdentificationOnly": "0.5.0"
+    },
+    {
+      "path": "apps/counter/dap.application.json",
+      "entry": "apps/counter/commitments.json",
+      "definitions": [
+        "apps/counter/commitments.json"
+      ],
+      "connections": [],
+      "versionForIdentificationOnly": "0.5.0"
+    }
+  ],
+  "retainedGrowNormalPacket": {
+    "path": "examples/grow/demo/application.dap.json",
+    "manifestLabel": {
+      "name": "ai.generalbusiness.grow-demo",
+      "version": "2.0.0"
+    },
+    "signatureVerification": "not performed; metadata count only",
+    "definitions": [
+      {
+        "scopeLabel": "grow-room",
+        "genesis": "establish",
+        "ordinaryCount": 30,
+        "ordinaryActs": [
+          "apply",
+          "approve-watering",
+          "authorize",
+          "bind-zone-devices",
+          "close-incident",
+          "commission-bench",
+          "commission-device",
+          "commission-zone",
+          "configure-watering",
+          "decline-watering",
+          "fulfill-watering",
+          "hold",
+          "observe",
+          "offer-task",
+          "open-incident",
+          "probe",
+          "propose-restoration",
+          "raise-alert",
+          "report-device",
+          "report-site",
+          "report-task",
+          "report-zone",
+          "request-watering",
+          "set-band",
+          "set-fan",
+          "set-heater",
+          "set-vent",
+          "set-water-policy",
+          "take-task",
+          "water"
+        ],
+        "ordinarySteps": {
+          "comment": 1,
+          "open": 9,
+          "transition": 20
+        },
+        "definitionBytes": 43080,
+        "matchesMaintainedOrdinaryKeySet": true
+      },
+      {
+        "scopeLabel": "grow-site",
+        "genesis": "establish",
+        "ordinaryCount": 4,
+        "ordinaryActs": [
+          "arrive",
+          "create-room",
+          "leave",
+          "provision-presence"
+        ],
+        "ordinarySteps": {
+          "open": 2,
+          "transition": 2
+        },
+        "definitionBytes": 5192,
+        "matchesMaintainedOrdinaryKeySet": true
+      }
+    ]
+  },
+  "excludedLegacyCounter": {
+    "path": "apps/counter/definition.json",
+    "name": "counting",
+    "ordinaryCount": 8,
+    "reason": "not selected by current Counter config; commitments.json is selected"
+  },
+  "totals": {
+    "applications": 3,
+    "definitionFamilies": 4,
+    "ordinaryActFormKinds": 55,
+    "actsIncludingGenesis": 59
+  },
+  "rawInputBindings": [
+    {
+      "path": "examples/grow/definitions/site.json",
+      "bytes": 6976,
+      "mode": "0o644",
+      "sha256": "76b93311e3f485db47dec77a50d952bbfb0eed0e5f6808d52f28f66fbaf4f0c0",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "examples/grow/definitions/room.json",
+      "bytes": 62828,
+      "mode": "0o644",
+      "sha256": "85f9c6e63d58e34b8fd4ceb35d5095a7ae7c4f1b3ca02dd363aff949d1930aac",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "examples/lending/definition.json",
+      "bytes": 10417,
+      "mode": "0o644",
+      "sha256": "72e34e2dea79aa189217e4095e84ddb154d000d3f94ce507f803789f19fa5652",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "apps/counter/commitments.json",
+      "bytes": 21176,
+      "mode": "0o644",
+      "sha256": "afa39e716c30567ef5521f55ccc6993ac1fa3a1ee3b7003ea3d47f02d7114748",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "notes/2026-11-14-act-environment.md",
+      "bytes": 69376,
+      "mode": "0o644",
+      "sha256": "2ef6e1cee7f72011cf1be1a5337f68950318621a4a8925bdd74f8e6c241ccd6e",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "examples/grow/check/dap.application.json",
+      "bytes": 64776,
+      "mode": "0o644",
+      "sha256": "166bb064051fcfa2bc4fb3086ee54f9b91fe845084cca3e3e65f2938eb77c057",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "examples/lending/dap.application.json",
+      "bytes": 10387,
+      "mode": "0o644",
+      "sha256": "b51f1f6cb2280ba9563e379401fc69b6c7089ddea57c440bc55a3ebabd5bad06",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "apps/counter/dap.application.json",
+      "bytes": 14608,
+      "mode": "0o644",
+      "sha256": "4e1cd00f51d5d24ef64de0105e12c95a3f9e991a866cbbd44b16d6b9181c9194",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "examples/grow/room.ts",
+      "bytes": 296,
+      "mode": "0o644",
+      "sha256": "3d114af416b1f99f5ddaa2a16b37fd9a04fc838bfa681479be0a018e24321595",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "examples/grow/site.ts",
+      "bytes": 296,
+      "mode": "0o644",
+      "sha256": "b4c877f7f1126f4989a55e1b8cb35f835cf17f0f5f41216c0095340c3fde1c9a",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "examples/grow/prepare-check.ts",
+      "bytes": 2207,
+      "mode": "0o644",
+      "sha256": "8f57ed933fe48fcf01171ca8607e360cd23bd66b50b2b76a72f516e437272fe0",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "examples/grow/prepare-demo.ts",
+      "bytes": 2561,
+      "mode": "0o644",
+      "sha256": "6b96b2f94846476f848a56ab7176b02b8e3f9b0151d2c06a06910c2e4d434b3e",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "examples/grow/demo-definitions.ts",
+      "bytes": 5188,
+      "mode": "0o644",
+      "sha256": "f974142c4f5a6a97307ec6433edb84f1ee3c237aeff996ec6ed7e7911f9dcd0a",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "examples/lending/package.ts",
+      "bytes": 2441,
+      "mode": "0o644",
+      "sha256": "d6a133fa01aee37385d6efafd03813f1871473d2857a6419d513d1a03f36e392",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "apps/counter/package.ts",
+      "bytes": 3019,
+      "mode": "0o644",
+      "sha256": "64b9f9d20a1dc86b796cd94ac6292da779be11bfe465c6c2f91a6b17b0f03d2e",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "packages/cli/src/application-files.ts",
+      "bytes": 12621,
+      "mode": "0o644",
+      "sha256": "d298084301e87115eeb923b1a9dee19420552da6e8d551088cf8eb9b878a4681",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "packages/cli/test/application-release-reproduction.test.ts",
+      "bytes": 6755,
+      "mode": "0o644",
+      "sha256": "f9c4c73f418cc15e4308ecbd421407c6785b14f8adf11cab7cc336b51df25811",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "examples/grow/demo/application.dap.json",
+      "bytes": 139919,
+      "mode": "0o644",
+      "sha256": "5887cd2790563325c476672765545cad52dae349d4876bb95bf8419549320beb",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "apps/counter/definition.json",
+      "bytes": 26824,
+      "mode": "0o644",
+      "sha256": "c7da079f5cf9d0946183a61c642afda36a89593ede8b4e6e9ab6e3c3cdb53315",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    },
+    {
+      "path": "packages/client/src/scope-client.ts",
+      "bytes": 46206,
+      "mode": "0o644",
+      "sha256": "6f39676ebacb10b22be4d77ef47b23e9e44ec3bd31f10048c9397690deff146e",
+      "meaning": "raw input-byte binding, not a new descriptor or definition digest"
+    }
+  ]
+}

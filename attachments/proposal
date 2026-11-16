@@ -1,0 +1,46 @@
+# DD1 descriptor granularity
+
+Recommend **one digest per act, scoped to its own definition**. A change isolated to one act's descriptor content would invalidate that form kind, instead of up to 30 form kinds in Grow Room. This is a proposal for planner, not a builder, recipe, API change, or computed descriptor.
+
+Request `4fce06378c41c265dddb80a8e7c487578819c4c6`, promise `93dfdfa49554fc960745ca34cb5e6508a350a41f`, and ruling `a1c5a189f33f49ef2c80f915e13476954aa94b94` govern this proposal. C4 continues with its opaque supplied digest and named TEST constants; DD1 does not delay it.
+
+## Actual count and invalidation envelope
+
+An ordinary act is an `acts` member other than the definition's exact `genesis` key. “Open form” below means a member's editing form for an ordinary act, not only the DSL's `step: open`. These count descriptor form kinds, not the subset shown by one adapter or allowed by one grant. No source read reveals how many dialogs or scope instances members currently hold.
+
+| Application / definition family | Ordinary form kinds | If one covered act changes: one scope digest | If one isolated act changes: per-act digest |
+| --- | ---: | ---: | ---: |
+| Grow / Site | 4 | 4, including 3 unchanged kinds | 1 |
+| Grow / Room | 30 | 30, including 29 unchanged kinds | 1 |
+| Lending / Library | 8 | 8, including 7 unchanged kinds | 1 |
+| Counter / commitments | 13 | 13, including 12 unchanged kinds | 1 |
+
+The repository's current authored applications therefore select four definition families and 55 ordinary act kinds, plus four genesis acts. These are not counts of deployed objects or users. A Room-only change affects none of Site's four kinds merely because both definitions belong to Grow; the inverse leaves Room's 30 untouched. No content from another scope enters either option.
+
+Examples of the scope-wide invalidation sets are exact: a covered set-fan change invalidates every one of Room's 30 listed ordinary kinds; an arrive change invalidates Site's four; a reserve change invalidates Lending's eight; a commit change invalidates Counter's thirteen. At per-act granularity each isolated change invalidates its named kind. The complete lists, step classifications and raw-byte bindings are in counts-and-bindings.json.
+
+“Isolated” matters: a change to shared item/subject data or shared described sentences can change the section-10 content of several acts. Per-act granularity must include those affected acts; it must not promise one invalidation for every possible source edit.
+
+## Which bytes these counts use
+
+- Grow's maintained sources are `examples/grow/definitions/{site,room}.json`. The normal pack route is prepareGrowDemo, which starts with prepareGrowCheck's two-file config and overwrites those files with demoDefinitions. Source lines 29–66 of demo-definitions.ts change existing acts and data without adding or deleting act keys. The retained normal Grow 2.0 packet contains actual definition strings with the same 4/30 ordinary key sets. Its Room changes observe from comment to transition, so step breakdown differs while the ordinary count stays 30. I parsed those strings as JSON for counting; I did not authenticate the packet or execute the producer.
+- Lending's current `dap.application.json` lists only `examples/lending/definition.json`. Its package.ts names that same path. The Directory/Destination outside connection does not add another owned definition to this count. Publisher definitions, installed platform services and historical signed packages are not added as current form families.
+- Counter's config/package.ts select `apps/counter/commitments.json`. Its 13 ordinary acts are the current application. The legacy `apps/counter/definition.json` has eight, but the current config does not select it.
+
+The maintained CLI source reader takes the configured definition bytes at application-files.ts:71–82. Its composition mapping resolves listed references at lines 108–133. The normal reproduction owner selects prepareGrowDemo, the Lending config, and the commitments Counter config at application-release-reproduction.test.ts:15–28. These source references establish which definitions to count; no pack, import, validator or browser ran here.
+
+The Grow check config's 0.3 label is TEST input metadata; prepareGrowDemo changes release metadata to 2.0. Current Lending/Counter config labels are 0.5. Those labels, names and paths identify the read inputs in this report only. They are not proposed digest content.
+
+## Trade-off and decision needed
+
+Section 10 lists each act's field schema, item/opened-item type, declared guard names, subject admission, and describe.ts sentences. Scope granularity fits today's single ClientOptions.descriptor value and gives one compatibility boundary for all forms of that scope. Its member cost is broad: a covered change to one Room act can make 29 otherwise unchanged form kinds historical and unrestorable.
+
+Per-act granularity costs a reviewed act-to-descriptor binding at the later producer/consumer seam. It better matches the member's individual form and limits unrelated loss. This proposal authorizes no change to C4's current required option, E4 authorization binding, stored schema, or restoration rule. Planner must select the granularity and disposition that later seam before any builder source.
+
+In either option, DD1 covers only the section-10 content for the selected scope definition. It includes no release/version/name/path metadata and no other-scope content. Hashing a whole application file or its path cannot implement that rule. This proposal specifies no serialization, hash recipe, dependency algorithm or new descriptor value.
+
+**Question for planner:** choose per-act granularity with affected shared section-10 content included, or accept scope granularity and the explicit 4/30/8/13 form-kind invalidation sets above? I recommend per-act because the largest normal scope has 30 ordinary kinds. C4's opaque/test-value work continues unchanged while DD1 settles and implements its own binding.
+
+## Evidence limits
+
+count-definition-metadata.py used only Python JSON/file metadata reads: `len(acts minus genesis)`, literal key lists, step counts and byte SHA-256 bindings. The four definition inputs are copied byte-exact beneath inputs/. Other source references bind by path, size, mode and SHA-256. These hashes identify raw input files; none is a new descriptor or application identifier. No Git/head query, project import, source parser/AST, compiler, test, producer, semantic evaluation, network, or workroom action ran. No current runtime, installation or release equivalence result is claimed.
