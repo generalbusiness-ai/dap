@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7b1a6af6612520fc7a5caccecfcd96b9f2a6e573","text":"Merge retired a covered predecessor; the successor is at scripts/test-celld-proxy.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:880cc2b2277a05eb39cf44f0c2300577e7acce25","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-15-ls3-transport-observation.md."}
