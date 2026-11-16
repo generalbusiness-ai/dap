@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d2b46bf735f38417ed7315198f0601c34b9442cb"}
+{"kind":"assert","text":"On 058ee5dd: next step is the AR-1 merge (decision 65dbbd76), not a CB-2 gate rerun. After my deployment START, hold every gate until the END that closes the hour's rate read. Run CB-2's four typecheck configs locally meanwhile.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
