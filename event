@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:56a768bfb2b27689f3c93e809661a08684c6d03c","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/native-timeout-crossing.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:682bc2ccaaddc4f880b34b7fa58dff6be1a3c1e9","text":"Merge retired a covered predecessor; the successor is at scripts/gate.sh."}
