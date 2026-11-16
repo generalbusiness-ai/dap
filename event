@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ee0652f3a1a8b8857f6769e49baf67329b9e9764","text":"Merge retired a covered predecessor; the successor is at examples/lending/release-identifiers.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ee9516de148c384e323e7a838837d82c506e2e02","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/install-without-mcp.test.ts."}
