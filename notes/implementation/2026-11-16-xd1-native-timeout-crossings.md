@@ -1,8 +1,11 @@
 # Name the Native timeout crossings
 
-In the Native test projects, a test or hook that exceeds its limit does
-not fail. It keeps running and can pass. XD-1 step 1 names each such
-crossing in the log. Step 3 turns each one into a failure.
+In the Native test projects, workerd can refuse the abort that vitest's
+timeout makes. XD-1 names each refusal in the log and sorts it into one of
+three classes. A refusal for a test that still runs is a lost timeout, and
+it fails the gate. By source, a test past its limit can then keep running
+and pass. No run has shown that yet: every line so far marks a timer that
+fired after its test passed.
 
 ## The fault
 
@@ -38,36 +41,49 @@ four Scope Native configs: `vitest.worker.config.ts`,
 `vitest.scale.config.ts`. The `scope-stories` project inherits it from
 `vitest.worker.config.ts`.
 
+The setup file keeps one owner for each test context. `beforeEach` maps
+the context's `signal` to the test's file and full name. `afterEach` marks
+that owner finished. Vitest aborts the controller of the test's own
+context, so the guard finds the owner of the aborted controller. A timer
+of test A that fires while test B runs names A (step 1b, ruling
+925778a5).
+
 When `abort` throws and the reason is a vitest timeout error, the guard
-prints one line and throws the original error again. Other aborts pass
-through unchanged. In step 1 the run behaves as before.
+prints one line and acts on its class (ruling 6ba49430):
+
+| Class | Owner | The guard |
+|---|---|---|
+| `lost` | still runs | returns, so vitest rejects the test with its timeout error |
+| `stale` | finished | throws the refusal again; the test has settled |
+| `no-owner` | none | throws the refusal again |
+
+Other aborts pass through unchanged.
 
 ## Read the line
 
 ```
-[native-timeout-crossing] file=<path> name=<test name> limit=<N>ms kind=<Test|Hook>
+[native-timeout-crossing] class=<lost|stale|no-owner> file=<path> name=<test name> limit=<N>ms kind=<Test|Hook>
 ```
 
-- `file` is the file of the test that owns the timer.
-- `name` is the full name of the test that owns the timer. It reads
-  `(no owner)` when no test context registered the controller.
+- `class` is the class from the table above.
+- `file` and `name` are the owner's file and full name. A `no-owner` line
+  reads `file=(unknown) name=(no owner)`.
 - `limit` is the limit from vitest's timeout message.
 - `kind` is `Test` or `Hook`.
 
-The owner is the test whose context holds the aborted controller. Vitest
-aborts the controller of the test's own context, and a `beforeEach` in the
-setup file maps each test's `signal` to that test (step 1b, ruling
-925778a5). A timer of test A that fires while test B runs names A. Before
-step 1b, the line named the test that ran when the timer fired.
+A `beforeAll` or `afterAll` hook has no test context, so its timer reports
+`no-owner`. That is not a fault of the guard.
 
-`scripts/gate.sh` prints `native timeout crossings: N`, the count of these
-lines in the test log.
+`scripts/gate.sh` prints one count for each class:
+`native timeout crossings, lost: N`, then `stale` and `no-owner`. A `lost`
+count above zero fails the gate. A `stale` or `no-owner` line never fails
+it.
 
-## What a line shows
+## What a stale line shows
 
-A line shows that a test's timer fired and that workerd refused the abort.
-It does not show that the test ran past its limit. The step 1b gate named
-two owners in `packages/scope/test/archive-driver.test.ts`:
+A `stale` line shows that a test's timer fired after the test passed and
+that workerd refused the abort. The step 1b gate named two owners in
+`packages/scope/test/archive-driver.test.ts`:
 
 | Test | Limit | Recorded duration |
 |---|---|---|
@@ -78,33 +94,42 @@ A run of that file alone, followed by a test that waits 35 seconds, printed
 both refusals during the wait. No gate ran beside it. Both stacks enter
 `rejectTimeoutError` from the timer callback, not from the elapsed-time
 check in `resolve`. So the timer of each test fired after the test passed:
-`clearTimeout` in `resolve` did not clear it.
+`clearTimeout` in `resolve` did not clear it. Three more runs of the same
+probe printed no refusal: one with the step 2 guard twice, and one with
+the step 1b guard. The stale timer does not fire in every run.
 
 Both tests settle a promise that `lane.inside` returns, from inside a
 Durable Object. The likely cause is that `resolve` then runs in that
 object's I/O context, and workerd does not clear a timer from another
 context. No run has tested that cause.
 
-When the stale timer fires, `reject_` comes after `resolve_`, so it changes
-nothing. Step 3 as written would therefore not fail these tests.
+When a stale timer fires, `reject_` comes after `resolve_`, so it changes
+nothing.
+
+## Limit
+
+A timer that fires after the test settles and before its `afterEach` runs
+counts as `lost`. The gate then fails, although the test passed. The time
+between the two is a few microtasks.
 
 ## The control
 
 `scripts/native-timeout-crossing.test.mjs` runs in the Node stage, by
-ruling e48cd709. It pins the wrapper over a class whose `abort` throws the
-workerd refusal:
+rulings e48cd709 and 6ba49430. It pins the wrapper over a class whose
+`abort` throws the workerd refusal:
 
-- With the wrapper, one refused timeout abort prints one line, and step 1
-  throws the refusal again.
+- A finished owner gives one `stale` line, and the refusal is thrown again.
+- A running owner gives one `lost` line, and the wrapper returns.
+- An unregistered controller gives one `no-owner` line, and the refusal is
+  thrown again.
+- A timer that test A starts and that fires during test B names A.
 - Without the wrapper, the refusal escapes `abort`. That is the lost
   rejection.
-- With `swallow`, the wrapper returns, so vitest's rejection runs (step 3).
 - Another reason, or an abort that does not throw, prints nothing.
-- A timer that test A starts and that fires during test B names A.
 
-The control does not prove that workerd refuses in a real run. A gate's
-crossing count is the Native witness. A gate with a count of 0 shows no
-crossing in that gate. It does not show that the guard sees a real one.
+The control does not prove that workerd refuses in a real run, or that the
+setup file marks owners in a real run. A gate's counts are the Native
+witness. A gate with all counts at 0 shows no refusal in that gate.
 
 ## Versions
 
@@ -116,19 +141,7 @@ The guard depends on these versions:
 
 When either version changes, read `withTimeout` and `abortIfTimeout` again.
 If `onTimeout` can no longer throw before the rejection, vitest fixed the
-fault. Then remove the guard, the control and the gate count.
-
-## Step 3
-
-Step 3 waits until a gate prints a crossing line, or a run shows the guard
-on a real crossing. Then set `SWALLOW_CROSSING` to `true` in
-`packages/scope/test/support/native-timeout-crossing.setup.ts`. The guard
-prints the line and returns. Vitest rejects the test with its timeout
-error, so a crossing fails a test that has not settled.
-
-A stale timer of a test that already passed fails nothing in step 3: its
-promise has settled. The step 1b gate printed only such lines. The planner
-decides steps 2 and 3 again from that result.
+fault. Then remove the guard, the control and the gate counts.
 
 ## Plain projects
 

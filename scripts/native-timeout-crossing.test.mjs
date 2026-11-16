@@ -2,57 +2,62 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { crossingLine, guardAbort } from "../packages/scope/test/support/native-timeout-crossing.ts";
 
-// XD-1 unit control (ruling e48cd709). It proves the wrapper only: an abort that throws the
-// workerd refusal prints one line, and step 1 rethrows. It does not prove that workerd throws
-// in a real Native run; only a gate's crossing count shows that.
+// XD-1 unit control (rulings e48cd709 and 6ba49430). It proves the wrapper only: a refused timeout abort prints one
+// line with its class, and only a `lost` one returns. It does not prove that workerd refuses in a real Native run;
+// only a gate's crossing counts show that.
 const refusal = () => new Error("Cannot perform I/O on behalf of a different Durable Object.");
 const timeout = new Error("Test timed out in 30000ms.");
 
-function refusingController() {
-  class Refusing { abort() { throw refusal(); } }
-  return Refusing;
+/** A controller class whose abort throws the workerd refusal, and the owners that a setup file would register. */
+function guarded() {
+  class Refusing { constructor() { this.signal = {}; } abort() { throw refusal(); } }
+  const owners = new WeakMap(), lines = [];
+  guardAbort(Refusing.prototype, controller => owners.get(controller.signal), line => lines.push(line));
+  const own = (file, name, finished) => { const c = new Refusing(); owners.set(c.signal, { file, name, finished }); return c; };
+  return { Refusing, own, lines };
 }
 
-test("the wrapper prints one line for a refused timeout abort and rethrows in step 1 (not proof that workerd refuses)", () => {
-  const Refusing = refusingController(), lines = [];
-  guardAbort(Refusing.prototype, crossing => lines.push(crossingLine(crossing, "test/a.test.ts", "a case")), false);
-  assert.throws(() => new Refusing().abort(timeout), /different Durable Object/);
-  assert.deepEqual(lines, ["[native-timeout-crossing] file=test/a.test.ts name=a case limit=30000ms kind=Test"]);
+test("a timer whose owner finished is stale: one line, and the refusal is thrown again", () => {
+  const { own, lines } = guarded();
+  assert.throws(() => own("test/a.test.ts", "test A", true).abort(timeout), /different Durable Object/);
+  assert.deepEqual(lines, ["[native-timeout-crossing] class=stale file=test/a.test.ts name=test A limit=30000ms kind=Test"]);
+});
+
+test("a timer whose owner still runs is lost: one line, and the wrapper returns so that vitest rejects the test", () => {
+  const { own, lines } = guarded();
+  assert.doesNotThrow(() => own("test/a.test.ts", "test A", false).abort(timeout));
+  assert.deepEqual(lines, ["[native-timeout-crossing] class=lost file=test/a.test.ts name=test A limit=30000ms kind=Test"]);
+});
+
+test("a controller that no test context registered, such as a beforeAll hook's, has no owner", () => {
+  const { Refusing, lines } = guarded();
+  assert.throws(() => new Refusing().abort(new Error("Hook timed out in 10000ms.")), /different Durable Object/);
+  assert.deepEqual(lines, ["[native-timeout-crossing] class=no-owner file=(unknown) name=(no owner) limit=10000ms kind=Hook"]);
+});
+
+test("a timer that test A starts and that fires during test B names A", () => {
+  const { own, lines } = guarded();
+  const a = own("test/a.test.ts", "test A", true);
+  own("test/b.test.ts", "test B", false);
+  assert.throws(() => a.abort(timeout), /different Durable Object/);
+  assert.deepEqual(lines, ["[native-timeout-crossing] class=stale file=test/a.test.ts name=test A limit=30000ms kind=Test"]);
 });
 
 test("without the wrapper the refusal escapes abort, which is the lost timeout", () => {
-  const Refusing = refusingController();
+  class Refusing { abort() { throw refusal(); } }
   assert.throws(() => new Refusing().abort(timeout), /different Durable Object/);
 });
 
-test("step 3: the wrapper swallows the refusal, so vitest's rejection runs", () => {
-  const Refusing = refusingController(), lines = [];
-  guardAbort(Refusing.prototype, crossing => lines.push(crossing), true);
-  assert.doesNotThrow(() => new Refusing().abort(new Error("Hook timed out in 10000ms.")));
-  assert.deepEqual(lines, [{ kind: "Hook", limit: "10000" }]);
-});
-
 test("a refusal with another reason, and an abort that does not throw, print nothing", () => {
-  const Refusing = refusingController(), lines = [];
-  guardAbort(Refusing.prototype, crossing => lines.push(crossing), false);
-  assert.throws(() => new Refusing().abort(new Error("other")), /different Durable Object/);
-  class Quiet { abort() {} }
-  guardAbort(Quiet.prototype, crossing => lines.push(crossing), false);
+  const { own, lines } = guarded();
+  assert.throws(() => own("test/a.test.ts", "test A", false).abort(new Error("other")), /different Durable Object/);
+  class Quiet { constructor() { this.signal = {}; } abort() {} }
+  guardAbort(Quiet.prototype, () => undefined, line => lines.push(line));
   new Quiet().abort(timeout);
   assert.deepEqual(lines, []);
 });
 
-test("step 1b: a timer that test A starts and that fires during test B names A", () => {
-  class Refusing { constructor() { this.signal = {}; } abort() { throw refusal(); } }
-  const owners = new WeakMap(), lines = [];
-  guardAbort(Refusing.prototype, (crossing, controller) => {
-    const owner = owners.get(controller.signal);
-    lines.push(crossingLine(crossing, owner.file, owner.name));
-  }, false);
-  const a = new Refusing(), b = new Refusing();
-  owners.set(a.signal, { file: "test/a.test.ts", name: "test A" });
-  owners.set(b.signal, { file: "test/b.test.ts", name: "test B" });
-  // Test B runs now; the timer of test A fires and aborts A's controller.
-  assert.throws(() => a.abort(timeout), /different Durable Object/);
-  assert.deepEqual(lines, ["[native-timeout-crossing] file=test/a.test.ts name=test A limit=30000ms kind=Test"]);
+test("the line keeps the class first, so the gate counts each class with one fixed prefix", () => {
+  assert.equal(crossingLine({ kind: "Test", limit: "20000" }, { file: "f", name: " a\n b ", finished: false }),
+    "[native-timeout-crossing] class=lost file=f name=a b limit=20000ms kind=Test");
 });
