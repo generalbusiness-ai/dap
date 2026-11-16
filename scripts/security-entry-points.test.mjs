@@ -279,7 +279,7 @@ const seals = {
   "apps/room/celld/worker.ts": "d1bc465525bd0af046fa0703464f14aeaaee8286b88415dfec3b9e03869fb644", // H1 reviewed production entry or public-origin gate owner.
   "packages/scope/src/public-origin.ts": "d6e867fc859db69b6fcf2d465d387a032966331cbae04310ea4c24cda3773269", // H1 reviewed production entry or public-origin gate owner.
   "packages/platform/src/versions.ts": "6b9b184d22fbffaa617049e1b6ec01bc64fd6039b068ac534d0adaf443868962", // Closed native publication protocol policy; actual maintained parser output.
-  "apps/room/worker.ts": "2128850ac47fa5068b261852c9436bb5973722676bd86f9fd14d46850e7644c3", // AR-1a: hotfix 32866453 returns the deployed wiring before archive wiring; actual maintained parser output.
+  "apps/room/worker.ts": "0460fe0647f5494a0ed8fb38ff49a09bdf5d7c89b2fadf988ffd446be8aa465d", // AR-1 restores the archive wiring as before hotfix 32866453, now with a bounded wake rate; actual maintained parser output.
   "apps/room/worker.commons.ts": "c525a1b0d13e6243099d03b80c5207b76f082c71432db2b8ecaf86ccf8cb1160", // Reviewed separate deployment entry; actual maintained parser output.
   "apps/room/fetch.ts": "83b2a56552c5f6874935d1491f487fd7d2b9e2651a9acceb87d731139897ad2c", // Forward the HTTP context to the existing scope route; dispatcher gates stay fixed.
   "apps/room/demo-creation.ts": "18124da145e98edf887394d92a1d3e37f2e350127c4e268e16729acfe8cdfc23",
