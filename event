@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3d5518db1ec1519cce9892598c2d3fa93687a55f","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-adaptive.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:40512c0b96d54c6e105f8021d80e71efe3e41dcc","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.lending.jsonc."}
