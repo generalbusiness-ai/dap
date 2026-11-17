@@ -522,13 +522,15 @@ export class ArchiveRows {
   /** New entries only change the tiny wake index. An outstanding retry keeps
    * its backoff, and a stopped writer is never silently restarted. AR-4: a
    * member's unbound marker keeps its daily recheck, so a lane that commits
-   * every minute makes no pass per commit. A commit in the Directory drops
-   * its own marker and wakes the Directory now. */
-  signal(at: Timestamp, budget = new ArchiveBudget()): void {
+   * every minute makes no pass per commit. A sealed commit in the Directory
+   * drops its own marker and wakes the Directory now. AR-5: an activation
+   * (`sealed` false) leaves every marker, so an object that the platform
+   * constructs again each minute makes no pass per construction. */
+  signal(at: Timestamp, budget = new ArchiveBudget(), sealed = true): void {
     this.#sql.transaction(() => {
       if (timeMs(at) === null) return refuse("unavailable");
       const wake = this.#wake(budget);
-      if (wake?.stopped || wake?.pending || wake?.unbound === "member" || wake?.next && timeMs(wake.next)! <= timeMs(at)!) return;
+      if (wake?.stopped || wake?.pending || wake?.unbound === "member" || wake?.unbound === "directory" && !sealed || wake?.next && timeMs(wake.next)! <= timeMs(at)!) return;
       budget.spend({ calls: 1, inputWork: 4096 }); budget.check();
       this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", WAKE, canonicalize({ pending: false, stopped: false, next: at })).toArray();
       budget.check();

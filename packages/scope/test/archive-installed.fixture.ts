@@ -474,6 +474,17 @@ for (const scenario of scenarios) {
       expect(threwPrebindTarget).toBe(scenario === "Grow activation evicted");
       expect(await life.wait(() => runInDurableObject(D.object, (_instance, state) => new ArchiveRows(archiveSql(state), directory).load()))).toBeNull();
       expect(roomArchiveConstructions.get(A.name)).toBe(0);
+      if (unbound) {
+        // AR-5: the platform constructs the Directory again (an eviction and
+        // a later RPC). The activation is no commit: the marker and its
+        // one-day alarm stay, and no pass runs.
+        const lookups = unboundLookups;
+        await life.wait(() => D.restart());
+        await life.wait(() => (D.object as unknown as { readiness(): Promise<unknown> }).readiness());
+        expect(await wakeIndex(D), "an activation leaves the Directory's marker").toEqual(deferredWake);
+        expect(await alarm(D)).toBe(retry);
+        expect(unboundLookups).toBe(lookups);
+      }
       const bindAt = life.now();
       await life.wait(async () => D.did(rita, "bind-archive", { on: 0, fields: { archive: "journal" }, expected: await D.expected({ on: 0 }) }));
       // AR-4: the binding commit drops the Directory's unbound marker and

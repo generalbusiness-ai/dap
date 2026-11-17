@@ -206,7 +206,10 @@ test("unbound markers: a member keeps its recheck, a Directory commit wakes the 
   await lane.restart();
   expect(await rows(lane, store => store.wake())).toBe(at(86_400));
   expect(await rows(lane, store => store.storedWake())).toEqual({ pending: false, stopped: false, next: at(86_400), unbound: "member" });
-  await rows(lane, store => { store.unbound("directory", at(86_400)); store.signal(at(3)); });
+  // AR-5: an activation (sealed false) leaves the Directory's marker.
+  await rows(lane, store => { store.unbound("directory", at(86_400)); store.signal(at(3), undefined, false); });
+  expect(await rows(lane, store => store.storedWake())).toEqual({ pending: false, stopped: false, next: at(86_400), unbound: "directory" });
+  await rows(lane, store => { store.signal(at(3)); });
   expect(await rows(lane, store => store.storedWake())).toEqual({ pending: false, stopped: false, next: at(3) });
   // A pass's deferred retry replaces the marker, and the marker replaces it.
   await rows(lane, store => { store.unbound("member", at(86_400)); store.defer(() => at(60)); });

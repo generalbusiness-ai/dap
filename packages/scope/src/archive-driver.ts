@@ -126,10 +126,12 @@ export class ArchiveDriver {
       return command && next && rows && same(command.at,this.#options.current()?.at) ? rows.restart(command,next,now,budget) : "refused";
     } catch { return "refused"; }
   }
-  /** Scheduling only: never waits on a host or reads a manifest. */
-  committed(): void {
+  /** Scheduling only: never waits on a host or reads a manifest. A sealed
+   * commit passes `sealed` true. An activation passes false (AR-5): it is no
+   * new entry, so it leaves an unbound marker and its daily recheck. */
+  committed(sealed = true): void {
     if (this.#disabled || this.#options.policies.registry.size === 0) return;
-    try { this.#store()?.signal(this.#options.clock()); } catch { this.#fallback = this.#later(0); }
+    try { this.#store()?.signal(this.#options.clock(), undefined, sealed); } catch { this.#fallback = this.#later(0); }
   }
   wake(): Timestamp | null {
     if (this.#disabled || this.#options.policies.registry.size === 0) return null;

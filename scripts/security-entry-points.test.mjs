@@ -12,7 +12,7 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 const namedOwners = {
   "packages/scope/src/object.ts": {
     "packages/scope/src/object.ts:$module": "61e64e92aebf2a3c602365b09d982b68ab0d7a348a1bc2b6232455b2bbf2079e",
-    "packages/scope/src/object.ts:ScopeObject": "8b71320c8a10617e754c6709de4c25c5adc77ad54f83194571f4e0500d051901"
+    "packages/scope/src/object.ts:ScopeObject": "0c29878ad81078430c2f8470a06d9cf27d8d20205a5d136cc1329f155ab5e69d" // AR-5: activation calls committed(false)
   },
   "packages/scope/src/object-archive.ts": {
     "packages/scope/src/object-archive.ts:$module": "7d7c0da57c8b69bc953c19a59e3bd6af25a5f02863bac10ef6fd839fc9dd5adc",
@@ -374,8 +374,8 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "300e4a3f51f23b93a2ce026b98993700e3c0b8947d35b68de195adc5c522ae45",
   "packages/scope/src/archive-publication.ts": "6c13c9f864b559e26d75982eca85c058975a12f18ad00b660c227577aae76d9b",
   "packages/scope/src/archive-build.ts": "bf1c79debbe0141140174c9a3d79f63d1952b874bce1d8713207dea8c817b8a0", // Actual pin SQL payload settles; final identity fence unchanged.
-  "packages/scope/src/archive-driver.ts": "99c1540df454dbec081a693f8c661d37c7d173b9d1512f9a143dc9748deb30eb", // AR-4 ends a pass whose Directory answers "unbound" as disabled, with the unbound marker and a one-day recheck. AS-2 adds stopCause to archive-pass-diagnostic-v1 only. AR-1 bounds every archive retry (60 s floor, one-hour cap, persisted retry count), leaves no stored wake in the past, and returns before policy work while the stored wake is in the future; actual maintained AST output.
-  "packages/scope/src/archive-row.ts": "13fea01061dbad72ac9509c8386ed14c0099a235134ffec6140a00872d9cfd86", // AR-4 adds the optional unbound marker to the wake record; a member's commits leave it, a Directory commit drops it. AR-1 adds the bounded retry count to the wake record; defer takes the delay as a function of it; actual maintained AST output.
+  "packages/scope/src/archive-driver.ts": "b62a1a7da449452b95b44a2124692021023ab1f1ffe8e7020c28580b3c77b345", // AR-5 passes committed(sealed) to signal().  AR-4 ends a pass whose Directory answers "unbound" as disabled, with the unbound marker and a one-day recheck. AS-2 adds stopCause to archive-pass-diagnostic-v1 only. AR-1 bounds every archive retry (60 s floor, one-hour cap, persisted retry count), leaves no stored wake in the past, and returns before policy work while the stored wake is in the future; actual maintained AST output.
+  "packages/scope/src/archive-row.ts": "c70a21a8d0efd2cde5e2be373a7cfac19fb878cba111d47bc5819a355a857df6", // AR-5: an activation signal leaves the Directory marker.  AR-4 adds the optional unbound marker to the wake record; a member's commits leave it, a Directory commit drops it. AR-1 adds the bounded retry count to the wake record; defer takes the delay as a function of it; actual maintained AST output.
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "packages/scope/src/object-archive.ts": namedOwners["packages/scope/src/object-archive.ts"],
