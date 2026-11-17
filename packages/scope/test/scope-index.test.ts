@@ -3,7 +3,7 @@ import { env } from "cloudflare:workers";
 import type { ControlRequest, ScopeRef } from "@generalbusiness/dap-contract";
 import { RETIRED_ROOM_READER_COMMIT, b64url, canonicalize, digestBytes, signControl, utf8 } from "@generalbusiness/dap-bytes";
 import { applicationScreenPath } from "@generalbusiness/dap-client/application";
-import { indexedScopes, ScopeIndexRows, SCOPE_INDEX_NAME, type ScopeIndexPort, type ScopeRegistration } from "../src/scope-index.ts";
+import { indexedScopes, KNOWN_SCOPE_CACHE_LIMIT, ScopeIndexRows, SCOPE_INDEX_NAME, type ScopeIndexPort, type ScopeRegistration } from "../src/scope-index.ts";
 import scopeWorker, { api, mcpRoute, route } from "../src/worker.ts";
 import { applicationSandboxPage } from "../src/applications/route.ts";
 import { namespace, membershipIn, type Binding } from "../src/namespace.ts";
@@ -219,7 +219,12 @@ test("unknown scope gate touches no target and only the native target's applied 
     failRegistration = true;
     expect(await scopes.create(born.signed, definition.declared)).toEqual(answer);
     expect(known.has(born.name)).toBe(false);
-    expect((await scopes.summary(born.name, reader)).ok).toBe(false);
+    // AR-8: production rows are insert-only, so this delete stands for a
+    // registration that never happened. This isolate already holds the
+    // earlier positive answer; a fresh binding is an isolate without it.
+    expect((await scopes.summary(born.name, reader)).ok).toBe(true);
+    const fresh: Binding = { idFromName: name => target.idFromName(name), get: id => target.get(id) };
+    expect((await api(indexedScopes(fresh, settings), null, { ALLOW_OPEN_CREATION: "true", SCOPE_INDEX: env.SCOPE_INDEX }).summary(born.name, reader)).ok).toBe(false);
     const backfill = api(indexedScopes(target, { ...settings, SCOPE_INDEX_MODE: "register" }));
     expect((await backfill.summary(born.name, reader)).ok).toBe(false);
     failRegistration = false;
@@ -282,4 +287,67 @@ test("unknown scope gate touches no target and only the native target's applied 
   } finally {
     scopeRegistrationWiring.delete(born.name); scopeRegistrationWiring.delete(denied.name);
   }
+});
+
+test("AR-8: a positive has() is asked once per isolate; a negative or failed answer is asked again and refused", async () => {
+  const knownName = creation().name, unknownName = creation().name, flakyName = creation().name;
+  const asked: string[] = [];
+  let flakyFails = true;
+  const index: ScopeIndexPort = {
+    async has(scope, kind) {
+      asked.push(kind === undefined ? scope : `${scope}:${kind}`);
+      if (scope === flakyName && flakyFails) { flakyFails = false; throw Error("index unavailable"); }
+      return scope === knownName || scope === flakyName;
+    },
+    async register() { throw Error("lookup wrote index"); },
+    async list() { throw Error("lookup requested census"); },
+  };
+  let targetCalls = 0;
+  const targets: Binding = { idFromName: (name: string) => name, get: () => ({ async text() { targetCalls++; return { ok: true, text: "t" }; } }) };
+  const gated = indexedScopes(targets, { SCOPE_INDEX: { idFromName: (name: string) => name, get: () => index } }) as unknown as
+    { get(name: string): { text(): Promise<unknown> } };
+  // A known name: the index answers once; both calls reach the target.
+  expect(await gated.get(knownName).text()).toEqual({ ok: true, text: "t" });
+  expect(await gated.get(knownName).text()).toEqual({ ok: true, text: "t" });
+  expect(asked.filter(name => name === knownName)).toHaveLength(1);
+  expect(targetCalls).toBe(2);
+  // An unknown name: asked each time, refused each time, never reaches a target.
+  expect(await gated.get(unknownName).text()).toBeNull();
+  expect(await gated.get(unknownName).text()).toBeNull();
+  expect(asked.filter(name => name === unknownName)).toHaveLength(2);
+  expect(targetCalls).toBe(2);
+  // A failed lookup is refused and not kept; the next call asks again.
+  expect(await gated.get(flakyName).text()).toBeNull();
+  expect(await gated.get(flakyName).text()).toEqual({ ok: true, text: "t" });
+  expect(await gated.get(flakyName).text()).toEqual({ ok: true, text: "t" });
+  expect(asked.filter(name => name === flakyName)).toHaveLength(2);
+  expect(targetCalls).toBe(4);
+});
+
+test("AR-8: the positive cache is bounded and keyed by mode, name and kind", async () => {
+  const names = Array.from({ length: KNOWN_SCOPE_CACHE_LIMIT + 1 }, () => creation().name);
+  const asked = new Map<string, number>();
+  const index: ScopeIndexPort = {
+    async has(scope, kind) { const key = `${scope}:${kind ?? ""}`; asked.set(key, (asked.get(key) ?? 0) + 1); return true; },
+    async register() { throw Error("lookup wrote index"); },
+    async list() { throw Error("lookup requested census"); },
+  };
+  const targets: Binding = { idFromName: (name: string) => name, get: () => ({ async text() { return { ok: true }; }, async nativeBirthByName() { return null; } }) };
+  const indexBinding = { idFromName: (name: string) => name, get: () => index };
+  const gated = indexedScopes(targets, { SCOPE_INDEX: indexBinding }) as unknown as
+    { get(name: string): { text(): Promise<unknown>; nativeBirthByName(at: string, kind: string): Promise<unknown> } };
+  for (const name of names) await gated.get(name).text();
+  // The first name fell out when the cache passed its bound; it is asked again.
+  await gated.get(names[0]!).text();
+  expect(asked.get(`${names[0]}:`)).toBe(2);
+  expect(asked.get(`${names.at(-1)}:`)).toBe(1);
+  // A kind-checked answer has its own key.
+  const last = names.at(-1)!;
+  await gated.get(last).nativeBirthByName(last, "directory");
+  await gated.get(last).nativeBirthByName(last, "directory");
+  expect(asked.get(`${last}:directory`)).toBe(1);
+  // Register mode keeps its own answers.
+  const legacy = indexedScopes(targets, { SCOPE_INDEX: indexBinding, SCOPE_INDEX_MODE: "register" }) as unknown as typeof gated;
+  await legacy.get(last).text();
+  expect(asked.get(`${last}:`)).toBe(2);
 });

@@ -63,11 +63,36 @@ function absent(method: unknown): unknown {
 
 const NO_INDEX = {};
 type IndexMode = "enforce" | "register" | "invalid";
-// Cache transport identity only, not has()/registration/proof answers. This
-// preserves consumers' binding-keyed single-flight state. Both binding keys
-// are weak, and each pair has at most three policy variants.
+// Cache transport identity, which preserves consumers' binding-keyed
+// single-flight state. Both binding keys are weak, and each pair has at most
+// three policy variants. No registration or proof answer is cached.
 interface Adapter { settings: ScopeIndexEnvironment; binding: Binding<string> }
 const adapters = new WeakMap<Binding, WeakMap<object, Map<IndexMode, Adapter>>>();
+
+// AR-8: positive has() answers, per isolate. known_scope rows are insert-only:
+// register() is INSERT ... ON CONFLICT DO NOTHING, and no code deletes or
+// updates a row, so a name the index once knew (with its kind) stays known.
+// A negative or failed answer is never kept, so an unknown name still reaches
+// the index and is refused. A future delete path must clear this cache.
+// Keys: scopes binding, index binding, then mode, name and kind.
+export const KNOWN_SCOPE_CACHE_LIMIT = 4096;
+const knownScopes = new WeakMap<Binding, WeakMap<object, Map<string, true>>>();
+function knownCache(binding: Binding, indexBinding: object): Map<string, true> {
+  let byIndex = knownScopes.get(binding);
+  if (!byIndex) { byIndex = new WeakMap(); knownScopes.set(binding, byIndex); }
+  let known = byIndex.get(indexBinding);
+  if (!known) { known = new Map(); byIndex.set(indexBinding, known); }
+  return known;
+}
+async function cachedHas(known: Map<string, true>, index: ScopeIndexPort, mode: IndexMode, name: string, kind?: ScopeKind): Promise<boolean> {
+  const key = `${mode}\u0000${name}\u0000${kind ?? ""}`;
+  if (known.has(key)) return true;
+  const answer = kind === undefined ? await index.has(name) : await index.has(name, kind);
+  if (answer !== true) return false;
+  known.set(key, true);
+  if (known.size > KNOWN_SCOPE_CACHE_LIMIT) known.delete(known.keys().next().value!);
+  return true;
+}
 
 /** Lazy RPC proxy: even namespace.get/idFromName of the TARGET waits for admission.
  * A native creation is allowed to reach its existing judge; only the target's
@@ -98,6 +123,7 @@ export function indexedScopes(binding: Binding, env: ScopeIndexEnvironment): Bin
     ...(Object.hasOwn(env, "PLATFORM_CREATION_PINS") ? { PLATFORM_CREATION_PINS: env.PLATFORM_CREATION_PINS } : {}),
   };
   const policy = injectedPlatformCreationPolicy(settings);
+  const knownScopeAnswers = knownCache(binding, indexBinding);
   const adapter: Binding<string> = {
     idFromName: name => name,
     get: name => new Proxy({}, { get(_target, key) {
@@ -113,7 +139,7 @@ export function indexedScopes(binding: Binding, env: ScopeIndexEnvironment): Bin
         const actualArgs = key === "observed" ? args[1] as unknown[] : args;
         if (method === "create" && isPlatformDefinition(actualArgs?.[1]) && policy !== undefined
           && !permitsNewPlatformScope(policy, actualArgs[1])) {
-          try { if (await index.has(name) !== true) return missing(); } catch { return missing(); }
+          try { if (await cachedHas(knownScopeAnswers, index, mode, name) !== true) return missing(); } catch { return missing(); }
           // This admits lookup only; the target must prove its sealed applied
           // genesis and let its native repeat/mismatch judge decide.
         }
@@ -143,11 +169,11 @@ export function indexedScopes(binding: Binding, env: ScopeIndexEnvironment): Bin
         if (method === "nativeBirthByName") {
           const kind = actualArgs?.[1];
           if (!["directory", "destination", "register"].includes(kind as string)) return missing();
-          try { if (await index.has(name, kind as ScopeKind) !== true) return missing(); }
+          try { if (await cachedHas(knownScopeAnswers, index, mode, name, kind as ScopeKind) !== true) return missing(); }
           catch { return missing(); }
         }
         let known: boolean;
-        try { known = creating ? false : await index.has(name) === true; } catch { return missing(); }
+        try { known = creating ? false : await cachedHas(knownScopeAnswers, index, mode, name); } catch { return missing(); }
         if (!creating && !known && mode !== "register") return missing();
         if (creationCurrent && !creationCurrent()) return key === "observed"
           ? { value: { answer: "retry", reason: "dependency-unavailable" }, turn: false }
@@ -172,8 +198,8 @@ export function indexedScopes(binding: Binding, env: ScopeIndexEnvironment): Bin
     } }),
   };
   // Keep only the latest creation-policy variant in each of three mode
-  // slots. No proof/index decision survives; repeated equal settings retain
-  // the health transport's identity.
+  // slots. No proof decision survives; repeated equal settings retain the
+  // health transport's identity. Positive has() answers live in knownScopes.
   modes.set(mode, { settings, binding: adapter });
   return adapter;
 }
