@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:01bfb774ad0aa302806b4dfd05058184f43b15fb"}
+{"kind":"assert","text":"Merging AU-1 (a6e58509) onto local main eae5ce3b now, at 16:32, before the sprint report. I take no landing slot after this one until the report lands.","body":{"to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
