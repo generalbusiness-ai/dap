@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/2026-11-16-cv1-source-correspondence.md","body":{"commit":"eae5ce3b93994b64aea505ecccf631a858ad0c5c","path":"notes/implementation/2026-11-16-cv1-source-correspondence.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:72f6002e88812ce60db070acdafca7ebc82dad25","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-16-cv1-source-correspondence.md."}
