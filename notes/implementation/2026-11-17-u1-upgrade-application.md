@@ -24,8 +24,18 @@ Register 29 and Directory 28 run the data and rules of Register 28 and
 Directory 27. Only their relations differ. Register 29 creates Directory 28
 (`DIRECTORY_OF`), and its claim proof names Directory 28
 (`registerRulesOf` in `base-register.ts`). Directory 28 creates Rules 16
-(`SIBLINGS_OF`). `NEWEST`, `deploymentCreationDefaults()`, the CLI's
-`--cohort` list and every Worker configuration stay on the `base` family.
+(`SIBLINGS_OF`). `NEWEST`, `deploymentCreationDefaults()` and every Worker
+configuration stay on the `base` family.
+
+Scope admits a child creation only from a family in
+`CREATION_LINEAGE_COHORTS`, and the CLI must offer exactly those families
+(`install-cohort.test.ts`). So the CLI now takes `--cohort upgrade`
+(`CLI_INSTALL_REGISTERS`, `CREATION_INSTALL_COHORTS`, `selectedRegister` and
+the argument check in `line.ts`), and `docs/cli.md` lists it. The default
+stays `base`. A base-family index manifest also reports `upgrade` as usable,
+because each new pin answers the default-coverage question of the pin it
+follows. Register 29 carries the failed-claim repair of Register 28, so the
+historical failed-claim defect test skips it, as it skips Register 28.
 
 ## Rules 16
 
@@ -117,11 +127,15 @@ application room now names the new pin beside it:
 |---|---|---|
 | Seal of `packages/contract/src/catalog-vocabulary.ts` | `458e087b56935e8c198016c476d11aff10ca24e9ab131d90d31fe282a6b731f1` | `1f58a135e016811c53f92b2d78c35a449d80b54e75059ea1b6f9e43a31be421d` |
 | Seal of `packages/platform/src/version-questions.ts` | `1db22b0f15e32ac2f221530a7070f2c3ecf2a2db35503afe7ccfd81134b6e178` | `715333df2a0bfeb66a1c9dc82814bfe24d03f3e95da21121d77e7901debfa3a9` |
-| Seal of `packages/platform/src/version-relations.ts` | `1eb52555e06569c8f76d9de97a03717828996f2de7500c6c17e66413eef25f0a` | `ab7da54366ee08e529bf48aad7a41ecf784759e74d7cf639149b1b07152e8e64` |
+| Seal of `packages/platform/src/version-relations.ts` | `1eb52555e06569c8f76d9de97a03717828996f2de7500c6c17e66413eef25f0a` | `84a5df8be0ca9c654faffa2493faba513606c4e82709d89a42decd3d930f464f` |
 | Seal of `packages/platform/src/application-archive-reader.ts` | `e261d7d0e052702daf16b07eba0a7457df30f7a9591ba1a13524456c27a4ee2e` | `19bb24e8367f70384d9843c63dc158e7bf2ad09ae34fa5e3b753b9aec69d5d73` |
 | Open Lending 0.6.0 presentation | `sha256:db139b7398bda6dc5562e4904023e8c067a348c59807d8ad816180dc8cad6180` | `sha256:9f7d92b3f2cf9ff8caa192a37a7d0d7fa890b8fff8cdeac2b2677f4a5a7b17be` |
-| Open Counter 0.7.0 presentation | `sha256:9d6995c8523ea6e59cbd3dfb4694501fdfe7420ee8e0d59f5e839f9a6529a300` | `sha256:566fb699c28b89e97998fcf9191af6b126bbb2c73024f6e8225df6ebc2c1c420` |
-| Page module `apps/room/page/assets.ts` | 2485796 bytes | 2499652 bytes |
+| Open Counter 0.7.0 presentation | `sha256:9d6995c8523ea6e59cbd3dfb4694501fdfe7420ee8e0d59f5e839f9a6529a300` | `sha256:d08f341c706008f5de61dadff37c1c11a2d85e3bd24a05c531253821d4a40102` |
+| Page module `apps/room/page/assets.ts` | 2485796 bytes | 2499692 bytes |
+| Seal of `packages/cli/src/command-install.ts` `$module` | `2f2e4690fc429f57d7a47795b986f3d1ca335775f6c43aa946982a4a6c7808dd` | `81144b60ef61fa1623759185ddcaf5f5ee1da493e89d61727d3c6e73df18f560` |
+| Seal of `command-install.ts` `CREATION_INSTALL_COHORTS` | `c007f288c599052489abdd8f0e301920e5752b39104bb2e22f2b79cf9bf8da9e` | `3bc72a98d0af6179d7cec8894302187bd31d4cc70ba331fcd23c6330bb1f1bc5` |
+| Seal of `command-install.ts` `selectedRegister` | `41e1ec4c908a3cec8ea0a0c03081215dfb5adf7b9879134ac14e95e1d0e39635` | `f0bbd3c0a7d66884c5d16ac1df5b277de4d2140466e0c0da4c62a9afb98a3ceb` |
+| Seal of `packages/cli/src/line.ts` | `d54491faa255f4a0aa96af07b8a972f090b5e486c14afaf760ad39582d85beaf` | `3cb0933073668b77d6aef44676168445f418a735af7c6e4c22c59ab3d409fcb3` |
 
 Each seal is the value that `scripts/security-entry-points.test.mjs` prints
 for the reviewed source. The open screens bundle the platform catalogue, so
