@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:62bb0ca9ee28e609bac202325b5aa06b5df71aa3","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-17-ar10-kind-answers.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d82651e06d32ef8738a0cfce4ba3725fb6c4e1ee","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/scope-index.test.ts."}
