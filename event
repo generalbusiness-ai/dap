@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval 868c4f8e: land NF-10 (head 0d46e993) now onto 5ea5954f, then ask for the landing check. After the push I sign Counter 0.6.0 from that main (expected presentation 905a3f7e); hold compiles until my signing END. Then LC-6 (trust row) is yours.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:868c4f8e663f35cbcc2b2813aa7fbc5317ef9980"}
