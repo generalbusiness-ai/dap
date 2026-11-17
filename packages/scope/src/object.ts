@@ -375,7 +375,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       const activation = diagnostic.then(() => {
         const existing = store.scope(), birth = genesis();
         if (existing?.status === "active" && birth?.decision === "applied" && archive.admit(existing.at, birth.seed)) {
-          this.#archive?.committed();
+          // AR-5: an activation is no commit; it leaves an unbound marker.
+          this.#archive?.committed(false);
           return wakes.set();
         }
       }).catch(() => undefined);
