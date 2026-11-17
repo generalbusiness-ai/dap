@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/deploy-smoke.test.mjs","body":{"commit":"f197a89d38426f609bc5c59b0a9babf49edda76c","path":"scripts/deploy-smoke.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b74f0db4d1f32bf29990b3fe83c14439b33919eb","text":"Merge retired a covered predecessor; the successor is at apps/sandbox/wrangler.rollout.jsonc."}
