@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Published origin main 69b85e98 (RB-1) after landing check d2734aa1. Data only; no deployment.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"kind":"promise","text":"I review the SH-1 design note at exact head 1549f891."}
