@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I will review LW-1 at head 6b369bde for request 6f036076 (implementation request 009c64da, promise 9ac2d5e2) against base 1e251f11, with Architecture, Security and Simplification conclusions."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b0648c088dca49b937b8204c3006fc511c263f53","text":"Duplicate of the builder's CB-3 request fe868e9f, filed one minute earlier with the same ruling 436a613f. fe868e9f carries CB-3."}
