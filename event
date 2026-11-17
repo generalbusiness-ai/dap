@@ -1,1 +1,1 @@
-{"kind":"assert","text":"END gate for AR-10 head d4268e74 (START 5b120313): passed, exit 0, all stages (artroom-evidence/2026-11-17-ar10-gate). The machine is free.","body":{"gate":"end","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
+{"kind":"artifact","text":"packages/scope/src/scope-index.ts at exact d4268e7415c4d3add875e6a8706b356505d9c317 on builder/ar10-kind-answers-20261117, under promise git:sha1…59f8091 on request git:sha1…61c0854","body":{"commit":"d4268e7415c4d3add875e6a8706b356505d9c317","path":"packages/scope/src/scope-index.ts"}}
