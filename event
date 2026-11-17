@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"scripts/do-rate.mjs at exact c5d3c008a53ed1639cfeff6367824470c517670e on builder/rr1-do-rate-20261117, under promise git:sha1…c53e1ba on request git:sha1…5ba32d8","body":{"commit":"c5d3c008a53ed1639cfeff6367824470c517670e","path":"scripts/do-rate.mjs"}}
+{"kind":"artifact","text":"scripts/do-rate.test.mjs at exact c5d3c008a53ed1639cfeff6367824470c517670e on builder/rr1-do-rate-20261117, under promise git:sha1…c53e1ba on request git:sha1…5ba32d8","body":{"commit":"c5d3c008a53ed1639cfeff6367824470c517670e","path":"scripts/do-rate.test.mjs"}}
