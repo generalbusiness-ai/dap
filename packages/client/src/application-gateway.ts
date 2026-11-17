@@ -1,5 +1,5 @@
 /** A sandbox changes transport location, never the room that owns an identity. */
-import { isDigest, isRecord, isScopeId, parseStrict } from "@generalbusiness/dap-bytes";
+import { isDigest, isRecord, isScopeId, parseStrict, readMinimumParameter } from "@generalbusiness/dap-bytes";
 import type { Digest, ScopeId } from "@generalbusiness/dap-contract";
 import { applicationJson } from "./application-json.ts";
 import { readApplicationScreenAddress } from "./application-route.ts";
@@ -9,7 +9,7 @@ import type { ApplicationScreenContext } from "./application-types.ts";
 
 declare const URL: new (url: string) => {
   origin: string; pathname: string; search: string; hash: string; username: string; password: string; href: string;
-  searchParams: { keys(): IterableIterator<string> };
+  searchParams: { keys(): IterableIterator<string>; get(name: string): string | null };
 };
 export const APPLICATION_SCREEN_HOST_PATH = "/_application-host";
 export interface ApplicationScreenHost {
@@ -54,15 +54,25 @@ export function applicationGatewayRoute(host: ApplicationScreenHost, address: st
   const what = parts[3], which = parts[4];
   if (method === "POST") return parts.length === 4 && ["acts", "settle", "sessions"].includes(what ?? "") && !url.search;
   if (method !== "GET") return false;
-  if (parts.length === 3) return !url.search;
+  // GW-1: a read that takes a minimum (summary, history, items,
+  // application-projection, entries) may also carry one atLeast: the
+  // canonical read-minimum encoding, naming this same scope. Other reads
+  // allow no atLeast, as before.
+  const minimum = (...allowed: string[]) => {
+    if (!keys.includes("atLeast")) return query(...allowed);
+    return readMinimumParameter(url.searchParams.get("atLeast"))?.at.scope === parts[2] && query(...allowed, "atLeast");
+  };
+  const others = keys.filter(key => key !== "atLeast").length;
+  if (parts.length === 3) return minimum();
   if (parts.length === 4) {
-    if (["history", "outbox", "log"].includes(what ?? "")) return query("cursor");
+    if (what === "history") return minimum("cursor");
+    if (["outbox", "log"].includes(what ?? "")) return query("cursor");
     if (what === "stream") return !url.search;
     if (what === "query-items") return keys.length === 1 && query("q");
-    if (what === "application-projection") return keys.length === 1 && query("p");
+    if (what === "application-projection") return others === 1 && minimum("p");
   }
-  if (parts.length === 5 && what === "entries") return /^(?:0|[1-9][0-9]{0,15})$/.test(which ?? "") && !url.search;
-  if (parts.length === 5 && what === "items") return /^[A-Za-z][A-Za-z0-9_-]{0,127}$/.test(which ?? "") && query("cursor");
+  if (parts.length === 5 && what === "entries") return /^(?:0|[1-9][0-9]{0,15})$/.test(which ?? "") && minimum();
+  if (parts.length === 5 && what === "items") return /^[A-Za-z][A-Za-z0-9_-]{0,127}$/.test(which ?? "") && minimum("cursor");
   return false;
 }
 

@@ -4,6 +4,9 @@
 import { expect, test } from "vitest";
 import type { Entry, Receipt, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, entryHash, intentDigest, keyIdOfSecret, scopeIdOf, textDigest, utf8, verifyInvitationProof, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { applicationScreenPath } from "../src/application-route.ts";
+import { applicationScreenTransport, readApplicationScreenHost } from "../src/application-gateway.ts";
+import { loadApplicationScreenContext } from "../src/application-screen.ts";
 import { browserJoining, generateBrowserDeviceKey, memoryStore, readBrowserInvitation, RETIRED_REQUEST, storedWebCryptoSigner, type BrowserJoinStore, type BrowserKeptJoin, type CustodyRecord, type Fetch, type InvitationLink } from "../src/index.ts";
 const origin = "https://browser.test", start = Date.parse("2026-10-18T12:00:00Z"), seed = new Uint8Array(32).fill(66);
 type Version = "platform:membership@4" | "platform:membership@6" | "platform:membership@7" | "platform:membership@8";
@@ -252,4 +255,29 @@ test("an awaited host handoff keeps the join pointer when its clearing capabilit
   const original = f.kept();
   f.context.current = false; held.release(); await rejected;
   expect([f.kept(), f.record()!.phase, f.posts.length, f.calls.filter(call => call.startsWith("clear"))]).toEqual([original, "accepted", 1, []]);
+});
+
+// GW-1 (request 54e31a40): an installed screen sends the join's reads through its gateway. The receipt read carries its read
+// minimum (atLeast), and the gateway must pass it, or the page cannot verify a join that the room recorded.
+test("a join through an installed screen's gateway reads its entry with the minimum and settles as joined", async () => {
+  const f = await fixture("platform:membership@8"), scripted = f.fetcher.call, digest = (letter: string) => `sha256:${letter.repeat(64)}` as const;
+  f.replies({ lose: false });
+  const host = readApplicationScreenHost({ v: 1, screenOrigin: "https://counter.inguz.space", roomOrigin: origin, directory: reference("directory").scope, item: 2, presentation: digest("c") });
+  const body = { v: 1, origin, deployment: "TEST installed screen", directory: reference("directory"), rules: reference("rules"), membership: reference("membership"),
+    destination: reference("destination"), scope: reference("lane"), item: host.item, definition: digest("d"), ids: { release: digest("e"), semantic: digest("f"), presentation: host.presentation },
+    membershipDefinition: "platform:membership@8" };
+  const screen = await loadApplicationScreenContext(host.screenOrigin + applicationScreenPath(host.directory, host.item, host.presentation) + "index.html",
+    { fetch: async url => new Response(canonicalize(url.endsWith("/_application-host") ? host : body)) });
+  if (!screen) throw new Error("The TEST screen context must load.");
+  const reads: string[] = [];
+  const gateway = applicationScreenTransport(screen, { fetch: async (physical, init) => {
+    const logical = origin + physical.slice(host.screenOrigin.length), url = new URL(logical);
+    if ((init?.method ?? "GET") === "GET") reads.push(url.pathname.slice(url.pathname.lastIndexOf("/") + 1) + (url.search.startsWith("?atLeast=") ? "?atLeast" : url.search));
+    const answer = await scripted(logical, init);
+    return { status: answer.status, body: answer.body, headers: new Headers(), url: physical, redirected: false };
+  } });
+  f.fetcher.call = gateway.fetch;
+  expect(await f.api.join(f.link, f.seat)).toMatchObject({ status: "joined" });
+  expect(reads).toEqual(["1?atLeast"]);
+  expect([f.posts.length, f.record()!.phase, f.calls.filter(call => call.startsWith("clear"))]).toEqual([1, "accepted", ["clear joined"]]);
 });
