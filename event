@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:37fc549c976394fe4ab0b52a1b1a4c827c189080","text":"Merge retired a covered predecessor; the successor is at scripts/test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3a6ef7487656449f8f97d48a5d7d486265ed2918","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/witness-request-shape.test.mjs."}
