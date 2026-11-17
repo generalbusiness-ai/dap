@@ -151,17 +151,18 @@ async function deviceTransaction<T>(mode: IDBTransactionMode, current: () => boo
     catch { try {tx.abort();} catch { /* Already terminal. */ } reject(custodyError()); }
   });
 }
-async function checkedDevices(devices: SavedDevice[]): Promise<void> {
+async function checkedDevices(devices: SavedDevice[], origin: string): Promise<void> {
   if (!Array.isArray(devices) || ![1, 3].includes(devices.length)) throw custodyError();
   if (new Set(devices.map(d => d.binding.publicKey)).size !== devices.length || new Set(devices.map(d => d.name)).size !== devices.length) throw custodyError();
   if (utf8(canonicalize(devices.map(d => ({ name: d.name, binding: d.binding })))).length > MOST) throw custodyError();
-  for (const device of devices) await deviceSigner(device);
+  for (const device of devices) await deviceSigner(device, origin);
 }
 function checkedChoice(choice: DeviceChoice | undefined, devices: SavedDevice[]): void {
   if (choice === undefined) return;
   if (!choice || Object.keys(choice).length !== 2 || !Object.hasOwn(choice, "publicKey") || !Object.hasOwn(choice, "voiceId") || !devices.some(d => d.binding.publicKey === choice.publicKey) || typeof choice.voiceId !== "string" || !choice.voiceId || choice.voiceId.length > 512) throw custodyError();
 }
-export function privateDeviceStore(installed?: string) {
+/** The devices that this origin keeps for one installed screen, or for the demo page. Each binding must name `origin`. */
+export function privateDeviceStore(origin: string, installed?: string) {
   const epochKey = installed ? installed + ":epoch" : "epoch", currentKey = installed ? installed + ":current" : "current";
   return {
     load(current: () => boolean = () => true): Promise<SavedDevices> {
@@ -178,7 +179,7 @@ export function privateDeviceStore(installed?: string) {
           // Only an origin with no epoch can migrate its previous v1 row.
           if (held.epoch===undefined ? (row as {v:number}).v!==1 : row.v!==2 || row.epoch!==held.epoch) throw custodyError();
           devices=row.devices;choice=row.choice;
-          await checkedDevices(devices);checkedChoice(choice,devices);
+          await checkedDevices(devices,origin);checkedChoice(choice,devices);
         }
         if (!current()) throw custodyError();
         const epoch=held.epoch===undefined?crypto.randomUUID():held.epoch;
@@ -194,7 +195,7 @@ export function privateDeviceStore(installed?: string) {
       const selected=choice?structuredClone(choice):undefined;
       return originLock(async()=>{
         if(!validEpoch(epoch)||!current())throw custodyError();
-        await checkedDevices(snapshot);checkedChoice(selected,snapshot);
+        await checkedDevices(snapshot,origin);checkedChoice(selected,snapshot);
         await deviceTransaction<void>("readwrite",current,(store,done,check)=>{
           const read=store.get(epochKey);read.onsuccess=()=>{try{check();if(read.result!==epoch)throw custodyError();store.put({v:2,epoch,devices:snapshot,...(selected?{choice:selected}:{})},currentKey);done(undefined);}catch{try{store.transaction.abort();}catch{/* Already terminal. */}}};
         });
