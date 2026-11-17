@@ -1,1 +1,1 @@
-{"kind":"assert","text":"END gate for UP-1 head 70dee51e (START 163d7209): passed, exit 0. The head is notes-only, so the gate skipped its test step (artroom-evidence/2026-11-17-up1-gate). The machine is free.","body":{"gate":"end","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
+{"kind":"promise","text":"I will review the exact head 05ffba87 on builder/ar8-index-cache-20261117 with all its artifacts, against ruling 96a70605, and state the request rate before and after."}
