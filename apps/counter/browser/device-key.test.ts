@@ -29,14 +29,14 @@ test("TEST bundle becomes non-extractable keys that survive structured clone and
   for (const device of structuredClone(devices)) {
     assert.equal(device.key.extractable, false);
     await assert.rejects(crypto.subtle.exportKey("pkcs8", device.key), { name: "InvalidAccessError" });
-    const signer = await deviceSigner(device);
+    const signer = await deviceSigner(device, origin);
     const message = new TextEncoder().encode("TEST local signing challenge");
     assert.ok(verify(device.binding.publicKey, await signer.sign(message), message));
     assert.ok(verifySessionRequest(await signerSessionRequest(device.binding.membership, signer, "2026-10-12T00:01:00Z", "TEST operation")));
     assert.deepEqual(Object.keys(device).sort(), ["binding", "key", "name"]);
   }
   const swapped = { ...devices[0]!, key: devices[1]!.key };
-  await assert.rejects(deviceSigner(swapped), /does not match/);
+  await assert.rejects(deviceSigner(swapped, origin), /does not match/);
 });
 
 test("TEST mismatched bundles are refused and cleared; legacy raw seed imports use the same non-extractable path", async () => {
@@ -52,5 +52,18 @@ test("TEST mismatched bundles are refused and cleared; legacy raw seed imports u
   assert.ok(bindingBytes.every(byte => byte === 0) && seedBytes.every(byte => byte === 0));
   assert.equal(device.key.extractable, false);
   assert.ok(!Object.hasOwn(device.binding, "publicNote") && !Object.hasOwn(device.binding, "cohort"));
-  assert.equal((await deviceSigner(device)).key, row.binding.publicKey);
+  assert.equal((await deviceSigner(device, origin)).key, row.binding.publicKey);
+});
+
+// NF-10: an installed screen runs on its own host, and its device binding names the room's service origin.
+test("A device bound to the room's service origin signs on a screen host with another origin, and another origin is refused", async () => {
+  const room = "https://room-service.test", bundle = fixture();
+  for (const row of bundle.identities) row.binding.origin = room;
+  assert.notEqual(location.origin, room, "the page runs on a different host");
+  const [device] = await importDemoBundle(bytes(bundle), room);
+  const message = new TextEncoder().encode("TEST screen host challenge");
+  const signer = await deviceSigner(device!, room);
+  assert.ok(verify(device!.binding.publicKey, await signer.sign(message), message));
+  await assert.rejects(deviceSigner(device!, origin), /belong to this origin/);
+  await assert.rejects(deviceSigner(device!, "https://other-room.test"), /belong to this origin/);
 });

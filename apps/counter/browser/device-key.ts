@@ -31,13 +31,15 @@ async function imported(name: string, identity: ActorIdentity, seed: Uint8Array)
     const key = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);
     seed.fill(0); pkcs8.fill(0);
     const device = { name, binding: identity, key };
-    await deviceSigner(device);
+    await deviceSigner(device, identity.origin);
     return device;
   } finally { seed.fill(0); pkcs8.fill(0); }
 }
-export async function deviceSigner(device: SavedDevice): Promise<Signer> {
+/** A signer for a saved device whose binding names `origin`, the room's service origin. On an installed screen that is
+ * the screen context's origin, which differs from the page's own origin; on the demo page it is location.origin. */
+export async function deviceSigner(device: SavedDevice, origin: string): Promise<Signer> {
   if (!closed(device, ["name", "binding", "key"]) || typeof device.name !== "string" || !device.name || device.name.length > 64) throw new Error("The remembered device is invalid.");
-  const identity = binding(device.binding, location.origin, false);
+  const identity = binding(device.binding, origin, false);
   const key = device.key;
   const signer = storedWebCryptoSigner(identity.publicKey, key);
   const challenge = new Uint8Array(crypto.getRandomValues(new Uint8Array(32)));
