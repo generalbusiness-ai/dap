@@ -31,9 +31,11 @@ card with `currentGesture()`:
 The timer does not start a background read while `busy` is set or while
 another background read runs. It schedules the next interval instead.
 
-A background read still clears the last notice when it starts, as the
-timer's read did before CB-3. A press that waits on the read sets its own
-notice after the read ends, so that notice stays.
+A background read clears the last notice when it starts, except the
+changed-card notice. CB-4 keeps that notice through background reads,
+after the planner's ruling in 7c80ab85. It stays until the member's next
+press, read or act. Before CB-4, the next background read cleared it,
+about 2 s later on the Grow card.
 
 ## Evidence
 
@@ -60,9 +62,23 @@ Results:
   the click on "Read points", the section stayed closed for 30 s. LW-1's
   third run before CB-2 failed at the same step. Twelve runs with click
   and toggle logging did not reproduce it, so its cause is still open.
-- The paired control ran the same witness with `main.ts` from main
-  1e251f11. It failed at case 1: "A background read leaves the card idle".
-  Evidence: `artroom-evidence/2026-11-17-cb3-gate/witness/`.
+- Three controls ran the same witness at width 320 on a temporary
+  `main.ts`. Their logs are in `artroom-evidence/2026-11-17-cb3-gate/witness/`.
+  - With `main.ts` from main 1e251f11, the witness failed at case 1: "A
+    background read leaves the card idle"
+    (`control-main-main-ts.log`).
+  - Control B treats every card as changed after a background read. It
+    failed at case 1, waiting for the second chat message: an unchanged
+    card no longer runs the press (`control-b-always-changed.log`).
+  - Control C makes `currentGesture()` accept every card. It failed at
+    case 2, waiting for the changed-card notice: a changed card no longer
+    stops the press (`control-c-gesture-always-current.log`).
+- CB-4 adds one step after case 2. The witness waits until the host has
+  answered one more background read, then asserts that the changed-card
+  notice still shows. With `main.ts` from CB-3 (main 3a0daab0), the step
+  fails: "A background read keeps the changed-card notice". Logs are in
+  `artroom-evidence/2026-11-17-cb4-gate/witness/`. The host counts its
+  answers to background reads in `proof.refreshReplies`.
 - `main.ts` runs only in the card page, and no unit test loads it. The
   witness carries these cases. `bridge.test.ts` tests the reconciler and
   the bridge, which CB-3 does not change.
