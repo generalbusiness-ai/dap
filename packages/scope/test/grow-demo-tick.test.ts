@@ -88,9 +88,12 @@ async function fixture() {
     const host = () => simulatorHost(new TextDecoder().decode(bytes), packet.ids.release, packet.package.release.manifest.publisher);
     const settings = { GROW_BINDING: canonicalize({ service: port.service, room: scope, members }), GROW_SENSORS_SECRET: b64url(una.secret), GROW_CLIMATE_SECRET: b64url(vic.secret) };
     const sessions: { status: number; ok: boolean; reason: string | null }[] = [];
+    // Each request the simulator makes, as "METHOD /path"; no body or token.
+    const calls: string[] = [];
     const tick = async (minute: number) => {
       life.advance(start + minute * 60_000 - life.now());
       return life.wait(() => host().run(settings, life.now(), async (url, init) => {
+        calls.push(`${init?.method ?? "GET"} ${new URL(url).pathname}`);
         const response = await life.wait(() => routed(url, init));
         if (new URL(url).pathname.endsWith("/sessions")) {
           const value = await response.clone().json() as { ok?: boolean; reason?: unknown };
@@ -100,7 +103,7 @@ async function fixture() {
         return response;
       }));
     };
-    return { life, room, site, scope, membership, port, members, settings, host, start, firstFan, tick, sessions };
+    return { life, room, site, scope, membership, port, members, settings, host, start, firstFan, tick, sessions, calls };
   } catch (error) { life.release(); throw error; }
 }
 
@@ -108,11 +111,17 @@ async function fixture() {
 // keeps the two actual agents separate despite their shared role, recovers
 // after missed minutes/restart, and stops on the first native refusal.
 test("the separately installed Grow demo runs native owner ticks under its distinct enrolled agents and fences a concurrent refusal", async () => {
-  const { life, room, site, membership, port, settings, host, start, firstFan, tick, sessions } = await fixture();
+  const { life, room, site, membership, port, settings, host, start, firstFan, tick, sessions, calls } = await fixture();
   try {
     const initial = await tick(0); expect(initial, JSON.stringify({ initial, sessions })).toMatchObject({ result: "complete" });
     const unchanged = (await life.wait(() => room.summary())).at;
+    calls.length = 0;
     expect(await tick(0)).toMatchObject({ result: "complete", accepted: [], costs: { writes: 0 } });
+    // AR-11: a tick that sends no act opens one session and reads the Room
+    // summary once. Before AR-11 it opened 2 sessions and read it 3 times.
+    expect(calls.filter(call => call.endsWith("/sessions")), calls.join("\n")).toHaveLength(1);
+    // The summary read is the only GET of a bare scope path in a tick.
+    expect(calls.filter(call => /^GET \/v1\/scopes\/[^/]+$/.test(call)), calls.join("\n")).toHaveLength(1);
     // Native Site acknowledgments can still arrive after the first tick.
     // The duplicate itself submits no mutation or additional signed act.
     for (const entry of (await life.wait(() => room.entries())).filter(entry => entry.seq > unchanged.seq)) {
