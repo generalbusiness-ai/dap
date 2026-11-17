@@ -1,1 +1,1 @@
-{"kind":"assert","text":"START gate for AR-8 head 05ffba87 (promise feda2d6c), base main a7acfdf2. The 1-minute load is 3.09, with no qx566 job running. Pre-gate checks pass: pins, Node stage 228/228, commit messages, notes, diff check, format, typecheck. Reds fail without the fix (artroom-evidence/2026-11-17-ar8-red). Hold compiles and deployments until my END.","body":{"gate":"start","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8cf6ae4d8cbd896a8bae83bd42cd900c9bc3b676"}
