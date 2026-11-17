@@ -43,6 +43,7 @@ export const nodeFiles = [
   'apps/views/test/two-process.test.mjs',
   'apps/room/page/test/row-press-probe.test.mjs',
   'apps/room/page/test/witness-failure-page.test.mjs',
+  'apps/room/page/test/witness-poll.test.mjs',
   'apps/room/page/test/witness-request-shape.test.mjs',
   'apps/jam/test/managed-assets.test.mjs',
   'scripts/test.test.mjs',
