@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:52bf2f0467b15f4faefce114dde671656fa75ff7","text":"Merge retired a covered predecessor; the successor is at examples/grow/simulator-host.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:721ce0b1415acb29f36340d29df078997fab9685","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-17-rr2-rate-baseline.md."}
