@@ -1,0 +1,19 @@
+{
+  "$source": "Planner rate read after the AR-10 deployment (END 5995bf0a, 20:37 to 20:52Z), and fault minutes from 19:30 to 20:55Z on 2026-11-17. RR-2 note: notes/implementation/2026-11-17-rr2-rate-baseline.md.",
+  "dap-grow": {
+    "floor": 32,
+    "limit": 36,
+    "peaks": { "10": 53, "11": 47, "35": 51, "36": 48, "40": 42, "41": 41 },
+    "$peaks": "The Grow simulator's hourly fault cycle: the highest count seen at each minute since AR-8, plus 4."
+  },
+  "dap-lending": {
+    "floor": 0,
+    "limit": 2,
+    "$limit": "Idle. A new scope or a deployment wakes objects for a minute; start the read the minute after the last Worker deploys."
+  },
+  "dap-demo": {
+    "floor": 0,
+    "limit": 2,
+    "$limit": "Idle. A deployment wakes objects for a minute; start the read the minute after the last Worker deploys."
+  }
+}

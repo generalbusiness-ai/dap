@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -9,6 +10,7 @@ import {
   defaultWorkers,
   formatReport,
   parseBaseline,
+  parseObjectReply,
   parseMinute,
   parseReply,
   parseTokenFile,
@@ -104,6 +106,82 @@ test("a baseline flags minutes above a Worker's floor and counts them", () => {
   );
   assert.equal(lines.at(-1), "above-baseline dap-grow=1 dap-lending=0");
   assert.throws(() => parseBaseline('{"dap-grow": -1}'), /non-negative/);
+});
+
+test("RR-2: a baseline peak raises the limit for its minute of the hour only", () => {
+  const baseline = parseBaseline(
+    '{"$source": "test", "dap-grow": {"floor": 40, "peaks": {"02": 60}, "$why": "fault cycle"}}',
+  );
+  const lines = formatReport(
+    aggregate(parseReply(recorded), { since, until, workers }),
+    { baseline },
+  );
+  assert.equal(lines[3], "07:02Z dap-grow=55 dap-lending=0");
+  assert.equal(lines.at(-1), "above-baseline dap-grow=0");
+  const limited = parseBaseline('{"dap-grow": {"floor": 40, "limit": 55}}');
+  assert.equal(
+    formatReport(aggregate(parseReply(recorded), { since, until, workers }), {
+      baseline: limited,
+    }).at(-1),
+    "above-baseline dap-grow=0",
+  );
+  const lower = parseBaseline(
+    '{"dap-grow": {"floor": 40, "peaks": {"03": 60}}}',
+  );
+  assert.equal(
+    formatReport(aggregate(parseReply(recorded), { since, until, workers }), {
+      baseline: lower,
+    })[3],
+    "07:02Z dap-grow=55 dap-lending=0 above: dap-grow(55>40)",
+  );
+  for (const [text, message] of [
+    ['{"dap-grow": {"floor": 40, "peaks": {"2": 60}}}', /two digits/],
+    ['{"dap-grow": {"floor": 40, "peaks": {"60": 60}}}', /two digits/],
+    [
+      '{"dap-grow": {"floor": 40, "peaks": {"02": 30}}}',
+      /at or above the limit/,
+    ],
+    [
+      '{"dap-grow": {"floor": 40, "limit": 44, "peaks": {"02": 42}}}',
+      /at or above the limit/,
+    ],
+    [
+      '{"dap-grow": {"floor": 40, "limit": 30}}',
+      /limit must be a number at or above the floor/,
+    ],
+    ['{"dap-grow": {"floor": 40, "extra": 1}}', /only floor, limit, peaks/],
+    ['{"dap-grow": "40"}', /floor or an object/],
+  ])
+    assert.throws(() => parseBaseline(text), message, text);
+});
+
+test("RR-2: the tracked baseline parses and flags a minute above a floor", async () => {
+  const text = await readFile(
+    new URL("../ops/do-rate-baseline.json", import.meta.url),
+    "utf8",
+  );
+  const baseline = parseBaseline(text);
+  assert.ok(baseline.has("dap-grow"), "the tracked baseline names dap-grow");
+  const grow = baseline.get("dap-grow");
+  // A quiet minute (no peak) one request above the limit flags; at the
+  // limit it does not.
+  const quiet = [...Array(60).keys()].find((m) => !grow.peaks.has(m));
+  const at = Date.UTC(2026, 10, 17, 21, quiet);
+  const report = (count) => ({
+    since: at,
+    until: at + 60_000,
+    workers: ["dap-grow"],
+    minutes: [{ at, counts: new Map([["dap-grow", count]]) }],
+    totals: new Map([["dap-grow", count]]),
+  });
+  assert.equal(
+    formatReport(report(grow.limit), { baseline }).at(-1),
+    "above-baseline dap-grow=0",
+  );
+  assert.equal(
+    formatReport(report(grow.limit + 1), { baseline }).at(-1),
+    "above-baseline dap-grow=1",
+  );
 });
 
 test("the query groups by minute and Worker script name", () => {
@@ -333,4 +411,100 @@ test("--all queries every Worker and reports each one that has rows, the busiest
     stderr: { write: () => {} },
   });
   assert.equal(both, 2);
+});
+
+test("RR-2: --objects reads one Worker's requests per Durable Object, the busiest first", async () => {
+  const a = "a".repeat(64),
+    b = "b".repeat(64),
+    c = "c".repeat(64);
+  const reply = {
+    data: {
+      viewer: {
+        accounts: [
+          {
+            durableObjectsInvocationsAdaptiveGroups: [
+              { sum: { requests: 15 }, dimensions: { objectId: b } },
+              { sum: { requests: 60 }, dimensions: { objectId: c } },
+              { sum: { requests: 15 }, dimensions: { objectId: a } },
+            ],
+          },
+        ],
+      },
+    },
+  };
+  const out = [],
+    err = [],
+    queries = [];
+  const code = await run(
+    [
+      "--objects",
+      "--worker",
+      "dap-grow",
+      "--minutes",
+      "3",
+      "--account",
+      account,
+    ],
+    {
+      env: { CLOUDFLARE_ANALYTICS_TOKEN: secret },
+      fetch: async (url, init) => {
+        queries.push(JSON.parse(init.body));
+        return new Response(JSON.stringify(reply), { status: 200 });
+      },
+      now: () => new Date(until + 30_000),
+      stdout: { write: (text) => out.push(text) },
+      stderr: { write: (text) => err.push(text) },
+    },
+  );
+  assert.equal(code, 0, err.join(""));
+  assert.equal(queries.length, 1);
+  assert.equal(queries[0].variables.s, "dap-grow");
+  assert.match(queries[0].query, /dimensions\{objectId\}/);
+  assert.deepEqual(out.join("").trim().split("\n"), [
+    "window 2026-11-17T07:00Z 2026-11-17T07:03Z minutes=3 worker=dap-grow",
+    `${c} 60 per-minute=20.0`,
+    `${a} 15 per-minute=5.0`,
+    `${b} 15 per-minute=5.0`,
+    "objects 3 total 90",
+  ]);
+  assert.ok(!out.join("").includes(secret));
+  for (const argv of [
+    ["--objects", "--minutes", "3"],
+    ["--objects", "--all", "--minutes", "3"],
+    [
+      "--objects",
+      "--worker",
+      "dap-grow",
+      "--worker",
+      "dap-lending",
+      "--minutes",
+      "3",
+    ],
+  ]) {
+    const refused = await run([...argv, "--account", account], {
+      env: { CLOUDFLARE_ANALYTICS_TOKEN: secret },
+      fetch: async () => assert.fail("no query on bad arguments"),
+      now: () => new Date(until + 30_000),
+      stdout: { write: () => {} },
+      stderr: { write: () => {} },
+    });
+    assert.equal(refused, 2, argv.join(" "));
+  }
+  assert.throws(
+    () =>
+      parseObjectReply({
+        data: {
+          viewer: {
+            accounts: [
+              {
+                durableObjectsInvocationsAdaptiveGroups: [
+                  { sum: { requests: 1 }, dimensions: { objectId: "short" } },
+                ],
+              },
+            ],
+          },
+        },
+      }),
+    /malformed/,
+  );
 });

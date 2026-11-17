@@ -277,24 +277,49 @@ application sandbox `dap-application-sandbox`, with its configuration in
    [Observe a deployment](operations.md) does not replace smoke.
    Lending has no analytics dataset.
 
-7. Read the Durable Object request rate for the 30 minutes after the
-   deployment.
+7. Wait 30 minutes after the last Worker deploys. Then read the Durable
+   Object request rate for those 30 minutes against the tracked baseline.
+   Give the minute after the last deployment as `--since`, because a
+   deployment wakes idle objects for a minute.
 
    ```sh
-   node scripts/do-rate.mjs --minutes 30 --token-file /absolute/analytics-token \
-     --baseline /absolute/do-rate-baseline.json
+   node scripts/do-rate.mjs --all \
+     --since 2026-11-17T20:37Z --until 2026-11-17T21:07Z \
+     --token-file /absolute/analytics-token \
+     --baseline ops/do-rate-baseline.json
    ```
 
-   The command prints requests per minute for each Worker, then each
-   Worker's total and per-hour rate. Compare the rate with the rate before
-   the deployment. The baseline file maps each Worker to a floor in
-   requests per minute, for example `{"dap-grow": 40}`. A line that ends
-   in `above:` names a Worker over its floor. Add `--all` once a day to read
-   every Worker in the account, including Workers that `deploy.mjs` does
-   not deploy. The token needs the Account Analytics read
-   permission. Without `--token-file`, the command reads
-   `CLOUDFLARE_ANALYTICS_TOKEN`, and `--account` or `CLOUDFLARE_ACCOUNT_ID`
-   gives the account. `--help` lists the other options.
+   The command prints requests per minute for each Worker in the account,
+   then each Worker's total and per-hour rate. `ops/do-rate-baseline.json`
+   gives each room Worker a floor, the measured rate in requests per
+   minute, and a limit at or above it. It also gives known peaks for
+   single minutes of the hour, such as the Grow demo's fault cycle. A line
+   that ends in `above:` names a Worker over its limit for that minute. The last line counts the flagged minutes for each
+   Worker.
+
+   If a Worker has flagged minutes:
+
+   1. Stop. Start no other deployment.
+   2. Read the requests for each Durable Object of that Worker over the
+      same window, to find the object that grew.
+
+      ```sh
+      node scripts/do-rate.mjs --objects --worker dap-grow \
+        --since 2026-11-17T20:37Z --until 2026-11-17T21:07Z \
+        --token-file /absolute/analytics-token
+      ```
+
+   3. File a finding with the window, the Worker, the flagged minutes and
+      the object rates.
+
+   When a reviewed change lowers or raises a rate on purpose, change the
+   baseline file in the same head, and give the new figures and their
+   window in the note.
+
+   The token needs the Account Analytics read permission. Without
+   `--token-file`, the command reads `CLOUDFLARE_ANALYTICS_TOKEN`, and
+   `--account` or `CLOUDFLARE_ACCOUNT_ID` gives the account. `--help`
+   lists the other options.
 
 8. Repeat `dap log` and `dap verify --all` on the same existing rooms.
    Compare the records with step 2. Keep the smoke results with the receipts.
