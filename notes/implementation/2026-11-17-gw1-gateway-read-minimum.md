@@ -52,8 +52,19 @@ verify the join and reported it as unknown. The NF-A1 audit (act
   other 13 pass. Evidence:
   `/Users/hughpyle/play/artroom-evidence/2026-11-17-gw1-red/`.
 
-## Deployment
+## Deployment and release
 
-The route runs in the sandbox Worker and the room Workers, so the change
-takes effect after the planner deploys them. A hosted NF-7 run with a fresh
-invitation then checks the join through `counter.inguz.space`.
+The route runs in three places, and each needs its own step:
+
+- The sandbox Worker and the room Workers take the rule when the planner
+  deploys them.
+- The Lending and Counter browser scripts bundle the route, so their open
+  0.5.0 presentations move: Lending `00598706`, Counter `9334159c`. Grow,
+  the room page and the MCP cards do not change.
+- An installed screen runs the bundle of its installed release. The
+  Counter screen on `counter.inguz.space` runs Counter 0.4.0, which keeps
+  the old route in the browser. A hosted join through that screen works
+  only after the planner signs and installs Counter 0.5.0.
+
+A hosted NF-7 run with a fresh invitation then checks the join through
+`counter.inguz.space`.
