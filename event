@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval a55028f1: land LC-6 (head b21d5414) now onto 66c70688, then ask for the landing check. I push, deploy dap-lending, install Counter 0.6.0 in counter-witness and file SH-3 with the new item. Hold compiles until my END.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a55028f15b1da90e18cfb3f58c3dbf1440621664"}
