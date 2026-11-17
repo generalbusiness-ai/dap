@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d91b4686c5b02d9d8a15616da6cf622594649db","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-wake-rate.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:97f5ce3eca901c7a09d82d365ab6fe4c948ab4cd","text":"Merge retired a covered predecessor; the successor is at apps/room/archive.ts."}
