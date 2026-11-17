@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3f2ab1aa7df67fecf375cab20cd5595842570b4a","text":"Merge retired a covered predecessor; the successor is at examples/grow/simulator-host.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:43240eeeefc1a8a6264c8bb9b753fb0375165b57","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-17-ar11-simulator-reads.md."}
