@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a834b04f9703f0e249e241baa41f217de46e6a49","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-17-ar8-index-cache.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c8e5100cfb2ae6ea32e5e819067d1a16628979c5","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/health.test.ts."}
