@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/known-scope-insert-only.test.mjs","body":{"commit":"7af0952f13e6f3ad24470c7bc2dad94065c95ed9","path":"scripts/known-scope-insert-only.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0833ca451c392b76ab383e1c625ec76f90c236e2","text":"Merge retired a covered predecessor; the successor is at scripts/known-scope-insert-only.test.mjs."}
