@@ -572,6 +572,7 @@ export class ArchiveDriver {
           attempted, state: observed.outcome?.state ?? "threw", reason: reason === undefined ? "none" : known.includes(reason) ? reason : "other",
           caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost,
           reservationCosts: ArchiveBudget.prototype.reservationCosts.call(budget),
+          stopCause: ArchiveBudget.prototype.stopCause.call(budget),
           parentRead, capacityRefusal, fixedFinish, sourceFailure, capacityObservation, ...(policyStop ? { policyStop } : {}),
         });
       } catch { /* Observation cannot replace the original archive result. */ }

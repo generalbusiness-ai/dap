@@ -10,6 +10,16 @@ export const ARCHIVE_SECONDS = 30;
 export type ArchiveCost = { -readonly [K in keyof typeof ARCHIVE_BOUNDS]: number };
 const keys = ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const;
 export type ArchiveStopReason = "limit" | "timeout" | "unavailable";
+/** AS-2: why a pass stopped as unavailable, for archive-pass-diagnostic-v1.
+ * Only the clock check, a failed wait and the send verifier name a cause. */
+export type ArchiveStopCause =
+  | { readonly site: "clock"; readonly clock: "not-finite" | "regressed" }
+  | { readonly site: "wait"; readonly error: string }
+  | { readonly site: "verifier"; readonly verifier: string };
+/** A bounded identifier for the log: an error or verifier name, never a message. */
+export function archiveStopName(value: unknown): string {
+  return typeof value === "string" && /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(value) ? value : "other";
+}
 export class ArchiveStopped extends Error {
   constructor(readonly reason: ArchiveStopReason, readonly capacityRefusal: ArchiveCapacityCheck | null = null) { super(`archive-${reason}`); }
 }
@@ -47,6 +57,7 @@ export class ArchiveBudget {
   readonly #until: number;
   #last: number;
   #stopped: ArchiveStopReason | null = null;
+  #stopCause: ArchiveStopCause | null = null;
   #reserve: ArchiveCost | null = null;
   #lookaheadBlocked = false;
   #lookaheadRefusal: ArchiveCapacityCheck | null = null;
@@ -63,14 +74,15 @@ export class ArchiveBudget {
     if (!Number.isFinite(this.#last)) throw new ArchiveStopped("unavailable");
     this.#until = this.#last + milliseconds;
   }
-  stop(reason: ArchiveStopReason, refusal: ArchiveCapacityCheck | null = null): never {
+  stop(reason: ArchiveStopReason, refusal: ArchiveCapacityCheck | null = null, cause: ArchiveStopCause | null = null): never {
+    if (this.#stopped === null) this.#stopCause = cause;
     this.#stopped ??= reason;
     throw new ArchiveStopped(this.#stopped, this.#stopped === reason ? refusal : null);
   }
   check(): void {
     if (this.#stopped) throw new ArchiveStopped(this.#stopped);
     const time = this.now();
-    if (!Number.isFinite(time) || time < this.#last) this.stop("unavailable");
+    if (!Number.isFinite(time) || time < this.#last) this.stop("unavailable", null, { site: "clock", clock: Number.isFinite(time) ? "regressed" : "not-finite" });
     this.#last = time;
     if (time >= this.#until) this.stop("timeout");
     if (this.#lookaheadBlocked) throw new ArchiveLookaheadLimited();
@@ -246,11 +258,13 @@ export class ArchiveBudget {
     } catch (error) {
       if (error instanceof ArchiveStopped || error instanceof ArchiveLookaheadLimited) throw error;
       if (this.#lookaheadBlocked) this.check();
-      return this.stop("unavailable");
+      return this.stop("unavailable", null, { site: "wait", error: error instanceof Error ? archiveStopName(error.name) : "non-error" });
     }
     finally { if (timer !== undefined) clearTimeout(timer); }
   }
   admitted(): ArchiveCost { return { ...this.#used }; }
+  /** The cause the first stop named, or null. */
+  stopCause(): ArchiveStopCause | null { return this.#stopCause; }
   /** A subordinate native read can only spend the original remaining time. */
   remaining(): number { this.check(); return Math.max(0, Math.floor(this.#until - this.#last)); }
 }
