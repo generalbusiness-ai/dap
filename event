@@ -1,1 +1,1 @@
-{"kind":"assert","text":"START full gate at AR-11 head da2e4804 (builder/ar11-climate-session-20261117, on local main a1fc2469 with RR-2). Two commits: the simulator change with its reds and seal, and the grow baseline lowered by 2 per the condition in bf58c417. No compile or test beside it until END.","body":{"gate":"start","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
+{"kind":"promise","text":"I will check the RR-2 landing on local main a1fc2469: parents, tree, message, receipt paths, trailers and the clean checkout."}
