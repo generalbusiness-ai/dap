@@ -417,7 +417,7 @@ const pendingR8Seals = {
   "packages/cli/src/status-report.ts": "6167375d4e69a8be6614b9445f2d2d5262d0b2ea59145628de9f183e94a60d5d", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/client/src/session.ts": "6e4a3c47ba2a2fc26e2df8a15cdb1e2f64a4dc9e1cb271ec6ea118752338ecfd", // Reviewed CLI session or verification boundary; ES-1 asks for standing on request and keeps it only after sessionStanding checks form and agreement.
   "apps/sandbox/worker.ts": "758b28ea299eddad07022a913d4b94d632814aa51f2868810300a582ee833f51", // Inject the reply window; retain the existing Native lifetime close on an observed HTTP disconnect.
-  "packages/client/src/application-gateway.ts": "738c72e3734ab7987c0838f0efdb2ea8ec5ee62e436876e519d99ef468d8d919", // GW-1: the five reads that take a minimum allow one canonical atLeast of the path's scope.
+  "packages/client/src/application-gateway.ts": "7745e62033ad7664837928e20d0f832fc02bd095534a6ea82f1a83d8fae0ec26", // PT-1: application-projection takes p before atLeast. GW-1: the five reads that take a minimum allow one canonical atLeast of the path's scope.
   "packages/client/src/application-route.ts": "62660d1d37d6d75f350d338a3efbb69c37ebcf8fd9d6dd2a27e21472e2d9c23b",
   "packages/scope/src/applications/bindings.ts": "b89e8155ad5479d5b4f9175b2e941ef80b54c75dc9af4a993401c544e150cd78",
 };

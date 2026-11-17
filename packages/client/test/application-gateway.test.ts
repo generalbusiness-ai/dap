@@ -71,6 +71,8 @@ test("gateway allows one canonical read minimum of the same scope on every read 
     for (const refused of ["atLeast=" + own + "&atLeast=" + own, "atLeast=TEST-not-canonical", "atLeast=", "atLeast=" + other, "atLeast=" + own + "&token=TEST"])
       expect(applicationGatewayRoute(host, join(url, refused), "GET"), name + " refuses " + refused.slice(0, 24)).toBe(false);
   }
+  // PT-1 (request 61a14dcd): application-projection takes p first, the one order that the room's parser reads.
+  expect(applicationGatewayRoute(host, at + "/application-projection?atLeast=" + own + "&p=TEST-native-parser-checks-this", "GET"), "projection with atLeast before p").toBe(false);
   // Reads that take no minimum, and every write, still refuse it.
   for (const [url, method] of [[at + "/outbox?atLeast=" + own, "GET"], [at + "/log?atLeast=" + own, "GET"], [at + "/stream?atLeast=" + own, "GET"],
     [at + "/query-items?q=TEST&atLeast=" + own, "GET"], [at + "/acts?atLeast=" + own, "POST"], [at + "/sessions?atLeast=" + own, "POST"]])
