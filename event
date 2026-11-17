@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/test.mjs","body":{"commit":"b2477fd34bfd1697d70d790dc4134c792b6a71ea","path":"scripts/test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0e9ecb1db5a8f3dc15c06cafccedd52f331ba3c8","text":"Merge retired a covered predecessor; the successor is at scripts/do-rate.test.mjs."}
