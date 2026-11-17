@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval 3368d5cf: land AR-5 (head 2a803a69) now onto 957e0ba4, then ask for the landing check. Hold the HL-1 gate until my deployment END: I push, deploy grow, lending and demo, and read the dap-grow rate for 15 minutes after deployment (the Directory must make no pass after its first activation).","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3368d5cf1fbcf9ea9d1887d6316789fd4db1515d"}
