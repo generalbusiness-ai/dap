@@ -33,7 +33,8 @@ import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
-import { saveFailedPage } from "./witness-failure-page.mjs";
+import { redact, saveFailedPage } from "./witness-failure-page.mjs";
+import { recordRequests } from "./witness-request-shape.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../../../..");
@@ -140,6 +141,7 @@ async function hostedCounter(screen) {
   }
   browser = await chromium.launch({ executablePath: CHROMIUM, headless: process.env.WITNESS_HEADLESS === "1" });
   const counterContext = await browser.newContext();
+  hostedRequests = recordRequests(counterContext);
   let reader = null;
   counterContext.on("request", request => {
     if (new URL(request.url()).pathname.startsWith(`/v1/scopes/${target}`)) {
@@ -217,6 +219,8 @@ async function hostedCounter(screen) {
 
 const report = { join: {}, counter: {}, storage: { ran: false } };
 let browser = null;
+/** NF-9: the shapes of the hosted page's requests, written to the private failure note when a run stops. */
+let hostedRequests = null;
 try {
   if (screen) await hostedCounter(screen);
   else {
@@ -352,7 +356,8 @@ try {
   }
 } catch (error) {
   if (hostedPage) report.failurePage = await saveFailedPage(hostedPage.page, hostedPage.evidence, hostedPage.secrets);
-  writeFileSync(join(WITNESS_DIR, "failure-private.txt"), String(error), { mode: 0o600, flag: "wx" });
+  const requests = hostedRequests ? ["", "Requests, oldest first (shapes only):", ...hostedRequests.lines()] : [];
+  writeFileSync(join(WITNESS_DIR, "failure-private.txt"), redact([String(error), ...requests].join("\n"), hostedPage?.secrets), { mode: 0o600, flag: "wx" });
   failures.push({ name: "witness run", actual: "stopped; details stay in the private failure file", expected: null });
 } finally {
   await browser?.close().catch(() => {});
