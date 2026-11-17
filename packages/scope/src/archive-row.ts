@@ -32,7 +32,15 @@ interface ArchiveWake {
   /** Consecutive pre-Mark retries without progress, at most 32 (AR-1).
    * Absent on old wakes and after any write that records progress. */
   readonly retries?: number;
+  /** AR-4: the Directory named no archive destination at the last pass.
+   * "directory" marks the Directory itself, whose next commit clears the
+   * marker (a bind-archive act is one). "member" marks a scope that the
+   * Directory reaches; its own commits leave the marker and its daily
+   * recheck alone. Absent on every other wake. */
+  readonly unbound?: ArchiveUnboundScope;
 }
+/** AR-4: which scope holds an unbound marker. */
+export type ArchiveUnboundScope = "directory" | "member";
 type Format = "sha1" | "sha256";
 export interface ArchivedPosition { readonly commit: string; readonly through: Head; readonly layout?: 2; readonly anchorsPublished?: true }
 export interface ArchiveMark extends Omit<ArchivedPosition, "anchorsPublished"> {
@@ -55,7 +63,7 @@ export interface ArchiveRow {
   readonly next: Timestamp | null;
   readonly stopped: { readonly reason: string; readonly where: string | null } | null;
 }
-export interface ArchiveStoredWake { readonly pending: boolean; readonly stopped: boolean; readonly next: Timestamp | null }
+export interface ArchiveStoredWake { readonly pending: boolean; readonly stopped: boolean; readonly next: Timestamp | null; readonly unbound?: ArchiveUnboundScope }
 /** Operator retry eligibility only. Source/export admission still runs afresh. */
 export function archiveRestartEligible(row: ArchiveRow, wake: ArchiveStoredWake | null): boolean {
   return (row.stopped?.reason === "limit" || row.stopped?.reason === "foreign-source-unavailable")
@@ -380,8 +388,10 @@ export class ArchiveRows {
     catch { return refuse("unavailable"); }
     if (!isRecord(value)) return refuse("unavailable");
     const counts = ["capacityDeferrals", "retries"].filter(key => Object.hasOwn(value, key));
-    if (!fields(value, [...counts, "next", "pending", "stopped"].sort().join(","))
+    const marked = Object.hasOwn(value, "unbound") ? ["unbound"] : [];
+    if (!fields(value, [...counts, ...marked, "next", "pending", "stopped"].sort().join(","))
       || counts.some(key => !natural(value[key]) || value[key] === 0 || (value[key] as number) > 32)
+      || marked.length && (value["unbound"] !== "directory" && value["unbound"] !== "member" || value["pending"] !== false || value["stopped"] !== false || typeof value["next"] !== "string")
       || typeof value["pending"] !== "boolean" || typeof value["stopped"] !== "boolean" || value["next"] !== null && (typeof value["next"] !== "string" || timeMs(value["next"]) === null)) return refuse("unavailable");
     return value as unknown as ArchiveWake;
   }
@@ -492,18 +502,33 @@ export class ArchiveRows {
       } };
     });
   }
+  /** AR-4: record that the Directory names no archive destination. The
+   * marker replaces the pass's own deferred retry and waits until `next`,
+   * the daily recheck. A stopped writer stays stopped. */
+  unbound(scope: ArchiveUnboundScope, next: Timestamp, budget = new ArchiveBudget()): void {
+    if (timeMs(next) === null) return refuse("unavailable");
+    this.#sql.transaction(() => {
+      if (this.#wake(budget)?.stopped) return;
+      budget.spend({ calls: 1, inputWork: 4096 }); budget.check();
+      this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", WAKE, canonicalize({ pending: false, stopped: false, next, unbound: scope })).toArray();
+      budget.check();
+    });
+  }
   clearWake(budget = new ArchiveBudget()): void {
     budget.spend({ calls: 1, inputWork: 4096 }); budget.check();
     this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", WAKE, canonicalize({ pending: false, stopped: false, next: null })).toArray();
     budget.check();
   }
   /** New entries only change the tiny wake index. An outstanding retry keeps
-   * its backoff, and a stopped writer is never silently restarted. */
+   * its backoff, and a stopped writer is never silently restarted. AR-4: a
+   * member's unbound marker keeps its daily recheck, so a lane that commits
+   * every minute makes no pass per commit. A commit in the Directory drops
+   * its own marker and wakes the Directory now. */
   signal(at: Timestamp, budget = new ArchiveBudget()): void {
     this.#sql.transaction(() => {
       if (timeMs(at) === null) return refuse("unavailable");
       const wake = this.#wake(budget);
-      if (wake?.stopped || wake?.pending || wake?.next && timeMs(wake.next)! <= timeMs(at)!) return;
+      if (wake?.stopped || wake?.pending || wake?.unbound === "member" || wake?.next && timeMs(wake.next)! <= timeMs(at)!) return;
       budget.spend({ calls: 1, inputWork: 4096 }); budget.check();
       this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", WAKE, canonicalize({ pending: false, stopped: false, next: at })).toArray();
       budget.check();

@@ -53,10 +53,10 @@ export interface FixtureArchiveProvider extends ArchiveProvider { readonly fixtu
 export interface FixtureArchivePolicies { readonly fixture: "archive-policies"; readonly registry: ArchivePolicyRegistry }
 export interface FixtureArchiveTarget {
   readonly fixture: "archive-target";
-  resolve(at: SequenceRef, seed: Seed, budget: ArchiveBudget): Promise<DestinationRepository | null>;
+  resolve(at: SequenceRef, seed: Seed, budget: ArchiveBudget): Promise<DestinationRepository | "unbound" | null>;
 }
 export interface ArchiveTarget {
-  resolve(at: SequenceRef, seed: Seed, budget: ArchiveBudget): Promise<DestinationRepository | null>;
+  resolve(at: SequenceRef, seed: Seed, budget: ArchiveBudget): Promise<DestinationRepository | "unbound" | null>;
 }
 export interface RoomArchiveDriverOptions extends Omit<FixtureArchiveDriverOptions, "policies" | "provider" | "target"> {
   readonly production: "room-binding";
@@ -93,6 +93,9 @@ export interface ArchivePass { readonly state: "idle" | "disabled" | "retry" | "
 export const ARCHIVE_RETRY_FLOOR_SECONDS = 60;
 /** AR-1: the backoff stops growing at one hour. */
 export const ARCHIVE_RETRY_MAX_SECONDS = 3600;
+/** AR-4: a scope whose Directory names no archive destination checks again
+ * once a day. A Directory commit wakes the Directory sooner. */
+export const ARCHIVE_UNBOUND_RECHECK_SECONDS = 86_400;
 
 export class ArchiveDriver {
   readonly #options: FixtureArchiveDriverOptions | RoomArchiveDriverOptions;
@@ -272,6 +275,15 @@ export class ArchiveDriver {
       }
       step = "target";
       const productionTarget = "production" in this.#options ? await budget.wait(() => this.#options.target.resolve(at, { ...pin.seed, creator: pin.seed.creator ? { ...pin.seed.creator } : null }, budget)) : null;
+      if (productionTarget === "unbound") {
+        // AR-4: a definite answer, not a transient failure. The marker
+        // replaces the deferred retry above and holds until the recheck.
+        detail = "target-unbound";
+        const now = timeMs(this.#options.clock()), recheck = now === null ? null : timeOf(now + ARCHIVE_UNBOUND_RECHECK_SECONDS * 1000);
+        if (recheck === null) return done({ state: "retry", next: scheduled, reason: "unavailable" });
+        rows.unbound(pin.seed.kind === "directory" ? "directory" : "member", recheck, budget);
+        return done({ state: "disabled", next: recheck, reason: "unbound" });
+      }
       if ("production" in this.#options && (!productionTarget || row && !same(row.repository, productionTarget))) {
         detail = productionTarget ? "target-different" : "target-missing";
         return done({ state: "retry", next: scheduled, reason: "unavailable" });
@@ -283,7 +295,7 @@ export class ArchiveDriver {
           deferred = true;
         }
         const repository = productionTarget ?? await budget.wait(() => this.#options.target.resolve(at, { ...pin.seed, creator: pin.seed.creator ? { ...pin.seed.creator } : null }, budget));
-        if (!repository) return done({ state: "retry", next: this.#later(0), reason: "unavailable" });
+        if (!repository || repository === "unbound") return done({ state: "retry", next: this.#later(0), reason: "unavailable" });
         const captured = { ...repository };
         step = "format";
         const format = await budget.wait(() => this.#options.provider.format({ ...captured }, allowed));
@@ -544,7 +556,7 @@ export class ArchiveDriver {
       if (credential) { try { budget.check(); await budget.wait(() => this.#options.provider.revokeArchive(credential!)); } catch { /* The short-lived credential may expire; it is never recorded. */ } }
       try {
         const reason = observed.outcome?.reason;
-        const known = ["application-policy-revoked", "application-policy-unavailable", "limit", "timeout", "unavailable", "conflict", "mismatch", "parent", "missing-input", "rebuild-mismatch", "unsupported-archive-cohort", "foreign-source-unavailable"];
+        const known = ["application-policy-revoked", "application-policy-unavailable", "limit", "timeout", "unavailable", "conflict", "mismatch", "parent", "missing-input", "rebuild-mismatch", "unsupported-archive-cohort", "foreign-source-unavailable", "unbound"];
         const position = (value: number | null) => value !== null && Number.isSafeInteger(value) && value >= 0 ? value : null;
         const cost = budget.admitted();
         const states = ["idle", "disabled", "retry", "stopped", "confirmed"];

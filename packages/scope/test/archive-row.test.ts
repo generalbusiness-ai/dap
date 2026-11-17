@@ -197,6 +197,28 @@ test("persists retries and stops with a small wake index", async () => {
   await expect(rows(lane, store => store.confirm(mark.commit))).rejects.toThrow("archive-row-stopped");
 });
 
+// AR-4: a member's unbound marker survives its own commits; the Directory's
+// next commit drops its marker and wakes it now. A stopped writer stays
+// stopped, and the stored marker carries no pending retry.
+test("unbound markers: a member keeps its recheck, a Directory commit wakes the Directory", async () => {
+  const lane = await create();
+  await rows(lane, store => { store.unbound("member", at(86_400)); store.signal(at(1)); store.signal(at(2)); });
+  await lane.restart();
+  expect(await rows(lane, store => store.wake())).toBe(at(86_400));
+  expect(await rows(lane, store => store.storedWake())).toEqual({ pending: false, stopped: false, next: at(86_400), unbound: "member" });
+  await rows(lane, store => { store.unbound("directory", at(86_400)); store.signal(at(3)); });
+  expect(await rows(lane, store => store.storedWake())).toEqual({ pending: false, stopped: false, next: at(3) });
+  // A pass's deferred retry replaces the marker, and the marker replaces it.
+  await rows(lane, store => { store.unbound("member", at(86_400)); store.defer(() => at(60)); });
+  expect(await rows(lane, store => store.storedWake())).toEqual({ pending: true, stopped: false, next: at(60), retries: 1 });
+  for (const malformed of [{ pending: true, stopped: false, next: at(9), unbound: "member" }, { pending: false, stopped: false, next: null, unbound: "member" }, { pending: false, stopped: false, next: at(9), unbound: "other" }]) {
+    await lane.inside(state => { state.storage.sql.exec("INSERT INTO meta (k, v) VALUES ('archive-wake-1', ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", canonicalize(malformed)); });
+    await expect(rows(lane, store => store.wake()), canonicalize(malformed)).rejects.toThrow("archive-row-unavailable");
+  }
+  await rows(lane, store => { store.clearWake(); store.target(repository, "sha1"); store.stop("conflict"); store.unbound("member", at(86_400)); });
+  expect(await rows(lane, store => store.wake())).toBeNull();
+});
+
 // The reservation is paid before planning; the actual CAS needs no new
 // allowance and cannot replace a Mark with identical wake bytes.
 test("capacity wake reservations preserve old rows, saturate and refuse a stale Mark", async () => {

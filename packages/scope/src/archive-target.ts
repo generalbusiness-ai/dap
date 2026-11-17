@@ -11,6 +11,7 @@ import { isRoomRetiredStop, type RoomRetiredStop } from "./room-retired.ts";
 import type { FixtureArchiveTarget } from "./archive-driver.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import type { NativeItemQuery } from "./item-queries.ts";
+import type { ArchiveHostItemReply } from "./archive-host-item.ts";
 import { readNativeBirth, type NativeBirthSource } from "./native-birth.ts";
 import { namespace, type Binding } from "./namespace.ts";
 import type { ArchiveReplayContext, ExpectedDirectoryRulesRoot } from "./archive-publication.ts";
@@ -23,7 +24,7 @@ export interface FixtureArchiveTargetReads {
 }
 export interface ArchiveTargetReads {
   readonly births: NativeBirthSource;
-  query(at: SequenceRef, encoded: string, archiving: SequenceRef, directory: SequenceRef): Promise<NativeItemQuery>;
+  query(at: SequenceRef, encoded: string, archiving: SequenceRef, directory: SequenceRef): Promise<ArchiveHostItemReply>;
 }
 export interface ArchiveDependencyScope {
   readonly at: SequenceRef;
@@ -59,6 +60,10 @@ export function fixtureArchiveTarget(reads: FixtureArchiveTargetReads): FixtureA
 export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDependencyTarget, "fixture"> & {
   resolveRoom(at: SequenceRef, seed: Seed, budget: ArchiveBudget): Promise<DestinationRepository | null>;
   discoverRoom(at: SequenceRef, seed: Seed, budget: ArchiveBudget): Promise<ArchiveDependencyPlan | null>;
+  /** AR-4: the production room's lookup. A lane reads in room mode, every
+   * other scope reads the whole route. "unbound" means the Directory's
+   * repository row names no archive destination. */
+  bound(at: SequenceRef, seed: Seed, budget: ArchiveBudget): Promise<ArchiveDependencyPlan | "unbound" | null>;
 } {
   const birth = async (at: SequenceRef, budget: ArchiveBudget) => {
     const reservation = budget.reserve({ nodes: 1, calls: 1, metadata: BIRTH_BYTES, inputWork: BIRTH_BYTES * 8 });
@@ -76,19 +81,22 @@ export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDep
     if (encodedCreator !== null && creator === null) return null;
     return { entry, seed: entry.input.seed, creator, named: found.named, sequence };
   };
-  const one = async (at: SequenceRef, type: string, states: readonly string[], budget: ArchiveBudget, archiving: SequenceRef, directory: SequenceRef): Promise<Item | null> => {
+  const one = async (at: SequenceRef, type: string, states: readonly string[], budget: ArchiveBudget, archiving: SequenceRef, directory: SequenceRef): Promise<Item | "unbound" | null> => {
     const query: ItemQuery = { v: 1, scope: { ...at }, type, states, ids: null, limit: 1, cursor: null };
     const encoded = encodeItemQueryParameter(query); if (!encoded) return null;
     const reservation = budget.reserve({ calls: 1, metadata: ITEM_QUERY_BOUNDS.payloadBytes, inputWork: ITEM_QUERY_BOUNDS.payloadBytes * 4 });
     const answer = await budget.wait(() => reads.query({ ...at }, encoded, archiving, directory));
-    if (!answer.ok || typeof answer.serialized !== "string" || answer.serialized.length > ITEM_QUERY_BOUNDS.payloadBytes) return null;
+    // AR-4: only the Directory host answers "unbound"; every other refusal
+    // stays a transient null that keeps the AR-1 backoff.
+    if (!answer.ok) return answer.reason === "unbound" && same(at, directory) ? "unbound" : null;
+    if (typeof answer.serialized !== "string" || answer.serialized.length > ITEM_QUERY_BOUNDS.payloadBytes) return null;
     const serialized = utf8(answer.serialized);
     if (serialized.length > ITEM_QUERY_BOUNDS.payloadBytes) return null;
     const page = readItemQueryReply(serialized, query);
     if (page) budget.settle(reservation, serialized.length);
     return page?.ok && page.complete && page.value.items.length === 1 ? page.value.items[0]! : null;
   };
-  const locate = async (at: SequenceRef, seed: Seed, budget: ArchiveBudget, mode: "legacy" | "room" | "all"): Promise<ArchiveDependencyPlan | null> => {
+  const locate = async (at: SequenceRef, seed: Seed, budget: ArchiveBudget, mode: "legacy" | "room" | "all"): Promise<ArchiveDependencyPlan | "unbound" | null> => {
     const dependencies = mode !== "legacy";
     if (!isSequenceRef(at) || !isSeed(seed) || scopeIdOf(seed) !== at.scope) return null;
     at = { ...at }; const archiving = { ...at }; seed = { ...seed, creator: seed.creator ? { ...seed.creator } : null };
@@ -136,13 +144,14 @@ export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDep
         const cohort = archiveTargetCohort(found.named);
         if (dependencies && !cohort) return null;
         const room = await one(at, "repository", ["open"], budget, archiving, at);
+        if (room === "unbound") return room;
         if (room?.values["archive"] !== "journal") return null;
         const configured = repository(room?.values["repository"]), destination = room?.refs["destination"];
         if (!configured || !isSequenceRef(destination)) return null;
         const target = await birth(destination, budget);
         if (!target || target.sequence.kind !== "destination" || !isOf(target.named, "platform:destination") || !same(target.creator, at)) return null;
         const branch = await one(destination, "branch", ["empty", "ready"], budget, archiving, at);
-        if (!branch || !same(branch.refs["directory"], at) || !same(repository(branch.values["repository"]), configured)) return null;
+        if (!branch || branch === "unbound" || !same(branch.refs["directory"], at) || !same(repository(branch.values["repository"]), configured)) return null;
         if (dependencies) {
           const rules = room.refs["rules"];
           // Equal declaration bytes do not permit mixing versioned families.
@@ -184,16 +193,20 @@ export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDep
     return null;
   };
   return {
-    async resolve(at, seed, budget) { const found = await locate(at, seed, budget, "legacy"); return found ? { ...found.repository } : null; },
+    async resolve(at, seed, budget) { const found = await locate(at, seed, budget, "legacy"); return found && found !== "unbound" ? { ...found.repository } : null; },
     async resolveRoom(at, seed, budget) {
       if (!isSequenceRef(at) || seed.kind !== "lane") return null;
-      const found = await locate(at, seed, budget, "room"); return found ? { ...found.repository } : null;
+      const found = await locate(at, seed, budget, "room"); return found && found !== "unbound" ? { ...found.repository } : null;
     },
     async discoverRoom(at, seed, budget) {
       if (!isSequenceRef(at) || seed.kind !== "lane") return null;
-      return locate(at, seed, budget, "room");
+      const found = await locate(at, seed, budget, "room"); return found === "unbound" ? null : found;
     },
-    discover: (at, seed, budget) => locate(at, seed, budget, "all"),
+    async discover(at, seed, budget) { const found = await locate(at, seed, budget, "all"); return found === "unbound" ? null : found; },
+    async bound(at, seed, budget) {
+      if (seed.kind === "lane" && !isSequenceRef(at)) return null;
+      return locate(at, seed, budget, seed.kind === "lane" ? "room" : "all");
+    },
   };
 }
 

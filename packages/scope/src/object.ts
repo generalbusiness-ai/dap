@@ -57,7 +57,7 @@ import { CredentialStore } from "./credential-store.ts";
 import { Originals, type OriginalBytes, type OriginalEnded, type OriginalKept, type OriginalPage } from "./originals.ts";
 import { type ArchiveDriver, type FixtureArchiveDriverOptions, type RoomArchiveDriverOptions } from "./archive-driver.ts";
 import { archiveRowDiagnostic } from "./archive-operator.ts";
-import { archiveHostItem, type ArchiveHostConfiguration, type ArchiveHostItemAsk } from "./archive-host-item.ts";
+import { archiveHostItem, type ArchiveHostConfiguration, type ArchiveHostItemAsk, type ArchiveHostItemReply } from "./archive-host-item.ts";
 import { GenesisProofs, type ProofTimer } from "./genesis-proof.ts";
 import { EXACT_PROOF_RECEIVER_BOUNDS, ProofBytes } from "./proof-bytes.ts";
 import { PreparationFlights } from "./preparation-flight.ts";
@@ -141,7 +141,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #archive!: ArchiveDriver | null;
   readonly #archiveRestart!: unknown;
   readonly #floorOffer!: (() => import("@generalbusiness/dap-contract").FloorInput | null) | null;
-  readonly #archiveItem!: (ask: ArchiveHostItemAsk) => import("./item-queries.ts").NativeItemQuery;
+  readonly #archiveItem!: (ask: ArchiveHostItemAsk) => ArchiveHostItemReply;
   readonly #name!: ScopeId | null;
   readonly #store!: SqliteStore;
   readonly #registerGenesis!: Wiring["registerGenesis"];
