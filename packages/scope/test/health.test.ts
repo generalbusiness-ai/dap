@@ -39,7 +39,7 @@ test("host-none health probes its actual active Native Register without reposito
   expect(await life.wait(() => node.entries())).toEqual(before);
 });
 
-test("production health keeps indexed transport identity for concurrent and cached probes without caching admission", async () => {
+test("production health keeps indexed transport identity for concurrent and cached probes and caches only positive admission", async () => {
   // Transport/readiness are stand-ins. Production fetch and HealthProbe are
   // actual; a deferred response exposes the physical single-flight boundary.
   const name = scopeIdOf({ v: 1, kind: "register", definition: "platform:register@3", creator: null, cause: digestBytes(utf8(crypto.randomUUID())), ordinal: 0 });
@@ -58,19 +58,27 @@ test("production health keeps indexed transport identity for concurrent and cach
   expect((await Promise.all([first, second])).map(response => response.status)).toEqual([200, 200]);
   expect((await scopeWorker.fetch(request(), { ...base, SCOPE_INDEX_MODE: "enforce" })).status).toBe(200);
   expect({ calls, indexReads }).toEqual({ calls: 1, indexReads: 1 });
-  // A real new RPC still checks the index; the stable adapter stores no has()
-  // answer. Health's existing five-second readiness cache is a separate layer.
-  admitted = false;
+  // AR-8: the stable adapter keeps a positive has() answer for this isolate,
+  // so a real new RPC to the same name asks the index no more. Health's
+  // existing five-second readiness cache is a separate layer.
   const scopes = indexedScopes(base.SCOPES, base);
-  expect(await (scopes.get(scopes.idFromName(name)) as { readiness(): Promise<string> }).readiness()).toBe("absent");
-  expect({ calls, indexReads }).toEqual({ calls: 1, indexReads: 2 });
+  expect(await (scopes.get(scopes.idFromName(name)) as { readiness(): Promise<string> }).readiness()).toBe("ready");
+  expect({ calls, indexReads }).toEqual({ calls: 2, indexReads: 1 });
+  // A negative answer is never kept: a binding without the positive answer
+  // asks the index again and is refused before any target.
+  admitted = false;
+  const unseen = { ...target } as unknown as DurableObjectNamespace;
+  const fresh = indexedScopes(unseen, base);
+  expect(await (fresh.get(fresh.idFromName(name)) as { readiness(): Promise<string> }).readiness()).toBe("absent");
+  expect(await (fresh.get(fresh.idFromName(name)) as { readiness(): Promise<string> }).readiness()).toBe("absent");
+  expect({ calls, indexReads }).toEqual({ calls: 2, indexReads: 3 });
   expect((await scopeWorker.fetch(request(), { ...base, SCOPE_INDEX_MODE: "invalid" })).status).toBe(503);
-  expect({ calls, indexReads }).toEqual({ calls: 1, indexReads: 2 });
+  expect({ calls, indexReads }).toEqual({ calls: 2, indexReads: 3 });
   let replacementReads = 0;
   const replacement = { idFromName: (value: string) => value, get: () => ({ ...index, async has() { replacementReads++; return false; } }) };
   expect((await scopeWorker.fetch(request(), { ...base, SCOPE_INDEX: replacement })).status).toBe(503);
   expect(replacementReads).toBe(1);
-  expect(calls).toBe(1);
+  expect(calls).toBe(2);
 
   // A retired readiness RPC is unavailable, not evidence of an absent room.
   let retiredCalls = 0;

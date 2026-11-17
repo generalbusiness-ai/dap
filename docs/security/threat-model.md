@@ -14,12 +14,12 @@ The model protects five things. Each one has an invariant in
 [Invariants and their limits](#invariants-and-their-limits), and that
 table states the qualification.
 
-| Protected | Invariant |
-|---|---|
-| The effect of an act. An ordinary declared act takes effect only with a grant. | `grant` |
-| Outside systems. A forged or mismatched origin reaches no provider. | `sealed-operation` |
-| A room's content. A read session opens only the reads in its claims. | `session-membership` |
-| The set of scopes. Only a target's verified genesis registers it. | `verified-genesis` |
+| Protected                                                                      | Invariant            |
+| ------------------------------------------------------------------------------ | -------------------- |
+| The effect of an act. An ordinary declared act takes effect only with a grant. | `grant`              |
+| Outside systems. A forged or mismatched origin reaches no provider.            | `sealed-operation`   |
+| A room's content. A read session opens only the reads in its claims.           | `session-membership` |
+| The set of scopes. Only a target's verified genesis registers it.              | `verified-genesis`   |
 | Credentials. A read token or workspace token leaves private custody only once. | `credential-custody` |
 
 A deployment also holds a secret and bindings that carry authority:
@@ -71,13 +71,13 @@ membership for this answer.
 The [witness inventory](#witnesses) names executable tests by file and
 literal case name. Its invariant keys refer to these claims:
 
-| Invariant | Required behavior and qualification |
-|---|---|
-| `grant` | An ordinary declared act takes effect only with an observed grant for its key, action and scope. Expired or unavailable standing cannot authorize a fresh act. Trusted platform acts and genesis have their own pinned authority rules. A cached observation can remain valid during its defined window; revocation is not instantaneous across scopes. |
-| `sealed-operation` | An outside operation starts from its committed opening entry and exact operation, attempt and scope. A forged or mismatched origin reaches no provider. This applies to native operation effects. Authenticated reads, proof fetches, telemetry and provider readiness probes can precede an act's commit. The [entry-point inventory](entry-points.md) records that work. |
-| `session-membership` | A room read session opens only the reads in its claims, for its exact deployment and Membership reference, until expiry. It opens no other room's ordinary scope. The pinned Register has a separate read policy for rooms it created, described in [Deployment trust boundaries](trust-boundaries.md). A revoked key can retain an already-issued session until its end. |
-| `verified-genesis` | In enforce mode, an unknown scope ID reaches no target object, and only a target's verified applied genesis registers it. Native creation is an explicit exception: after serving admission, a refused creation can leave unregistered target storage. In register mode, any unknown, well-formed scope ID reaches `registerKnown()` on a new target object. Constructing that object writes the full schema, and no serving window bounds an unsigned request on this path. Neither mode establishes that no physical object exists without a genesis. |
-| `credential-custody` | A read or workspace token leaves private custody only once, to the session key that prepared it and only while the token and its recorded use remain eligible. Journal entries contain no token plaintext. A provider credential already disclosed to that key remains governed by its provider lifetime and revocation behavior. |
+| Invariant            | Required behavior and qualification                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `grant`              | An ordinary declared act takes effect only with an observed grant for its key, action and scope. Expired or unavailable standing cannot authorize a fresh act. Trusted platform acts and genesis have their own pinned authority rules. A cached observation can remain valid during its defined window; revocation is not instantaneous across scopes.                                                                                                                                                                                                 |
+| `sealed-operation`   | An outside operation starts from its committed opening entry and exact operation, attempt and scope. A forged or mismatched origin reaches no provider. This applies to native operation effects. Authenticated reads, proof fetches, telemetry and provider readiness probes can precede an act's commit. The [entry-point inventory](entry-points.md) records that work.                                                                                                                                                                              |
+| `session-membership` | A room read session opens only the reads in its claims, for its exact deployment and Membership reference, until expiry. It opens no other room's ordinary scope. The pinned Register has a separate read policy for rooms it created, described in [Deployment trust boundaries](trust-boundaries.md). A revoked key can retain an already-issued session until its end.                                                                                                                                                                               |
+| `verified-genesis`   | In enforce mode, an unknown scope ID reaches no target object, and only a target's verified applied genesis registers it. Native creation is an explicit exception: after serving admission, a refused creation can leave unregistered target storage. In register mode, any unknown, well-formed scope ID reaches `registerKnown()` on a new target object. Constructing that object writes the full schema, and no serving window bounds an unsigned request on this path. Neither mode establishes that no physical object exists without a genesis. |
+| `credential-custody` | A read or workspace token leaves private custody only once, to the session key that prepared it and only while the token and its recorded use remain eligible. Journal entries contain no token plaintext. A provider credential already disclosed to that key remains governed by its provider lifetime and revocation behavior.                                                                                                                                                                                                                       |
 
 The `verified-genesis` row states the limit of that invariant. The software
 does not promise zero target SQL for a native creation that passes serving
@@ -115,6 +115,17 @@ verifies the request signature and applies the signed-read serving windows
 of one key and one address. The census owner then reads the register's
 genesis proof, up to 1 MiB within 10 seconds. Only after that read does it
 compare the founding actor with the caller.
+
+The scope-index adapter keeps positive `has()` answers in isolate memory
+(AR-8). It keys each answer by the scopes binding, the index binding, the
+mode, the name and the kind, and holds at most 4,096 answers per isolate,
+dropping the oldest first. It never keeps a negative answer or an error, so
+an unknown name still reaches the index and the adapter refuses it. A kept
+answer cannot go stale while `known_scope` rows are insert-only: `register`
+adds a row with `ON CONFLICT DO NOTHING`, and no code deletes or updates a
+row. `scripts/known-scope-insert-only.test.mjs` fails when a source changes
+or removes `known_scope` rows. A future delete path must also clear this
+cache.
 
 A remote authority run reserves a signing-key place only after a checked
 Membership observation grants current standing. Once-only grants count too:
@@ -224,6 +235,11 @@ scripted recorded state. See [stand-ins and what they show](../testing-reference
     "invariant": "verified-genesis",
     "path": "packages/scope/test/scope-index.test.ts",
     "name": "unknown scope gate touches no target and only the native target's applied genesis registers"
+  },
+  {
+    "invariant": "verified-genesis",
+    "path": "packages/scope/test/scope-index.test.ts",
+    "name": "AR-8: a positive has() is asked once per isolate; a negative or failed answer is asked again and refused"
   },
   {
     "invariant": "credential-custody",

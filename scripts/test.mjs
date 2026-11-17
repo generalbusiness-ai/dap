@@ -26,6 +26,7 @@ export const nodeFiles = [
   'scripts/check-doc-links.test.mjs',
   'apps/counter/scripts/node-witness.test.mjs',
   'scripts/deploy-check.test.mjs',
+  'scripts/known-scope-insert-only.test.mjs',
   'scripts/deploy.test.mjs',
   'scripts/deploy-smoke.test.mjs',
   'scripts/register-values.test.mjs',
