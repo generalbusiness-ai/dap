@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a7f16135225069c19cfe3ab586ad643cbbf8c589","text":"Replaced by the review request for exact head 6188b53b787918eb29cbbf3a53febe85bfb73ce1; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
+{"kind":"promise","text":"I will review CB-2 at head 6188b53b for request 2bc63ac8 (implementation request ced2f264, promise 340635c1) against base e3392a05, against my c2404ee4, with Architecture, Security and Simplification conclusions."}
