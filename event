@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/client/src/application-gateway.ts","body":{"commit":"fc42cf3e8bed4eae70fd0bce6c04ee74233a9f4e","path":"packages/client/src/application-gateway.ts"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/client/test/application-gateway.test.ts","body":{"commit":"fc42cf3e8bed4eae70fd0bce6c04ee74233a9f4e","path":"packages/client/test/application-gateway.test.ts"}}
