@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b764f70fad4ac3b34cbb6efc5bac3642b0ff0471","text":"Merge retired a covered predecessor; the successor is at apps/counter/dap.application.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c5b3102f19e637e791f92534b541ad100cab1777","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-14-lc1-lending-counter-releases.md."}
