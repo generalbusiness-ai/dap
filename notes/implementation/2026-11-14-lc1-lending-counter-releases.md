@@ -332,3 +332,45 @@ The joint focused outer wall was 55.508290334 s. Security, Agent, Scope's two in
 The exact-head preflight and one joint gate passed under END `24537e4f42759f8ea95547f6be7a119f7ae1dcb7`. Independent review remains owed. Planner assertion `a26cd1d7d974e7b57c6ee4ed97c18b021dc8fb92` records Local Worker smoke run 43806153520 green in 45 s at dad; it stands for review only if the gated successor differs solely under notes. Planner correction `65ec5705d102a010662fe19ab1bae04f38e3d153` requires retired hosted plain reads to answer 404 `not-found` before and after deployment, because enforced indexing starts no old object. The planner owns those probes, deployment and, after E4/A1/CR2 lands, the new 0.4.0 rooms and installs. No review approval, new installation or deployment result is claimed here.
 
 The joint gated head is `1454bd88cf09412acd43ad30e36edbdf0ad522f2`, tree `75226586e096bd8219a4a04e8dde0dadda143c80`, against main `7a6fcadf5c317269650c574233c13ba8158861d8`. Native took 932.535182458 s including the moved Scale selection; no separate Scale-only wall exists. All four terminal groups are complete despite the partial scope-stories duration projection. The 129 unknown/suite observations and zero contradictions remain qualifications, not extra case counts. LS5 records the seven retained terminal files and exact-source correspondence. This follow-up changes only these two existing notes; source, tests, configuration, dependencies, generated assets and packets stay exact to the gated tree. The post-commit source readback supplies the final note-only head/tree. The document-only filing needs no repeated gate, preflight, owner or control.
+
+
+## LC-5: trust Lending 0.5.0 and Counter 0.5.0, 17 November
+
+LC-5 request `625e51d22ad019b91051404b77c9486ac7915318` adds the 0.5.0 pair.
+The planner signed both packets at 01:33 EST from main `830d134a` (GW-1), so
+the installed screens carry the read-minimum gateway rule. The head commits
+the signed bytes unchanged:
+
+- `examples/lending/releases/0.5.0/application.dap.json`: 2,513,568 bytes,
+  blob `a26636afef3c8b84c67cbe4a181251364557b3e0`, SHA-256
+  `939251a996e06658f2f248ae3547772b2a247223a6012be97b299e313a17da99`,
+  release `sha256:1bda4e9bb7540300d3124759dae76d5e74dfc69919b1caa91a9d1534a0420077`,
+  presentation `sha256:005987060d6db0d2234d4c78355887d3756d349fc5abf2c44da31abace00533b`.
+- `apps/counter/releases/0.5.0/application.dap.json`: 2,599,263 bytes, blob
+  `ce8449f2a3e82dd5ad09ca31f22449af097c2668`, SHA-256
+  `e0851ec9b864d3dfcd9beb8c4eab202e932cce5518d7c7d4db21eac1d7d1f718`,
+  release `sha256:7b9e666ba63c04fdedae50ff7932c91337bc5df4a6050b7d0006f39acecd5e8b`,
+  presentation `sha256:9334159c91ea2df5d25e75aaa265b0ccb8b8ceac7a564b8eb46d0b7be57d2af4`.
+
+The dap-lending trust rows now name five releases: Lending 0.3.0, 0.4.0 and
+0.5.0, and Counter 0.4.0 and 0.5.0. Each uses publisher
+`key_qNT9aIt0WhJndvMP7UV33FFJ7DOYwW0JUvOv4PhNlFI` and host `github.com`. The
+sandbox Worker holds no trust rows. The formatter protects the two new packet
+paths, and the reproduction test reads each packet against its row.
+
+The head opens Lending and Counter 0.6.0 (ruling `163de663`). The version
+raise moves the open presentations: Lending `1b40301d`, Counter `c4275588`.
+
+Named red: with the packets and main's trust rows, the reproduction test fails
+with "dap-lending must trust each committed packet exactly once" (3 rows, 5
+packets). Evidence: `/Users/hughpyle/play/artroom-evidence/2026-11-17-lc5-red/`.
+
+The screen-host rows still pin the 0.3.0 and 0.4.0 installations. The screen
+route answers 404 when the installed presentation differs from its row
+(`packages/scope/src/applications/route.ts:79`). An install of 0.5.0 does not
+replace the older installation. It opens a new item, whose id is the sequence
+number the rules scope assigns to the accepted install
+(`packages/platform/src/application-install.ts:47`, `:122`). It also creates a
+new application scope (`:240`), so the 0.5.0 installation starts with fresh
+application state. The older item stays active, so each screen keeps serving
+it until a later head moves its row to the new item (act `4f1474e6`).

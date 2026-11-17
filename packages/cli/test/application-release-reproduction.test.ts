@@ -57,7 +57,9 @@ test("Grow, Lending and Counter reproduce their reviewed definition and presenta
     const installed = [
       { name: "Lending", application: "ai.generalbusiness.lending", version: "0.3.0", path: "examples/lending/releases/0.3.0/application.dap.json", identifiers: "examples/lending/release-identifiers.json", config: "examples/lending/dap.application.json" },
       { name: "Lending", application: "ai.generalbusiness.lending", version: "0.4.0", path: "examples/lending/releases/0.4.0/application.dap.json", identifiers: "examples/lending/release-identifiers.json", config: "examples/lending/dap.application.json" },
+      { name: "Lending", application: "ai.generalbusiness.lending", version: "0.5.0", path: "examples/lending/releases/0.5.0/application.dap.json", identifiers: "examples/lending/release-identifiers.json", config: "examples/lending/dap.application.json" },
       { name: "Counter", application: "ai.generalbusiness.counter", version: "0.4.0", path: "apps/counter/releases/0.4.0/application.dap.json", identifiers: "apps/counter/release-identifiers.json", config: "apps/counter/dap.application.json" },
+      { name: "Counter", application: "ai.generalbusiness.counter", version: "0.5.0", path: "apps/counter/releases/0.5.0/application.dap.json", identifiers: "apps/counter/release-identifiers.json", config: "apps/counter/dap.application.json" },
     ];
     const packets = new Map<string, { source: typeof installed[number]; bytes: Uint8Array }>();
     for (const source of installed) {

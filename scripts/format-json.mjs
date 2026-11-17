@@ -9,7 +9,9 @@ export const CANONICAL_PROTOCOL_PACKETS = Object.freeze([
   "examples/grow/fixtures/earlier-application.dap.json",
   "examples/lending/releases/0.3.0/application.dap.json",
   "examples/lending/releases/0.4.0/application.dap.json",
+  "examples/lending/releases/0.5.0/application.dap.json",
   "apps/counter/releases/0.4.0/application.dap.json",
+  "apps/counter/releases/0.5.0/application.dap.json",
 ]);
 
 // Default formatting exceeds the CLI's 65,536-byte source-read allowance.
