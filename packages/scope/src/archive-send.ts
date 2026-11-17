@@ -6,6 +6,7 @@ import { verifyJournalAppend } from "@generalbusiness/dap-git/journal";
 import { SmartHttpGit, type RawGitObject, type SmartHttpOptions } from "@generalbusiness/dap-git/http";
 import type { ArchiveSend } from "./archive-driver.ts";
 import { archiveSendCopyReservation, archiveSendPackWork } from "./archive-transfer-cost.ts";
+import { archiveStopName } from "./archive-budget.ts";
 
 const bad = (): never => { throw new GitRefusal("unreadable", "archive append edges"); };
 export async function sendArchiveAppend(request: ArchiveSend, transport: SmartHttpOptions, readBack: () => Promise<string | null>): Promise<unknown> {
@@ -32,7 +33,7 @@ export async function sendArchiveAppend(request: ArchiveSend, transport: SmartHt
     },
   } });
   if (!checked.ok) {
-    if (["limit", "timeout", "unavailable"].includes(checked.reason)) work.stop(checked.reason as "limit" | "timeout" | "unavailable");
+    if (["limit", "timeout", "unavailable"].includes(checked.reason)) work.stop(checked.reason as "limit" | "timeout" | "unavailable", null, { site: "verifier", verifier: archiveStopName(checked.reason) });
     return bad();
   }
   work.spend({ inputWork: archiveSendPackWork(bytes) });

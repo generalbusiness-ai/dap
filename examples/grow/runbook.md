@@ -516,6 +516,21 @@ pin is longer, `pinOmitted` is true. No pin is reported when the birth
 is unavailable. The field is null when no such failure was captured.
 These fields describe that pass; they do not reconstruct an earlier stop.
 
+When a pass stops as `unavailable`, `stopCause` names the check that
+stopped it:
+
+- `{ "site": "clock", "clock": "regressed" | "not-finite" }`: the pass
+  clock ran backwards or gave no number.
+- `{ "site": "wait", "error": "<name>" }`: work inside a budget wait
+  threw. The field gives the error's class name, such as `TypeError`,
+  never its message. A name that is not a short identifier shows as
+  `other`, and a thrown value that is not an error shows as `non-error`.
+- `{ "site": "verifier", "verifier": "<reason>" }`: the append verifier
+  stopped the send before any request went out.
+
+The first stop of a pass keeps its cause. Every other stop records
+`null`.
+
 A pass can still stop a row with reason `limit`. That happens when the
 finish quote is null, or when a debit outside the planner's lookahead
 refuses: the pass line then shows `capacityRefusal` with site

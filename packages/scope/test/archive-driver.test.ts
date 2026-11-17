@@ -284,13 +284,16 @@ test("a pre-Mark target failure survives eviction and new native input without l
     const records = observed.map(args => {
       expect(args).toHaveLength(2);
       const record = args[1] as Record<string, unknown>;
-      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost", "reservationCosts", "parentRead", "capacityRefusal", "fixedFinish", "sourceFailure", "capacityObservation"].sort());
+      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost", "reservationCosts", "parentRead", "capacityRefusal", "fixedFinish", "sourceFailure", "capacityObservation", "stopCause"].sort());
       expect(record["capacityObservation"]).toBeNull();
       // This stand-in provider has no exact-object transport. It must not
       // invent a parent-read phase from a target failure or native work.
       expect(record["capacityRefusal"]).toBeNull();
       expect(record["fixedFinish"]).toBeNull();
       expect(record["sourceFailure"]).toBeNull();
+      // AS-2: a target failure names no clock, wait or verifier cause.
+      // AS-2: a target lookup that throws names the error class, never its message.
+      expect(record["stopCause"]).toEqual(record["step"] === "target" && record["state"] === "retry" ? { site: "wait", error: "Error" } : null);
       expect(record["parentRead"]).toEqual({ ordinal: 0, type: "none", maximum: 0, phase: "none", refusal: "none" });
       expect(["row-load", "wake-check", "pin", "due-check", "target", "format", "pending-readback", "parent", "bootstrap", "sources", "rebuild", "plan", "frontier", "mark", "copy", "mint", "send", "readback", "confirm"]).toContain(record["step"]);
       expect(["none", "not-due", "wake-not-due", "target-missing", "target-different"]).toContain(record["detail"]);

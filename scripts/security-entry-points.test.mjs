@@ -362,7 +362,7 @@ const pendingArchiveSeals = {
   "apps/room/archive-setup-cost.ts": "ff70caaf56adfc4501cb1fe6606fa7f9283f2207b7e2d50d29063d9e9d41baed", // AE-1 reviewed boundary; actual maintained AST output.
   "packages/platform/src/application-archive-reader.ts": "e261d7d0e052702daf16b07eba0a7457df30f7a9591ba1a13524456c27a4ee2e", // AE-1 uses shared canonical same; actual maintained AST output.
   "packages/scope/src/applications/archive-proof.ts": "163a8b2f7710752ee09e24d4b81704bc2fe8ce1484ad4a58b42edb9a89d5004b", // AE-1 reviewed boundary; actual maintained AST output.
-  "packages/scope/src/archive-budget.ts": "a35cc8c0e8cc4be8fc33bd4316906085173f19e1e68e12091803a5e3ce08f499", // AE-1 reviewed shared nodes/inputWork definition; four other native ceilings stay fixed.
+  "packages/scope/src/archive-budget.ts": "a02ee3dc4e2edc55562d4de87d953ae562c65b59dc0df7e6b493e9990764aece", // AS-2: the first stop records its clock, wait or verifier cause; limits and stop reasons unchanged.
   "packages/scope/src/archive-adaptive.ts": "ddf7c2ec284340fe10b965d73e373ca639563cdad19dcbd510b5e7b2b83953b8", // AE-1 reviewed boundary; actual maintained AST output.
   "packages/scope/src/archive-row-cost.ts": "cb9a949c1f9a0d8be8dc678b0c82371ab2f25cf51d980e25a8bf6f21f7178855", // AE-1 reviewed boundary; actual maintained AST output.
   "packages/scope/src/archive-outcome-values.ts": "d142fa0fb776d6558a5c1101bab05105fe904e1cf4c71fc883fc8a5c5425bd67", // Certified rules evidence projection; actual maintained parser output.
@@ -374,7 +374,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "300e4a3f51f23b93a2ce026b98993700e3c0b8947d35b68de195adc5c522ae45",
   "packages/scope/src/archive-publication.ts": "6c13c9f864b559e26d75982eca85c058975a12f18ad00b660c227577aae76d9b",
   "packages/scope/src/archive-build.ts": "bf1c79debbe0141140174c9a3d79f63d1952b874bce1d8713207dea8c817b8a0", // Actual pin SQL payload settles; final identity fence unchanged.
-  "packages/scope/src/archive-driver.ts": "8281cebc4bb9e20d7f091f0b94c2d6da344c6777a36beeeea98fa1a28275bb26", // AR-1 bounds every archive retry (60 s floor, one-hour cap, persisted retry count), leaves no stored wake in the past, and returns before policy work while the stored wake is in the future; actual maintained AST output.
+  "packages/scope/src/archive-driver.ts": "70d0a2942c87a2486ad23672f189f19f30b28716fdd9d9c35f46fd73ae5a11a5", // AS-2 adds stopCause to archive-pass-diagnostic-v1 only. AR-1 bounds every archive retry (60 s floor, one-hour cap, persisted retry count), leaves no stored wake in the past, and returns before policy work while the stored wake is in the future; actual maintained AST output.
   "packages/scope/src/archive-row.ts": "0b69533c7387fd730e8a5717cc6dfce1269ba22db199303f76eeff6ed32ad3f3", // AR-1 adds the bounded retry count to the wake record; defer takes the delay as a function of it; actual maintained AST output.
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
