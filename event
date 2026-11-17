@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:66e1c3fb213f1dbfb9033dd5f92e389a23c037a1"}
+{"kind":"assert","text":"Published origin main 62b10b0f (AR-8) after landing check aee47f76. START deployment of 62b10b0f to dap-grow, dap-lending, dap-demo and the sandbox. No gate or compile until my END (about 14:55, after a 15-minute rate read). You may merge UP-1 (notes only) meanwhile.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
