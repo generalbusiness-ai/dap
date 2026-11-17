@@ -351,3 +351,33 @@ test("AR-8: the positive cache is bounded and keyed by mode, name and kind", asy
   await legacy.get(last).text();
   expect(asked.get(`${last}:`)).toBe(2);
 });
+
+test("AR-10: a positive kind answer also answers the plain question; a plain answer never answers a kind", async () => {
+  const kindFirst = creation().name, plainFirst = creation().name, wrongKind = creation().name;
+  const asked: string[] = [];
+  const kinds = new Map<string, string>([[kindFirst, "directory"], [plainFirst, "directory"], [wrongKind, "register"]]);
+  const index: ScopeIndexPort = {
+    async has(scope, kind) { asked.push(`${scope}:${kind ?? ""}`); return kinds.has(scope) && (kind === undefined || kinds.get(scope) === kind); },
+    async register() { throw Error("lookup wrote index"); },
+    async list() { throw Error("lookup requested census"); },
+  };
+  let births = 0;
+  const targets: Binding = { idFromName: (name: string) => name, get: () => ({ async text() { return { ok: true }; }, async nativeBirthByName() { births++; return null; } }) };
+  const gated = indexedScopes(targets, { SCOPE_INDEX: { idFromName: (name: string) => name, get: () => index } }) as unknown as
+    { get(name: string): { text(): Promise<unknown>; nativeBirthByName(at: string, kind: string): Promise<unknown> } };
+  // A birth by name in a new instance asks once, with the kind; the plain
+  // admission that follows uses the same positive answer.
+  await gated.get(kindFirst).nativeBirthByName(kindFirst, "directory");
+  expect(asked).toEqual([`${kindFirst}:directory`]);
+  await gated.get(kindFirst).text();
+  expect(asked).toEqual([`${kindFirst}:directory`]);
+  // A plain positive does not answer a kind question: the kind is asked.
+  await gated.get(plainFirst).text();
+  await gated.get(plainFirst).nativeBirthByName(plainFirst, "directory");
+  expect(asked.slice(1)).toEqual([`${plainFirst}:`, `${plainFirst}:directory`]);
+  // A known name with another kind is refused for that kind and asked again.
+  expect(await gated.get(wrongKind).nativeBirthByName(wrongKind, "directory")).toBeNull();
+  expect(await gated.get(wrongKind).nativeBirthByName(wrongKind, "directory")).toBeNull();
+  expect(asked.filter(row => row === `${wrongKind}:directory`)).toHaveLength(2);
+  expect(births).toBe(2);
+});
