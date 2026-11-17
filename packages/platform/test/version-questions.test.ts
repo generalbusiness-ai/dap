@@ -22,7 +22,7 @@ const CUTOVER_QUESTIONS: readonly VersionQuestion[] = ["scopePublicationPrefixes
 test("the question owner covers every frozen predicate and catalog pin", () => {
   expect([...VERSION_QUESTIONS].sort()).toEqual([...frozen.questions.map(question => question.name), standing.question, ...CUTOVER_QUESTIONS].sort());
   for (const row of frozen.rows) for (const question of CUTOVER_QUESTIONS) expect(answersVersionQuestion(row.pin, question), row.pin).toBe(false);
-  expect(Object.keys(VERSIONS).filter(pin => !Object.hasOwn(CUTOVER_FAMILY_ANSWERS, pin)).sort()).toEqual([...frozen.catalogPins].sort());
+  expect(Object.keys(VERSIONS).filter(pin => !Object.hasOwn(FAMILY_ANSWERS, pin)).sort()).toEqual([...frozen.catalogPins].sort());
   expect(frozen.rows).toHaveLength(105);
   expect(frozen.questions).toHaveLength(104);
 });
@@ -103,8 +103,15 @@ const CUTOVER_FAMILY_ANSWERS: Readonly<Record<string, readonly VersionQuestion[]
     "pageInitializationRules", "pageReviewPolicyRules", "scopeApplicationOutsideRules",
   ],
 };
+/** U1 (ruling D5 of 2026-11-17): each upgrade family pin answers exactly the questions of the base pin that it follows. */
+const UPGRADE_FAMILY_OF: Readonly<Record<string, string>> = {
+  "platform:register@29": "platform:register@28", "platform:directory@28": "platform:directory@27", "platform:rules@16": "platform:rules@15",
+};
+const FAMILY_ANSWERS: Readonly<Record<string, readonly VersionQuestion[]>> = { ...CUTOVER_FAMILY_ANSWERS,
+  ...Object.fromEntries(Object.entries(UPGRADE_FAMILY_OF).map(([pin, base]) => [pin, CUTOVER_FAMILY_ANSWERS[base]!])),
+};
 
-test.each(Object.entries(CUTOVER_FAMILY_ANSWERS))("the cutover family pin %s answers exactly its chosen questions", (pin, chosen) => {
+test.each(Object.entries(FAMILY_ANSWERS))("the cutover and upgrade family pin %s answers exactly its chosen questions", (pin, chosen) => {
   expect(frozen.catalogPins).not.toContain(pin);
   expect(VERSION_QUESTIONS.filter(question => answersVersionQuestion(pin, question))).toEqual(VERSION_QUESTIONS.filter(question => chosen.includes(question)));
 });

@@ -42,7 +42,7 @@ test('the base plan and retained old-family plans prepare without replacing cust
     assert.equal(prepared.vars.REGISTER_SCOPE, register);
     assert.equal(Object.hasOwn(prepared.vars, 'PLATFORM_CREATION_PINS'), version === 25);
   }
-  const unknown = retainedPlan(); unknown.plan.definition = 'platform:register@29';
+  const unknown = retainedPlan(); unknown.plan.definition = 'platform:register@30';
   const paths = await fixture(t, unknown);
   await assert.rejects(prepareProject({ origin, ...paths }), error => error instanceof ProjectPreparationError
     && error.message.startsWith('Project preparation refused: cohort.'));

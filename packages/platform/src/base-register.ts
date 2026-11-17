@@ -27,7 +27,8 @@ export const baseRegister: PlatformData = { ...unpublishedRegister,
   acts: { ...unpublishedRegister.acts, found: { ...found, guards: [...found.guards, recovery] } },
 };
 
-export const baseRegisterRules: Rules = { ...unpublishedRegisterRules,
+/** The rules of a `base`-shaped Register whose claims prove the Directory of `cohort`. */
+export const registerRulesOf = (cohort: Readonly<{ register: string; directory: string }>): Rules => ({ ...unpublishedRegisterRules,
   "founder-not-recovery": separateRecoveryRegisterRules["founder-not-recovery"]!,
   "create-repository": failedClaimRegisterRules["create-repository"]!,
   "directory-genesis-result": { place: "type", run: (given, value) => {
@@ -39,11 +40,12 @@ export const baseRegisterRules: Rules = { ...unpublishedRegisterRules,
     const sent = original.entry.sends.find(send => send.n === of.n);
     if (!sent || !isSeed(sent.to) || scopeIdOf(sent.to) !== value.at.scope) return false;
     const origin = original.entry.input;
-    const act = origin.type === "act" ? origin : origin.type === "outcome" && origin.kind === "create-repository" && origin.owner === C.register
+    const act = origin.type === "act" ? origin : origin.type === "outcome" && origin.kind === "create-repository" && origin.owner === cohort.register
       ? given.own(Number(origin.operation.split(":")[0]))?.entry.input : null;
     return act?.type === "act" && act.signed.intent.kind === "found" && same(sent.to, {
-      v: 1, kind: "directory", definition: C.directory, creator: given.resolved.at,
+      v: 1, kind: "directory", definition: cohort.directory, creator: given.resolved.at,
       cause: intentDigest(act.signed.intent), ordinal: 0,
     });
   } },
-};
+});
+export const baseRegisterRules: Rules = registerRulesOf(C);

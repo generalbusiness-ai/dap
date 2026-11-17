@@ -1,6 +1,7 @@
 export { COMMONS_COHORT } from "./commons-cohort.ts";
 export { OWN_AGENT_COHORT } from "./own-agent-cohort.ts";
 export { BASE_COHORT } from "./base-cohort.ts";
+export { UPGRADE_COHORT } from "./upgrade-cohort.ts";
 export { OWN_AGENT_KEYS } from "./base-membership.ts";
 export { APPLICATION_PATHS } from "./base-directory.ts";
 export { applicationPublicationPrefixes } from "./base-destination.ts";

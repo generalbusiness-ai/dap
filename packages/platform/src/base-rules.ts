@@ -31,7 +31,9 @@ export const baseRulesScope: PlatformData = {
     fields: { ...install.fields, owner: { type: "member", required: false } } } },
 };
 
-const proof = (given: RuleGiven) => installProof2(given, semantic => applicationCapabilities(semantic) !== null);
+/** The signed v2 proof of an act's `release` and `semantic` fields, for the capability sets that Rules 15 admits. */
+export const baseInstallProof = (given: RuleGiven) => installProof2(given, semantic => applicationCapabilities(semantic) !== null);
+const proof = baseInstallProof;
 const capabilities = (checked: PublishedApplicationReleaseProof2): ApplicationCapabilities => {
   const held = applicationCapabilities(checked.semantic);
   if (!held) throw Error("admitted capability set required");

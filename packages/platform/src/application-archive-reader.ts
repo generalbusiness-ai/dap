@@ -5,6 +5,7 @@ import { freeze, isDigest, isRecord, isScopeRef, same } from "@generalbusiness/d
 import type { StateView } from "@generalbusiness/dap-derive";
 import { platform } from "./native-catalog.ts";
 import { BASE_COHORT } from "./base-cohort.ts";
+import { UPGRADE_COHORT as UC } from "./upgrade-cohort.ts";
 import { COMMONS_COHORT } from "./commons-cohort.ts";
 import { TRUSTED_APPLICATION_COHORT } from "./application-install-wire.ts";
 import { DECLARED_APPLICATION_COHORT } from "./application-install-v2-wire.ts";
@@ -25,7 +26,7 @@ export type ApplicationArchiveProof = (
   | { readonly v: 2; readonly semantic: PublishedApplicationReleaseProof2["semantic"]; readonly release: PublishedApplicationReleaseProof2["release"] }
 ) & { readonly installation: ArchiveInstallation; readonly publisher: KeyId };
 
-const rulesPins: readonly string[] = [BASE_COHORT.rules, COMMONS_COHORT.rules, TRUSTED_APPLICATION_COHORT.rules,
+const rulesPins: readonly string[] = [BASE_COHORT.rules, UC.rules, COMMONS_COHORT.rules, TRUSTED_APPLICATION_COHORT.rules,
   DECLARED_APPLICATION_COHORT.rules, DEVICE_APPLICATION_COHORT.rules, EVIDENCE_RULES_COHORT.rules,
   ARCHIVE_APPLICATION_COHORT.rules, ARCHIVE_DECLARED_APPLICATION_COHORT.rules, ARCHIVE_DEVICE_APPLICATION_COHORT.rules,
   ARCHIVE_CERTIFIED_RULES_COHORT.rules, HARDENED_CERTIFIED_RULES_COHORT.rules];

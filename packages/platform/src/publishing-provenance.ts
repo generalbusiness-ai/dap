@@ -285,9 +285,12 @@ export function ownAgentApplicationPublicationOrigin(from: FactRef, directory: S
   return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@26", rules: "platform:rules@10", destination: "platform:destination@20", membership: "platform:membership@13", deviceCommand: true });
 }
 
-/** Exact `base` family (CF-1): an ordinary, device or publication creation of Directory 27. */
+/** Exact `base` family (CF-1): an ordinary, device or publication creation of Directory 27.
+ * Destination 21 also serves the `upgrade` family (U1), whose Directory 28 creates Rules 16; pins never mix. */
 export function baseApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly SourceCopy[]): boolean | null {
-  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@27", rules: "platform:rules@15", destination: "platform:destination@21", membership: "platform:membership@14", capabilities: true });
+  const base = installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@27", rules: "platform:rules@15", destination: "platform:destination@21", membership: "platform:membership@14", capabilities: true });
+  if (base !== false) return base;
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@28", rules: "platform:rules@16", destination: "platform:destination@21", membership: "platform:membership@14", capabilities: true });
 }
 
 /** Exact later-binding family; earlier creation pins remain distinct. */
