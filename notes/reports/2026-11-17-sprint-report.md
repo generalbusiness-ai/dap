@@ -152,8 +152,9 @@ is filed.
   untracked. `dap-library-publication-final-1014` stays until the
   homepage library page and the Lending examples stop linking to it.
 - The self-hosted fleet witness (FW-1) runs on this build Mac, with
-  the owner at the administrator steps. Its preparation stopped on two
-  findings in the host kit, and the owner's steps wait for them.
+  the owner at the administrator steps. The builder prepares the
+  steps that need no administrator rights, then hands the owner the
+  administrator commands.
 
 ## In progress
 
@@ -169,9 +170,9 @@ is filed.
 - The read of the `lending-shelf` projection through a browser. The
   browser witness ran on Counter first, and the Lending read was not
   scheduled.
-- The self-hosted fleet witness (FW-1). Its preparation stopped on a
-  certificate helper that uses forbidden delete flags, and on an
-  installer that copies credentials outside the private fleet path.
+- The self-hosted fleet witness (FW-1). Its preparation stopped on 16
+  November on two host-kit findings. Both were fixed the same day,
+  and the preparation did not resume during this sprint.
 
 ## What landed
 
