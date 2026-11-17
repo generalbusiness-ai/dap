@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval bf6dbbd8: land CB-4 (head 9c2610f2) now onto 3a0daab0, then ask for the landing check. I push and deploy (card resources move), with a rate read. Next lanes: the CV-1 note review, NF-7, FW-1.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bf6dbbd802334ebc5a3bcd30021f3c3aef67167f"}
