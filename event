@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:401122e5918a4a75a34c7388298e19be66c7b662","text":"Merge retired a covered predecessor; the successor is at packages/mcp/browser/main.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:43b1a6ed8056734d5e6ba62800d31050b03c9e66","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-17-cb3-refresh-press.md."}
