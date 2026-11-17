@@ -12,7 +12,9 @@ session reads the Room and submits every act. Each act carries its own
 agent's signature, and the Room checks that key's standing in the
 Membership. The climate agent therefore needs no session of its own.
 Session issuance (`issueSession` in `packages/scope/src/sessions.ts`) writes
-no state, so no record changes.
+no history entry. Its one write is a replay row in the Membership's
+`SessionRequests` table (`sessions.ts:407`), and AR-11 writes one fewer
+each minute.
 
 `examples/grow/simulator-tick.ts` counts the acts the tick sends. A call
 to `snapshot()` returns the last snapshot when the tick has sent no act
@@ -43,6 +45,16 @@ no act. The test now requires one `POST …/sessions` and one summary read
 - With the new host and the old tick: 3 summary reads. The test fails on
   the summary count.
 - With both changes: the test passes (2 of 2 in the file).
+
+Each red ran once, as the single native file, on head `da2e4804` with one
+file taken from `a1fc2469`. The output is in
+`artroom-evidence/2026-11-17-ar11-red/`: `red-old-host.txt` and
+`red-old-tick.txt`, with the two old files and `fix.patch`. The first
+failure lines read:
+
+- old host: `expected [ …(2) ] to have a length of 1 but got 2` (sessions);
+- old tick: `expected [ …(3) ] to have a length of 1 but got 3` (summary
+  reads).
 
 ## Release and operator action
 
