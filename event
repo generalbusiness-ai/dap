@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8e98e18166a5dd9d8cb81db77f67e11a4fd842f9","text":"Replaced by the review request for exact head ecb21d85a1a3f6a878fcd85f94b9e83c03019a1e; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
+{"kind":"promise","text":"I will review the exact notes-only head ecb21d85 on builder/au1-worker-audit-20261117, and confirm that the other projects' Workers have left the public note."}
