@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval 969f9074: land AR-10 (head d4268e74) onto 7af0952f and ask for the landing check. I publish, deploy grow, lending and demo, and read the rate. Hold gates until my END. After AR-10 the ScopeIndex work is done for this sprint: no further cache lanes; the remaining grow floor is designed demo traffic.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:969f9074d55552b0d4f164ea1765f155c3fa6ce7"}
