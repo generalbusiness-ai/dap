@@ -49,8 +49,10 @@ function scheduleRefresh() {
 /** The timer's read. It never rejects, so a press that waits on it never fails because of it. */
 function refresh(): Promise<void> {
   const run = (async () => {
-    // A background read clears the last notice. A press that waits on this read sets its own notice afterwards.
-    notice = ""; readAgain = false;
+    // A background read clears the last notice, except the changed-card notice: that one stays until the member's
+    // next press, read or act. A press that waits on this read sets its own notice afterwards.
+    if (notice !== CHANGED_GESTURE) notice = "";
+    readAgain = false;
     try { await readDisplay({ refresh: true }); }
     catch (error) { if (error instanceof AppToolError && error.reason === "busy") scheduleRefresh(); else showError(error); }
     finally { refreshing = null; render(); }
@@ -89,6 +91,8 @@ function currentGesture(gesture: Gesture): boolean {
     && canonicalize(gesture.identity) === canonicalize(display?.context.identity ?? null);
 }
 const CHANGED_GESTURE = "The card changed during this press, so nothing was sent. Check the card, then press again.";
+/** A press that goes ahead ends the changed-card notice. Reads and acts clear every notice themselves. */
+function pressed() { if (notice === CHANGED_GESTURE) { notice = ""; render(); } }
 function button(key: string, label: string, run: (gesture: Gesture) => Promise<void>, className?: string) {
   const element = node("button", label, className);
   element.type = "button";
@@ -99,6 +103,7 @@ function button(key: string, label: string, run: (gesture: Gesture) => Promise<v
     return () => whenSettled(() => {
       if (!alive || busy) return;
       if (!currentGesture(gesture)) { notice = CHANGED_GESTURE; render(); return; }
+      pressed();
       void run(gesture).catch(showError);
     });
   });
@@ -396,6 +401,7 @@ function renderCard(desired: DocumentFragment, identity: string, sections: Reado
         whenSettled(() => {
           if (!alive || busy) return;
           if (!currentGesture(gesture)) { notice = CHANGED_GESTURE; render(); return; }
+          pressed();
           void open().catch(showError);
         });
       };

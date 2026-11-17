@@ -221,6 +221,11 @@ try {
     await app.getByText('The card changed during this press, so nothing was sent. Check the card, then press again.', { exact: true }).waitFor();
     await app.getByText('This declared view has no matching items.', { exact: true }).waitFor();
     assert.equal(await page.evaluate(() => proof.chat.length), 2, 'The press on the ended task sends no message');
+    // The changed-card notice stays through the next background read.
+    const replied = await page.evaluate(() => proof.refreshReplies);
+    await page.waitForFunction(count => proof.refreshReplies > count, replied); await settle();
+    assert.equal(await app.getByText('The card changed during this press, so nothing was sent. Check the card, then press again.', { exact: true }).isVisible(), true,
+      'A background read keeps the changed-card notice');
     assert.equal(day.signatures(), 2); assert.equal(session.scope.state.item(task.id).state, 'done');
     assert.equal(session.scope.state.item(task.id).values.report, 'Freed the jammed vane by hand.');
     await app.getByRole('button', { name: /Back/ }).waitFor(); await layout(app, width); await capture(page, app, `task-complete-${width}.png`);
@@ -252,7 +257,7 @@ try {
     const replay = [];
     for (const scope of [session.site, session.scope, roomB.scope]) { const result = await scope.replay(); assert.equal(result.report.result, 'consistent'); assert.equal(result.why, null); replay.push({ scope: scope.at, result: result.report.result }); }
     await writeFile(join(out, `proof-${width}.json`), JSON.stringify({ proofs, errors, signed: { day: day.submitted, operator: operator.submitted, head: head.submitted }, presence: { item: dayPresence, scope: session.site.at, arrival: arrival.receipt.fact, rawReportPosition: stablePresence.refs.reportedAt, unrelatedReports: 101, wrongRoomRefusal: wrongRoom.name }, replay }, null, 2));
-    report.cases.push({ width, resizedTo: otherWidth, unavailableReadPoints: true, openAcrossTwoRefreshes: true, pressDuringRefresh: { unchanged: 'sent', changed: 'refused' }, closedAcrossRefresh: true, provisionedUnknown: true, durableAfterOtherReports: 101, wrongRoomRefused: true, quietRefresh: true, appOnlyRead: true, connectedReport: true, nativeReportClick: true, reportRevision: pressedIdentity.revision,
+    report.cases.push({ width, resizedTo: otherWidth, unavailableReadPoints: true, openAcrossTwoRefreshes: true, pressDuringRefresh: { unchanged: 'sent', changed: 'refused', noticeAfterRead: 'kept' }, closedAcrossRefresh: true, provisionedUnknown: true, durableAfterOtherReports: 101, wrongRoomRefused: true, quietRefresh: true, appOnlyRead: true, connectedReport: true, nativeReportClick: true, reportRevision: pressedIdentity.revision,
       signatures: { day: 2, operator: 1, head: 2 }, nativeKinds: ['take-task', 'report-task', 'hold', 'approve-watering', 'decline-watering'], emptyBack: true, replay: 'consistent', errors });
   }
   await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n'); console.log(JSON.stringify(report));
