@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at ops/do-rate-baseline.json","body":{"commit":"69b85e9860472ff2657e5b8fbc837c039fe89a7e","path":"ops/do-rate-baseline.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:487bacb4c65801fe2726a93393a00aa779905297","text":"Merge retired a covered predecessor; the successor is at ops/do-rate-baseline.json."}
