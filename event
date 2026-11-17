@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:596906fc05fd3f4905175fa12761fb907579f497","text":"Republished at 1dc839afea8f553d5047ba6a7eb531efa51d1946; the successor stands at notes/implementation/2026-11-17-ar11-simulator-reads.md."}
+{"kind":"artifact","text":"examples/grow/simulator-tick.ts at exact 1dc839afea8f553d5047ba6a7eb531efa51d1946 on builder/ar11-climate-session-20261117, under promise git:sha1…42fcdc7 on request git:sha1…f1d50b0","body":{"commit":"1dc839afea8f553d5047ba6a7eb531efa51d1946","path":"examples/grow/simulator-tick.ts"}}
