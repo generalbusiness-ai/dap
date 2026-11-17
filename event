@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/mcp/test/grow-routing-browser.mjs","body":{"commit":"9d5855059357922643dc3b063d7c70b7bfe3e88c","path":"packages/mcp/test/grow-routing-browser.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3ad69f1a6b91028a3442bd5c4987188c1a3577d0","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/grow-routing-browser.mjs."}
