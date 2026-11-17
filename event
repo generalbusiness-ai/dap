@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/2026-11-17-hl1-homepage-counter.md","body":{"commit":"a7acfdf2fc419da0a241efc5e18252a8f40c8596","path":"notes/implementation/2026-11-17-hl1-homepage-counter.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:27c4d480045d716ea54d28e522c5684d5239195f","text":"Merge retired a covered predecessor; the successor is at homepage/src/counter/index.html."}
