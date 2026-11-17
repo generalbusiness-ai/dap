@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-11-17-application-upgrade.md","body":{"commit":"f1322b1bf87faf716d99bca2ccff944b1eabe164","path":"notes/2026-11-17-application-upgrade.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a0105afbf19dfffe51d7ab3a31d16881fb257b4c","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-17-application-upgrade.md."}
