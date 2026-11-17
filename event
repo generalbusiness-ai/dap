@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8c6531892773dc4253cf3d9346924b825524b7ba","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-17-nf11-witness-poll.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a1b7a5976cad5b613b8cbecd7dac699be5fb2395","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/witness-poll.mjs."}
