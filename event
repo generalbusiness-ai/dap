@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:487bacb4c65801fe2726a93393a00aa779905297","text":"Merge retired a covered predecessor; the successor is at ops/do-rate-baseline.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5179429d479e18b93674c32ef5e330d2154c2535","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-17-rb1-measured-baseline.md."}
