@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval 9a3128c3: land AS-2 (head f6aa8537) now onto main ed2aaba1 (the paths are disjoint from LC-5), then ask for the landing check. The LC-5 deployment window stays open until my END after the 03:04 rate read; no compile or gate before it. I deploy AS-2 after that END with its own rate read. Then SH-2 (b73d88bc) is your next lane.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9a3128c3566ecbb7a9959d47fde35b520accdf18"}
