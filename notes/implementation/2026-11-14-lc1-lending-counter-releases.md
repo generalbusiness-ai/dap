@@ -374,3 +374,37 @@ number the rules scope assigns to the accepted install
 new application scope (`:240`), so the 0.5.0 installation starts with fresh
 application state. The older item stays active, so each screen keeps serving
 it until a later head moves its row to the new item (act `4f1474e6`).
+
+## LC-6: trust Counter 0.6.0, 17 November
+
+LC-6 request `268eb2a6a4469938e3a6c8996df5c8260818eaa1` adds Counter 0.6.0.
+The planner signed it at 05:51 EST from main `66c70688` (NF-10), so the
+installed screen binds an enrolled device to the room's service origin. The
+semantic identifier `a5a44ebc` is unchanged from 0.5.0; only the screen
+changed. The head commits the signed bytes unchanged:
+
+- `apps/counter/releases/0.6.0/application.dap.json`: 2,600,242 bytes, blob
+  `d46e3d97acc3c4f432bfeb8d8a381bd923b6ace6`, SHA-256
+  `a83239571d04a0646ec67bd1416c40a48195ac169a18f29ca554dfa2337ff43e`,
+  release `sha256:581e5d26a2e035f76a70cc627e76d483f5b9dc63cdea10b198d802cdc2951a8a`,
+  presentation `sha256:905a3f7e088278894937f41bd27bf612bafac9b65fe030dbf0e2e0f584cd444f`.
+
+The dap-lending trust rows now name six releases: Lending 0.3.0, 0.4.0 and
+0.5.0, and Counter 0.4.0, 0.5.0 and 0.6.0, each with the same publisher and
+host. The formatter protects the new packet path, and the reproduction test
+reads the packet against its row.
+
+The head opens Counter 0.7.0 (ruling `163de663`), which moves the open Counter
+presentation to `36945f1d`. Lending stays at open 0.6.0, unsigned.
+
+Named reds, in `/Users/hughpyle/play/artroom-evidence/2026-11-17-lc6-red/`:
+
+- With the packet and main's trust rows, the reproduction test fails with
+  "dap-lending must trust each committed packet exactly once" (5 rows, 6
+  packets).
+- With the 0.6.0 row listed and no packet, the test fails to open
+  `apps/counter/releases/0.6.0/application.dap.json`.
+
+After the deployment, the planner installs 0.6.0 in counter-witness. The
+install opens a new item, and a later head (SH-3) moves the
+`counter.inguz.space` row to it.

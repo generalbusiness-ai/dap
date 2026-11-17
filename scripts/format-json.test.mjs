@@ -16,6 +16,7 @@ test("tracked JSON formatting preserves signed application packets and retained 
     "examples/lending/releases/0.5.0/application.dap.json",
     "apps/counter/releases/0.4.0/application.dap.json",
     "apps/counter/releases/0.5.0/application.dap.json",
+    "apps/counter/releases/0.6.0/application.dap.json",
   ]) {
     assert.ok(paths.includes(packet), "Each actual byte-compared packet must exist");
     assert.equal(selected.includes(packet), false, "The canonical packet reader must receive each packet's original bytes");
