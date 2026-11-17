@@ -277,7 +277,26 @@ application sandbox `dap-application-sandbox`, with its configuration in
    [Observe a deployment](operations.md) does not replace smoke.
    Lending has no analytics dataset.
 
-7. Repeat `dap log` and `dap verify --all` on the same existing rooms.
+7. Read the Durable Object request rate for the 30 minutes after the
+   deployment.
+
+   ```sh
+   node scripts/do-rate.mjs --minutes 30 --token-file /absolute/analytics-token \
+     --baseline /absolute/do-rate-baseline.json
+   ```
+
+   The command prints requests per minute for each Worker, then each
+   Worker's total and per-hour rate. Compare the rate with the rate before
+   the deployment. The baseline file maps each Worker to a floor in
+   requests per minute, for example `{"dap-grow": 40}`. A line that ends
+   in `above:` names a Worker over its floor. Add `--all` once a day to read
+   every Worker in the account, including Workers that `deploy.mjs` does
+   not deploy. The token needs the Account Analytics read
+   permission. Without `--token-file`, the command reads
+   `CLOUDFLARE_ANALYTICS_TOKEN`, and `--account` or `CLOUDFLARE_ACCOUNT_ID`
+   gives the account. `--help` lists the other options.
+
+8. Repeat `dap log` and `dap verify --all` on the same existing rooms.
    Compare the records with step 2. Keep the smoke results with the receipts.
    A health check alone proves no room or Git continuity.
 
