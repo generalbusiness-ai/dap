@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:43b1a6ed8056734d5e6ba62800d31050b03c9e66","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-17-cb3-refresh-press.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:873d046ef0a73f8a2f22aa2dc8d4ed950ec9cfc6","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/views/generated.ts."}
