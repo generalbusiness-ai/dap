@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:25a73c91faccf21068b20cbd2d569f6688800e58","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-17-ar4-archive-unbound.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2b3728725d1d6d742bf82df504374c38d1c7ba69","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-installed.fixture.ts."}
