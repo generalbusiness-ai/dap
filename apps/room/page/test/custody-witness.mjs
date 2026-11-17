@@ -34,6 +34,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { redact, saveFailedPage } from "./witness-failure-page.mjs";
+import { pollUntil } from "./witness-poll.mjs";
 import { recordRequests } from "./witness-request-shape.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -195,13 +196,7 @@ async function hostedCounter(screen) {
   check("Counter kept one unknown record after losing its reply", [lost.length, lost[0]?.phase, counterPosts.length], [1, "unknown", 1]);
   await counterPage.reload();
   await counterPage.getByRole("button", { name: "Check command", exact: true }).click();
-  await counterPage.waitForFunction(scope => new Promise(resolve => {
-    const open = indexedDB.open("dap-counter-custody-1");
-    open.onsuccess = () => { const db = open.result, tx = db.transaction("records", "readonly"), read = tx.objectStore("records").getAll();
-      read.onsuccess = () => resolve(read.result.map(row => JSON.parse(row.text)).some(record => record.identity.target.scope === scope && record.phase === "accepted"));
-      tx.oncomplete = tx.onabort = () => db.close(); };
-    open.onerror = () => resolve(false);
-  }), target);
+  await pollUntil(records, rows => rows.some(record => record.phase === "accepted"), { what: "an accepted Counter record after Check", timeout: 60_000 });
   const final = await records(), keptCounter = final[0];
   const counterEntries = keptCounter ? await hostedJournal(keptCounter, reader) : [];
   report.counter = { ran: true, pageUnknown, afterLoss: { records: lost.length, phase: lost[0]?.phase, posts: postsAfterLoss },
@@ -336,7 +331,8 @@ try {
   const admission = await openTabs("admission");
   await tab(page, "hold-admission");
   const waiting = tab(second, "keep", { key: "admitted-first" });
-  await page.waitForFunction(name => navigator.locks.query().then(state => state.pending.some(lock => lock.name === `${name}:exclusive`)), admission);
+  await pollUntil(() => page.evaluate(name => navigator.locks.query().then(state => state.pending.some(lock => lock.name === `${name}:exclusive`)), admission),
+    Boolean, { what: "the queued admission lock" });
   await tab(page, "release-admission");
   tabCheck("a held real admission lets the queued identity sign once after release", await waiting, { kept: true, builds: 1 });
   tabCheck("real multi-tab admission refuses the next identity before signing", await tab(page, "keep", { key: "capacity-full" }), { kept: false, builds: 0 });
@@ -344,7 +340,8 @@ try {
   const closedQueue = await openTabs("closed-queue");
   await tab(page, "hold-admission");
   const obsolete = tab(second, "keep", { key: "closed-before-admission" });
-  await page.waitForFunction(name => navigator.locks.query().then(state => state.pending.some(lock => lock.name === `${name}:exclusive`)), closedQueue);
+  await pollUntil(() => page.evaluate(name => navigator.locks.query().then(state => state.pending.some(lock => lock.name === `${name}:exclusive`)), closedQueue),
+    Boolean, { what: "the queued admission lock" });
   await tab(second, "close");
   await tab(page, "release-admission");
   tabCheck("closing a real tab store rejects queued admission without signing", await obsolete, { kept: false, builds: 0 });
