@@ -119,7 +119,9 @@ compare the founding actor with the caller.
 The scope-index adapter keeps positive `has()` answers in isolate memory
 (AR-8). It keys each answer by the scopes binding, the index binding, the
 mode, the name and the kind, and holds at most 4,096 answers per isolate,
-dropping the oldest first. It never keeps a negative answer or an error, so
+dropping the oldest first. A positive answer for a name and kind also stands
+for the name alone (AR-10), because `known_scope` stores one kind per name.
+A positive answer for the name alone never stands for a kind. It never keeps a negative answer or an error, so
 an unknown name still reaches the index and the adapter refuses it. A kept
 answer cannot go stale while `known_scope` rows are insert-only: `register`
 adds a row with `ON CONFLICT DO NOTHING`, and no code deletes or updates a

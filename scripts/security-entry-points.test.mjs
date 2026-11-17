@@ -289,7 +289,7 @@ const seals = {
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": namedOwners["packages/scope/src/worker.ts"],
   "packages/scope/src/worker-mcp.ts": namedOwners["packages/scope/src/worker-mcp.ts"],
-  "packages/scope/src/scope-index.ts": "90c4fc516175105050d4e606b8c7b0a9ad09fb38a50c892006d89208743fc3a8", // AR-8 keeps positive has() answers per isolate (insert-only known_scope rows).  Exact indexed scope and kind gate before internal native birth discovery.
+  "packages/scope/src/scope-index.ts": "b51b990281e2763f6ed73b094ff75883ae6905d5cc8e26efa1582b22ec4f2057", // AR-10: a positive kind answer also answers has(name); AR-8 keeps positive answers per isolate (insert-only known_scope rows).
   "packages/scope/src/host-wiring.ts": "6cbde3017c210bc1875d07c470bc588c452bc855171646ce889bf39cd9065fa5", // Installed-register authority retains exact Native birth and host binding.
   "packages/scope/src/installed-registers.ts": "39618d91dba4884b866f1823d5bc2ee89e7ca0b78b47b884387e7bfeba2dee5e", // Installed-register authority retains exact Native birth and host binding.
   "packages/scope/src/register-setting.ts": "1ead9e620589e3707e2a6515951cc095b44308a34aee6855b3bb8da37bd230ca", // Shared exact Register selector; actual maintained parser output.

@@ -90,7 +90,10 @@ async function cachedHas(known: Map<string, true>, index: ScopeIndexPort, mode: 
   const answer = kind === undefined ? await index.has(name) : await index.has(name, kind);
   if (answer !== true) return false;
   known.set(key, true);
-  if (known.size > KNOWN_SCOPE_CACHE_LIMIT) known.delete(known.keys().next().value!);
+  // AR-10: a row known with this kind is a known row, so the same answer
+  // also stands for has(name). A plain answer never stands for a kind.
+  if (kind !== undefined) known.set(`${mode}\u0000${name}\u0000`, true);
+  while (known.size > KNOWN_SCOPE_CACHE_LIMIT) known.delete(known.keys().next().value!);
   return true;
 }
 
