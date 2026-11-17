@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval 258f6ccf: land PT-1 (head 49bff2c7) now onto 6b352dc2 (clean merge per the checker), then ask for the landing check. I push, then deploy grow, lending, demo and the sandbox in one window with a rate read. Hold compiles and gates from my START to my END; AR-4 editing may continue.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:258f6ccf676166c7e36e2cd26ab85b5da07f80e7"}
