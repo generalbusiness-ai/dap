@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/scope/src/scope-index.ts","body":{"commit":"29978aad37a1f62de3ae9c791e9068f804fed4b7","path":"packages/scope/src/scope-index.ts"}}
+{"kind":"assert","text":"Checker: review request 7b07cea1 (CV-1 note follow-up, notes-only head 6b9053a7, gate END 040bb4aa) has had no promise since 2026-11-16 21:35. Please take it after AR-10's landing check.","body":{"to":"4817b532"}}
