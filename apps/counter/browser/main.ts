@@ -8,6 +8,7 @@ import { browserLock, counterCustody, dropRetiredSlots, privateDeviceStore, priv
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { applicationScreenTransport, loadApplicationScreenContext } from "@generalbusiness/dap-client";
 import { counterEnrollment } from "./installed.ts";
+import { atStep, unconfirmedWords } from "./enrollment-step.ts";
 import type { TrustedActFetch } from "./client.ts";
 async function main() {
 const screen = await loadApplicationScreenContext(location.href), installed = screen ? canonicalize(screen.scope) : undefined;
@@ -71,16 +72,16 @@ if (enrollment) {
       const result = await enrollment(() => at === active).perform(mode, dialog.querySelector<HTMLTextAreaElement>("[data-invitation]")!.value);
       if (at !== active) return;
       if (result.device) {
-        const held = await custody.load(() => at === active);
+        const device = result.device, held = await atStep("custody save", () => custody.load(() => at === active));
         if (at !== active) return;
-        await custody.save([result.device], undefined, () => at === active, held.epoch);
+        await atStep("custody save", () => custody.save([device], undefined, () => at === active, held.epoch));
         if (at !== active) return;
         custodyEpoch = held.epoch; devices = [result.device]; selectedKey = result.device.binding.publicKey;
         dialog.querySelector<HTMLTextAreaElement>("[data-invitation]")!.value = "";
         if (location.hash) history.replaceState(null, "", location.pathname);
       }
       message.textContent = result.reason;
-    } catch { if (at === active) message.textContent = "The enrollment remains unconfirmed. Check its original request before continuing."; }
+    } catch (error) { if (at === active) message.textContent = unconfirmedWords(error); }
     finally { busy = false; renderPicker(); }
   };
   dialog.querySelector<HTMLButtonElement>("[data-enroll]")!.onclick = () => { void enroll("join"); };

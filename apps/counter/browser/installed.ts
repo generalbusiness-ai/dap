@@ -5,6 +5,7 @@ import { applicationDeviceIdentity, browserJoining, browserPrivateSlots, generat
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import type { SavedDevice } from "./device-key.ts";
 import { counterCustody } from "./storage.ts";
+import { atStep } from "./enrollment-step.ts";
 interface Device { publicKey: import("@generalbusiness/dap-contract").KeyId; pair: CryptoKeyPair }
 export function counterEnrollment(context: ApplicationScreenContext, current: () => boolean, fetch?: Fetch) {
   if (context.definition !== COUNTING_COMMITMENTS_DEFINITION) throw Error("This presentation does not match the installed Counter definition.");
@@ -25,7 +26,7 @@ export function counterEnrollment(context: ApplicationScreenContext, current: ()
   });
   const saved = (key: Device, seat: BrowserJoinSeat): SavedDevice => ({ name: seat.handle, binding: applicationDeviceIdentity(context, seat, key.publicKey), key: key.pair.privateKey });
   const api = (key: Device) => browserJoining(storedWebCryptoSigner(key.publicKey, key.pair.privateKey), { origin: context.origin, membershipDefinition: context.membershipDefinition, current, ...(fetch ? { fetch, actFetch: fetch } : {}),
-    lock: slots, custody: counterCustody(), store: { load: () => get("join"), save: value => put("join", value), clear: async outcome => {
+    lock: slots, custody: counterCustody(), store: { load: () => atStep("join record", () => get("join")), save: value => atStep("join record", () => put("join", value)), clear: outcome => atStep("join record", async () => {
       if (!current()) throw Error("This join context is no longer current.");
       const value = await get("join") as BrowserKeptJoin | null;
       if (!current()) throw Error("This join context is no longer current.");
@@ -34,7 +35,7 @@ export function counterEnrollment(context: ApplicationScreenContext, current: ()
       if (outcome === "joined" && value?.v === 2) await put("seat", value.seat);
       if (!current()) throw Error("This join context is no longer current.");
       await slots.remove(prefix + ":join");
-    } },
+    }) },
   });
   return {
     forget: () => slots.run(async () => {
@@ -49,11 +50,11 @@ export function counterEnrollment(context: ApplicationScreenContext, current: ()
     async perform(mode: "join" | "check" | "continue", text = ""): Promise<{ device?: SavedDevice; reason: string }> {
       const invitation = mode === "join" ? readApplicationInvitation(context, text) : null;
       if (invitation && !invitation.ok) return { reason: invitation.reason };
-      const key = await device(mode === "join");
+      const key = await atStep("browser key", () => device(mode === "join"));
       usable();
       if (!key) return { reason: "No original browser enrollment is kept." };
-      const joining = api(key), result = mode === "join" && invitation?.ok ? await joining.join(invitation.link, invitation.seat)
-        : mode === "continue" ? await joining.continueOriginal() : await joining.check();
+      const joining = api(key), result = await atStep("enrollment request", () => mode === "join" && invitation?.ok ? joining.join(invitation.link, invitation.seat)
+        : mode === "continue" ? joining.continueOriginal() : joining.check());
       usable();
       return result?.status === "joined" ? { device: saved(key, result.seat), reason: "This browser's membership is confirmed. Choose a voice, then Join count." }
         : { reason: result?.reason ?? "No original enrollment is kept. Paste an invitation to enroll this browser." };

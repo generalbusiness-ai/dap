@@ -12,6 +12,7 @@ import { browserSpeech } from "./speech.ts";
 import { stageView, type StagePresentation } from "./view.ts";
 import { nativeGateway, type StageGateway } from "./client.ts";
 import { counterEnrollment } from "./installed.ts";
+import { EnrollmentStepError, atStep, errorClass, unconfirmedWords, type EnrollmentStep } from "./enrollment-step.ts";
 import type { CountingView } from "./model.ts";
 import type { ActorIdentity, AudioStart, PendingReport } from "./voice-controller.ts";
 class Element {
@@ -70,6 +71,7 @@ test("Installed enrollment cannot sign, save or remove a later slot after an awa
       const work=stage.startsWith("forget")?enrollment.forget():stage==="device-read"?enrollment.restore():enrollment.perform("join",invitation);
       const rejected=assert.rejects(work,/no longer current/);
       await entered;current=false;release();await rejected;
+      if(stage==="key-generation"||stage==="key-save"){const failed=await work.catch((error:unknown)=>error);assert.ok(failed instanceof EnrollmentStepError&&failed.step==="browser key",`${stage}: the stop names the browser key step`);}
       assert.equal(signs,0,`${stage}: no later probe or request signing`);
       assert.equal(generations,stage==="key-generation"||stage==="key-save"?1:0,`${stage}: no later key generation`);
       assert.deepEqual(saves,stage==="key-save"?["device"]:[],`${stage}: only an already-started key save may finish`);
@@ -79,6 +81,23 @@ test("Installed enrollment cannot sign, save or remove a later slot after an awa
       for(const [target,name,descriptor] of [[globalThis,"indexedDB",originalIDB],[globalThis,"navigator",originalNavigator],[crypto.subtle,"generateKey",originalGenerate],[crypto.subtle,"sign",originalSign]] as const){if(descriptor)Object.defineProperty(target,name,descriptor);else Reflect.deleteProperty(target,name);}
     }
   }
+});
+// NF-9: each enrollment step that stops names itself and the error class on the page, and never the message.
+test("A stopped enrollment step names itself and its error class, and an inner step keeps its own name",async()=>{
+  for(const step of ["browser key","join record","enrollment request","custody save"] as const satisfies readonly EnrollmentStep[]){
+    const failed=await atStep(step,async()=>{throw new TypeError("TEST private text");}).catch((error:unknown)=>error);
+    assert.ok(failed instanceof EnrollmentStepError,`${step}: the stop is a step error`);
+    assert.deepEqual([failed.step,failed.error],[step,"TypeError"],`${step}: step and class`);
+    const words=unconfirmedWords(failed);
+    assert.equal(words,`The enrollment remains unconfirmed at the ${step} step (TypeError). Check its original request before continuing.`);
+    assert.ok(!words.includes("TEST private text"),`${step}: the page never shows the message`);
+  }
+  const inner=await atStep("enrollment request",()=>atStep("join record",async()=>{throw new RangeError("x");})).catch((error:unknown)=>error);
+  assert.deepEqual([(inner as EnrollmentStepError).step,(inner as EnrollmentStepError).error],["join record","RangeError"]);
+  assert.equal(await atStep("custody save",async()=>7),7);
+  const odd=new Error("x");odd.name="Name with spaces";
+  assert.deepEqual([errorClass(odd),errorClass("thrown text"),errorClass(new DOMException("x","QuotaExceededError"))],["other","non-error","QuotaExceededError"]);
+  assert.equal(unconfirmedWords(new SyntaxError("y")),"The enrollment remains unconfirmed at an unnamed step (SyntaxError). Check its original request before continuing.");
 });
 // Browser speech inventory and utterances are stand-ins; no physical audio.
 test("Counter demo offers and plays only en-US voices, including after inventory changes",()=>{
