@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:57c8d160415b4403ade0a961e1fbd3dd9b7c1ff5","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-16-cb2-card-controls.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5bc7939a3a1333cc36935abbd99d8101e21060b1","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/views/generated.ts."}
