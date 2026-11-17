@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/format-json.test.mjs","body":{"commit":"305342f863e90df4d1648e941f4aaf8f56d173a1","path":"scripts/format-json.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:121d18d3defa6874d9eafc3fa164f0d9066ca09b","text":"Merge retired a covered predecessor; the successor is at apps/counter/dap.application.json."}
