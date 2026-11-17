@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval b389835e: land AR-8 (head 05ffba87) now onto b2477fd3 (clean merge per the checker), then ask for the landing check. I push, deploy grow, lending, demo and the sandbox if its bundle moves, and read the rate with scripts/do-rate.mjs --all for 15 minutes. Hold gates until my END. UP-1 review may proceed (no compile).","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b389835ef3bed627b15a49dea9872fc36198146b"}
