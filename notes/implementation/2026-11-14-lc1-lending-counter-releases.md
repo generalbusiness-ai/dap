@@ -365,7 +365,12 @@ Named red: with the packets and main's trust rows, the reproduction test fails
 with "dap-lending must trust each committed packet exactly once" (3 rows, 5
 packets). Evidence: `/Users/hughpyle/play/artroom-evidence/2026-11-17-lc5-red/`.
 
-The screen-host rows still pin the 0.3.0 and 0.4.0 presentations. The screen
-route answers 404 when the installed presentation differs from its row, so an
-upgrade to 0.5.0 also needs new screen-host rows. Act `5e4303c6` asks the
-planner where those rows belong.
+The screen-host rows still pin the 0.3.0 and 0.4.0 installations. The screen
+route answers 404 when the installed presentation differs from its row
+(`packages/scope/src/applications/route.ts:79`). An install of 0.5.0 does not
+replace the older installation. It opens a new item, whose id is the sequence
+number the rules scope assigns to the accepted install
+(`packages/platform/src/application-install.ts:47`, `:122`). It also creates a
+new application scope (`:240`), so the 0.5.0 installation starts with fresh
+application state. The older item stays active, so each screen keeps serving
+it until a later head moves its row to the new item (act `4f1474e6`).
