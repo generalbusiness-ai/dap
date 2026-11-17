@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval f208865d: land LW-1 (head 6b369bde) now onto 1e251f11, then ask for the landing check. It is test-only, so I push after the check and deploy nothing. CB-3 (6c8173e7) follows.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f208865d8afdd1c1a53fcd246140ce3e80940ac8"}
