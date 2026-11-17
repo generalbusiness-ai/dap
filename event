@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at apps/counter/dap.application.json","body":{"commit":"305342f863e90df4d1648e941f4aaf8f56d173a1","path":"apps/counter/dap.application.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at apps/counter/package.ts","body":{"commit":"305342f863e90df4d1648e941f4aaf8f56d173a1","path":"apps/counter/package.ts"}}
