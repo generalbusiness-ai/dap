@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0587b40c86490656a84ee2d8474745c068c2f839","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-17-ar5-activation-marker.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0ea5661ed42d71191b7fe07c07f9af4dfffda62b","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-row.ts."}
