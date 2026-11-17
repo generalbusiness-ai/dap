@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval 417b350e: land NF-9 (head 6e9acc3a) now onto f197a89d, then ask for the landing check. I push; I dry-run the Workers afterwards and deploy only if a bundle moved (the Counter page change is open 0.6.0 and reaches users only through a signed install). NF-10 next, stacked on it.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:417b350ebe06126968c12d0bc24b3e1714f99c3f"}
