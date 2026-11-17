@@ -81,8 +81,8 @@ gives each end, and the steps for a stolen key.
 ### `dap install`
 
 ```
-dap install <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort failed-claim|own-agent|repository-binding|unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery|commons]
-dap install --plan <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort failed-claim|own-agent|repository-binding|unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery|commons]
+dap install <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort base|upgrade|failed-claim|own-agent|repository-binding|unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery|commons]
+dap install --plan <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort base|upgrade|failed-claim|own-agent|repository-binding|unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery|commons]
 dap install --planned [--register-policy keys|open] [--cohort <saved-cohort>]
 dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>] [--owner <full-member-JSON>]
 ```
@@ -172,6 +172,7 @@ the `platform:` prefix.
 | `--cohort` | register | directory | membership | rules | destination | inbox |
 |---|---|---|---|---|---|---|
 | `base` (the default) | 28 | 27 | 14 | 15 | 21 | 1 |
+| `upgrade` | 29 | 28 | 14 | 16 | 21 | 1 |
 | `failed-claim` | 26 | 25 | 12 | 10 | 19 | 1 |
 | `archive-device-publication` | 18 | 17 | 8 | 10 | 13 | 1 |
 | `unpublished` | 21 | 20 | 8 | 10 | 16 | 1 |
@@ -185,6 +186,11 @@ the `platform:` prefix.
 | `own-agent` | 27 | 26 | 13 | 10 | 20 | 1 |
 
 The `commons` cohort also pins `platform:commons@1`.
+
+The `upgrade` cohort is the `base` cohort with Rules 16, which adds the
+`upgrade-application` act. A member who holds `application.install` uses it
+to move an active installation to a newer signed release of the same
+publisher.
 
 The `base` cohort is the default for every host, `none` included. It keeps
 the failed-claim final state, separate founder and recovery keys, the

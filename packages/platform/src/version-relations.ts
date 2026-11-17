@@ -65,7 +65,7 @@ export function answersVersionRelation(question: BooleanVersionRelation, ...pins
 export const pagePartitionOpeningDeclaration = (): "platform:directory-partition@1" => "platform:directory-partition@1";
 
 export const CLI_INSTALL_REGISTERS = {
-  base: BC.register, "failed-claim": FC.register, "repository-binding": RB.register, "own-agent": OA.register,
+  base: BC.register, upgrade: UC.register, "failed-claim": FC.register, "repository-binding": RB.register, "own-agent": OA.register,
   "separate-recovery": SR.register, commons: CC.register, unpublished: UN.register,
   "invitation-key": INVITATION_KEY_COHORT.register, "file-publication": "platform:register@3",
   application: APPLICATION_COHORT.register, "application-publication": FILE_PUBLICATION_COHORT.register,
