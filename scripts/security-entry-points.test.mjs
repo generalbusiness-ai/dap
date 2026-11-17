@@ -12,7 +12,7 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 const namedOwners = {
   "packages/scope/src/object.ts": {
     "packages/scope/src/object.ts:$module": "61e64e92aebf2a3c602365b09d982b68ab0d7a348a1bc2b6232455b2bbf2079e",
-    "packages/scope/src/object.ts:ScopeObject": "92fa6b7c21573229c9b994a64131373ff403eb799fc71ffea2aedf59cd3c9436"
+    "packages/scope/src/object.ts:ScopeObject": "8b71320c8a10617e754c6709de4c25c5adc77ad54f83194571f4e0500d051901"
   },
   "packages/scope/src/object-archive.ts": {
     "packages/scope/src/object-archive.ts:$module": "7d7c0da57c8b69bc953c19a59e3bd6af25a5f02863bac10ef6fd839fc9dd5adc",
@@ -370,19 +370,19 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-operator.ts": "8fca4c14a1fd93a21f5a707c60ef8fb6f8249b644fe32f367ce0321f975091b8", // Private observation owner; actual maintained parser output.
   // Publication and floor owners were reviewed before these values were
   // computed by the maintained parser on the integrated source.
-  "packages/scope/src/archive-target.ts": "0b96dfe16e0d051a9978e1324505206e6dcea9019985f2ee3dd787e712285469", // Read ceilings settle only after bounded replies; authority checks unchanged.
+  "packages/scope/src/archive-target.ts": "a341d15ae654a75694f3d8ca9101187f4dbd4b73a5d0b4efc40a45f46fe251c8", // AR-4: only the checked Directory's own "unbound" answer leaves the hop; every other refusal stays null. Read ceilings settle only after bounded replies.
   "packages/scope/src/archive-source-window.ts": "300e4a3f51f23b93a2ce026b98993700e3c0b8947d35b68de195adc5c522ae45",
   "packages/scope/src/archive-publication.ts": "6c13c9f864b559e26d75982eca85c058975a12f18ad00b660c227577aae76d9b",
   "packages/scope/src/archive-build.ts": "bf1c79debbe0141140174c9a3d79f63d1952b874bce1d8713207dea8c817b8a0", // Actual pin SQL payload settles; final identity fence unchanged.
-  "packages/scope/src/archive-driver.ts": "70d0a2942c87a2486ad23672f189f19f30b28716fdd9d9c35f46fd73ae5a11a5", // AS-2 adds stopCause to archive-pass-diagnostic-v1 only. AR-1 bounds every archive retry (60 s floor, one-hour cap, persisted retry count), leaves no stored wake in the past, and returns before policy work while the stored wake is in the future; actual maintained AST output.
-  "packages/scope/src/archive-row.ts": "0b69533c7387fd730e8a5717cc6dfce1269ba22db199303f76eeff6ed32ad3f3", // AR-1 adds the bounded retry count to the wake record; defer takes the delay as a function of it; actual maintained AST output.
+  "packages/scope/src/archive-driver.ts": "99c1540df454dbec081a693f8c661d37c7d173b9d1512f9a143dc9748deb30eb", // AR-4 ends a pass whose Directory answers "unbound" as disabled, with the unbound marker and a one-day recheck. AS-2 adds stopCause to archive-pass-diagnostic-v1 only. AR-1 bounds every archive retry (60 s floor, one-hour cap, persisted retry count), leaves no stored wake in the past, and returns before policy work while the stored wake is in the future; actual maintained AST output.
+  "packages/scope/src/archive-row.ts": "13fea01061dbad72ac9509c8386ed14c0099a235134ffec6140a00872d9cfd86", // AR-4 adds the optional unbound marker to the wake record; a member's commits leave it, a Directory commit drops it. AR-1 adds the bounded retry count to the wake record; defer takes the delay as a function of it; actual maintained AST output.
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "packages/scope/src/object-archive.ts": namedOwners["packages/scope/src/object-archive.ts"],
   "apps/room/worker.grow.ts": "c525a1b0d13e6243099d03b80c5207b76f082c71432db2b8ecaf86ccf8cb1160",
   "apps/room/archive-policy.ts": "3723eb633f5da1572d3adc3c1321de3e37cd3a0ee2ea3da77186d6a7b374483c",
-  "apps/room/archive.ts": "7a9e7aa6f3a1f38245f6dafcf526afcd27f1893462f89f287f69f4bd0997f8df", // AE-1 shared Artifacts adapter and authenticated package policy; actual maintained AST output.
-  "packages/scope/src/archive-host-item.ts": "72a9e8b4364fba877df3502f11bd71de4f9ae2076cbd490744aaedd7e3ca8602",
+  "apps/room/archive.ts": "b024fdfc2c69cfe3b835e02dadf6a9aab822ebb1b66885244642c817a5342ae0", // AR-4 passes only the checked Directory's "unbound" answer and reads the route through target.bound(). AE-1 shared Artifacts adapter and authenticated package policy; actual maintained AST output.
+  "packages/scope/src/archive-host-item.ts": "41dfb134296ce3bb1d16f1a743dfa88eab5d17c788702279e40ed2bd2a81547e", // AR-4 answers "unbound" only after every Directory check; every other failure stays forbidden.
   "packages/scope/src/archive-host.ts": "ad759aff6f090fab3401d2f75274af294269f7db488ae2d5c56954759cdf754a", // Migration collectors settle only checked POST byte receipts; decoder fees and authority fences unchanged.
   "packages/scope/src/artifacts-host.ts": "17169f775db94ec5544115119385ab979854b43679185f4360b07311e1a8a516", // Reviewed durable fork setup custody; the journal owns its later revocation.
   "packages/scope/src/artifacts-wiring.ts": "addcb51aef7f62f98b9ddabe3a40ebb9f552df2d6d41f192eadd840dd0a4d76d",

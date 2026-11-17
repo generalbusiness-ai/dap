@@ -7,8 +7,7 @@ import { archiveTarget } from "../../packages/scope/src/archive-target.ts";
 import { namespace, type Binding } from "../../packages/scope/src/namespace.ts";
 import { readNativeBirth } from "../../packages/scope/src/native-birth.ts";
 import { FixtureArchiveSourcePins as ArchiveSourcePins, type FixtureArchiveSourceBirth } from "../../packages/scope/src/archive-source-pins.ts";
-import type { ArchiveHostConfiguration, ArchiveHostItemAsk } from "../../packages/scope/src/archive-host-item.ts";
-import type { NativeItemQuery } from "../../packages/scope/src/item-queries.ts";
+import type { ArchiveHostConfiguration, ArchiveHostItemAsk, ArchiveHostItemReply } from "../../packages/scope/src/archive-host-item.ts";
 import { isRoomRetiredStop, type RoomRetiredStop } from "../../packages/scope/src/room-retired.ts";
 import type { ArchiveBudget } from "../../packages/scope/src/archive-budget.ts";
 import type { ArchivePolicyRegistry } from "../../packages/scope/src/archive-inventory.ts";
@@ -63,9 +62,11 @@ export function roomArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
       };
       const target = archiveTarget({ births: { read: async (...args) => capture(args[0], await nativeBirths.read(...args)) },
         query: async (where, query, archiving, directory) => {
-          const peer = binding.get(binding.idFromName(where.scope)) as unknown as { archiveItem(ask: ArchiveHostItemAsk): Promise<NativeItemQuery | RoomRetiredStop> };
+          const peer = binding.get(binding.idFromName(where.scope)) as unknown as { archiveItem(ask: ArchiveHostItemAsk): Promise<ArchiveHostItemReply | RoomRetiredStop> };
           const answer = await peer.archiveItem({ query, archiving, directory });
           if (isRoomRetiredStop(answer)) return { ok: false, reason: "unavailable" };
+          // AR-4: only the checked Directory's own answer can say "unbound".
+          if (!answer.ok && answer.reason === "unbound") return same(where, directory) ? answer : { ok: false, reason: "forbidden" };
           const checked = readItemQueryParameter(query);
           const page = answer.ok && checked ? readItemQueryReply(utf8(answer.serialized), checked) : null;
           const row = page?.ok && page.complete && page.value.items.length === 1 ? page.value.items[0] : null;
@@ -77,7 +78,8 @@ export function roomArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
       // Directory's own charged pass discovers/activates its quiet Rules
       // sibling. Room/Site preserve their complete target route while not
       // reading that unrelated birth on every application-journal pass.
-      const discovered = await (seed.kind === "lane" ? target.discoverRoom(at, seed, budget) : target.discover(at, seed, budget));
+      const discovered = await target.bound(at, seed, budget);
+      if (discovered === "unbound") return discovered;
       const repository = discovered?.repository;
       if (!repository || repository.host !== config.host || repository.namespace !== config.namespace) return null;
       prepared.set(budget, births);

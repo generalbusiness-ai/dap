@@ -16,8 +16,13 @@ import type { Sql } from "./sqlite.ts";
 
 export interface ArchiveHostConfiguration { readonly registerScope: ScopeId | readonly ScopeId[]; readonly host: string; readonly namespace: string; readonly directory?: ScopeId }
 export interface ArchiveHostItemAsk { readonly query: string; readonly archiving: ScopeRef; readonly directory: ScopeRef }
+/** AR-4: the Directory's repository row passed every check, and its archive
+ * slot names no journal. A room that never binds an archive gets this answer
+ * on every pass, so the archive driver stops retrying until a daily recheck. */
+export const ARCHIVE_UNBOUND = Object.freeze({ ok: false, reason: "unbound" } as const);
+export type ArchiveHostItemReply = NativeItemQuery | typeof ARCHIVE_UNBOUND;
 
-export function archiveHostItem(sql: Pick<Sql, "exec">, given: OutsideGiven, pinned: Pinned | null, config: ArchiveHostConfiguration | null, ask: ArchiveHostItemAsk): NativeItemQuery {
+export function archiveHostItem(sql: Pick<Sql, "exec">, given: OutsideGiven, pinned: Pinned | null, config: ArchiveHostConfiguration | null, ask: ArchiveHostItemAsk): ArchiveHostItemReply {
   const refused = { ok: false, reason: "forbidden" } as const;
   try {
     // A reference names no kind. The archive driver admits the archiving scope by its own birth's seed kind; this host
@@ -32,7 +37,9 @@ export function archiveHostItem(sql: Pick<Sql, "exec">, given: OutsideGiven, pin
       if (!same(scope.at, ask.directory) || (!answersVersionQuestion(pinned.named, "scopeArchiveHostDirectory")) || query.type !== "repository" || query.states.join() !== "open") return refused;
       const row = given.state.page("repository", ["open"], null, 1).items[0];
       const claim = row?.refs["claim"], repository = row?.values["repository"] as Record<string, unknown> | undefined;
-      if (row?.values["archive"] !== "journal" || !same(row.refs["register"], genesis?.seed.creator)
+      // AR-4: the archive slot is checked last. A caller that gets "unbound"
+      // passed every check that would otherwise return this row to it.
+      if (!row || !same(row.refs["register"], genesis?.seed.creator)
         || !genesis?.seed.creator || !registers.includes(genesis.seed.creator.scope) || !isFactRef(claim) || !registers.includes(claim.at.scope)
         || repository?.["host"] !== config.host || repository["namespace"] !== config.namespace) return refused;
       const use = given.own(0)?.entry.uses.find(use => same(use.fact, claim));
@@ -42,6 +49,7 @@ export function archiveHostItem(sql: Pick<Sql, "exec">, given: OutsideGiven, pin
       const seeds = opening.effects.filter(effect => effect.effect === "value" && effect.item === claim.seq && effect.slot === "seed");
       const seed = seeds.length === 1 && seeds[0]?.effect === "value" ? seeds[0].value : null;
       if (!isDigest(seed) || directoryIdOf(seed) !== scope.at.scope) return refused;
+      if (row.values["archive"] !== "journal") return ARCHIVE_UNBOUND;
     } else if (scope.kind === "destination") {
       if ((!answersVersionQuestion(pinned.named, "scopeArchiveHostDestination")) || query.type !== "branch" || query.states.join() !== "empty,ready"
         || genesis?.sourceKind !== "directory" || !genesis.source || !same(resolveGenesisSelf(genesis.seed.creator, genesis.source), ask.directory) || !hostBound(given, config.registerScope, config.host, config.namespace)(pinned.named)) return refused;

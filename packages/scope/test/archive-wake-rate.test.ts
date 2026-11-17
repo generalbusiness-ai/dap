@@ -4,9 +4,9 @@
  * policy, target and provider ports are TEST stand-ins. They count the calls
  * that a production pass makes to the shared Directory scope. */
 import { expect, onTestFinished, test } from "vitest";
-import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, parseStrict, timeOf } from "@generalbusiness/dap-bytes";
 import { ArchivePolicyPending } from "../src/archive-budget.ts";
-import { ARCHIVE_RETRY_FLOOR_SECONDS } from "../src/archive-driver.ts";
+import { ARCHIVE_RETRY_FLOOR_SECONDS, ARCHIVE_UNBOUND_RECHECK_SECONDS } from "../src/archive-driver.ts";
 import { ScriptedHost } from "./support/archive-driver.ts";
 import { rita } from "./fixtures-native.ts";
 import { archiveAuthorityPolicies, createNativeArchiveApplicationLane } from "./support/archive-native-authority.ts";
@@ -78,5 +78,50 @@ test.each(cases)("an idle room whose archive stays $kind ($mode, old wake: $old)
   expect(passes.length).toBeLessThanOrEqual(CEILING);
   expect(directoryCalls).toBe(passes.length);
   if (mode === "other-alarms") expect(notDue, "other alarms fell between the archive wakes").toBeGreaterThan(50);
+  expect(host.mintCalls).toBe(0); expect(host.sends).toEqual([]);
+}, 60_000);
+
+/** AR-4: a lane whose Directory names no archive destination. The room keeps
+ * committing every minute, as Room A's simulator does. */
+test("an unbound lane that commits every minute makes one pass a day, and an unreadable target after it keeps the AR-1 backoff", async () => {
+  const lane = await createNativeArchiveApplicationLane(), host = new ScriptedHost("sha1");
+  let directoryCalls = 0, answer: "unbound" | null = "unbound";
+  roomArchiveWiring.set(lane.name, () => ({ production: "room-binding", provider: host,
+    policies: { registry: archiveAuthorityPolicies(lane, archivePolicies) }, admit: () => true,
+    target: { resolve: async () => { directoryCalls++; return answer; } } }));
+  onTestFinished(() => { roomArchiveWiring.delete(lane.name); });
+  await lane.restart();
+  await lane.did(rita, "remark", { on: 0, fields: { text: "the first act wakes the archive" } });
+  const start = Date.parse(lane.c.clock.now);
+  const wake = () => lane.inside(state => parseStrict(state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'archive-wake-1'").one().v) as Record<string, unknown>);
+  // The first pass gets the definite answer and stores the member marker.
+  lane.c.clock.now = timeOf(Math.max(start, (await lane.alarmAt()) ?? start));
+  expect(await lane.alarm()).toBe(true);
+  expect(directoryCalls).toBe(1);
+  const marked = await wake();
+  expect(marked).toEqual({ pending: false, stopped: false, next: expect.any(String), unbound: "member" });
+  const recheck = Date.parse(marked["next"] as string);
+  expect(recheck - Date.parse(lane.c.clock.now), "the recheck waits one day").toBe(ARCHIVE_UNBOUND_RECHECK_SECONDS * 1000);
+  // An hour of commits, one a minute, each followed by the scope's alarm.
+  for (let minute = 1; minute <= 60; minute++) {
+    lane.c.clock.now = timeOf(start + minute * 60_000);
+    await lane.did(rita, "remark", { on: 0, fields: { text: `minute ${minute}` } });
+    expect(await lane.alarm()).toBe(true);
+  }
+  expect(directoryCalls, "no commit wakes an unbound member").toBe(1);
+  expect(await wake(), "commits leave the marker and its recheck").toEqual(marked);
+  expect(await lane.alarmAt()).toBe(recheck);
+  // The daily recheck: still unbound, so one more pass and one more day.
+  lane.c.clock.now = timeOf(recheck); await lane.restart();
+  expect(await lane.alarm()).toBe(true);
+  expect(directoryCalls).toBe(2);
+  expect(await wake()).toEqual({ pending: false, stopped: false, next: timeOf(recheck + ARCHIVE_UNBOUND_RECHECK_SECONDS * 1000), unbound: "member" });
+  // The next recheck cannot read the target: a transient failure keeps the
+  // AR-1 backoff from the floor, and drops the marker.
+  answer = null;
+  lane.c.clock.now = timeOf(recheck + ARCHIVE_UNBOUND_RECHECK_SECONDS * 1000);
+  expect(await lane.alarm()).toBe(true);
+  expect(directoryCalls).toBe(3);
+  expect(await wake()).toEqual({ pending: true, stopped: false, next: timeOf(Date.parse(lane.c.clock.now) + ARCHIVE_RETRY_FLOOR_SECONDS * 1000), retries: 1 });
   expect(host.mintCalls).toBe(0); expect(host.sends).toEqual([]);
 }, 60_000);

@@ -23,7 +23,7 @@ import { command as dapCommand, memoryStore as cliMemoryStore } from "../../cli/
 import { artifactsOutside } from "../src/artifacts-wiring.ts";
 import type { ArtifactsNamespace } from "../src/artifacts-host.ts";
 import { archiveInput } from "../src/archive-input.ts";
-import { ARCHIVE_RETRY_FLOOR_SECONDS, ArchiveDriver } from "../src/archive-driver.ts";
+import { ARCHIVE_RETRY_FLOOR_SECONDS, ARCHIVE_UNBOUND_RECHECK_SECONDS, ArchiveDriver } from "../src/archive-driver.ts";
 import { ArchiveFrontiers } from "../src/archive-frontier-store.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { readArchiveRestart } from "../src/archive-restart.ts";
@@ -404,7 +404,7 @@ for (const scenario of scenarios) {
         ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: repository.namespace, host: "service.invalid", maxBytes: 8 * 1024 * 1024, credentialIdentity: "adapter-attempt" }),
          };
       const reads: { owner: string; source: string }[] = [];
-      let threwPrebindTarget = false, interruptedFirstSources = false;
+      let threwPrebindTarget = false, interruptedFirstSources = false, unboundLookups = 0;
       const ledgers: { owner: string; budget: ArchiveBudget; targetBefore?: ArchiveCost; targetAfter?: ArchiveCost; resolved?: boolean }[] = [];
       for (const scope of [rootScope, childScope, D, A, G]) {
         roomArchiveConstructions.set(scope.name, 0);
@@ -438,8 +438,9 @@ for (const scenario of scenarios) {
             target: { resolve: async (...args) => {
               expect(args[2]).toBe(ownLedger!.budget); ownLedger!.targetBefore = args[2].admitted();
               const repository = await options.target.resolve(...args);
-              ownLedger!.targetAfter = args[2].admitted(); ownLedger!.resolved = repository !== null;
-              if (scope.name === D.name && repository === null && scenario === "Grow activation evicted" && !threwPrebindTarget) {
+              ownLedger!.targetAfter = args[2].admitted(); ownLedger!.resolved = repository !== null && repository !== "unbound";
+              if (scope.name === D.name && repository === "unbound") unboundLookups++;
+              if (scope.name === D.name && repository === "unbound" && scenario === "Grow activation evicted" && !threwPrebindTarget) {
                 threwPrebindTarget = true; throw Error("TEST target unavailable after real unbound lookup");
               }
               return repository;
@@ -457,19 +458,34 @@ for (const scenario of scenarios) {
         const bytes = state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k='archive-wake-1'").one().v;
         return parseStrict(bytes);
       }));
-      // Warm Directory's actual configured instance before binding. Its
-      // missing-binding pass must retain a real retry wake, without a row.
+      // Warm Directory's actual configured instance before binding. The
+      // real host answers "unbound" (AR-4). Warm: the pass stores the
+      // Directory's unbound marker with a daily recheck. Evicted: the TEST
+      // wrapper turns that first lookup into a transient throw, so the pass
+      // keeps the AR-1 retry wake. Neither pass stores a row.
       await life.wait(() => (D.object as unknown as { readiness(): Promise<unknown> }).readiness());
       expect(await life.wait(() => runDurableObjectAlarm(D.object))).toBe(true);
+      const unbound = scenario === "Grow activation warm";
       const retry = await alarm(D); expect(retry).not.toBeNull(); expect(retry).toBeGreaterThan(life.now());
-      const deferredWake = { pending: true, stopped: false, next: timeOf(retry!), retries: 1 };
+      if (unbound) expect(retry! - life.now(), "the unbound recheck waits about a day").toBeGreaterThan(ARCHIVE_UNBOUND_RECHECK_SECONDS * 1000 - 60_000);
+      const deferredWake = unbound ? { pending: false, stopped: false, next: timeOf(retry!), unbound: "directory" } : { pending: true, stopped: false, next: timeOf(retry!), retries: 1 };
       expect(await wakeIndex(D)).toEqual(deferredWake);
+      expect(unboundLookups).toBe(1);
       expect(threwPrebindTarget).toBe(scenario === "Grow activation evicted");
       expect(await life.wait(() => runInDurableObject(D.object, (_instance, state) => new ArchiveRows(archiveSql(state), directory).load()))).toBeNull();
       expect(roomArchiveConstructions.get(A.name)).toBe(0);
+      const bindAt = life.now();
       await life.wait(async () => D.did(rita, "bind-archive", { on: 0, fields: { archive: "journal" }, expected: await D.expected({ on: 0 }) }));
-      expect(await alarm(D)).toBe(retry); // warm onSealed must not shorten retry
-      expect(await wakeIndex(D)).toEqual(deferredWake);
+      // AR-4: the binding commit drops the Directory's unbound marker and
+      // wakes it now. A transient retry keeps its AR-1 backoff (warm
+      // onSealed must not shorten it).
+      const boundWake = unbound ? await wakeIndex(D) as { next: string } : deferredWake;
+      if (unbound) {
+        expect(boundWake).toEqual({ pending: false, stopped: false, next: expect.any(String) });
+        expect(Date.parse(boundWake.next)).toBeGreaterThanOrEqual(bindAt); expect(Date.parse(boundWake.next)).toBeLessThanOrEqual(life.now());
+      } else expect(await wakeIndex(D)).toEqual(boundWake);
+      const bound = unbound ? Date.parse(boundWake.next) : retry;
+      expect(await alarm(D)).toBe(bound);
       const directoryConstructions = roomArchiveConstructions.get(D.name)!;
       if (scenario === "Grow activation evicted") await life.wait(() => D.restart());
       const readStart = reads.length;
@@ -479,8 +495,8 @@ for (const scenario of scenarios) {
       expect(reads.slice(readStart).some(read => read.owner === childScope.name && read.source === A.name)).toBe(false);
       expect(roomArchiveConstructions.get(A.name)).toBe(0);
       expect(roomArchiveConstructions.get(D.name)).toBe(directoryConstructions + (scenario === "Grow activation evicted" ? 1 : 0));
-      const directoryWake = await alarm(D); expect(directoryWake).toBe(retry);
-      expect(await wakeIndex(D)).toEqual(deferredWake);
+      const directoryWake = await alarm(D); expect(directoryWake).toBe(bound);
+      expect(await wakeIndex(D)).toEqual(boundWake);
       life.active(); net.clock.now = timeOf(Math.max(life.now(), directoryWake!));
       expect(await life.wait(() => runDurableObjectAlarm(D.object))).toBe(true);
       expect(reads.some(read => read.owner === D.name && read.source === A.name)).toBe(true);
