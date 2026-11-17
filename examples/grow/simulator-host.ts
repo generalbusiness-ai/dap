@@ -77,8 +77,10 @@ export function simulatorHost(packetText: string, expectedRelease: Digest, expec
           || answer.session.claims.key !== signer.key || answer.session.endedBy(timeOf(now))) throw new Error("demo-session-mismatch");
         return answer.session;
       }
+      // One session reads and submits for both agents. Each act carries its
+      // own agent's signature, and the Room checks that key's standing, so
+      // the climate agent needs no session of its own.
       const sensorsSession = await memberSession("sensors", sensorsSecret, signers.sensors);
-      await memberSession("climate", climateSecret, signers.climate);
       const reader = new ScopeHandle(transport, config.room.scope, sensorsSession.reader());
       phase = "installed-owner";
       const birth = await reader.entry(0);

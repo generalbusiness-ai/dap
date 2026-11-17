@@ -352,7 +352,7 @@ const seals = {
   "packages/client/src/application-install.ts": "f6c69d8f3abb87eaaecdaf25360deaaca98eec3ca6cb57a5912d72121cb1000c", // Reviewed R10 trust-before-fetch owner; actual maintained parser output. CF-1 changes it; actual maintained parser output.
   "packages/scope/src/applications/resolve.ts": "6338c9357780846b115999454239b68f34c5d6be3c090ca3f18b8f6e8771d0e2", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "examples/grow/simulator-worker.ts": "9f1c5f0a8fd16fd2200e5b4aecc5ebbe874bfd6497476e19e120c3a0dfd834d0",
-  "examples/grow/simulator-host.ts": "25147890d54ef509cbea2996d81f4a8ea6d37d5309be90bf47e9a76acd381541"
+  "examples/grow/simulator-host.ts": "d63e3ce49801910f0db117c4cfa853f7da71a1a1ffc996fcdec8c2922a684e24"
 };
 // Integrated archive owners computed by the maintained owning parser.
 // Root adopted the reviewed outputs; the historical map name is retained here.

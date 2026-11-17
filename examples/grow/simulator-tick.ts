@@ -70,7 +70,11 @@ export async function acceptedTickFact(answer: Extract<Answer, { answer: "accept
 export async function simulatorTick(config: SimulatorTick, port: SimulatorPorts): Promise<TickReport> {
   const report: TickReport = { result: "stopped", phase: "read", accepted: [], alreadyClosed: 0, scannedThrough: null, acknowledgedThrough: null, completeWindow: false, pendingInWindow: 0 };
   let lastRequest: SignedIntent | undefined, climateActs = 0;
+  // Acts sent so far. A snapshot taken after the last act is still current
+  // for this tick's own writes; reuse it rather than read the summary again.
+  let sent = 0, lastSnapshot: { snapshot: Snapshot; sent: number } | null = null;
   async function snapshot(): Promise<Snapshot> {
+    if (lastSnapshot?.sent === sent) return lastSnapshot.snapshot;
     const read = await port.reader.summary();
     if (!read.ok || !read.complete || read.next !== undefined || !same(read.value.scope, config.scope) || read.value.definition !== config.definition || read.value.status !== "active") return tickFailure("room-snapshot-unavailable");
     const root = read.value.items.find(item => item.type === "room" && item.state === "open");
@@ -79,6 +83,7 @@ export async function simulatorTick(config: SimulatorTick, port: SimulatorPorts)
     const rows = (type: string) => read.value.items.filter(item => item.type === type);
     const result = { summary: read.value, head: read.at, root, zones: rows("zone"), devices: rows("device"), alerts: rows("alert"), incidents: rows("incident"), tasks: rows("task") };
     if (result.zones.length !== 4 || result.devices.length !== 12) return tickFailure("demo-room-not-commissioned");
+    lastSnapshot = { snapshot: result, sent };
     return result;
   }
   async function fact(position: number): Promise<{ fact: FactRef; entry: import("@generalbusiness/dap-contract").Entry }> {
@@ -88,6 +93,7 @@ export async function simulatorTick(config: SimulatorTick, port: SimulatorPorts)
   }
   async function send(role: "sensors" | "climate", kind: string, on: number | null, fields: Record<string, FieldValue>, expected: Record<string, number>, owner = false): Promise<FactRef | "already-closed"> {
     lastRequest = await signedIntent(config.signers[role], { to: config.scope, kind, on, fields, expected }, { now: config.now, lifetimeSeconds: 120 });
+    sent++;
     const answer = await (owner ? port.answer(lastRequest) : port.submit(lastRequest));
     if (owner && answer.answer === "refused" && answer.reason === "capability-refused" && answer.name === "device-command-closed") { report.alreadyClosed++; return "already-closed"; }
     if (answer.answer === "archived") return tickFailure(`archived:${answer.fact.seq}`);
