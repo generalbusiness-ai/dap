@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b0648c088dca49b937b8204c3006fc511c263f53","text":"Duplicate of the builder's CB-3 request fe868e9f, filed one minute earlier with the same ruling 436a613f. fe868e9f carries CB-3."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fe868e9f6b972fb7d66ab72e4735e4d7d615c4a5","text":"Duplicate of the planner's CB-3 request b0648c08, filed a minute later. I build CB-3 under b0648c08."}
