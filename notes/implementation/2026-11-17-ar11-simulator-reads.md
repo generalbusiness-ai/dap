@@ -62,6 +62,23 @@ application changes.
 moves from `25147890` to `d63e3ce4`. The diff adds one comment and removes
 one session request. The simulator's `fetch` stays an unconditional 404.
 
+## Baseline
+
+RR-2 landed first, so this head lowers `dap-grow` in
+`ops/do-rate-baseline.json` by the saving the reds count: one session and
+one summary read a minute.
+
+| Figure           | Before (RR-2)          | After (AR-11)          |
+| ---------------- | ---------------------- | ---------------------- |
+| Floor            | 32                     | 30                     |
+| Limit            | 36                     | 34                     |
+| Peaks :10 to :41 | 53, 47, 51, 48, 42, 41 | 51, 45, 49, 46, 40, 39 |
+
+The figures are inference from the per-tick count, not a measured rate.
+The rate read after the AR-11 deployment replaces them. This head also
+rewraps one paragraph in step 7 of `docs/operate-a-service.md` and one in
+the RR-2 note, as the RR-2 review asked.
+
 ## Rate
 
 Before: `dap-grow` 32 Durable Object requests a minute (END `5995bf0a`,

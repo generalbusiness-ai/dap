@@ -52,10 +52,10 @@ Worker:
   a minute of the hour from `00` to `59`. The limit defaults to the floor.
 
 It refuses a negative or non-numeric floor, a limit below the floor, a
-minute that is not two digits, a peak below the limit and any other key
-that does not start with `$`. `limitAt` gives the limit for one minute: the
-peak for that minute of the hour, otherwise the limit. A minute flags when its count is above its
-limit. A file with only numbers reads as before.
+minute that is not two digits, a peak below the limit and any other key that
+does not start with `$`. `limitAt` gives the limit for one minute: the peak
+for that minute of the hour, otherwise the limit. A minute flags when its
+count is above its limit. A file with only numbers reads as before.
 
 ## Requests per object
 

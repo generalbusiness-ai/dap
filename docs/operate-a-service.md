@@ -291,11 +291,11 @@ application sandbox `dap-application-sandbox`, with its configuration in
 
    The command prints requests per minute for each Worker in the account,
    then each Worker's total and per-hour rate. `ops/do-rate-baseline.json`
-   gives each room Worker a floor, the measured rate in requests per
-   minute, and a limit at or above it. It also gives known peaks for
-   single minutes of the hour, such as the Grow demo's fault cycle. A line
-   that ends in `above:` names a Worker over its limit for that minute. The last line counts the flagged minutes for each
-   Worker.
+   gives each room Worker a floor, the measured rate in requests per minute,
+   and a limit at or above it. It also gives known peaks for single minutes
+   of the hour, such as the Grow demo's fault cycle. A line that ends in
+   `above:` names a Worker over its limit for that minute. The last line
+   counts the flagged minutes for each Worker.
 
    If a Worker has flagged minutes:
 
