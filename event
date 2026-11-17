@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/deploy-smoke.test.mjs","body":{"commit":"d910468d3dd996aca2f3a96be8996ae0f42441bf","path":"scripts/deploy-smoke.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:263b3e90fc5bd3f2f1ca9a1bd0ec810e44443ce2","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.lending.jsonc."}
