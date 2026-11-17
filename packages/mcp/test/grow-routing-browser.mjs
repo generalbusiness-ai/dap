@@ -145,8 +145,7 @@ try {
     assert.equal(day.signatures(), 1); assert.equal(session.scope.state.item(task.id).state, 'taken');
     // Reuse the existing current-revision, two-read and idle milestones around one native press.
     await page.waitForFunction(revision => proof.contexts.at(-1)?.structuredContent?.identity?.revision === revision, String(session.scope.state.item(task.id).revision));
-    // Every read disables the card's controls, so a press that starts during a background read misses the button.
-    // Start the press just after a read ends, at the start of an idle refresh interval.
+    // Start the press just after a read ends, so the press spans two whole refreshes.
     const readsBefore = await page.evaluate(() => proof.calls.filter(call => call.name === 'view_read').length);
     await page.waitForFunction(reads => proof.calls.filter(call => call.name === 'view_read').length > reads, readsBefore);
     await app.locator('#card-root[aria-busy="false"]').waitFor();
@@ -197,20 +196,36 @@ try {
     assert.equal(day.signatures(), 1, 'The Report handoff adds no ACT signature');
     await page.waitForFunction(() => proof.chat.length === 1);
     assert.equal(await page.evaluate(() => proof.chat[0]), `Help me with ${pressedIdentity.kind} ${pressedIdentity.item}, revision ${pressedIdentity.revision}.`);
+    // A click during a background read waits for that read. The read leaves the card unchanged, so the press runs.
+    const settle = () => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await page.evaluate(() => window.holdRefresh()); await page.waitForFunction(() => proof.refreshHeld === 1);
+    assert.equal(await app.locator('#card-root').getAttribute('aria-busy'), 'false', 'A background read leaves the card idle');
+    assert.equal(await reportButton.isEnabled(), true, 'A background read leaves the controls enabled');
+    await reportButton.click(); await settle();
+    assert.equal(await page.evaluate(() => proof.chat.length), 1, 'The press waits for the background read');
+    await page.evaluate(() => window.releaseRefresh());
+    await page.waitForFunction(() => proof.chat.length === 2);
+    assert.equal(await page.evaluate(() => proof.chat[1]), `Help me with ${pressedIdentity.kind} ${pressedIdentity.item}, revision ${pressedIdentity.revision}.`);
     const context = await page.evaluate(() => proof.contexts.at(-1).structuredContent);
     const denied = await page.evaluate(view => window.modelCall('view_read', { view }), context.view); assert.equal(denied.error.code, -32601);
+    // A click during a background read waits for that read. The task ends during the read, so the press sends nothing.
+    await page.evaluate(() => window.holdRefresh()); await page.waitForFunction(() => proof.refreshHeld === 2);
+    await reportButton.click(); await settle();
     const response = await page.evaluate(({ tool, args }) => window.modelCall(tool, args), {
       tool: viewInputToolName('tasks', 'report-task'), args: { view: context.view, item: context.identity.item, revision: context.identity.revision,
         request: `task-report-${width}`, values: { report: 'Freed the jammed vane by hand.' } },
     });
     assert.equal(response.error, undefined, JSON.stringify(response)); assert.equal(response.result.isError, false, JSON.stringify(response));
     assert.match(response.result.structuredContent.receipt, /accepted/); assert.ok(!JSON.stringify(response.result).includes('sources'));
+    await page.evaluate(() => window.releaseRefresh());
+    await app.getByText('The card changed during this press, so nothing was sent. Check the card, then press again.', { exact: true }).waitFor();
     await app.getByText('This declared view has no matching items.', { exact: true }).waitFor();
+    assert.equal(await page.evaluate(() => proof.chat.length), 2, 'The press on the ended task sends no message');
     assert.equal(day.signatures(), 2); assert.equal(session.scope.state.item(task.id).state, 'done');
     assert.equal(session.scope.state.item(task.id).values.report, 'Freed the jammed vane by hand.');
     await app.getByRole('button', { name: /Back/ }).waitFor(); await layout(app, width); await capture(page, app, `task-complete-${width}.png`);
     await app.getByRole('button', { name: /Back/ }).click(); await app.getByRole('heading', { name: 'Bench grid', exact: true }).waitFor(); await layout(app, width);
-    assert.equal(await page.evaluate(() => proof.chat.length), 1); await save('day', page);
+    assert.equal(await page.evaluate(() => proof.chat.length), 2); await save('day', page);
 
     const op = await pageFor('operator', 'alerts');
     await op.app.getByRole('button', { name: 'Authorize', exact: true }).waitFor(); await op.app.getByRole('button', { name: 'Hold 60 s', exact: true }).waitFor();
@@ -237,7 +252,7 @@ try {
     const replay = [];
     for (const scope of [session.site, session.scope, roomB.scope]) { const result = await scope.replay(); assert.equal(result.report.result, 'consistent'); assert.equal(result.why, null); replay.push({ scope: scope.at, result: result.report.result }); }
     await writeFile(join(out, `proof-${width}.json`), JSON.stringify({ proofs, errors, signed: { day: day.submitted, operator: operator.submitted, head: head.submitted }, presence: { item: dayPresence, scope: session.site.at, arrival: arrival.receipt.fact, rawReportPosition: stablePresence.refs.reportedAt, unrelatedReports: 101, wrongRoomRefusal: wrongRoom.name }, replay }, null, 2));
-    report.cases.push({ width, resizedTo: otherWidth, unavailableReadPoints: true, openAcrossTwoRefreshes: true, closedAcrossRefresh: true, provisionedUnknown: true, durableAfterOtherReports: 101, wrongRoomRefused: true, quietRefresh: true, appOnlyRead: true, connectedReport: true, nativeReportClick: true, reportRevision: pressedIdentity.revision,
+    report.cases.push({ width, resizedTo: otherWidth, unavailableReadPoints: true, openAcrossTwoRefreshes: true, pressDuringRefresh: { unchanged: 'sent', changed: 'refused' }, closedAcrossRefresh: true, provisionedUnknown: true, durableAfterOtherReports: 101, wrongRoomRefused: true, quietRefresh: true, appOnlyRead: true, connectedReport: true, nativeReportClick: true, reportRevision: pressedIdentity.revision,
       signatures: { day: 2, operator: 1, head: 2 }, nativeKinds: ['take-task', 'report-task', 'hold', 'approve-watering', 'decline-watering'], emptyBack: true, replay: 'consistent', errors });
   }
   await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n'); console.log(JSON.stringify(report));

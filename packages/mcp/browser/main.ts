@@ -18,6 +18,8 @@ let view = "";
 /** The call that opened this view: the host's tool input, or the card's own call for a declared screen. */
 let openingCall: { tool: string; args: Record<string, unknown> } | null = null;
 let busy = false;
+/** A read that the refresh timer started. It leaves the controls enabled; a press waits for it, then checks its card. */
+let refreshing: Promise<void> | null = null;
 let notice = "";
 /** The last call got no answer, or found the card busy, so the display may be old. The card offers a read. */
 let readAgain = false;
@@ -41,10 +43,24 @@ function scheduleRefresh() {
   window.clearTimeout(refreshTimer);
   const interval = display?.card?.declared?.refresh ?? display?.surface?.refresh ?? display?.refresh;
   if (alive && display?.active && interval) refreshTimer = window.setTimeout(() => {
-    if (busy) scheduleRefresh(); else void read({ refresh: true }).catch(error => {
-      if (error instanceof AppToolError && error.reason === "busy") scheduleRefresh(); else showError(error);
-    });
+    if (busy || refreshing) scheduleRefresh(); else void refresh();
   }, interval);
+}
+/** The timer's read. It never rejects, so a press that waits on it never fails because of it. */
+function refresh(): Promise<void> {
+  const run = (async () => {
+    // A background read clears the last notice. A press that waits on this read sets its own notice afterwards.
+    notice = ""; readAgain = false;
+    try { await readDisplay({ refresh: true }); }
+    catch (error) { if (error instanceof AppToolError && error.reason === "busy") scheduleRefresh(); else showError(error); }
+    finally { refreshing = null; render(); }
+  })();
+  refreshing = run;
+  return run;
+}
+/** Run a press now, or after the background read ends. The press then judges the card that read left. */
+function whenSettled(then: () => void): void {
+  if (refreshing) void refreshing.then(() => whenSettled(then)); else then();
 }
 
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, className?: string): HTMLElementTagNameMap[K] {
@@ -80,11 +96,11 @@ function button(key: string, label: string, run: (gesture: Gesture) => Promise<v
   element.disabled = busy;
   bindControl(element, key, () => {
     const gesture = captureGesture(key);
-    return () => {
+    return () => whenSettled(() => {
       if (!alive || busy) return;
       if (!currentGesture(gesture)) { notice = CHANGED_GESTURE; render(); return; }
       void run(gesture).catch(showError);
-    };
+    });
   });
   return element;
 }
@@ -159,6 +175,7 @@ const NO_ANSWER = (what: string) => `The app gave no answer to this press, so th
 const LATE_REPLY = "A late reply arrived. Read the card again to check the original request.";
 type ReadMove = { page?: PageKind; position?: number; refresh?: boolean };
 async function read(move?: ReadMove) {
+  while (refreshing) await refreshing;
   if (busy || !alive) return;
   busy = true; notice = ""; readAgain = false; render();
   try { await readDisplay(move); }
@@ -204,6 +221,7 @@ async function declaredMode() {
   render();
 }
 async function openDeclared(screen: string, items?: Readonly<Record<string, number>>, scope: ScopeRef | undefined = display?.card?.declared?.scope ?? display?.scope ?? display?.data?.scope, remember = true) {
+  while (refreshing) await refreshing;
   if (busy || !alive) return;
   const selected = display?.query.scope ?? display?.card?.declared?.scope ?? display?.scope ?? display?.data?.scope;
   const previous: DeclaredAddress | undefined = display ? { screen: display.query.screen, ...(display.query.items ? { items: display.query.items } : {}), ...(selected ? { scope: selected } : {}) } : undefined;
@@ -247,6 +265,7 @@ async function back() {
   notice = modeNotice || notice; render();
 }
 async function act(action: string, signs = "an act", gesture = captureGesture(action)) {
+  while (refreshing) await refreshing;
   if (!display || busy || !display.active) return;
   if (!currentGesture(gesture) || gesture.cut === null) { notice = CHANGED_GESTURE; render(); return; }
   busy = true; notice = ""; readAgain = false; render();
@@ -373,9 +392,12 @@ function renderCard(desired: DocumentFragment, identity: string, sections: Reado
     bindControl(title, "title", () => {
       const gesture = captureGesture("title");
       return event => {
-        event.preventDefault(); if (!alive || busy) return;
-        if (!currentGesture(gesture)) { notice = CHANGED_GESTURE; render(); return; }
-        void open().catch(showError);
+        event.preventDefault();
+        whenSettled(() => {
+          if (!alive || busy) return;
+          if (!currentGesture(gesture)) { notice = CHANGED_GESTURE; render(); return; }
+          void open().catch(showError);
+        });
       };
     });
     heading.append(title);

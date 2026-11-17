@@ -102,8 +102,9 @@ run failed earlier, in `layout()` (see Limits).
 ## Limits
 
 - A press that starts while a read runs still misses the button, with no
-  notice to the member. CB-2 does not change that. The planner decides
-  whether controls stay enabled during a background read.
+  notice to the member. CB-2 does not change that. CB-3
+  (`2026-11-17-cb3-refresh-press.md`) keeps the controls enabled during a
+  background read.
 - One witness run failed earlier, in `layout()`, which reads the card's
   width right after the viewport changes. That code is on main and CB-2
   does not change it.
