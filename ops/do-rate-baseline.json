@@ -1,11 +1,11 @@
 {
   "$source": "Planner rate read after the AR-10 deployment (END 5995bf0a, 20:37 to 20:52Z), and fault minutes from 19:30 to 20:55Z on 2026-11-17. RR-2 note: notes/implementation/2026-11-17-rr2-rate-baseline.md.",
   "dap-grow": {
-    "floor": 30,
-    "limit": 34,
-    "peaks": { "10": 51, "11": 45, "35": 49, "36": 46, "40": 40, "41": 39 },
-    "$peaks": "The Grow simulator's hourly fault cycle: the highest count seen at each minute since AR-8, plus 4.",
-    "$ar11": "AR-11 lowered the floor, the limit and each peak by 2: one session and one summary read fewer each minute (notes/implementation/2026-11-17-ar11-simulator-reads.md). The AR-11 END read replaces these figures."
+    "floor": 28,
+    "limit": 32,
+    "peaks": { "10": 50, "11": 46, "35": 38, "36": 36, "40": 34, "41": 33 },
+    "$peaks": "The Grow simulator's hourly fault cycle: the highest count seen at each minute from 22:30 to 23:13Z on 2026-11-17, plus 4.",
+    "$rb1": "Measured after the AR-11 deployment (version 1adb6271): 22:30 to 23:00Z on 2026-11-17, 834 requests, 23 to 34 a minute, mean 27.8. Floor is the rounded mean; limit is the floor plus 4. Minutes :10 and :11 come from 23:10 and 23:11Z. RB-1 note: notes/implementation/2026-11-17-rb1-measured-baseline.md."
   },
   "dap-lending": {
     "floor": 0,
