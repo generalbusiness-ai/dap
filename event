@@ -1,1 +1,1 @@
-{"kind":"promise","text":"SH-1: I write the design note for self-hosted application screens (screen origin, what serves the bytes on celld, isolation, owner steps and work size). Notes only, before any source change, for checker review.","body":{"target":"inherit"}}
+{"kind":"promise","text":"I review RB-1 at exact head d3a7a78a: the note, the baseline diff, the gate END and the rate evidence."}
