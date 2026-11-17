@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval df3a935b: land the CV-1 note follow-up (notes-only head 6b9053a7) onto 29978aad (clean merge per the checker) and ask for the landing check. Notes only; merging during the AR-10 deployment window is fine (no compile).","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:df3a935b997ed90ee5ae41e92c7838082f368744"}
