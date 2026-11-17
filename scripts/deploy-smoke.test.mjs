@@ -172,10 +172,10 @@ test("room screen descriptors and sandbox mappings agree in both directions on t
   }
   assert.deepEqual(mapped.filter(row => row.host.screenOrigin === "https://counter.inguz.space"), [{
     host: { v: 1, screenOrigin: "https://counter.inguz.space", roomOrigin: "https://dap-lending.inguz.workers.dev",
-      directory: "sc_rgtlrioy5eckfikcapmqdteiw7y4b4lrc7k6use4rqdktn4lnabq", item: 11,
-      presentation: "sha256:9334159c91ea2df5d25e75aaa265b0ccb8b8ceac7a564b8eb46d0b7be57d2af4" },
+      directory: "sc_rgtlrioy5eckfikcapmqdteiw7y4b4lrc7k6use4rqdktn4lnabq", item: 20,
+      presentation: "sha256:905a3f7e088278894937f41bd27bf612bafac9b65fe030dbf0e2e0f584cd444f" },
     service: "LENDING",
-  }], "Counter 0.5.0 (item 11) uses its exact installed screen descriptor through dap-lending");
+  }], "Counter 0.6.0 (item 20) uses its exact installed screen descriptor through dap-lending");
   assert.deepEqual(mapped.filter(row => row.host.screenOrigin === "https://lending.inguz.space"), [{
     host: { v: 1, screenOrigin: "https://lending.inguz.space", roomOrigin: "https://dap-lending.inguz.workers.dev",
       directory: "sc_5hagamavauu5lcejxqxqkd6xl3ol26bke2ipkhaiwxtxono2gujq", item: 2,
