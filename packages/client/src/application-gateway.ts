@@ -69,7 +69,8 @@ export function applicationGatewayRoute(host: ApplicationScreenHost, address: st
     if (["outbox", "log"].includes(what ?? "")) return query("cursor");
     if (what === "stream") return !url.search;
     if (what === "query-items") return keys.length === 1 && query("q");
-    if (what === "application-projection") return others === 1 && minimum("p");
+    // PT-1: p comes first, the one order that the room's parser reads.
+    if (what === "application-projection") return others === 1 && keys[0] === "p" && minimum("p");
   }
   if (parts.length === 5 && what === "entries") return /^(?:0|[1-9][0-9]{0,15})$/.test(which ?? "") && minimum();
   if (parts.length === 5 && what === "items") return /^[A-Za-z][A-Za-z0-9_-]{0,127}$/.test(which ?? "") && minimum("cursor");
