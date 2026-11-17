@@ -25,6 +25,19 @@ Three files carry the row, and each now names item 11 and presentation
 The two Lending rows do not change. Item 2 stays active with its old state,
 but no screen serves it after the deployment.
 
+## Tests
+
+`scripts/deploy-smoke.test.mjs` maps each sandbox row to its room row and
+expects the Counter row exactly. Two reds fail on its Counter assertion,
+"Counter 0.5.0 (item 11) uses its exact installed screen descriptor through
+dap-lending":
+
+- main's room and sandbox rows (item 2, presentation `52378055`);
+- the new room row with main's sandbox row, a deployment that moves only
+  one side.
+
+Evidence: `/Users/hughpyle/play/artroom-evidence/2026-11-17-sh2-red/`.
+
 ## Deployment
 
 The planner deploys dap-lending and the sandbox, then reads the screen
