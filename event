@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval 7d291611: land SH-3 (head a8fdd5be) now onto 305342f8, then ask for the landing check. I push, deploy dap-lending and the sandbox in one window, read counter.inguz.space at item 20, and issue invitation 5 for NF-7 run 5. Hold compiles and gates until my END.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d2916114578d3683f5a8b0fe37b9c534731248b"}
