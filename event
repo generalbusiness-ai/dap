@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I will build CB-4 on builder/cb4-notice-life-20261117 from main 3a0daab0: refresh() keeps a CHANGED_GESTURE notice; a press that runs, a member read or an act clears it. I will add a witness step that waits through one background read with the notice still shown, run a red with CB-3's main.ts, fix the CB-3 note, rebuild the card resources and gate once before review.","body":{"target":"inherit"}}
+{"kind":"promise","text":"I will check the landing of CB-3 head dea6935f at local main 3a0daab0 for request c7deb51e."}
