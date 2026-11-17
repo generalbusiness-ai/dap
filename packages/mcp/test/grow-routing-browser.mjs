@@ -130,10 +130,6 @@ try {
       const context = proof.contexts.at(-1)?.structuredContent, points = context?.projection?.filter(point => point.scope === scope) ?? [];
       return context?.status === 'ready' && points.length === 2 && points.every(point => point.seq === seq && point.hash === hash);
     }, { scope: session.site.at.scope, ...sitePoint });
-    await app.locator('#card-root[aria-busy="false"]').waitFor();
-    const quiet = await page.evaluate(() => ({ contexts: proof.contexts.length, reads: proof.calls.filter(call => call.name === 'view_read').length }));
-    await page.waitForFunction(reads => proof.calls.filter(call => call.name === 'view_read').length >= reads + 2, quiet.reads);
-    assert.equal(await page.evaluate(() => proof.contexts.length), quiet.contexts);
     const otherWidth = width === 320 ? 592 : 320;
     await page.setViewportSize({ width: otherWidth + 32, height: 1100 }); await layout(app, otherWidth);
     await page.setViewportSize({ width: width + 32, height: 1100 }); await layout(app, width); await capture(page, app, `task-${width}.png`);
@@ -142,10 +138,60 @@ try {
     await app.getByRole('button', { name: 'Report in chat', exact: true }).waitFor();
     await app.locator('#card-root[aria-busy="false"]').waitFor();
     assert.equal(day.signatures(), 1); assert.equal(session.scope.state.item(task.id).state, 'taken');
-    await app.getByRole('button', { name: 'Report in chat', exact: true }).click();
-    // The scripted model follows the actual chat handoff. The revision can already be current before the click.
-    await page.waitForFunction(() => proof.chat.length === 1);
+    // Reuse the existing current-revision, two-read and idle milestones around one native press.
     await page.waitForFunction(revision => proof.contexts.at(-1)?.structuredContent?.identity?.revision === revision, String(session.scope.state.item(task.id).revision));
+    // Every read disables the card's controls, so a press that starts during a background read misses the button.
+    // Start the press just after a read ends, at the start of an idle refresh interval.
+    const readsBefore = await page.evaluate(() => proof.calls.filter(call => call.name === 'view_read').length);
+    await page.waitForFunction(reads => proof.calls.filter(call => call.name === 'view_read').length > reads, readsBefore);
+    await app.locator('#card-root[aria-busy="false"]').waitFor();
+    const pressedIdentity = await page.evaluate(() => proof.contexts.at(-1).structuredContent.identity);
+    const reportButton = app.getByRole('button', { name: 'Report in chat', exact: true });
+    const pressedButton = await reportButton.elementHandle(); assert.ok(pressedButton);
+    assert.equal(await reportButton.isEnabled(), true);
+    const pressedBox = await pressedButton.boundingBox(); assert.ok(pressedBox);
+    const beforePress = await pressedButton.evaluate(button => {
+      const ancestors = []; for (let node = button; node; node = node.parentNode) ancestors.push(node);
+      const sectionState = () => [...document.querySelectorAll('details[data-section]')].map(section => [section.dataset.section, section.open]);
+      const state = { clicks: 0, removals: 0, label: button.textContent, disabled: button.disabled, sections: sectionState() };
+      const removed = records => {
+        for (const record of records) for (const node of record.removedNodes) {
+          if (ancestors.some(ancestor => node === ancestor || node.contains(ancestor))) state.removals++;
+        }
+      };
+      const observer = new MutationObserver(removed); observer.observe(document, { subtree: true, childList: true });
+      button.addEventListener('click', () => { state.clicks++; }, { passive: true });
+      state.downs = [];
+      for (const type of ['pointerdown', 'mousedown']) button.addEventListener(type, () => { state.downs.push(type); }, { passive: true });
+      button.__connectedReport = { state, observer, removed, sectionState };
+      return { label: state.label, disabled: state.disabled, sections: state.sections };
+    });
+    await page.mouse.move(pressedBox.x + pressedBox.width / 2, pressedBox.y + pressedBox.height / 2);
+    await page.mouse.down();
+    try {
+      assert.deepEqual(await pressedButton.evaluate(button => button.__connectedReport.state.downs), ['pointerdown', 'mousedown'],
+        'The press starts on the enabled Report button');
+      const quiet = await page.evaluate(() => ({ contexts: proof.contexts.length, reads: proof.calls.filter(call => call.name === 'view_read').length }));
+      await page.waitForFunction(reads => proof.calls.filter(call => call.name === 'view_read').length >= reads + 2, quiet.reads);
+      await app.locator('#card-root[aria-busy="false"]').waitFor();
+      assert.equal(await page.evaluate(() => proof.contexts.length), quiet.contexts);
+    } finally { await page.mouse.up(); }
+    const connectedReport = await pressedButton.evaluate(button => {
+      const { state, observer, removed, sectionState } = button.__connectedReport;
+      removed(observer.takeRecords()); observer.disconnect();
+      return { clicks: state.clicks, removals: state.removals, connected: button.isConnected,
+        label: button.textContent, disabled: button.disabled, sections: sectionState() };
+    });
+    // This first assertion distinguishes a detached/reinserted or replaced native press without a chat timeout.
+    assert.equal(connectedReport.clicks, 1, 'The original Report button receives the native click after two refreshes');
+    assert.equal(connectedReport.removals, 0, 'Neither the pressed button nor an ancestor leaves the document');
+    assert.equal(connectedReport.connected, true);
+    assert.equal(await reportButton.evaluate((current, pressed) => current === pressed, pressedButton), true);
+    assert.equal(connectedReport.label, beforePress.label); assert.equal(connectedReport.disabled, beforePress.disabled);
+    assert.deepEqual(connectedReport.sections, beforePress.sections);
+    assert.equal(day.signatures(), 1, 'The Report handoff adds no ACT signature');
+    await page.waitForFunction(() => proof.chat.length === 1);
+    assert.equal(await page.evaluate(() => proof.chat[0]), `Help me with ${pressedIdentity.kind} ${pressedIdentity.item}, revision ${pressedIdentity.revision}.`);
     const context = await page.evaluate(() => proof.contexts.at(-1).structuredContent);
     const denied = await page.evaluate(view => window.modelCall('view_read', { view }), context.view); assert.equal(denied.error.code, -32601);
     const response = await page.evaluate(({ tool, args }) => window.modelCall(tool, args), {
@@ -186,7 +232,7 @@ try {
     const replay = [];
     for (const scope of [session.site, session.scope, roomB.scope]) { const result = await scope.replay(); assert.equal(result.report.result, 'consistent'); assert.equal(result.why, null); replay.push({ scope: scope.at, result: result.report.result }); }
     await writeFile(join(out, `proof-${width}.json`), JSON.stringify({ proofs, errors, signed: { day: day.submitted, operator: operator.submitted, head: head.submitted }, presence: { item: dayPresence, scope: session.site.at, arrival: arrival.receipt.fact, rawReportPosition: stablePresence.refs.reportedAt, unrelatedReports: 101, wrongRoomRefusal: wrongRoom.name }, replay }, null, 2));
-    report.cases.push({ width, resizedTo: otherWidth, unavailableReadPoints: true, openAcrossTwoRefreshes: true, closedAcrossRefresh: true, provisionedUnknown: true, durableAfterOtherReports: 101, wrongRoomRefused: true, quietRefresh: true, appOnlyRead: true,
+    report.cases.push({ width, resizedTo: otherWidth, unavailableReadPoints: true, openAcrossTwoRefreshes: true, closedAcrossRefresh: true, provisionedUnknown: true, durableAfterOtherReports: 101, wrongRoomRefused: true, quietRefresh: true, appOnlyRead: true, connectedReport: true, nativeReportClick: true, reportRevision: pressedIdentity.revision,
       signatures: { day: 2, operator: 1, head: 2 }, nativeKinds: ['take-task', 'report-task', 'hold', 'approve-watering', 'decline-watering'], emptyBack: true, replay: 'consistent', errors });
   }
   await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n'); console.log(JSON.stringify(report));

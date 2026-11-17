@@ -2797,6 +2797,17 @@ desktop-host registration. The
 [card-kit note](../notes/implementation/2026-10-18-compact-card-kit.md)
 gives the command that runs the fixture browser.
 
+### Messages from a card
+
+A host keeps an earlier revision named in a card message as that message's
+subject. It does not reinterpret the message as the latest revision or as
+authorization. Before a typed submission, the host reads the current card
+and states any difference from the named revision.
+
+If the card changes during a press, the kit sends no message and asks the
+member to check the card and press again. The existing typed-submission
+guard still refuses a stale revision before signing.
+
 ## Local project views
 
 The opt-in [project entry](../apps/views/README.md) supplies five reads and
