@@ -40,8 +40,12 @@ Options:
   --token-file PATH  File with the API token: a bare token, or KEY=value lines
                      with ${TOKEN_ENV}= or CLOUDFLARE_API_TOKEN=.
                      Default: $${TOKEN_ENV}.
-  --baseline FILE    JSON {"worker": requests per minute}. Flags each minute
-                     above a Worker's floor.
+  --baseline FILE    JSON {"worker": floor} or {"worker": {"floor": n,
+                     "limit": n, "peaks": {"MM": n}}}. Flags each minute
+                     above its peak, or above the limit (default: the
+                     floor). The tracked file is ops/do-rate-baseline.json.
+  --objects          With one --worker: requests per Durable Object in the
+                     window, the busiest first.
 
 Exit 0 on a report, 2 on bad arguments, 1 on an API failure.`;
 
@@ -97,7 +101,12 @@ export function parseTokenFile(text) {
   return { token, account: pairs.get(ACCOUNT_ENV) || null };
 }
 
-/** Parse a baseline document: Worker name to a requests-per-minute floor. */
+/** Parse a baseline document. Each Worker name maps to a floor in
+ * requests per minute, or to {"floor": n, "limit": n, "peaks": {"MM": n}}.
+ * The floor is the measured rate; the limit, at or above it, is where a
+ * minute flags (default: the floor). A peak is the limit for minute MM of
+ * each hour (00 to 59), such as a demo fault cycle. Keys that start with
+ * "$" are comments. */
 export function parseBaseline(text) {
   let value;
   try {
@@ -107,13 +116,44 @@ export function parseBaseline(text) {
   }
   if (value === null || typeof value !== "object" || Array.isArray(value))
     bad("The baseline file must be a JSON object.");
+  const count = (n) => typeof n === "number" && Number.isFinite(n) && n >= 0;
   const floors = new Map();
-  for (const [worker, floor] of Object.entries(value)) {
-    if (typeof floor !== "number" || !Number.isFinite(floor) || floor < 0)
+  for (const [worker, entry] of Object.entries(value)) {
+    if (worker.startsWith("$")) continue;
+    if (count(entry)) {
+      floors.set(worker, { floor: entry, limit: entry, peaks: new Map() });
+      continue;
+    }
+    if (typeof entry === "number")
       bad("Each baseline floor must be a non-negative number.");
-    floors.set(worker, floor);
+    if (entry === null || typeof entry !== "object" || Array.isArray(entry))
+      bad("Each baseline entry must be a floor or an object with a floor.");
+    const { floor, limit = floor, peaks = {}, ...rest } = entry;
+    if (Object.keys(rest).some((key) => !key.startsWith("$")))
+      bad("A baseline entry has only floor, limit, peaks and $ comments.");
+    if (!count(floor))
+      bad("Each baseline floor must be a non-negative number.");
+    if (!count(limit) || limit < floor)
+      bad("A baseline limit must be a number at or above the floor.");
+    if (peaks === null || typeof peaks !== "object" || Array.isArray(peaks))
+      bad("Baseline peaks must be an object of minutes.");
+    const byMinute = new Map();
+    for (const [minute, peak] of Object.entries(peaks)) {
+      if (!/^[0-5][0-9]$/.test(minute))
+        bad("A baseline peak minute must be two digits, 00 to 59.");
+      if (!count(peak) || peak < limit)
+        bad("Each baseline peak must be a number at or above the limit.");
+      byMinute.set(Number(minute), peak);
+    }
+    floors.set(worker, { floor, limit, peaks: byMinute });
   }
   return floors;
+}
+
+/** The limit for one Worker at one minute: its peak for that minute of the
+ * hour, otherwise its limit. */
+export function limitAt(entry, at) {
+  return entry.peaks.get(new Date(at).getUTCMinutes()) ?? entry.limit;
 }
 
 /** The GraphQL request body for one window. --until is exclusive. With
@@ -132,6 +172,58 @@ export function buildQuery({ account, workers, since, until }) {
   };
 }
 
+/** --objects: the GraphQL request body for one Worker's requests per
+ * Durable Object over the window. */
+export function buildObjectQuery({ account, worker, since, until }) {
+  return {
+    query: `query($a:String!,$s:String!,$f:Time!,$t:Time!){viewer{accounts(filter:{accountTag:$a}){durableObjectsInvocationsAdaptiveGroups(limit:${ROW_LIMIT},filter:{scriptName:$s,datetimeMinute_geq:$f,datetimeMinute_lt:$t}){sum{requests} dimensions{objectId}}}}}`,
+    variables: {
+      a: account,
+      s: worker,
+      f: new Date(since).toISOString(),
+      t: new Date(until).toISOString(),
+    },
+  };
+}
+
+/** --objects: rows {object, requests}, the busiest first, then by ID. */
+export function parseObjectReply(json) {
+  const groups = groupsOf(json);
+  if (groups.length >= ROW_LIMIT)
+    throw Error(`The Worker has ${ROW_LIMIT} or more objects in the window.`);
+  return groups
+    .map((group) => {
+      const object = group?.dimensions?.objectId,
+        requests = group?.sum?.requests;
+      if (
+        typeof object !== "string" ||
+        !/^[0-9a-f]{64}$/.test(object) ||
+        !Number.isSafeInteger(requests) ||
+        requests < 0
+      )
+        throw Error("The analytics reply has a malformed group.");
+      return { object, requests };
+    })
+    .sort(
+      (x, y) =>
+        y.requests - x.requests ||
+        (x.object < y.object ? -1 : x.object > y.object ? 1 : 0),
+    );
+}
+
+/** --objects: one line per object with its total and per-minute rate. */
+export function formatObjects(rows, { worker, since, until }) {
+  const length = (until - since) / MINUTE;
+  return [
+    `window ${isoMinute(since)} ${isoMinute(until)} minutes=${length} worker=${worker}`,
+    ...rows.map(
+      (row) =>
+        `${row.object} ${row.requests} per-minute=${(row.requests / length).toFixed(1)}`,
+    ),
+    `objects ${rows.length} total ${rows.reduce((sum, row) => sum + row.requests, 0)}`,
+  ];
+}
+
 /** --all: every Worker that has a row, the busiest first, then by name. */
 export function workersOf(rows) {
   const totals = new Map();
@@ -142,9 +234,9 @@ export function workersOf(rows) {
     .map(([worker]) => worker);
 }
 
-/** Return rows {minute, worker, requests}, or throw an error that names the
- * API errors. */
-export function parseReply(json) {
+/** The reply's Durable Object groups, or an error that names the API
+ * errors. */
+function groupsOf(json) {
   if (json === null || typeof json !== "object")
     throw Error("The analytics API answered with no JSON object.");
   if (Array.isArray(json.errors) && json.errors.length) {
@@ -163,7 +255,13 @@ export function parseReply(json) {
   const groups = accounts[0]?.durableObjectsInvocationsAdaptiveGroups;
   if (!Array.isArray(groups))
     throw Error("The analytics reply has no Durable Object groups.");
-  return groups.map((group) => {
+  return groups;
+}
+
+/** Return rows {minute, worker, requests}, or throw an error that names the
+ * API errors. */
+export function parseReply(json) {
+  return groupsOf(json).map((group) => {
     const minute = Date.parse(group?.dimensions?.datetimeMinute),
       worker = group?.dimensions?.scriptName,
       requests = group?.sum?.requests;
@@ -241,9 +339,9 @@ export function formatReport(report, { baseline = null } = {}) {
     const flags = [];
     for (const worker of above.keys()) {
       const count = minute.counts.get(worker),
-        floor = baseline.get(worker);
-      if (count > floor) {
-        flags.push(`${worker}(${count}>${floor})`);
+        limit = limitAt(baseline.get(worker), minute.at);
+      if (count > limit) {
+        flags.push(`${worker}(${count}>${limit})`);
         above.set(worker, above.get(worker) + 1);
       }
     }
@@ -327,6 +425,7 @@ export async function run(
         minutes: { type: "string" },
         "token-file": { type: "string" },
         baseline: { type: "string" },
+        objects: { type: "boolean" },
         help: { type: "boolean" },
       },
     });
@@ -371,7 +470,20 @@ export async function run(
       }
       baseline = parseBaseline(text);
     }
-    options = { ...window, workers, account, baseline };
+    if (
+      values.objects &&
+      (workers === null || workers.length !== 1 || !values.worker)
+    )
+      bad("--objects reads one Worker: give exactly one --worker.");
+    if (values.objects && baseline)
+      bad("Give --objects or --baseline, not both.");
+    options = {
+      ...window,
+      workers,
+      account,
+      baseline,
+      objects: !!values.objects,
+    };
   } catch (error) {
     if (
       !(error instanceof ArgumentError) &&
@@ -405,6 +517,14 @@ export async function run(
     return json;
   };
   try {
+    if (options.objects) {
+      const worker = options.workers[0];
+      const rows = parseObjectReply(
+        await post(buildObjectQuery({ ...options, worker })),
+      );
+      say(stdout, formatObjects(rows, { ...options, worker }).join("\n"));
+      return 0;
+    }
     const rows = await readRows(options, post);
     const report = aggregate(rows, {
       ...options,
