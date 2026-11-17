@@ -124,8 +124,10 @@ an unknown name still reaches the index and the adapter refuses it. A kept
 answer cannot go stale while `known_scope` rows are insert-only: `register`
 adds a row with `ON CONFLICT DO NOTHING`, and no code deletes or updates a
 row. `scripts/known-scope-insert-only.test.mjs` fails when a source changes
-or removes `known_scope` rows. A future delete path must also clear this
-cache.
+or removes `known_scope` rows. The same check (AR-9) fails when the
+`ScopeIndex` class calls `storage.delete()` or `storage.deleteAll()`, and
+when a tracked wrangler migration deletes, renames or transfers the
+`ScopeIndex` class. A future delete path must also clear this cache.
 
 A remote authority run reserves a signing-key place only after a checked
 Membership observation grants current standing. Once-only grants count too:
