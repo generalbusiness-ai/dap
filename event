@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:34bb7aa367f130767fc7835b51718f9277d54323","text":"Merge retired a covered predecessor; the successor is at examples/grow/runbook.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:375afd56f5495d9617950cec72a20e746c1c259e","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-driver.ts."}
