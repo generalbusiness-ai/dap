@@ -1,7 +1,7 @@
 /** Fixed transport mapping only. No browser/native admission or hosted shim
  * is claimed by these scripted HTTP boundaries. */
 import { expect, test } from "vitest";
-import { canonicalize, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, encodeReadMinimumParameter, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import type { Digest, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationScreenPath } from "../src/application-route.ts";
 import { applicationGatewayRoute, applicationScreenTransport, readApplicationScreenHost, type ApplicationGatewayFetch } from "../src/application-gateway.ts";
@@ -57,4 +57,22 @@ test("gateway allows only fixed native methods, canonical queries and the instal
   for (const [url, method] of [[at + "/acts", "GET"], [at + "/stream?target=https%3A%2F%2Fevil.test", "GET"], [at + "/history?cursor=1&cursor=2", "GET"], [at + "?token=TEST", "GET"],
     [at.replace(host.roomOrigin, "https://other.test"), "GET"], [at.replace("https://", "https://user:TEST@"), "GET"], [`${host.roomOrigin}/v1/scopes`, "POST"], [`${host.roomOrigin}/mcp`, "POST"],
     [`${host.roomOrigin}/site/${scope.scope}/HEAD/item.md`, "GET"]]) expect(applicationGatewayRoute(host, url!, method!), url).toBe(false);
+});
+
+// GW-1 (request 54e31a40): each read that takes a minimum allows one canonical atLeast of its own scope, beside its own parameters.
+test("gateway allows one canonical read minimum of the same scope on every read that takes one", () => {
+  const at = `${host.roomOrigin}/v1/scopes/${scope.scope}`;
+  const own = encodeReadMinimumParameter({ at: scope, head: 3 })!, other = encodeReadMinimumParameter({ at: membership, head: 3 })!;
+  const reads = { summary: at, history: at + "/history?cursor=2", items: at + "/items/Task?cursor=2", projection: at + "/application-projection?p=TEST-native-parser-checks-this", entries: at + "/entries/4" };
+  const join = (url: string, extra: string) => url + (url.includes("?") ? "&" : "?") + extra;
+  for (const [name, url] of Object.entries(reads)) {
+    expect(applicationGatewayRoute(host, url, "GET"), name + " without a minimum").toBe(true);
+    expect(applicationGatewayRoute(host, join(url, "atLeast=" + own), "GET"), name + " with its minimum").toBe(true);
+    for (const refused of ["atLeast=" + own + "&atLeast=" + own, "atLeast=TEST-not-canonical", "atLeast=", "atLeast=" + other, "atLeast=" + own + "&token=TEST"])
+      expect(applicationGatewayRoute(host, join(url, refused), "GET"), name + " refuses " + refused.slice(0, 24)).toBe(false);
+  }
+  // Reads that take no minimum, and every write, still refuse it.
+  for (const [url, method] of [[at + "/outbox?atLeast=" + own, "GET"], [at + "/log?atLeast=" + own, "GET"], [at + "/stream?atLeast=" + own, "GET"],
+    [at + "/query-items?q=TEST&atLeast=" + own, "GET"], [at + "/acts?atLeast=" + own, "POST"], [at + "/sessions?atLeast=" + own, "POST"]])
+    expect(applicationGatewayRoute(host, url!, method!), url).toBe(false);
 });
