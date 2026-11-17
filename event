@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/2026-11-17-au1-account-worker-audit.md","body":{"commit":"87d48b02634eae03a02a4c260578e220cbbc8da8","path":"notes/implementation/2026-11-17-au1-account-worker-audit.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2115b56c78e94df9245cef0b7c0ee1da7c642a19","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-17-au1-account-worker-audit.md."}
