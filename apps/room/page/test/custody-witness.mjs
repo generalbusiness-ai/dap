@@ -33,6 +33,7 @@ import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
+import { saveFailedPage } from "./witness-failure-page.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../../../..");
@@ -69,6 +70,8 @@ const run = async (...argv) => {
 
 // The Worker. Kill by PID only: other sessions run tests on this machine.
 let worker = null;
+/** NF-8: the hosted Counter page, its evidence directory and the values its saved failure page must not show. */
+let hostedPage = null;
 async function startWorker(register, secret) {
   worker = spawn(process.execPath, [WRANGLER, "dev", "--config", "apps/room/celld/wrangler.json", "--port", String(port), "--ip", "127.0.0.1", "--persist-to", persist,
     "--var", `REGISTER_SCOPE:${register}`, "--var", `SESSION_SECRET:${secret}`, "--var", `PUBLIC_ORIGIN:${base}`, "--log-level", "error"],
@@ -145,6 +148,7 @@ async function hostedCounter(screen) {
     }
   });
   const counterPage = await counterContext.newPage();
+  hostedPage = { page: counterPage, evidence, secrets: [invitation] };
   counterPage.on("pageerror", () => failures.push({ name: "Counter page runtime error", actual: true, expected: false }));
   const counterConsole = [];
   counterPage.on("console", message => { if (message.type() === "error" || message.type() === "warning") counterConsole.push(message.type()); });
@@ -207,6 +211,7 @@ async function hostedCounter(screen) {
   check("Counter journal holds one act under the key", counterEntries.length, 1);
   check("Counter journal signed bytes equal custody", report.counter.afterCheck.sameEnvelope, true);
   await counterPage.screenshot({ path: join(evidence, "counter-checked.png") });
+  hostedPage = null;
   await counterContext.close();
 }
 
@@ -346,6 +351,7 @@ try {
   report.counter = { ran: false, reason: "Hosted NF-7 runs after NF-5 lands and the planner deploys its Counter release, by ruling 657e4217." };
   }
 } catch (error) {
+  if (hostedPage) report.failurePage = await saveFailedPage(hostedPage.page, hostedPage.evidence, hostedPage.secrets);
   writeFileSync(join(WITNESS_DIR, "failure-private.txt"), String(error), { mode: 0o600, flag: "wx" });
   failures.push({ name: "witness run", actual: "stopped; details stay in the private failure file", expected: null });
 } finally {

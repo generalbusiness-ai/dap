@@ -42,6 +42,7 @@ export const nodeFiles = [
   'apps/views/test/j5.test.mjs',
   'apps/views/test/two-process.test.mjs',
   'apps/room/page/test/row-press-probe.test.mjs',
+  'apps/room/page/test/witness-failure-page.test.mjs',
   'apps/jam/test/managed-assets.test.mjs',
   'scripts/test.test.mjs',
   'scripts/control.test.mjs',
