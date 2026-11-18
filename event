@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:86867c5be26171e5741bd122e2d6125ddaeefa2d","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/views/generated.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8acc3e87c017782f26b8d1f4900ee2f5a1fed68a","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/refusal-classes.test.ts."}
