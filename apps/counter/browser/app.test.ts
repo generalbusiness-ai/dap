@@ -10,6 +10,7 @@ import { COUNTING_COMMITMENTS_DEFINITION as COUNTING_DEFINITION } from "../commi
 import { mountCountingStage } from "./app.ts";
 import { browserSpeech } from "./speech.ts";
 import { stageView, type StagePresentation } from "./view.ts";
+import counterApplication from "../dap.application.json" with { type: "json" };
 import { nativeGateway, type StageGateway } from "./client.ts";
 import { counterEnrollment } from "./installed.ts";
 import { EnrollmentStepError, atStep, errorClass, unconfirmedWords, type EnrollmentStep } from "./enrollment-step.ts";
@@ -233,6 +234,9 @@ test("Counter acknowledgement requires a recorded local effect and keeps playbac
   const root=new Element(),noop=()=>{},ui=stageView(root as unknown as HTMLElement,{control:noop,arm:noop,disarm:noop,check:noop,checkReport:noop,resumeCommand:noop,resumeReport:noop,correct:noop,connect:noop,disconnect:noop,forget:noop},{voices:()=>[],play:()=>noop});
   try{
     const logos=elements(root).filter(e=>e.tag==="a"&&e.attrs["aria-label"]==="dap homepage");
+    // U4: the footer names the manifest's version, so the screen read before and after an in-place upgrade differs.
+    const release=elements(root).filter(e=>e.className==="release");
+    assert.equal(release.length,1);assert.equal(release[0]!.textContent,`Counter ${counterApplication.version}`);assert.equal(release[0]!.dataset["release"],counterApplication.version);assert.equal(release[0]!.hidden,false);
     assert.equal(logos.length,1);assert.equal(logos[0]!.href,"https://dap.generalbusiness.ai/");assert.equal(logos[0]!.children.length,2);
     const base:StagePresentation={fresh:true,connection:"Connected"};
     const acknowledgement=()=>elements(root).find(e=>e.className==="acknowledgement")!.textContent;

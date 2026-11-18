@@ -3,6 +3,9 @@ import { controllerOf, label, ownedParticipant, same, type Control, type Proposa
 import type { MemberRef } from "@generalbusiness/dap-contract";
 import type { CommandOutcome } from "./client.ts";
 import type { ActorIdentity, SpeechPort, VoiceState } from "./voice-controller.ts";
+import application from "../dap.application.json" with { type: "json" };
+/** The footer names the release version, so a screen read tells an in-place upgrade from the version before it. */
+export const COUNTER_RELEASE_LINE=`Counter ${application.version}`;
 export interface StagePresentation {
   identity?:ActorIdentity; deviceName?:string; view?:CountingView; fresh:boolean; connection:string; voice?:VoiceState;
   command?:string; commandOutcome?:CommandOutcome["status"]; commandUnknown?:boolean;
@@ -55,7 +58,7 @@ export function stageView(root:HTMLElement,actions:StageActions,speech:SpeechPor
   const inspection=make("details","inspection"),summary=make("summary",undefined,"Record and definition"),record=make("p","record"),definition=make("p","definition");inspection.append(summary,record,definition);
   const footer=make("footer","footer"),disconnect=keyedButton("Disconnect device","disconnect",actions.disconnect),forget=keyedButton("Forget this device","forget",()=>actions.forget?.()),checkCommand=keyedButton("Check command","check-command",actions.check),checkReport=keyedButton("Check report","check-report",actions.checkReport),updateReport=keyedButton("Update report","update-report",actions.correct),resumeReport=keyedButton("Resume original report","resume-report",actions.resumeReport),resumeCommand=keyedButton("Resume original command","resume-command",actions.resumeCommand);
   const fail=keyedButton("Mark uncertain speech failed","fail",()=>actions.control("fail",{reason:"speech-uncertain"})),cancel=keyedButton("Cancel pledge","cancel",()=>actions.control("cancel"));
-  const qualification=make("span","qualification","Fake transport · Fake speech · No audio");footer.append(disconnect,forget,fail,cancel,checkCommand,checkReport,updateReport,resumeReport,resumeCommand,qualification);
+  const qualification=make("span","qualification","Fake transport · Fake speech · No audio"),release=make("span","release",COUNTER_RELEASE_LINE);release.dataset["release"]=application.version;footer.append(disconnect,forget,fail,cancel,checkCommand,checkReport,updateReport,resumeReport,resumeCommand,qualification,release);
   main.append(numberArea,controls,initialization,rosterSection,personal,inspection,footer);root.replaceChildren(header,main);
   type Row={element:HTMLElement;avatar:HTMLElement;name:HTMLElement;device:HTMLElement;state:HTMLElement;deactivate:HTMLButtonElement;remove:HTMLButtonElement;management:HTMLElement;managementName:HTMLElement;agent:Participant};
   const rows=new Map<number,Row>();
