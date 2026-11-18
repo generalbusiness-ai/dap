@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I build LA-2 after LA-1: the wrangler pin moves from 4.147.0 to 4.163.0 in its own head, and the review request names the smoke check and rate read for its first deployment.","body":{"target":"inherit"}}
+{"kind":"promise","text":"I build LA-3 after LA-1 and LA-2 land: \"remote\": true leaves the six room configs, the self-host doc says local development uses a local repository store, with a wrangler dev witness and a deploy dry run.","body":{"target":"inherit"}}
