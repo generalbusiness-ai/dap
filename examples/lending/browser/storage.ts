@@ -45,6 +45,9 @@ const joinStore: JoinStore = { load: () => get<KeptJoin>("join"), save: (value) 
 } };
 /** The custody records of this origin's lending requests. `byTarget` separates each identity's requests. */
 const custody = browserCustodyStore({ database: "dap-lending-custody-1", lock: "dap-lending-custody" });
+/** Another tab opened a newer custody database. Custody refuses all work in this page until it reloads. */
+const whenCustodyUpdated = (show: (text: string) => void): (() => void) =>
+  custody.observe(() => { if (custody.retired() === "version-change") show("This page was updated in another tab. Reload this page."); });
 /** The page's own state of one identity's requests: the keys the person gave up, and the slot of the retired format. */
 const requests = (identity: LendingIdentity) => {
   const givenUp = `given-up:${identity.scope.scope}:${identity.publicKey}`, retired = `act:${identity.scope.scope}:${identity.publicKey}`;
@@ -55,6 +58,6 @@ const requests = (identity: LendingIdentity) => {
     dropRetired: async (): Promise<boolean> => { if (await get(retired) === null) return false; await remove(retired); return true; },
   };
 };
-  return { browserLock, remembered, joinStore, custody, requests };
+  return { browserLock, remembered, joinStore, custody, requests, whenCustodyUpdated };
 }
 export const { browserLock, remembered, joinStore, custody, requests } = lendingStorage();

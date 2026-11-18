@@ -21,7 +21,7 @@ const screen = await loadApplicationScreenContext(location.href);
 const screenTransport = screen ? applicationScreenTransport(screen) : null;
 const serviceOrigin = screen?.origin ?? location.origin;
 if (screen && screen.definition !== LENDING_DEFINITION) throw Error("This presentation does not match the installed library definition.");
-const { browserLock, custody, joinStore, remembered, requests } = lendingStorage(screen ? canonicalize(screen.scope) : undefined);
+const { browserLock, custody, joinStore, remembered, requests, whenCustodyUpdated } = lendingStorage(screen ? canonicalize(screen.scope) : undefined);
 type Notice = { kind: "plain" | "refusal"; text: string } | null;
 const root = document.querySelector<HTMLElement>("#lending")!;
 /** Each change of room or view raises this, so an answer for a view the person has left is ignored. */
@@ -288,6 +288,7 @@ function draw(): void {
   if (focused) controls().find((control) => control.dataset["key"] === focused)?.focus();
 }
 
+whenCustodyUpdated(text => { notice = { kind: "plain", text }; draw(); });
 void (async () => {
   try {
     memory = await remembered.load();

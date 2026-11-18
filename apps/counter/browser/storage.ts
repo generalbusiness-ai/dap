@@ -4,8 +4,13 @@ import { Custody, browserCustodyStore, envelopesOf, identityId, type ClientCusto
 import { deviceSigner, type SavedDevice } from "./device-key.ts";
 import { keptReport, terminalReport, validAudioStart, validReport, type ActorIdentity, type AudioStart, type CustodyLock, type KeptReport, type PendingReport, type PendingStore, type ReportCustody } from "./voice-controller.ts";
 /** The custody records of this origin's Counter requests: joins, commands and voice reports. */
-let shared: ClientCustodyStore | undefined;
-export const counterCustody = (): ClientCustodyStore => shared ??= browserCustodyStore({ database: "dap-counter-custody-1", lock: "dap-counter-custody" });
+let shared: ReturnType<typeof browserCustodyStore> | undefined;
+export const counterCustody = () => shared ??= browserCustodyStore({ database: "dap-counter-custody-1", lock: "dap-counter-custody" });
+/** Another tab opened a newer custody database. Custody refuses all work in this page until it reloads. */
+export const whenCustodyUpdated = (show: (text: string) => void): (() => void) => {
+  const store = counterCustody();
+  return store.observe(() => { if (store.retired() === "version-change") show("This page was updated in another tab. Reload this page."); });
+};
 const MOST=64*1024, IDENTITIES=32;
 const identityStorageKey=(identity:ActorIdentity)=>digestBytes(utf8(canonicalize(identity)));
 const ORIGIN_LOCK = "artroom-counting-device-custody";

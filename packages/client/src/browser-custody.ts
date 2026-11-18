@@ -2,11 +2,14 @@
  * Browser custody: whole records, bounded outcome-position reads and Web Locks.
  * Older terminal records move to an archive; reads still find them.
  * BroadcastChannel supplies optional invalidation hints, never write authority.
- * Version 2 is the first released layout (planner ruling 14609eb8).
+ * Version 2 is the first released layout (planner ruling 14609eb8). Version 3 adds the authorization store of step E4-B.
+ * A version 2 database upgrades by creating that store alone; no custody row changes.
  */
 import { canonicalize, digestBytes, isRecord, natural, utf8 } from "@generalbusiness/dap-bytes";
 import { CustodyError, TERMINAL, identityId, readStoredCustodyRecord, readStoredOutcome,
   type ClientCustodyStore, type Identity, type Phase, type StoredCustodyRecord, type StoredOutcome } from "./custody.ts";
+import type { AuthorizationPort } from "./authorization-store.ts";
+import type { Authorization } from "./authorization.ts";
 
 export const BROWSER_TERMINAL_LIVE = 64;
 type Handler = (() => void) | null;
@@ -28,7 +31,7 @@ interface Database {
   readonly version: number;
   objectStoreNames: { readonly length: number; contains(name: string): boolean };
   createObjectStore(name: string): unknown;
-  transaction(names: string[], mode: "readonly" | "readwrite"): Transaction;
+  transaction(names: string[], mode: "readonly" | "readwrite", options?: { durability?: "strict" }): Transaction;
   close(): void;
   onversionchange: Handler;
   onclose: Handler;
@@ -51,13 +54,26 @@ export interface BrowserCustodyOptions {
   unresolvedMost?: number;
   platform?: BrowserCustodyPlatform;
 }
-const RECORDS = "records", ARCHIVE = "archive", OUTCOMES = "outcomes", LENGTHS = "lengths";
-const STORES = [RECORDS, ARCHIVE, OUTCOMES, LENGTHS];
+const RECORDS = "records", ARCHIVE = "archive", OUTCOMES = "outcomes", LENGTHS = "lengths", AUTHORIZATIONS = "authorizations";
+/** The stores of version 2, the first released layout. */
+const CUSTODY_STORES = [RECORDS, ARCHIVE, OUTCOMES, LENGTHS];
+const VERSION = 3, STORES = [...CUSTODY_STORES, AUTHORIZATIONS];
 const unavailable = (): CustodyError => new CustodyError({ held: "unreadable" });
 const whoOf = (identity: Omit<Identity, "key">): string => digestBytes(utf8(canonicalize({ service: identity.service, membership: identity.membership, signer: identity.signer, target: identity.target })));
 const byUpdated = (a: Row, b: Row): number => a.updated < b.updated ? -1 : a.updated > b.updated ? 1 : a.id.localeCompare(b.id);
 
-export function browserCustodyStore(options: BrowserCustodyOptions): ClientCustodyStore & { close(): void } {
+/**
+ * Why a store refuses all work: `version-change` when another page opened a newer database version, so this page must
+ * reload; `closed` when the page closed the store or the browser closed its connection.
+ */
+export type BrowserCustodyRetired = "version-change" | "closed";
+
+export function browserCustodyStore(options: BrowserCustodyOptions): ClientCustodyStore & {
+  authorizations: AuthorizationPort;
+  /** Null while the store works. Otherwise every call is refused `unreadable`, and this names the cause. */
+  retired(): BrowserCustodyRetired | null;
+  close(): void;
+} {
   const { database: name, lock: prefix } = options;
   const terminalLive = options.terminalLive ?? BROWSER_TERMINAL_LIVE;
   if ([name, prefix].some(value => typeof value !== "string" || value.length < 1 || value.length > 128) || !Number.isSafeInteger(terminalLive) || terminalLive < 1) throw new Error("Choose bounded browser custody names.");
@@ -67,17 +83,21 @@ export function browserCustodyStore(options: BrowserCustodyOptions): ClientCusto
     locks: (globalThis as { navigator?: { locks?: Locks } }).navigator?.locks,
     BroadcastChannel: (globalThis as BrowserCustodyPlatform).BroadcastChannel,
   };
-  let retired = false, connection: Database | undefined, opened: Promise<Database> | undefined, channel: Channel | undefined, abandonOpen: (() => void) | undefined;
+  let retired: BrowserCustodyRetired | null = null, connection: Database | undefined, opened: Promise<Database> | undefined, channel: Channel | undefined, abandonOpen: (() => void) | undefined;
   const observers = new Set<() => void>();
   const current = (): void => { if (retired) throw unavailable(); };
-  const retire = (): void => {
-    retired = true;
+  /** The first cause holds. A version change tells each observer once, after the store refuses work, so its re-read fails. */
+  const retire = (cause: BrowserCustodyRetired): void => {
+    if (retired) return;
+    retired = cause;
     abandonOpen?.();
+    const told = cause === "version-change" ? [...observers] : [];
     observers.clear();
     try { channel?.close(); } catch { /* notification cleanup never owns custody */ }
     channel = undefined;
     connection?.close();
     connection = undefined;
+    for (const changed of told) { try { changed(); } catch { /* an observer never owns the retirement */ } }
   };
   const signal = (): void => { for (const changed of [...observers]) { if (retired) return; try { changed(); } catch { /* an observer never owns a write */ } } };
   const openChannel = (): Channel | undefined => {
@@ -94,37 +114,46 @@ export function browserCustodyStore(options: BrowserCustodyOptions): ClientCusto
     current();
     if (!platform.indexedDB) return Promise.reject(unavailable());
     return opened ??= new Promise<Database>((resolve, reject) => {
-      const request = platform.indexedDB!.open(name, 2);
+      const request = platform.indexedDB!.open(name, VERSION);
       let abandoned = false;
       const fail = (): void => { abandoned = true; reject(unavailable()); };
       abandonOpen = fail;
+      // Only the exact version 2 layout upgrades: its four stores, out-of-line keys, no key generator.
+      const released = (db: Database): boolean => {
+        if (db.objectStoreNames.length !== CUSTODY_STORES.length || CUSTODY_STORES.some(store => !db.objectStoreNames.contains(store))) return false;
+        try { return CUSTODY_STORES.every(store => { const held = request.transaction!.objectStore(store); return held.keyPath === null && !held.autoIncrement; }); }
+        catch { return false; }
+      };
       request.onupgradeneeded = event => {
-        // There is no released predecessor. Never clear, convert or upgrade an unexpected database.
-        if (retired || abandoned || event.oldVersion !== 0) { request.transaction?.abort(); fail(); return; }
-        for (const store of STORES) request.result.createObjectStore(store);
+        const db = request.result;
+        if (!retired && !abandoned && event.oldVersion === 0) { for (const store of STORES) db.createObjectStore(store); return; }
+        // Version 2 gains the authorization store and nothing else changes. Never clear, convert or upgrade any other database.
+        if (!retired && !abandoned && event.oldVersion === 2 && released(db)) { db.createObjectStore(AUTHORIZATIONS); return; }
+        request.transaction?.abort(); fail();
       };
       request.onblocked = request.onerror = fail;
       request.onsuccess = () => {
         const db = request.result;
-        if (retired || abandoned || db.version !== 2 || db.objectStoreNames.length !== STORES.length || STORES.some(store => !db.objectStoreNames.contains(store))) { db.close(); fail(); return; }
+        if (retired || abandoned || db.version !== VERSION || db.objectStoreNames.length !== STORES.length || STORES.some(store => !db.objectStoreNames.contains(store))) { db.close(); fail(); return; }
         try {
           const schema = db.transaction(STORES, "readonly");
           if (STORES.some(name => schema.objectStore(name).keyPath !== null || schema.objectStore(name).autoIncrement)) { db.close(); fail(); return; }
         } catch { db.close(); fail(); return; }
         connection = db;
         abandonOpen = undefined;
-        db.onversionchange = retire;
-        db.onclose = retire;
+        // Close at once so the newer page's upgrade is not blocked. This page must reload to read custody again.
+        db.onversionchange = () => retire("version-change");
+        db.onclose = () => retire("closed");
         resolve(db);
       };
     });
   };
   /** A transaction already created finishes by its own commit or abort, even if the instance retires meanwhile. */
-  async function transaction<T>(names: string[], mode: "readonly" | "readwrite", work: (store: (name: string) => Store, done: (value: T) => void, fail: (error: Error) => void) => void): Promise<T> {
+  async function transaction<T>(names: string[], mode: "readonly" | "readwrite", work: (store: (name: string) => Store, done: (value: T) => void, fail: (error: Error) => void) => void, durability?: "strict"): Promise<T> {
     const db = await open();
     current();
     return new Promise<T>((resolve, reject) => {
-      const tx = db.transaction(names, mode);
+      const tx = durability ? db.transaction(names, mode, { durability }) : db.transaction(names, mode);
       let value: T, failed: Error | undefined;
       tx.oncomplete = () => failed ? reject(failed) : resolve(value);
       tx.onerror = tx.onabort = () => reject(failed ?? unavailable());
@@ -196,8 +225,46 @@ export function browserCustodyStore(options: BrowserCustodyOptions): ClientCusto
     if (!platform.IDBKeyRange) throw unavailable();
     return platform.IDBKeyRange.bound([id, from], [id, to], false, true);
   };
+  /**
+   * The authorization port of step E4: one row holds the whole batch of one owner and scope, under its canonical name.
+   * The port takes no lock. Its callers hold `exclusive`, the same Web Lock that admits each custody write, so the batch
+   * that permits a signing commits in its own transaction before the custody transaction that keeps the signing begins.
+   * No custody transaction includes this store: an archive move or a record write never changes an authorization.
+   */
+  const batchOf = (owner: string, scope: unknown): string => canonicalize({ owner, scope } as never);
+  /** A stored batch: its own name, canonical text and rows of that owner and scope only. Anything else is unreadable. */
+  const batchRows = (owner: string, at: string, value: unknown): Authorization[] => {
+    if (value === undefined) return [];
+    if (!isRecord(value) || value["at"] !== at || typeof value["text"] !== "string") throw unavailable();
+    let rows: unknown;
+    try { rows = JSON.parse(value["text"]); if (canonicalize(rows as never) !== value["text"]) throw unavailable(); } catch { throw unavailable(); }
+    if (!Array.isArray(rows) || rows.some(row => !isRecord(row) || row["owner"] !== owner || batchOf(owner, row["scope"]) !== at)) throw unavailable();
+    return rows as Authorization[];
+  };
+  const authorizations: AuthorizationPort = {
+    read: async (owner, scope) => {
+      current();
+      const at = batchOf(owner, scope);
+      return transaction<Authorization[]>([AUTHORIZATIONS], "readonly", (store, done, fail) => {
+        got(store(AUTHORIZATIONS).get(at), value => done(batchRows(owner, at, value)), fail);
+      });
+    },
+    write: async (owner, scope, records) => {
+      current();
+      // Serialization and validation run before the transaction starts, so a refused batch changes nothing.
+      const at = batchOf(owner, scope), text = canonicalize(records), row = { at, text };
+      batchRows(owner, at, row);
+      // Strict durability: the permission mark is on disk before the signer runs and before the custody write begins.
+      await transaction<void>([AUTHORIZATIONS], "readwrite", (store, done, fail) => {
+        store(AUTHORIZATIONS).put(row, at);
+        got(store(AUTHORIZATIONS).get(at), held => { if (!isRecord(held) || held["text"] !== text) throw unavailable(); batchRows(owner, at, held); done(undefined); }, fail);
+      }, "strict");
+      notify(at);
+    },
+  };
   return {
     ...(options.unresolvedMost === undefined ? {} : { unresolvedMost: options.unresolvedMost }),
+    authorizations,
     lock: id => new Promise((resolve, reject) => {
       let release!: () => void;
       const held = new Promise<void>(done => { release = done; });
@@ -284,6 +351,7 @@ export function browserCustodyStore(options: BrowserCustodyOptions): ClientCusto
     byTarget: async who => (await rows()).filter(row => row.who === whoOf(who)).sort((a, b) => a.created.localeCompare(b.created) || a.id.localeCompare(b.id))
       .map(row => ({ id: row.id, key: readStoredCustodyRecord(JSON.parse(row.text)).identity.key, phase: row.phase, created: row.created })),
     observe: changed => { current(); openChannel(); const own = () => changed(); observers.add(own); return () => { observers.delete(own); }; },
-    close: retire,
+    retired: () => retired,
+    close: () => retire("closed"),
   };
 }
