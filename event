@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1bb24897f1d0b706450df3737ace450236cfcaf2","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-18-ucp-lending-upgrade-pins.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:23f6e733daa86c131df18baadd14de1f4de3f1e3","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.lending.jsonc."}
