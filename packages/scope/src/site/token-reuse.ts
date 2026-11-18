@@ -4,7 +4,7 @@
 import { canonicalize, isScopeId, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { hostRegisterScopes } from "../installed-registers.ts";
 import { refName } from "@generalbusiness/dap-git";
-import { READ_TTL } from "../artifacts-host.ts";
+import { READ_TTL, artifactsLocalOrigin } from "../artifacts-host.ts";
 import { ARTIFACTS_HOST, type ArtifactsReadiness } from "../artifacts-wiring.ts";
 import type { DestinationRepository } from "../destination-host.ts";
 import type { Sql, SqlValue } from "../sqlite.ts";
@@ -42,9 +42,13 @@ export class SiteTokenReuse {
   readonly #clock: () => number;
   readonly #schedule: () => Promise<void>;
   readonly #flights = new Map<string, Flight>();
+  /** Development and test only; see `ArtifactsProviderOptions.localOrigin`. */
+  readonly #localOrigin: string | null;
   #waiters = 0;
-  constructor(sql: Sql, readiness: () => ArtifactsReadiness, clock: () => number, schedule: () => Promise<void>, settings: () => Parameters<typeof hostRegisterScopes>[1] = () => ({})) {
+  constructor(sql: Sql, readiness: () => ArtifactsReadiness, clock: () => number, schedule: () => Promise<void>, settings: () => Parameters<typeof hostRegisterScopes>[1] = () => ({}), local: { localOrigin?: string } = {}) {
     this.#sql = sql; this.#readiness = readiness; this.#clock = clock; this.#schedule = schedule; this.#settings = settings;
+    this.#localOrigin = local.localOrigin === undefined ? null : artifactsLocalOrigin(local.localOrigin);
+    if (local.localOrigin !== undefined && this.#localOrigin === null) throw new Error("Site local origin");
   }
   #exists(): boolean { return this.#sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='private_site_token'").toArray().length === 1; }
   maintain(now: number): void {
@@ -104,7 +108,9 @@ export class SiteTokenReuse {
       try { handle = await wait(ready.binding.get(name)); } catch (error) { if (error instanceof DeadlineFailure) throw error; throw new ProviderFailure("open"); }
       let info;
       try { info = record(await wait(handle.info())); } catch (error) { if (error instanceof DeadlineFailure) throw error; throw new ProviderFailure("info"); }
-      const expected = `https://${ready.config.host}/git/${ready.config.namespace}/${name}.git`;
+      // The binding must answer for the expected origin: the configured
+      // service over https, or the local simulator only when code passed it.
+      const expected = `${this.#localOrigin ?? `https://${ready.config.host}`}/git/${ready.config.namespace}/${name}.git`;
       const bare = (s: string) => s.replace(/\/+$/, "").replace(/\.git$/, "");
       if (typeof info?.["remote"] !== "string" || bare(info["remote"]) !== bare(expected)) throw new ProviderFailure("info");
       if (!current()) throw Error("Site config changed");

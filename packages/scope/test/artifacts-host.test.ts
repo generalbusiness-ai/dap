@@ -3,7 +3,13 @@ import { utf8 } from "@generalbusiness/dap-bytes";
 import { idOf, snapshotCommit } from "@generalbusiness/dap-git";
 import { buildPack, type RawGitObject } from "@generalbusiness/dap-git/http";
 import { editTree, type DestinationObject } from "@generalbusiness/dap-platform";
-import { ArtifactsProvider, READ_TTL, WRITE_TTL, type ArtifactsNamespace, type CreationCustody } from "../src/artifacts-host.ts";
+import { canonicalize } from "@generalbusiness/dap-bytes";
+import { otherLane } from "@generalbusiness/dap-derive/testing";
+import { ArtifactsProvider, READ_TTL, WRITE_TTL, artifactsLocalOrigin, type ArtifactsNamespace, type CreationCustody } from "../src/artifacts-host.ts";
+import { artifactsConfiguration, artifactsReadiness } from "../src/artifacts-wiring.ts";
+import wiringSource from "../src/artifacts-wiring.ts?raw";
+import workerSource from "../src/worker.ts?raw";
+import archiveSource from "../../../apps/room/archive.ts?raw";
 import type { DestinationBinding } from "../src/destination-host.ts";
 import type { Diagnosis } from "../src/diag.ts";
 import type { MetricPoint } from "../src/metrics.ts";
@@ -423,4 +429,76 @@ test("workspace fork uses one binding call, binds its seed and namespace, and re
   expect(await noCustody.workspaceFork(repository, "h-without-custody", commit, "main", () => true)).toBeNull();
   expect(s.calls).toHaveLength(beforeUnowned);
   expect(forks).toBe(3);
+});
+
+// LA-1. The local Artifacts simulator answers `http://127.0.0.1:<port>`.
+// Deployed wiring builds every remote from configuration, which names only
+// a hostname, so it keeps `https://<service>`.
+const LOCAL = "http://127.0.0.1:8787";
+const loopbackRemote = (origin: string) => (name: string) => `${origin}/git/${NAMESPACE}/${name}.git`;
+
+test("red: a deployed Artifacts config cannot name an http remote, and the provider without the local option refuses the simulator's loopback remote", async () => {
+  const config = (host: string) => canonicalize({ registerScope: otherLane.scope, namespace: NAMESPACE, host, maxBytes: 1024, credentialIdentity: "adapter-attempt" });
+  expect(artifactsConfiguration(config(SERVICE)), "control: a hostname is a deployed config").not.toBeNull();
+  for (const host of [LOCAL, "http://[::1]:8787", "127.0.0.1:8787", "http://service.invalid", `https://${SERVICE}`]) {
+    expect(artifactsConfiguration(config(host)), host).toBeNull();
+    expect(artifactsReadiness({ ARTIFACTS_CONFIG: config(host), ARTIFACTS: service().ns }), host).toEqual({ state: "off", reason: "invalid-config" });
+  }
+  // The deployed parser carries no local field: an extra key refuses the whole config.
+  expect(artifactsConfiguration(canonicalize({ ...JSON.parse(config(SERVICE)), localOrigin: LOCAL }))).toBeNull();
+  for (const named of [LOCAL, "http://service.invalid"]) {
+    expect(() => new ArtifactsProvider({ binding: service().ns, host: "artifacts", namespace: NAMESPACE, service: named, maxBytes: 1024, credentialHandle: async () => "unused" }), named).toThrow();
+  }
+
+  for (const origin of [LOCAL, "http://other-host.invalid:8787"]) {
+    const s = service();
+    s.script.remote = loopbackRemote(origin);
+    s.script.create = name => ({ name, remote: loopbackRemote(origin)(name), token: "creation-plaintext" });
+    const fetched: string[] = [];
+    const p = provider(s, async request => { fetched.push(request.url); throw new Error("no fetch scripted"); });
+    expect(p.remote(repository)).toBe(REMOTE);
+    await expect(p.ref(repository, "refs/heads/main"), origin).rejects.toThrow();
+    expect(s.calls, "refused at the identity check, before any token").toEqual(["get repo-1", "info repo-1"]);
+    expect(await p.createRepository("repo-2"), "a created repository at another origin is no answer").toBeNull();
+    expect(fetched).toEqual([]);
+  }
+});
+
+test("green: the local option accepts the simulator's loopback remote, and only an exact loopback http origin", async () => {
+  for (const origin of [LOCAL]) {
+    expect(artifactsLocalOrigin(origin)).toBe(origin);
+    const s = service();
+    s.script.remote = loopbackRemote(origin);
+    s.script.create = name => ({ name, remote: loopbackRemote(origin)(name), token: "creation-plaintext" });
+    const requests: string[] = [], commit = "1".repeat(40);
+    const p = new ArtifactsProvider({ binding: s.ns, host: "artifacts", namespace: NAMESPACE, service: SERVICE, localOrigin: origin, maxBytes: 1024 * 1024,
+      fetch: async request => { requests.push(request.url); if (request.url.endsWith("/info/refs?service=git-upload-pack")) return uploadAdvertisement({ "refs/heads/main": commit }); throw new Error("unscripted"); },
+      credentialHandle: async () => "unused", creation: s.custody });
+    expect(p.remote(repository)).toBe(`${origin}/git/${NAMESPACE}/repo-1.git`);
+    expect(await p.ref(repository, "refs/heads/main")).toBe(commit);
+    expect(requests).toEqual([`${origin}/git/${NAMESPACE}/repo-1.git/info/refs?service=git-upload-pack`]);
+    expect(await p.createRepository("repo-2")).toEqual({ created: true, name: "repo-2", id: "repo-2" });
+    // The option replaces the origin: the https service remote is now foreign.
+    s.script.remote = name => `https://${SERVICE}/git/${NAMESPACE}/${name}.git`;
+    await expect(p.ref(repository, "refs/heads/main")).rejects.toThrow();
+  }
+  // Negative cases under the local option: each is refused at construction.
+  for (const origin of ["http://example.com:8787", "http://127.0.0.1.evil.test:8787", "http://user:pass@127.0.0.1:8787", "http://user@127.0.0.1:8787",
+    "http://127.0.0.1", "http://127.0.0.1:80", "http://127.0.0.1:8787/", "http://127.0.0.1:8787/git", "http://127.0.0.1:8787?x=1", "http://127.0.0.1:8787#x",
+    "http://127.1:8787", "http://0x7f.0.0.1:8787", "http://localhost:8787", "http://[::1]:8787", "http://10.0.0.1:8787", "http://[::ffff:127.0.0.1]:8787",
+    "https://127.0.0.1:8787", `https://${SERVICE}`, "ftp://127.0.0.1:8787", " http://127.0.0.1:8787", "HTTP://127.0.0.1:8787", ""]) {
+    expect(artifactsLocalOrigin(origin), origin).toBeNull();
+    expect(() => new ArtifactsProvider({ binding: service().ns, host: "artifacts", namespace: NAMESPACE, service: SERVICE, localOrigin: origin, maxBytes: 1024, credentialHandle: async () => "unused" }), origin).toThrow();
+  }
+  // https without the option is unchanged.
+  expect(provider(service()).remote(repository)).toBe(REMOTE);
+});
+
+test("no deployed wiring passes the local option", () => {
+  for (const [file, source] of [["artifacts-wiring.ts", wiringSource], ["worker.ts", workerSource], ["apps/room/archive.ts", archiveSource]] as const) {
+    expect(source.includes("localOrigin"), file).toBe(false);
+  }
+  expect(wiringSource).toContain("new ArtifactsProvider(");
+  expect(archiveSource).toContain("new ArtifactsProvider(");
+  expect(workerSource).toContain("new SiteTokenReuse(");
 });

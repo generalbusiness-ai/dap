@@ -56,6 +56,12 @@ export interface ArtifactsProviderOptions {
   namespace: string;
   /** The hostname of the service's remote URLs. */
   service: string;
+  /** Development and test only: the local Artifacts simulator's origin,
+   * `http://127.0.0.1:<port>`. It replaces `https://<service>` in every
+   * remote URL, and the Git requests use the `local` transport, which admits
+   * plain HTTP to `127.0.0.1` alone. Only a caller's code passes it:
+   * no deployed wiring sets it, and no configuration can name it. */
+  localOrigin?: string;
   /** Caller-chosen transport allowance, not a platform quota. */
   maxBytes: number;
   bounds?: ReadBounds;
@@ -99,12 +105,26 @@ function own(reply: unknown, key: string): unknown {
 
 /** Local service configuration only; no provider request. */
 export const artifactsService = (value: unknown): value is string => typeof value === "string" && value.length <= 253 && /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(value);
+/** The local simulator's origin, or null: plain HTTP to a loopback address
+ * with an explicit port, with no user, password, path, query or fragment.
+ * The text must be the URL's own origin, so no parser folding admits
+ * another spelling. A development or test caller passes it in code. */
+export function artifactsLocalOrigin(value: unknown): string | null {
+  if (typeof value !== "string" || value.length > 64) return null;
+  let url: URL;
+  try { url = new URL(value); } catch { return null; }
+  return url.protocol === "http:" && url.hostname === "127.0.0.1" && /^[1-9][0-9]{0,4}$/.test(url.port) && url.username === "" && url.password === ""
+    && url.pathname === "/" && url.search === "" && url.hash === "" && url.origin === value ? value : null;
+}
 
 export class ArtifactsProvider implements RegisterProvider, DestinationProvider {
   readonly #options: ArtifactsProviderOptions;
   readonly #bounds: ReadBounds;
+  /** `https://<service>`, or the local simulator's origin when the caller passed one. */
+  readonly #origin: string;
   constructor(options: ArtifactsProviderOptions) {
     if (!repositoryName(options.namespace) || !artifactsService(options.service) || !Number.isSafeInteger(options.maxBytes) || options.maxBytes < 32) bad();
+    this.#origin = options.localOrigin === undefined ? `https://${options.service}` : artifactsLocalOrigin(options.localOrigin) ?? bad();
     this.#options = { ...options };
     this.#bounds = { ...(options.bounds ?? READ_BOUNDS) };
   }
@@ -377,10 +397,10 @@ export class ArtifactsProvider implements RegisterProvider, DestinationProvider 
   /** The remote URL of a recorded repository at this host and namespace. */
   #remote(repository: DestinationRepository): string {
     if (repository.host !== this.#options.host || repository.namespace !== this.#options.namespace || !repositoryName(repository.name) || repository.id !== repository.name) return bad();
-    return `https://${this.#options.service}/git/${this.#options.namespace}/${repository.name}.git`;
+    return `${this.#origin}/git/${this.#options.namespace}/${repository.name}.git`;
   }
   #transport(remote: string) {
-    return { remote, maxBytes: this.#options.maxBytes, bounds: this.#bounds, ...(this.#options.fetch === undefined ? {} : { fetch: this.#options.fetch }), ...(this.#options.timeoutMs === undefined ? {} : { timeoutMs: this.#options.timeoutMs }) };
+    return { remote, ...(this.#options.localOrigin === undefined ? {} : { transport: "local" as const }), maxBytes: this.#options.maxBytes, bounds: this.#bounds, ...(this.#options.fetch === undefined ? {} : { fetch: this.#options.fetch }), ...(this.#options.timeoutMs === undefined ? {} : { timeoutMs: this.#options.timeoutMs }) };
   }
   /** One revocation: true, false, or null when the outcome is unknown. */
   async #revoke(name: string, plaintext: string): Promise<boolean | null> {

@@ -320,3 +320,37 @@ test("Site token custody rechecks installed roots after a provider wait and reta
     expect(p.counts().mints).toBe(1);
   });
 });
+
+// LA-1. The local simulator answers `http://127.0.0.1:<port>`. Only code
+// passes the local option; the deployed config names a hostname only.
+test("Site token check refuses the simulator's loopback remote without the local option and accepts it with the option", async () => {
+  const holder = await create();
+  await holder.inside(async state => {
+    const sql: Sql = { exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: run => state.storage.transactionSync(run) };
+    const now = Date.parse("2099-01-01T00:00:00Z"), local = "http://127.0.0.1:8787";
+    const loopback = `${local}/git/${configuration.namespace}/${repository.name}.git`;
+    // Red: deployed wiring, a binding that answers for a loopback http remote.
+    const deployed = provider(() => now);
+    deployed.remote(loopback);
+    const plain = new SiteTokenReuse(sql, () => artifactsReadiness(deployed.settings), () => now, async () => {});
+    expect(await plain.acquire(request("refs/heads/deployed"))).toEqual({ ok: false, reason: "provider", step: "info" });
+    deployed.remote(`http://other-host.invalid:8787/git/${configuration.namespace}/${repository.name}.git`);
+    expect(await plain.acquire(request("refs/heads/deployed"))).toEqual({ ok: false, reason: "provider", step: "info" });
+    expect(deployed.counts().mints).toBe(0);
+    expect(artifactsReadiness({ ...deployed.settings, ARTIFACTS_CONFIG: canonicalize({ ...configuration, host: local }) })).toEqual({ state: "off", reason: "invalid-config" });
+
+    // Green: the local option accepts the loopback remote.
+    const simulated = provider(() => now);
+    simulated.remote(loopback);
+    const tokens = new SiteTokenReuse(sql, () => artifactsReadiness(simulated.settings), () => now, async () => {}, () => ({}), { localOrigin: local });
+    expect(await tokens.acquire(request("refs/heads/local"))).toMatchObject({ ok: true, plaintext: "private-1" });
+    // Under the option, the https service remote is foreign.
+    simulated.remote(`https://${configuration.host}/git/${configuration.namespace}/${repository.name}.git`);
+    expect(await tokens.acquire(request("refs/heads/local-https"))).toEqual({ ok: false, reason: "provider", step: "info" });
+    expect(simulated.counts().mints).toBe(1);
+
+    for (const origin of ["http://example.com:8787", "http://127.0.0.1.evil.test:8787", "http://user@127.0.0.1:8787", "http://127.0.0.1:8787/", "https://127.0.0.1:8787", "http://127.0.0.1"]) {
+      expect(() => new SiteTokenReuse(sql, () => artifactsReadiness(simulated.settings), () => now, async () => {}, () => ({}), { localOrigin: origin }), origin).toThrow("Site local origin");
+    }
+  });
+});
