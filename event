@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1c972f7b64a112a408295eb8325ab59ad12d6bc4","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-31-head-outcome-recovery-design.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1c9861537b51673aa85417e628aa72f7a15f1330","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-02-g3-receive-pack-diagnosis.md."}
