@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f1ff8215dd64c216173a7860cddbcda63ac59736","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-retire-smoke-pre-gate.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f28e828b6e01ceb3820058d2087767cd96ff5f6d","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-13-identifiers-cutover.manifest.json."}
