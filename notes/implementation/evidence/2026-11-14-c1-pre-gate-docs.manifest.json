@@ -1,6 +1,6 @@
 {
   "qualification": "Only five root-granted cheap pre-gate checks; no tests/compiler/control/repro/generator/install/fullgate. Checked source b1d3b502; later note/manifest filing does not change runtime/test/config/dependency files. No full-gate result.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-c1-pre-gate-docs-attempt1",
+  "directory": "artroom-evidence/2026-11-14-c1-pre-gate-docs-attempt1",
   "head": "b1d3b502e03b698c3d388108ce8825136b5a583d",
   "tree": "39242a34d887e225388440cafc94c6b4d2f82840",
   "file_count": 36,

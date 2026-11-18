@@ -8,8 +8,8 @@ runs each deployment.
 ## Prepare before starting the plan
 
 1. Export runtime source `afdd8ee5288a7b33c90536c9489bcfc06eafc7d9` below
-   `/Users/inguz/dap-host-g3-20261102/source`.
-2. Keep `/Users/inguz/dap-host-g3-20261102` and its `github` directory at
+   `<mini home>/dap-host-g3-20261102/source`.
+2. Keep `<mini home>/dap-host-g3-20261102` and its `github` directory at
    mode 0700, owned by inguz.
 3. Copy the existing H3 dependency directory as a new owned directory below
    the source export. Keep H3's original source unchanged.
@@ -30,11 +30,11 @@ runs each deployment.
 Set these values in the service user's shell:
 
 ```sh
-export G3_ROOT=/Users/inguz/dap-host-g3-20261102
+export G3_ROOT=<mini home>/dap-host-g3-20261102
 export G3_PREFIX=/Library/dap-host-h3-20261029
 export DAP_HOME="$G3_ROOT/client"
-export NODE_EXTRA_CA_CERTS=/Users/inguz/dap-host-h3-20261029/tls/cert.pem
-export PATH=/Users/inguz/dap-validate/bin/node-v26.12.1-darwin-arm64/bin:/usr/bin:/bin:/usr/sbin:/sbin
+export NODE_EXTRA_CA_CERTS=<mini home>/dap-host-h3-20261029/tls/cert.pem
+export PATH=<mini home>/dap-validate/bin/node-v26.12.1-darwin-arm64/bin:/usr/bin:/bin:/usr/sbin:/sbin
 ```
 
 1. Create the new client directory at mode 0700.
@@ -113,10 +113,10 @@ Record only the approved nonsecret command results and evidence hashes.
 2. As planner, deploy the original H3 project with its original helper:
 
    ```sh
-   /usr/bin/python3 /Users/inguz/dap-host-h3-20261029/source/apps/room/celld/mac/deploy.py \
+   /usr/bin/python3 <mini home>/dap-host-h3-20261029/source/apps/room/celld/mac/deploy.py \
      --prefix /Library/dap-host-h3-20261029 \
-     --project /Users/inguz/dap-host-h3-20261029/project \
-     --esbuild /Users/inguz/dap-host-h3-20261029/source/node_modules/.bin/esbuild
+     --project <mini home>/dap-host-h3-20261029/project \
+     --esbuild <mini home>/dap-host-h3-20261029/source/node_modules/.bin/esbuild
    ```
 
 3. Require health 200 and successful H3 baseline reads.

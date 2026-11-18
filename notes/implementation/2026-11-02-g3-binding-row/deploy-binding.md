@@ -7,7 +7,7 @@ client home, original plan, source export, installation, node, and store.
 1. Require the current room's full Destination reference to match the reviewed
    row. Require `unpublished` with repository, Git head, and token all null.
 2. Copy only the reviewed `bindings.json` to
-   `/Users/inguz/dap-host-g3-20261102/github/bindings.json`, mode 0600.
+   `<mini home>/dap-host-g3-20261102/github/bindings.json`, mode 0600.
    Compare the existing nonsecret App configuration with this packet's filled
    `github-app.json`. Require exact field equality.
 3. Run the existing H3 baseline and require active Membership8 head 21 and
@@ -15,9 +15,9 @@ client home, original plan, source export, installation, node, and store.
 4. Set the service user's environment:
 
    ```sh
-   export G3_ROOT=/Users/inguz/dap-host-g3-20261102
-   export NODE_EXTRA_CA_CERTS=/Users/inguz/dap-host-h3-20261029/tls/cert.pem
-   export PATH=/Users/inguz/dap-validate/bin/node-v26.12.1-darwin-arm64/bin:/usr/bin:/bin:/usr/sbin:/sbin
+   export G3_ROOT=<mini home>/dap-host-g3-20261102
+   export NODE_EXTRA_CA_CERTS=<mini home>/dap-host-h3-20261029/tls/cert.pem
+   export PATH=<mini home>/dap-validate/bin/node-v26.12.1-darwin-arm64/bin:/usr/bin:/bin:/usr/sbin:/sbin
    ```
 
 5. Stage a new binding project from the original prepared project:

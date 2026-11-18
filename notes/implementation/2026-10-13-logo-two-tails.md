@@ -9,7 +9,7 @@ The browser icon uses the adopted reversed, thinned path in white (#FFFFFF) on a
 All 23 distribution files were regenerated once, with Node 26.11.1 and sharp 0.35.4 from an existing installation outside the checkout:
 
 ```sh
-/opt/homebrew/Cellar/node/26.11.1/bin/node /Users/hughpyle/play/artroom-worktrees/dap-logo-two-tails/scripts/brand-dist.mjs /Users/hughpyle/.npm/_npx/d77349f55c2be1c0/node_modules/sharp/dist/index.mjs
+/opt/homebrew/Cellar/node/26.11.1/bin/node artroom-worktrees/dap-logo-two-tails/scripts/brand-dist.mjs ~/.npm/_npx/d77349f55c2be1c0/node_modules/sharp/dist/index.mjs
 ```
 
 The command ran from `/tmp` and exited 0. Authored input and tool hashes matched before and after. Root viewed the actual 16-, 32-, and 48-pixel PNGs at original size and distinguished both tails in the 16-pixel PNG. This is provisional PNG evidence. Normal-size Chrome tab-strip captures in light and dark mode are still owed for Home and Counter.

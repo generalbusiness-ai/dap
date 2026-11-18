@@ -44,7 +44,7 @@ same `ArchiveStopped` as before.
   The existing check confirms that the message never reaches the log.
 - Named red: with main's budget, send and driver at `830d134a`, the new
   cases fail and the driver case fails on the missing key. Evidence:
-  `/Users/hughpyle/play/artroom-evidence/2026-11-17-as2-red/`.
+  `artroom-evidence/2026-11-17-as2-red/`.
 
 ## Deployment
 

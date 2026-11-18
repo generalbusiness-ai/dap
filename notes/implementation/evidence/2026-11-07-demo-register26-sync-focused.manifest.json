@@ -3,7 +3,7 @@
   "baseHead": "bf6ffe617fb1ac6f0e14c39a6f1f93534182bc31",
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-demo-register26-sync-validation",
+      "directory": "artroom-evidence/2026-11-07-demo-register26-sync-validation",
       "files": [
         {
           "path": "bindings.json",

@@ -1,6 +1,6 @@
 {
   "qualification": "Four granted post-gate documentation/Git checks passed at 1b4f39e831. Later note/manifests-only results filing changes no source/test/config/dependency file. No formatter, test, compiler, control, reproducer, generation, installation or second gate ran.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-c1-post-gate-docs-attempt1",
+  "directory": "artroom-evidence/2026-11-14-c1-post-gate-docs-attempt1",
   "head": "1b4f39e831217decd34c63b61d3b7f91b4ebb5af",
   "tree": "035df98274c00d5ae49aebce95dbc21537b6e337",
   "file_count": 33,

@@ -1,6 +1,6 @@
 {
   "qualification": "Independent metadata-only reconciliation of the repaired BR13 gate after the verified lower-client and maintained-project alias repairs, exact architecture guard and fresh Page asset. All four earlier full-gate attempts remain separately failed: v2 format; v3 two Node architecture failures; v4 six module import failures; v5b Workerd-child heap abort with one pending obligation. The isolated LIST1 pass remains separate. This unchanged-source gate includes passive ten-second own-process RSS sampling under a2e43e02; no heap, worker or deadline changes. The26 real-project cases and2 actual resolver observations remain a separate positive witness. Original pools, workers and deadlines remain. All111 wrappers stay unknown. No deployment, hosted/live acceptance, SDK output checker, private capture or publication claim.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-final-gate-v6b-review",
+  "directory": "artroom-evidence/2026-11-10-br13-final-gate-v6b-review",
   "checkpoint": "ff0eee7d1a047ce1e94bc9040c1e6c96e5bf6d3a",
   "tree": "f17cb1507a81614a37d56ac84a156451a01aa820",
   "fileCount": 7,
@@ -39,7 +39,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-final-gate-v6b",
+      "directory": "artroom-evidence/2026-11-10-br13-final-gate-v6b",
       "payloadFileCount": 2453,
       "fileCount": 2454,
       "payloadBytes": 114866636,
@@ -47,7 +47,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-final-gate-v6b-launch",
+      "directory": "artroom-evidence/2026-11-10-br13-final-gate-v6b-launch",
       "payloadFileCount": 12,
       "fileCount": 13,
       "payloadBytes": 800575,
@@ -55,7 +55,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-final-gate-v6b-analysis-private",
+      "directory": "artroom-evidence/2026-11-10-br13-final-gate-v6b-analysis-private",
       "payloadFileCount": 7,
       "fileCount": 8,
       "payloadBytes": 21671304,
@@ -175,7 +175,7 @@
       "role": "separate isolated LIST1 PASS"
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-v5b-abort-attribution/attribution.json",
+      "path": "artroom-evidence/2026-11-10-br13-v5b-abort-attribution/attribution.json",
       "sha256": "4ed100891b59a9c6fdbe8d01d4b2f49bf1d126125382657e089175109c594ac9",
       "role": "source-supported Workerd-child crash; exclusive owner UNKNOWN"
     }
@@ -261,7 +261,7 @@
     }
   ],
   "privateAnalysisCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-final-gate-v6b-analysis-private",
+    "directory": "artroom-evidence/2026-11-10-br13-final-gate-v6b-analysis-private",
     "file": "full-reconciliation.private.json",
     "bytes": 15902035,
     "sha256": "d1c4a1792f65ec58ef1575f1e8178b4e5e1e5cf8234cc3b9162a1f969e8eb7eb",

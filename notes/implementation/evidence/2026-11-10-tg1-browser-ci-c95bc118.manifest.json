@@ -3,7 +3,7 @@
   "promise": "af287821038111e452959ff3e62c5dd612cc7dae",
   "head": "c95bc118db07afbd87485608a95d4baf3b2c759f",
   "tree": "92cdd6efaa3c412d31c42b7c93d221bc4a8553d3",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-browser-ci-c95bc118/unit",
+  "unit": "artroom-evidence/2026-11-10-tg1-browser-ci-c95bc118/unit",
   "outcome": "PASSED",
   "runs": [
     {
@@ -48,7 +48,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-browser-ci-c95bc118/private",
+    "directory": "artroom-evidence/2026-11-10-tg1-browser-ci-c95bc118/private",
     "manifestSha256": "74b87ccdc09772e9a0fda7c335a4362fd88d0bac0cce4302ef64d3bd0557f32c",
     "files": 141,
     "retention": {

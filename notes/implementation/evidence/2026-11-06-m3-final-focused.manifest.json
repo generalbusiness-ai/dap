@@ -1,5 +1,5 @@
 {
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-final-focused",
+  "directory": "artroom-evidence/2026-11-06-m3-final-focused",
   "qualification": "First frozen focused verification exits1 for ledger-name mismatch despite both compilers and111 selected cases passing. Earlier planning-script copy absent; its hash remains in the plan. Failed evidence retained.",
   "fileCount": 9,
   "files": [

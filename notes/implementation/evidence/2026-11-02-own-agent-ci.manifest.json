@@ -1,6 +1,6 @@
 {
   "qualification": "Actual Card 41565388797 and Page 41565388918 browser workflow successes at frozen source. Only an unrelated isolated Native test changes afterwards; raw logs stay private.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-own-agent-ci",
+  "directory": "artroom-evidence/2026-11-02-own-agent-ci",
   "checkpoint": "5929ca7cd76f180e062fcbf0cd340243fdb2c729",
   "tree": "9285a3daa4436aff5fd30010d3b84a3393b7f181",
   "fileCount": 7,

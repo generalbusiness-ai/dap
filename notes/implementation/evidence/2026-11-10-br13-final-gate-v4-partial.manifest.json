@@ -1,6 +1,6 @@
 {
   "qualification": "Independent metadata-only v4 partial failure audit. Node150 and Counting56 passed; Plain4478passed1skipped with zero failed case assertions. Six actual maintained project modules failed to collect through ENOTDIR Contract subpath resolution, leaving25Plain obligations uncollected. Native1135 stayed unreached, total1160unrun. All111 observed wrappers remain unknown. Typecheck45contexts/16scripts, formatting and retained pins passed. Both earlier failed gates retain their original outcomes. No pass analyzer/sealer, application import, compiler, test, build or browser body ran in this audit.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4-partial-audit",
+  "directory": "artroom-evidence/2026-11-09-br13-final-gate-v4-partial-audit",
   "checkpoint": {
     "commit": "fb98fb2e0c41620cdfffc0d1f3696874fbad63f8",
     "tree": "b6093752a93b7188e5029c2e3a6bc0970ee4e87f"
@@ -41,7 +41,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4",
+      "directory": "artroom-evidence/2026-11-09-br13-final-gate-v4",
       "payloadFileCount": 2413,
       "fileCount": 2414,
       "payloadBytes": 70140331,
@@ -50,7 +50,7 @@
       "symlinkCount": 0
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4-launch",
+      "directory": "artroom-evidence/2026-11-09-br13-final-gate-v4-launch",
       "payloadFileCount": 9,
       "fileCount": 10,
       "payloadBytes": 26516,
@@ -63,91 +63,91 @@
     {
       "name": "whitespace",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/whitespace.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/whitespace.log",
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
       "name": "commit-messages",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/commit-messages.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/commit-messages.log",
       "bytes": 39,
       "sha256": "6bbfe209a0171ac4e4bcc6e4a741eb17eeff73a399a59a876fff0684cf003010"
     },
     {
       "name": "commit-test",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/commit-test.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/commit-test.log",
       "bytes": 592,
       "sha256": "c16c1e40034b7a06c62ce45e0219cf615f8577fb230679ff1da2e7cc9b0f4294"
     },
     {
       "name": "helpers",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/helpers.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/helpers.log",
       "bytes": 68,
       "sha256": "a5597c033cce01875023e74c11eb631178c0ee9be1fadeb043c2b2a9b0bc438b"
     },
     {
       "name": "citations",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/citations.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/citations.log",
       "bytes": 1570370,
       "sha256": "539047a6cde066473c3cf56078ce53af089339ad49d30f740658b98dfaa84e42"
     },
     {
       "name": "cite-test",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/cite-test.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/cite-test.log",
       "bytes": 758,
       "sha256": "ff432686c8e62b6ecc7199a3870daf8e28a44595e37fbdfec618a41f1b844cfc"
     },
     {
       "name": "doc-links",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/doc-links.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/doc-links.log",
       "bytes": 36,
       "sha256": "40d07cb44f51e6b8126957e91832efabb0a87160865396cb64fa9a1792f914e2"
     },
     {
       "name": "notes",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/notes.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/notes.log",
       "bytes": 141,
       "sha256": "c693916a884edb98953f2631e1f3c3509561ea8f1a55fed87047d97d7e40f274"
     },
     {
       "name": "format",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/format.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/format.log",
       "bytes": 114,
       "sha256": "6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79"
     },
     {
       "name": "typecheck",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/typecheck.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/typecheck.log",
       "bytes": 2218,
       "sha256": "808c1cacdb754403a1470d046090f319f2a65157619d867b7423c4788c4cbe15"
     },
     {
       "name": "def-pins",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/def-pins.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/def-pins.log",
       "bytes": 353,
       "sha256": "3b1002b3daf4a04958148422fc60950e33be7c89b854daa773b76f6d1a836701"
     },
     {
       "name": "test",
       "exitCode": 1,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/test.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/test.log",
       "bytes": 684251,
       "sha256": "8c63d0bb9db3418cd7f7af6e4e3b312b1a54c5244bda66675492d014f10378e9"
     },
     {
       "name": "gate",
       "exitCode": 1,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/gate.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v4/gate.log",
       "bytes": 9959,
       "sha256": "aa4451ad06ef72689e4f4aa3016c991081dc1a90c1e3967b391737794e1ee1a9"
     }
@@ -159,12 +159,12 @@
         "apps/counter/commitments.test.ts",
         "apps/counter/definition.test.ts"
       ],
-      "originalLog": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/test.log",
+      "originalLog": "artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/test.log",
       "originalLogSha256": "8c63d0bb9db3418cd7f7af6e4e3b312b1a54c5244bda66675492d014f10378e9",
       "byteOffset": 682362,
       "bytes": 760,
       "sha256": "537755204d657891572e1c00e1af46868515b437bd4698ca1cbbf66f8e9ac7c9",
-      "retainedRawBlock": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/retained-collection-errors/counting.private.txt",
+      "retainedRawBlock": "artroom-evidence/2026-11-09-br13-final-gate-v4/retained-collection-errors/counting.private.txt",
       "qualification": "Verbatim raw import/collection error group; no case assertion failed. Raw bytes remain owner-private."
     },
     {
@@ -175,12 +175,12 @@
         "examples/lending/definition.test.ts",
         "examples/lending/shelf.test.ts"
       ],
-      "originalLog": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/test.log",
+      "originalLog": "artroom-evidence/2026-11-09-br13-final-gate-v4/stage.usUCgavC/test.log",
       "originalLogSha256": "8c63d0bb9db3418cd7f7af6e4e3b312b1a54c5244bda66675492d014f10378e9",
       "byteOffset": 683122,
       "bytes": 923,
       "sha256": "6932583e6913a2779f9e0f264446bb4768f6a99e1314cb0d5df28ee060addf63",
-      "retainedRawBlock": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v4/retained-collection-errors/lending.private.txt",
+      "retainedRawBlock": "artroom-evidence/2026-11-09-br13-final-gate-v4/retained-collection-errors/lending.private.txt",
       "qualification": "Verbatim raw import/collection error group; no case assertion failed. Raw bytes remain owner-private."
     }
   ],

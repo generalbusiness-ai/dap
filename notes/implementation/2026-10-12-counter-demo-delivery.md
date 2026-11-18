@@ -67,7 +67,7 @@ Room and Jam parts; this Counter candidate does not close them.
 ## Checks, with original failures retained
 
 The external evidence below is under
-`/Users/hughpyle/play/artroom-diagnostics/`.
+`artroom-diagnostics/`.
 
 | Evidence | Result and limit |
 |---|---|

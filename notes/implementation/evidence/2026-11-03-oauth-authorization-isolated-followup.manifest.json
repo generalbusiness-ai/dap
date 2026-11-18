@@ -1,6 +1,6 @@
 {
   "qualification": "Isolated test-file follow-up after failed gate 4. The owning compiler and whole file pass. Native passes 1060 cases and skips two; native.exit and followup.exit each record exit 0. The frozen source is unchanged. The full gate remains failed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-authorization-isolated-followup",
+  "directory": "artroom-evidence/2026-11-03-oauth-authorization-isolated-followup",
   "checkpoint": "9bcb91f9931861fb47ef5fc6afb5ea60f58dfbb4",
   "fileCount": 13,
   "files": [

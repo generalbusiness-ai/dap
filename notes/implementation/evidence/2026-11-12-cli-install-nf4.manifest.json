@@ -2,7 +2,7 @@
   "qualification": "Index of unchanged raw originals for NF-4. Each evidence directory carries its own SHA256SUMS and is read-only. The gate and the Card browser run at 18ebc428 passed. Gate internals sit under gate-internals and are not listed here.",
   "request": "d2aff0679496a6b3f31815d7f6891e7a4ef93121",
   "promise": "c67cd117b942566d06b34c7ea6d0c899d827b22f",
-  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "directory": "artroom-evidence",
   "base": "2216316ea76f4df59413d42b916b3b66e1c02cb2",
   "checkpointCommit": "18ebc42843c05dd3c532019c52d45e11a67a02c5",
   "checkpointTree": "d7eca9706ff2159934340d17ad0fccb8349ba448",

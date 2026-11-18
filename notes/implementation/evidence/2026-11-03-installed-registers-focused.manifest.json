@@ -1,6 +1,6 @@
 {
   "qualification": "Incremental owning compilers,15Nativecases, two expected-failure controls with exact restoration, reviewed source inventory, failed settings check and successful documentation repair. Not one frozen aggregate.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-installed-registers-focused",
+  "directory": "artroom-evidence/2026-11-03-installed-registers-focused",
   "checkpoint": "c3995f8508bc6573abe6e5cbb626dd9d8f51be20",
   "tree": "32bdd9fd4f324991ddc87b82f7d099ba1121824b",
   "fileCount": 16,

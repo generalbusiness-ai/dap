@@ -59,7 +59,7 @@ runs. They are not a combined gate or borrowed whole-candidate verification.
 | D: Lending and shared-slot integration | Two compiler configurations passed. Sixteen pure/model/custody cases passed, with the new renderer-text witness separately passing. Both path controls distinguished their faults. Native Lending `61375` passed every original story, role, capacity, recovery and proven Replay assertion, plus causal outbox results and gone-page repair. Mixed case `46681` passed with the real CLI change and Lending scopes, one held OwnGit answer, both receipts, commit ancestry and both immutable Site pages. |
 
 D's compact public summaries are in the local diagnostics packet
-`/Users/hughpyle/play/artroom-diagnostics/pub-lending-assets-one/`:
+`artroom-diagnostics/pub-lending-assets-one/`:
 `pure-and-compiler.public.json`, `native-61375.public.json`,
 `mixed-46681.public.json` and `local-qa.public.json`.
 They were written retrospectively from terminal tool results; raw runner

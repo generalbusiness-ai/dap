@@ -1700,8 +1700,8 @@ the design of section 4; it does not stand in for it.
 ## 9. Prior art
 
 Both sources were read, not changed. gitseq at `02090dc2d`
-(`/Users/hughpyle/play/gitseq`), dap at `9d738e2e`
-(`/Users/hughpyle/play/dap`).
+(`gitseq`), dap at `9d738e2e`
+(`dap`).
 
 ### gitseq's declared kinds
 

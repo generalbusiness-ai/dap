@@ -1,6 +1,6 @@
 {
   "qualification": "Isolated test-file repair after failed gate 5929ca7c under docs/testing.md. Compiler and all 24 whole-owner Native cases pass; no production, configuration, dependency, helper, assertion or deadline change. Both gates remain failures.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-own-agent-session-followup",
+  "directory": "artroom-evidence/2026-11-02-own-agent-session-followup",
   "checkpoint": "63023896a98cb49cf503dcccff767e8282117d20",
   "tree": "7f47e97cb7405ea8132712c4574daf8992205cb6",
   "fileCount": 8,

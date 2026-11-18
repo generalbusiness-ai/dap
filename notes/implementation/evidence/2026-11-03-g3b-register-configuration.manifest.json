@@ -1,6 +1,6 @@
 {
   "qualification": "Public G3b configuration/source checks and explicit initial metadata correction; no real mini or key access.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-register-configuration",
+  "directory": "artroom-evidence/2026-11-03-g3b-register-configuration",
   "checkpoint": "9c7ae712d6281a1f32bbbf180e70cfa4329d6e7c",
   "fileCount": 22,
   "files": [

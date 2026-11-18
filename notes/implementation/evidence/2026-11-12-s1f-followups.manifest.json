@@ -2,7 +2,7 @@
   "qualification": "Index of unchanged raw originals for S1-F. The evidence directory carries its own SHA256SUMS and is read-only. The gate at c717f9b4 passed. Gate internals sit under gate-internals and are not listed here.",
   "request": "17eb790dcf3d168fdf9f5aafeaecdb6ca5766bd2",
   "promise": "00e3230dee0fe8af5a9d4823ca47720cee265ddf",
-  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "directory": "artroom-evidence",
   "base": "a76764a793ee518c85c3dedafe8103da040c1847",
   "checkpointCommit": "c717f9b4bdab5ef380e17ee0462083a8afae4b55",
   "checkpointTree": "b541c9e9d282e3125f0ab0137a384d8c807052f7",

@@ -1,4 +1,4 @@
-import {chromium}from'/Users/hughpyle/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs';
+import {chromium}from'~/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs';
 import{mkdir,writeFile}from'node:fs/promises';
 const out='/tmp/artroom-compact-cards-accessibility-20261017';await mkdir(out);
 const browser=await chromium.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});

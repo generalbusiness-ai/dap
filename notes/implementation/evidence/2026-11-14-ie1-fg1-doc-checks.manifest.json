@@ -1,6 +1,6 @@
 {
   "qualification": "Cheap document, commit-message and whitespace checks after the evidence-note commit. No test, compiler, gate, bundle or installation ran. Later note/manifest filing changes documents only.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-ie1-fg1-doc-checks",
+  "directory": "artroom-evidence/2026-11-14-ie1-fg1-doc-checks",
   "checkpoint": {
     "commit": "6927c3e53584fef33bb5c5b89e9d8b82eb13bfc2",
     "tree": "0a07583cb1795dea9a7739780afd499f7e18284a"

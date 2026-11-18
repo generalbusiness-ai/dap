@@ -50,12 +50,12 @@ Public retained evidence:
 
 | Evidence | Path | SHA-256 |
 | --- | --- | --- |
-| Compiler zero and 55 owning Node passes | `/Users/hughpyle/play/artroom-diagnostics/counter-repair-focused-one/public-result.json` | `f73bcb6731b62bd5f4d0004ae9f297a6c20a3103e93aca6f46b491eefd09fa18` |
-| Actual three browser custody cases | `/Users/hughpyle/play/artroom-diagnostics/counter-durable-forget-source/browser-one/public-result.json` | `c6eab286583b9b9199701758547e18e86b2481eaede07b966fe174e37a5d0612` |
-| Three repaired-guard controls | `/Users/hughpyle/play/artroom-diagnostics/counter-repaired-guards-control-source/output-one/public-result.json` | `1f626ddb4c06aab3b215e5073139248197e465fde94f2cdfaf4852a1659cef2a` |
-| Normal Counter asset build | `/Users/hughpyle/play/artroom-diagnostics/counter-repaired-gate-source/build-one/public-result.json` | `27f2700f4514cf060188564f5cb25957c2a5fc060e9821bbc4bd847d891c5a05` |
-| Repaired Counter ordinary gate | `/Users/hughpyle/play/artroom-diagnostics/counter-repaired-gate-source/gate-one/public-result.json` | `ccf3afa1918bbeeadc68b29595d89ffcd4f69a76c4bf49e44ed6c4ab460ae42c` |
-| Original failed gate, preserved | `/Users/hughpyle/play/artroom-diagnostics/counter-demo-gate-one/public-result.json` | `4f87a54fe0426d863246b7dfd734620a3845688f0e88656629da6d90c9e16260` |
+| Compiler zero and 55 owning Node passes | `artroom-diagnostics/counter-repair-focused-one/public-result.json` | `f73bcb6731b62bd5f4d0004ae9f297a6c20a3103e93aca6f46b491eefd09fa18` |
+| Actual three browser custody cases | `artroom-diagnostics/counter-durable-forget-source/browser-one/public-result.json` | `c6eab286583b9b9199701758547e18e86b2481eaede07b966fe174e37a5d0612` |
+| Three repaired-guard controls | `artroom-diagnostics/counter-repaired-guards-control-source/output-one/public-result.json` | `1f626ddb4c06aab3b215e5073139248197e465fde94f2cdfaf4852a1659cef2a` |
+| Normal Counter asset build | `artroom-diagnostics/counter-repaired-gate-source/build-one/public-result.json` | `27f2700f4514cf060188564f5cb25957c2a5fc060e9821bbc4bd847d891c5a05` |
+| Repaired Counter ordinary gate | `artroom-diagnostics/counter-repaired-gate-source/gate-one/public-result.json` | `ccf3afa1918bbeeadc68b29595d89ffcd4f69a76c4bf49e44ed6c4ab460ae42c` |
+| Original failed gate, preserved | `artroom-diagnostics/counter-demo-gate-one/public-result.json` | `4f87a54fe0426d863246b7dfd734620a3845688f0e88656629da6d90c9e16260` |
 
 The normal Counter asset build exited zero. Its HTML and CSS stayed
 unchanged; the JavaScript bundle and generated Worker asset module were

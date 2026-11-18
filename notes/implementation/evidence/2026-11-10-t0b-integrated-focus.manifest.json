@@ -1,7 +1,7 @@
 {
   "request": "260991d8d29bc2dd58a039062572f56c30b7735f",
   "promise": "b153688569e2a6c32e95e32d3c5c0a22c9a01f3c",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-integrated-focus/independent-audit/unit",
+  "unit": "artroom-evidence/2026-11-10-t0b-integrated-focus/independent-audit/unit",
   "sourceHead": "90c7dd9b9614ca61a4d31448088608ec0e3621e6",
   "sourceTree": "c278e41675ec1db20f694bb04c4caf4e96c02aa3",
   "booking": "405977ef19b3c062a4e4c3d0a1ec08fc3b195b24",
@@ -36,7 +36,7 @@
     }
   ],
   "privateArchive": {
-    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-integrated-focus/independent-audit/private-archive",
+    "path": "artroom-evidence/2026-11-10-t0b-integrated-focus/independent-audit/private-archive",
     "archiveIndexSha256": "b32966043a0ef50e3dd09fc33bcd08db3a3403b5731cb774246d4dc1969666ee",
     "rawFiles": 63,
     "retentionThrough": "2026-12-10"
@@ -55,7 +55,7 @@
     "binEntries": 17,
     "npmAliases": 9,
     "ownedGroupsClosed": true,
-    "originalRun": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-integrated-focus/run",
+    "originalRun": "artroom-evidence/2026-11-10-t0b-integrated-focus/run",
     "qualification": "Independent metadata audit only. Frozen UNRUN and copied Page-build preparation sentences remain historical; actual receipts and specific outcomes describe this completed slot. No body repeated.",
     "compilerContexts": 26,
     "maintainedCommands": 27,

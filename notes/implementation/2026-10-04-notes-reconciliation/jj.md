@@ -199,14 +199,14 @@ Rulings applied: `jj run` statement restored and dated; "cannot fail to commit" 
 
 ## Checks run
 
-All from `/Users/hughpyle/play/artroom-worktrees/notes-reconcile` unless a path is given. Read-only except the edits to the note, to one paragraph of the plan, and to this checklist.
+All from `artroom-worktrees/notes-reconcile` unless a path is given. Read-only except the edits to the note, to one paragraph of the plan, and to this checklist.
 
 Identity:
 
 ```sh
-wc -c /Users/hughpyle/play/artroom/plans/011-2026-10-04-jj-clarification.md
+wc -c plans/011-2026-10-04-jj-clarification.md
 # 25637
-shasum -a 256 /Users/hughpyle/play/artroom/plans/011-2026-10-04-jj-clarification.md
+shasum -a 256 plans/011-2026-10-04-jj-clarification.md
 # cd74665c0e516d30edfdc078d18f2410574d8ec2f6a221d383c62ab175e3139b
 git branch --show-current            # request/notes-reconcile
 wc -l -c notes/2026-10-01-research-jj.md      # before: 247 lines, 12816 bytes

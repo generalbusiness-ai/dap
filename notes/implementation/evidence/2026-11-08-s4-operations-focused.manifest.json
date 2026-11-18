@@ -8,7 +8,7 @@
   "fileCount": 14,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-s4-validation",
+      "directory": "artroom-evidence/2026-11-08-s4-validation",
       "files": [
         {
           "path": "SHA256SUMS",

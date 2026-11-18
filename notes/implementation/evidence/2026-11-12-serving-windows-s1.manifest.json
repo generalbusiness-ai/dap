@@ -262,19 +262,19 @@
         "url": "https://github.com/generalbusiness-ai/dap/actions/runs/43201044890",
         "originals": {
           "run": {
-            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044890-run.json",
+            "path": "artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044890-run.json",
             "sha256": "055d4eb29ee9ca88f6e4ced079198cd990adc747f3971f76b659eb6e3aca485a",
             "bytes": 13029,
             "mode": 384
           },
           "jobs": {
-            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044890-jobs.json",
+            "path": "artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044890-jobs.json",
             "sha256": "2e2f99e25036d6ca6e71b9a807b5aa25056c23d7a765efa57b1d08e6eeef746c",
             "bytes": 3120,
             "mode": 384
           },
           "jobLog": {
-            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/job-131124242674-original.log",
+            "path": "artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/job-131124242674-original.log",
             "sha256": "bc81aa8d8ff619c6ae6c3821329a64240b9d4e8a396783b6e16c6c080c0ab91d",
             "bytes": 43894,
             "mode": 384
@@ -303,19 +303,19 @@
         "url": "https://github.com/generalbusiness-ai/dap/actions/runs/43201044687",
         "originals": {
           "run": {
-            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044687-run.json",
+            "path": "artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044687-run.json",
             "sha256": "f2278571ea953d0fa94fa908dc1f285779c6ab3112f31e9eeafc2562e7a2a8f8",
             "bytes": 13029,
             "mode": 384
           },
           "jobs": {
-            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044687-jobs.json",
+            "path": "artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044687-jobs.json",
             "sha256": "45f347f27789f188c62e61ba6919207a4ac30227073e161225bbdc5a8fbd6f9e",
             "bytes": 3343,
             "mode": 384
           },
           "jobLog": {
-            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/job-131124242198-original.log",
+            "path": "artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/job-131124242198-original.log",
             "sha256": "643216dc0bf4a1575bd9cdc2e8a066ee581fc5926bb0050a99c7e1f4b9783639",
             "bytes": 46045,
             "mode": 384
@@ -348,25 +348,25 @@
         "url": "https://github.com/generalbusiness-ai/dap/actions/runs/43201184843",
         "originals": {
           "run": {
-            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-page-ci/run-observation-2.json",
+            "path": "artroom-evidence/2026-11-12-s1-bfc67122-page-ci/run-observation-2.json",
             "sha256": "8012a5f17c3fe13ab79f94997662b8e3fa78d2adb03f6d2d56fc9ce949ce10f0",
             "bytes": 13027,
             "mode": 420
           },
           "jobs": {
-            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-page-ci/jobs-observation-2.json",
+            "path": "artroom-evidence/2026-11-12-s1-bfc67122-page-ci/jobs-observation-2.json",
             "sha256": "aba37dd76b37b9a94bf26cd2dcfea90efea699eb313d355420fde55adff2b387",
             "bytes": 3120,
             "mode": 420
           },
           "jobLog": {
-            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-page-ci/job-131124731653-original.log",
+            "path": "artroom-evidence/2026-11-12-s1-bfc67122-page-ci/job-131124731653-original.log",
             "sha256": "e262952cd00a2db0831f6835413d9ab85bb4e9548c0194878ebfd08a544b8c47",
             "bytes": 43628,
             "mode": 420
           },
           "curatedFailure": {
-            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-page-ci/failure-curated-readback.json",
+            "path": "artroom-evidence/2026-11-12-s1-bfc67122-page-ci/failure-curated-readback.json",
             "sha256": "8844b363df6faad2f4d816144d6aa66a27de4995dfc0b1b346a2e4c123451e74",
             "bytes": 4578,
             "mode": 384
@@ -443,7 +443,7 @@
   },
   "status": "CURATED_METADATA_COMPOSITION",
   "qualification": "Curated provenance, not raw output. Fourteen exact normalized metadata/small-summary afterimages accompany nineteen unchanged original references. Raw and source originals stay at their locators with unchanged hashes and modes. This is no raw archive, seal or copied validation output. Adopt only after root verifies the exact metadata afterimages at directory; actual publication and final-doc correspondence receipts stay external.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance",
+  "directory": "artroom-evidence/2026-11-12-s1-final-curated-provenance",
   "checkpointCommit": "acf797a70b254f4373465b3fb07476f80d943172",
   "checkpointTree": "223e2c0b6e9bb2419acb0a8b1b5207e3a9dde8b7",
   "fileCount": 14,
@@ -594,7 +594,7 @@
       "origin": "external-original",
       "head": "10d0cc387ad9019bf5475f2320d2d43bc932191c",
       "file": {
-        "path": "/Users/hughpyle/play/artroom-evidence/2026-11-11-s1-10d-working-91a0e94c/results.json",
+        "path": "artroom-evidence/2026-11-11-s1-10d-working-91a0e94c/results.json",
         "sha256": "c58bd29c8a77f1e544194b77ef392b9a86791310c96b2e3062cd2e5235b9bb8d",
         "bytes": 3182,
         "mode": 384
@@ -605,7 +605,7 @@
       "origin": "external-original",
       "head": "df50066b7b5f0b15ac78b835c986c5ee1eccc4d2",
       "file": {
-        "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-df500-working-90b99d8c/results.json",
+        "path": "artroom-evidence/2026-11-12-s1-df500-working-90b99d8c/results.json",
         "sha256": "e6d4d39bdfa97cfc6bc37fcfc3cb1c6f822bded3e2b10ba37da781611ba49fea",
         "bytes": 2935,
         "mode": 384
@@ -616,7 +616,7 @@
       "origin": "external-original",
       "head": "df50066b7b5f0b15ac78b835c986c5ee1eccc4d2",
       "file": {
-        "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-df500-maintained-ast-90b99d8c/actual.json",
+        "path": "artroom-evidence/2026-11-12-s1-df500-maintained-ast-90b99d8c/actual.json",
         "sha256": "718b44d8a6dc9bf8ae3eabf4aa4921b1efa12d9c471b9b42f194eea171918465",
         "bytes": 7860,
         "mode": 384
@@ -660,7 +660,7 @@
       "origin": "external-original",
       "head": "acf797a70b254f4373465b3fb07476f80d943172",
       "file": {
-        "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-acf797a7-working-ce36f2aa/results.json",
+        "path": "artroom-evidence/2026-11-12-s1-acf797a7-working-ce36f2aa/results.json",
         "sha256": "d52900fa5b544bc9cd699a73ce909f2376ed54880690f07f027dbe69ccef5d33",
         "bytes": 1610,
         "mode": 384
@@ -747,7 +747,7 @@
   "curatedDestinations": [
     {
       "role": "prerequisites",
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/prerequisites.json",
+      "path": "artroom-evidence/2026-11-12-s1-final-curated-provenance/prerequisites.json",
       "bytes": 5104,
       "sha256": "d32054b6fcdf776da758dfb26bcb4bc2972edbe963e0ce9bb08f83c37668fcd4",
       "mode": 256,
@@ -761,7 +761,7 @@
     },
     {
       "role": "integration",
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/input-correspondence.json",
+      "path": "artroom-evidence/2026-11-12-s1-final-curated-provenance/input-correspondence.json",
       "bytes": 5315,
       "sha256": "4f2d098a29cba6e246136ee6fc81aed63181eb7cd399c83a56065e65aad0aa6b",
       "mode": 256,
@@ -775,7 +775,7 @@
     },
     {
       "role": "gateRoot",
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/gate-root.json",
+      "path": "artroom-evidence/2026-11-12-s1-final-curated-provenance/gate-root.json",
       "bytes": 9643,
       "sha256": "fc042eb4cd5e894b752675a338d751899e95432c81e59c883c22cf148d5db49a",
       "mode": 256,
@@ -789,7 +789,7 @@
     },
     {
       "role": "gatePeer",
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/gate-independent-readback.json",
+      "path": "artroom-evidence/2026-11-12-s1-final-curated-provenance/gate-independent-readback.json",
       "bytes": 7584,
       "sha256": "bce05034a462cabfcca688ad05110b8e2f109b2c83073500a333f2112ae1d434",
       "mode": 256,
@@ -803,7 +803,7 @@
     },
     {
       "role": "focusRoot",
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/historical-focus-root.json",
+      "path": "artroom-evidence/2026-11-12-s1-final-curated-provenance/historical-focus-root.json",
       "bytes": 3220,
       "sha256": "f16bce1201e9461d7098a0d2ccd33d7c009cdf09ab84970382e5d452ef29508c",
       "mode": 256,
@@ -817,7 +817,7 @@
     },
     {
       "role": "focusPeer",
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/historical-focus-independent-readback.json",
+      "path": "artroom-evidence/2026-11-12-s1-final-curated-provenance/historical-focus-independent-readback.json",
       "bytes": 3740,
       "sha256": "fd9bdd295ab210c7a1c27f8d17efed6a7738a2381b83d80988110b9535f801ad",
       "mode": 256,
@@ -831,7 +831,7 @@
     },
     {
       "role": "pageProducerRoot",
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/historical-page-producer.json",
+      "path": "artroom-evidence/2026-11-12-s1-final-curated-provenance/historical-page-producer.json",
       "bytes": 3601,
       "sha256": "1f3a3a7023d7f1e65bfa3a02b69a071bd9213ba765c886a38c4f21f9ab94a022",
       "mode": 256,
@@ -845,7 +845,7 @@
     },
     {
       "role": "remainingProducersRoot",
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/historical-remaining-producers.json",
+      "path": "artroom-evidence/2026-11-12-s1-final-curated-provenance/historical-remaining-producers.json",
       "bytes": 3170,
       "sha256": "e34d95800ecb3f1e5a3f3336af02b16fc19ce9c322b2cd1a773b10937f24c19a",
       "mode": 256,
@@ -859,7 +859,7 @@
     },
     {
       "role": "addressAndSiteRoot",
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/address-and-site-root.json",
+      "path": "artroom-evidence/2026-11-12-s1-final-curated-provenance/address-and-site-root.json",
       "bytes": 4485,
       "sha256": "c11cd1dba6416287146337887c8d76012a8b9a419bcf27f4aaf9c2ec383fd013",
       "mode": 256,
@@ -873,7 +873,7 @@
     },
     {
       "role": "addressAndSitePeer",
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/address-and-site-independent-readback.json",
+      "path": "artroom-evidence/2026-11-12-s1-final-curated-provenance/address-and-site-independent-readback.json",
       "bytes": 6681,
       "sha256": "30f3217856e25f945c6d90ccc62c87f7eeed2cc0bf0f1d3c736483f35c55cd7e",
       "mode": 256,
@@ -887,7 +887,7 @@
     },
     {
       "role": "ingressBoundariesRoot",
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/ingress-boundaries-root.json",
+      "path": "artroom-evidence/2026-11-12-s1-final-curated-provenance/ingress-boundaries-root.json",
       "bytes": 4707,
       "sha256": "13d538ac09ab2e0038307beb79ea1980068ae56e5e11701a030758ec4af8f67a",
       "mode": 256,
@@ -901,7 +901,7 @@
     },
     {
       "role": "ingressBoundariesPeer",
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/ingress-boundaries-independent-readback.json",
+      "path": "artroom-evidence/2026-11-12-s1-final-curated-provenance/ingress-boundaries-independent-readback.json",
       "bytes": 7374,
       "sha256": "4f66fefe628d4f9d15a0672b954d0a7ca517377d51eca65a64ee445f6708fd3e",
       "mode": 256,
@@ -915,7 +915,7 @@
     },
     {
       "role": "astAdoption",
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/ast-adoption-correspondence.json",
+      "path": "artroom-evidence/2026-11-12-s1-final-curated-provenance/ast-adoption-correspondence.json",
       "bytes": 1751,
       "sha256": "5029fa625df766991f3f1c62dcd44fbe3911466e9cb9cb9d30ea6beef802aa14",
       "mode": 256,
@@ -929,7 +929,7 @@
     },
     {
       "role": "producerClosure",
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/producer-input-correspondence.json",
+      "path": "artroom-evidence/2026-11-12-s1-final-curated-provenance/producer-input-correspondence.json",
       "bytes": 1551,
       "sha256": "3db2ffd66430815df6915e5288bbc271dbcd5aa01cf93747ee1f633ab9b4e304",
       "mode": 256,

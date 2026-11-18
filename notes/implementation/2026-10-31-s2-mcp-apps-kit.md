@@ -88,7 +88,7 @@ The receipt records actual argv and the command's own measured wall and
 host child CPU. Their values do not measure one end-to-end pipeline.
 
 The ten original rows keep their exact text. The next thirteen use `B/` for
-`/Users/hughpyle/play/artroom-evidence/2026-10-31-s2-corrected-host-browser/`.
+`artroom-evidence/2026-10-31-s2-corrected-host-browser/`.
 Each label owns its exact `command.json` or `argv.json` command array, receipt
 and streams. These records preserve original execution paths. Exit cells in
 these new rows show child/capture. Browser wall and CPU use the owned Node
@@ -303,7 +303,7 @@ records prove no physical descendant or VM drain.
 ## Public custody and remaining acceptance
 
 Three read-only public units remain separate. The focused unit is
-`/Users/hughpyle/play/artroom-evidence/2026-10-31-s2-focused-kit-source`:
+`artroom-evidence/2026-10-31-s2-focused-kit-source`:
 122 files and 16,465,681 bytes. Its external full inventory is 25,413 bytes,
 SHA-256 `cfae14691a93eeee20a40a9e68078baf8d38bd69332ef3a6ce0efa228501b863`.
 Its SUMS has SHA-256
@@ -326,7 +326,7 @@ The public unit excludes private fixture homes, custody bytes, keys, tool
 caches, dependencies and the browser executable. No live capture is included.
 
 The gate unit `G/` is
-`/Users/hughpyle/play/artroom-evidence/2026-10-31-s2-full-gate`: 253 files
+`artroom-evidence/2026-10-31-s2-full-gate`: 253 files
 and 60,502,943 bytes. Its 53,614-byte external inventory has SHA-256
 `d4f5aec2143cd3e111d36c1784077a5178a8b63493340411a7f5098b44d92703`.
 Its 30,451-byte SUMS has SHA-256

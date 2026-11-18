@@ -50,7 +50,7 @@ enrollment with session reads of directory and inbox, current standing, and lega
 person Join. Git provider, clock, dispatcher, memory custody and reply loss remain
 labelled stand-ins. The filesystem story proves fileStore behavior separately.
 
-The [closed focused proof](/Users/hughpyle/play/artroom-diagnostics/demo-ready-native-extension/inbox-2008-public-complete/public-proof.json)
+The [closed focused proof](artroom-diagnostics/demo-ready-native-extension/inbox-2008-public-complete/public-proof.json)
 has SHA256 `74aad54bd7dbe1a8fdc8a5a4b8826bd67a45782812aa983e97d2450637ffd1d5`.
 Native `56492` failed its compiler before the body. Native `84434` failed the
 issued-state assertion. Earlier SDK fixture, pointer-fault and parser failures
@@ -72,11 +72,11 @@ The pair and the remaining matrix belong to different scripted rooms because the
 first browser context had closed. All browser HTTP, sessions, authority, history,
 inbox and provider answers are scripted. These results show real Chromium, DOM,
 crypto, localStorage and Web Locks behavior, not hosted native admission.
-The [closed browser proof](/Users/hughpyle/play/artroom-diagnostics/demo-ready-browser-connections-source/public-complete/public-proof.json)
+The [closed browser proof](artroom-diagnostics/demo-ready-browser-connections-source/public-complete/public-proof.json)
 has SHA256 `d19e3965436d88f23e7b36612a6ae78e99b4914c82e6330b27c2b4ee3b717130`.
 
 Root viewed the accepted reference, the native-size pair and all 12 captures.
-The [fidelity record](/Users/hughpyle/play/artroom-diagnostics/demo-ready-browser-connections-source/root-final-fidelity.json)
+The [fidelity record](artroom-diagnostics/demo-ready-browser-connections-source/root-final-fidelity.json)
 has SHA256 `90418d2ec0bff2cf4bcd50b0202d6a42fa026c1b9f7aae97deeeb92f9be97faf`.
 The adopted no-email change, separate recorded name and personal label, and
 optional recovery remain explicit. Mobile form fields extend below the viewport.
@@ -90,7 +90,7 @@ missing-journal toThrow assertion. Changing shared Check into Continue reached
 the native tuple: expected one submission and zero pauses, observed four
 submissions and eleven pauses. Later descriptor mutation assertions were not reached.
 
-The [static control correspondence](/Users/hughpyle/play/artroom-diagnostics/demo-start-delivery-source/control-correspondence.json)
+The [static control correspondence](artroom-diagnostics/demo-start-delivery-source/control-correspondence.json)
 has SHA256 `dc9e6c1d4bbfe5cb8614461cad9ea229f4e60969b08eea85617dbbbf09bafa3d`.
 Both selected guard and assertion texts remain exact in `2008ed12`; their whole
 production and witness files changed. The controls were not run at `2008ed12`.
@@ -149,12 +149,12 @@ logs, reports, captures, and credentials are outside this read and evidence list
 
 | Closed record | SHA256 |
 |---|---|
-| [materialization-public.json](/Users/hughpyle/play/artroom-diagnostics/demo-start-rename-landed-execution-preparation/materialization-public.json) | `55fd64328bad24658de7eb7c6362cd44acade97738ccbccc8cc8d7cdd99cc682` |
-| [producer-one/result.public.json](/Users/hughpyle/play/artroom-diagnostics/demo-start-rename-landed-execution-preparation/producer-one/result.public.json) | `a647c58ae24ef97159137bc51bd6104427291b1fad89d22d70ffdbe6b3def08d` |
-| [focused-one/result.public.json](/Users/hughpyle/play/artroom-diagnostics/demo-start-rename-landed-execution-preparation/focused-one/result.public.json) | `617fe3e6d8c58ff80f1cfcfbeef552b95ecbc9005fc49c08652685ce1d55ac49` |
-| [focused-one/owner-coverage-reconciliation.public.json](/Users/hughpyle/play/artroom-diagnostics/demo-start-rename-landed-execution-preparation/focused-one/owner-coverage-reconciliation.public.json) | `aa6ecf8811ca2ced39916cccd04896c40c1d1ef93adb8cf53ee7e384ddc0f5b2` |
-| [ordinary-gate-held/gate-one/terminal.public.json](/Users/hughpyle/play/artroom-diagnostics/demo-start-rename-landed-execution-preparation/ordinary-gate-held/gate-one/terminal.public.json) | `1d02edac3a636e8bb16be83ba815184b640c57c445e01a3613008c4bd619c247` |
-| [ordinary-gate-held/gate-one/gate-reconciliation.public.json](/Users/hughpyle/play/artroom-diagnostics/demo-start-rename-landed-execution-preparation/ordinary-gate-held/gate-one/gate-reconciliation.public.json) | `09275e517089cb398ceb11981a5ace3b03764b1617e78ac3e637b5cf789b8189` |
+| [materialization-public.json](artroom-diagnostics/demo-start-rename-landed-execution-preparation/materialization-public.json) | `55fd64328bad24658de7eb7c6362cd44acade97738ccbccc8cc8d7cdd99cc682` |
+| [producer-one/result.public.json](artroom-diagnostics/demo-start-rename-landed-execution-preparation/producer-one/result.public.json) | `a647c58ae24ef97159137bc51bd6104427291b1fad89d22d70ffdbe6b3def08d` |
+| [focused-one/result.public.json](artroom-diagnostics/demo-start-rename-landed-execution-preparation/focused-one/result.public.json) | `617fe3e6d8c58ff80f1cfcfbeef552b95ecbc9005fc49c08652685ce1d55ac49` |
+| [focused-one/owner-coverage-reconciliation.public.json](artroom-diagnostics/demo-start-rename-landed-execution-preparation/focused-one/owner-coverage-reconciliation.public.json) | `aa6ecf8811ca2ced39916cccd04896c40c1d1ef93adb8cf53ee7e384ddc0f5b2` |
+| [ordinary-gate-held/gate-one/terminal.public.json](artroom-diagnostics/demo-start-rename-landed-execution-preparation/ordinary-gate-held/gate-one/terminal.public.json) | `1d02edac3a636e8bb16be83ba815184b640c57c445e01a3613008c4bd619c247` |
+| [ordinary-gate-held/gate-one/gate-reconciliation.public.json](artroom-diagnostics/demo-start-rename-landed-execution-preparation/ordinary-gate-held/gate-one/gate-reconciliation.public.json) | `09275e517089cb398ceb11981a5ace3b03764b1617e78ac3e637b5cf789b8189` |
 
 The full Start request `32da4f2a`, promise `344f195a`, remains open. Actual
 hosted native admission, usable founder recovery and ready connections, demo

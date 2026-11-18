@@ -35,7 +35,7 @@ branch `main`. No new Destination or branch authorization enters this packet.
 
 ## New home and later deployment
 
-The new client home is `/Users/inguz/dap-host-g3b-20261103/client`.
+The new client home is `<mini home>/dap-host-g3b-20261103/client`.
 [The procedure](2026-11-03-g3b-register-configuration/deploy-g3b.md)
 keeps the existing fleet identity and old roots, adds the root-list string
 before GitHub staging, and leaves private App-key work to the planner.

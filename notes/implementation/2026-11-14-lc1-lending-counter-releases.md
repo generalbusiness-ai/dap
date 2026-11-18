@@ -65,14 +65,14 @@ main `57f887ce`; it has not integrated C3. The checks below establish
 bounded development readiness at that source. The later exact-head preflight
 and gate below establish their own results, without a deployment claim.
 
-`W` is `/Users/hughpyle/play/artroom/.builder-worktrees/lc1-lending-counter-releases-20261114`.
+`W` is `.builder-worktrees/lc1-lending-counter-releases-20261114`.
 `D` is the authentic owned C3 donor at
-`/Users/hughpyle/play/artroom/.builder-worktrees/c3-resign-admission-20261114`.
-`E` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-lc1-development-attempt1`.
+`.builder-worktrees/c3-resign-admission-20261114`.
+`E` is `artroom-evidence/2026-11-14-lc1-development-attempt1`.
 `N` is `/opt/homebrew/bin/node`. Commands run from `W` except the two
 CLI owners, which run together from `W/packages/cli`.
-`P` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-lc1-gate-preflight-attempt1`.
-`G` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-lc1-full-gate-attempt1`.
+`P` is `artroom-evidence/2026-11-14-lc1-gate-preflight-attempt1`.
+`G` is `artroom-evidence/2026-11-14-lc1-full-gate-attempt1`.
 The later preflight and gate commands also ran from `W`.
 
 The setup rechecked all 17 current and committed metadata inputs before
@@ -82,7 +82,7 @@ Its 15 relative workspace bindings resolve into LC1, all 57 source
 export targets exist, and 107 installed non-link package metadata files
 equal the donor bytes. No install, restamp or preserved-view mutation ran.
 
-For the dated LC4 continuation, `J4` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-ls5-lc4-compiler-node-owners-attempt1` and `C4` is `/Users/hughpyle/play/artroom-evidence/2026-11-16-ls5-lc4-gate-attempt1/controls/attempt3`. `P4` is `/Users/hughpyle/play/artroom-private-evidence/2026-11-15-ls5-lc4-controls-attempt3`. `G4` is `/Users/hughpyle/play/artroom-evidence/2026-11-16-ls5-lc4-gate-attempt1`. All LC4 commands ran from `/Users/hughpyle/play/artroom/.builder-worktrees/ls5-owned-room-tables-20261115`. `LC4-C` means the exact command `N P4/helper/control.retained.mjs apps/room/wrangler.lending.jsonc 'sha256:1a5128d47487e9888228c64aa2b36e366b1d4b72b0f210b610ad3f14caf25ede' 'sha256:0000000000000000000000000000000000000000000000000000000000000000' --expect 'Grow, Lending and Counter reproduce their reviewed definition and presentation identifiers from canonical sources' -- packages/cli --config vitest.config.ts test/application-release-reproduction.test.ts`. These aliases do not change the older LC1/LC2 aliases or results.
+For the dated LC4 continuation, `J4` is `artroom-evidence/2026-11-15-ls5-lc4-compiler-node-owners-attempt1` and `C4` is `artroom-evidence/2026-11-16-ls5-lc4-gate-attempt1/controls/attempt3`. `P4` is `artroom-private-evidence/2026-11-15-ls5-lc4-controls-attempt3`. `G4` is `artroom-evidence/2026-11-16-ls5-lc4-gate-attempt1`. All LC4 commands ran from `.builder-worktrees/ls5-owned-room-tables-20261115`. `LC4-C` means the exact command `N P4/helper/control.retained.mjs apps/room/wrangler.lending.jsonc 'sha256:1a5128d47487e9888228c64aa2b36e366b1d4b72b0f210b610ad3f14caf25ede' 'sha256:0000000000000000000000000000000000000000000000000000000000000000' --expect 'Grow, Lending and Counter reproduce their reviewed definition and presentation identifiers from canonical sources' -- packages/cli --config vitest.config.ts test/application-release-reproduction.test.ts`. These aliases do not change the older LC1/LC2 aliases or results.
 
 | Check | Actual command | Result and wall | Retained output and SHA-256 |
 |---|---|---|---|
@@ -103,7 +103,7 @@ For the dated LC4 continuation, `J4` is `/Users/hughpyle/play/artroom-evidence/2
 | LC2 equal-version control | Same whole owner with both Lending versions 0.3.0 and the retained measured NF03 tuple | Exit 1; 1 failed by intended “Raise the version” assertion at 90:184; 2.446507709 s; DISTINGUISHES | `C/signed-version/vitest.json` — `b76bbb6c1135952572069a23bde3cb5c2ee819a6472df271a848f5a4d48bbe9f`; aggregate `C/result.json` — `6620eaad8d1644288f54ac7ebbbdc1c23df4100e51ab531317dc584dabc741ac` |
 | LC2 exact-head shared helpers | `N scripts/check-shared-helpers.mjs` | Exit 0; 0.596663333 s | `T/helpers.stdout.log` — `af00848d1b94433533085adfecd184e68584914cce159b58ead29f4dab584502` |
 | LC2 exact-head whole typecheck | `/opt/homebrew/bin/npm run typecheck` | Exit 0; 16.459192000 s | `T/typecheck.stdout.log` — `a9abf7e40e10fbda74447d08a5ea3b33733361ecd9ac199658065cfbc874936a` |
-| LC2 combined full gate | `/opt/homebrew/bin/npm run gate` | Exit 0; child 1620.579566916 s, outer 1620.829315250 s; Node 202, Counting 56, Plain 4858 passed and 1 skipped, Native 1158 passed and 2 skipped; natural Scale all 22 passed in 13 owners | `/Users/hughpyle/play/artroom-evidence/2026-11-15-nf6-nf8-fh2-sd1-lc2-full-gate-attempt1/gate.log` — `44a9865875f439993459f0f78655acc3475b54615a65b838ec78aae452f2daf9` |
+| LC2 combined full gate | `/opt/homebrew/bin/npm run gate` | Exit 0; child 1620.579566916 s, outer 1620.829315250 s; Node 202, Counting 56, Plain 4858 passed and 1 skipped, Native 1158 passed and 2 skipped; natural Scale all 22 passed in 13 owners | `artroom-evidence/2026-11-15-nf6-nf8-fh2-sd1-lc2-full-gate-attempt1/gate.log` — `44a9865875f439993459f0f78655acc3475b54615a65b838ec78aae452f2daf9` |
 | LC2 joint independent review | One five-promise review after final note-only successor | OWED | No approval claimed |
 | LC4 CLI test compiler at 2a5 | `N node_modules/typescript/bin/tsc -p packages/cli/tsconfig.test.json` | Exit 0; 0.536860500 s; empty streams. | `J4/result.json` — `26961fd949c7958ab4f51b1e32fd7673453441a1542d2129a9b7fd327a52aadc` |
 | LC4 whole formatter owner at 2a5 | `N --test scripts/format-json.test.mjs` | Exit 0; 1 passed; 0.166339375 s; stderr empty. | `J4/result.json` above; stdout SHA-256 `4ac509c2285ce9e14206c60d501756f8805d02b95d53fa57ff1cc73c29ec004e` |
@@ -248,7 +248,7 @@ packet assertion did not run.
 
 After exact restoration, the equal-version fault restored both authored
 Lending versions to 0.3.0 and used the already measured NF03 candidate from
-`/Users/hughpyle/play/artroom-evidence/2026-11-15-nf-canonical-compare-only-attempt1/preparation/lending.candidate.json`.
+`artroom-evidence/2026-11-15-nf-canonical-compare-only-attempt1/preparation/lending.candidate.json`.
 Its presentation is
 `sha256:f99dce241076cc0d8a2b6eac1c84dff60f1f7858b5882ae5065ba7c914229b63`;
 its entry, definition and semantic identifiers stay exact. The version enters
@@ -266,12 +266,12 @@ producer, synthetic expected baseline, packet edit, weakened assertion or
 third green supplied these results.
 
 For the current rows in the existing evidence table, `C` is
-`/Users/hughpyle/play/artroom-evidence/2026-11-15-nf6-nf8-fh2-sd1-lc2-full-gate-attempt1/controls/lc2`.
-`B` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-nf-lc2-bounded-owners-attempt1`,
-`S` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-nf-lc2-security-owner-attempt1`,
-and `T` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-nf-lc2-exact-head-preflight-attempt1`.
+`artroom-evidence/2026-11-15-nf6-nf8-fh2-sd1-lc2-full-gate-attempt1/controls/lc2`.
+`B` is `artroom-evidence/2026-11-15-nf-lc2-bounded-owners-attempt1`,
+`S` is `artroom-evidence/2026-11-15-nf-lc2-security-owner-attempt1`,
+and `T` is `artroom-evidence/2026-11-15-nf-lc2-exact-head-preflight-attempt1`.
 Current root commands ran from
-`/Users/hughpyle/play/artroom/.builder-worktrees/nf6-nf8-on-c3-sh1-source-20261115`;
+`.builder-worktrees/nf6-nf8-on-c3-sh1-source-20261115`;
 CLI examples and configuration ran from its `packages/cli`. The reproduction
 baseline and controls ran from `packages/cli` in the matching detached scratch
 `/private/tmp/artroom-lc2-fh2-control-source-20261115`. Exact reporter argv and
@@ -363,7 +363,7 @@ raise moves the open presentations: Lending `1b40301d`, Counter `c4275588`.
 
 Named red: with the packets and main's trust rows, the reproduction test fails
 with "dap-lending must trust each committed packet exactly once" (3 rows, 5
-packets). Evidence: `/Users/hughpyle/play/artroom-evidence/2026-11-17-lc5-red/`.
+packets). Evidence: `artroom-evidence/2026-11-17-lc5-red/`.
 
 The screen-host rows still pin the 0.3.0 and 0.4.0 installations. The screen
 route answers 404 when the installed presentation differs from its row
@@ -397,7 +397,7 @@ reads the packet against its row.
 The head opens Counter 0.7.0 (ruling `163de663`), which moves the open Counter
 presentation to `36945f1d`. Lending stays at open 0.6.0, unsigned.
 
-Named reds, in `/Users/hughpyle/play/artroom-evidence/2026-11-17-lc6-red/`:
+Named reds, in `artroom-evidence/2026-11-17-lc6-red/`:
 
 - With the packet and main's trust rows, the reproduction test fails with
   "dap-lending must trust each committed packet exactly once" (5 rows, 6

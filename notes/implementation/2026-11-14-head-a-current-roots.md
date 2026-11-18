@@ -78,7 +78,7 @@ their expected packages. No link or marker was rewritten.
 
 The [current evidence manifest](evidence/2026-11-14-head-a-current-roots.manifest.json)
 records all 46 sealed script and proof files under
-`/Users/hughpyle/play/artroom-evidence/2026-11-14-head-a-current-roots-script`.
+`artroom-evidence/2026-11-14-head-a-current-roots-script`.
 Its `SHA256SUMS` digest is
 `6347cdd1bd36aaff25387bc9d62114854d4881579d099e30657fd65955e6c92f`.
 The proof imports the real production reader and deployment JSONC
@@ -113,7 +113,7 @@ contains only this note and its evidence manifest under `notes/`.
 Source and tests remain unchanged.
 
 The gate's 269 raw files live in
-`/Users/hughpyle/play/artroom-evidence/2026-11-14-head-a-current-roots-gate`.
+`artroom-evidence/2026-11-14-head-a-current-roots-gate`.
 Its `SHA256SUMS` digest is
 `191b6fc68553430a57380b57f72c32c8ba71d96b895015f7968530d2926d5a51`.
 All 326 current script, gate, and documentation raw files match their
@@ -128,12 +128,12 @@ messages with none flagged, 1,246 local links with none broken, note
 size and inventory with zero warnings, and diff whitespace. Only this
 note and its manifest add those results afterward. No compiler, test,
 or additional gate ran. The 11 raw follow-up files live in
-`/Users/hughpyle/play/artroom-evidence/2026-11-14-head-a-current-roots-doc-checks`;
+`artroom-evidence/2026-11-14-head-a-current-roots-doc-checks`;
 its `SHA256SUMS` digest is
 `26c734ffe84e5272f6f9a6f50da606c8e4b103a637cb49199ce084dfa80d6ad6`.
 
 The scripts used main `0ad4aa91`; the gate used source `259b5cb3`.
-All raw paths below are relative to `/Users/hughpyle/play/artroom-evidence/`.
+All raw paths below are relative to `artroom-evidence/`.
 
 | Check | Command | Exit | Raw output and SHA256 |
 |---|---|---:|---|

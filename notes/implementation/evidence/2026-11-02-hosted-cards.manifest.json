@@ -9,7 +9,7 @@
   "fileCount": 114,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-hosted-cards-focused",
+      "directory": "artroom-evidence/2026-11-02-hosted-cards-focused",
       "qualification": "Focused checks across qualified drafts; the changed-source snapshot names this checkpoint. Earlier failures and an inconclusive wrong-project control remain qualified. Raw output stays private and indexed. The frozen full gate owns final composition.",
       "checkpoint": {
         "commit": "a612368f9923b334741a5fecf8964f28e75bc2a4",
@@ -481,7 +481,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-hosted-cards-card-ci",
+      "directory": "artroom-evidence/2026-11-02-hosted-cards-card-ci",
       "qualification": "Card workflow 41472303998 succeeds at the exact source checkpoint on scripted browser hosts. No real host UI or deployment acceptance.",
       "checkpoint": {
         "commit": "a612368f9923b334741a5fecf8964f28e75bc2a4",
@@ -508,7 +508,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-hosted-cards-gate",
+      "directory": "artroom-evidence/2026-11-02-hosted-cards-gate",
       "qualification": "Actual gate.exit reads exit 0; the before and after checkpoint and clean status match. Raw logs and requests stay private; terminal counts and hashes remain public.",
       "checkpoint": {
         "commit": "a612368f9923b334741a5fecf8964f28e75bc2a4",
@@ -555,7 +555,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-hosted-cards-documentation",
+      "directory": "artroom-evidence/2026-11-02-hosted-cards-documentation",
       "qualification": "First documentation checkpoint after the frozen a612368f source. Six record, whitespace, commit-message, link, citation and note checks passed. All production, tests, configuration and workflow inputs equal a612368f. The final documentation record adds this check row and sealed unit to the manifest. Raw diagnostics remain private; no credential or request input ran.",
       "checkpoint": {
         "commit": "2e0685bd27f0bf3f10a94ef7ecd7bd3774e3a86e",
@@ -597,7 +597,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-hosted-cards-documentation-final",
+      "directory": "artroom-evidence/2026-11-02-hosted-cards-documentation-final",
       "qualification": "Final documentation checkpoint after the frozen a612368f source. Six record, whitespace, commit-message, link, citation and note checks passed. All production, tests, configuration and workflow inputs equal a612368f. The final documentation record adds this check row and sealed unit to the manifest. Raw diagnostics remain private; no credential or request input ran.",
       "checkpoint": {
         "commit": "3a2bffaab13cec24c7ea3d545e63c5fd5bb5b082",

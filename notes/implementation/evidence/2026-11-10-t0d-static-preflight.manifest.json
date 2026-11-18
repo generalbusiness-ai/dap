@@ -1,7 +1,7 @@
 {
   "request": "6f87a4e3bc6186ffa6b08ad7c5ca01be1a2c49bd",
   "promise": "00b5bef0936bad3bd01429eb95bd018f11ec717e",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-static-preflight-audit/unit",
+  "unit": "artroom-evidence/2026-11-10-t0d-static-preflight-audit/unit",
   "sourceHead": "9b92bd28a4550162abde0be388670388bff3413e",
   "sourceTree": "c532751f02a08875a704a696ae6ecd28b8fb269f",
   "booking": "bff87eba4ef1f9d491e54428d5e40c766be7f715",
@@ -36,7 +36,7 @@
     }
   ],
   "privateArchive": {
-    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-static-preflight-audit/private-archive",
+    "path": "artroom-evidence/2026-11-10-t0d-static-preflight-audit/private-archive",
     "archiveIndexSha256": "568c6ed3a57c42f7666bd912a0fb97097811473a07ef6e77fd2c1b9e72b52923",
     "rawInnerFiles": 135,
     "rawOuterFiles": 9,

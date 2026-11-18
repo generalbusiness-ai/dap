@@ -1,5 +1,5 @@
 {
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-failed-gate-validation",
+  "directory": "artroom-evidence/2026-11-06-m3-failed-gate-validation",
   "qualification": "Failed source gate at cb614e2f; Native unreached. Raw originals remain private and read-only.",
   "fileCount": 7,
   "files": [

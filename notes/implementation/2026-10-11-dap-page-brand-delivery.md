@@ -34,7 +34,7 @@ page and brand assets; no native room, model, or microphone is connected.
 ## Evidence and remaining work
 
 Focused route, asset, view, and browser checks are retained under
-`/Users/hughpyle/play/artroom-diagnostics/`. The original asset test import
+`artroom-diagnostics/`. The original asset test import
 failure is preserved; the corrected freshness check passes. Jam's six
 page tests pass. These checks do not establish hosted native acceptance.
 

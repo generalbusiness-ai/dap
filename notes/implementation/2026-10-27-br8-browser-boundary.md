@@ -68,7 +68,7 @@ after the focused Native run. Its update changes no source behavior and did not
 cause another test run.
 
 All paths in the table are relative to
-`/Users/hughpyle/play/artroom-evidence/2026-10-27-br8-browser-boundary`.
+`artroom-evidence/2026-10-27-br8-browser-boundary`.
 Each command reference contains the recorded argv and cwd. Output hashes are
 SHA-256; separate stderr hashes are in receipts that split the streams. The two
 editing-tool diagnostics are explicitly transcript-derived records, not raw
@@ -149,7 +149,7 @@ plain: packages/cli/test/browser-boundary.test.ts=1, packages/cli/test/invitatio
 `analysis-run.json` records the actual analyzer argv, exit, timing, stream hashes,
 and analyzer/output hashes. All analyzer input hashes are checked.
 
-Raw evidence is sealed read-only at `/Users/hughpyle/play/artroom-evidence/2026-10-27-br8-browser-boundary`. The single manifest indexes every
+Raw evidence is sealed read-only at `artroom-evidence/2026-10-27-br8-browser-boundary`. The single manifest indexes every
 raw file, including nested indexes and the root `SHA256SUMS`; that index excludes
 itself. Previously read-only evidence and its permissions remain unchanged.
 `gate-source-equality.json` (SHA-256 `00984b13a1c4f961f923fcd1de5ef2ce35c0cf9ce80922c5b12b72a3df0664e6`) records the complete count,

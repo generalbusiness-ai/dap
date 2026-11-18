@@ -1,6 +1,6 @@
 {
   "qualification": "Failed exact workflow preserved, two unchanged-source local widths pass, explicit handoff wait passes both widths, new exact workflow succeeds. Precise original CI cause remains unknown. Two inspected TEST fixture images; raw originals remain private.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-goose-integrated-ci",
+  "directory": "artroom-evidence/2026-11-03-goose-integrated-ci",
   "checkpoint": "b8e3f0fb72214ca279586e9429da44002e3ed5fb",
   "fileCount": 16,
   "files": [

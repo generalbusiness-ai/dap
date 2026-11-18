@@ -85,18 +85,18 @@ a pass of the authored runner. Process
 walls include child startup/import work. The complete outer totals below
 are not sums of test-case durations.
 
-`M` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-gs4-six-owner-measure-attempt1`.
+`M` is `artroom-evidence/2026-11-15-gs4-six-owner-measure-attempt1`.
 Its public `result.json` SHA-256 is `83a931fe12796b36d6dfa46a89e8a7c2bff82ccac021425de1f00ee753dce8c1`.
-`N` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-gs4-pins-command-attempt1`.
+`N` is `artroom-evidence/2026-11-15-gs4-pins-command-attempt1`.
 Its public `result.json` SHA-256 is `a99b36d339c268c9683aab070af9a8686a2a2bc1dfb9cc7243ff2a57b5a14548`.
 
-`C` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-gs4-p1-ls4-pins-attempt1`.
+`C` is `artroom-evidence/2026-11-15-gs4-p1-ls4-pins-attempt1`.
 Its `result.json` SHA-256 is `c0f36eaae15a26706ef7c3fc3221a66436a9f4ceb0633bcddb8fdf0eaa8ba464`.
-`S` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-gs4-p1-ls4-stale-id-control-attempt1`.
+`S` is `artroom-evidence/2026-11-15-gs4-p1-ls4-stale-id-control-attempt1`.
 Its immutable controller `result.json` SHA-256 is `474ee8e020b4b41d1766c12d9547b17b77b8b917d1bc23b48199461d533987ec`.
 Root's separate `root-assertion-review.json` SHA-256 is
 `46b995bc553178dae20614161e7c2821fe4f7c57dee7c12abe2637741a8280c9`.
-`G` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-gs4-p1-ls4-full-gate-attempt1`.
+`G` is `artroom-evidence/2026-11-15-gs4-p1-ls4-full-gate-attempt1`.
 Its `result.json` SHA-256 is `c6314cad08bab493f56d3a602bad90d138c200a9b596aea058d483dbe45867b6`.
 Its `gate.log` SHA-256 is `cb4205c5b33dc5118979c8ff1e87a17ed476a0b57d2e63f8d42d2ef5079752d8`.
 
@@ -147,7 +147,7 @@ cases ran before the reproduction failure.
 ## Source and dependency preparation history
 
 The normal GS4/P1 composition receipt is
-`/Users/hughpyle/play/artroom-private-evidence/2026-11-15-gs4-p1-source-composition-attempt1/resume-result.json`,
+`artroom-private-evidence/2026-11-15-gs4-p1-source-composition-attempt1/resume-result.json`,
 SHA-256 `4100c71b0e460edabd03056ae04b6d54cb94fb219658c4a2dc8d6831992a6018`.
 It records the two conflict-free merge commands and the exact 49-path union.
 This source-composition record is not a test result.

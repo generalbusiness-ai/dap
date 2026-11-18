@@ -1,6 +1,6 @@
 {
   "qualification": "Independent terminal metadata reconciliation of D at9b92/treec532. Earlier first-focus compiler failure stays failed; passing continuation and paired109values retain their actual earlier heads, while integrated109values and Page/Card ran1088. The9b92 adoption changed only the note and capturemanifest, with all4533other oldblob/modes corresponding exactly. Current gate source and all outcomes stay separately labeled. All111wrappers remain unknown; omittedScale6 is not a skipped/pass result. Original flags/pools/workers/deadlines and passive10sRSS sampler remain. RSS is sampled single-process resident memory, not heap/sum/threshold; prior baseline scope differs. Actual static prechecks crossed planner deployment START, corrected by370217ef; no non-overlap claim or replay. No deployment, hosted acceptance, SDKoutputchecker, private capture or publication claim.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-gate-review",
+  "directory": "artroom-evidence/2026-11-10-t0d-final-gate-review",
   "checkpoint": "9b92bd28a4550162abde0be388670388bff3413e",
   "tree": "c532751f02a08875a704a696ae6ecd28b8fb269f",
   "fileCount": 7,
@@ -39,7 +39,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-gate",
+      "directory": "artroom-evidence/2026-11-10-t0d-final-gate",
       "payloadFileCount": 2457,
       "fileCount": 2458,
       "payloadBytes": 81397557,
@@ -47,7 +47,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-gate-launch",
+      "directory": "artroom-evidence/2026-11-10-t0d-final-gate-launch",
       "payloadFileCount": 12,
       "fileCount": 13,
       "payloadBytes": 591623,
@@ -55,7 +55,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-gate-analysis-private",
+      "directory": "artroom-evidence/2026-11-10-t0d-final-gate-analysis-private",
       "payloadFileCount": 7,
       "fileCount": 8,
       "payloadBytes": 21391370,
@@ -173,7 +173,7 @@
     }
   ],
   "privateAnalysisCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-gate-analysis-private",
+    "directory": "artroom-evidence/2026-11-10-t0d-final-gate-analysis-private",
     "file": "full-reconciliation.private.json",
     "bytes": 15798364,
     "sha256": "c04cd42e4173c692cb4401780a6e0c4a1b666f9a45bd75c43c0e621f4e46f6b8",

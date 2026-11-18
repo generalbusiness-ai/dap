@@ -1,6 +1,6 @@
 {
   "qualification": "Pre-gate finite note-cited output manifest. Multiple actual execution checkpoints are grouped below; the current owning checkpoint does not replace historical execution heads or later-adoption distinctions. Bundle-index hashes identify retained output bundles, not a synthetic combined passing run. Original failures remain failed. Nested SHA256SUMS cover uncited portable payloads; this file directly indexes all132 selected note-cited indexes/checksums and individual file outputs. Raw environment/bindings/physical vectors stay private. First ordinary gate27835 failed at whitespace (npm2/owner1); second92211 failed at helpers (npm1/owner1) after three precheck passes. Main compiler/test suffixes were unreached. Three post-repair static scripts separately exited0 on intentionally dirty six-identifier repair; no combined outer time was measured. Future GateV3/review and final aggregate Home index/parent sealing remain pending; no nonexistent future file is listed. Latest one-case Page freshness also passed on the same intentional dirty helper rename; its Node command interval is not a wrapper outer measurement. No rebuild owed by this actual freshness result.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-25-certified-rules-policy",
+  "directory": "artroom-evidence/2026-10-25-certified-rules-policy",
   "checkpoint": {
     "commit": "1f8ed9effd8966c02aa4e2df6daf9470676b493a",
     "tree": "a5ecf677702379fb848de4cc4a5609594bacd477",

@@ -1,6 +1,6 @@
 {
   "qualification": "Four exact-baseline invariant controls, not a passing suite: baseline compiler exit 0, native child exit 1 with four expected assertion failures, original controller exit 2 from a reporting-filter bug, offline reviewed parser confirms four failures without rerun. Only the two hashed witness files overlay baseline production/config. Positive 9e716d4cf0 remains untouched.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-cdf1-wide-baseline",
+  "directory": "artroom-evidence/2026-11-13-cdf1-wide-baseline",
   "checkpoint_commit": "5339ccc50856cb179349e91c08d0098e6055cf6e",
   "checkpoint_tree": "d9c6ccb6073a5681f26c93074f7d4063b45fc013",
   "overlays": {

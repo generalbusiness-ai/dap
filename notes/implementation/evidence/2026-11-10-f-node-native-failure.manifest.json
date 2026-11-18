@@ -1,7 +1,7 @@
 {
   "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
   "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-node-native-0ca2/node-failure-sealed/unit",
+  "unit": "artroom-evidence/2026-11-10-f-node-native-0ca2/node-failure-sealed/unit",
   "head": "0ca2b25011efec06bb0211370cdc681be46a1161",
   "tree": "a4def2eb5a7755c796e2e7874b718d51ce0a7a27",
   "booking": "cbb564f5e3c1b1ba0bf2830a2d300167ebb29819",
@@ -44,7 +44,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-node-native-0ca2/node-failure-sealed/private",
+    "directory": "artroom-evidence/2026-11-10-f-node-native-0ca2/node-failure-sealed/private",
     "manifestSha256": "a38d82d95a48b1753ab37a9e2b5c402eb4b16266e48217fb82744dcc4cd5c8be",
     "files": 475,
     "retention": {

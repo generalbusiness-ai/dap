@@ -1,7 +1,7 @@
 {
   "version": 1,
   "qualification": "One passing gate at the checkpoint. The owner and both controls ran at the checkpoint. The probe of the upstream signal after a forward returned ran three times at main 93a6b661 plus the first witness's uncommitted edit; its test is not in the tree. No container, Git host or hosted run is claimed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-checker-origin-signal-2",
+  "directory": "artroom-evidence/2026-10-31-checker-origin-signal-2",
   "checkpoint": {
     "commit": "2ccba51a63d996b81bc0feeba8c86ad4399681a7",
     "tree": "40f2a1ee08a5084deeb582fef8db7f34cbad0e00"

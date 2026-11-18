@@ -1,7 +1,7 @@
 {
   "qualification": "Final G evidence aggregate. Actual gate and controls passed at818; four focused failures, two failed gates and first controls setup failure retain their distinct outcomes.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g-final-818/unit",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g-final-818/unit",
+  "directory": "artroom-evidence/2026-11-11-g-final-818/unit",
+  "unit": "artroom-evidence/2026-11-11-g-final-818/unit",
   "checkpoint": "818009b868881508f04c65a087a2df88e4f53516",
   "head": "818009b868881508f04c65a087a2df88e4f53516",
   "tree": "ab69e56f6e9ca2480e1ae83104c2882f99e2cc4d",
@@ -395,8 +395,8 @@
         "sha256": "535c08aab2a5cd6d66d77539a258239cfde4aac7336238b14401089908d7dd26",
         "mode": 256
       },
-      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g818-full-gate-passed-sealed/unit",
-      "originalPrivateDirectory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g818-full-gate-passed-sealed/private",
+      "originalPublicUnit": "artroom-evidence/2026-11-11-g818-full-gate-passed-sealed/unit",
+      "originalPrivateDirectory": "artroom-evidence/2026-11-11-g818-full-gate-passed-sealed/private",
       "privateManifestSha256": "a8ce57ac9df3bc4aba854487501f1e98582cfffcb288cc6798aa293990c0f88d",
       "aggregateRawIndexLeaf": "final-gate-raw-index.original.json",
       "minimumRetentionDaysAfterLanding": 30,
@@ -409,8 +409,8 @@
         "sha256": "324d99e143f5a1507ceb32b5abeaec670358de67f27238b903a1bb83e584f564",
         "mode": 256
       },
-      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g818-controls2-passed-sealed/unit",
-      "originalPrivateDirectory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g818-controls2-passed-sealed/private",
+      "originalPublicUnit": "artroom-evidence/2026-11-11-g818-controls2-passed-sealed/unit",
+      "originalPrivateDirectory": "artroom-evidence/2026-11-11-g818-controls2-passed-sealed/private",
       "privateManifestSha256": "c456d28b5e070fcf8190116d0b3ad51ccdb28eca4f88f0f5ae3c68960fa30c28",
       "aggregateRawIndexLeaf": "final-controls-raw-index.original.json",
       "minimumRetentionDaysAfterLanding": 30,
@@ -418,7 +418,7 @@
     }
   },
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g-final-818/private",
+    "directory": "artroom-evidence/2026-11-11-g-final-818/private",
     "manifestSha256": "454c82c914b7de79fffcd688f5dcd66e64766f8bb22ca30247fcfefa03abc067",
     "files": 3677,
     "minimumRetentionDays": 30

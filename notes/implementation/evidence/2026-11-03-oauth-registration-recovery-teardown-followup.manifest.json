@@ -1,6 +1,6 @@
 {
   "qualification": "Focused investigation of DCR failed-gate teardown owner. Unchanged source passes the two cases alone; full gate remains failed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-registration-recovery-teardown-followup",
+  "directory": "artroom-evidence/2026-11-03-oauth-registration-recovery-teardown-followup",
   "checkpoint": "41a4a7e91a03edbce45c39e7fe8f1b556d74e308",
   "tree": "94f916e1a79b8a9d7c44d0a1f1dec703e9f92044",
   "fileCount": 5,

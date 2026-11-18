@@ -9,7 +9,7 @@
   "fileCount": 180,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-roster-recovery-baseline",
+      "directory": "artroom-evidence/2026-11-01-roster-recovery-baseline",
       "checkpoint": {
         "commit": "313840592ee0f4d4c49dd617f969534998d99e50",
         "tree": "ead96ec28b18a11e31c53a1de4f4067d9bb2e441"
@@ -45,7 +45,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-roster-recovery-baseline-2",
+      "directory": "artroom-evidence/2026-11-01-roster-recovery-baseline-2",
       "checkpoint": {
         "commit": "313840592ee0f4d4c49dd617f969534998d99e50",
         "tree": "ead96ec28b18a11e31c53a1de4f4067d9bb2e441"
@@ -91,7 +91,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-roster-recovery-baseline-3",
+      "directory": "artroom-evidence/2026-11-01-roster-recovery-baseline-3",
       "checkpoint": {
         "commit": "313840592ee0f4d4c49dd617f969534998d99e50",
         "tree": "ead96ec28b18a11e31c53a1de4f4067d9bb2e441"
@@ -152,7 +152,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-roster-recovery-browser",
+      "directory": "artroom-evidence/2026-11-01-roster-recovery-browser",
       "checkpoint": {
         "commit": "658aab954d7a017c5cbce0d7daf28bb798fa1f52",
         "tree": "27936fcbfd752aef7a6fecf02961279f258c2628"
@@ -208,7 +208,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-roster-recovery-browser-2",
+      "directory": "artroom-evidence/2026-11-01-roster-recovery-browser-2",
       "checkpoint": {
         "commit": "658aab954d7a017c5cbce0d7daf28bb798fa1f52",
         "tree": "27936fcbfd752aef7a6fecf02961279f258c2628"
@@ -299,7 +299,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-roster-recovery-checks",
+      "directory": "artroom-evidence/2026-11-01-roster-recovery-checks",
       "checkpoint": {
         "baseCommitAtRun": "313840592ee0f4d4c49dd617f969534998d99e50",
         "workingTreeModified": true,
@@ -377,7 +377,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-roster-recovery-src",
+      "directory": "artroom-evidence/2026-11-01-roster-recovery-src",
       "checkpoint": {
         "commit": "658aab954d7a017c5cbce0d7daf28bb798fa1f52",
         "tree": "27936fcbfd752aef7a6fecf02961279f258c2628"

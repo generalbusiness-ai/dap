@@ -49,7 +49,7 @@
   "driverSha256": "c61eea45bc096ecb5db7db94af0ffc724ad4eb74ef3b14561240c39504562c37",
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-client-page-build-e4d60604/run",
+      "directory": "artroom-evidence/2026-11-10-br13-client-page-build-e4d60604/run",
       "fileCount": 132,
       "files": [
         {
@@ -873,7 +873,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-client-page-build-e4d60604-review",
+      "directory": "artroom-evidence/2026-11-10-br13-client-page-build-e4d60604-review",
       "fileCount": 4,
       "files": [
         {

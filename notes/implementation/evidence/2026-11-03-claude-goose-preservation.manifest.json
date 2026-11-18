@@ -1,6 +1,6 @@
 {
   "qualification": "Actual four-card Claude preservation at fixed e32 source, including exact original configuration restoration and owned-process closure. No standalone screenshot file.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-claude-goose-preservation",
+  "directory": "artroom-evidence/2026-11-03-claude-goose-preservation",
   "checkpoint": "e32d7dfc4f972051714b3aa6b0afc2921a854248",
   "fileCount": 9,
   "files": [

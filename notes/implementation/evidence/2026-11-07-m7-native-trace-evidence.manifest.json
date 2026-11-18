@@ -1,6 +1,6 @@
 {
   "qualification": "M7 Native trace completion before exact seal approval, full gate and review; prior failures, the narrow NaN follow-up and the deliberate duplicate-call control remain qualified in QUALIFICATION.md. Page CI is separate.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m7-native-trace-evidence",
+  "directory": "artroom-evidence/2026-11-07-m7-native-trace-evidence",
   "checkpoint_commit": "803e4bb2c63a5a7bba44e27a62df4f5d2caa6efb",
   "checkpoint_tree": "e7ea6ecba1b989881262365ac38d664d97b81ffd",
   "followup_commit": "7f28e18aa46ef7a9f0ed3a0b7667727343640496",

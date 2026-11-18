@@ -1,6 +1,6 @@
 {
   "qualification": "Partial C3 focused evidence. The run checked six dirty source and test files, retained exactly under source/. It proves no complete C3 client, public interface, broader typecheck or gate. Actual Battery Power, powermode 0, no timeout.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-c3-focused-attempt1",
+  "directory": "artroom-evidence/2026-11-13-c3-focused-attempt1",
   "checkpoint": {
     "commit": "d34cbd1fba05408278f1dec45a8df307cc7f3f63",
     "tree": "5712cccd45d5cf9287946e73e6569e2a7127d975",

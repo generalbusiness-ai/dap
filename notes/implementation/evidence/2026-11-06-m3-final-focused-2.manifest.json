@@ -1,5 +1,5 @@
 {
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-final-focused-2",
+  "directory": "artroom-evidence/2026-11-06-m3-final-focused-2",
   "qualification": "Corrected frozen focused plan at cb614e2f: both compilers and111 complete cases pass with exact source/tool/selection fences. Actual pipeline exit0.",
   "fileCount": 9,
   "files": [

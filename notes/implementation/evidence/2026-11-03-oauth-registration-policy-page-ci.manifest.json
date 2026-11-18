@@ -1,6 +1,6 @@
 {
   "qualification": "Actual Page workflow success at the exact source/fixture head, all four required browser commands. Local full gate remains failed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-registration-policy-page-ci",
+  "directory": "artroom-evidence/2026-11-03-oauth-registration-policy-page-ci",
   "checkpoint": "450025c5a8b7838c1cd251d4999505b40a98bcc4",
   "fileCount": 3,
   "files": [

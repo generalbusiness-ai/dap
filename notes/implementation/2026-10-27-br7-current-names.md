@@ -66,7 +66,7 @@ passed four cases with unchanged route/method/gate parser and table. This is
 structural evidence, not Native authority. Page-assets equality passed one case
 without a bundle build.
 
-Evidence is sealed read-only at `/Users/hughpyle/play/artroom-evidence/2026-10-27-br7-current-names`. Existing Native, seal and assets
+Evidence is sealed read-only at `artroom-evidence/2026-10-27-br7-current-names`. Existing Native, seal and assets
 subdirectories retain bytes/modes without rewrite or chmod. The 20-file seal
 copy matches its unchanged original, named in `seal-copy-provenance.json`.
 The manifest includes all nested indices. No dependency was installed.

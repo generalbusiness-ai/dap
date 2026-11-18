@@ -14,7 +14,7 @@
   },
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-integration-first-curated-c7800a6282",
+      "directory": "artroom-evidence/2026-11-09-br13-integration-first-curated-c7800a6282",
       "classification": "safe actual source/dependency/process/case metadata",
       "fileCount": 28,
       "files": [
@@ -161,7 +161,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-integration-first-c7800a6282",
+      "directory": "artroom-evidence/2026-11-09-br13-integration-first-c7800a6282",
       "classification": "retained original outer/inner and same-run output",
       "fileCount": 33,
       "files": [

@@ -5,7 +5,7 @@
   "fileCount": 16,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s3-gate-failure",
+      "directory": "artroom-evidence/2026-11-07-s3-gate-failure",
       "files": [
         {
           "path": "SHA256SUMS",

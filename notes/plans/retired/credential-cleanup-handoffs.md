@@ -4977,8 +4977,8 @@ Status on 2026-10-04: approved. Review `81478e2d` approved the head `1e444739` (
 
 ```
 npm ci
-npm run release:pack -- /Users/hughpyle/play/artroom-releases/candidates/1b40b7ec
-npm run release:check -- /Users/hughpyle/play/artroom-releases/candidates/1b40b7ec
+npm run release:pack -- artroom-releases/candidates/1b40b7ec
+npm run release:check -- artroom-releases/candidates/1b40b7ec
 ```
 
 | Package | Tarball | Bytes | SHA-256 |
@@ -5019,7 +5019,7 @@ Controls, by hand, each restored afterwards: one byte added to a recorded licenc
 
 Limits of this repair: the embedded packages are found through the source maps the MCP server package publishes; a bundled package that embedded other code and published no source map would not be found this way. The record says what each package declares and ships. It is not legal advice.
 
-**Where it is.** The directory `/Users/hughpyle/play/artroom-releases/candidates/1b40b7ec/` on the development machine holds the six tarballs, `release-manifest.json`, the consumer's lock file (`consumer-package-lock.json`), the lock file of the command installed alone (`cli-only-package-lock.json`) and the check's output (`release-check.log`). The manifest, the two lock files and the log are also attached to the review request in the workroom. The jam repository installs from that directory by file path. This is a local route, chosen because the first jam task runs on this machine; it is not a public release.
+**Where it is.** The directory `artroom-releases/candidates/1b40b7ec/` on the development machine holds the six tarballs, `release-manifest.json`, the consumer's lock file (`consumer-package-lock.json`), the lock file of the command installed alone (`cli-only-package-lock.json`) and the check's output (`release-check.log`). The manifest, the two lock files and the log are also attached to the review request in the workroom. The jam repository installs from that directory by file path. This is a local route, chosen because the first jam task runs on this machine; it is not a public release.
 
 **The consumer check** (`npm run release:check`, [scripts/check-release.mjs](../scripts/check-release.mjs)): 55 checks passed, in 7 seconds. It copies [release/consumer](../release/consumer) to a fresh directory outside the repository and:
 
@@ -5046,7 +5046,7 @@ This shows the packages install and load. It does not show Room admission: no ro
 - The contract package has no README, so its tarball has none.
 - Not tried: `npm ci` in a consumer from the saved lock file, and a global install of the command.
 
-**Gates.** The review request gives the gate's result at the head sent. The packaging source is that of `1b40b7ec`; the head for review adds only this section. The earlier candidate, packed from `980618d1`, is still at `/Users/hughpyle/play/artroom-releases/0.1.0-dev.1/`; it lacks the licence texts and is not to be installed.
+**Gates.** The review request gives the gate's result at the head sent. The packaging source is that of `1b40b7ec`; the head for review adds only this section. The earlier candidate, packed from `980618d1`, is still at `artroom-releases/0.1.0-dev.1/`; it lacks the licence texts and is not to be installed.
 
 ## Intermediate verifier release (request 42342e35)
 

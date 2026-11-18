@@ -14,7 +14,7 @@
   },
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-focused-curated-c35f01a570",
+      "directory": "artroom-evidence/2026-11-09-br13-focused-curated-c35f01a570",
       "classification": "safe source/tool/process and complete case-status metadata",
       "fileCount": 25,
       "files": [
@@ -146,7 +146,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-focused-c35f01a570",
+      "directory": "artroom-evidence/2026-11-09-br13-focused-c35f01a570",
       "classification": "retained original compiler/test output and same-run raw reports",
       "fileCount": 66,
       "files": [

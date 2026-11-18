@@ -1,6 +1,6 @@
 {
   "qualification": "Two required documentation checks at a clean note checkpoint. Source and tests match landed R7 Main; prose changes only in the existing R7 note. This mechanical manifest is the only additional path required by the implementation-evidence convention. No gate or test rerun and no reread of earlier accepted execution evidence.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-26-r7-note-clarifications",
+  "directory": "artroom-evidence/2026-10-26-r7-note-clarifications",
   "base": {
     "commit": "6852f78d3279ef13a33b7b9d0b283e9ba96f079f",
     "tree": "b4dbac71198f26f84513966c58d9cef7f248a0b2"

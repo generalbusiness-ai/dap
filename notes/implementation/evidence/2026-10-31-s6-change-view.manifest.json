@@ -1,7 +1,7 @@
 {
   "version": 1,
   "qualification": "One passing gate at the checkpoint, and fourteen controls at the checkpoint. earlier-checkpoint holds copies of the focused runs and controls from the head before the repair, each naming the commit it ran at, and the sealed directory 2026-10-31-s6-change-view keeps the originals with that gate. The gate ran every witness again at the checkpoint. No hosted Worker, real provider or browser ran. Witness 5 ran on Native stand-ins and the hosted scratch room witness stays owed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s6-change-view-repair",
+  "directory": "artroom-evidence/2026-10-31-s6-change-view-repair",
   "checkpoint": {
     "commit": "3a05555a1304764e392c2d36083af548cb0768b8",
     "tree": "67e7d1ff6093d9dae5a3cb3f77583bf58187348e"

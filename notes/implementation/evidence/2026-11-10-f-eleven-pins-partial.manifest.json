@@ -1,7 +1,7 @@
 {
   "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
   "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-eleven-pins/partial-audit/unit",
+  "unit": "artroom-evidence/2026-11-10-f-eleven-pins/partial-audit/unit",
   "head": "d4cb0cb2f005dd5eaae5cc0f44f209bb66e37ad9",
   "tree": "43cd23a5c945c98e101b6549b0b12cf7ce1cf75a",
   "booking": "c9bdffdb9f735b5c39319638a5a8867ca0e8e7ec",
@@ -24,7 +24,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-eleven-pins/partial-audit/private",
+    "directory": "artroom-evidence/2026-11-10-f-eleven-pins/partial-audit/private",
     "manifestSha256": "c308756580804d9fc22f3223c3669db9ab1fccb569c5b1e4c53fa2ddc22b355b",
     "files": 179,
     "retention": {

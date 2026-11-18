@@ -12,7 +12,7 @@ The original G3 logs contain no wire reply. This reproduction establishes a conc
 
 ## Inputs and the one write
 
-The planner staged the probe in `0be664e9`, following setup request `f544751c`. The mini runs celld 0.6.3, SHA-256 `76a95349d7eab84faf842fcbf41be5112e7cd7c9b721ed99ddfea7b2d057e121`. The scratch server uses its own project and state at `/Users/inguz/dap-receive-pack-diagnosis-20261102`, listening on loopback port 29876. The planner started the server without changing the installed G3 fleet.
+The planner staged the probe in `0be664e9`, following setup request `f544751c`. The mini runs celld 0.6.3, SHA-256 `76a95349d7eab84faf842fcbf41be5112e7cd7c9b721ed99ddfea7b2d057e121`. The scratch server uses its own project and state at `<mini home>/dap-receive-pack-diagnosis-20261102`, listening on loopback port 29876. The planner started the server without changing the installed G3 fleet.
 
 The probe imports fixed G3 source `afdd8ee5` and calls the production `sendOnce` and `SmartHttpGit`. Before staging, it verifies both owner files against the mini. Their hashes are `df0c0737b69c76f4dcc3fa86f147d0ece3a2684875d93b4210f39e2c31c33b43` for `github-host.ts` and `18bb115bb6054c4e5da362632b94cee71158f3d46bcf27f636fd13c295a7e539` for `http.ts`.
 

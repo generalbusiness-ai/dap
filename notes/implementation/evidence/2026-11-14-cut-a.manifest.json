@@ -1,6 +1,6 @@
 {
   "qualification": "Two separately sealed focused attempts at the same frozen source. Attempt 1 failed the first compiler because the shared dependency view lacked dap-define. Attempt 2 uses the verified APFS clone and passes the resumed plan. This evidence is not a gate, deployment or Head A live-values witness. Only the listed run directories belong to this manifest.",
-  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "directory": "artroom-evidence",
   "checkpoint": {
     "commit": "eadd7c7424a94d9521d2697c176ca79139321502",
     "tree": "f4676f63e836828f89ad0f96b6be8a0046fb391d"

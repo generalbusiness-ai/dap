@@ -30,14 +30,14 @@ The initial focused test failed because it asked the fixture reader for the expe
 
 The frozen source checkpoint is `b6d8a38eae30a3b39cdc0b710c64b9c3b1715303`, tree `29ce1ab880d1920507ec0c888cfc38331f71a40b`. The production HTTP witnesses, Page workflow and full gate name that checkpoint. The focused commands ran during implementation on dirty source over `ecf59e05`; their manifest says so. All control subjects restore before the source freezes.
 
-Four manifests hold 154 public files in read-only directories under `/Users/hughpyle/play/artroom-evidence/`:
+Four manifests hold 154 public files in read-only directories under `artroom-evidence/`:
 
 - [Diagnostic evidence](evidence/2026-11-03-stream-http-close-diagnostics.manifest.json): 58 files.
 - [Focused evidence](evidence/2026-11-03-stream-http-close-focused.manifest.json): 56 files.
 - [Browser evidence](evidence/2026-11-03-stream-http-close-browser.manifest.json): 30 files, including five inspected fixture images.
 - [Gate evidence](evidence/2026-11-03-stream-http-close-gate.manifest.json): 10 files.
 
-Each manifest records full byte counts and SHA-256 hashes. Retain every unit for at least 30 days after landing. Private fixture homes, keys, session inputs, configurations, browser profiles and raw Native logs stay outside these units. The gate retains its 29 raw output files separately under `/Users/hughpyle/play/artroom-private-evidence/2026-11-03-stream-http-close-gate`, with its own checksum file. The public gate unit records their exact hashes. Named-pattern scans cover the selected public text; they do not claim every possible secret shape.
+Each manifest records full byte counts and SHA-256 hashes. Retain every unit for at least 30 days after landing. Private fixture homes, keys, session inputs, configurations, browser profiles and raw Native logs stay outside these units. The gate retains its 29 raw output files separately under `artroom-private-evidence/2026-11-03-stream-http-close-gate`, with its own checksum file. The public gate unit records their exact hashes. Named-pattern scans cover the selected public text; they do not claim every possible secret shape.
 
 The gate passes 133 Node cases, 56 Counting cases, 3601 plain cases with one skip, and 1070 Native cases with two skips. Its terminal records report zero unhandled errors, failed cases, report errors or contradictory states. The Mac wrapper separately passes 13 Node and 17 Python child tests. **The sealed focused ledger's caption says 18 Python children; that caption is wrong.** The raw focused output and frozen gate both say 17. `gate/corrections.json` preserves the correction without changing the earlier seal.
 

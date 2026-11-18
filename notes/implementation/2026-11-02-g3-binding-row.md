@@ -100,7 +100,7 @@ asks for separate runtime proof that the second bundle serves before binding.
 
 [The manifest](evidence/2026-11-02-g3-room-before-binding.manifest.json) indexes
 53 read-only files in
-`/Users/hughpyle/play/artroom-evidence/2026-11-02-g3-room-before-binding`.
+`artroom-evidence/2026-11-02-g3-room-before-binding`.
 Its checkpoint is `6884772d771c1f9a4d752fffc48e6ef5a3baa447`, tree
 `cb5a46008ec925d66e7e6f13bea066f99285fefe`. The final follow-up adds only
 this evidence account and its manifest. The private index names 12 withheld

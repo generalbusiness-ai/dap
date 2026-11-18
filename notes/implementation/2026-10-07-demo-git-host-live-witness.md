@@ -12,7 +12,7 @@ generated and kept in the owner-only local demo directory. This operator is
 builder's stand-in for a person; the `@hugh` member label is no human sign-off.
 
 ```sh
-ARTROOM_HOME=/Users/hughpyle/.config/artroom/demo-public-2026-10-07-builder \
+ARTROOM_HOME=~/.config/artroom/demo-public-2026-10-07-builder \
   packages/cli/bin/artroom.js install https://artroom-scope.inguz.workers.dev \
   --host github.com --namespace generalbusiness-ai
 # exit 0; whole-command wall 1.385 s
@@ -27,12 +27,12 @@ ARTROOM_HOME=/Users/hughpyle/.config/artroom/demo-public-2026-10-07-builder \
 
 cd /tmp
 npx --yes wrangler@4.147.0 deploy --keep-vars \
-  --config /Users/hughpyle/play/artroom-worktrees/demo-git-host/packages/scope/wrangler.jsonc
+  --config artroom-worktrees/demo-git-host/packages/scope/wrangler.jsonc
 # exit 0; wall 6.271 s; source version a6bff5d3-f02e-41de-a4ba-08041327b6e4
 # 1367.46 KiB uploaded, gzip 320.92; startup 13 ms.
 
-ARTROOM_HOME=/Users/hughpyle/.config/artroom/demo-public-2026-10-07-builder \
-  /Users/hughpyle/play/artroom-worktrees/demo-git-host/packages/cli/bin/artroom.js \
+ARTROOM_HOME=~/.config/artroom/demo-public-2026-10-07-builder \
+  artroom-worktrees/demo-git-host/packages/cli/bin/artroom.js \
   claim demo-public-2026-10-07 --handle @hugh
 # exit 0; wall 7.474 s; directory, membership, rules, destination and inbox
 # created and confirmed, founder seated and first key active.

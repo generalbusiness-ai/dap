@@ -1,7 +1,7 @@
 {
   "request": "260991d8d29bc2dd58a039062572f56c30b7735f",
   "promise": "b153688569e2a6c32e95e32d3c5c0a22c9a01f3c",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-rule-refusal-seal/unit",
+  "unit": "artroom-evidence/2026-11-10-t0b-rule-refusal-seal/unit",
   "qualification": "Actual maintained AST metadata at b4d followed by exact root adoption246. No compiler failure has been observed, and no compiler/test/control/build/capture body ran during this metadata audit. Bounded focus and later integration witnesses remain due.",
   "files": [
     {
@@ -11,7 +11,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-rule-refusal-seal/private",
+    "directory": "artroom-evidence/2026-11-10-t0b-rule-refusal-seal/private",
     "manifestSha256": "32681845e3756c2690570c8bc0b086596595f0b21c79b6ccc8d79a412d53d868",
     "files": 25,
     "retention": {

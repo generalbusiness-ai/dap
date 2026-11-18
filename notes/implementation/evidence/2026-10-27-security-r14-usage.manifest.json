@@ -1,6 +1,6 @@
 {
   "qualification": "Local R14 usage-script evidence: one naturally closed combined-tree recut gate; original standalone gate and focused checks retained separately under prior-base. Scripted SQL boundaries and actual Metrics TEST writer emissions, not hosted SQL execution, real credentials, live reads, retirement or deployment. Final reporting note and manifest only follow the gate; all non-note source bytes match. Earlier harness failures and missing callbacks remain qualified.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-security-r14-usage-recut",
+  "directory": "artroom-evidence/2026-10-27-security-r14-usage-recut",
   "checkpoint": {
     "commit": "df115cd1df1496ff783b663d6b912ee07cf8029a",
     "tree": "e78d5a2c01890a96cfad4982287c350ae0b24a80"

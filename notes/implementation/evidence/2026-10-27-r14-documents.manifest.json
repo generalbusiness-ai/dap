@@ -1,6 +1,6 @@
 {
   "qualification": "Complete naming-repair collector, including the root SHA256SUMS whose rows exclude itself. Previous copied manifest and recorded verification describe the earlier naming-rejected head; its sealed collector remains unchanged. Four actual repair checks and source/style proofs bind the clean checkpoint; only note/manifest follow. No gate, hosted query, deployment, parent closure or census completion. Phase exit:null is not final process success.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-r14-documents-naming-repair",
+  "directory": "artroom-evidence/2026-10-27-r14-documents-naming-repair",
   "request": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:082750e849acdb3351ffc4f376aeb0140b7946db",
   "promise": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:43f14337d15a33d822581e2b755a88fa17413ad8",
   "amendment": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f373d4d3260026e540d40803a038b13003d17652",

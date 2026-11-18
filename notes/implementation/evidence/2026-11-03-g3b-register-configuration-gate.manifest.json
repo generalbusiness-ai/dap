@@ -1,6 +1,6 @@
 {
   "qualification": "Actual full gate exit0 with exact unchanged source, complete terminal phases and private raw custody. No deployment or G3 acceptance.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-register-configuration-gate",
+  "directory": "artroom-evidence/2026-11-03-g3b-register-configuration-gate",
   "checkpoint": "b6e7134a920f4e580f2f8e65101a235f5251b0bc",
   "fileCount": 10,
   "files": [

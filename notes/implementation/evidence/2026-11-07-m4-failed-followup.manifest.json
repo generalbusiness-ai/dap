@@ -6,7 +6,7 @@
   "scopeAddendum": "76900c6440159ee41e24b45fcd649d199e160b78",
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-failed-followup-validation",
+      "directory": "artroom-evidence/2026-11-07-m4-failed-followup-validation",
       "files": [
         {
           "path": "analysis-driver.mjs",

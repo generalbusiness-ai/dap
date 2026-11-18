@@ -1,6 +1,6 @@
 {
   "qualification": "Actual frozen full gate exit 0 at unchanged source. Every phase completes; no unhandled error. Raw complete stage evidence stays private. Earlier flush and DCR failed gates remain separately failed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-installed-registers-gate",
+  "directory": "artroom-evidence/2026-11-03-installed-registers-gate",
   "checkpoint": "8cdd44cdcabdafead3bb418de25127ce31943fe0",
   "tree": "fa3e9257aa1a49012bafd9bbd802aa2506218d51",
   "fileCount": 8,

@@ -30,7 +30,7 @@ The TEST storage object retained earlier proxy layers. Retry followed T2 → F2 
 
 Focused END `330236a1d02673db2c7acfd29e59c5fcbfa782b9` accepts the actual attempt 3 positives and both direct REDs after root read their failures. The saved controller record still says root assertion review was pending when it finished; that later END supplies the review. The current whole Scope baseline passed all ten cases. Removing only the quoted `meta` name made the isolated earlier-meta room return an accepted creation instead of `{ stop: "retired" }`, so its direct actual-caller assertion failed. The Node source pin was not this witness.
 
-Commands below ran from `W = /Users/hughpyle/play/artroom/.builder-worktrees/ls5-owned-room-tables-20261115`. `N = /opt/homebrew/bin/node`. `E = /Users/hughpyle/play/artroom-evidence` and `P = /Users/hughpyle/play/artroom-private-evidence`.
+Commands below ran from `W = .builder-worktrees/ls5-owned-room-tables-20261115`. `N = /opt/homebrew/bin/node`. `E = artroom-evidence` and `P = artroom-private-evidence`.
 
 Output aliases name existing directories: `S = E/2026-11-15-ls5-room-tables-compilers-attempt1`, `J = E/2026-11-15-ls5-lc4-compiler-node-owners-attempt1`, `A = E/2026-11-15-ls5-lc4-agent-owner-attempt1`, and `G = E/2026-11-16-ls5-lc4-gate-attempt1`. `C1`, `C2` and `C3` are `G/controls/attempt1`, `G/controls/attempt2` and `G/controls/attempt3`. `F = G/focused-source-repairs/fixture-alignment.result.json`; `O = G/focused-source-repairs/observer-repair.result.json`. These are byte-exact retained copies; originals remain. `G` holds the actual preflight, gate and retained focused evidence.
 

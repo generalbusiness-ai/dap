@@ -1,6 +1,6 @@
 {
   "qualification": "Bounded Native/reporting-failure audit after actual passed early stages. Actual command and reporting exits remain distinct. Complete observed/unobserved case ledger, diagnostics and raw tails stay owner-private. No case, compiler, application, test, control, build or capture body ran in this audit. All earlier failures remain separately failed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v5b-native-failure-audit",
+  "directory": "artroom-evidence/2026-11-09-br13-final-gate-v5b-native-failure-audit",
   "checkpoint": {
     "commit": "ff0eee7d1a047ce1e94bc9040c1e6c96e5bf6d3a",
     "tree": "f17cb1507a81614a37d56ac84a156451a01aa820"
@@ -31,7 +31,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v5b",
+      "directory": "artroom-evidence/2026-11-09-br13-final-gate-v5b",
       "payloadFileCount": 2440,
       "fileCount": 2441,
       "payloadBytes": 115007563,
@@ -40,7 +40,7 @@
       "symlinkCount": 0
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v5b-launch",
+      "directory": "artroom-evidence/2026-11-09-br13-final-gate-v5b-launch",
       "payloadFileCount": 9,
       "fileCount": 10,
       "payloadBytes": 27812,
@@ -49,7 +49,7 @@
       "symlinkCount": 0
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v5b-native-failure-private",
+      "directory": "artroom-evidence/2026-11-09-br13-final-gate-v5b-native-failure-private",
       "payloadFileCount": 12,
       "fileCount": 13,
       "payloadBytes": 6465984,

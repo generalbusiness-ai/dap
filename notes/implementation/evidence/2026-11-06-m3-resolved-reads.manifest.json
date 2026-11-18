@@ -8,7 +8,7 @@
   "fileCount": 44,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-resolved-read-compilers",
+      "directory": "artroom-evidence/2026-11-06-m3-resolved-read-compilers",
       "fileCount": 11,
       "inputHead": "2786b7174bbe480950044da0e77dd7eb8a0e015a",
       "files": [
@@ -70,7 +70,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-resolved-read-checks",
+      "directory": "artroom-evidence/2026-11-06-m3-resolved-read-checks",
       "fileCount": 9,
       "inputHead": "2786b7174bbe480950044da0e77dd7eb8a0e015a",
       "files": [
@@ -122,7 +122,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-resolved-read-checks-2",
+      "directory": "artroom-evidence/2026-11-06-m3-resolved-read-checks-2",
       "fileCount": 14,
       "inputHead": "2786b7174bbe480950044da0e77dd7eb8a0e015a",
       "files": [
@@ -199,7 +199,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-resolved-read-checks-3",
+      "directory": "artroom-evidence/2026-11-06-m3-resolved-read-checks-3",
       "fileCount": 10,
       "inputHead": "8d4ed685d19bc8c46786249f42b24a440c6d1acc",
       "files": [

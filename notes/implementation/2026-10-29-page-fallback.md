@@ -362,7 +362,7 @@ literal, matching the Page JS digest above, plus its copy record. These copies
 run no code and make no server read.
 
 The historical prepared RAW inventory has 1,911 files and 159,280,878 B at
-`/Users/hughpyle/play/artroom-evidence/2026-10-29-page-fallback`. The receipt
+`artroom-evidence/2026-10-29-page-fallback`. The receipt
 audit passes for all 29 formal captures and preserves failed child outcomes.
 Audit JSON is 63,305 B, SHA256
 `7588b2b58d50e7a328a186dd5a39f4ddf301387d12ca0419e957717645efddc5`; the 3,823 B
@@ -412,7 +412,7 @@ copy SHA256 `4afabaa445439c47900cb278edff17aeb8d2be36a7eb9376df1629fee6fefcfa`.
 Prior note/manifest, renamed root index and final metadata form partial
 history, not a reaudited full old RAW. The index keeps its old namespace;
 original RAW stays sealed. Continuation RAW
-`/Users/hughpyle/play/artroom-evidence/2026-10-29-page-fallback-review-repair`
+`artroom-evidence/2026-10-29-page-fallback-review-repair`
 now has a historical prepared inventory of 2,409 files/224,752,917 B. Gate 3
 closes complete at a9d686b2/5470ef1 with matching clean source; its receipt
 SHA256 is `d15543a65c3fb81f19043bd4f29159e80d94a1b406590c734ccfd3e573bd1edd`.

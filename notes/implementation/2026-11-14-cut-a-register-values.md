@@ -44,7 +44,7 @@ The frozen checkpoint is `eadd7c7424a94d9521d2697c176ca79139321502`, tree
 `f4676f63e836828f89ad0f96b6be8a0046fb391d`. Focused-evidence commit `56debcee52` added only
 this note and its [manifest](evidence/2026-11-14-cut-a.manifest.json).
 The manifest lists 28 files across two separately sealed directories under
-`/Users/hughpyle/play/artroom-evidence`. Both directories retain their own
+`artroom-evidence`. Both directories retain their own
 `SHA256SUMS`. Raw reports stay outside the checkout.
 
 Attempt 1 failed its first compiler because the shared root dependency

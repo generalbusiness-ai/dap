@@ -159,7 +159,7 @@ amendment does not turn authored lengths into measured Room A data.
 ## Checks run so far
 
 Raw evidence is in
-`/Users/hughpyle/play/artroom-evidence/2026-10-27-archive-read-settlement/`.
+`artroom-evidence/2026-10-27-archive-read-settlement/`.
 The collector is indexed and sealed read-only: 194 files,
 105959768 bytes, including the root `SHA256SUMS` (which excludes
 itself). The complete committed-manifest candidate has SHA-256
@@ -169,8 +169,8 @@ records every tracked working-file hash before and after the run.
 
 | Check | Command | Exit | Output SHA-256 |
 |---|---|---|---|
-| Historical numeric refusal controls | `node /private/tmp/artroom-archive-read-settlement-numeric-W1-20261027.mjs --output /Users/hughpyle/play/artroom-evidence/2026-10-27-archive-read-settlement/numeric-W1-final/w1.json` | 0 | `numeric-W1-final/w1.json`: `99600c763ff55b6bc7232414fc9e742cdfd4a1ec490b40672a809e13d94b678c` |
-| Synthetic conditional capacity boundary | `node /private/tmp/artroom-archive-conditional-admission-20261027.mjs --output /Users/hughpyle/play/artroom-evidence/2026-10-27-archive-read-settlement/conditional-admission/w1-conditional.json` | 0 | `conditional-admission/w1-conditional.json`: `bfb50ce5ab3e14056b789e32d626a88bba77e3b7dd6c26960d8f138823057466` |
+| Historical numeric refusal controls | `node /private/tmp/artroom-archive-read-settlement-numeric-W1-20261027.mjs --output artroom-evidence/2026-10-27-archive-read-settlement/numeric-W1-final/w1.json` | 0 | `numeric-W1-final/w1.json`: `99600c763ff55b6bc7232414fc9e742cdfd4a1ec490b40672a809e13d94b678c` |
+| Synthetic conditional capacity boundary | `node /private/tmp/artroom-archive-conditional-admission-20261027.mjs --output artroom-evidence/2026-10-27-archive-read-settlement/conditional-admission/w1-conditional.json` | 0 | `conditional-admission/w1-conditional.json`: `bfb50ce5ab3e14056b789e32d626a88bba77e3b7dd6c26960d8f138823057466` |
 | Seven owning files; 65 passed | `python3 /private/tmp/artroom-archive-settlement-focused-20261027.py` | 0 | `focused.log`: `9deee1108c4bbc261d38ef232f66bbe5ee1fbf28b7e3e8d7ccf106f29255e01f` |
 | Migration and transport owners; 35 passed | `python3 /private/tmp/artroom-archive-settlement-migration-focused-20261027.py` | 0 | `migration-focused.log`: `8d573d6ec7244b76cad4202934d47264ddd322ebf63af00ee8c355f1e3501f5f` |
 | Migration source and test types | `npm run typecheck --workspace @generalbusiness/dap-scope --workspace @generalbusiness/dap-git` | 0 | `migration-typecheck.log`: `a22bebe45957389503f81a89065b1a2e6ff61209f53dd26348ed7dbc15e68ff3` |

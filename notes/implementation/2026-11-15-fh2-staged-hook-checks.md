@@ -83,7 +83,7 @@ safe outputs and actual argv in `D/result.json` — `a498ca9d34370a74ed4e32849a1
 Browser scripts ran locally on macOS at this head. The Linux workflows have
 not run at this head.
 
-`E=/Users/hughpyle/play/artroom-evidence`;
+`E=artroom-evidence`;
 `B=E/2026-11-15-nf-lc2-bounded-owners-attempt1`,
 `T=E/2026-11-15-nf-lc2-exact-head-preflight-attempt1`,
 `G=E/2026-11-15-nf6-nf8-fh2-sd1-lc2-full-gate-attempt1` and

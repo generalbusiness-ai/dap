@@ -1,6 +1,6 @@
 {
   "qualification": "R2 one maintained full gate at94a29 passed, with separate actual-END no-Sleep supplement. Final terminal metadata is complete; callback/observation coverage remains partial where recorded, and skips are preserved. No new collection/owner run during filing. Nested manifests/checksums bind all32448original and7supplement files, including mutable caches and actual system-temp retained copy.",
-  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "directory": "artroom-evidence",
   "checkpoint": {
     "commit": "94a29a264254a6fd9367b44cd24e82d6afebaf35",
     "tree": "d6fc30ee5a48ceb0e99f37f0f07df5351769ee58"

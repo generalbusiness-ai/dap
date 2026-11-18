@@ -143,7 +143,7 @@ commit/tree and its document-only delta are named in the reporting
 artifact, avoiding a self-referential commit hash in this note.
 
 Raw evidence is retained in
-`/Users/hughpyle/play/artroom-evidence/2026-10-27-archive-capacity-capture`.
+`artroom-evidence/2026-10-27-archive-capacity-capture`.
 All raw paths below are relative to it. The directory is sealed read-only:
 188 files, 136,957,111 bytes, with checksum index SHA-256
 `35f8fc74ecb09e6ba0eb083dced8358ae3d1125baa4027bbb8ab99e2dd44495b`.

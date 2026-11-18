@@ -163,9 +163,9 @@ described below, with starting load averages 1.712890625, 1.8916015625, and
 reporting-only commit.
 
 The original evidence remains read-only at
-`/Users/hughpyle/play/artroom-evidence/2026-10-27-security-r14-usage`.
+`artroom-evidence/2026-10-27-security-r14-usage`.
 Final combined evidence is retained read-only at
-`/Users/hughpyle/play/artroom-evidence/2026-10-27-security-r14-usage-recut`.
+`artroom-evidence/2026-10-27-security-r14-usage-recut`.
 `prior-base/` is an exact copy of all 114 original sealed files. The final
 manifest inventories the recut evidence and that prior-base copy. Only this
 reporting note and the manifest change after the recut gate. All 2,805 tracked files outside

@@ -50,7 +50,7 @@ verify the join and reported it as unknown. The NF-A1 audit (act
   entry read carries `atLeast`.
 - Named red: with main's route at `356fcd11`, both new tests fail and the
   other 13 pass. Evidence:
-  `/Users/hughpyle/play/artroom-evidence/2026-11-17-gw1-red/`.
+  `artroom-evidence/2026-11-17-gw1-red/`.
 
 ## Deployment and release
 

@@ -9,7 +9,7 @@
   "fileCount": 127,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-goose-host",
+      "directory": "artroom-evidence/2026-11-01-goose-host",
       "checkpoint": {
         "commit": "8093f9cecdeac454761b027c56c0059ff0231348",
         "tree": "4789fd430513d4cfefc3b4da7f0c238572e66d5d"
@@ -635,7 +635,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-goose-host-source-proof",
+      "directory": "artroom-evidence/2026-11-01-goose-host-source-proof",
       "checkpoint": {
         "commit": "8093f9cecdeac454761b027c56c0059ff0231348",
         "tree": "4789fd430513d4cfefc3b4da7f0c238572e66d5d"

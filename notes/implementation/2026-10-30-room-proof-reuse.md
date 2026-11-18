@@ -93,10 +93,10 @@ records.
 Control H denotes source 80749894, not documentation head H57fb.
 
 OLD means sealed root
-`/Users/hughpyle/play/artroom-evidence/2026-10-30-room-proof-reuse`.
+`artroom-evidence/2026-10-30-room-proof-reuse`.
 Old formal label L binds OLD/L/command.json and its original argv.
 REPAIR means the repaired evidence root
-`/Users/hughpyle/play/artroom-evidence/2026-10-30-room-proof-reuse-repair`.
+`artroom-evidence/2026-10-30-room-proof-reuse-repair`.
 Original commands retain producer path
 `/private/tmp/artroom-room-proof-reuse-repair-evidence-20261030`.
 I rows bind REPAIR/L/command.json.

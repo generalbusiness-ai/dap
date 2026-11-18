@@ -1,7 +1,7 @@
 {
   "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
   "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/archive-focus-sealed/unit",
+  "unit": "artroom-evidence/2026-11-10-f-archive-only-control-3979/archive-focus-sealed/unit",
   "head": "3979f03f126582c0e8f6ebf044c24e8668c5113b",
   "tree": "bc3fe3d95f7556d47b09871a1091f094a8225cd2",
   "booking": "924f69d2ecd33003a31ce308ba7dbc9a4d401fd2",
@@ -36,7 +36,7 @@
   ],
   "fullGateResult": null,
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/archive-focus-sealed/private",
+    "directory": "artroom-evidence/2026-11-10-f-archive-only-control-3979/archive-focus-sealed/private",
     "manifestSha256": "9c9604bc39d1edada1ea0ab71869ed24a4799b432ea9f53b4d19dbe178ef3eaf",
     "files": 711,
     "retention": {

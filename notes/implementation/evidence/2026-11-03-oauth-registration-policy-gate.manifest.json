@@ -1,6 +1,6 @@
 {
   "qualification": "Actual frozen full gate exit1 with unchanged source. The original archive-scale receipt and consent fixture fail. Native remains failed/partial, and this gate never becomes a pass. Earlier O3, flush and DCR gates also remain separately failed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-registration-policy-gate",
+  "directory": "artroom-evidence/2026-11-03-oauth-registration-policy-gate",
   "checkpoint": "5183640a65eeef98d496289ab0e1bf0c552c5079",
   "tree": "4d0448229ae466f2fd27b6e0cf3e063592952dc0",
   "fileCount": 8,

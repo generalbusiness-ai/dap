@@ -1,6 +1,6 @@
 {
   "qualification": "Failed full gate at its actual clean immutable head. This run remains a failure; no later follow-up changes its exit. Raw stage logs and complete test evidence stay private.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-authorization-gate-2",
+  "directory": "artroom-evidence/2026-11-03-oauth-authorization-gate-2",
   "checkpoint": "1c617e0cfb2896e464654aa45155a20a823dced6",
   "tree": "2383a8958386564a1194918dd5e1dd581604c04f",
   "fileCount": 7,

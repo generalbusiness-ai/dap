@@ -1,6 +1,6 @@
 {
   "qualification": "Independent metadata-only audit; no compiler, test, browser, application import or build ran. Earlier failed attempt remains failed at its own exact source. Native and projection witnesses do not claim a real DOM interaction. Value-print comparison and final gate remain separate owed evidence.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-audit",
+  "directory": "artroom-evidence/2026-11-09-t0d-focused-audit",
   "checkpoint": {
     "commit": "8292fe9a141572e73a5ec2413b61954c8f6a754d",
     "tree": "b60ec36360ab69607cd6972803e51eb45b3d38c8"
@@ -36,7 +36,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused",
+      "directory": "artroom-evidence/2026-11-09-t0d-focused",
       "payloadFileCount": 21,
       "fileCount": 22,
       "payloadBytes": 2229257,
@@ -45,7 +45,7 @@
       "symlinkCount": 0
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-launch",
+      "directory": "artroom-evidence/2026-11-09-t0d-focused-launch",
       "payloadFileCount": 9,
       "fileCount": 10,
       "payloadBytes": 2235,
@@ -59,12 +59,12 @@
       "name": "plain:context-00",
       "argv": [
         "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/node_modules/typescript/bin/tsc",
+        ".builder-worktrees/typed-browser-models-t0d-20261109/node_modules/typescript/bin/tsc",
         "-p",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/examples/lending/tsconfig.json"
+        ".builder-worktrees/typed-browser-models-t0d-20261109/examples/lending/tsconfig.json"
       ],
       "exitCode": 1,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused/pipeline/context-00.log",
+      "output": "artroom-evidence/2026-11-09-t0d-focused/pipeline/context-00.log",
       "bytes": 829,
       "sha256": "7e51d3e98a309d6d5ac3b6c6fd9ecd06b5db8dd70dc376cab82cf0717b1bec67"
     }

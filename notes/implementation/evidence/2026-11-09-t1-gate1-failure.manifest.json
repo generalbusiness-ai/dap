@@ -1,6 +1,6 @@
 {
   "qualification": "Independent metadata-only audit of the actual first C full-gate failure. Whitespace exited2 before every compiler and test stage. No case or wrapper observation ran; no pass is inferred. The authorized repair removes exactly one extra EOF LF and changes no assertion or token. Earlier attempts/control remain separate. No validation body ran during this audit.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate1-failure-audit",
+  "directory": "artroom-evidence/2026-11-09-t1-gate1-failure-audit",
   "checkpoint": "8178fe63dca58e27d720e723fc1d1b9776405ec5",
   "tree": "668ec7c3c30e5d0e7dcdfc57037a7ebcb8002197",
   "fileCount": 6,
@@ -34,7 +34,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate",
+      "directory": "artroom-evidence/2026-11-09-t1-gate",
       "fileCount": 130,
       "payloadFileCount": 129,
       "payloadBytes": 7138864,
@@ -42,7 +42,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate-launch",
+      "directory": "artroom-evidence/2026-11-09-t1-gate-launch",
       "fileCount": 10,
       "payloadFileCount": 9,
       "payloadBytes": 10181,

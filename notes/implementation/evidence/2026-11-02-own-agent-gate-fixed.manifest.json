@@ -1,6 +1,6 @@
 {
   "qualification": "Second frozen O2 gate: actual exit 1, all plain cases passed, one Native R27 setup failed. Its isolated test-file repair and passing whole-owner follow-up stay separate.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-own-agent-gate-fixed",
+  "directory": "artroom-evidence/2026-11-02-own-agent-gate-fixed",
   "checkpoint": "5929ca7cd76f180e062fcbf0cd340243fdb2c729",
   "tree": "9285a3daa4436aff5fd30010d3b84a3393b7f181",
   "fileCount": 7,

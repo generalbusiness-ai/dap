@@ -1,6 +1,6 @@
 {
   "qualification": "Independent metadata-only reconciliation of the second full A gate at its exact repaired B-merged source. Earlier real gate1 failure and build-wrapper2 remain separate outcomes. Original pools, workers and deadlines remain. Unknown wrappers remain unknown. No deployment or live acceptance claim.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0a-gate2-review",
+  "directory": "artroom-evidence/2026-11-09-t0a-gate2-review",
   "checkpoint": "9295b11c97e6c35a005f47a81282a06169a7cf06",
   "tree": "04d6739f876de12b7940ce93b02887cb118072fd",
   "fileCount": 3,

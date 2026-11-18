@@ -7,7 +7,7 @@
   "fileCount": 4,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-room-br12-page-ci-validation",
+      "directory": "artroom-evidence/2026-11-08-room-br12-page-ci-validation",
       "files": [
         {
           "path": "SHA256SUMS",

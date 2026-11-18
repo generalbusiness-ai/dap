@@ -1,7 +1,7 @@
 {
   "version": 1,
   "qualification": "One passing gate at the checkpoint. The focused owners and the two controls ran before the rebase at ed25438905 and at 66e324d3; the rebase adds only the landed repair, so those runs carry over by the retained range diff and path list. One owner run failed and stays as evidence. No deployment or hosted run is claimed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-control-tap-parser",
+  "directory": "artroom-evidence/2026-10-31-control-tap-parser",
   "checkpoint": {
     "commit": "e314592d96ae52f5f9540cd6d8229d5c4c30d2c9",
     "tree": "e712edbb1b8959c201ef87386d81bfbbd32f9180"

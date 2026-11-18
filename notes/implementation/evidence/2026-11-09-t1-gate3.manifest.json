@@ -1,6 +1,6 @@
 {
   "qualification": "Independent metadata-only reconciliation of the third complete C gate at the verified ACT_NAME-repaired and document-adopted source. Both earlier full gates remain separately failed at their actual checkpoints. Earlier failed attempts and the successful named control remain separate at their actual checkpoints. Original pools, workers and deadlines remain. Unknown wrappers remain unknown. No deployment, live acceptance or SDK compiled-output/publication claim.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate3-review",
+  "directory": "artroom-evidence/2026-11-09-t1-gate3-review",
   "checkpoint": "8b7de735354595b048508a518eb4b2ff08990035",
   "tree": "40556767cc554e2ccc5733ed3a18ea45993921ef",
   "fileCount": 6,
@@ -34,7 +34,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate3",
+      "directory": "artroom-evidence/2026-11-09-t1-gate3",
       "payloadFileCount": 2423,
       "fileCount": 2424,
       "payloadBytes": 101920080,
@@ -42,7 +42,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate3-launch",
+      "directory": "artroom-evidence/2026-11-09-t1-gate3-launch",
       "payloadFileCount": 9,
       "fileCount": 10,
       "payloadBytes": 13851,
@@ -50,7 +50,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate3-analysis-private",
+      "directory": "artroom-evidence/2026-11-09-t1-gate3-analysis-private",
       "fileCount": 2,
       "payloadFileCount": 1,
       "payloadBytes": 14171298,
@@ -62,7 +62,7 @@
   "priorAudits": [
     {
       "slug": "pre-gate-audit",
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-pre-gate-audit",
+      "directory": "artroom-evidence/2026-11-09-t1-pre-gate-audit",
       "sha256Sums": "057944d39ca155e29a26a9b71809752527340d0a2e2020b65617e323232ca5fe",
       "manifest": "notes/implementation/evidence/2026-11-09-t1-pre-gate-audit.manifest.json",
       "manifestSha256": "91ea63c61ca50108510ee5e3498967c0613ba3a03f916af912f471e345b29938",
@@ -74,7 +74,7 @@
     },
     {
       "slug": "control-audit",
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-control-audit",
+      "directory": "artroom-evidence/2026-11-09-t1-control-audit",
       "sha256Sums": "9b6da1f720b0cc3b6ce70d4d723f6401ab3178e83a1d03e8207143a481de5d50",
       "manifest": "notes/implementation/evidence/2026-11-09-t1-control-audit.manifest.json",
       "manifestSha256": "089eb232b4a1611f239e725fcf70f51c6e7042270ea29142779dd58fb779c46c",
@@ -86,7 +86,7 @@
     },
     {
       "slug": "focused-repair-3-audit",
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-repair-3-audit",
+      "directory": "artroom-evidence/2026-11-09-t1-focused-repair-3-audit",
       "sha256Sums": "14c3d5a541d112af4c252121f8c4d1851ab25011248afcf37a929cb7911f7224",
       "manifest": "notes/implementation/evidence/2026-11-09-t1-focused-repair-3-audit.manifest.json",
       "manifestSha256": "f268561afd6d1df993b3493cf59268a0b4e386095ecdad695f667a3f73b2cfe7",
@@ -206,7 +206,7 @@
     "removalRequires": "recorded planner act naming adopted manifest"
   },
   "privateAnalysisCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate3-analysis-private",
+    "directory": "artroom-evidence/2026-11-09-t1-gate3-analysis-private",
     "fileCount": 2,
     "payloadFileCount": 1,
     "payloadBytes": 14171298,

@@ -44,10 +44,10 @@ mobile rows. The supporting sentence is absent. Static Room and Counter
 marketing headers match the new homepage height at both widths. All 52 requests
 were allowed local GETs, with no browser errors. Root directly viewed all eight
 captures and recorded the seven-point fidelity check. The browser proof is
-`/Users/hughpyle/play/artroom-diagnostics/homepage-single-line-browser-source/output-one/public-result.json`,
+`artroom-diagnostics/homepage-single-line-browser-source/output-one/public-result.json`,
 SHA-256 `5c6ed195c575b6205044a555ea906fb9615111698b145a3bd23f6e3d83dd67ec`. The
 fidelity record is
-`/Users/hughpyle/play/artroom-diagnostics/homepage-single-line-browser-source/root-fidelity.public.json`,
+`artroom-diagnostics/homepage-single-line-browser-source/root-fidelity.public.json`,
 SHA-256 `d104132a8ece07174d7c8d3155426d42389a22292179227ce699fa7068762148`.
 These measurements use exact Source HTML, CSS, and public brand assets on
 loopback with fresh browser contexts. They establish no deployed page or served
@@ -68,7 +68,7 @@ mode, type and blob entries are preserved.
 
 The original owning Node test passed one case at
 `64e68b8dea675180c59af6b2358e3865a94e218d`. Its
-[closed public result](/Users/hughpyle/play/artroom-diagnostics/homepage-single-line-source/owning-check-public.json)
+[closed public result](artroom-diagnostics/homepage-single-line-source/owning-check-public.json)
 has SHA-256
 `a1568041b20f664807c2876e34817707bac9096be270ca3af1b2391bc254371f`.
 It builds an exclusive temporary fixture and removes it. It is distinct from the
@@ -83,7 +83,7 @@ and 186 test files, with 1 skipped file. The chained Node runs passed 9 and 55
 tests. The measured command wall time was 119.7002 seconds. Installation was
 skipped. The clean postguard retained 1431 Source files, 3882 dependency files
 and 12 workspace links. The
-[closed public gate proof](/Users/hughpyle/play/artroom-diagnostics/home-single-line-composition-gate-source/gate-one/public-proof.json)
+[closed public gate proof](artroom-diagnostics/home-single-line-composition-gate-source/gate-one/public-proof.json)
 has SHA-256
 `5f8ee5dcbb61a4d9142cb0af0f4e6ab9cda9c0fee1ae2688c7366290e5e698ac`.
 The raw diagnostic token counts are 1 for `RefcountedCanceler` and 2 for
@@ -115,13 +115,13 @@ from that landed commit. Both phases exited 0. The existing `dap-home` Worker
 reported version `697b181d-08da-46ff-9ed2-a7b31ca19836` at 100% traffic.
 The resource hashes, protected configuration except the permitted script etag,
 and domain remained unchanged. The
-[original production result](/Users/hughpyle/play/artroom-diagnostics/home-single-line-production-preparation/output-one/public-result.json)
+[original production result](artroom-diagnostics/home-single-line-production-preparation/output-one/public-result.json)
 has SHA-256
 `f6970dd36fb7d6f8ccc5436d253b1cedcfd939e5ad0244e4a38d66e93f7db01f`.
 
 That original command remains failed. Its first canonical Home GET returned
 2190 bytes instead of the expected 2063, so nine asset reads did not run. The
-[HTML comparison](/Users/hughpyle/play/artroom-diagnostics/home-single-line-production-preparation/original-html-comparison.public.json)
+[HTML comparison](artroom-diagnostics/home-single-line-production-preparation/original-html-comparison.public.json)
 shows that response matched committed pre-Home HTML exactly. Its SHA-256 is
 `d9abb31a9f270771a84d9235cc05cefb283436d2618d168c9e3fcb8ff388e6a8`.
 The comparison establishes no cause for the mismatch.
@@ -132,7 +132,7 @@ response contained the sole adopted tagline and no supporting sentence. The
 shared CSS declared the new desktop and compact widths. Room and Counter
 marketing HTML, the wordmark, favicon, three fonts, and font licence also matched.
 The responses retained `public, max-age=0, must-revalidate, no-transform`. The
-[read-only completion result](/Users/hughpyle/play/artroom-diagnostics/home-single-line-production-preparation/completion-one/public-result.json)
+[read-only completion result](artroom-diagnostics/home-single-line-production-preparation/completion-one/public-result.json)
 has SHA-256
 `d4eb66848a2bf006aef8ae28857341389ecf9c823be818bca27cf152ae1d7301`.
 This completion ran no build, deployment, or provider metadata call. It does not
@@ -149,7 +149,7 @@ before heights, rather than a new observation of the previous deployment.
 | 1280 px | 98.90625 px | 123.625 px | 1.249921 | 212.5 px | 1 |
 | 390 px | 75.625 px | 94.53125 px | 1.25 | 162.5 px | 2 |
 
-The [served geometry result](/Users/hughpyle/play/artroom-diagnostics/home-single-line-production-preparation/served-measurement-one/public-result.json)
+The [served geometry result](artroom-diagnostics/home-single-line-production-preparation/served-measurement-one/public-result.json)
 has SHA-256
 `0ca93f3f6c385a2f7f0a2a728b4f3a454e8d5bbffed27aaf4654cdd9f85d8a3e`.
 It records actual observed main `b69ee8ef5284a75239c0c4d47ec8fc23e9a77a53`,
@@ -158,7 +158,7 @@ landed commit. The intervening main change is the planner's sprint report.
 The geometry observation supplies no fresh provider-version claim.
 
 Root directly viewed both served captures. The
-[public fidelity record](/Users/hughpyle/play/artroom-diagnostics/home-single-line-production-preparation/served-measurement-one/root-fidelity.public.json),
+[public fidelity record](artroom-diagnostics/home-single-line-production-preparation/served-measurement-one/root-fidelity.public.json),
 SHA-256 `82323faa98a57ba5dc0c5f39e3d63da983ab7aa9f17a58091b0682ad5e81093e`,
 records visible glyphs, keyboard focus, readable destination rows, aligned rules,
 and utility icons without horizontal clipping. This is Root's observation,
@@ -187,7 +187,7 @@ for this delivery note. The parent remains promised pending its normal workflow.
 
 The separate single-URL purge requested by `d99d5730` attempted one POST and
 failed with HTTP 401 and error code 10000. The
-[purge result](/Users/hughpyle/play/artroom-diagnostics/homepage-single-url-purge-preparation/purge-one/public-result.json)
+[purge result](artroom-diagnostics/homepage-single-url-purge-preparation/purge-one/public-result.json)
 has SHA-256
 `32e056c0034f4bd038e7a66c21f4113d94225b2f66ae55105447dde3587386ac`.
 That failure remains separate work. It is not a dependency of this Home delivery

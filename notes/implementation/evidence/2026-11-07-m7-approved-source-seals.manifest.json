@@ -1,6 +1,6 @@
 {
   "qualification": "Hugh approved exact patch SHA40864da31c9dc90e3f725f53d93d5a6e4090eaf958f54cb6a908393255a5e4c8 in this builder session. Three sealed source owners and baseline preconditions match the question. Only three hash literals change. The complete security inventory owner passes 11 Node cases; no full M7 gate has run.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m7-approved-source-seals",
+  "directory": "artroom-evidence/2026-11-07-m7-approved-source-seals",
   "checkpoint_commit": "b687ec5fd62d8e818d484a53c088babff14c79f3",
   "checkpoint_tree": "122ea29944da30a759cf0abdf69515397c00628e",
   "file_count": 11,

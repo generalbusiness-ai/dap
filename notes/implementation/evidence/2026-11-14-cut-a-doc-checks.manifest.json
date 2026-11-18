@@ -1,6 +1,6 @@
 {
   "qualification": "Cheap read-only documentation and Git checks after CUT-A gate/follow-up evidence filing. No compiler, test, gate, bundle or install ran. Final filing changes only the note and this manifest.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cut-a-doc-checks",
+  "directory": "artroom-evidence/2026-11-14-cut-a-doc-checks",
   "checkpoint": {
     "commit": "9b1a733ed5cd6c2e9dffb842016e7b095ddc8cc2",
     "tree": "65300650861328a25497a537f2f1dc4609928bb8"

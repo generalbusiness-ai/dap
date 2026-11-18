@@ -8,7 +8,7 @@
   "fileCount": 29,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s3-partition-followup-validation",
+      "directory": "artroom-evidence/2026-11-07-s3-partition-followup-validation",
       "fileCount": 8,
       "files": [
         {
@@ -54,7 +54,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s3-unreached-tests-validation",
+      "directory": "artroom-evidence/2026-11-07-s3-unreached-tests-validation",
       "fileCount": 21,
       "files": [
         {

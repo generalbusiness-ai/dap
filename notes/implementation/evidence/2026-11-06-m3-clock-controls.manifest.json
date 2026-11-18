@@ -1,6 +1,6 @@
 {
   "qualification": "Initial controls: removing declared clock use fails exactly5 selected assertions; removing Native contribution survives all8 cases. The driver stops on that unexpected survival before the future-clause control. Both source files restored. Retain this failed control-design attempt.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-clock-controls",
+  "directory": "artroom-evidence/2026-11-06-m3-clock-controls",
   "fileCount": 11,
   "files": [
     {

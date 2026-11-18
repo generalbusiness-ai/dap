@@ -2,7 +2,7 @@
   "qualification": "Index of unchanged raw originals for NF-1. Each evidence directory carries its own SHA256SUMS over every file it holds and is read-only. The first gate at 77e534cc failed and stays failed; the fresh gate at 1fa60702 passed.",
   "request": "6050f6ea4758cb38fd7c643c35a2d77c3233c7c3",
   "promise": "90c57c859211cdd55a48d075b2a14eb02d05669f",
-  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "directory": "artroom-evidence",
   "base": "28aa0446ab0f5cac2753fa802a186ecb7843daca",
   "checkpointCommit": "1fa60702d89440b2e4e2359000b584e985b88b4b",
   "checkpointTree": "afbcc1364ae67518832eba6ed3400dcb826f57e3",

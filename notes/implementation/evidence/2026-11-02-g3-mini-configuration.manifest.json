@@ -1,7 +1,7 @@
 {
   "version": 1,
   "qualification": "G3 nonsecret configuration preparation only. The required gate failed with 15 plain timeouts and Native unreached. Two distinct diagnostics cover the 15 failed cases, the first has sandbox EPERM. Separate Native outcome is in its actual native.exit. No full gate pass, App key read/copy, register plan, deploy, rollback execution or parent real-GitHub acceptance.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-g3-mini-configuration",
+  "directory": "artroom-evidence/2026-11-02-g3-mini-configuration",
   "checkpoint": {
     "commit": "2f0e82952a232f11e9969bb26ca70ae24f56aab8",
     "tree": "99f8fc502d89eb2cefd6f7d5675686059fa022fe"

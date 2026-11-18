@@ -327,24 +327,24 @@ signature file changed. Compatibility ran once before direct Vitest,
 exited zero and left the installed bundle unchanged (`copied:false`).
 
 `N` below is `/opt/homebrew/bin/node`. Output paths resolve under
-`/Users/hughpyle/play/artroom-evidence/2026-11-14-r-reservation-development-attempt1`.
+`artroom-evidence/2026-11-14-r-reservation-development-attempt1`.
 Wall times come from `/usr/bin/time -p`; case counts come from actual Vitest
 JSON reports. Earlier temporary raw files remain, and the retained copies
 match them byte-for-byte. This table records development, not a gate.
 
 `L` denotes the later raw directory
-`/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-minimal-red-attempt1`.
+`artroom-evidence/2026-11-15-r-lp1-minimal-red-attempt1`.
 Its JSON results retain each exact argv, working directory, exit, wall time,
 and stream hashes. LP1 rows below bind the clean `4f213e9d` head, not the
 unrun descriptor repair.
-`G` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-green-attempt1`.
-`M` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-remaining-development-attempt1`.
+`G` denotes `artroom-evidence/2026-11-15-r-lp1-green-attempt1`.
+`M` denotes `artroom-evidence/2026-11-15-r-remaining-development-attempt1`.
 The later GREEN and remaining-owner rows bind `eb6d6a30a4`; neither validates
 the authored-package follow-up.
-`F` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-authored-package-followup-attempt1`.
-`I` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-identifiers-compare-attempt1`.
-`Q` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-full-gate-attempt1`.
-`U` denotes `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-targeted-followup-attempt1`.
+`F` denotes `artroom-evidence/2026-11-15-r-authored-package-followup-attempt1`.
+`I` denotes `artroom-evidence/2026-11-15-r-lp1-identifiers-compare-attempt1`.
+`Q` denotes `artroom-evidence/2026-11-15-r-lp1-full-gate-attempt1`.
+`U` denotes `artroom-evidence/2026-11-15-r-lp1-targeted-followup-attempt1`.
 `IDTOOL` is `/private/tmp/artroom-c3-open-03-identifiers-20261114.mjs`.
 `ROOT` is this worktree's absolute path. `H` is the full `8d7f7f8c` head above,
 and `T` is its full tree. Expand these aliases in the exact commands below.
@@ -369,16 +369,16 @@ Originals remain unchanged. Retain the copies for at least 30 days after
 landing. The unrelated Node compile cache was not copied.
 
 
-`J1` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-bp1-identifiers-compare-attempt1`.
-`B1` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-bp1-lending-base-red-attempt1`.
-`G1` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-bp1-green-owners-attempt1`.
-`RR` is `/Users/hughpyle/play/artroom-evidence/2026-11-15-r-lp1-bp1-release-reproduction-attempt1`.
+`J1` is `artroom-evidence/2026-11-15-r-lp1-bp1-identifiers-compare-attempt1`.
+`B1` is `artroom-evidence/2026-11-15-r-lp1-bp1-lending-base-red-attempt1`.
+`G1` is `artroom-evidence/2026-11-15-r-lp1-bp1-green-owners-attempt1`.
+`RR` is `artroom-evidence/2026-11-15-r-lp1-bp1-release-reproduction-attempt1`.
 Current result.json files retain exact argv/cwd/exit/wall/streams; H1/T1 below
 are the full 1b091111/7db3fa84 values above, not the older H/T aliases.
 Named RED uses the exact anchored quoted title retained in B1/result.json.
 The whole CLI, Platform and Native owners retain their configs, Native case
 allowance and worker limits. Page and Security also run whole. No case-name filter runs in GREEN.
-`E=/Users/hughpyle/play/artroom-evidence`,
+`E=artroom-evidence`,
 `PF=E/2026-11-15-r-lp1-bp1-preflight-attempt1` and
 `FG=E/2026-11-15-r-lp1-bp1-full-gate-attempt1`.
 

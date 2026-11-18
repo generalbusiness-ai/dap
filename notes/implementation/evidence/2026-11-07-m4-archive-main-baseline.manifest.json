@@ -4,7 +4,7 @@
   "baseHead": "e50d9eebb27f47d0f33549486751ab8bdce8de80",
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-archive-main-paired-validation",
+      "directory": "artroom-evidence/2026-11-07-archive-main-paired-validation",
       "files": [
         {
           "path": "owners.exit",

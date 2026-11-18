@@ -131,7 +131,7 @@ The timing script measures pre-act wall time from writing `tools/call` to the
 fetch dispatch of the act. The sum of individual request times is a separate
 sum. It overlaps after this change. To regenerate the public counts and timing
 comparison without touching private identities or sealed output, run
-`python3 /Users/hughpyle/play/artroom-evidence/2026-11-02-first-press-after-2/summarize.py --report`.
+`python3 artroom-evidence/2026-11-02-first-press-after-2/summarize.py --report`.
 The script checks its computed records against the retained comparison.
 
 Draft focused runs preceded the frozen commit. They support implementation

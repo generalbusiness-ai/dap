@@ -371,7 +371,7 @@ RPC label is context, not proof of the caller or scheduling cause.
 ## Retained evidence snapshot
 
 All table paths now refer to the single collector at
-`/Users/hughpyle/play/artroom-evidence/2026-10-27-archive-capacity-measurement`.
+`artroom-evidence/2026-10-27-archive-capacity-measurement`.
 Its `Site/` and `RoomA/` copies matched all source bytes and modes at assembly.
 The final seal removes their write bits; original modes remain in the receipt.
 The original two raw collections were not rewritten or sealed by finalization. `assembly/copy-receipt.json` checks complete
@@ -395,7 +395,7 @@ In the table, R1 is the exact recorded command with `$RAW` expanded to the
 Site raw directory above:
 
 ```sh
-node "$RAW/reconstruct.mjs" --input "$RAW/numeric-pass.json" --output "$RAW/reconstruction.json" --label hosted-capture --repo /Users/hughpyle/play/artroom
+node "$RAW/reconstruct.mjs" --input "$RAW/numeric-pass.json" --output "$RAW/reconstruction.json" --label hosted-capture --repo the shared checkout
 ```
 
 R0 uses the same arguments except `--label hosted-Site-9172`. It exits 1 with

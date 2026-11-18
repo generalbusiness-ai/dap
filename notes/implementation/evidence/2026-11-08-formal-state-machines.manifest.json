@@ -1,6 +1,6 @@
 {
   "qualification": "Verification artifacts over the recorded source checkpoint. The single gate failed when a temporary transport control overlapped its Node stage. The corrected control, affected Node owner, and previously unreached stages passed separately. This is not a successful single gate run.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-formal-five",
+  "directory": "artroom-evidence/2026-11-08-formal-five",
   "checkpointCommit": "8faa38dcf31855a0a6264e5912b58061b5eda223",
   "checkpointTree": "44cec6488a2060da51d823eda2bf2a5587993574",
   "fileCount": 294,

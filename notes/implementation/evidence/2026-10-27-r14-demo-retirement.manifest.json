@@ -1,6 +1,6 @@
 {
   "qualification": "Complete sealed demo retirement evidence. Actual command receipts and source-bound reconstructed costs; no hosted deployment, deployed proxy or live provider claim. Index excludes itself; manifest includes it. Finalizer terminal is retained separately.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-r14-demo-retirement",
+  "directory": "artroom-evidence/2026-10-27-r14-demo-retirement",
   "checkpoint": {
     "commit": "b9cd8f45065dab2a0077161860a99aef4f6358b5",
     "tree": "b7c088a817559dc2e137e63c87eedcf0aad768b0"

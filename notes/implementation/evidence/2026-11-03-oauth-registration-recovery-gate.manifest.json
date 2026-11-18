@@ -1,6 +1,6 @@
 {
   "qualification": "Failed frozen full gate. Every case passes, but Native teardown reports one unhandled EnvironmentTeardownError. The Native stage and gate remain failures. Raw output and all complete stage evidence stay private.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-registration-recovery-gate",
+  "directory": "artroom-evidence/2026-11-03-oauth-registration-recovery-gate",
   "checkpoint": "41a4a7e91a03edbce45c39e7fe8f1b556d74e308",
   "tree": "94f916e1a79b8a9d7c44d0a1f1dec703e9f92044",
   "fileCount": 8,

@@ -1,7 +1,7 @@
 {
   "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
   "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/failed-focus-sealed/unit",
+  "unit": "artroom-evidence/2026-11-10-f-archive-repair-focus-3979/failed-focus-sealed/unit",
   "head": "3979f03f126582c0e8f6ebf044c24e8668c5113b",
   "tree": "bc3fe3d95f7556d47b09871a1091f094a8225cd2",
   "booking": "94d41fbccf10482ff54db9a5030bd6930fa31cce",
@@ -36,7 +36,7 @@
   ],
   "fullGateResult": null,
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/failed-focus-sealed/private",
+    "directory": "artroom-evidence/2026-11-10-f-archive-repair-focus-3979/failed-focus-sealed/private",
     "manifestSha256": "4ef2af2befe42a27d4264979f6bc4ceda3242e8e085695a4c56afda837d0baf3",
     "files": 692,
     "retention": {

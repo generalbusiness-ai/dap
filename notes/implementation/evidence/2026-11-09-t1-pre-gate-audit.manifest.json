@@ -1,6 +1,6 @@
 {
   "qualification": "Metadata-only audit of three actual C attempts; both failures remain failed. Thirteen compiler and 25 plain passes belong to 97b82970, selective Node 11/pin pass to 9f9dacf5; B integration awaits final gate. Raw fixture/payload files are withheld from the curated publication and remain owner-private.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-pre-gate-audit",
+  "directory": "artroom-evidence/2026-11-09-t1-pre-gate-audit",
   "checkpoint": {
     "commit": "9f9dacf591df07195d78b147bd729ee781736a34",
     "tree": "267261fc3921d63c0e0fd8d65f7f93ac7eb884e2"
@@ -56,7 +56,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused",
+      "directory": "artroom-evidence/2026-11-09-t1-focused",
       "payloadFileCount": 27,
       "fileCount": 28,
       "payloadBytes": 1347796,
@@ -65,7 +65,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-launch",
+      "directory": "artroom-evidence/2026-11-09-t1-focused-launch",
       "payloadFileCount": 9,
       "fileCount": 10,
       "payloadBytes": 2265,
@@ -74,7 +74,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-continuation-1",
+      "directory": "artroom-evidence/2026-11-09-t1-focused-continuation-1",
       "payloadFileCount": 42,
       "fileCount": 43,
       "payloadBytes": 1451025,
@@ -83,7 +83,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-continuation-1-launch",
+      "directory": "artroom-evidence/2026-11-09-t1-focused-continuation-1-launch",
       "payloadFileCount": 9,
       "fileCount": 10,
       "payloadBytes": 2342,
@@ -92,7 +92,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-continuation-2",
+      "directory": "artroom-evidence/2026-11-09-t1-focused-continuation-2",
       "payloadFileCount": 162,
       "fileCount": 163,
       "payloadBytes": 2019445,
@@ -101,7 +101,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-continuation-2-launch",
+      "directory": "artroom-evidence/2026-11-09-t1-focused-continuation-2-launch",
       "payloadFileCount": 9,
       "fileCount": 10,
       "payloadBytes": 1850,

@@ -1,7 +1,7 @@
 {
   "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
   "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-page-boundary-6df/sealed/unit",
+  "unit": "artroom-evidence/2026-11-10-f-page-boundary-6df/sealed/unit",
   "head": "6df7088ad359197fd589976ea1daef180b91b1bf",
   "tree": "e5e76dcb008826316332c984f4bdda7c0dd271ec",
   "booking": "87966e39bebafd4ebaae97d09f89e6f49be32447",
@@ -34,7 +34,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-page-boundary-6df/sealed/private",
+    "directory": "artroom-evidence/2026-11-10-f-page-boundary-6df/sealed/private",
     "manifestSha256": "cc519542e686a8110836cf902559a0426ed0ca2b4ac66040891e0f8da15a1594",
     "files": 58,
     "retention": {

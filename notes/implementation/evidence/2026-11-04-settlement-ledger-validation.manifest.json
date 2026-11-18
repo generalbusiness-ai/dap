@@ -6,7 +6,7 @@
   "fileCount": 22,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-settlement-ledger-validation",
+      "directory": "artroom-evidence/2026-11-04-settlement-ledger-validation",
       "fileCount": 7,
       "files": [
         {
@@ -47,7 +47,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-settlement-ledger-revision-validation",
+      "directory": "artroom-evidence/2026-11-04-settlement-ledger-revision-validation",
       "fileCount": 6,
       "files": [
         {
@@ -83,7 +83,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-settlement-ledger-interrupted-gate-validation",
+      "directory": "artroom-evidence/2026-11-04-settlement-ledger-interrupted-gate-validation",
       "fileCount": 9,
       "files": [
         {

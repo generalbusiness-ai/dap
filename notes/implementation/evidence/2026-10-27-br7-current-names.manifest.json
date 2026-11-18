@@ -1,6 +1,6 @@
 {
   "qualification": "One naturally closed ordinary BR7 gate after rebase, per-run preparation receipts, deliberate and inconclusive controls separately qualified, focused Native delivery (32 cases in six files), sealed Node sourceSeal follow-up and page-assets equality. Existing nested seals and the original external seal evidence remain unchanged. No live query, deployment, authority-policy change, archive action or new application-family capability. Only this implementation note and manifest follow the tested checkpoint; all other tracked blobs/modes equal it. Missing callbacks remain qualified.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-br7-current-names",
+  "directory": "artroom-evidence/2026-10-27-br7-current-names",
   "checkpoint": {
     "commit": "10e89e18ed98da667b362d8ea182279b6050040d",
     "tree": "7f13a3a120958ece38e6128811e5d58b9b6ad4a9"

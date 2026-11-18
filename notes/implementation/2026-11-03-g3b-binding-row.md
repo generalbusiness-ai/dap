@@ -13,7 +13,7 @@ proposal, owner merge, and the GitHub comparison.
 ## Content retained before binding
 
 The authorized producer used only the existing G3b client home at
-`/Users/inguz/dap-host-g3b-20261103/client`. Its four commands published
+`<mini home>/dap-host-g3b-20261103/client`. Its four commands published
 Rules with `approvals=1` and `ownerMayReview=false`, activated the reviewed
 issue and change profiles, and created one TEST issue. The actual producer
 exit is 0. The separate verification exit is also 0.

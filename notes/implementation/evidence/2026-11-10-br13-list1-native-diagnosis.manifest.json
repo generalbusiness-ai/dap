@@ -8,7 +8,7 @@
   "end": "1e0ff86e63cbd4e2166f803f20db95288b000f4e",
   "case": {
     "project": "scope",
-    "file": "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/apps/room/page/test/list1-source.scope.test.ts",
+    "file": ".builder-worktrees/version-questions-br13-20261109/apps/room/page/test/list1-source.scope.test.ts",
     "name": "LIST1 preview authenticates the exact frozen source and rejects altered or missing source evidence"
   },
   "pool": "cloudflare-pool",
@@ -78,7 +78,7 @@
   "planSha256": "d931cf5f271a73376be7be5b283bffd74c8bd80e6df55953a97d9e58eab138de",
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-list1-native-diagnosis-ff0eee7d/run",
+      "directory": "artroom-evidence/2026-11-10-br13-list1-native-diagnosis-ff0eee7d/run",
       "ownerPrivate": true,
       "fileCount": 26,
       "files": [
@@ -255,7 +255,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-list1-native-diagnosis-ff0eee7d-review",
+      "directory": "artroom-evidence/2026-11-10-br13-list1-native-diagnosis-ff0eee7d-review",
       "ownerPrivate": false,
       "fileCount": 6,
       "files": [

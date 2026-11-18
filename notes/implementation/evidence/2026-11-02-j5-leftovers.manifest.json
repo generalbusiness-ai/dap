@@ -9,7 +9,7 @@
   "fileCount": 195,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-diagnosis",
+      "directory": "artroom-evidence/2026-11-02-j5-leftovers-diagnosis",
       "checkpoint": {
         "commit": "ed908579870435778e1d82b7814975900c16ecd5",
         "tree": "0eddadee4d0a4f918f104d22b4f82b8096baa507"
@@ -50,7 +50,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-diagnosis-2",
+      "directory": "artroom-evidence/2026-11-02-j5-leftovers-diagnosis-2",
       "checkpoint": {
         "commit": "ed908579870435778e1d82b7814975900c16ecd5",
         "tree": "0eddadee4d0a4f918f104d22b4f82b8096baa507"
@@ -91,7 +91,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-diagnosis-ana2",
+      "directory": "artroom-evidence/2026-11-02-j5-leftovers-diagnosis-ana2",
       "checkpoint": {
         "commit": "ed908579870435778e1d82b7814975900c16ecd5",
         "tree": "0eddadee4d0a4f918f104d22b4f82b8096baa507"
@@ -132,7 +132,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-browser-historical",
+      "directory": "artroom-evidence/2026-11-02-j5-leftovers-browser-historical",
       "checkpoint": {
         "commit": "ed908579870435778e1d82b7814975900c16ecd5",
         "tree": "0eddadee4d0a4f918f104d22b4f82b8096baa507"
@@ -188,7 +188,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-browser-cause",
+      "directory": "artroom-evidence/2026-11-02-j5-leftovers-browser-cause",
       "checkpoint": {
         "commit": "ed908579870435778e1d82b7814975900c16ecd5",
         "tree": "0eddadee4d0a4f918f104d22b4f82b8096baa507"
@@ -274,7 +274,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-rules-shape",
+      "directory": "artroom-evidence/2026-11-02-j5-leftovers-rules-shape",
       "checkpoint": {
         "commit": "892456defbfe41042d1a54d5b1d38159401b5c12",
         "tree": "396fb1fa6e236e002dae4150a677ce3a4df28a84"
@@ -315,7 +315,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-browser-render",
+      "directory": "artroom-evidence/2026-11-02-j5-leftovers-browser-render",
       "checkpoint": {
         "commit": "b64ad0261d3c6227b9a8fef4fabda33d0bbb1361",
         "tree": "6f53350b9d1e4c39085ebe90ffb20bff1262f41b"
@@ -391,7 +391,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-preparation",
+      "directory": "artroom-evidence/2026-11-02-j5-leftovers-preparation",
       "checkpoint": {
         "commit": "b64ad0261d3c6227b9a8fef4fabda33d0bbb1361",
         "tree": "6f53350b9d1e4c39085ebe90ffb20bff1262f41b"
@@ -602,7 +602,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-browser",
+      "directory": "artroom-evidence/2026-11-02-j5-leftovers-browser",
       "checkpoint": {
         "commit": "70e955f8483e9b4c2891973488e1c5e37440600c",
         "tree": "e999f2bd596a6a28ce47cd731ed2bb3e5d5e55af"
@@ -708,7 +708,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-src",
+      "directory": "artroom-evidence/2026-11-02-j5-leftovers-src",
       "checkpoint": {
         "commit": "b64ad0261d3c6227b9a8fef4fabda33d0bbb1361",
         "tree": "6f53350b9d1e4c39085ebe90ffb20bff1262f41b"
@@ -944,7 +944,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-sending-followup",
+      "directory": "artroom-evidence/2026-11-02-j5-leftovers-sending-followup",
       "checkpoint": {
         "commit": "88b84adaf06d278ab1595fee06696e1bd75330ef",
         "tree": "62378540ab5f183b0d1dbed6a2da2846a3f7d083"

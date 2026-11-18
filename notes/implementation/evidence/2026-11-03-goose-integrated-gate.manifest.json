@@ -1,6 +1,6 @@
 {
   "qualification": "Actual gate.exit0, unchanged clean head/tree/lock/workspace links, five passed stages and four complete reporting phases, zero contradictions and report errors. Complete raw output retained privately. No deployment or new real-host claim.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-goose-integrated-gate",
+  "directory": "artroom-evidence/2026-11-03-goose-integrated-gate",
   "checkpoint": "b8e3f0fb72214ca279586e9429da44002e3ed5fb",
   "fileCount": 10,
   "files": [

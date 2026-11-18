@@ -1,6 +1,6 @@
 {
   "qualification": "CUT-A full gate attempt 1 at 554187d4 failed in one plain test file: 76 failures, 4540 passes, one skip; native was unreached. Static checks, compiler, kernel, Node and Counter passed. The isolated fixture follow-up is a separate record; this original gate remains failed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cut-a-gate-attempt1",
+  "directory": "artroom-evidence/2026-11-14-cut-a-gate-attempt1",
   "checkpoint": {
     "commit": "554187d425e46847f35146e11b45689e5338c70a",
     "tree": "7f7e180f309750ec0235507aa80bb60ddcb610ae"

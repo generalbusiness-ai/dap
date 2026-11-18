@@ -26,7 +26,7 @@ The deployed capture observes seven HTTP 200 stream answers and no 503. One furt
 
 ## Evidence
 
-The source checkpoint is main `313840592ee0f4d4c49dd617f969534998d99e50`, tree `ead96ec28b18a11e31c53a1de4f4067d9bb2e441`. The scene runs from 21:18 to 21:25 EST on 1 November. Raw output is in `/Users/hughpyle/play/artroom-evidence/2026-11-01-j5-after-row-fix-2/`, SHA256SUMS `220fee9899d8da211983d60227ec98cf49449269c086992c51e9ea9914b07eba`. Keep it for at least 30 days after landing. The manifest records its absolute path, file count, and full cited-file hashes.
+The source checkpoint is main `313840592ee0f4d4c49dd617f969534998d99e50`, tree `ead96ec28b18a11e31c53a1de4f4067d9bb2e441`. The scene runs from 21:18 to 21:25 EST on 1 November. Raw output is in `artroom-evidence/2026-11-01-j5-after-row-fix-2/`, SHA256SUMS `220fee9899d8da211983d60227ec98cf49449269c086992c51e9ea9914b07eba`. Keep it for at least 30 days after landing. The manifest records its absolute path, file count, and full cited-file hashes.
 
 The gate ran once at `f51fbf5d`, tree `0582e116f568350728c8409e22d9c048d038565c`. Only the repair note and manifest differ through the deployed source. This head adds only this record and its manifest. Source, tests, and Page workflow inputs stay unchanged. The review request gives the final tree and the complete document-only diff. No second gate runs.
 

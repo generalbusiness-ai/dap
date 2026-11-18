@@ -1,6 +1,6 @@
 {
   "qualification": "Entire four-case native residency file passed once at the merged CDF-1 plus CF-2 comments head on actual escalated AC Power and powermode 0. Power sampled every two seconds, with zero violations. No name filter, deadline change, retry or gate.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-cdf1-residency-ac",
+  "directory": "artroom-evidence/2026-11-13-cdf1-residency-ac",
   "checkpoint_commit": "7872d111b9afcff6bae73f39cc95db78a32cad8f",
   "checkpoint_tree": "2b3386fa38ad3e6c02a2f8f171f924800edd13a4",
   "file_count": 9,

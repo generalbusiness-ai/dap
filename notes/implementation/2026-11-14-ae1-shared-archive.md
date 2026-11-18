@@ -66,7 +66,7 @@ Gate 3 ran the ordinary `npm run gate` at the approved head. Its START was
 - Plain passed 4891 tests with 1 skipped.
 - Native passed 1172 tests with 2 skipped.
 
-The evidence is in `/Users/hughpyle/play/artroom-evidence/2026-11-16-ae1-cs1-gate-attempt3`.
+The evidence is in `artroom-evidence/2026-11-16-ae1-cs1-gate-attempt3`.
 `gate.log` has SHA-256 `0232ea4e…` and `gate.result.json` has `adada1b7…`.
 Preflight 3 (START `65940893`) passed in 35.8 s.
 

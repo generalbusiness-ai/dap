@@ -1,8 +1,8 @@
 {
   "request": "d5fa31c9c36fc1afb93f401b61e3b3f3b31d92f9",
   "promise": "230f5474cedda62059b5c9f4f89d11bb61a6f638",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review",
+  "unit": "artroom-evidence/2026-11-10-t0e-final-gate-review",
+  "directory": "artroom-evidence/2026-11-10-t0e-final-gate-review",
   "sourceHead": "c370fcbb21b68318fbd298474d143712fe780881",
   "sourceTree": "aa3fccf5228ef69bfb95e4ddb456015489f706c3",
   "checkpoint": "c370fcbb21b68318fbd298474d143712fe780881",
@@ -81,43 +81,43 @@
   ],
   "safeFiles": [
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review/SHA256SUMS",
+      "path": "artroom-evidence/2026-11-10-t0e-final-gate-review/SHA256SUMS",
       "bytes": 507,
       "sha256": "2db7e4fe13285c7926432497a1cab21c21683bdd0306f8a1f06edd6ac9395561",
       "sealedMode": 256
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review/gate-reconciliation.json",
+      "path": "artroom-evidence/2026-11-10-t0e-final-gate-review/gate-reconciliation.json",
       "bytes": 9785,
       "sha256": "5c3f4b72f683eb7e89e2408b02c1ae3d6d4ebe74075060ff8d2ab3ad40598905",
       "sealedMode": 256
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review/raw-inputs.json",
+      "path": "artroom-evidence/2026-11-10-t0e-final-gate-review/raw-inputs.json",
       "bytes": 4257,
       "sha256": "1fc85053a675651fad65c7a94f462c51f91ee267a0a21ea4b3668c09267d0534",
       "sealedMode": 256
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review/rss-baseline.json",
+      "path": "artroom-evidence/2026-11-10-t0e-final-gate-review/rss-baseline.json",
       "bytes": 2540,
       "sha256": "26f8377d2e82c108f10a1b8d1981b8535673009b66db4914edd53cfc179e190c",
       "sealedMode": 256
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review/scope-custody.json",
+      "path": "artroom-evidence/2026-11-10-t0e-final-gate-review/scope-custody.json",
       "bytes": 2059,
       "sha256": "4abb5206a60b6152b1a14131f75e802d0f7fb2c669b0d9af745a3695289a1109",
       "sealedMode": 256
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review/sealer.py",
+      "path": "artroom-evidence/2026-11-10-t0e-final-gate-review/sealer.py",
       "bytes": 46995,
       "sha256": "da29ce8618dbd7da0c8a85b18c410b222bdfcd5fb2e30271076f527b7d1510c3",
       "sealedMode": 256
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review/source-unit-seals.json",
+      "path": "artroom-evidence/2026-11-10-t0e-final-gate-review/source-unit-seals.json",
       "bytes": 920,
       "sha256": "6c8570d5e720593731e9f3a1f63e34464f06a7d2b0fa7501c64bb07aa29ff9b3",
       "sealedMode": 256
@@ -125,7 +125,7 @@
   ],
   "safeDirectories": [
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review",
+      "path": "artroom-evidence/2026-11-10-t0e-final-gate-review",
       "sealedMode": 320
     }
   ],
@@ -133,7 +133,7 @@
   "sha256Sums": "2db7e4fe13285c7926432497a1cab21c21683bdd0306f8a1f06edd6ac9395561",
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate",
+      "directory": "artroom-evidence/2026-11-10-t0e-final-gate",
       "fileCount": 2427,
       "directoryCount": 211,
       "links": [],
@@ -142,7 +142,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-launch",
+      "directory": "artroom-evidence/2026-11-10-t0e-final-gate-launch",
       "fileCount": 13,
       "directoryCount": 2,
       "links": [],
@@ -151,7 +151,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-analysis-private",
+      "directory": "artroom-evidence/2026-11-10-t0e-final-gate-analysis-private",
       "fileCount": 50,
       "directoryCount": 3,
       "links": [],
@@ -161,14 +161,14 @@
     }
   ],
   "rawMembership": {
-    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-analysis-private/original-raw-membership.private.json",
+    "path": "artroom-evidence/2026-11-10-t0e-final-gate-analysis-private/original-raw-membership.private.json",
     "bytes": 783207,
     "sha256": "2b2157cc2025f1cd2cc5f09ebdbb6d13e35a83b3d6432b36e97ba9c3ba3975ed",
     "sealedMode": 256,
     "qualification": "Complete file hashes, exact directory membership and final400/500 modes for original gate+launcher. SHA256SUMS binds all payload leaves; no private member is copied into the public unit."
   },
   "privateAnalysisCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-analysis-private",
+    "directory": "artroom-evidence/2026-11-10-t0e-final-gate-analysis-private",
     "file": "full-reconciliation.private.json",
     "bytes": 15620780,
     "sha256": "084344015a22de0639dafcb427aa937c96f02abd648cd96ea788174144cd1d9f",
@@ -243,21 +243,21 @@
   ],
   "actualExitFiles": [
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate/gate.exit",
+      "path": "artroom-evidence/2026-11-10-t0e-final-gate/gate.exit",
       "bytes": 7,
       "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
       "actualExit": 0,
       "mode": 256
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-launch/actualdriver.exit",
+      "path": "artroom-evidence/2026-11-10-t0e-final-gate-launch/actualdriver.exit",
       "bytes": 7,
       "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
       "actualExit": 0,
       "mode": 256
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-launch/launcher.exit",
+      "path": "artroom-evidence/2026-11-10-t0e-final-gate-launch/launcher.exit",
       "bytes": 7,
       "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
       "actualExit": 0,

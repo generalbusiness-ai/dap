@@ -1,6 +1,6 @@
-import { chromium } from '/Users/hughpyle/.npm/_npx/e41f203b7505f1fb/node_modules/playwright/index.mjs';
+import { chromium } from '~/.npm/_npx/e41f203b7505f1fb/node_modules/playwright/index.mjs';
 import { writeFile } from 'node:fs/promises';
-const dir = '/Users/hughpyle/play/artroom-worktrees/usability-review/plans/027-artroom-usability';
+const dir = 'artroom-worktrees/usability-review/plans/027-artroom-usability';
 const browser=await chromium.launch({headless:true});
 const page=await browser.newPage({viewport:{width:1024,height:1000}});
 page.setDefaultTimeout(5000);

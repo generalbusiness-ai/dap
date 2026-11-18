@@ -1,6 +1,6 @@
 {
   "qualification": "Focused C3 evidence, not a gate or review-ready head. Original owning run failed only its stale export allowlist: 56 tests passed, one failed, 151.16 s wall. Final compiler, entry, MCP no-send and inventory checks passed. Original untracked source lacks a pre-run copy; source-correspondence.txt qualifies final retained source and subsequent changes. Generated own-case duration was not retained by the default reporter. Actual AC Power and powermode 0 at start and end.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-c3-owner-attempt1",
+  "directory": "artroom-evidence/2026-11-13-c3-owner-attempt1",
   "checkpoint": {
     "commit": "398d55b41b836667a9cc24e4114f9fccabef40cd",
     "tree": "967cde6adc20f50adef041c36c25149c662f6c47",

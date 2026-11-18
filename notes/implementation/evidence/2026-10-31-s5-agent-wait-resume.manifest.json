@@ -1,7 +1,7 @@
 {
   "version": 1,
   "qualification": "One passing gate at the checkpoint, one failed gate at 110a0d56 and one gate stopped at 69e76cf8, kept separately. The focused captures ran before main was merged, at the commits the note names, and the note says which results carry over. No hosted run, deployment or autonomous external agent is claimed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s5-agent-wait-resume",
+  "directory": "artroom-evidence/2026-10-31-s5-agent-wait-resume",
   "checkpoint": {
     "commit": "a72eed596a9570e385bef8a5a2ec613a8c172f21",
     "tree": "88fa3aaa91cfe13ae42547f4b039f628f7231cf2"

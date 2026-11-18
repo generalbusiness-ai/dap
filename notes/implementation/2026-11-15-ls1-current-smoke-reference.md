@@ -74,8 +74,8 @@ an unknown operation, and a foreign error. These are script boundaries;
 they do not substitute for a real Worker or prove the whole proxy flow.
 
 Metadata-only inspection on 15 November found `CELLD_BIN` unset and no
-`celld` executable on PATH or at `/Users/hughpyle/bin/celld`,
-`/Users/hughpyle/.local/bin/celld`, `/opt/homebrew/bin/celld`, or
+`celld` executable on PATH or at `~/bin/celld`,
+`~/.local/bin/celld`, `/opt/homebrew/bin/celld`, or
 `/usr/local/bin/celld`. No binary, version probe, proxy, server, network
 request, installer, or project import ran during this source work.
 This search does not claim that no celld binary exists elsewhere.
@@ -110,7 +110,7 @@ The joint head follows R, E1 and NF6; current gate START records that order.
 | Original gate and distinct follow-up | Gate FAIL END a18e2cecc1eb733b26f89189cfc00c0eaed2abbc; ruled owner/Plain/Native follow-up PASS END 2005b6dd95727162ff69c94cf3c75b5bcc71fcf2 at 5fd226c6 | The common CB1 report keeps the single original gate result, canonical repair and complete follow-up facts. All four local Page routes passed under END 718f2d46cc6d30b4a2587cb8160ca9a2e707cc97. |
 | Local Page routes, END 718f2d46cc6d30b4a2587cb8160ca9a2e707cc97 | Four scripts exit 0 at 5fd226c6; outer 137.321146292 s, root QA complete | `D/result.json` — `3e660bb31909b27337a6eb8495100db05a6f4e89891d6fdf0c009324b1971ba7`; QA index `8098f24657bd21a062ee15797f8e58625cc97e75926a4623c7fa4feb55575668`; full command/wall/report rows and limits are in the common CB1 report. |
 
-`E=/Users/hughpyle/play/artroom-evidence`;
+`E=artroom-evidence`;
 `T=E/2026-11-15-cb1-ls1-lc3-final-source-preflight-attempt1`,
 `B=E/2026-11-15-cb1-ls1-lc3-bounded-owners-attempt1`,
 `A=E/2026-11-15-cb1-ls1-page-assets-repair-owner-attempt1`,

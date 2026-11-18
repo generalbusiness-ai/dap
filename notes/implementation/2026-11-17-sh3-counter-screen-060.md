@@ -12,7 +12,7 @@ presentation
 The install created a new Counter scope,
 `sc_wpykw53gmvmf7tkqqorsg6a4hic57x5kcuzsvvz33ablh2fnfpwa`, so item 20 starts
 with fresh application state. Evidence:
-`/Users/hughpyle/play/artroom-evidence/2026-11-17-counter-witness-060-install/`.
+`artroom-evidence/2026-11-17-counter-witness-060-install/`.
 
 ## The change
 

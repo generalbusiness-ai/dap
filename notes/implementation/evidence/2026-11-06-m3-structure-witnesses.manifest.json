@@ -1,6 +1,6 @@
 {
   "qualification": "Test compiler and6 new graph witnesses, including full admitted opcode vocabulary. Static metadata only; public production clock caller integration and final gate remain pending.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-structure-witnesses",
+  "directory": "artroom-evidence/2026-11-06-m3-structure-witnesses",
   "checkpoint": "9f063f180427fc07b9ef8dfb529cbc6b962edb76",
   "tree": "b4ce8d52bcfa175799749e2f87a32804186907fd",
   "fileCount": 15,

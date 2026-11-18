@@ -166,11 +166,11 @@ Table source letters name these exact checkpoints and trees:
 - J: `73528f2d5e0fafaf9a441eb682bbb9f6b12c1698`, tree `cb97eefcddff8c5e15ced326680f583e703330aa`.
 
 Original 36-capture evidence root:
-`/Users/hughpyle/play/artroom-evidence/2026-10-30-fixed-slot-index`.
+`artroom-evidence/2026-10-30-fixed-slot-index`.
 Each original label contains `command.json`, `process.json`, `receipt.json`,
 `source-index.json`, `stdout.log` and `stderr.log`. The root index also covers
 source snapshots and extra reports. Commands ran from
-`/Users/hughpyle/play/artroom/.builder-worktrees/fixed-slot-index-20261029`.
+`.builder-worktrees/fixed-slot-index-20261029`.
 The table gives original argv as shell syntax, including control replacements.
 
 Exit numbers mean command status, then capture status. Each closed capture
@@ -188,7 +188,7 @@ Its bounds are 40,000 files, 2 GiB total, 128 MiB of source snapshots and
 preparation, not a test.
 
 The nine source J rows use the repair evidence root
-`/Users/hughpyle/play/artroom-evidence/2026-10-30-fixed-slot-index-repair-v2`,
+`artroom-evidence/2026-10-30-fixed-slot-index-repair-v2`,
 separate from the original root. Their command records pin collector SHA-256
 `f791a622126e9c371f2cfdc8e03e405bf2a8dedad286c322b569605c3bdcd5b0`.
 They record the same file and stream bounds. The original audit and retention

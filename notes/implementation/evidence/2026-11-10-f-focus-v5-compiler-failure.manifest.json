@@ -1,7 +1,7 @@
 {
   "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
   "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-focus-successor143/compiler23-failure-sealed/unit",
+  "unit": "artroom-evidence/2026-11-10-f-focus-successor143/compiler23-failure-sealed/unit",
   "head": "d1d09f3cfd15b8b794eb53aec65e4d83dddd4671",
   "tree": "5fac757a3e5e4b2a26778bff731b4c94b31ddd47",
   "booking": "e003b705a29cc451941c191d83ff7675f4d135f2",
@@ -39,7 +39,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-focus-successor143/compiler23-failure-sealed/private",
+    "directory": "artroom-evidence/2026-11-10-f-focus-successor143/compiler23-failure-sealed/private",
     "manifestSha256": "09113f97e3db0d5bd0b859a338676a8d67ba979dafff708e6cc14bf6354c7829",
     "files": 91,
     "retention": {

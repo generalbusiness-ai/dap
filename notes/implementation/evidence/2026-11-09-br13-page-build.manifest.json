@@ -14,7 +14,7 @@
   },
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-page-build-curated-b5deebe1fe",
+      "directory": "artroom-evidence/2026-11-09-br13-page-build-curated-b5deebe1fe",
       "classification": "curated safe output/source/tool/process metadata",
       "fileCount": 16,
       "files": [
@@ -101,7 +101,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-page-build-b5deebe1fe",
+      "directory": "artroom-evidence/2026-11-09-br13-page-build-b5deebe1fe",
       "classification": "retained original Page build metadata, output and npm compile cache",
       "fileCount": 120,
       "files": [

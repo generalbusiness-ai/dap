@@ -1,6 +1,6 @@
 {
   "qualification": "Incremental source/Native compilers,10Nativecases,2expected-failure controls,settings and entry inventories,shared helpers; initial compiler and inventory failures retained. Not a frozen gate.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-registration-policy-focused",
+  "directory": "artroom-evidence/2026-11-03-oauth-registration-policy-focused",
   "checkpoint": "d7f1ebf7b6246a936fa590d6fbe2c24bbb9c18c8",
   "fileCount": 18,
   "files": [

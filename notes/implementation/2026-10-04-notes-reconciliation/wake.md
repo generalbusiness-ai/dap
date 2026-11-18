@@ -2,7 +2,7 @@
 
 Request `50d7806a`, input 1. Edited file:
 `notes/2026-10-01-wake-and-schedule.md` in worktree
-`/Users/hughpyle/play/artroom-worktrees/notes-reconcile` (branch
+`artroom-worktrees/notes-reconcile` (branch
 `request/notes-reconcile`). Line numbers refer to the
 edited file (1041 lines). "008" is
 `plans/008-2026-10-03-wake-and-schedule-clarification.md`. "007" is
@@ -264,20 +264,20 @@ all 14 were applied. Line numbers are in the edited file.
 
 ## Checks run
 
-All from `/Users/hughpyle/play/artroom-worktrees/notes-reconcile`
+All from `artroom-worktrees/notes-reconcile`
 unless a path is given.
 
 ```sh
 # identity of the inputs
-wc -c /Users/hughpyle/play/artroom/plans/008-2026-10-03-wake-and-schedule-clarification.md
+wc -c plans/008-2026-10-03-wake-and-schedule-clarification.md
 #   26682
-shasum -a 256 /Users/hughpyle/play/artroom/plans/008-2026-10-03-wake-and-schedule-clarification.md
+shasum -a 256 plans/008-2026-10-03-wake-and-schedule-clarification.md
 #   bb4eedbd29bae8834a903471c144dded1a32f8dc7e440edda32382ecd073facc
-shasum -a 256 /Users/hughpyle/play/artroom/plans/007-2026-10-03-attention-runtime-handoff.md
+shasum -a 256 plans/007-2026-10-03-attention-runtime-handoff.md
 #   6b0cb9cd9f8079ed0ff21d5b3d13bb3838bfb2c5678f8a930cbf7f40d068ca5d (matches approval 78be0cd1 / 34c5274b)
-git -C /Users/hughpyle/play/artroom show 337a449d:notes/2026-10-01-wake-and-schedule.md | shasum -a 256
+git -C the shared checkout show 337a449d:notes/2026-10-01-wake-and-schedule.md | shasum -a 256
 #   6754f5d87b280441adfcee0f7874ae97a79af6005cd8f987a3d5289def764598 (matches 008 and review 2acf4f43)
-git -C /Users/hughpyle/play/artroom log --oneline request/wake-and-schedule -- notes/2026-10-01-wake-and-schedule.md
+git -C the shared checkout log --oneline request/wake-and-schedule -- notes/2026-10-01-wake-and-schedule.md
 #   337a449d, 51f11a31
 
 # workroom reads (read-only)
@@ -301,7 +301,7 @@ grep -n -e '-' -e 'software scale' -- notes/2026-10-01-wake-and-schedule.md
 f=notes/2026-10-01-wake-and-schedule.md
 grep -o '`[^`]*`' $f | tr -d '`' | grep -E '^(notes|plans|docs|packages|attachments)/' | sort -u |
   while read p; do if [ -e "$p" ]; then echo "IN WORKTREE  $p";
-  elif [ -e "/Users/hughpyle/play/artroom/$p" ]; then echo "SHARED ONLY  $p";
+  elif [ -e "the shared checkout$p" ]; then echo "SHARED ONLY  $p";
   else echo "NOT A FILE   $p"; fi; done
 grep -no '\]([^)]*)' $f      # Markdown relative links: none
 grep -no '<http[^>]*>' $f    # one URL: https://earendil.com/posts/pi-durable/ (not fetched)

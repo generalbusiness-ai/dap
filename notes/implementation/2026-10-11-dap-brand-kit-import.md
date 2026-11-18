@@ -73,7 +73,7 @@ After dependencies were restored in a scratch directory outside the checkout, bo
 
 After the owned dependency directory replaced that symlink, bounded test completion `51564` passed: 1,025 Vitest cases, two existing recording skips, eight source and pool Node cases, and 37 Counter Node cases. This test command took 89.69 seconds elapsed and 134.14 CPU seconds. These are separate bounded completions, not a passed replacement gate. The original failed gate and intermediate failures remain retained. No gate was repeated. Root restored 105 dependencies offline in the scratch directory. The public proof’s `dependency_install: false` describes this agent’s checks; it does not describe root’s scratch recovery.
 
-Durable evidence is `/Users/hughpyle/play/artroom-diagnostics/brand-kit-import/bounded-completion-final.json`, SHA-256 `47727f8976f9b6103add3d56cf2e265a13f71e06a3aa23bcce09c647f628884c`. The delivery commit after these checks changes only this note; the copied kit bytes and authored README remain the checked source.
+Durable evidence is `artroom-diagnostics/brand-kit-import/bounded-completion-final.json`, SHA-256 `47727f8976f9b6103add3d56cf2e265a13f71e06a3aa23bcce09c647f628884c`. The delivery commit after these checks changes only this note; the copied kit bytes and authored README remain the checked source.
 
 The first documentation append stood at commit `52709897e3dfe7373ba1516efdedefaf9129cc0a`; this accuracy correction changes only the delivery note. The checked source and tree remain the pair recorded above.
 
@@ -94,7 +94,7 @@ Focused checks confirmed the exact token pairs in all three selectors and the gu
 
 The supplied kit now includes Open Runde, Teletype33, and its Narrow derivative, with the supplied conversion script and licences. The builder froze the current source list and bytes before importing these updates. No font was downloaded or adopted by a served application. Earlier supplied snapshots remain in the external diagnostics directory.
 
-The current 48-file source snapshot is `/Users/hughpyle/play/artroom-diagnostics/brand-kit-import/supplied-kit-narrow-snapshot.json`, SHA-256 `932b329c377bfe7277b02bee8c495f7e5548ac1b796752b36951997a963499a0`; byte copies are beside it in `supplied-kit-narrow-snapshot/`. Every current source file was copied byte for byte, then the authorized garnet amendment was retained. Only `tokens.css` and `GUIDELINES.md` differ from the supplied snapshot, solely by the approved garnet additions. The font files, conversion script, and licences retain their supplied bytes. The separately imported parent generator remains unchanged.
+The current 48-file source snapshot is `artroom-diagnostics/brand-kit-import/supplied-kit-narrow-snapshot.json`, SHA-256 `932b329c377bfe7277b02bee8c495f7e5548ac1b796752b36951997a963499a0`; byte copies are beside it in `supplied-kit-narrow-snapshot/`. Every current source file was copied byte for byte, then the authorized garnet amendment was retained. Only `tokens.css` and `GUIDELINES.md` differ from the supplied snapshot, solely by the approved garnet additions. The font files, conversion script, and licences retain their supplied bytes. The separately imported parent generator remains unchanged.
 
 The table below records the current frozen source hash and final imported hash for every kit file, plus the parent generator.
 

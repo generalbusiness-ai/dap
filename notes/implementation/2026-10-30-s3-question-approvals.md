@@ -239,7 +239,7 @@ the old lane's block behavior survives the checker correction.
 Original retention history: the initial selection preserved its 146 development
 leaves, complete 21-file gate, 27-file inner runner and six Counting generated
 leaves. That history is sealed in
-/Users/hughpyle/play/artroom-evidence/2026-10-30-s3-question-approvals and
+artroom-evidence/2026-10-30-s3-question-approvals and
 remains unchanged. The repair selection retains that whole 237-file unit under
 prior-unit plus its external full manifest under prior-metadata. Only actual
 finalizer output may establish the new repair unit's count, sums or seal.
@@ -263,7 +263,7 @@ with exit 0; independent byte/mode/inventory readback matches 237 regular files
 / 77,322,503 bytes. SHA256SUMS has 25,402 bytes and SHA256
 48fc9f760c3d68559a40256f0c21dc19e20e6a68240836645974efe39d866495. The external
 full inventory manifest at
-/Users/hughpyle/play/artroom-evidence/2026-10-30-s3-question-approvals.manifest.json
+artroom-evidence/2026-10-30-s3-question-approvals.manifest.json
 has 47,590 bytes and SHA256
 f684ff371c2bd58281646e6727943640198ece363a08878fb0cfe39d95c4e250. The manifest
 covers every RAW file, including the sums; it does not hash itself.
@@ -292,7 +292,7 @@ unchanged. Exact-head review, Source publication and landing remain separate
 from gate and retention results.
 
 Repair custody: The reviewed copy completed with exit 0. The new read-only
-unit at /Users/hughpyle/play/artroom-evidence/2026-10-30-s3-question-approvals-review-repair
+unit at artroom-evidence/2026-10-30-s3-question-approvals-review-repair
 contains 419 regular files and 148,259,732 bytes, including the complete prior
 237-file unit. Its external full manifest has 86,885 bytes and SHA256
 c9c785c06c36138f4d516387517edf042498968e19d17483def498d1a7dfedef. Its

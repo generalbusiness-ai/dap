@@ -1,7 +1,7 @@
 # MCP plan reconciliation checklist (request 50d7806a)
 
 Edited file: `notes/2026-10-01-mcp-plan.md` on `request/notes-reconcile`
-(worktree `/Users/hughpyle/play/artroom-worktrees/notes-reconcile`).
+(worktree `artroom-worktrees/notes-reconcile`).
 1,366 lines after the edit, the independent check and the planner's
 direction `fceb27d0`; revision 3 had 582. Line numbers below are in the
 edited file.
@@ -191,19 +191,19 @@ Candidate; "Delivered" is used only for source on `main`.
 
 ## Checks run
 
-All from `/Users/hughpyle/play/artroom-worktrees/notes-reconcile` unless a
+All from `artroom-worktrees/notes-reconcile` unless a
 path is given. No install, test or writing `gs` command was run.
 
 ```sh
 # identity of the clarification
-wc -c /Users/hughpyle/play/artroom/plans/009-2026-10-03-mcp-clarification.md      # 35977
-shasum -a 256 /Users/hughpyle/play/artroom/plans/009-2026-10-03-mcp-clarification.md
+wc -c plans/009-2026-10-03-mcp-clarification.md      # 35977
+shasum -a 256 plans/009-2026-10-03-mcp-clarification.md
 #   c5bd4fbe66c424e12db24a34baeaa4bad15495adf423412ce1ba8108fc0e7343
-git -C /Users/hughpyle/play/artroom ls-tree -r --name-only b15eca8d | grep mcp-clar
+git -C the shared checkout ls-tree -r --name-only b15eca8d | grep mcp-clar
 #   attachments/2026-10-03-mcp-clarification-draft2.md
 
 # the starting note equals revision 3
-git -C /Users/hughpyle/play/artroom log --oneline request/mcp-plan -- notes/2026-10-01-mcp-plan.md
+git -C the shared checkout log --oneline request/mcp-plan -- notes/2026-10-01-mcp-plan.md
 git diff --stat request/mcp-plan -- notes/2026-10-01-mcp-plan.md   # empty before the edit
 wc -l -c notes/2026-10-01-mcp-plan.md                               # 582 lines, 32581 bytes before the edit
 

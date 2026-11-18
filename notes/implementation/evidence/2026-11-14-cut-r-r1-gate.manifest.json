@@ -1,6 +1,6 @@
 {
   "qualification": "R1 preparation only. One passing maintained full gate at source 91f9cfbc after exact main 11c215a4 merge and planner deployment END. All twelve native import-closure owners and four naturally selected scale owners passed in this single gate. Earlier focused and formatter records remain separately qualified. Complete Native terminal records report 1155 passes; optional callbacks report 1110. Only notes/evidence may change after this checkpoint. Every sealed raw file was checked; this manifest lists all non-periodic files directly, and the sealed raw manifest/SHA256SUMS cover every power sample. No new release, signature or public packet is exported. Later packed-closure changes refresh their own identifiers under planner 119140cd; R2 remains separate.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cut-r-r1-gate-attempt1",
+  "directory": "artroom-evidence/2026-11-14-cut-r-r1-gate-attempt1",
   "checkpoint": {
     "commit": "91f9cfbc4bff2eb6fabeab3a07a4e49e47bfc630",
     "tree": "61e9a17ca6070ed16449ed8dc52e166725dde370"
@@ -18,11 +18,11 @@
       "run",
       "gate"
     ],
-    "cwd": "/Users/hughpyle/play/artroom/.builder-worktrees/cut-r-r1-20261114",
+    "cwd": ".builder-worktrees/cut-r-r1-20261114",
     "head": "91f9cfbc4bff2eb6fabeab3a07a4e49e47bfc630",
     "started": "2026-11-14T09:35:22.535396+00:00",
     "removedSelectorNames": [],
-    "progress": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cut-r-r1-gate-attempt1/progress",
+    "progress": "artroom-evidence/2026-11-14-cut-r-r1-gate-attempt1/progress",
     "powerViolation": false,
     "pid": 78494,
     "exit": 0,

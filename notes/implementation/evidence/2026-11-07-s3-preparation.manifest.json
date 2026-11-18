@@ -1,6 +1,6 @@
 {
   "qualification": "Read-only S3 source and witness inspection; no test execution or acceptance.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s3-preparation",
+  "directory": "artroom-evidence/2026-11-07-s3-preparation",
   "sourceHead": "7244d8847f48cdb91b8b735bd9af0c34be4da85c",
   "sourceTree": "607f963ef13ea80afe8c5c0c93d8267df996e49d",
   "file_count": 11,

@@ -2,7 +2,7 @@
   "qualification": "Index of unchanged raw originals for NF-3. Each evidence directory carries its own SHA256SUMS and is read-only. The gate and both browser CI runs at a91f1d6b passed. The gates at 8f490edc and 31fcce02 failed and stay failed. Gate internals sit under each gate directory's gate-internals and are not listed here. The builder added SHA256SUMS to the predecessor capture directory at 490291a1 and made it read-only on 2026-11-12; its other files are unchanged.",
   "request": "dd0d078a9ae671500312242cf27a6110d1f34753",
   "promise": "50178a3f2c1aae865705f4bd329eda1a2bdf8882",
-  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "directory": "artroom-evidence",
   "base": "a76764a793ee518c85c3dedafe8103da040c1847",
   "checkpointCommit": "a91f1d6ba0958f1861532bdb15e3673f9a8439ff",
   "checkpointTree": "9b811ef2f73f8aba7477009439bf075946aacc72",

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "state": "recovery-design-only",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s1-head-outcome-recovery-design",
+  "directory": "artroom-evidence/2026-10-31-s1-head-outcome-recovery-design",
   "qualification": "Recovery design documentation only. Existing gated Source and tests remain unchanged. Actual sealed telemetry retains its scoped observations and gaps; no new query, diagnosis implementation, reader, room/provider action, landing or acceptance follows. Historical captures keep their own checkpoints/outcomes.",
   "request": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f0bdea6f41a90f6f9bbca459a4a27c270485460e",
   "ruling": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f15b9b44c018b1e345b3efe558fcee29d26bffb0",
@@ -39,7 +39,7 @@
       "sha256": "de17781247501ee9cdbf7179957f4091bbce429132e8b107da91f1f26f75eee1"
     },
     "externalInventory": {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s1-head-outcome-recovery-design.manifest.json",
+      "path": "artroom-evidence/2026-10-31-s1-head-outcome-recovery-design.manifest.json",
       "bytes": 20591,
       "sha256": "856fe033f5d49a9c9f44ada342bbe007ee476f3974968454a55a61da285e29f8"
     },
@@ -603,7 +603,7 @@
   },
   "citationCollections": {
     "telemetry": {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s1-head-telemetry",
+      "directory": "artroom-evidence/2026-10-31-s1-head-telemetry",
       "fileCount": 14,
       "bytes": 418806,
       "directoryMode": 365,
@@ -704,12 +704,12 @@
       "files": [
         {
           "bytes": 635,
-          "path": "/Users/hughpyle/play/artroom-evidence/2026-10-30-s1-identity-members-followup/input/scratch-input.json",
+          "path": "artroom-evidence/2026-10-30-s1-identity-members-followup/input/scratch-input.json",
           "sha256": "bcaff6825ec713054edac1201afcf2b523487b05fde3e5c11a7dfdba712c82a5"
         },
         {
           "bytes": 637,
-          "path": "/Users/hughpyle/play/artroom-evidence/2026-10-30-s1-second-scratch/preparation/second-scratch/input.candidate.json",
+          "path": "artroom-evidence/2026-10-30-s1-second-scratch/preparation/second-scratch/input.candidate.json",
           "sha256": "e39b2dc07f15d692b74018a39d8786eab85e2c0c3ecd29b1234c414db002b5f2"
         }
       ],

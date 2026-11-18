@@ -4,7 +4,7 @@ SH-2 (request `b73d88bc`) moves the `counter.inguz.space` screen to the
 Counter 0.5.0 installation in counter-witness. The planner installed 0.5.0
 at 02:46 EST as item 11 (state `active`, presentation
 `sha256:9334159c91ea2df5d25e75aaa265b0ccb8b8ceac7a564b8eb46d0b7be57d2af4`).
-Evidence: `/Users/hughpyle/play/artroom-evidence/2026-11-17-counter-witness-050-install/`.
+Evidence: `artroom-evidence/2026-11-17-counter-witness-050-install/`.
 
 ## The change
 
@@ -36,7 +36,7 @@ dap-lending":
 - the new room row with main's sandbox row, a deployment that moves only
   one side.
 
-Evidence: `/Users/hughpyle/play/artroom-evidence/2026-11-17-sh2-red/`.
+Evidence: `artroom-evidence/2026-11-17-sh2-red/`.
 
 ## Deployment
 

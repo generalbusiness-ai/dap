@@ -5,7 +5,7 @@
   "qualification": "Preparation errors copied from the session tool results. Neither command started a test, formatter, compiler, compatibility command or application import. This is an explicit preparation record, not original stdout bytes or a validation result. Corrected frozenv2 plan then ran once and passed.",
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-json-size-preparation",
+      "directory": "artroom-evidence/2026-11-09-json-size-preparation",
       "fileCount": 2,
       "files": [
         {

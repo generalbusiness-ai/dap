@@ -2,7 +2,7 @@
   "qualification": "Index of unchanged raw originals for the identifiers cutover. Each evidence directory carries its own SHA256SUMS and is read-only. The gate at 9b38f07e passed on attempt 10. It started on AC power with powermode 0. The laptop switched to battery (powermode 1) at 17:50:59Z, in the last minutes of the Native stage, and no case timed out. The pmset log shows no sleep between start and end. The gate at f9d6fea1 passed on attempt 9, on AC power with powermode 0 at start and end and no sleep. Commits after f9d6fea1 answer review 15f2b78a, so attempt 10 gates the review head. Attempts 1 to 8 failed and stay sealed in their own -attemptN directories. Their END acts record each cause. Gate internals sit under gate-internals and are not listed here.",
   "request": "05d618e28d87f9d6b3aa6b41ce414a9b0e084717",
   "promise": "9fd2d4288ec27d3b459cf8eb99fd4e100a8de08d",
-  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "directory": "artroom-evidence",
   "base": "64112e4576b4c3c8fb668389786deb6b703da417",
   "checkpointCommit": "9b38f07e7932309772b28d18363b34ccd27c8938",
   "checkpointTree": "5996fa10bb7210290f9cbfaf33d3eec4033123ba",

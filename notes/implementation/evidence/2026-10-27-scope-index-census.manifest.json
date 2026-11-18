@@ -1,6 +1,6 @@
 {
   "qualification": "Complete fresh admission-repair collector including root SHA256SUMS, whose rows exclude itself. The three predecessor files remain unchanged and describe the earlier security-rejected code; its sealed collector is not modified. Fresh owning checks, meaningful admission-ordering control and ordinary gate bind the named repaired checkpoint. Only note/manifest follow it. No hosted census, deployment, key succession, legacy absence or parent closure claim. Phase exit:null precedes writes; actual terminal status follows seal validation.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-scope-index-census-admission-repair",
+  "directory": "artroom-evidence/2026-10-27-scope-index-census-admission-repair",
   "request": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f51f16f4e23d8a1e02a54dbb302f1dba4fb14513",
   "promise": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d28d9bcd02aa9374774c52e565f5b5c893c657f1",
   "ruling": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c078934976a5d59c57ae13b65404ec2fa650225a",

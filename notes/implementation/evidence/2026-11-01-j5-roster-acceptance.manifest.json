@@ -1,7 +1,7 @@
 {
   "version": 1,
   "qualification": "One scripted deployed J5 scene on the reviewed roster repair. A failed harness preflight remains recorded separately. No person or desktop AI app participates. Unknown stream outcome and local cause limits remain explicit.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-j5-after-row-fix-2",
+  "directory": "artroom-evidence/2026-11-01-j5-after-row-fix-2",
   "checkpoint": {
     "commit": "313840592ee0f4d4c49dd617f969534998d99e50",
     "tree": "ead96ec28b18a11e31c53a1de4f4067d9bb2e441"

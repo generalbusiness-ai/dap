@@ -1,6 +1,6 @@
 {
   "qualification": "One evaluation run of SeaweedFS 4.51 as the local bucket of one celld v0.6.3 node on an Apple M4 Mac mini, 27 October 2026 10:45 to 12:55 ET, with the room Worker of main 4419008a. Raw outputs as collected; WITHHELD.txt names the withheld secret-bearing files, the omitted re-fetchable binary and reference source, and the one redaction (the trial S3 access key ID in SeaweedFS logs). Exit codes are recorded only where the note's evidence table says so. No gate case or rerun is claimed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-seaweedfs-local-bucket",
+  "directory": "artroom-evidence/2026-10-27-seaweedfs-local-bucket",
   "checkpoint": {
     "commit": "4419008a8723ccb283c8784a843aa170790bd11e",
     "tree": "8ff173724b0efb9dc59535b056888e7145a147c3"

@@ -518,7 +518,7 @@ Artroom references mean approved baseline `344656705140d9bf6539fe44de889d1e21dd2
 - **F11. Other hosting.** [Temporary authentication](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/temporary-auth/) supports purpose/approval and ≤24-hour access; [session management](https://developers.cloudflare.com/cloudflare-one/access-controls/access-settings/session-management/) separates session termination from preventing new sessions; [Workflows](https://developers.cloudflare.com/workflows/) persists steps/retries/external-event waits. Checked 2026-10-03; none establishes an Artroom identity/revocation/delivery integration.
 - **F12. Chess.** gitseq-chess `b97c6a82ef7e3618721696f5a69efef13da10a79`, chess.go:191–225,388–432; docs/reference/architecture.md:24–40,73–101. Native move engine/local source and Q6's **three** tests support bounded legality/refusal checks, not public deployment, multi-host failover or Artroom declaration-based chess.
 
-Internal repositories F9/F12 are `/Users/hughpyle/play/dap` and `/Users/hughpyle/play/gitseq-chess`. Their exact identities/paths are research provenance under the approved naming exception, not asset names.
+Internal repositories F9/F12 are `dap` and `gitseq-chess`. Their exact identities/paths are research provenance under the approved naming exception, not asset names.
 
 ## What this round could not settle
 

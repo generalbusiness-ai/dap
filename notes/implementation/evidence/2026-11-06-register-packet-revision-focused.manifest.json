@@ -6,7 +6,7 @@
   "fileCount": 29,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-register-packet-revision-focused",
+      "directory": "artroom-evidence/2026-11-06-register-packet-revision-focused",
       "fileCount": 14,
       "actualExit": 1,
       "files": [
@@ -83,7 +83,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-register-packet-revision-focused-2",
+      "directory": "artroom-evidence/2026-11-06-register-packet-revision-focused-2",
       "fileCount": 15,
       "actualExit": 0,
       "files": [

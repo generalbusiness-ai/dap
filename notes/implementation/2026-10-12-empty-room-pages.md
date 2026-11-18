@@ -68,7 +68,7 @@ This checkpoint changes only the generated asset and this outcome note after
 the checked head. It does not repeat the focused cases, control or build.
 
 The closed component proof is
-`/Users/hughpyle/play/artroom-diagnostics/empty-room-configured-status-checks/public-proof.json`,
+`artroom-diagnostics/empty-room-configured-status-checks/public-proof.json`,
 SHA256 `853394111ec0d879c3715cc8ce8acba9b3787f61c063ebcf332bd1232f1cab66`.
 The closed control proof is the same directory's `control-public.json`, SHA256
 `d7b0169a1047cbfb43c8b38365d07604a012c5e5cd8c544d86734b30282c816a`.
@@ -98,7 +98,7 @@ Fault and RefcountedCanceler diagnostics remain in the private logs. This does
 not claim an error-free log, physical drain, a timing factor or a complete cause.
 
 The closed public gate proof is
-`/Users/hughpyle/play/artroom-diagnostics/empty-room-configured-status-gate/gate-one/public-proof.json`,
+`artroom-diagnostics/empty-room-configured-status-gate/gate-one/public-proof.json`,
 SHA256 `4050cbaf6cc3818820baa7b41e29bd1da5b88515c014fa6dd35de74eeb5a69aa`.
 Its whitelist contains metadata only. Raw logs, private bodies, generated program
 content and keys are not declassified.

@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { lstatSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-const root='/Users/inguz/dap-host-h3-20261029', source=root+'/source', home=root+'/client';
+const root='<mini home>/dap-host-h3-20261029', source=root+'/source', home=root+'/client';
 const info=lstatSync(home);if(!info.isDirectory()||info.isSymbolicLink()||(info.mode&0o777)!==0o700)throw Error('Existing H3 client home required');
 const { contextForCelldSmoke }=await import(pathToFileURL(source+'/scripts/celld-smoke.mjs').href);
 const hash=v=>createHash('sha256').update(typeof v==='string'?v:JSON.stringify(v)).digest('hex');

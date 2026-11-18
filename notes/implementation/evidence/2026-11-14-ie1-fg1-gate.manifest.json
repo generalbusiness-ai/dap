@@ -1,6 +1,6 @@
 {
   "qualification": "IE-1 and FG-1 gate after CDF-1 and Plan 036 main integration. The ruled post-gate caller checks follow separately.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-ie1-fg1-gate-attempt1",
+  "directory": "artroom-evidence/2026-11-14-ie1-fg1-gate-attempt1",
   "checkpoint": {
     "commit": "983deef183bdf7945694d2b9ea6405f77b23e95d",
     "tree": "fa59cbdbf3b4efc0432b1a5a8de6b4c501db65da"

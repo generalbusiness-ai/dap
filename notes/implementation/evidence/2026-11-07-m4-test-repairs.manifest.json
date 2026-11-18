@@ -7,7 +7,7 @@
   "baseHead": "7b4534a699c3fcf71206da11c8870ad3939a2c92",
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-test-repairs-validation",
+      "directory": "artroom-evidence/2026-11-07-m4-test-repairs-validation",
       "files": [
         {
           "path": "driver.py",

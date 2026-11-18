@@ -1,6 +1,6 @@
 {
   "qualification": "Independent metadata-only partial failure audit. Actual Node150 identities are148pass2fail; all5695 Counting/Plain/Native obligations remain unreached. Formatting,45compilercontexts,16scripts and exactpincheck passed. Actual99wrapper observations remain unknown;111expectedpatterns are retained separately, including12unreachedCountingwrappers. No pass analyzer/sealer or application/compiler/test/build/browser body ran in this audit. Earlier v2 format failure remains separately failed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3-partial-audit",
+  "directory": "artroom-evidence/2026-11-09-br13-final-gate-v3-partial-audit",
   "checkpoint": {
     "commit": "c18298a48dfc6b56a06cf220e7a95de34011f131",
     "tree": "6d1e7745e3ad33a4c3a512fcff8e6d38a57c6278"
@@ -41,7 +41,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3",
+      "directory": "artroom-evidence/2026-11-09-br13-final-gate-v3",
       "payloadFileCount": 1109,
       "fileCount": 1110,
       "payloadBytes": 42717615,
@@ -50,7 +50,7 @@
       "symlinkCount": 0
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3-launch",
+      "directory": "artroom-evidence/2026-11-09-br13-final-gate-v3-launch",
       "payloadFileCount": 9,
       "fileCount": 10,
       "payloadBytes": 24914,
@@ -63,91 +63,91 @@
     {
       "name": "whitespace",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/whitespace.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/whitespace.log",
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
       "name": "commit-messages",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/commit-messages.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/commit-messages.log",
       "bytes": 39,
       "sha256": "0c02ad02d54c25fb073c77789fb69f497b27d00838fc72d0fab945eeb4d4036c"
     },
     {
       "name": "commit-test",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/commit-test.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/commit-test.log",
       "bytes": 595,
       "sha256": "03e22130837507d88885c5c113d2dff388d41a589b07cad30af63168ad89a535"
     },
     {
       "name": "helpers",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/helpers.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/helpers.log",
       "bytes": 68,
       "sha256": "a5597c033cce01875023e74c11eb631178c0ee9be1fadeb043c2b2a9b0bc438b"
     },
     {
       "name": "citations",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/citations.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/citations.log",
       "bytes": 1570370,
       "sha256": "539047a6cde066473c3cf56078ce53af089339ad49d30f740658b98dfaa84e42"
     },
     {
       "name": "cite-test",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/cite-test.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/cite-test.log",
       "bytes": 752,
       "sha256": "ecffb8080061d31fcad6facfe4ee190ef07e2205974a00a025686dab7f1579fd"
     },
     {
       "name": "doc-links",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/doc-links.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/doc-links.log",
       "bytes": 36,
       "sha256": "40d07cb44f51e6b8126957e91832efabb0a87160865396cb64fa9a1792f914e2"
     },
     {
       "name": "notes",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/notes.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/notes.log",
       "bytes": 141,
       "sha256": "c693916a884edb98953f2631e1f3c3509561ea8f1a55fed87047d97d7e40f274"
     },
     {
       "name": "format",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/format.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/format.log",
       "bytes": 114,
       "sha256": "6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79"
     },
     {
       "name": "typecheck",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/typecheck.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/typecheck.log",
       "bytes": 2218,
       "sha256": "808c1cacdb754403a1470d046090f319f2a65157619d867b7423c4788c4cbe15"
     },
     {
       "name": "def-pins",
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/def-pins.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/def-pins.log",
       "bytes": 353,
       "sha256": "46ed8510757f740e98e06be13ecd698f45203dbfcd56c86ee671f21c81a5b601"
     },
     {
       "name": "test",
       "exitCode": 1,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/test.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/test.log",
       "bytes": 31361,
       "sha256": "9e408d1bb302f77ee1bd4940e1120c2cf5df34c7f02c1eff040109d0f51e5418"
     },
     {
       "name": "gate",
       "exitCode": 1,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/gate.log",
+      "output": "artroom-evidence/2026-11-09-br13-final-gate-v3/gate.log",
       "bytes": 9743,
       "sha256": "3409b05b513e2551a2c928d9634f3aee47c189e30a8f3d5c60d4ebeeaaf9c55a"
     }
@@ -166,12 +166,12 @@
         "line": 66,
         "column": 1
       },
-      "originalLog": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/test.log",
+      "originalLog": "artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/test.log",
       "originalLogSha256": "9e408d1bb302f77ee1bd4940e1120c2cf5df34c7f02c1eff040109d0f51e5418",
       "byteOffset": 27776,
       "bytes": 1677,
       "sha256": "548a0a33813199e607f4f55efb859605de86dc799fc23cede2c6c7f158baf161",
-      "retainedRawBlock": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/retained-failed-assertions/active-source-66.private.txt",
+      "retainedRawBlock": "artroom-evidence/2026-11-09-br13-final-gate-v3/retained-failed-assertions/active-source-66.private.txt",
       "qualification": "Verbatim byte slice from original maintained Node output; raw assertions remain owner-private."
     },
     {
@@ -187,12 +187,12 @@
         "line": 193,
         "column": 1
       },
-      "originalLog": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/test.log",
+      "originalLog": "artroom-evidence/2026-11-09-br13-final-gate-v3/stage.kiWO7YbX/test.log",
       "originalLogSha256": "9e408d1bb302f77ee1bd4940e1120c2cf5df34c7f02c1eff040109d0f51e5418",
       "byteOffset": 29453,
       "bytes": 1908,
       "sha256": "79e36af63f75e4f14a668fd37de6feb8834b8be91773b5b772908034faeb9dd3",
-      "retainedRawBlock": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v3/retained-failed-assertions/active-source-193.private.txt",
+      "retainedRawBlock": "artroom-evidence/2026-11-09-br13-final-gate-v3/retained-failed-assertions/active-source-193.private.txt",
       "qualification": "Verbatim byte slice from original maintained Node output; raw assertions remain owner-private."
     }
   ],
