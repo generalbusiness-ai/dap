@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bea72c858128bd35fa8cac47ba314f4944371213","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-18-s3-fail-closed-configuration.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c0117e674c24eeae0a63f981bee2de74e8fdeabe","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/caller-address.test.ts."}
