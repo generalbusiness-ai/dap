@@ -490,3 +490,8 @@ and modes preserve 5fd226c6/tree 388bbbac. The four maintained citation, link,
 note and commit-message checks run once after this note-only commit and
 record the actual head and results externally. No future result or self-hash
 is supplied here, and no project-owner or producer rerun follows.
+
+## FW-1
+
+The persistent fleet witness of 17 November, with both restarts, is in
+[2026-11-17-fw1-fleet-witness.md](2026-11-17-fw1-fleet-witness.md).

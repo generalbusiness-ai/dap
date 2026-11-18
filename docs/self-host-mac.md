@@ -188,7 +188,11 @@ installation's bucket and uploads the Worker. Run these commands as the
 service user. After a failure or an uncertain result, keep the project and
 its private deployment logs.
 
-Wait for `"sessions":"ok"` in the health response. Then finish the plan:
+Wait for `"sessions":"ok"` in the health response. Read health at a name
+that `dap-host.json` lists. Before the first deployment, celld holds each
+request and gives no answer. Caddy answers a name that the file does not
+list, such as `localhost`, with an empty 200. Neither answer shows the
+host's health. Then finish the plan:
 
 ```sh
 NODE_EXTRA_CA_CERTS="$HOME/dap-tls/cert.pem" \
@@ -242,15 +246,16 @@ The helpers retain private output and never overwrite an existing project.
 Set the same `APPLICATION_TRUST` value for the CLI that installs the packet.
 
 Follow [Install an application package](cli.md#install-an-application-package)
-with the public immutable Git URI and its exact release. When CB-1 source
-work began on 14 November 2026, no public Counter packet existed. Counter
-`0.2.0` is now signed and on main since `863ca6b2`; this head selects no
-operator release. The distinct fleet witness installs only the approved
-planner-signed public Counter packet. A TEST packet or the Grow demo cannot
-replace it. The recorded active install, journal verification, restart,
-stored-byte reload, prefix reservation and no-repository checks remain owed
-on Hugh's selected machine. Archive-provider work remains in CB-2. The
+with the public immutable Git URI and its exact release. Give the
+package's genesis values with `--values`. Counter needs its target, for
+example `--values '{"target":2}'`. Without it, the room refuses the
+install with `bad-field`. Archive-provider work remains in CB-2. The
 planner checks the Local Worker smoke workflow on main after publication.
+
+A self-hosted room serves no application screen. Screen hosts must be
+`inguz.space` origins that the hosted sandbox Worker serves. The room's
+own host answers 404 at the screen URL that `dap application` prints. Use
+the CLI or MCP to act on an installed application.
 
 ## Bind a new room to GitHub
 
