@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:12b21b43dedbcf849daed6e9ca2742e6256decbd","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-18-la1-local-artifacts-remote.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:12fd56ce3537c9abe101f2214741faa07eec8a7b","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/artifacts-host.ts."}
