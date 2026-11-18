@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Gate START: SD-2 head 0dacc82f (one commit on main 60223c5c), full gate, evidence 2026-11-18-sd2-gate.","body":{"gate":"start","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e97fd01be60448e5a93d33cd71bbb7ffdc094873"}
