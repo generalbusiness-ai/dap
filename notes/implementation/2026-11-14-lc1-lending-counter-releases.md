@@ -408,3 +408,43 @@ Named reds, in `/Users/hughpyle/play/artroom-evidence/2026-11-17-lc6-red/`:
 After the deployment, the planner installs 0.6.0 in counter-witness. The
 install opens a new item, and a later head (SH-3) moves the
 `counter.inguz.space` row to it.
+
+## U4-T: trust Counter 0.7.0, 18 November
+
+U4-T request `4ef5478b` adds Counter 0.7.0 for the U4 witness. The planner
+signed it from main `e90f04f4` (act `61ebf872`), which carries the U4
+footer line `Counter <version>`. The semantic identifier `a5a44ebc` is
+unchanged from 0.6.0, so a room upgrades in place. The head commits the
+signed bytes unchanged:
+
+- `apps/counter/releases/0.7.0/application.dap.json`: 2,609,520 bytes, blob
+  `4b2d62f01e2052eb78ff6695653b93d35ecd9a04`, SHA-256
+  `5cfaa3d62b4b85617663221047860dbd43f58a4dbe85c071ad211e4258fc66c9`,
+  release `sha256:b0d84eb176e0de3240a4e399172b033d89c7c26f64ca91ed8c82c3765c0a5649`,
+  presentation `sha256:70c32e9edc50ac6c5128fb0573f9703773bcac7098269fdd7b51b70832e5c15c`.
+
+The packet's presentation equals the open presentation that the U4 marker
+head landed (approval `a409625f`). That approval reviewed the 0.7.0 screen,
+so this row adds no unreviewed screen to `counter.inguz.space`.
+
+The dap-lending trust rows now name seven releases: Lending 0.3.0, 0.4.0
+and 0.5.0, and Counter 0.4.0, 0.5.0, 0.6.0 and 0.7.0, each with the same
+publisher and host. The formatter protects the new packet path, and the
+reproduction test reads the packet against its row.
+
+The head opens Counter 0.8.0 (ruling `163de663`). The footer line reads
+the manifest, so the open presentation moves to `1407bd69`.
+
+The head is built on head Q. Q names both registers in
+`wrangler.lending.jsonc`, so a deployment of this head keeps the
+upgrade-cohort room that the window made (approval `691bae0b`).
+
+Named reds, in `artroom-evidence/2026-11-18-u4t-red/`:
+
+- With the packet and main's trust rows, the reproduction test fails with
+  "dap-lending must trust each committed packet exactly once" (6 rows, 7
+  packets). `red-1-no-row.txt`, SHA-256
+  `33f97e1a9c487dabd19df3834aa38dc850ab07499f745a2dd731ff4ea9a36812`.
+- With the 0.7.0 row listed and no packet, the test fails to open
+  `apps/counter/releases/0.7.0/application.dap.json`. `red-2-no-packet.txt`,
+  SHA-256 `92f391d8aa3ba505ef68c9de5a06f25bddff4f45d3b72cb959ecc8ee07dbb529`.
