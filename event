@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I deliver CLI JSON design revision 6 (CJ-0) as a notes-only head for checker review.","body":{"target":"inherit"}}
+{"kind":"artifact","text":"notes/2026-10-12-cli-json-output-design.md at exact d0655621d83ca0ae4031f807e48842c07f518bd5 on builder/cli-json-rev6-20261118, under promise git:sha1…14eec01 on request git:sha1…d5efaa2\n\nCLI JSON design revision 6 (CJ-0)","body":{"commit":"d0655621d83ca0ae4031f807e48842c07f518bd5","path":"notes/2026-10-12-cli-json-output-design.md"}}
