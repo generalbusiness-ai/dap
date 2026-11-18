@@ -1,1 +1,1 @@
-{"kind":"promise","text":"U2: the archive proof for both upgrade forms, with reds (1) in-place continues on the new release with no hourly retry for the old one and (2) a replaced scope stops with application-replaced after the upgrade act and schedules no further alarm. Built on U1 (local main 7cb207e1, pushed before review); full gate before review; the note states the wake floor and requests per room per hour.","body":{"target":"inherit"}}
+{"kind":"promise","text":"I check the U1 landing at local main 7cb207e1."}
