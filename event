@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a24c63d1c0c5b83f476f2f3b54035350cfa58db2","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-18-u4-counter-release-line.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fdf2c8bf0012ea78f13c6df8c2d0736f996ec0ef","text":"Merge retired a covered predecessor; the successor is at apps/counter/release-identifiers.json."}
