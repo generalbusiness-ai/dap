@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:44c65a150d349140b132e478a9cb7dea2addddf9","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-26-br3-worker-parallelism.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:44e94a6b882633b6a447fa855521d7a5374abde7","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-13-fork-cost-measurement.md."}
