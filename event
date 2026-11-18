@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2d765e1039a74e7ab61b360e7ba98c6c49339e98","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/health.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2e927410d210054a2291a9db004f3a05af08b29d","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/test_deploy.py."}
