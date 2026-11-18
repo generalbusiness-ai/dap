@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1301ae0e26d7e06a83ef3e8eb2f58101c3c2b1fe","text":"Closed in the 2026-11-18 open-request review, with Hugh's approval. done: terminology pass landed (08c9778c, 54b0d78b); docs/manual/ten-terms.md current."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:38064e13b0dc53d435d659a54ee326d1fce2cafd","text":"Closed in the 2026-11-18 open-request review, with Hugh's approval. done: apps/room, apps/counter, apps/jam exist; examples/counting and homepage/src/jam removed."}
