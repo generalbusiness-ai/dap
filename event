@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e4418847435d1ec7c5ed0a23fec892e5cc0d956b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-stream-http-close-gate.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e4b31632d8e195513fd42d07a8afd31c9e3703be","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-05-installed-host-roots-failed-diagnostic-gate.manifest.json."}
