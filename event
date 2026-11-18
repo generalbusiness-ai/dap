@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:834f24c71c2700ebaef362746086f6a182af7ebd","text":"Replaced by the review request for exact head 2202eadf3cc85cbdfc31c89ed476321ed441b3e1; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
+{"kind":"promise","text":"I review U1 at exact head 2202eadf: the fix for 836909f8, its red and the gate END."}
