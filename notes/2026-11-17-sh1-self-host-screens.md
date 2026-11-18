@@ -63,8 +63,9 @@ stays.
 On any other origin it reads the context as if the page were on the room
 origin, and the context check then fails. SH-1 fetches the descriptor on
 every `https:` origin. A 200 answer must parse and name this page's origin,
-as today. A 404 keeps the present same-origin path. Any other answer fails
-closed. The descriptor comes from the origin that served the script, so the
+as today. On an `inguz.space` origin, every other answer fails closed,
+404 included, as today. On any other origin, a 404 keeps the present
+same-origin path, and every other answer fails closed. The descriptor comes from the origin that served the script, so the
 browser trusts it no more than the script itself.
 
 A screen release signed before SH-1 carries the old client. It cannot open
@@ -89,11 +90,21 @@ dispatch must never expose. SH-1 does neither.
 Instead, the celld entry serves both names from one Worker:
 
 1. `apps/room/celld/worker.ts` (now two re-export lines) gains a `fetch`
-   that reads the request host. When the host equals the hostname of one
-   `APPLICATION_SCREEN_HOSTS` descriptor, it rebuilds the URL on that
-   descriptor's `https:` screen origin and calls the sandbox handler.
-   Every other host goes to the unchanged room `fetch`
-   (`apps/room/fetch.ts`).
+   that reads the request host and closes on every unknown name:
+   - The host of `PUBLIC_ORIGIN` goes to the unchanged room `fetch`
+     (`apps/room/fetch.ts`).
+   - The hostname of one `APPLICATION_SCREEN_HOSTS` descriptor goes to the
+     sandbox handler, with the URL rebuilt on that descriptor's `https:`
+     screen origin.
+   - Every other host gets 404.
+
+   The room page therefore never answers on a screen name, in any
+   configuration state. The room routes do not read the host themselves,
+   so this rule matters. A screen name added to `hosts` and Caddy before its
+   setting deploys (owner steps 4 to 10) answers 404 on `/` and on the room
+   page path. The same holds after a redeploy from an old project
+   directory. No member can enrol a room device key in the screen origin's
+   storage.
 2. The sandbox handler receives a synthesized environment:
    `SCREEN_HOSTS` maps each room descriptor to service `ROOM`, and `ROOM`
    is an in-process object with the four methods.
@@ -132,6 +143,15 @@ SH-1 keeps these properties:
   The screen's content policy sets `connect-src 'self'`.
 - **The room judges every act.** Forwarded native requests reach the
   room's own parsers, session checks and membership gates.
+- **Same site, no cookie trust.** Hosted screens sit on `inguz.space`, a
+  different site from the room. `screens.room.example` shares the room's
+  registrable domain, so the two origins are same-site, and screen script
+  can set a cookie for `.room.example` that the room receives. This is
+  safe because the room reads no cookie: at `c17d556d` no room, scope or
+  client source reads a `cookie` header or `document.cookie`. The room
+  judges each act by its signature. The source head adds a pin to
+  `security-entry-points.test.mjs` that fails when room, scope or client
+  source reads a cookie.
 
 **Hosted behavior.** The hosted sandbox Worker keeps its route
 `*.inguz.space/*` and its bindings, so no other name reaches it. Hosted
@@ -179,14 +199,14 @@ add one process per name. SH-1 does not provide it.
 | Change | Files | Lines, about | Tests |
 |---|---|---|---|
 | `isSeparateScreenOrigin` in `readApplicationScreenHost` | `application-gateway.ts` | 15 | `application-gateway.test.ts`: admit `screens.room.example`; refuse same host, IP, `http:`, port; `inguz.space` unchanged. 30 lines |
-| Descriptor fetch on every `https:` origin | `application-screen.ts` | 10 | `application-gateway.test.ts`: 200 binds, 404 keeps same-origin, 503 fails. 25 lines |
+| Descriptor fetch on every `https:` origin | `application-screen.ts` | 10 | `application-gateway.test.ts`: 200 binds; 404 keeps same-origin on another origin; 404 on `inguz.space` fails; 503 fails. 30 lines |
 | `applicationScreenService` factory | `packages/scope/src/worker.ts` | 40 moved, 15 new | Existing `application-sandbox.test.ts` covers the class unchanged |
-| Host dispatch in the celld entry | `apps/room/celld/worker.ts` | 35 | New workerd test: bytes and an act on the screen host; room routes 404 there; room host unchanged; no `set-cookie`. 90 lines |
+| Host dispatch in the celld entry | `apps/room/celld/worker.ts` | 35 | New workerd test: bytes and an act on the screen host; room routes 404 there; room host unchanged; no `set-cookie`; an unknown host gets 404; a screen name with no deployed setting gets 404 on `/` and the room page path. 110 lines |
 | Screen host setting in prepare and deploy; entry path | `prepare-project.mjs`, `deploy.py`, `application-settings.mjs`, new `stage-screens.mjs` | 80 | `test_deploy.py`: admit a checked setting whose `roomOrigin` is `PUBLIC_ORIGIN`; refuse others. 50 lines |
 | `reconfigure` command | `kit.py`, `install.sh` | 45 | `test_install.py`: renders, keeps data, restarts only Caddy. 40 lines |
-| Pins and documents | `security-entry-points.test.mjs`, `celld-smoke.test.mjs`, `deploy-smoke.test.mjs`, `docs/self-host-mac.md`, `docs/security/entry-points.md` | 60 | The pins are tests |
+| Pins and documents | `security-entry-points.test.mjs` (with the no-cookie pin), `celld-smoke.test.mjs`, `deploy-smoke.test.mjs`, `docs/self-host-mac.md`, `docs/security/entry-points.md` | 70 | The pins are tests |
 
-Total: about 11 files, 240 source lines, 235 test lines and 50 lines of
+Total: about 11 files, 240 source lines, 270 test lines and 50 lines of
 documentation. One builder head, then one fleet witness. Separately, the
 publisher signs new Counter and Lending releases with the changed client,
 and each raises its minor version.
