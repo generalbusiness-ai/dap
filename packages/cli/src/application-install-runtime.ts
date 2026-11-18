@@ -1,7 +1,7 @@
 /** CLI entry to the client's native install request and installation read, under the persistent custody that MCP shares. */
 import { isScopeRef, timeOf } from "@generalbusiness/dap-bytes";
 import { Custody, CustodyError, Lost, Reads, TransportError, secretSigner, type CustodyStore } from "@generalbusiness/dap-client";
-import { applicationInstallation, installApplication, type InstallationRefusal, type InstallHandle, type InstallRefusal, type PackageBytes } from "@generalbusiness/dap-client/install";
+import { applicationInstallation, installApplication, upgradeApplication, type InstallationRefusal, type InstallHandle, type InstallOptions, type InstallRefusal, type PackageBytes, type UpgradeRefusal } from "@generalbusiness/dap-client/install";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
 import type { Context, Outcome } from "./commands.ts";
 
@@ -34,23 +34,42 @@ async function call(ctx: Context, store: CustodyStore, applicationFetch: ((reque
     const now = ctx.now ?? Date.now;
     const handle: InstallHandle = { service: config.service, signer, now, repository: config.repository, ...(applicationTrust === undefined ? {} : { applicationTrust }) };
     const reader = new Reads({ service: config.service, signer, now, ...(ctx.fetch ? { fetch: ctx.fetch } : {}) });
+    const custody = new Custody(store, () => timeOf(now()));
+    const requestOptions: InstallOptions = {
+      reader,
+      recoverAbsent: async identity => {
+        // A lost reply may hide an accepted request. Ask for its Native settlement before trying absence.
+        const target = identity.target;
+        if (isScopeRef(target)) await custody.settle(identity, async envelope => {
+          try {
+            const read = await reader.transport.settle(target.scope, envelope.signed);
+            return read.ok ? read.value : read.reason === "archived" ? read : null;
+          } catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
+        });
+        return reader.recoverAbsent(custody, identity);
+      },
+      send: (...sent) => custody.send(...sent), packageBytes: (address, limit) => packageBytes(address, limit, applicationFetch),
+    };
+    if (name === "upgrade_application") {
+      const item = args["item"], upgraded = await upgradeApplication(handle, custody, { item, uri: args["uri"], release: args["release"], replace: args["replace"], roles: args["roles"], values: args["values"], idempotencyKey: args["idempotencyKey"] }, requestOptions);
+      switch (upgraded.outcome) {
+        case "refused": return { code: 1, lines: [
+          ...(upgraded.refusal.refused === "recovery" && upgraded.refusal.state !== "absent"
+            ? [installRefused({ refused: "lost", scope: config.repository.rules })] : []),
+          upgradeRefused(upgraded.refusal, item),
+          ...(early(upgraded.refusal) ? await earlier(store, config.service, signer.key, args["idempotencyKey"]) : []),
+        ] };
+        case "archived": return { code: 1, lines: ["Upgrade request: archived. The exact original is retained."] };
+        case "answered": return { code: 1, lines: [`Upgrade request: ${upgraded.answer.answer}${"reason" in upgraded.answer ? ` (${upgraded.answer.reason}${"name" in upgraded.answer && upgraded.answer.name ? `: ${upgraded.answer.name}` : ""})` : ""}. The exact original is retained.`] };
+        case "accepted": return { code: 0, lines: upgraded.form === "in-place"
+          ? [`Upgrade request recorded: act ${upgraded.act} moves item ${upgraded.on} in place.`, `Read its result with: dap application ${upgraded.on}`,
+            "Acceptance records the request. The native fetch may still be pending or refused."]
+          : [`Upgrade request recorded: act ${upgraded.act} opens item ${upgraded.act} to replace item ${upgraded.on}.`, `Read its result with: dap application ${upgraded.act}`,
+            `Acceptance records the request. Native fetch, admission, grants and creation may still be pending or refused. Item ${upgraded.on} stays active until item ${upgraded.act} is active.`] };
+      }
+    }
     if (name === "install_application") {
-      const custody = new Custody(store, () => timeOf(now()));
-      const installed = await installApplication(handle, custody, { uri: args["uri"], release: args["release"], roles: args["roles"], values: args["values"], owner: args["owner"], idempotencyKey: args["idempotencyKey"] }, {
-        reader,
-        recoverAbsent: async identity => {
-          // A lost reply may hide an accepted install. Ask for its Native settlement before trying absence.
-          const target = identity.target;
-          if (isScopeRef(target)) await custody.settle(identity, async envelope => {
-            try {
-              const read = await reader.transport.settle(target.scope, envelope.signed);
-              return read.ok ? read.value : read.reason === "archived" ? read : null;
-            } catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
-          });
-          return reader.recoverAbsent(custody, identity);
-        },
-        send: (...sent) => custody.send(...sent), packageBytes: (address, limit) => packageBytes(address, limit, applicationFetch),
-      });
+      const installed = await installApplication(handle, custody, { uri: args["uri"], release: args["release"], roles: args["roles"], values: args["values"], owner: args["owner"], idempotencyKey: args["idempotencyKey"] }, requestOptions);
       switch (installed.outcome) {
         case "refused": return { code: 1, lines: [
           ...(installed.refusal.refused === "recovery" && installed.refusal.state !== "absent"
@@ -89,7 +108,7 @@ function roomRefused(refusal: Extract<InstallRefusal, { refused: "unconfigured" 
 }
 
 /** A refusal before this command signed: an earlier request under the same key can still be open. */
-function early(refusal: InstallRefusal): boolean {
+function early(refusal: UpgradeRefusal): boolean {
   return !["stopped", "lost", "receipt", "accepted-unread", "entry-unread", "entry", "recovery", "unsent", "not-found"].includes(refusal.refused);
 }
 
@@ -135,6 +154,22 @@ function installRefused(refusal: InstallRefusal): string {
     case "accepted-unread": return `The room accepted the request, and the reply to the read after it was lost. ${SETTLE}`;
     case "entry-unread": return `The room accepted the request, and the read of its entry gave nothing. ${SETTLE}`;
     case "entry": return `The room's entry does not hold the exact kept request. Report this, and do not send a new request. ${KEEP}`;
+  }
+}
+
+/** One line for each reason an upgrade refused; the install's reasons keep the install's words. */
+function upgradeRefused(refusal: UpgradeRefusal, item: unknown): string {
+  switch (refusal.refused) {
+    case "upgrade-unsupported": return `The room's rules scope has no upgrade act. A room of the upgrade cohort has one. ${NOTHING}`;
+    case "installation": return `The upgrade needs an install item, a Git URI at a full commit and the expected release. The in-place form takes no --role or --values. ${NOTHING}`;
+    case "installation-read": return `The installation read was refused (${refusal.reason}). ${NOTHING}`;
+    case "installation-unavailable": return `Item ${String(item)} is not an installation in this room. ${NOTHING}`;
+    case "installation-state": return `Item ${String(item)} is ${refusal.state}, not active, so it cannot be upgraded. ${NOTHING}`;
+    case "upgrade-pending": return `Item ${String(item)} has an open upgrade (application-upgrade-pending). Read it with dap application ${String(item)}, and try again after it ends. ${NOTHING}`;
+    case "semantic-changed": return `This release changes the semantic identifier of item ${String(item)}, so it cannot upgrade in place. Add --replace to open a successor installation. ${NOTHING}`;
+    case "semantic-kept": return `This release keeps the semantic identifier of item ${String(item)}. Remove --replace to upgrade it in place. ${NOTHING}`;
+    case "trust": return "APPLICATION_TRUST does not list this release and Git host. This command fetched, signed and sent nothing.";
+    default: return installRefused(refusal);
   }
 }
 

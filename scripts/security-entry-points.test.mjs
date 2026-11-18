@@ -349,7 +349,7 @@ const seals = {
   "packages/mcp/src/inventory.ts": "4bbbf22863db4c36546b0c8283a3d2b3e5c501a64b0cc4ccf9c56695ed4300dc", // Reviewed parallel authority reads and target-only discovery; NF-4 reader import; EK-1 reads standing from the held session at the membership head (sessionAt) and judges each action with judgeExploreGrant.
   "packages/mcp/src/http.ts": "773765a2edab34cfd675038a9bf5bbd51ef671379a0ce379d48725ea1b61b3b9", // Reviewed Mcp-Name binding for prompts/get.
   "packages/client/src/application-trust.ts": "137391c8b1ed6f59f66e9368012c1355ed77325fdb16f67b73296be1ccc856b3", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
-  "packages/client/src/application-install.ts": "f6c69d8f3abb87eaaecdaf25360deaaca98eec3ca6cb57a5912d72121cb1000c", // Reviewed R10 trust-before-fetch owner; actual maintained parser output. CF-1 changes it; actual maintained parser output.
+  "packages/client/src/application-install.ts": "a3927463578dd61121888b27f9f2af7c6c295f0ca653b63a45f36c62560a996e", // Reviewed R10 trust-before-fetch owner; actual maintained parser output. CF-1 changes it; actual maintained parser output.
   "packages/scope/src/applications/resolve.ts": "6338c9357780846b115999454239b68f34c5d6be3c090ca3f18b8f6e8771d0e2", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "examples/grow/simulator-worker.ts": "9f1c5f0a8fd16fd2200e5b4aecc5ebbe874bfd6497476e19e120c3a0dfd834d0",
   "examples/grow/simulator-host.ts": "d63e3ce49801910f0db117c4cfa853f7da71a1a1ffc996fcdec8c2922a684e24"
@@ -410,14 +410,14 @@ const pendingR8Seals = {
   "packages/cli/src/verification.ts": "4875139168f453ff917ff565deefccc60b377ab529b42a236c6025bc7bf429d9", // Reviewed unique-entry ledger, source conflicts and owner retirement; actual maintained output.
   "packages/cli/src/files.ts": "692ad5257d940da6eefe571283600befb1db3323510d2ab2065654dcc2e780e7", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/store.ts": "e710dc929252a3f413fb889344fc4fdad1bc2bc3340b9fd4e91a57c4891295a5", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "packages/cli/src/line.ts": "3cb0933073668b77d6aef44676168445f418a735af7c6e4c22c59ab3d409fcb3", // Reviewed CLI session or verification boundary; actual maintained parser output; dap issue wait signs no act. CF-1 changes it; U1 accepts --cohort upgrade.
+  "packages/cli/src/line.ts": "70f9cc725e72c500e6873b58ed02911fde0458834dd62eafa3c8987ab5d5134d", // Reviewed CLI session or verification boundary; actual maintained parser output; dap issue wait signs no act. CF-1 changes it; U1 accepts --cohort upgrade.
   "packages/cli/src/invitations.ts": "45d96db128f59bbb5a5319120371aafa0e234fb9dc1baa213ba3f92a5811a4e0", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-applications-command.ts": "5af0f495fb9af7ba04b64deda0019e39649c81971196c3999ab60d1d75a26571", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-manifest.ts": "4bd67e5543b060c24e235a15f03983ad590ee77fc94a8a96627e2ad1adcd0155", // Preserve trusted session refusal outcomes; actual maintained parser output.
   "packages/cli/src/status-report.ts": "6167375d4e69a8be6614b9445f2d2d5262d0b2ea59145628de9f183e94a60d5d", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/client/src/session.ts": "6e4a3c47ba2a2fc26e2df8a15cdb1e2f64a4dc9e1cb271ec6ea118752338ecfd", // Reviewed CLI session or verification boundary; ES-1 asks for standing on request and keeps it only after sessionStanding checks form and agreement.
   "apps/sandbox/worker.ts": "758b28ea299eddad07022a913d4b94d632814aa51f2868810300a582ee833f51", // Inject the reply window; retain the existing Native lifetime close on an observed HTTP disconnect.
-  "packages/client/src/application-gateway.ts": "7745e62033ad7664837928e20d0f832fc02bd095534a6ea82f1a83d8fae0ec26", // PT-1: application-projection takes p before atLeast. GW-1: the five reads that take a minimum allow one canonical atLeast of the path's scope.
+  "packages/client/src/application-gateway.ts": "fbd240398b141bd081fa8f03725a0255a07cf0666964d23c7a31e49292744e72", // PT-1: application-projection takes p before atLeast. GW-1: the five reads that take a minimum allow one canonical atLeast of the path's scope.
   "packages/client/src/application-route.ts": "62660d1d37d6d75f350d338a3efbb69c37ebcf8fd9d6dd2a27e21472e2d9c23b",
   "packages/scope/src/applications/bindings.ts": "b89e8155ad5479d5b4f9175b2e941ef80b54c75dc9af4a993401c544e150cd78",
 };

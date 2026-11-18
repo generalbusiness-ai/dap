@@ -4,7 +4,7 @@
  */
 
 import { parseStrict } from "@generalbusiness/dap-bytes";
-import { applicationInstallation, installApplication } from "./application-install.ts";
+import { applicationInstallation, installApplication, upgradeApplication } from "./application-install.ts";
 import { enrolAgentKey, enrolCheckerKey, enrolDeviceKey, invitePerson } from "./invitations.ts";
 import { AGENT_KEY_LINK, CHECKER_KEY_LINK, DEVICE_KEY_LINK } from "@generalbusiness/dap-client";
 import { issueWait } from "./issue-wait.ts";
@@ -18,6 +18,7 @@ export const USAGE = [
   "  install --planned also recognizes historical cohort names from the retained plan.",
   "  dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>] [--owner <full-member-JSON>]",
   "  dap application <install-item>",
+  "  dap application upgrade <install-item> <git+https-uri> --release <release-id> --request <kept-key> [--replace [--role <default-role> ...] [--values <genesis-JSON>]]",
   "  dap apps [--cursor <cursor>]",
   "  dap check [<directory>] [--config <relative-file>]",
   "  dap dev [<directory>] [--config <relative-file>] [--port <loopback-port>] [--scenario <listed-file>]",
@@ -55,7 +56,7 @@ export const USAGE = [
 ].join("\n");
 
 /** The flags that take no value. */
-const SWITCHES: ReadonlySet<string> = new Set(["again", "all", "plan", "planned", "check", "keep", "continue", "archive", "device"]);
+const SWITCHES: ReadonlySet<string> = new Set(["again", "all", "plan", "planned", "check", "keep", "continue", "archive", "device", "replace"]);
 
 /** The words of a command line: the positional ones, each `--name value`, and each switch; `--set` may be given more than once. */
 export function parse(argv: readonly string[]): { words: string[]; flags: Map<string, string[]> } | null {
@@ -79,7 +80,7 @@ export function parse(argv: readonly string[]): { words: string[]; flags: Map<st
 }
 
 const KNOWN: Record<string, readonly string[]> = {
-  install: ["host", "namespace", "register-policy", "plan", "planned", "cohort", "release", "request", "role", "values", "owner"], application: [], apps: ["cursor"], create: ["handle", "branch", "again"], claim: ["handle", "branch", "again"], invite: ["role", "acts", "hours", "keep", "check", "continue", "device"], join: ["check"], acts: [], act: ["on", "target", "set", "value"], log: ["limit"], items: ["query"], show: [], verify: ["all"], status: ["request"], remote: [], clone: ["hours", "archive"], edit: ["file", "title", "closes"], propose: ["title"], merge: ["closes"], issue: ["title", "body", "hours"], issues: [],
+  install: ["host", "namespace", "register-policy", "plan", "planned", "cohort", "release", "request", "role", "values", "owner"], application: ["release", "request", "replace", "role", "values"], apps: ["cursor"], create: ["handle", "branch", "again"], claim: ["handle", "branch", "again"], invite: ["role", "acts", "hours", "keep", "check", "continue", "device"], join: ["check"], acts: [], act: ["on", "target", "set", "value"], log: ["limit"], items: ["query"], show: [], verify: ["all"], status: ["request"], remote: [], clone: ["hours", "archive"], edit: ["file", "title", "closes"], propose: ["title"], merge: ["closes"], issue: ["title", "body", "hours"], issues: [],
 };
 
 /** Runs one command line with the given context. */
@@ -89,6 +90,8 @@ export async function command(ctx: Context, argv: readonly string[]): Promise<Ou
   if (!parsed || name === undefined || !(name in KNOWN)) return { code: 2, lines: [USAGE] };
   const unknown = [...parsed.flags.keys()].find((flag) => !KNOWN[name]!.includes(flag));
   if (name === "issue") return unknown !== undefined ? { code: 2, lines: [`issue takes no --${unknown}.`, USAGE] } : issue(ctx, first, rest, parsed.flags);
+  if (name === "application" && first === "upgrade") return unknown !== undefined ? { code: 2, lines: [`application upgrade takes no --${unknown}.`, USAGE] } : applicationUpgrade(ctx, rest, parsed.flags);
+  if (name === "application" && parsed.flags.size > 0) return { code: 2, lines: ["Only application upgrade takes flags.", USAGE] };
   if (unknown !== undefined || rest.length > 0) return { code: 2, lines: [unknown !== undefined ? `${name} takes no --${unknown}.` : `${name} takes one argument.`, USAGE] };
   const flag = (f: string) => parsed.flags.get(f)?.at(-1);
   const number = (f: string) => (flag(f) === undefined ? undefined : Number(flag(f)));
@@ -149,6 +152,20 @@ export async function command(ctx: Context, argv: readonly string[]): Promise<Ou
     case "issues": return first === undefined ? issues(ctx) : { code: 2, lines: ["issues takes no argument.", USAGE] };
     default: return verify(ctx, first, { ...(flag("all") ? { all: true } : {}) });
   }
+}
+
+/** `dap application upgrade <item> <uri>`: one --release and one --request. Only --replace takes --role and --values. */
+function applicationUpgrade(ctx: Context, words: readonly string[], flags: Map<string, string[]>): Promise<Outcome> | Outcome {
+  const wrong = (what: string): Outcome => ({ code: 2, lines: [what, USAGE] });
+  const [item, uri] = words, replace = flags.has("replace");
+  if (words.length !== 2 || !/^(0|[1-9][0-9]*)$/.test(item!) || !Number.isSafeInteger(Number(item)) || !uri!.startsWith("git+")
+    || flags.get("release")?.length !== 1 || flags.get("request")?.length !== 1 || (flags.get("values")?.length ?? 0) > 1) return wrong("application upgrade needs an install item, an immutable Git URI, one --release and one --request.");
+  if (!replace && (flags.has("role") || flags.has("values"))) return wrong("An in-place upgrade keeps the installation's grants: --role and --values need --replace.");
+  let values: unknown;
+  try { if (flags.has("values")) values = parseStrict(flags.get("values")![0]!); }
+  catch { return wrong("application upgrade needs valid JSON in --values."); }
+  return upgradeApplication(ctx, Number(item), uri!, { release: flags.get("release")![0]!, request: flags.get("request")![0]!, replace,
+    ...(replace ? { roles: flags.get("role") ?? [], values: values ?? {} } : {}) });
 }
 
 /** `dap issue open|comment|assign|close`: the words after `issue`, and its flags. Only `open` takes flags. */

@@ -430,10 +430,46 @@ dap application <install-item>
 ```
 
 Reads the recorded state and phase of one application install: pending,
-active or refused. An active result includes the exact screen URL. A
-later refusal can leave earlier activations and grants in force. The
+active, refused or, after an upgrade, replaced. An active result includes
+the exact screen URL. A later refusal can leave earlier activations and grants in force. The
 install records no rollback, and ordinary authorized acts can change
 those effects.
+
+#### Upgrade an installed application
+
+```
+dap application upgrade <install-item> <git+https-uri> --release <release-id> --request <kept-key>
+dap application upgrade <install-item> <git+https-uri> --release <release-id> --request <kept-key> --replace [--role <default-role> ...] [--values <genesis-JSON>]
+```
+
+Records one `upgrade-application` act on an active installation. The room
+needs Rules 16, which the `upgrade` cohort supplies. The caller needs
+`application.install`, and the release must have the installation's
+publisher.
+
+- Without `--replace`, the release must keep the installation's semantic
+  identifier. The act moves the same item to the new release and
+  presentation when the host confirms its fetch. The application scope,
+  its state and its grants stay. This form takes no `--role` or
+  `--values`.
+- With `--replace`, the release must change the semantic identifier. The
+  act opens a successor installation with the given roles and genesis
+  values, as an install does. The old item stays active until the
+  successor is active, and then ends `replaced`.
+
+Before it signs, the command refuses with one line when:
+
+- the item has an open upgrade (`application-upgrade-pending`);
+- the release changes the semantic identifier and `--replace` is absent,
+  or keeps it and `--replace` is present;
+- `APPLICATION_TRUST` does not list the release and Git host;
+- the item is not an active installation.
+
+`--request` works as for `dap install`. The output names the act and the
+item to read with `dap application`. The screen host of an item serves
+its current presentation, so an in-place upgrade keeps the screen address
+and needs no new screen-host row. A successor is a new item and needs its
+own row.
 
 ### `dap apps`
 

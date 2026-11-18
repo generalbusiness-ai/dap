@@ -46,8 +46,9 @@ export default {
     const logical = host.roomOrigin + url.pathname + url.search;
     const screen = applicationScreenHostMatches(host, url.pathname);
     if (metadata ? request.method !== "GET" || !!url.search : screen ? !["GET", "HEAD"].includes(request.method) || !!url.search : !applicationGatewayRoute(host, logical, request.method)) return refused(404);
-    // Both ends pin the same descriptor. A misbound service or stale
-    // presentation refuses before fetching package bytes or native state.
+    // Both ends pin the same descriptor. A misbound service refuses before
+    // fetching package bytes or native state. The room serves only the
+    // installation's current presentation.
     let actual;
     try { actual = await within(10, () => service.screenHost(host.screenOrigin)); } catch { return refused(503); }
     if (actual === LATE || canonicalize(actual) !== canonicalize(host)) return refused(503);

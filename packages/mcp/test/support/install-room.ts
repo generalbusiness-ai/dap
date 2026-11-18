@@ -50,27 +50,28 @@ export interface InstallRoom {
   wants: string[];
 }
 
-export async function installRoom(key: KeyId): Promise<InstallRoom> {
-  // One ordinary version 1 package in an in-memory Git repository: a blob, two trees and a commit, with SHA-1 object IDs.
-  const declared = countingCommitments, definition = definitionDigest(declared);
-  const packet = await packApplication({ name: "test.example.nf4", version: "1", semantic: { v: 1, entry: definition,
-    definitions: [{ id: definition, bytes: canonicalize(declared) }], host: { execution: "recorded-do", profiles: ["restricted@1"] }, roles: {}, projections: {}, capabilities: [], predecessor: null },
-    presentation: { v: 1, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {} } }, secretSigner(new Uint8Array(32).fill(64)));
-  const objects = new Map<string, { type: string; data: Uint8Array }>(), wants: string[] = [];
+/** A Git host of package blobs: one repository `packages<n>.git` for the nth package, each a blob, two trees and a commit with
+ * SHA-1 object IDs. `uris[n]` names the nth package at its commit. */
+export function gitPackages(packages: readonly Uint8Array[]) {
+  const objects = new Map<string, { type: string; data: Uint8Array }>(), wants: string[] = [], heads = new Map<string, string>();
   const add = (type: string, data: Uint8Array) => {
     const id = createHash("sha1").update(utf8.encode(`${type} ${data.length}\0`)).update(data).digest("hex");
     objects.set(id, { type, data }); return id;
   };
   const entry = (mode: string, name: string, id: string) => Buffer.concat([utf8.encode(`${mode} ${name}\0`), Buffer.from(id, "hex")]);
-  const blob = add("blob", packet.bytes), nested = add("tree", entry("100644", "application.dap.json", blob)), tree = add("tree", entry("40000", "packages", nested));
-  const commit = add("commit", utf8.encode(`tree ${tree}\nauthor TEST <test@example.invalid> 0 +0000\ncommitter TEST <test@example.invalid> 0 +0000\n\nTEST release\n`));
-  const uri = `git+https://git.example/packages.git/@${commit}/packages/application.dap.json`, release = packet.ids.release;
-  const trust = JSON.stringify([{ release, publisher: packet.package.release.manifest.publisher, host: "git.example" }]);
-
+  const uris = packages.map((bytes, n) => {
+    const blob = add("blob", bytes), nested = add("tree", entry("100644", "application.dap.json", blob)), tree = add("tree", entry("40000", "packages", nested));
+    const commit = add("commit", utf8.encode(`tree ${tree}\nauthor TEST <test@example.invalid> 0 +0000\ncommitter TEST <test@example.invalid> 0 +0000\n\nTEST release${n === 0 ? "" : ` ${n}`}\n`));
+    const repository = n === 0 ? "packages" : `packages${n}`;
+    heads.set(repository, commit);
+    return `git+https://git.example/${repository}.git/@${commit}/packages/application.dap.json`;
+  });
   const git = (method: string, path: string, sent: Uint8Array): GitAnswer => {
-    if (method === "GET" && path === "packages.git/info/refs?service=git-upload-pack") return { status: 200, headers: { "content-type": "application/x-git-upload-pack-advertisement" },
+    const repository = /^([a-z0-9]+)\.git\//.exec(path)?.[1], commit = repository === undefined ? undefined : heads.get(repository);
+    if (commit === undefined) return { status: 404, headers: {}, body: new Uint8Array() };
+    if (method === "GET" && path === `${repository}.git/info/refs?service=git-upload-pack`) return { status: 200, headers: { "content-type": "application/x-git-upload-pack-advertisement" },
       body: Buffer.concat([packetLine("# service=git-upload-pack\n"), utf8.encode("0000"), packetLine(`${commit} HEAD\0shallow filter allow-reachable-sha1-in-want object-format=sha1\n`), utf8.encode("0000")]) };
-    const wanted = method === "POST" && path === "packages.git/git-upload-pack" ? /want ([0-9a-f]{40}) shallow filter\n/.exec(new TextDecoder().decode(sent))?.[1] : undefined;
+    const wanted = method === "POST" && path === `${repository}.git/git-upload-pack` ? /want ([0-9a-f]{40}) shallow filter\n/.exec(new TextDecoder().decode(sent))?.[1] : undefined;
     const object = wanted === undefined ? undefined : objects.get(wanted);
     if (!wanted || !object) return { status: 404, headers: {}, body: new Uint8Array() };
     wants.push(wanted);
@@ -82,6 +83,17 @@ export async function installRoom(key: KeyId): Promise<InstallRoom> {
     const answer = git(request.method, request.url.slice(GIT_HOST.length), new Uint8Array(await request.arrayBuffer()));
     return new Response(answer.body.length ? answer.body : null, { status: answer.status, headers: answer.headers });
   };
+  return { uris, git, applicationFetch, wants };
+}
+
+export async function installRoom(key: KeyId): Promise<InstallRoom> {
+  // One ordinary version 1 package in an in-memory Git repository.
+  const declared = countingCommitments, definition = definitionDigest(declared);
+  const packet = await packApplication({ name: "test.example.nf4", version: "1", semantic: { v: 1, entry: definition,
+    definitions: [{ id: definition, bytes: canonicalize(declared) }], host: { execution: "recorded-do", profiles: ["restricted@1"] }, roles: {}, projections: {}, capabilities: [], predecessor: null },
+    presentation: { v: 1, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {} } }, secretSigner(new Uint8Array(32).fill(64)));
+  const { uris, git, applicationFetch, wants } = gitPackages([packet.bytes]), uri = uris[0]!, release = packet.ids.release;
+  const trust = JSON.stringify([{ release, publisher: packet.package.release.manifest.publisher, host: "git.example" }]);
 
   // A trusted-application room: the stand-in's four scopes under the cohort's exact Directory, Membership, Rules and Destination pins.
   const stand = new StandIn(key, "admin", ["application.install"]);

@@ -4,12 +4,12 @@
  * handle on the configured room, a custody and typed arguments, and returns a typed result. A refusal is a code: each caller
  * writes its own words. This source-only entry imports the platform's catalogue, so the client root does not import it.
  */
-import type { Answer, Digest, PlatformDefinition, Read, ScopeId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, intentDigest, isDigest, isPlatformDefinition, isReceipt, isRecord, isScopeRef, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import type { Answer, Digest, Entry, PlatformDefinition, Read, ScopeId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
+import { ITEM_QUERY_BOUNDS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { canonicalize, digestBytes, entryHash, intentDigest, isDigest, isPlatformDefinition, isReceipt, isRecord, isScopeRef, parseStrict, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { COMMONS_COHORT, VERSIONS, answersVersionQuestion, mcpApplicationRoomCohort, platform } from "@generalbusiness/dap-platform";
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
-import { readApplicationInstallOptions, readDeviceApplicationInstallOptions, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, signedPublishedApplicationInstall } from "./application-install.ts";
+import { readApplicationInstallOptions, readDeviceApplicationInstallOptions, signedApplicationInstall, signedApplicationInstall2, signedApplicationUpgrade, signedDeviceApplicationInstall, signedPublishedApplicationInstall } from "./application-install.ts";
 import { readApplicationPackage } from "./application-package.ts";
 import { applicationScreenPath } from "./application-route.ts";
 import { applicationTrustForSource, readApplicationTrust } from "./application-trust.ts";
@@ -18,7 +18,7 @@ import { readApplicationReleaseUri, type ApplicationReleaseUri } from "./applica
 import { commonsInstallCheck } from "./commons.ts";
 import { CustodyError, Lost, TERMINAL, identityId, meaningOf, validKey, type ArchivedSettlement, type Custody, type Envelope, type Identity, type Phase, type Sent } from "./custody.ts";
 import { descriptionsOf, type DefinitionLike } from "./describe.ts";
-import { ScopeHandle, TransportError, type Transport } from "./handle.ts";
+import { LogProtocolError, ScopeHandle, TransportError, type Transport } from "./handle.ts";
 import type { AbsenceFailure, AbsenceRecovery } from "./reads.ts";
 import type { Signer } from "./signer.ts";
 
@@ -159,6 +159,28 @@ export type InstallRequest =
   | { outcome: "archived"; rules: ScopeRef; archivedSettlement: ArchivedSettlement }
   | { outcome: "refused"; refusal: InstallRefusal };
 
+/** Why an upgrade refused before it signed, beside the install's reasons. Each caller words these. */
+export type UpgradeRefusal = InstallRefusal
+  | { refused: "upgrade-unsupported" }
+  | { refused: "installation-read"; reason: string }
+  | { refused: "installation-unavailable" }
+  | { refused: "installation-state"; state: string }
+  | { refused: "upgrade-pending" }
+  | { refused: "semantic-changed" }
+  | { refused: "semantic-kept" };
+
+/** An accepted upgrade names its act's position `act`. A replace opens its successor installation there; in place, N moves. */
+export type UpgradeRequest =
+  | { outcome: "accepted"; rules: ScopeRef; answer: Extract<Answer, { answer: "accepted" }>; act: number; on: number; form: "in-place" | "replace"; retained: boolean; phase: Phase }
+  | Extract<InstallRequest, { outcome: "answered" | "archived" }>
+  | { outcome: "refused"; refusal: UpgradeRefusal };
+
+/** What one request to the Rules scope came to; `seq` is the accepted act's position. */
+type Requested =
+  | { outcome: "accepted"; rules: ScopeRef; answer: Extract<Answer, { answer: "accepted" }>; seq: number; retained: boolean; phase: Phase }
+  | Extract<InstallRequest, { outcome: "answered" | "archived" }>
+  | { outcome: "refused"; refusal: UpgradeRefusal };
+
 export type InstallationRefusal = RoomRefusal
   | { refused: "item" }
   | { refused: "installation-read"; reason: string }
@@ -179,7 +201,7 @@ export interface InstallRoom { directory: ScopeRef; membership: ScopeRef; rules:
 
 // ---------------------------------------------------------------- the room
 
-class Refused extends Error { constructor(readonly refusal: InstallRefusal) { super("refused"); } }
+class Refused extends Error { constructor(readonly refusal: UpgradeRefusal) { super("refused"); } }
 class PackageUnavailable extends Error { constructor(readonly reason: "unsupported-object-format" | "unavailable") { super("package unavailable"); } }
 
 const KIB = 1024;
@@ -218,10 +240,6 @@ export async function applicationRoom(repository: InstallRoomConfig | null, read
 /** The install arguments as a caller received them. The function checks each one before it signs. */
 export interface InstallArguments { uri: unknown; release: unknown; roles: unknown; values: unknown; owner?: unknown; idempotencyKey: unknown }
 
-/**
- * Sign one native install under custody and send it. Custody keeps the exact envelope before it is sent, and the same key and
- * meaning send that envelope again. Acceptance records the request; the installation read shows its later state.
- */
 /** The Rules declaration states its install owner as optional: the pin admits an ordinary version 2 package. */
 function ordinaryVersion2(definition: DefinitionLike): boolean {
   const act: unknown = (definition as unknown as { acts?: Record<string, unknown> }).acts?.["install-application"];
@@ -229,60 +247,46 @@ function ordinaryVersion2(definition: DefinitionLike): boolean {
   return isRecord(owner) && owner["required"] === false;
 }
 
+/** The checked install selection for this room's Rules pin, or null when an argument is out of bounds. */
+function installSelection(room: InstallRoom, definition: DefinitionLike, args: Pick<InstallArguments, "uri" | "release" | "roles" | "values" | "owner">) {
+  try {
+    const ordinary = { rules: room.rules, uri: args.uri, release: args.release, roles: args.roles, values: args.values };
+    // A device Rules pin whose declaration makes the owner optional also installs an ordinary version 2 package.
+    const selected = answersVersionQuestion(room.cohort.rules, "mcpDeviceInstallOptionsRules") && (args.owner !== undefined || !ordinaryVersion2(definition))
+      ? readDeviceApplicationInstallOptions({ ...ordinary, owner: args.owner }) : readApplicationInstallOptions(ordinary);
+    if (!answersVersionQuestion(room.cohort.rules, "mcpOwnerFieldRules") && args.owner !== undefined) throw Error("this cohort has no owner selection");
+    return selected;
+  } catch { return null; }
+}
+
+/** The trust row for a release at its Git source, read again at each call, so a getter supplies the current setting. */
+function trustFor(handle: InstallHandle, address: ApplicationReleaseUri, release: Digest) {
+  const allowed = applicationTrustForSource(address, release, readApplicationTrust(handle.applicationTrust));
+  if (!allowed) throw new ApplicationPackageError("invalid");
+  return allowed;
+}
+
+/**
+ * Sign one native install under custody and send it. Custody keeps the exact envelope before it is sent, and the same key and
+ * meaning send that envelope again. Acceptance records the request; the installation read shows its later state.
+ */
 export async function installApplication(handle: InstallHandle, custody: Custody, args: InstallArguments, options: InstallOptions): Promise<InstallRequest> {
   const refused = (refusal: InstallRefusal): InstallRequest => ({ outcome: "refused", refusal });
   const key = args.idempotencyKey;
-  if (!validKey(key)) return refused({ refused: "key" });
+  if (typeof key !== "string" || !validKey(key)) return refused({ refused: "key" });
   const room = await applicationRoom(handle.repository, options.reader);
   if ("refused" in room) return refused(room);
   const pin = room.cohort.rules;
   const definition = platform(pin)!.data as unknown as DefinitionLike;
   if (options.admit && !await options.admit({ rules: room.rules, membership: room.membership, pinned: pin, definition })) return refused({ refused: "unknown-tool" });
-  let selected: ReturnType<typeof readApplicationInstallOptions> | ReturnType<typeof readDeviceApplicationInstallOptions>;
-  try {
-    const ordinary = { rules: room.rules, uri: args.uri, release: args.release, roles: args.roles, values: args.values };
-    // A device Rules pin whose declaration makes the owner optional also installs an ordinary version 2 package.
-    selected = answersVersionQuestion(room.cohort.rules, "mcpDeviceInstallOptionsRules") && (args.owner !== undefined || !ordinaryVersion2(definition))
-      ? readDeviceApplicationInstallOptions({ ...ordinary, owner: args.owner }) : readApplicationInstallOptions(ordinary);
-    if (!answersVersionQuestion(room.cohort.rules, "mcpOwnerFieldRules") && args.owner !== undefined) throw Error("this cohort has no owner selection");
-  }
-  catch { return refused({ refused: "installation" }); }
+  const selected = installSelection(room, definition, args);
+  if (!selected) return refused({ refused: "installation" });
   const address = readApplicationReleaseUri(selected.uri);
-  const trustForBuild = () => {
-    const allowed = applicationTrustForSource(address, selected.release, readApplicationTrust(handle.applicationTrust));
-    if (!allowed) throw new ApplicationPackageError("invalid");
-    return allowed;
-  };
-  try { trustForBuild(); }
+  try { trustFor(handle, address, selected.release); }
   catch { return refused({ refused: "trust" }); }
-  const identity: Identity = { service: handle.service, membership: room.membership, signer: handle.signer.key, target: room.rules, key: key as string };
-  const meaning = meaningOf(selected), scope = room.rules.scope;
-  if (options.recoverAbsent) {
-    const record = await custody.find(identity), latest = record?.signings.at(-1);
-    if (record && record.meaning === meaning && isScopeRef(record.identity.target) && record.envelope.creation === undefined
-      && record.envelope.signed.intent.to !== null && !record.standalone
-      && (record.phase === "prepared" || record.phase === "sent" || record.phase === "unknown")
-      && latest && !latest.closed && custody.dead(latest)) {
-      const recovery = await options.recoverAbsent(identity);
-      // The callback can settle or race this record. Report custody now, never its snapshot, and never send after recovery.
-      const fresh = await custody.find(identity);
-      if (!fresh) return refused({ refused: "not-found" });
-      if (fresh.meaning !== meaning) throw new CustodyError({ held: "conflicting", recorded: `install-application on ${scope}` });
-      if (TERMINAL.has(fresh.phase)) {
-        const decided = await custody.decided(identityId(identity), fresh);
-        if (!decided) throw new CustodyError({ held: "unreadable" });
-        return project({ record: fresh, ...decided, retained: true }, room);
-      }
-      if (canonicalize(fresh) === canonicalize(record)) {
-        if (recovery.state === "unproved") return refused({ refused: "recovery", state: "unproved", why: recovery.why });
-        if (recovery.state === "present") return refused({ refused: "recovery", state: "present" });
-      }
-      return refused({ refused: "recovery", state: "changed" });
-    }
-  }
   const build = async () => {
     // Recheck after custody awaits; an earlier list or policy read is no authority.
-    const allowed = trustForBuild();
+    const allowed = trustFor(handle, address, selected.release);
     const fetched = await options.packageBytes(address, PACKAGE_BYTES);
     if (!fetched.ok) throw new PackageUnavailable(fetched.reason);
     const bytes = fetched.bytes;
@@ -296,10 +300,48 @@ export async function installApplication(handle: InstallHandle, custody: Custody
     if ("refused" in directory) throw new Refused(directory);
     if (!commonsInstallCheck(directory, packet.package.semantic.host.requires).ok) throw new Refused({ refused: "commons-missing" });
     const prepared = "owner" in selected
-      ? await signedDeviceApplicationInstall(handle.signer, bytes, readDeviceApplicationInstallOptions(selected), { idempotencyKey: key as string, now: handle.now() }, allowed.publisher)
-      : await prepare(handle.signer, bytes, selected, { idempotencyKey: key as string, now: handle.now() }, allowed.publisher);
+      ? await signedDeviceApplicationInstall(handle.signer, bytes, readDeviceApplicationInstallOptions(selected), { idempotencyKey: key, now: handle.now() }, allowed.publisher)
+      : await prepare(handle.signer, bytes, selected, { idempotencyKey: key, now: handle.now() }, allowed.publisher);
     return { binding: { definition: "platform:rules", kind: "install-application", declaration: declarationDigest(definition, "install-application", pin), pinned: pin }, envelope: { signed: prepared.signed, beside: prepared.beside } };
   };
+  const sent = await submitRequest(handle, custody, options, room, key, "install-application", meaningOf(selected), build);
+  if (sent.outcome !== "accepted") return sent as InstallRequest;
+  const { seq, ...accepted } = sent;
+  return { ...accepted, item: seq };
+}
+
+/**
+ * Sign one request under custody and send it to the room's Rules scope, then check its receipt and entry. `build` runs only when
+ * custody keeps no record under the key, before anything is signed; a `Refused` from it refuses with nothing kept or sent.
+ */
+async function submitRequest(handle: InstallHandle, custody: Custody, options: InstallOptions, room: InstallRoom, key: string,
+  kind: "install-application" | "upgrade-application", meaning: Digest, build: Parameters<Custody["send"]>[2]): Promise<Requested> {
+  const refused = (refusal: UpgradeRefusal): Requested => ({ outcome: "refused", refusal });
+  const pin = room.cohort.rules, scope = room.rules.scope;
+  const identity: Identity = { service: handle.service, membership: room.membership, signer: handle.signer.key, target: room.rules, key };
+  if (options.recoverAbsent) {
+    const record = await custody.find(identity), latest = record?.signings.at(-1);
+    if (record && record.meaning === meaning && isScopeRef(record.identity.target) && record.envelope.creation === undefined
+      && record.envelope.signed.intent.to !== null && !record.standalone
+      && (record.phase === "prepared" || record.phase === "sent" || record.phase === "unknown")
+      && latest && !latest.closed && custody.dead(latest)) {
+      const recovery = await options.recoverAbsent(identity);
+      // The callback can settle or race this record. Report custody now, never its snapshot, and never send after recovery.
+      const fresh = await custody.find(identity);
+      if (!fresh) return refused({ refused: "not-found" });
+      if (fresh.meaning !== meaning) throw new CustodyError({ held: "conflicting", recorded: `${kind} on ${scope}` });
+      if (TERMINAL.has(fresh.phase)) {
+        const decided = await custody.decided(identityId(identity), fresh);
+        if (!decided) throw new CustodyError({ held: "unreadable" });
+        return project({ record: fresh, ...decided, retained: true });
+      }
+      if (canonicalize(fresh) === canonicalize(record)) {
+        if (recovery.state === "unproved") return refused({ refused: "recovery", state: "unproved", why: recovery.why });
+        if (recovery.state === "present") return refused({ refused: "recovery", state: "present" });
+      }
+      return refused({ refused: "recovery", state: "changed" });
+    }
+  }
   const deliver = async (envelope: Envelope): Promise<Answer> => {
     try { return await options.reader.transport.submit(scope, envelope.signed, [], envelope.beside); }
     catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
@@ -317,13 +359,13 @@ export async function installApplication(handle: InstallHandle, custody: Custody
     if (record && record.phase !== "prepared") return refused({ refused: "stopped", scope });
     return refused({ refused: "unprepared", why: error instanceof PackageUnavailable && error.reason === "unsupported-object-format" ? "unsupported-object-format" : error instanceof ApplicationPackageError ? "package" : "unavailable" });
   }
-  return project(kept, room);
+  return project(kept);
 
-  async function project(kept: Sent, room: InstallRoom): Promise<InstallRequest> {
+  async function project(kept: Sent): Promise<Requested> {
     if ("lost" in kept) return refused({ refused: "lost", scope });
     if ("archivedSettlement" in kept) return { outcome: "archived", rules: room.rules, archivedSettlement: kept.archivedSettlement };
     if ("unsent" in kept) return refused({ refused: "unsent" });
-    // A folded record holds no answer for the install caller to project here.
+    // A folded record holds no answer for the caller to project here.
     if ("folded" in kept) throw new CustodyError({ held: "unreadable" });
     if (kept.answer.answer !== "accepted") return { outcome: "answered", rules: room.rules, answer: kept.answer, retained: kept.retained, phase: kept.record.phase };
     const receipt = kept.answer.receipt;
@@ -335,8 +377,99 @@ export async function installApplication(handle: InstallHandle, custody: Custody
     if (read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
       || !("genesis" in read.value.entry) || read.value.entry.genesis !== room.rules.genesis || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
       || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return refused({ refused: "entry" });
-    return { outcome: "accepted", rules: room.rules, answer: kept.answer, item: receipt.fact.seq, retained: kept.retained, phase: kept.record.phase };
+    return { outcome: "accepted", rules: room.rules, answer: kept.answer, seq: receipt.fact.seq, retained: kept.retained, phase: kept.record.phase };
   }
+}
+
+// ---------------------------------------------------------------- the upgrade request
+
+/**
+ * The upgrade arguments as a caller received them. `item` is the active installation N. Without `replace`, the release must
+ * keep N's semantic identifier, and the act moves N in place; it takes no roles or values. With `replace`, the release must
+ * change the semantic identifier, and the act opens a successor installation with the given roles and values.
+ */
+export interface UpgradeArguments { item: unknown; uri: unknown; release: unknown; replace: unknown; roles?: unknown; values?: unknown; idempotencyKey: unknown }
+
+/** The installation states that an upgrade reads: N and every pending successor. */
+const UPGRADE_STATES = ["active", "pending", "refused", "replaced"] as const;
+
+/**
+ * Whether the fetch that N's latest in-place act opened, operation `<at>:0`, still has no decisive outcome. Rules 16's
+ * `application-upgrade-pending` guard reads the same operation; its fetch has one attempt. Null when this read cannot cover the
+ * journal from `at` to the head as a whole session read within eight pages: the room's Rules then judges.
+ */
+async function inPlaceFetchOpen(reader: InstallReader, room: InstallRoom, at: number): Promise<boolean | null> {
+  const operation = `${at}:0`;
+  let cursor: string | undefined = String(at), latest: string | null = null;
+  try {
+    for (let pages = 0; pages < 8 && cursor !== undefined; pages++) {
+      const from: string = cursor;
+      const read = await reader.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).log(from));
+      if (!read.ok || read.coverage !== "whole") return null;
+      for (const row of read.value.entries) {
+        const input = (parseStrict(row.bytes) as unknown as Entry).input;
+        if (input.type === "outcome" && input.operation === operation && input.attempt === 1) latest = input.result;
+      }
+      cursor = read.next;
+    }
+  } catch (error) { if (error instanceof TransportError || error instanceof LogProtocolError) return null; throw error; }
+  return cursor !== undefined ? null : latest === null || latest === "unknown";
+}
+
+/**
+ * Sign one `upgrade-application` act on installation N under custody and send it (Rules 16; note 2026-11-17-application-upgrade).
+ * Before it signs, the request reads N and refuses when N is not active, when an upgrade of N is open
+ * (`application-upgrade-pending`), when the release does not match the chosen form, and when APPLICATION_TRUST does not list
+ * the release. The room's Rules judges the act again; acceptance records the request, and the installation read shows N later.
+ */
+export async function upgradeApplication(handle: InstallHandle, custody: Custody, args: UpgradeArguments, options: InstallOptions): Promise<UpgradeRequest> {
+  const refused = (refusal: UpgradeRefusal): UpgradeRequest => ({ outcome: "refused", refusal });
+  const key = args.idempotencyKey, item = args.item, replace = args.replace;
+  if (typeof key !== "string" || !validKey(key)) return refused({ refused: "key" });
+  if (typeof item !== "number" || !Number.isSafeInteger(item) || item < 0 || typeof replace !== "boolean") return refused({ refused: "installation" });
+  const room = await applicationRoom(handle.repository, options.reader);
+  if ("refused" in room) return refused(room);
+  const pin = room.cohort.rules;
+  const definition = platform(pin)!.data as unknown as DefinitionLike;
+  if (!Object.hasOwn(definition.acts, "upgrade-application")) return refused({ refused: "upgrade-unsupported" });
+  if (options.admit && !await options.admit({ rules: room.rules, membership: room.membership, pinned: pin, definition })) return refused({ refused: "unknown-tool" });
+  // The in-place form takes no roles or values; the selection reads them as empty and the act leaves them out.
+  if (!replace && (args.roles !== undefined || args.values !== undefined)) return refused({ refused: "installation" });
+  const selected = installSelection(room, definition, replace ? { uri: args.uri, release: args.release, roles: args.roles ?? [], values: args.values ?? {} } : { uri: args.uri, release: args.release, roles: [], values: {} });
+  if (!selected || "owner" in selected) return refused({ refused: "installation" });
+  const address = readApplicationReleaseUri(selected.uri);
+  try { trustFor(handle, address, selected.release); }
+  catch { return refused({ refused: "trust" }); }
+  const form = replace ? "replace" : "in-place";
+  const build = async () => {
+    const allowed = trustFor(handle, address, selected.release);
+    const fetched = await options.packageBytes(address, PACKAGE_BYTES);
+    if (!fetched.ok) throw new PackageUnavailable(fetched.reason);
+    const packet = readPublishedApplicationPackage2(fetched.bytes, selected.release, { bytes: PACKAGE_BYTES, definitionBytes: 64 * 1024 });
+    if (packet.package.release.manifest.publisher !== allowed.publisher) throw new ApplicationPackageError("invalid");
+    // N and its pending successors, read now: custody runs this only for a new request.
+    const read = await options.reader.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).queryItems({ v: 1, scope: room.rules, type: "installation", states: [...UPGRADE_STATES], ids: null, limit: ITEM_QUERY_BOUNDS.rows, cursor: null }));
+    if (!read.ok) throw new Refused({ refused: "installation-read", reason: read.reason });
+    const rows = read.value.items, on = rows.find(row => row.id === item);
+    if (!read.complete || read.next !== undefined || !on || on.type !== "installation") throw new Refused({ refused: "installation-unavailable" });
+    if (on.state !== "active") throw new Refused({ refused: "installation-state", state: on.state });
+    const at = on.refs["upgradeAt"];
+    if (rows.some(row => row.state === "pending" && row.refs["replaces"] === item) || (typeof at === "number" && await inPlaceFetchOpen(options.reader, room, at) === true)) throw new Refused({ refused: "upgrade-pending" });
+    const same = packet.ids.semantic === on.values["semantic"];
+    if (!replace && !same) throw new Refused({ refused: "semantic-changed" });
+    if (replace && same) throw new Refused({ refused: "semantic-kept" });
+    if (replace) {
+      const directory = await summaryOf(options.reader, room.directory.scope, room.membership);
+      if ("refused" in directory) throw new Refused(directory);
+      if (!commonsInstallCheck(directory, packet.package.semantic.host.requires).ok) throw new Refused({ refused: "commons-missing" });
+    }
+    const prepared = await signedApplicationUpgrade(handle.signer, fetched.bytes, selected, { on: item, revision: on.revision, inPlace: !replace }, { idempotencyKey: key, now: handle.now() }, allowed.publisher);
+    return { binding: { definition: "platform:rules", kind: "upgrade-application", declaration: declarationDigest(definition, "upgrade-application", pin), pinned: pin }, envelope: { signed: prepared.signed, beside: prepared.beside } };
+  };
+  const sent = await submitRequest(handle, custody, options, room, key, "upgrade-application", meaningOf({ upgrade: item, form, ...selected }), build);
+  if (sent.outcome !== "accepted") return sent;
+  const { seq, ...accepted } = sent;
+  return { ...accepted, act: seq, on: item, form };
 }
 
 // ---------------------------------------------------------------- the installation read
@@ -347,7 +480,9 @@ export async function applicationInstallation(handle: InstallHandle, item: unkno
   if (typeof item !== "number" || !Number.isSafeInteger(item) || item < 0) return refused({ refused: "item" });
   const room = await applicationRoom(handle.repository, options.reader);
   if ("refused" in room) return refused(room);
-  const read = await options.reader.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).queryItems({ v: 1, scope: room.rules, type: "installation", states: ["active", "pending", "refused"], ids: [item], limit: 1, cursor: null }));
+  // Rules 16 adds the final state `replaced`; an earlier pin declares no such state, and the query names only declared states.
+  const replaced = Object.hasOwn(platform(room.cohort.rules)!.data.items["installation"]?.states ?? {}, "replaced");
+  const read = await options.reader.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).queryItems({ v: 1, scope: room.rules, type: "installation", states: ["active", "pending", "refused", ...(replaced ? ["replaced"] : [])], ids: [item], limit: 1, cursor: null }));
   if (!read.ok) return refused({ refused: "installation-read", reason: read.reason });
   const row = read.value.items[0];
   if (!read.complete || read.next !== undefined || !row || row.id !== item || row.type !== "installation") return refused({ refused: "installation-unavailable" });
