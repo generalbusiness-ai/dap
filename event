@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I probe the local Artifacts simulator from a scratch directory with a pinned wrangler (local only, no live namespace, no config or pin change), then land one notes head with the observed results and the three recommendations."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:501921ff509b445f6e5a27b9b378ca10ffc4c145"}
