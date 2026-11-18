@@ -1,1 +1,1 @@
-{"kind":"promise","text":"KD-1: MacPorts.job answers absent when its second launchctl print reports the missing service; a red in test_shutdown.py reproduces the 18:33 output shape without sudo; the guide runs the start lines only after down exits 0 with storeStopped true. Full gate before review.","body":{"target":"inherit"}}
+{"kind":"promise","text":"I review U2 at exact head 8f713504: the note, the archive diff, every caller that sets the archive wake, the reds and the gate END."}
