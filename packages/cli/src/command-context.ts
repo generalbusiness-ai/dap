@@ -11,7 +11,7 @@ export interface Context {
   verify?: VerifyOptions;
   /** An explicit runtime port with persistent request custody. The browser
    * command surface has no MCP server or Node dependency. */
-  applicationCommand?: (name: "install_application" | "application_installation", args: Record<string, unknown>) => Promise<Outcome>;
+  applicationCommand?: (name: "install_application" | "upgrade_application" | "application_installation", args: Record<string, unknown>) => Promise<Outcome>;
   store: Store;
   /** Replaces the runtime's `fetch`: a test passes the Worker's routes. */
   fetch?: Fetch;

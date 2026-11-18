@@ -320,7 +320,9 @@ test("application install syntax and custody failures never create a register", 
     ["install", uri, "--release", release, "--request", "counter-1", "--cohort", COHORT],
     ["install", uri, "--release", release, "--request", "counter-1", "--values", "{"],
     ["install", SERVICE, "--release", release, "--request", "counter-1"],
-    ["application", "01"], ["application", "-1"],
+    ["application", "01"], ["application", "-1"], ["application", "3", "--release", release],
+    ["application", "upgrade", "3", uri, "--release", release], ["application", "upgrade", "x", uri, "--release", release, "--request", "counter-2"],
+    ["application", "upgrade", "3", uri, "--release", release, "--request", "counter-2", "--role", "member"],
   ]) expect((await command(s.ctx, args)).code).toBe(2);
   expect(await command(s.ctx, ["install", uri, "--release", release, "--request", "counter-1"])).toMatchObject({ code: 1, lines: [expect.stringContaining("Persistent application request custody")] });
   expect([s.metrics(), s.bodies, await s.store.config()]).toEqual([{ saves: 0, keyReads: 0, keyWrites: 0 }, [], null]);

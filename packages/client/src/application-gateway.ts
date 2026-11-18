@@ -12,6 +12,8 @@ declare const URL: new (url: string) => {
   searchParams: { keys(): IterableIterator<string>; get(name: string): string | null };
 };
 export const APPLICATION_SCREEN_HOST_PATH = "/_application-host";
+/** One screen origin for one installation item. The room serves the item's current presentation. `presentation` names the
+ * presentation that the operator reviewed when they added the row; an older screen's client still compares it with its own. */
 export interface ApplicationScreenHost {
   readonly v: 1; readonly screenOrigin: string; readonly roomOrigin: string;
   readonly directory: ScopeId; readonly item: number; readonly presentation: Digest;
@@ -29,9 +31,11 @@ export function readApplicationScreenHost(value: unknown): ApplicationScreenHost
     || !Number.isSafeInteger(body["item"]) || (body["item"] as number) < 0 || !isDigest(body["presentation"])) throw Error("Invalid application screen host.");
   return Object.freeze(body) as unknown as ApplicationScreenHost;
 }
+/** A screen path of the descriptor's installation, at any presentation. The room's route then serves only the item's current
+ * presentation, which it reads for every screen request, so an in-place upgrade moves the screen with no new descriptor. */
 export function applicationScreenHostMatches(host: ApplicationScreenHost, path: string): boolean {
   const at = readApplicationScreenAddress(path);
-  return !!at && at.directory === host.directory && at.item === host.item && at.presentation === host.presentation;
+  return !!at && at.directory === host.directory && at.item === host.item;
 }
 
 /** Only maintained native contracts. Their own parsers and membership gates
@@ -81,7 +85,8 @@ export type ApplicationGatewayFetch = (url: string, init?: Parameters<Fetch>[1] 
 const hosts = new WeakMap<ApplicationScreenContext, ApplicationScreenHost>();
 /** Called only after strict same-origin metadata and context checks. */
 export function bindApplicationScreenHost(context: ApplicationScreenContext, host: ApplicationScreenHost): void {
-  if (context.origin !== host.roomOrigin || context.directory.scope !== host.directory || context.item !== host.item || context.ids.presentation !== host.presentation) throw Error("The screen host does not match this installation.");
+  // The context's presentation is the item's current one, which the context read already matched to the page address.
+  if (context.origin !== host.roomOrigin || context.directory.scope !== host.directory || context.item !== host.item) throw Error("The screen host does not match this installation.");
   hosts.set(context, host);
 }
 /** Caller gets no new authority. Cookies and unrelated headers never cross

@@ -690,7 +690,10 @@ default. `ROOM`, `GROW` and `LENDING` bind fixed services and the named
 RPC entrypoint. Each request checks the complete descriptor against
 `screenHost` before `screen`, `native` or the stream-only `nativeStream`.
 Those RPC methods have no public room HTTP route. `screen` verifies the
-room origin and installation path before private rendering. `native`
+room origin and installation path before private rendering. The path
+matches the descriptor's directory and item at any presentation; the
+render serves only the item's current presentation, which it reads for
+each request. `native`
 repeats the finite gateway matcher before ordinary native dispatch. All
 three native-reading service methods use the same fixed indexed namespace
 as the room routes. Eligible signed reads keep the serving window of the

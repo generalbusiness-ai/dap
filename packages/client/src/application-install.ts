@@ -84,14 +84,28 @@ export async function signedPublishedApplicationInstall(signer: Signer, bytes: U
   return signApplicationInstall(signer, packet, owned, signing);
 }
 
-async function signApplicationInstall(signer: Signer, packet: AnyPackedApplication, owned: ApplicationInstallOptions, signing: Signing, owner?: MemberRef): Promise<SignedApplicationInstall> {
+/** The installation item that an `upgrade-application` act names, at its revision. The in-place form carries no roles or values. */
+export interface ApplicationUpgradeTarget { readonly on: number; readonly revision: number; readonly inPlace: boolean }
+
+/** One `upgrade-application` act on an active installation (Rules 16). It carries the install's fields for the named release.
+ * The Rules judge chooses the form from the release's semantic identifier; `inPlace` only decides whether roles and values go. */
+export async function signedApplicationUpgrade(signer: Signer, bytes: Uint8Array, options: ApplicationInstallOptions, target: ApplicationUpgradeTarget, signing: Signing = {}, publisher?: KeyId): Promise<SignedApplicationInstall> {
+  const owned = readApplicationInstallOptions(options);
+  if (!Number.isSafeInteger(target.on) || target.on < 0 || !Number.isSafeInteger(target.revision) || target.revision < 0) return invalid();
+  const packet = readPublishedApplicationPackage2(bytes, owned.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
+  if (publisher !== undefined && packet.package.release.manifest.publisher !== publisher) return invalid();
+  return signApplicationInstall(signer, packet, owned, signing, undefined, target);
+}
+
+async function signApplicationInstall(signer: Signer, packet: AnyPackedApplication, owned: ApplicationInstallOptions, signing: Signing, owner?: MemberRef, upgrade?: ApplicationUpgradeTarget): Promise<SignedApplicationInstall> {
   const semantic = applicationJson(packet.package.semantic, 256 * 1024), release = applicationJson(packet.package.release, 4096);
   const values = applicationJson(owned.values, 16 * 1024);
   const texts = packet.package.semantic.definitions.map(part => part.bytes);
-  const signed = await signedIntent(signer, { to: owned.rules, kind: "install-application", fields: {
-    uri: owned.uri, release: packet.ids.release, semantic: packet.ids.semantic, roles: [...owned.roles], values,
-    ...(owner ? { owner } : {}),
-    ...Object.fromEntries(texts.map((text, index) => [`definitionText${index}`, textDigest(text)])),
-  } }, signing);
+  const signed = await signedIntent(signer, { to: owned.rules, kind: upgrade ? "upgrade-application" : "install-application",
+    ...(upgrade ? { on: upgrade.on, expected: { on: upgrade.revision } } : {}), fields: {
+      uri: owned.uri, release: packet.ids.release, semantic: packet.ids.semantic, ...(upgrade?.inPlace ? {} : { roles: [...owned.roles], values }),
+      ...(owner ? { owner } : {}),
+      ...Object.fromEntries(texts.map((text, index) => [`definitionText${index}`, textDigest(text)])),
+    } }, signing);
   return { signed, beside: { values: [semantic, release], texts }, ids: packet.ids };
 }

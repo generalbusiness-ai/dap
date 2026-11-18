@@ -21,8 +21,9 @@ import type { Binding } from "../namespace.ts";
 const POLICY = "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'; form-action 'self'";
 const applicationJsonReply = (status: number, body: unknown) => jsonReply(status, body, { "x-content-type-options": "nosniff" });
 /** Missing, duplicate or malformed mappings admit no sandbox. A hostname is
- * stable for one installation; a reviewed presentation update replaces its
- * descriptor, without moving that installation's browser key storage. */
+ * stable for one installation. It serves the item's current presentation,
+ * which `screenResponse` reads for each request, so an in-place upgrade keeps
+ * the descriptor and that installation's browser key storage. */
 export function applicationScreenHosts(setting: string | undefined): readonly ApplicationScreenHost[] {
   try {
     if (!setting || setting.length > 32 * 4096) return [];
