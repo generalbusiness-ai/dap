@@ -113,6 +113,11 @@ is the review: the hostname serves any release of N that the trust list
 names and that U1's in-place rule admits. The semantic identifier,
 definition and publisher stay N's.
 
+The planner confirmed this move (ruling `d0a92549`). Adding a release to
+`APPLICATION_TRUST` is itself a reviewed head, and that review covers the
+release's screen. `docs/operate-a-service.md` says so where it describes
+the `SCREEN_HOSTS` rows.
+
 A replace opens a new item, which needs its own row, as before.
 
 ## Tests
@@ -172,3 +177,12 @@ correct until the upgrade. After an in-place upgrade to Counter 0.7.0,
 the hostname serves 0.7.0's presentation, so U4 must sign 0.7.0 from a
 head that contains U3. A rollback to a release whose client predates U3
 needs its row moved back to that presentation.
+
+## Limits
+
+The planner accepted two limits (ruling `d0a92549`):
+
+- A bookmark at an earlier presentation of the item answers 404. No
+  redirect leads to the current presentation.
+- `dap application upgrade` does not take `--owner`, so this command
+  cannot replace a device-command package yet.

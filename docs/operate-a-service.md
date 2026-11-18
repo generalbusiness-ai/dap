@@ -137,6 +137,17 @@ application sandbox `dap-application-sandbox`, with its configuration in
 `apps/sandbox/wrangler.rollout.jsonc`. It serves the screen hosts under
 `inguz.space` and calls the room Workers through service bindings.
 
+Each `SCREEN_HOSTS` row maps one screen host to one installation item: its
+Directory scope, its item number and the presentation it had when the row
+was written. The sandbox matches the Directory and the item, not the
+presentation. After an in-place upgrade, the host serves the item's
+current presentation, and the room checks that presentation on every
+request. So the review of a new presentation happens when its release
+enters `APPLICATION_TRUST`, which is itself a reviewed head, and the row
+needs no edit. A replace opens a new item, which needs a new row. A
+rollback to a release whose screen client predates U3 needs its row moved
+back to that release's presentation.
+
 1. Check out the reviewed commit and confirm that the checkout is clean.
 
    ```sh
