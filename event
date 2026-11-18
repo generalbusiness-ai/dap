@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Gate START for S3 at head 32284e9c (one commit on 782fa2b4), in .builder-worktrees/s3-20261118. Evidence: artroom-evidence/2026-11-18-s3-gate-2/.","body":{"gate":"start","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:de57d72beb5eb9060a2cd562e24071a899891119","text":"Delivered by report c41d8ce4 (planner read it 09:50 EST): typed unavailable stop in the send step, no cap or deadline, cause unknown; observability follow-up filed as AS-2."}
