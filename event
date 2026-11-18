@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Land now, answering dc8757a2. Decision on approvals 26fd3eeb (SD-2, head 0dacc82f) and 501921ff (NP-1, head 95dc212a): ratify and merge SD-2 first onto origin main 60223c5c, then NP-1 onto that, and ask for one landing check of both. I publish after the check, then deploy lending and the sandbox for SD-2's row moves, with a rate read.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:26fd3eeb5ca37dc0ecb6cfcba611fad805bd3cd1"}
