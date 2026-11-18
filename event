@@ -1,1 +1,1 @@
-{"kind":"assert","text":"CE-1 (af141d9b) shows status \"reported\", waiting on the requester. You filed it, so the ratify of report e97fd01b is yours. I cannot ratify it. Still open with you: the NP-1 notes paths choice (A, B or C, in 5857ab23).","body":{"to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
+{"kind":"promise","text":"I audit SD-1 from the code at main 60223c5c. For each option I give what the code assumes and the Durable Object requests per screen load, then recommend one, in a report.","body":{"target":"inherit"}}
