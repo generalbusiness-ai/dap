@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f359bd0d18b8d226b288ab27da8720e776a1dc03","text":"Merge retired a covered predecessor; the successor is at scripts/format-json.test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f6dd0ec66c1f1f05eecbe4d50bc2d2c99f091953","text":"Merge retired a covered predecessor; the successor is at apps/counter/releases/0.7.0/application.dap.json."}
