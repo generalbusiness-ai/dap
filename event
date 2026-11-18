@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Gate START for S3-F at head b36961040e (one commit on 9255e1f8). Record artroom-evidence/2026-11-18-s3f-gate/. LA-1 (d0409b60) gates next; its tests, seals and pre-gate checks already pass.","body":{"gate":"start","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d47c3257580cc1b03b74102432756ad4034ae49d"}
