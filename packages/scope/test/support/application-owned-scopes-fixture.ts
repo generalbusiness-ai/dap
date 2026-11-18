@@ -8,7 +8,8 @@ import { packApplication2, readApplicationProjection } from "@generalbusiness/da
 import { fixedSigner } from "../fixtures-core.ts";
 
 
-export async function applicationOwnedScopesPacket(label = "test-owned-root", version = "1") {
+/** `page` changes the presentation only. */
+export async function applicationOwnedScopesPacket(label = "test-owned-root", version = "1", page = "VEVTVA") {
   const child = definition("test-owned-child"), childId = definitionDigest(child), root = definition(label, childId), rootId = definitionDigest(root);
   const projection = (id: Digest, withChild: boolean) => readApplicationProjection({ v: 1, definition: id, revision: "revision", sources: {
     row: { read: "one", item: "root", states: ["open"], limit: 1, fields: {
@@ -24,7 +25,7 @@ export async function applicationOwnedScopesPacket(label = "test-owned-root", ve
     connections: [{ from: rootId, item: "root", slot: "child", to: childId }],
     host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], roles: { admin: [grant] }, predecessor: null,
     projections: { root: projection(rootId, true), child: projection(childId, false) },
-  }, presentation: { v: 2, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {}, resources: {}, views: {
+  }, presentation: { v: 2, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: page }], descriptions: {}, resources: {}, views: {
     root: { ...view, projection: "root", acts: [] },
     child: { ...view, projection: "child", acts: [{ act: "bump", label: "Bump", needs: grant, when: "count = 0" }] },
   } } }, signer);

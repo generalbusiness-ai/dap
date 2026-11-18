@@ -64,8 +64,10 @@ export interface RoomArchiveDriverOptions extends Omit<FixtureArchiveDriverOptio
   readonly target: ArchiveTarget;
   readonly provider: ArchiveProvider;
   readonly admit: (at: SequenceRef, seed: Seed) => boolean;
-  /** Paid per-pass installed policy preparation, before provider work. */
-  readonly preparePolicies?: (at: SequenceRef, seed: Seed, budget: ArchiveBudget) => Promise<{ readonly stop: string } | void>;
+  /** Paid per-pass installed policy preparation, before provider work. A
+   * `stop` ends the archive now. A `final` reason (U2) lets the pass publish
+   * through the scope's head and then ends the archive with that reason. */
+  readonly preparePolicies?: (at: SequenceRef, seed: Seed, budget: ArchiveBudget) => Promise<{ readonly stop: string } | { readonly final: string } | void>;
   readonly policyCurrent?: () => boolean;
 
   /** Fresh bounded source identity preparation, charged to the same pass. */
@@ -222,7 +224,7 @@ export class ArchiveDriver {
       // outer lookahead starts with this write already removed from its
       // available allowance; failure need not leave spare write capacity.
       if ("production" in this.#options) halt = rows.prepareHalt(budget);
-      let policySeed: Seed | null = null;
+      let policySeed: Seed | null = null, final: string | null = null;
       if ("production" in this.#options && this.#options.preparePolicies) {
         step = "policy"; detail = "own-preparation";
         // Policy denial must not depend on decoding a large old pending row.
@@ -234,10 +236,11 @@ export class ArchiveDriver {
         policySeed = initial.seed;
         const prepare = this.#options.preparePolicies;
         const prepared = await budget.wait(() => prepare(at, initial.seed, budget));
-        if (prepared?.stop) {
+        if (prepared && "stop" in prepared) {
           halt!(prepared.stop);
           return done({ state: "stopped", next: null, reason: prepared.stop });
         }
+        if (prepared && "final" in prepared) final = prepared.final;
         detail = "none";
       }
       let row = rows.load(budget);
@@ -337,7 +340,7 @@ export class ArchiveDriver {
             throw error;
           }
         }
-        if (seen === row.pending!.commit) { step = "confirm"; return done(this.#confirmed(rows, row, budget, frontiers, pendingFrontier)); }
+        if (seen === row.pending!.commit) { step = "confirm"; return done(this.#final(this.#confirmed(rows, row, budget, frontiers, pendingFrontier), halt, final)); }
         if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return done({ state: "stopped", next: null, reason: "conflict" }); }
       } else if (row.confirmed?.layout === 2 && row.confirmed.through.seq >= through.seq) {
         if ("production" in this.#options) {
@@ -347,6 +350,7 @@ export class ArchiveDriver {
           const latest = this.#options.sql.transaction(() => readArchiveScopeFrame(this.#options.sql, at, pin, this.#options.bounds, budget));
           if (latest.head.seq > row.confirmed.through.seq) return done({ state: "retry", next: scheduled });
         }
+        if (final !== null) return done(this.#ended(halt!, final));
         rows.clearWake(budget); this.#fallback = null; return done({ state: "idle", next: null });
       }
       if (!row.pending && !deferred) {
@@ -525,7 +529,7 @@ export class ArchiveDriver {
         ...(row!.confirmed?.layout === 2 ? { incremental: { budget } } : {}) }));
       step = "readback";
       const seen = await budget.wait(() => this.#options.provider.ref({ ...row!.repository }, ref, allowed));
-      if (seen === archive.commit) { step = "confirm"; return done(this.#confirmed(rows, row, budget, frontiers, pendingFrontier)); }
+      if (seen === archive.commit) { step = "confirm"; return done(this.#final(this.#confirmed(rows, row, budget, frontiers, pendingFrontier), halt, final)); }
       if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return done({ state: "stopped", next: null, reason: "conflict" }); }
       return done({ state: "retry", next });
     } catch (error) {
@@ -591,6 +595,15 @@ export class ArchiveDriver {
         });
       } catch { /* Observation cannot replace the original archive result. */ }
     }
+  }
+  /** U2: a confirmation that reaches the head ends a `final` archive. */
+  #final(pass: ArchivePass, halt: ((reason: string) => void) | null, final: string | null): ArchivePass {
+    return final === null || halt === null || pass.state !== "confirmed" || pass.next !== null ? pass : this.#ended(halt, final);
+  }
+  /** The terminal write leaves a stopped wake index, so no alarm follows. */
+  #ended(halt: (reason: string) => void, final: string): ArchivePass {
+    halt(final); this.#fallback = null;
+    return { state: "stopped", next: null, reason: final };
   }
   #confirmed(rows: ArchiveRows, row: ArchiveRow, budget: ArchiveBudget, frontiers: ArchiveFrontiers, frontier: ArchiveFrontierPrepared | null): ArchivePass {
     const mark = row.pending!, latest = this.#options.current();

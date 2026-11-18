@@ -74,7 +74,10 @@ import { CAPABILITY_CODE, production } from "../src/ports.ts";
 import { rita, una, vic, routed } from "./repository.ts";
 import { net, soon } from "./net.ts";
 import type {} from "./support/maintained-applications.ts";
-import { fixedSigner } from "./fixtures-core.ts";
+import { applicationTrust, fixedSigner } from "./fixtures-core.ts";
+import { readApplicationTrust } from "@generalbusiness/dap-client/application";
+import { applicationJson } from "@generalbusiness/dap-platform/application";
+import { APPLICATION_ARCHIVE_PROOF_BYTES } from "../src/applications/archive-proof.ts";
 import retainedGrowRoom from "./support/retained-archive-grow-room.json.txt?raw";
 import retainedGrowSite from "./support/retained-archive-grow-site.json.txt?raw";
 import { withSequence } from "../src/testing.ts";
@@ -628,12 +631,12 @@ for (const scenario of scenarios) {
         expect(rows.some(row => row.entry.input.type === "preparation" && row.entry.input.capability === DEVICE_COMMAND && row.entry.input.step === "answer")).toBe(true);
         expect(rows.flatMap(row => row.entry.effects)).toContainEqual(expect.objectContaining({ effect: "record", capability: DEVICE_COMMAND, kind: "command" }));
       }
-      const run = (scope: typeof rootScope, cutoff: Head) => life.wait(() => runInDurableObject(scope.object, async (_instance, state) => {
+      const run = (scope: typeof rootScope, cutoff: Head, via: typeof binding = binding, peer: ArchiveArtifactsPeer = host) => life.wait(() => runInDurableObject(scope.object, async (_instance, state) => {
         const sql = archiveSql(state), store = new SqliteStore(sql), given = archiveGiven(store);
-        const policies = new Map(nativePolicies), owner = roomArchivePackages(given, sql, binding, environment, policies, PROPOSED_BOUNDS);
+        const policies = new Map(nativePolicies), owner = roomArchivePackages(given, sql, via, environment, policies, PROPOSED_BOUNDS);
         expect(policies.has(rootId)).toBe(false); expect(policies.has(childId)).toBe(false);
-        const options = roomArchiveDriver(given, sql, binding, environment, policies, PROPOSED_BOUNDS,
-          request => { providerCalls++; return host.fetch(request); }, owner);
+        const options = roomArchiveDriver(given, sql, via, environment, policies, PROPOSED_BOUNDS,
+          request => { providerCalls++; return peer.fetch(request); }, owner);
         if (!options) throw Error("Shared Artifacts archive adapter must admit this installed room");
         const at = store.scope()!.at, budget = new ArchiveBudget();
         const result = await new ArchiveDriver({ ...options, sql, current: () => ({ at, head: cutoff }),
@@ -655,7 +658,7 @@ for (const scenario of scenarios) {
       const rootRecord = records.find(record => record.scope.name === rootScope.name)!, final = rootRecord.rows.at(-1)!;
       const rootHead = { seq: final.entry.seq, hash: final.hash };
       const confirmed = await life.wait(() => runInDurableObject(rootScope.object, (_instance, state) => new ArchiveRows(archiveSql(state), rootRecord.at).load()!.confirmed));
-      let sameDefinitionAuthority: unknown = null;
+      let sameDefinitionAuthority: unknown = null, upgrade: unknown = null;
       if (sharedBaseScenario) {
         // A second genuine installation exists only to distinguish scope
         // authority from a policy map that already contains its definition.
@@ -700,6 +703,56 @@ for (const scenario of scenarios) {
           expect(genuine).toBe(true);
           return { first: rootRecord.at, second: otherAt, definition: rootId, substituted, genuine, cost: budget.admitted() };
         }));
+        // U2: the Rules proof after each upgrade form. The rewritten replies stand in for Rules 16, whose own
+        // answer archive-upgrade.test.ts shows; identity walk, policy owner, driver and Artifacts writes are real.
+        const proofAs = (rewrite: (proof: string) => unknown): typeof binding => ({ idFromName: binding.idFromName, get: (id: DurableObjectId) => {
+          const target = binding.get(id);
+          return new Proxy(target, { get(peer, key) {
+            if (key !== "applicationArchiveProofBytes") return Reflect.get(peer, key);
+            return async (where: ScopeRef, job: number) => {
+              const raw = await (target as unknown as { applicationArchiveProofBytes(directory: ScopeRef, item: number): Promise<unknown> }).applicationArchiveProofBytes(where, job);
+              return typeof raw === "string" ? rewrite(raw) : raw;
+            };
+          } });
+        } });
+        // In place: the item now names release 2 with a new presentation and the birth's semantic identifier.
+        const next = await applicationOwnedScopesPacket("test-owned-root", "2", "TkVYVA"), publisher = packet.package.release.manifest.publisher;
+        expect(next.packet.ids.semantic).toBe(packet.ids.semantic);
+        expect(next.packet.ids.release).not.toBe(packet.ids.release); expect(next.packet.ids.presentation).not.toBe(packet.ids.presentation);
+        const inPlace = proofAs(raw => {
+          const proof = parseStrict(raw) as { installation: Record<string, unknown> };
+          return applicationJson({ ...proof, release: next.packet.package.release, installation: { ...proof.installation, ids: next.packet.ids } }, APPLICATION_ARCHIVE_PROOF_BYTES);
+        });
+        const nextTrust = readApplicationTrust(applicationTrust(next.packet, publisher)), trustBefore = environment.APPLICATION_TRUST, callsBefore = providerCalls;
+        environment.APPLICATION_TRUST = canonicalize([...f.trust, ...nextTrust]);
+        const bothTrusted = await run(rootScope, rootHead, inPlace);
+        // The operator then drops release 1 from APPLICATION_TRUST. The archive continues on release 2.
+        environment.APPLICATION_TRUST = canonicalize(nextTrust);
+        const newTrusted = await run(rootScope, rootHead, inPlace);
+        for (const pass of [bothTrusted, newTrusted]) {
+          expect(pass.result, "an in-place upgrade makes no retry").toEqual({ state: "idle", next: null });
+          expect(pass.terminal).toBeNull(); expect(pass.confirmed).toEqual(confirmed);
+        }
+        expect(providerCalls).toBe(callsBefore);
+        environment.APPLICATION_TRUST = trustBefore;
+        // Replace: the second installation's scope was never archived. Its archive publishes through its head,
+        // then stops with application-replaced, and a later pass sends nothing. A separate peer keeps its ref apart.
+        const replacedPeer = new ArchiveArtifactsPeer(repository, life.now), replacedProof = proofAs(raw => ({ replaced: raw }));
+        const otherHead = { seq: otherRows.at(-1)!.entry.seq, hash: otherRows.at(-1)!.hash }, replacedPasses: { state: string; reason?: string; next: unknown }[] = [];
+        let replaced = await run(otherRoot, otherHead, replacedProof, replacedPeer);
+        replacedPasses.push(replaced.result);
+        while (replaced.result.state === "confirmed" && replacedPasses.length <= otherRows.length) {
+          replaced = await run(otherRoot, otherHead, replacedProof, replacedPeer); replacedPasses.push(replaced.result);
+        }
+        expect(replaced.result, JSON.stringify(replacedPasses)).toEqual({ state: "stopped", next: null, reason: "application-replaced" });
+        expect(replaced.confirmed?.through).toEqual(otherHead); expect(replaced.terminal).toEqual({ reason: "application-replaced" });
+        expect([...replacedPeer.refs.keys()]).toEqual([journalRef(otherRoot.name)]);
+        const replacedCalls = providerCalls, after = await run(otherRoot, otherHead, replacedProof, replacedPeer);
+        expect(after.result).toEqual({ state: "stopped", next: null, reason: "application-replaced" });
+        expect(providerCalls).toBe(replacedCalls); expect(after.confirmed).toEqual(replaced.confirmed);
+        const replacedWake = await life.wait(() => runInDurableObject(otherRoot.object, (_instance, state) => new ArchiveRows(archiveSql(state), otherAt).storedWake()));
+        expect(replacedWake).toEqual({ pending: false, stopped: true, next: null });
+        upgrade = { inPlace: [bothTrusted.result, newTrusted.result], replacedPasses, replacedWake };
       }
       bindings.APPLICATION_TRUST = "[]"; environment.APPLICATION_TRUST = bindings.APPLICATION_TRUST;
       const calls = providerCalls;
@@ -744,7 +797,7 @@ for (const scenario of scenarios) {
       expect(command.code, command.lines.join("\n")).toBe(0); expect(mints).toBe(1);
       retainedCommand = { producer: producerTitle, id: commandSession.id, lines: [...command.lines], refs: cloned.refs };
       commandTransferred = true;
-      Object.assign(context.task.meta, { [scenario === "shared Grow" ? "sharedGrowArchive" : "sharedBaseArchive"]: { passes, proofReads, revoked, repeated, sameDefinitionAuthority, chainAgreement,
+      Object.assign(context.task.meta, { [scenario === "shared Grow" ? "sharedGrowArchive" : "sharedBaseArchive"]: { passes, proofReads, revoked, repeated, sameDefinitionAuthority, upgrade, chainAgreement,
         expectedScopes: records.map(({ at }) => at),
         qualification: `${scenario === "shared Grow" ? "Actual signed TEST Grow demo installed through its native cohort, distinct enrolled agents and accepted device answer" : "Actual non-Grow Base room and normal signed ordinary package installation"}; genuine root/child and namespace-only retained proof RPC; native-only initial policy map; shared roomArchivePackages/roomArchiveDriver, actual Artifacts token and Git adapter, real clone and public replay command. Binding/HTTP peer, clock and per-entry cutoff scheduler are TEST stand-ins. Every pass retains original caps/deadline; no alarm-cadence or hosted claim.` } });
       return;

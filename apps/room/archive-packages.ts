@@ -8,7 +8,7 @@ import type { ReviewedArchivePolicy } from "../../packages/scope/src/archive-inv
 import { forecastArchiveDeclarationValidation } from "../../packages/scope/src/archive-inventory-cost.ts";
 import { forecastArchivePackageProofFixed, forecastArchivePackageProofReply, forecastArchivePolicyTables, forecastArchiveTrustCheck, forecastArchiveTrustParse } from "./archive-setup-cost.ts";
 import { readApplicationTrust, type ApplicationTrust } from "@generalbusiness/dap-client/application";
-import { APPLICATION_ARCHIVE_PROOF_BYTES, isApplicationArchiveProofRefusal, readApplicationArchiveProof, type ApplicationArchiveProof, type ApplicationArchiveProofRefusal } from "../../packages/scope/src/applications/archive-proof.ts";
+import { APPLICATION_ARCHIVE_PROOF_BYTES, isApplicationArchiveProofRefusal, isApplicationArchiveProofReplaced, readApplicationArchiveProof, type ApplicationArchiveProof, type ApplicationArchiveProofRefusal, type ApplicationArchiveProofReplaced } from "../../packages/scope/src/applications/archive-proof.ts";
 import type { OutsideGiven } from "../../packages/scope/src/given.ts";
 import { namespace, type Binding } from "../../packages/scope/src/namespace.ts";
 import { readNativeBirth } from "../../packages/scope/src/native-birth.ts";
@@ -18,6 +18,8 @@ import { archiveInstallationIdentity, type ArchiveInstallationIdentity } from ".
 import { archivePackagePolicies } from "./archive-policy.ts";
 
 export const APPLICATION_ARCHIVE_REVOKED = "application-policy-revoked";
+/** U2: an upgrade replaced the scope's installation. */
+export const APPLICATION_ARCHIVE_REPLACED = "application-replaced";
 /** App-private templates shared by production reads and the Plain native-guard owner. */
 export const archivePackageQueries = Object.freeze({
   entryPosition: "SELECT hash,size,typeof(bytes) AS type,octet_length(bytes) AS actual FROM entry WHERE seq=? LIMIT 1",
@@ -31,7 +33,8 @@ export const archivePackageQueries = Object.freeze({
           ${text("$.input.from.at.scope", 71)} AS rulesScope,${text("$.input.from.at.genesis", 71)} AS rulesGenesis
           FROM entry WHERE seq=? AND hash=? AND size=? AND typeof(bytes)='text' AND octet_length(bytes)=? LIMIT 1`,
 });
-type ProofReply = string | ApplicationArchiveProofRefusal | null | RoomRetiredStop;
+type ProofReply = string | ApplicationArchiveProofReplaced | ApplicationArchiveProofRefusal | null | RoomRetiredStop;
+type Proved = { readonly checked: ApplicationArchiveProof; readonly replaced: boolean };
 type ProofPeer = { applicationArchiveProofBytes(directory: ScopeRef, item: number): Promise<ProofReply> };
 type Identity = Pick<ArchiveInstallationIdentity, "directory" | "rules" | "rulesNamed" | "item">;
 
@@ -83,7 +86,7 @@ export function roomArchivePackages(_given: OutsideGiven, sql: Sql, binding: Bin
     for (const [pin, policy] of declared) policies.set(pin, policy);
     releases.set(release, proof.publisher);
   };
-  const proof = async (identity: Identity, budget: ArchiveBudget): Promise<ApplicationArchiveProof | null> => {
+  const proof = async (identity: Identity, budget: ArchiveBudget): Promise<Proved | null> => {
     const held = budget.reserve({ nodes: 1, calls: 1, metadata: bounds.entryBytes, inputWork: bounds.entryBytes * 8 });
     const birth = readNativeBirth(await budget.wait(() => namespace(binding).births.read(identity.rules, Math.min(10_000, budget.remaining()), bounds.entryBytes)), identity.rules, bounds.entryBytes,
       bytes => { budget.settle(held, bytes); budget.spend({ inputWork: bytes * 32 }); });
@@ -104,7 +107,7 @@ export function roomArchivePackages(_given: OutsideGiven, sql: Sql, binding: Bin
     flights.set(key, task);
     const release = () => { if (flights.get(key) === task) flights.delete(key); };
     void task.then(release, release);
-    const raw = await budget.wait(() => task);
+    const reply = await budget.wait(() => task), replaced = isApplicationArchiveProofReplaced(reply), raw = replaced ? reply.replaced : reply;
     if (isApplicationArchiveProofRefusal(raw)) {
       // A refusal keeps the full reserved read charge. Active installation
       // already retained its signed inputs; no archive repair owns them.
@@ -116,8 +119,7 @@ export function roomArchivePackages(_given: OutsideGiven, sql: Sql, binding: Bin
     if (bytes > APPLICATION_ARCHIVE_PROOF_BYTES) return null;
     budget.settle(reservation, bytes);
     const checked = readApplicationArchiveProof(raw, { named: identity.rulesNamed, rules: identity.rules, directory: identity.directory, item: identity.item });
-    if (!checked) return null;
-    return checked;
+    return checked ? { checked, replaced } : null;
   };
   const installed = async (at: ScopeRef, seed: Seed, budget: ArchiveBudget, birth?: { bytes: string; hash: Digest }) => {
     const identity = await archiveInstallationIdentity(at, seed, sql, binding, bounds, budget,
@@ -125,23 +127,29 @@ export function roomArchivePackages(_given: OutsideGiven, sql: Sql, binding: Bin
     budget.check();
     if (!identity) return false;
     if (identity === "unpackaged") throw new ArchivePolicyStopped("application-policy-unavailable");
-    if (!trusted(identity.ids.release, undefined, budget)) throw new ArchivePolicyStopped(APPLICATION_ARCHIVE_REVOKED);
-    const checked = await proof(identity, budget);
-    if (!checked || !same(checked.installation.scope, identity.root) || checked.installation.definition !== identity.definition
-      || !same(checked.installation.ids, identity.ids) || !checked.semantic.definitions.some(part => part.id === seed.definition)) return false;
+    const proved = await proof(identity, budget), checked = proved?.checked;
+    // U2 (decision c69cb559): an in-place upgrade moves the item's release and
+    // presentation. The semantic identifier and the root definition stay the
+    // birth's; `add` checks current trust of the item's current release.
+    if (!proved || !checked || !same(checked.installation.scope, identity.root) || checked.installation.definition !== identity.definition
+      || checked.installation.ids.semantic !== identity.ids.semantic || !checked.semantic.definitions.some(part => part.id === seed.definition)) return false;
     add(checked, budget);
     budget.spend({ metadata: 512, inputWork: 4096 });
     owned.add(canonicalize(at));
-    return true;
+    return proved.replaced ? "replaced" : "active";
   };
   return {
     current,
-    async prepare(at: SequenceRef, seed: Seed, budget: ArchiveBudget): Promise<{ readonly stop: string } | void> {
+    async prepare(at: SequenceRef, seed: Seed, budget: ArchiveBudget): Promise<{ readonly stop: string } | { readonly final: string } | void> {
       budget.spend(forecastArchivePolicyTables(policies.size + releases.size + prepared.size + owned.size, native.size));
       active = { at: { ...at }, seed: { ...seed } }; activeBudget = budget; truth = null;
       policies.clear(); for (const [pin, policy] of native) policies.set(pin, policy);
       releases.clear(); prepared.clear(); owned.clear();
-      if (isDigest(seed.definition) && !await installed(at, seed, budget)) throw new ArchivePolicyPending();
+      if (!isDigest(seed.definition)) return;
+      const state = await installed(at, seed, budget);
+      if (!state) throw new ArchivePolicyPending();
+      // U2: publish through the head, then stop. No retry follows the stop.
+      if (state === "replaced") return { final: APPLICATION_ARCHIVE_REPLACED };
     },
     async source(at: ScopeRef, seed: Seed, birth: { bytes: string; hash: Digest }, budget: ArchiveBudget): Promise<boolean> {
       if (!isDigest(seed.definition)) return policies.has(seed.definition);
@@ -152,7 +160,7 @@ export function roomArchivePackages(_given: OutsideGiven, sql: Sql, binding: Bin
         if (!current()) throw new ArchivePolicyStopped(APPLICATION_ARCHIVE_REVOKED);
         return true;
       }
-      return installed(at, seed, budget, birth);
+      return await installed(at, seed, budget, birth) !== false;
     },
     /** Native Rules/Directory entries select their own installation proof;
      * there is no scan of other rooms or all trusted releases. */
@@ -195,9 +203,9 @@ export function roomArchivePackages(_given: OutsideGiven, sql: Sql, binding: Bin
       }
       try {
         for (const identity of identities) {
-          const checked = await proof(identity, budget);
-          if (!checked) throw new ArchivePolicyPending();
-          add(checked, budget);
+          const proved = await proof(identity, budget);
+          if (!proved) throw new ArchivePolicyPending();
+          add(proved.checked, budget);
         }
       } catch (error) {
         if (error instanceof ArchivePolicyStopped) throw new ArchivePolicyStopped(error.policyReason, { ...error.details, position: { seq, hash } });

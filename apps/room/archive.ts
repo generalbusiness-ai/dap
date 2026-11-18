@@ -34,7 +34,7 @@ export function roomArchiveConfiguration(env: RoomArchiveEnvironment): RoomArchi
 /** One target resolution prepares only the finite room graph's public birth
  * identities. Private Register/Membership bodies are never inventoried. Each
  * new pass repeats the reads/validation on its original archive allowance. */
-export function roomArchiveDriver(given: OutsideGiven, sql: Sql, binding: Binding, env: RoomArchiveEnvironment, policies: ArchivePolicyRegistry, bounds: Bounds, fetch?: (request: Request) => Promise<Response>, policyOwner?: { prepare(at: SequenceRef, seed: Seed, budget: ArchiveBudget): Promise<{ readonly stop: string } | void>; current(): boolean; candidate(seq: number, budget: ArchiveBudget): Promise<void>; source(at: SequenceRef, seed: Seed, birth: { bytes: string; hash: Digest }, budget: ArchiveBudget): Promise<boolean> }): Omit<RoomArchiveDriverOptions, "sql" | "current" | "clock" | "bounds"> | null {
+export function roomArchiveDriver(given: OutsideGiven, sql: Sql, binding: Binding, env: RoomArchiveEnvironment, policies: ArchivePolicyRegistry, bounds: Bounds, fetch?: (request: Request) => Promise<Response>, policyOwner?: { prepare(at: SequenceRef, seed: Seed, budget: ArchiveBudget): Promise<{ readonly stop: string } | { readonly final: string } | void>; current(): boolean; candidate(seq: number, budget: ArchiveBudget): Promise<void>; source(at: SequenceRef, seed: Seed, birth: { bytes: string; hash: Digest }, budget: ArchiveBudget): Promise<boolean> }): Omit<RoomArchiveDriverOptions, "sql" | "current" | "clock" | "bounds"> | null {
   const config = roomArchiveConfiguration(env), ready = artifactsReadiness(env);
   if (!config || ready.state !== "wired") return null;
   const artifacts = ready.binding;
