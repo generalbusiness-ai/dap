@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:64552d409314e82829b263a430cb8ec04c06ab84","text":"Closed in the 2026-11-18 open-request review, with Hugh's approval. obsolete: not reproduced since 4 November; the archive was reworked by AR-1 to AR-5."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6478fe47014d61a8137e84831dabc72c29952ee7","text":"Closed in the 2026-11-18 open-request review, with Hugh's approval. obsolete: builder self-tracking from an earlier phase; the work landed or was replaced."}
