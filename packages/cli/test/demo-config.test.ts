@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { isDeepStrictEqual } from "node:util";
 import { expect, test } from "vitest";
 import type { PlatformDefinition } from "@generalbusiness/dap-contract";
-import { BASE_COHORT, COMMONS_COHORT } from "@generalbusiness/dap-platform";
+import { BASE_COHORT, COMMONS_COHORT, UPGRADE_COHORT } from "@generalbusiness/dap-platform";
 import { permitsNewPlatformScope, readPlatformCreationPolicy } from "../../scope/src/creation-versions.ts";
 import { readInstalledRegisters } from "../../scope/src/register-setting.ts";
 import { artifactsConfiguration } from "../../scope/src/artifacts-wiring.ts";
@@ -55,7 +55,7 @@ test("dap-demo has private namespaces, enforced index and the Grow serving bound
     ["wrangler.demo.jsonc", "dap-demo", "worker.ts", "enforce", ["platform:register@28", "platform:directory@27", "platform:membership@14", "platform:rules@15", "platform:destination@21", "platform:register@17", "platform:directory@16", "platform:membership@8", "platform:rules@10", "platform:destination@12", "platform:inbox@1"]],
     ["wrangler.commons.jsonc", "dap-commons", "worker.commons.ts", "enforce", ["platform:register@23", "platform:directory@22", "platform:membership@9", "platform:rules@14", "platform:destination@16", "platform:inbox@1", "platform:commons@1"]],
     ["wrangler.grow.jsonc", "dap-grow", "worker.grow.ts", "enforce", ["platform:register@28", "platform:directory@27", "platform:membership@14", "platform:rules@15", "platform:destination@21", "platform:register@17", "platform:directory@16", "platform:membership@8", "platform:rules@10", "platform:destination@12", "platform:inbox@1"]],
-    ["wrangler.lending.jsonc", "dap-lending", "worker.ts", "enforce", ["platform:register@28", "platform:directory@27", "platform:membership@14", "platform:rules@15", "platform:destination@21", "platform:register@5", "platform:directory@5", "platform:membership@4", "platform:rules@3", "platform:destination@2", "platform:inbox@1"]],
+    ["wrangler.lending.jsonc", "dap-lending", "worker.ts", "enforce", ["platform:register@28", "platform:directory@27", "platform:membership@14", "platform:rules@15", "platform:destination@21", "platform:register@5", "platform:directory@5", "platform:membership@4", "platform:rules@3", "platform:destination@2", "platform:inbox@1", "platform:register@29", "platform:directory@28", "platform:rules@16"]],
     ["wrangler.artroom-scope.jsonc", "artroom-scope", "worker.ts", "enforce", null],
     ["wrangler.jsonc", "dap-self-host", "worker.ts", "enforce", null],
   ] as const;
@@ -158,4 +158,14 @@ test("the commons Worker's creation policy admits the base family and keeps ever
   for (const pin of Object.values(COMMONS_COHORT)) expect(permitsNewPlatformScope(policy, pin), pin).toBe(true);
   expect(JSON.parse(commons.vars.DEMO_START_CONFIG).definition).toBe(COMMONS_COHORT.register);
   expect(permitsNewPlatformScope(policy, "platform:register@2" as PlatformDefinition)).toBe(false);
+});
+
+// UC-P (decision ab65d84d): dap-lending admits the upgrade cohort beside base, so a planned
+// Register 29 can be installed there. The current register and every base pin stay admitted.
+test("the lending Worker's creation policy admits the upgrade cohort beside base", () => {
+  const lending = read("wrangler.lending.jsonc"), policy = readPlatformCreationPolicy({ PLATFORM_CREATION_PINS: lending.vars.PLATFORM_CREATION_PINS });
+  for (const pin of Object.values(UPGRADE_COHORT)) expect(permitsNewPlatformScope(policy, pin), pin).toBe(true);
+  for (const pin of Object.values(BASE_COHORT)) expect(permitsNewPlatformScope(policy, pin), pin).toBe(true);
+  // The pins add no register: the current root alone stays installed until the window.
+  expect(readInstalledRegisters(lending.vars)).toMatchObject({ kind: "pinned", scope: lending.vars.REGISTER_SCOPE, scopes: [lending.vars.REGISTER_SCOPE] });
 });
