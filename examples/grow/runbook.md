@@ -15,7 +15,7 @@ deployment, run the pinned tool from a scratch directory:
 ```sh
 ARTROOM_REPO=/absolute/path/to/artroom
 cd "$(mktemp -d)"
-npx -y wrangler@4.147.0 deploy --keep-vars --config "$ARTROOM_REPO/apps/room/wrangler.grow.jsonc"
+npx -y wrangler@4.163.0 deploy --keep-vars --config "$ARTROOM_REPO/apps/room/wrangler.grow.jsonc"
 ```
 
 Use the reviewed, landed checkout and preserve each original request and
@@ -244,7 +244,7 @@ It opens public sessions for both keys and compares the public retained
 birth's owner grant to the exact signed graph before running a tick.
 
 The Worker is separate from the scope host and holds no operator key. Its only
-room interface is the public member API. Use pinned Wrangler 4.147.0 from a
+room interface is the public member API. Use pinned Wrangler 4.163.0 from a
 scratch directory with an explicit config path; do not install tooling into
 the checkout or run a local command against a remote Artifacts binding.
 
@@ -260,9 +260,9 @@ scratch directory with the reviewed absolute checkout path in
 `GROW_CHECKOUT` and the verified public binding JSON in `GROW_BINDING`:
 
 ```sh
-npx --yes --package wrangler@4.147.0 -- wrangler deploy --keep-vars --config "${GROW_CHECKOUT:?Set the reviewed checkout}/examples/grow/wrangler.jsonc" --var "GROW_BINDING:${GROW_BINDING:?Set the verified public Room binding}"
-npx --yes --package wrangler@4.147.0 -- wrangler secret put GROW_SENSORS_SECRET --config "$GROW_CHECKOUT/examples/grow/wrangler.jsonc"
-npx --yes --package wrangler@4.147.0 -- wrangler secret put GROW_CLIMATE_SECRET --config "$GROW_CHECKOUT/examples/grow/wrangler.jsonc"
+npx --yes --package wrangler@4.163.0 -- wrangler deploy --keep-vars --config "${GROW_CHECKOUT:?Set the reviewed checkout}/examples/grow/wrangler.jsonc" --var "GROW_BINDING:${GROW_BINDING:?Set the verified public Room binding}"
+npx --yes --package wrangler@4.163.0 -- wrangler secret put GROW_SENSORS_SECRET --config "$GROW_CHECKOUT/examples/grow/wrangler.jsonc"
+npx --yes --package wrangler@4.163.0 -- wrangler secret put GROW_CLIMATE_SECRET --config "$GROW_CHECKOUT/examples/grow/wrangler.jsonc"
 ```
 
 Supply each distinct agent secret through Wrangler's private prompt or
@@ -347,7 +347,7 @@ one-minute cadence throughout.
 3. Deploy the reviewed scope Worker from a scratch directory:
 
    ```sh
-   npx --yes --package wrangler@4.147.0 -- wrangler deploy --keep-vars --config "${GROW_CHECKOUT:?Set the reviewed checkout}/apps/room/wrangler.grow.jsonc"
+   npx --yes --package wrangler@4.163.0 -- wrangler deploy --keep-vars --config "${GROW_CHECKOUT:?Set the reviewed checkout}/apps/room/wrangler.grow.jsonc"
    ```
 
    Record the actual Worker version and settings. Set no archive Worker
@@ -432,13 +432,13 @@ object:
 
    ```sh
    cd "$(mktemp -d)"
-   npx -y wrangler@4.147.0 tail dap-grow --format json > tail.json
+   npx -y wrangler@4.163.0 tail dap-grow --format json > tail.json
    ```
 
    Stop the tail after the read; a tail that runs on leaves a Wrangler
    process behind. Run it under a wrapper that ends the whole process
    group after a fixed time, for example this one, as
-   `perl tailfor.pl 1500 npx -y wrangler@4.147.0 tail dap-grow --format json`:
+   `perl tailfor.pl 1500 npx -y wrangler@4.163.0 tail dap-grow --format json`:
 
    ```perl
    # Usage: perl tailfor.pl SECONDS command...
@@ -618,7 +618,7 @@ command, from a scratch directory, as a `--var` value:
 
 ```sh
 DIRECTIVE="$(cat directive.json)"
-npx -y wrangler@4.147.0 deploy --keep-vars --config "$ARTROOM_REPO/apps/room/wrangler.grow.jsonc" --var "ARCHIVE_RESTART_DIRECTIVE:$DIRECTIVE"
+npx -y wrangler@4.163.0 deploy --keep-vars --config "$ARTROOM_REPO/apps/room/wrangler.grow.jsonc" --var "ARCHIVE_RESTART_DIRECTIVE:$DIRECTIVE"
 ```
 
 Deploy the same reviewed source that is live, so that the only change is
@@ -670,7 +670,7 @@ Remove the setting at the next `dap-grow` deploy. `--keep-vars` keeps a
 setting that the file omits, so this one deploy runs without it:
 
 ```sh
-npx -y wrangler@4.147.0 deploy --config "$ARTROOM_REPO/apps/room/wrangler.grow.jsonc"
+npx -y wrangler@4.163.0 deploy --config "$ARTROOM_REPO/apps/room/wrangler.grow.jsonc"
 ```
 
 Secrets are held separately and survive. A deploy without `--keep-vars`
@@ -679,8 +679,8 @@ it, read the live version's settings and list every plain setting that
 is not in `wrangler.grow.jsonc`:
 
 ```sh
-npx -y wrangler@4.147.0 deployments status --name dap-grow --json
-npx -y wrangler@4.147.0 versions view "$LIVE_VERSION" --name dap-grow --json
+npx -y wrangler@4.163.0 deployments status --name dap-grow --json
+npx -y wrangler@4.163.0 versions view "$LIVE_VERSION" --name dap-grow --json
 ```
 
 Carry each such setting on the removal command as a reviewed `--var`,
@@ -689,7 +689,7 @@ exactly the file's eleven. After the deploy, read the new version's
 settings and check that `ARCHIVE_RESTART_DIRECTIVE` is absent:
 
 ```sh
-npx -y wrangler@4.147.0 versions view "$VERSION" --name dap-grow --json
+npx -y wrangler@4.163.0 versions view "$VERSION" --name dap-grow --json
 ```
 
 Record the deploy and the version in the workroom, under the request

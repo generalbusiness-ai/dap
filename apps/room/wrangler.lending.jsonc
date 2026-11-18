@@ -2,7 +2,7 @@
 // The lending library's deployment of the scope Worker: Worker dap-lending at https://dap-lending.inguz.workers.dev, with its own
 // Durable Object namespace and Artifacts namespace. ARTIFACTS_CONFIG names the register of the library's room, created after the
 // first deployment (examples/lending/runbook.md). Deploy from apps/room with
-// `npx -y wrangler@4.147.0 deploy --keep-vars --config wrangler.lending.jsonc`. DEPLOYMENT and SESSION_SECRET are existing secret bindings; preserve them.
+// `npx -y wrangler@4.163.0 deploy --keep-vars --config wrangler.lending.jsonc`. DEPLOYMENT and SESSION_SECRET are existing secret bindings; preserve them.
 {
   "name": "dap-lending",
   "main": "worker.ts",

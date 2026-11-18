@@ -23,6 +23,6 @@ while you work, and the gate (`npm run gate`) once before review. Do not run
 mutation sweeps or repeat whole suites.
 
 Tooling probes: never install packages in a checkout to run a tool. Run a
-pinned tool from a scratch directory (for example `npx wrangler@4.147.0`
+pinned tool from a scratch directory (for example `npx wrangler@4.163.0`
 in `/tmp`), so `package.json` and the lockfile change only in a reviewed
 commit. A checkout with uncommitted changes blocks landings.

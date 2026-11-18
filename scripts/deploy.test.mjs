@@ -32,7 +32,7 @@ async function fixture(t, names = ["grow"]) {
     }
     assert.equal(command, "npx"); calls.push({ args, options }); scratch.add(options.cwd);
     assert.ok(!resolve(options.cwd).startsWith(resolve(root)));
-    assert.deepEqual(args.slice(0, 4), ["-y", "wrangler@4.147.0", "deploy", "--keep-vars"]);
+    assert.deepEqual(args.slice(0, 4), ["-y", "wrangler@4.163.0", "deploy", "--keep-vars"]);
     assert.equal(options.env.WRANGLER_CI_OVERRIDE_NAME, undefined);
     const config = JSON.parse(await readFile(args[args.indexOf("--config") + 1], "utf8"));
     if (args.includes("--dry-run")) {
@@ -45,7 +45,7 @@ async function fixture(t, names = ["grow"]) {
       return { code: behavior.buildExit ?? 0, stdout: "TEST build", stderr: "" };
     }
     const rows = [
-      { type: "wrangler-session", version: 1, wrangler_version: "4.147.0", command_line_args: ["deploy", "--keep-vars"] },
+      { type: "wrangler-session", version: 1, wrangler_version: "4.163.0", command_line_args: ["deploy", "--keep-vars"] },
       { type: "deploy", version: 1, worker_name: behavior.worker ?? config.name, version_id: version },
     ];
     await writeFile(options.env.WRANGLER_OUTPUT_FILE_PATH, rows.map(JSON.stringify).join("\n")
