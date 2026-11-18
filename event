@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:caaa6edc4437858dfe16832c0d2271d8dbc8722f","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m4-caller-cutover.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:caad0f2c3c3fce7dcb85d7d1962d844930d53ddd","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-json-pre-gate.manifest.json."}
