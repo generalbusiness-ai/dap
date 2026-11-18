@@ -185,15 +185,44 @@ test("room screen descriptors and sandbox mappings agree in both directions on t
   assert.deepEqual(mapped.filter(row => row.host.screenOrigin === "https://lending-shelf.inguz.space"), [{
     host: { v: 1, screenOrigin: "https://lending-shelf.inguz.space", roomOrigin: "https://dap-lending.inguz.workers.dev",
       directory: "sc_zyofzb2ffitaapn2qavxv2nbdtlxzcjohc2t3mtrgqhvh2nt4dtq", item: 5,
-      presentation: "sha256:188f7b84e6b1ba29c2090265f4d7884a29884beff6ea58774a34ce8fbeef9f81" },
+      presentation: "sha256:6153d94842dffeadaab5cfb8c6db3f417021daf8c1f9e2fb07a3bdfd110f1e84" },
     service: "LENDING",
-  }], "lending-shelf.inguz.space serves Lending 0.4.0 at upgrade-witness item 5 through dap-lending");
+  }], "lending-shelf.inguz.space names upgrade-witness item 5, reviewed at Lending 0.6.0, through dap-lending");
   assert.deepEqual(mapped.filter(row => row.host.screenOrigin === "https://counter-upgrade.inguz.space"), [{
     host: { v: 1, screenOrigin: "https://counter-upgrade.inguz.space", roomOrigin: "https://dap-lending.inguz.workers.dev",
       directory: "sc_zyofzb2ffitaapn2qavxv2nbdtlxzcjohc2t3mtrgqhvh2nt4dtq", item: 2,
-      presentation: "sha256:905a3f7e088278894937f41bd27bf612bafac9b65fe030dbf0e2e0f584cd444f" },
+      presentation: "sha256:70c32e9edc50ac6c5128fb0573f9703773bcac7098269fdd7b51b70832e5c15c" },
     service: "LENDING",
-  }], "counter-upgrade.inguz.space serves Counter 0.6.0 at upgrade-witness item 2 through dap-lending");
+  }], "counter-upgrade.inguz.space names upgrade-witness item 2, reviewed at Counter 0.7.0, through dap-lending");
   const byHost = (a, b) => a.host.screenOrigin.localeCompare(b.host.screenOrigin) || a.service.localeCompare(b.service);
   assert.deepEqual(mapped.sort(byHost), expected.sort(byHost), "room and sandbox screen descriptors must match, with no row on one side alone");
+});
+
+// SD-2: a row's presentation is the reviewed presentation. It must belong to a
+// release in the same Worker's APPLICATION_TRUST, read from a committed packet.
+test("each room screen row names the presentation of a release that its Worker trusts", async () => {
+  const { readPublishedApplicationPackage2 } = await import("@generalbusiness/dap-platform/application-v2");
+  const repository = new URL("../", import.meta.url);
+  const packets = ["examples/grow/demo/application.dap.json"];
+  for (const dir of ["apps/counter/releases/", "examples/lending/releases/"]) {
+    for (const version of (await readdir(new URL(dir, repository))).sort()) packets.push(`${dir}${version}/application.dap.json`);
+  }
+  const presentationOf = new Map();
+  for (const path of packets) {
+    const { ids } = readPublishedApplicationPackage2(new Uint8Array(await readFile(new URL(path, repository))), null);
+    presentationOf.set(ids.release, ids.presentation);
+  }
+  const roomFiles = (await readdir(new URL("apps/room/", repository))).filter(name => /^wrangler(?:\..+)?\.jsonc$/.test(name)).sort();
+  let rows = 0;
+  for (const file of roomFiles) {
+    const room = parseConfig(await readFile(new URL(`apps/room/${file}`, repository), "utf8"));
+    const hosts = JSON.parse(room.vars.APPLICATION_SCREEN_HOSTS ?? "[]");
+    if (!hosts.length) continue;
+    const trusted = new Set(JSON.parse(room.vars.APPLICATION_TRUST ?? "[]").map(row => presentationOf.get(row.release)));
+    for (const host of hosts) {
+      rows += 1;
+      assert.ok(trusted.has(host.presentation), `${file}: ${host.screenOrigin} names ${host.presentation}, which no release in this Worker's APPLICATION_TRUST presents`);
+    }
+  }
+  assert.ok(rows > 0, "the tracked room files name screen rows");
 });

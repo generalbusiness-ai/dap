@@ -455,6 +455,9 @@ lists.
 
 3. To install a package with local `dap install` or local `dap mcp`, set
    the same `APPLICATION_TRUST` value in that process's environment.
+4. In the head that adds a release's trust row, move each screen row of
+   an item scheduled for that release to the release's presentation, in
+   both `APPLICATION_SCREEN_HOSTS` and the sandbox's `SCREEN_HOSTS`.
 
 The Worker applies these rules:
 
