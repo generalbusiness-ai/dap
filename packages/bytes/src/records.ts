@@ -89,12 +89,12 @@ export type RefusalClass = "never" | "head" | "protocol";
  * `genesis-conflict` are not refusal reasons, so the table has no row for them.
  */
 export const REFUSAL_CLASSES: Record<RefusalReason, RefusalClass> = {
-  archived: "never", "floor-ahead": "never", "floor-back": "never", "floor-keep": "never", "scope-refused": "never", "application-replaced": "never", late: "never",
+  archived: "never", "floor-ahead": "never", "floor-back": "never", "floor-keep": "never", "scope-refused": "never", late: "never",
   misaddressed: "protocol", "unknown-act": "protocol", "unknown-message": "protocol", "wrong-pin": "protocol", "unsupported-definition": "protocol",
   "floor-receipt": "head", "floor-step": "head", "floor-recent": "head", "floor-kept": "head", "revision-moved": "head", alias: "head", "duplicate-relation": "head",
   "required-unset": "head", "scope-full": "head", "bad-intent": "head", expired: "head", "bad-field": "head", "no-item": "head", final: "head",
   "fact-mismatch": "head", unauthorized: "head", "guard-failed": "head", "capability-refused": "head", "slot-full": "head", "type-full": "head",
-  "entry-too-large": "head", "send-unresolved": "head", "application-revoked": "head", limit: "head", "bad-input": "head",
+  "entry-too-large": "head", "send-unresolved": "head", "application-revoked": "head", "application-replaced": "head", limit: "head", "bad-input": "head",
 };
 export const READ_REFUSALS: Record<ReadRefusal, true> = {
   behind: true,

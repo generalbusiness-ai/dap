@@ -11,8 +11,8 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 // its own source-ordered line. Root adopts actual parser values after review.
 const namedOwners = {
   "packages/scope/src/object.ts": {
-    "packages/scope/src/object.ts:$module": "61e64e92aebf2a3c602365b09d982b68ab0d7a348a1bc2b6232455b2bbf2079e",
-    "packages/scope/src/object.ts:ScopeObject": "0c29878ad81078430c2f8470a06d9cf27d8d20205a5d136cc1329f155ab5e69d" // AR-5: activation calls committed(false)
+    "packages/scope/src/object.ts:$module": "b5a75b1b796e41010438ce99353defd43169ad1dc36c5a5a5cba8a5cdb95a6e5",
+    "packages/scope/src/object.ts:ScopeObject": "2fdf4ee3e46d326267dc316910535d3d882452e8fb47b96706330780a097d575" // AD-1: applicationInstallationState, admission installations and clock
   },
   "packages/scope/src/object-archive.ts": {
     "packages/scope/src/object-archive.ts:$module": "7d7c0da57c8b69bc953c19a59e3bd6af25a5f02863bac10ef6fd839fc9dd5adc",
@@ -239,7 +239,7 @@ const namedOwners = {
     "packages/scope/src/core.ts:heldBy": "a66b415809db685c99cc8961ba592bd8bdcb8bda8f2f4ea1e73fe71c4b052fd1",
     "packages/scope/src/core.ts:told": "bc25d088d5c51694f6e3a813f11f2875144c7a3bdfaa8d124063dc1f65e2fe67",
     "packages/scope/src/core.ts:Observes": "9a0e37bc23db915ebdfd3ec4eef21172918f50fc3e19de840d2b03746efc3710",
-    "packages/scope/src/core.ts:Scope": "731b5a55a1b6cac490f61d20559600cc63b39a73d09976c6e190871c582fe2e5" // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
+    "packages/scope/src/core.ts:Scope": "c8242aeb84e2578de49ad02a02fe48ea3ecaa15ff86b27cb747fa446bae497a2" // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
   }
 };
 
@@ -289,7 +289,7 @@ const seals = {
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": namedOwners["packages/scope/src/worker.ts"],
   "packages/scope/src/worker-mcp.ts": namedOwners["packages/scope/src/worker-mcp.ts"],
-  "packages/scope/src/scope-index.ts": "b51b990281e2763f6ed73b094ff75883ae6905d5cc8e26efa1582b22ec4f2057", // AR-10: a positive kind answer also answers has(name); AR-8 keeps positive answers per isolate (insert-only known_scope rows).
+  "packages/scope/src/scope-index.ts": "a81743f771c39157153dedcd2fb5a410ba4d5fa02487e45aa658ef4e01e60dbc", // AD-1: applicationInstallationState answers null for an unindexed scope. AR-10: a positive kind answer also answers has(name); AR-8 keeps positive answers per isolate (insert-only known_scope rows).
   "packages/scope/src/host-wiring.ts": "6cbde3017c210bc1875d07c470bc588c452bc855171646ce889bf39cd9065fa5", // Installed-register authority retains exact Native birth and host binding.
   "packages/scope/src/installed-registers.ts": "39618d91dba4884b866f1823d5bc2ee89e7ca0b78b47b884387e7bfeba2dee5e", // Installed-register authority retains exact Native birth and host binding.
   "packages/scope/src/register-setting.ts": "1ead9e620589e3707e2a6515951cc095b44308a34aee6855b3bb8da37bd230ca", // Shared exact Register selector; actual maintained parser output.
@@ -298,7 +298,7 @@ const seals = {
   "packages/scope/src/creation-lineage.ts": "12f2ab7d81f26f0a7c9d75095928d39e450f7eeca94e51793c7b7892760d2ee9", // Reviewed whole-lineage boundary; adopted AST value.
   "packages/scope/src/creation-versions.ts": "872e383c736e3d77b3377dec67ca29855612f1bbf2e9a6754c4c58db72fce97d", // Reviewed R6 creation-policy parser; actual maintained output.
   "packages/scope/src/creation-declaration.ts": "0aca81538bf80d643ff74166d99e535b68abf3b7dca2b06b65cee543806a3fd9", // Bounded immutable native Directory custody, not authority.
-  "packages/scope/src/namespace.ts": "d69ee16321e6cbc2d5bf56e003bb635b3bd2b18808241ed390059f4944aa4e2d", // Reviewed internal declaration RPC; adopted AST value.
+  "packages/scope/src/namespace.ts": "ad0f9dd3e83f8890552c7ba8828a8310935f34fef7456534bdea630dc89329f2", // Reviewed internal declaration RPC; adopted AST value.
   "packages/scope/src/health.ts": "fab90430e09a90ea73a9f9e663f17ef9e393d2a81a98327d9625b9041cb6a872",
   "packages/scope/src/site/route.ts": "a0dd2fc19f24b87ff033d8ebbe89718b8a953c291fc5f2689d064ade92e40166",
   "packages/scope/src/site/host.ts": "7ba177e4cf693beaad6ecef85cc3d33455a5896cd35565f50a98e03ba848cd07", // Private Site token custody; actual maintained parser output.
@@ -310,7 +310,7 @@ const seals = {
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "packages/scope/src/object-archive.ts": namedOwners["packages/scope/src/object-archive.ts"],
   "packages/scope/src/core.ts": namedOwners["packages/scope/src/core.ts"],
-  "packages/scope/src/applications/act-admission.ts": "bd0aba219f02c47c143e8a86b4204e1923d7c48d10cd4a873c93a40987f2eea9", // Exact native provenance and current trust; actual maintained parser output.
+  "packages/scope/src/applications/act-admission.ts": "25a5f80e6cfb83bc8b268fa86051212802e228bd028370dde4ddaa2691b05652", // Exact native provenance and current trust; actual maintained parser output.
   "packages/derive/src/genesis.ts": "d2a6165d424376a9057cc9390e721a1970341ad937d739a6f94eb9575d9f1cc2",
   "packages/derive/src/judge.ts": "2abf7ccdf023c74e33616ad88ec238ac23d7795d0c94c58e0df4414fb6512688", // A1 derives expected names through shared expectedKeys without changing judgment order.
   "packages/scope/src/sessions.ts": "12254a4ccbc51fb5b16eabc0bce84c4c764bb233e023cefd788b99dcf5189af8",
@@ -321,7 +321,7 @@ const seals = {
   "packages/scope/src/limits.ts": "dfab21444a03339291f51f500941dc1b0d23926fa01fb173e7cd7cc91983f099", // R12 verified-key join failure window.
   "packages/scope/src/serving-limits.ts": "94f6987027c7638ebe0aad6899f1dbf352a25029aceca60c00476b600e7d410b", // New bounded memory-only counter, no live eviction.
   "packages/scope/src/serving-admission.ts": "44e8ef11b0bb97a0a2982643152d62d9ec1ab14f9af26a2a687d5a301ccf1168", // New bounded original-signature/counter ingress.
-  "packages/bytes/src/records.ts": "9808419e86a06b15da0a12e5a36841bc7a2387a1c7c12074e4a2fc50cdaeeaf6", // R11 named serving refusal; RC-1 adds the REFUSAL_CLASSES table; H1 refuses the six sequenced inputs and leaves the page kind out; actual maintained parser output.
+  "packages/bytes/src/records.ts": "5bfb14e93dab8d1489c29b7e3327891a18cfe3ab0fcecf6d4396451a05efefd7", // R11 named serving refusal; RC-1 adds the REFUSAL_CLASSES table; H1 refuses the six sequenced inputs and leaves the page kind out; actual maintained parser output.
   "packages/scope/src/session-preparation.ts": "49b091ff2910c0c2602fce76330e7084479a3bd4cb3bc1617005c18f2cd3fac3",
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection-source.ts": "4045ccd66ccc971a08a2a31e5f7daaf8f20453c03af8fe0f1cb134bf77ac86b7", // Closed native room metadata with optional supported membership pin.
