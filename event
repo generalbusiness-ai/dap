@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:47378b8edd24374a6842797e0b48229dbab82166","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r15-gate-followup.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:48176036662db359a7622c1c0387ef10fc633c42","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-17-compact-cards-design/verification/browser.mjs."}
