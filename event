@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9465446d1d5e68cdd81e57ee5d70861515bf02e0","text":"Merge retired a covered predecessor; the successor is at docs/self-host-mac.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:94827ab092e5580dccc48d29ba2265a573ecd34b","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/caller-address.ts."}
