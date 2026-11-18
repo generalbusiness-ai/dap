@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I run CE-1: reopen the U4-B profile read-only on both screens, record each console error's text and source, classify it, and report.","body":{"target":"inherit"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b9a3994712e4165c97da6ddef9fe0bdb19efbe1b","text":"LS-7 closed by the U4-B run, not by a landing: report 5281f07f (projection beside the journal, residue) and U4-B report f5c4484c. Lending 0.6.0 runs in upgrade-witness item 5 on lending-shelf.inguz.space with the stepladder on the shelf. No head was owed."}
