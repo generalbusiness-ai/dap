@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval 64fe14fb: land LC-7 (94869db9) onto origin main 277ae9f0 and ask for the landing check. I deploy lending and the sandbox from that main, then run the screen checks and hand over U4-B.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:64fe14fb60c41e80a12b1b4ee5e8586a1fa20560"}
