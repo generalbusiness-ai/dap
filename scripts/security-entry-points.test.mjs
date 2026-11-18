@@ -302,7 +302,7 @@ const seals = {
   "packages/scope/src/health.ts": "3bc54d08e569c894c3c8c905feb99d95d9d951ed83d156815f039525e8741c6f", // S3 adds policy and missing, setting names only; actual maintained parser output.
   "packages/scope/src/site/route.ts": "a0dd2fc19f24b87ff033d8ebbe89718b8a953c291fc5f2689d064ade92e40166",
   "packages/scope/src/site/host.ts": "7ba177e4cf693beaad6ecef85cc3d33455a5896cd35565f50a98e03ba848cd07", // Private Site token custody; actual maintained parser output.
-  "packages/scope/src/site/token-reuse.ts": "7df9e0eb8e1c5bbfc050f52729ffaed86f00ea6d56ed04ac1efdf9e6cbf51ab0", // Reviewed pre-mint generation cleanup rescheduling; custody checks unchanged.
+  "packages/scope/src/site/token-reuse.ts": "f13f69f6ac385f48620bc9a08eaf1b957c35de0c6cef37ca785033ee8e56bb19", // Reviewed pre-mint generation cleanup rescheduling; custody checks unchanged.
   "packages/scope/src/site/window.ts": "1b0e1d820a7840063d35d39dc74d61a2b9caa6ffb5763e82a21b6ae5524d4936", // Bounded site-read window; actual maintained parser output.
   "packages/scope/src/applications/route.ts": "1b36c95f39b85224469aa260eebae3fe44163bc3e0f81662afbfc0528c1ee953", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
@@ -384,7 +384,7 @@ const pendingArchiveSeals = {
   "apps/room/archive.ts": "46c55978ad31bbabc4a414d2f1ee1d9f8f432b447fb303109634367c2025e30f", // U2 passes a final policy answer. AR-4 passes only the checked Directory's "unbound" answer and reads the route through target.bound(). AE-1 shared Artifacts adapter and authenticated package policy; actual maintained AST output.
   "packages/scope/src/archive-host-item.ts": "41dfb134296ce3bb1d16f1a743dfa88eab5d17c788702279e40ed2bd2a81547e", // AR-4 answers "unbound" only after every Directory check; every other failure stays forbidden.
   "packages/scope/src/archive-host.ts": "ad759aff6f090fab3401d2f75274af294269f7db488ae2d5c56954759cdf754a", // Migration collectors settle only checked POST byte receipts; decoder fees and authority fences unchanged.
-  "packages/scope/src/artifacts-host.ts": "17169f775db94ec5544115119385ab979854b43679185f4360b07311e1a8a516", // Reviewed durable fork setup custody; the journal owns its later revocation.
+  "packages/scope/src/artifacts-host.ts": "c0fb2c883f58f349fcd71a591bb3c2614bb6f37f43a61951df7dd71f492fa0e7", // Reviewed durable fork setup custody; the journal owns its later revocation.
   "packages/scope/src/artifacts-wiring.ts": "addcb51aef7f62f98b9ddabe3a40ebb9f552df2d6d41f192eadd840dd0a4d76d",
 };
 // Actual maintained parser outputs adopted by root; never infer hashes from intent.
