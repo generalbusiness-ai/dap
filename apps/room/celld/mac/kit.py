@@ -217,8 +217,13 @@ def job_state(label):
                             capture_output=True, timeout=5, check=False)
     if result.returncode == 0:
         return "loaded"
+    return "absent" if service_missing(label, result) else "unavailable"
+
+
+def service_missing(label, result):
+    """launchctl's exact answer for a label that is not loaded in the system domain."""
     missing = ('Could not find service "' + label + '"').encode()
-    return "absent" if result.returncode == 113 and missing in result.stderr else "unavailable"
+    return result.returncode == 113 and missing in result.stderr
 
 
 def read_installation(prefix):

@@ -409,13 +409,22 @@ sudo /Library/dap-host/bin/down --prefix /Library/dap-host
 ```
 
 The procedure asks celld for a preserve shutdown on the same node, waits
-for celld to exit, and then stops the store. If the result is unknown, the
-procedure exits nonzero and keeps the full prefix and node name. Restart
-the same installation to recover. An exit status of zero alone does not
-show that the preserve shutdown finished. If celld did not exit, the store
-keeps running. All data stays in place either way.
+for celld to exit, closes Caddy, and then stops the store. It prints one
+JSON line and keeps the full prefix, the data and the node name in every
+case.
 
-Restart the services in order, then verify the room:
+- Exit status 0 means the preserve shutdown finished and the store
+  stopped. The JSON line shows `"preservePreparation": "complete"` and
+  `"storeStopped": true`.
+- Any other exit status means a service may still run. Read
+  `"storeStopped"` and `"reason"` in the JSON line. Do not run the start
+  lines below. A job that is still loaded refuses `launchctl bootstrap`
+  with `Bootstrap failed: 5: Input/output error`, and celld would start
+  again against a store that never stopped. Keep the JSON line and report
+  it.
+
+After an exit status of 0, start the services in order, then verify the
+room:
 
 ```sh
 for service in seaweedfs celld caddy; do

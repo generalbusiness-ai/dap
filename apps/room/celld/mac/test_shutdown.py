@@ -180,6 +180,30 @@ class ShutdownControls(unittest.TestCase):
             self.assertEqual(ports.calls[-1], ("bootout", LABELS["seaweedfs"]))
             self.assertTrue(Path(directory).exists())
 
+    def test_scripted_label_removed_between_the_two_supervisor_reads_completes_the_bootout(self):
+        # FW-1, 17 November: launchd removed caddy 17 ms after it disabled it. job_state read
+        # "loaded", then the second print found no service, and down kept the store running.
+        label, uid = LABELS["caddy"], 501
+        original = ProcessIdentity(789, uid, 1000, 1)
+        missing = ('Could not find service "' + label + '" in domain for system').encode()
+        with patch("shutdown.job_state", side_effect=["loaded", "loaded"]), \
+                patch.object(MacPorts, "command", side_effect=[
+                    SimpleNamespace(returncode=0, stdout=b"\tpid = 789\n", stderr=b""),
+                    SimpleNamespace(returncode=0, stdout=b"", stderr=b""),
+                    SimpleNamespace(returncode=113, stdout=b"", stderr=b"Bad request.\n" + missing + b"\n")]) as command, \
+                patch.object(MacPorts, "identity", side_effect=[original, None]):
+            closure = MacPorts().bootout(label, 90, uid)
+        self.assertEqual(closure, {"supervisor": "absent", "process": "closed", "pid": 789,
+                                   "startSeconds": 1000, "startMicroseconds": 1})
+        self.assertEqual(command.call_args_list[1], call("bootout", "system/" + label))
+
+    def test_scripted_second_supervisor_read_failure_other_than_absence_stays_unavailable(self):
+        label = LABELS["caddy"]
+        with patch("shutdown.job_state", return_value="loaded"), \
+                patch.object(MacPorts, "command", return_value=SimpleNamespace(returncode=113, stdout=b"", stderr=b"Bad request.\n")):
+            with self.assertRaises(Refusal):
+                MacPorts().job(label)
+
     def test_scripted_label_absence_does_not_complete_while_its_process_remains_alive(self):
         class NamespaceGoneProcessLive(MacPorts):
             def __init__(self, changed_uid):
