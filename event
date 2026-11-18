@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c19ccaeb3af2af4bb5d6aa2ce104ee6c6fbb180f","text":"Merge retired a covered predecessor; the successor is at packages/client/src/application-gateway.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c21c5fcf645fd52ca03f86f083ef1bbac00b3e9e","text":"Merge retired a covered predecessor; the successor is at packages/client/src/install-request.ts."}
