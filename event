@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ed7398ddb6e7a6e210ef02ef57ebce6db7e96ece","text":"Closed in the 2026-11-18 open-request review, with Hugh's approval. obsolete: Lending is built and live (0.6.0); the handoff branch is superseded."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ed86d3ca8a898ded72c05f93b0f2fc531c2cf40c","text":"Closed in the 2026-11-18 open-request review, with Hugh's approval. fulfilled: the checked main 7cb207e1 is an ancestor of origin main 60223c5c; the checker answered with an assert."}
