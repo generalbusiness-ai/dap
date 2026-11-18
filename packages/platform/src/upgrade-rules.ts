@@ -19,7 +19,11 @@
  * Both forms refuse a release whose publisher differs from N's
  * (`application-publisher-changed`), a release equal to N's
  * (`application-release-unchanged`), and an act on N while a successor of N
- * is pending (`application-upgrade-pending`).
+ * is pending or while the fetch of an in-place act on N has no decisive
+ * outcome (`application-upgrade-pending`). The changeable reference
+ * `upgradeAt` of N holds the position of N's latest in-place act; the act
+ * opens its fetch there with ordinal 0, so the guard reads that one
+ * operation from the ledger.
  *
  * To let the fetch answer write them, `uri`, `release` and `presentation`
  * are not fixed slots in Rules 16. No other rule writes them after the
@@ -27,7 +31,7 @@
  */
 import type { Evidence, FieldValue, PlatformData } from "@generalbusiness/dap-contract";
 import { isDigest, isMemberRef, isRecord } from "@generalbusiness/dap-bytes";
-import type { GuardRule, Item, Operation, RuleEffect, RuleGiven, Rules } from "@generalbusiness/dap-derive";
+import { operationId, operationSettled, type GuardRule, type Item, type Operation, type RuleEffect, type RuleGiven, type Rules } from "@generalbusiness/dap-derive";
 import { readApplicationReleaseUri } from "./application-codec/application.ts";
 import { REFERENCE_INSTALL_REFUSAL } from "./application-install-reference.ts";
 import { APPLICATION_INSTALL_REFUSALS } from "./application-install.ts";
@@ -41,7 +45,8 @@ export const upgradeRulesScope: PlatformData = {
   ...baseRulesScope,
   items: { ...baseRulesScope.items, installation: { ...installation,
     states: { ...installation.states, replaced: { final: true } },
-    refs: { ...installation.refs, replaces: { fixed: true, required: false, to: { type: "item", of: "installation" } } },
+    refs: { ...installation.refs, replaces: { fixed: true, required: false, to: { type: "item", of: "installation" } },
+      upgradeAt: { fixed: false, required: false, to: { type: "int", min: 1, max: Number.MAX_SAFE_INTEGER } } },
     values: { ...installation.values, uri: changeable("uri"), release: changeable("release"), presentation: changeable("presentation") },
   } },
   acts: { ...baseRulesScope.acts, "upgrade-application": {
@@ -72,6 +77,14 @@ function pendingSuccessor(given: RuleGiven, of: number): boolean {
     if (!page.more || !last) return false;
     after = last.id;
   }
+}
+
+/** The fetch of N's latest in-place act has no decisive outcome yet. A confirmed or a refused outcome settles it; an `unknown` one leaves it open for its late answer. */
+function inPlaceOpen(given: RuleGiven, item: Item): boolean {
+  const at = item.refs["upgradeAt"];
+  if (typeof at !== "number") return false;
+  const operation = given.state.operation(operationId(at, 0));
+  return operation !== null && !operationSettled(operation);
 }
 
 /** The installation that an in-place upgrade act names, when the operation belongs to one. A replace act opens its successor at the act's own position, so its operation reads that item instead. */
@@ -108,7 +121,7 @@ export const upgradeRules: Rules = {
       const checked = baseInstallProof(given); if (!checked) return { holds: null, reason: "dependency-unavailable" };
       if (checked.release.manifest.publisher !== item.values["publisher"]) return { holds: false, name: "application-publisher-changed" };
       if (fields["release"] === item.values["release"]) return { holds: false, name: "application-release-unchanged" };
-      if (pendingSuccessor(given, item.id)) return { holds: false, name: "application-upgrade-pending" };
+      if (pendingSuccessor(given, item.id) || inPlaceOpen(given, item)) return { holds: false, name: "application-upgrade-pending" };
       if (inPlace(given, item)) {
         // The semantic identifier names the root definition, so an equal identifier keeps it. The in-place form takes no install fields.
         return checked.semantic.entry !== item.values["definition"] || ["roles", "values", "owner"].some(key => fields[key] !== undefined) ? invalid : { holds: true };
@@ -118,10 +131,10 @@ export const upgradeRules: Rules = {
       return invalid;
     }
   } },
-  /** The replace form opens the successor at the act's position, pending, with the install's own first slots. */
+  /** The in-place form records its position on N, where its fetch opens. The replace form opens the successor at the act's position, pending, with the install's own first slots. */
   "application-upgrade-open": { place: "effect", most: 6, run: given => {
     const item = upgraded(given), member = given.resolved.signer?.member;
-    if (inPlace(given, item)) return [];
+    if (inPlace(given, item)) return [{ effect: "ref", item: item.id, slot: "upgradeAt", to: given.resolved.self }];
     if (!isMemberRef(member)) throw Error("a signing member required");
     const self = given.resolved.self, fields = given.resolved.fields;
     return [

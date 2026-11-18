@@ -82,3 +82,28 @@ test("a refused successor leaves N active", async () => {
   A.take(outcome(`${successor}:0`, "refused", { uri: changed.source.uri, release: changed.packet.ids.release, reason: "untrusted-release" }));
   expect([A.item(N).state, A.item(successor).state]).toEqual(["active", "refused"]);
 });
+
+test("red (e): an open in-place fetch of N refuses a second upgrade of N in both forms until its outcome, confirmed or refused", async () => {
+  const { A, N, upgrade, outcome, first } = await room();
+  const two = await counter("2", { page: "TkVYVA" }), three = await counter("3", { page: "VEhSRUU" });
+  const changed = await counter("4", { member: ["counting.fulfill", "counting.participate"] });
+  expect(three.packet.ids.semantic).toBe(first.packet.ids.semantic);
+  // A refused outcome releases N.
+  expect(upgrade(two, two.source).result).toBe("write");
+  const refusedAct = A.head.seq;
+  expect(A.item(N).refs["upgradeAt"]).toBe(refusedAct);
+  expect(upgrade(three, three.source)).toMatchObject({ result: "refused", name: "application-upgrade-pending" });
+  expect(upgrade(changed, changed.install)).toMatchObject({ result: "refused", name: "application-upgrade-pending" });
+  A.take(outcome(`${refusedAct}:0`, "refused", { uri: two.source.uri, release: two.packet.ids.release, reason: "untrusted-release" }));
+  expect(A.item(N).values["release"]).toBe(first.packet.ids.release);
+  // A confirmed outcome releases N.
+  expect(upgrade(two, two.source).result).toBe("write");
+  const confirmedAct = A.head.seq;
+  expect(upgrade(three, three.source)).toMatchObject({ result: "refused", name: "application-upgrade-pending" });
+  expect(upgrade(changed, changed.install)).toMatchObject({ result: "refused", name: "application-upgrade-pending" });
+  A.outcome(`${confirmedAct}:0`, two.answer);
+  expect(A.item(N).values["release"]).toBe(two.packet.ids.release);
+  expect(upgrade(three, three.source).result).toBe("write");
+  expect(A.item(N).refs["upgradeAt"]).toBe(A.head.seq);
+  expect(A.replay().snapshot()).toEqual(A.state.snapshot());
+});

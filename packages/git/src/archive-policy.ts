@@ -18,7 +18,7 @@ export const ARCHIVE_NATIVE_DATA: Readonly<Record<string, Digest>> = Object.free
   "platform:rules@15": "sha256:de1f83120e304f4970e3d81504a1c888d512bcf037e66774df4e324cd73eeb0c",
   // U1 upgrade family: Directory 28 has the declaration of Directory 27; Rules 16 adds upgrade-application.
   "platform:directory@28": "sha256:3bcc3fef39c145c2de415debf0d45b4d9873df689aae898209835487f1044a23",
-  "platform:rules@16": "sha256:8bc4fafd5dd734ef76db8416f2a40fb4eeb87433deea2631670872aa10817185",
+  "platform:rules@16": "sha256:9e31b5daf81944fa260fb5901370168160b16f84ff6c0beb6f5adfca2f3549ca",
   "platform:directory@25": "sha256:7977d787622498ec5e4a52abb5ecb4ce9e25188a907683ea2ea28dd1062b8595",
   "platform:destination@19": "sha256:0cb5f11be6a55f4a49718ea297b6a26c4a533d9e9f436a542d8c4882dae17780",
   "platform:directory@16": "sha256:c8c40477f369a19213439eaa1a3263dad1ce16038e5df605b6f7322737380b55",
