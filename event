@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0bd2fdd67af8fdd3633278832e0e442c5ed8d556","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-26-br9-migration-prefixes.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0bff62da570dd77a83072ebeda06eb69b093a77d","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-17-compact-cards-design/verification/accessibility.mjs."}
