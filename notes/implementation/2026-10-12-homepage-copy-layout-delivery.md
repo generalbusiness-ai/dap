@@ -13,7 +13,7 @@ The checked Source is `7212e187aca683f03a4e5d23afaf838d17717b3e`, tree
 the normal homepage builder each passed once. Five public assets changed: four
 HTML pages and the stylesheet. Six brand and license files and serving headers
 remained unchanged. Closed evidence is
-`/Users/hughpyle/play/artroom-diagnostics/homepage-tagline-source/checks-7212/public-proof.json`,
+`artroom-diagnostics/homepage-tagline-source/checks-7212/public-proof.json`,
 SHA-256 `d6173906c2225fcdc4a525cca314470e90fc702fd0d6783567aa69243ed285c8`.
 
 The one local browser run, original session 39994, passed all four captures:
@@ -27,7 +27,7 @@ Root directly viewed all four captures and accepted six points of visual fidelit
 The Browser plugin was unavailable, so the run used pinned Playwright and Chromium.
 
 The actual browser result is
-`/Users/hughpyle/play/artroom-diagnostics/homepage-tagline-geometry-source-r2/output-one/public-result.json`,
+`artroom-diagnostics/homepage-tagline-geometry-source-r2/output-one/public-result.json`,
 SHA-256 `cec8f7905c87f5656aae088d9da712b4041e1416480419ab01ca63ab2d6d3bf5`.
 Root's visual qualification is in `root-fidelity-public.json` in that geometry
 directory, SHA-256
@@ -64,7 +64,7 @@ The test phase took 104.70 wall seconds and 153.24 CPU seconds. The retained
 private test log contains one RefcountedCanceler token and two
 SQLITE_CONSTRAINT tokens. Those counts do not identify a cause or prove draining.
 Closed gate evidence is
-`/Users/hughpyle/play/artroom-diagnostics/homepage-tagline-source/gate-source-r2/gate-one/public-proof.json`,
+`artroom-diagnostics/homepage-tagline-source/gate-source-r2/gate-one/public-proof.json`,
 SHA-256 `60867f74bbd8bde4601d2f4dff245c376a3834c000b16bc5fcc51e540366d7bf`.
 
 This final successor changes only this note. All other Source, tests and assets

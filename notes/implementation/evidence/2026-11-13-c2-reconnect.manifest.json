@@ -1,6 +1,6 @@
 {
   "qualification": "Focused functional evidence on Battery Power, powermode 0; no timeouts. No generated-suite run and no gate.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-c2-reconnect-8dba5200",
+  "directory": "artroom-evidence/2026-11-13-c2-reconnect-8dba5200",
   "checkpoint": {
     "commit": "8dba5200c99e0c1ba0b4581fad676b563aa85fbb",
     "tree": "73dae91de1e13dfe7b49ac981f92aae60a13f367"

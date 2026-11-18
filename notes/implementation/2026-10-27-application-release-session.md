@@ -88,7 +88,7 @@ when used. This child changes no grants, authority, settings or session policy.
 ## Current evidence and its limits
 
 Final repair evidence is retained read-only at
-`/Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-session-recut`.
+`artroom-evidence/2026-10-27-application-release-session-recut`.
 `prior-head/` is an exact size-and-hash copy of all 73 files sealed for the
 rejected candidate. The original sealed directory remains unchanged. The
 final replacement manifest inventories the repair evidence and all 73 prior

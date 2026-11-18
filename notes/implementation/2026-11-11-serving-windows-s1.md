@@ -99,7 +99,7 @@ The existing owners contain the five requested witnesses:
 
 The canonical [S1 manifest](evidence/2026-11-12-serving-windows-s1.manifest.json)
 indexes fourteen small files in
-`/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance`.
+`artroom-evidence/2026-11-12-s1-final-curated-provenance`.
 They carry the label **Curated provenance, not raw output**. The table hashes
 those normalized metadata files. Its three CI rows instead hash the complete
 job logs at their original HOME locations; the rows mark those hashes as

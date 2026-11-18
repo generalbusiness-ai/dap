@@ -8,7 +8,7 @@
   "fileCount": 27,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br11-focused-validation",
+      "directory": "artroom-evidence/2026-11-09-br11-focused-validation",
       "fileCount": 17,
       "files": [
         {
@@ -100,7 +100,7 @@
       "privateRegularFilesIncludingInventory": 275
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br11-retired-decoder-control-validation",
+      "directory": "artroom-evidence/2026-11-09-br11-retired-decoder-control-validation",
       "fileCount": 10,
       "files": [
         {

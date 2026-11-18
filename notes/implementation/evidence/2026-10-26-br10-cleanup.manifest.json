@@ -1,6 +1,6 @@
 {
   "qualification": "BR10 final delivery: completed owning evidence plus the single ordinary gate at its exact checkpoint. Gate exit 0. Original raw failures, source indexes, owner scripts, and observation gaps are retained; nothing was rerun.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-26-br10-cleanup-delivery",
+  "directory": "artroom-evidence/2026-10-26-br10-cleanup-delivery",
   "checkpoint": {
     "commit": "5ff4fc52892c45ba8c6c1d7d0da97a31011f69b4",
     "tree": "69d166347c5b349d6a177b9a08647f8e79a37afb"

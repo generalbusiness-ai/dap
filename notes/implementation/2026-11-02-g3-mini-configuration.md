@@ -36,7 +36,7 @@ permission. This configuration does not narrow the App installation itself.
 
 ## Mini paths and current observations
 
-All new G3 state belongs below `/Users/inguz/dap-host-g3-20261102`, mode 0700.
+All new G3 state belongs below `<mini home>/dap-host-g3-20261102`, mode 0700.
 The planner owns private-key placement after checker approval.
 
 | Purpose | Path |
@@ -48,11 +48,11 @@ The planner owns private-key placement after checker approval.
 | Private App key, mode 0600, owned by inguz | `.../github/app-key.pk8.pem` |
 | First staged GitHub project | `.../github-project` |
 | Later staged binding project | `.../binding-project` |
-| Existing per-command trust anchor | `/Users/inguz/dap-host-h3-20261029/tls/cert.pem` |
+| Existing per-command trust anchor | `<mini home>/dap-host-h3-20261029/tls/cert.pem` |
 
 The new `source` directory keeps H3's original source and dependencies intact.
 The Node runtime already exists at
-`/Users/inguz/dap-validate/bin/node-v26.12.1-darwin-arm64/bin/node`.
+`<mini home>/dap-validate/bin/node-v26.12.1-darwin-arm64/bin/node`.
 The H3 source and this runtime base have the same lockfile SHA-256,
 `c835dfee04d7dc8bb946ab08e38d79d54aa2bade3c03d917319a835431014fc6`.
 An owned copy of the existing dependency directory can serve the new export
@@ -119,7 +119,7 @@ keeps the G3 deployment acceptance open and retains all projects and evidence.
 ## Retained H3 rollback
 
 The original prepared project exists at
-`/Users/inguz/dap-host-h3-20261029/project`, owned by inguz, mode 0700.
+`<mini home>/dap-host-h3-20261029/project`, owned by inguz, mode 0700.
 Read-only validation through the original H3 `deploy.py` accepts that project
 and its actual installation record. Its retained esbuild is executable,
 and the installed celld answers version 0.6.3, matching pin `v0.6.3`.
@@ -184,7 +184,7 @@ mini deployment, GitHub push, rollback execution, or parent acceptance.
 
 [The evidence manifest](evidence/2026-11-02-g3-mini-configuration.manifest.json)
 indexes 59 files in the read-only unit
-`/Users/hughpyle/play/artroom-evidence/2026-11-02-g3-mini-configuration`.
+`artroom-evidence/2026-11-02-g3-mini-configuration`.
 The private index names 36 withheld raw test files with their sizes and
 hashes. Raw test output can contain fixture requests or credentials, so it
 stays in the indexed private directory. Retention lasts at least 30 days

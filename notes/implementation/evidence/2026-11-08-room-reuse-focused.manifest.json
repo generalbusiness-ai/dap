@@ -8,7 +8,7 @@
   "fileCount": 22,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-room-reuse-validation",
+      "directory": "artroom-evidence/2026-11-08-room-reuse-validation",
       "files": [
         {
           "path": "SHA256SUMS",

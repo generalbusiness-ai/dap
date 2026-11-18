@@ -1,6 +1,6 @@
 {
   "qualification": "CDF-1 gate at checkpoint 01bbd802 after main integration and the separate AC residency-file run; carried CF-2 changes only comments and documents.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-cdf1-retained-bytes-gate-attempt1",
+  "directory": "artroom-evidence/2026-11-13-cdf1-retained-bytes-gate-attempt1",
   "checkpoint": {
     "commit": "01bbd802261446972f5e030aa0d220eef4261cd3",
     "tree": "5f3c41f6410dc54b144cc2934ea597a82d17737c"

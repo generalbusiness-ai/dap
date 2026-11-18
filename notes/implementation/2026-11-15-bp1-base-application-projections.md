@@ -121,7 +121,7 @@ not a browser renderer, provider, deployed host or physical-room acceptance.
 
 ## Evidence
 
-`E=/Users/hughpyle/play/artroom-evidence`;
+`E=artroom-evidence`;
 `J=E/2026-11-15-r-lp1-bp1-identifiers-compare-attempt1`,
 `B=E/2026-11-15-r-lp1-bp1-lending-base-red-attempt1`,
 `G=E/2026-11-15-r-lp1-bp1-green-owners-attempt1`.

@@ -9,7 +9,7 @@
  "fileCount": 194,
  "units": [
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-target",
+   "directory": "artroom-evidence/2026-11-02-card-refresh-target",
    "qualification": "Implementation checks on the uncommitted refresh draft atop 7b691a39, before its base fast-forward to 2f825e32. No complete frozen draft snapshot was retained. These local observations support development; exact-source Card workflow 41426562339 at e0b21985 owns final composition. The original harness failures and their actual exits remain separate from later passes. Scripted projections prove no hosted outcome. Native Grow scope observations use the local owned fixture with TEST installation, membership, sessions and grants.",
    "checkpoint": {
     "commit": "7b691a39b756df584bbeaa1d73a1730dec509b4b",
@@ -136,7 +136,7 @@
    ]
   },
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-controls",
+   "directory": "artroom-evidence/2026-11-02-card-refresh-controls",
    "qualification": "Implementation checks on the uncommitted refresh draft atop 7b691a39, before its base fast-forward to 2f825e32. No complete frozen draft snapshot was retained. These local observations support development; exact-source Card workflow 41426562339 at e0b21985 owns final composition. The original harness failures and their actual exits remain separate from later passes. Scripted projections prove no hosted outcome. Native Grow scope observations use the local owned fixture with TEST installation, membership, sessions and grants.",
    "checkpoint": {
     "commit": "7b691a39b756df584bbeaa1d73a1730dec509b4b",
@@ -243,7 +243,7 @@
    ]
   },
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-browser",
+   "directory": "artroom-evidence/2026-11-02-card-refresh-browser",
    "qualification": "Implementation checks on the uncommitted refresh draft atop 7b691a39, before its base fast-forward to 2f825e32. No complete frozen draft snapshot was retained. These local observations support development; exact-source Card workflow 41426562339 at e0b21985 owns final composition. The original harness failures and their actual exits remain separate from later passes. Scripted projections prove no hosted outcome. Native Grow scope observations use the local owned fixture with TEST installation, membership, sessions and grants.",
    "checkpoint": {
     "commit": "7b691a39b756df584bbeaa1d73a1730dec509b4b",
@@ -690,7 +690,7 @@
    ]
   },
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-ci",
+   "directory": "artroom-evidence/2026-11-02-card-refresh-ci",
    "qualification": "Exact frozen source e0b21985: Card workflow 41426562339 succeeds, including the generated-module check and all three browser scripts. Whole console stays private with its hash and byte count.",
    "checkpoint": {
     "commit": "e0b21985cac267abc5c0d2313e511d2201099302",
@@ -742,7 +742,7 @@
    ]
   },
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-gate",
+   "directory": "artroom-evidence/2026-11-02-card-refresh-gate",
    "qualification": "One full refresh gate at frozen e0b21985. The actual exit and matching before/after source guards decide the result. Raw test.log stays private. This run does not alter the two separately retained first-press gate failures.",
    "checkpoint": {
     "commit": "e0b21985cac267abc5c0d2313e511d2201099302",
@@ -954,7 +954,7 @@
    ]
   },
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-documentation",
+   "directory": "artroom-evidence/2026-11-02-card-refresh-documentation",
    "qualification": "Documentation checkpoint 60515b92 verifies the initial 177-file record, ten output citations and six local links. Only the final audit row and manifest expansion follow; production, tests, configuration and Card inputs remain equal to successful gate and workflow source e0b21985.",
    "checkpoint": {
     "commit": "60515b9224678983061323bb874ae4aabd744fcb",

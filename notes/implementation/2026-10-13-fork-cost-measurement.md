@@ -26,7 +26,7 @@ copied from the live rehearsal repository. The texts came from
 `scripts/demo/rehearse.ts` at SHA-256
 `f1cd2c9822d898eaf43ef2df1b239b979a90b49c6d86bc7c360799a75f3e2f90`
 and the retained rehearsal file
-`/Users/hughpyle/play/artroom-diagnostics/freeze-rehearsal-recipe/run-two/work/site/README.md`
+`artroom-diagnostics/freeze-rehearsal-recipe/run-two/work/site/README.md`
 at SHA-256
 `18f9f989591ab3c5340fe8b07f88dfbf54a59efc634197517e9f8ffbff80e005`.
 
@@ -154,12 +154,12 @@ node <same-fork>/action.mjs cleanup ACTION INSPECT_PLAN CLEANUP_RELEASE INSPECTI
 ```
 
 `<startup-three>` is
-`/Users/hughpyle/play/artroom-diagnostics/fork-cost-d055-startup-three`.
+`artroom-diagnostics/fork-cost-d055-startup-three`.
 `<same-fork>` is
-`/Users/hughpyle/play/artroom-diagnostics/fork-cost-d055-same-fork-completion`.
+`artroom-diagnostics/fork-cost-d055-same-fork-completion`.
 The executable was `/opt/homebrew/Cellar/node/26.11.1/bin/node`.
 `<pinned-wrangler>` is
-`/Users/hughpyle/.npm/_npx/d77349f55c2be1c0/node_modules/wrangler`.
+`~/.npm/_npx/d77349f55c2be1c0/node_modules/wrangler`.
 These commands describe the completed run; they do not authorize a rerun.
 
 | Digest argument | SHA-256 |

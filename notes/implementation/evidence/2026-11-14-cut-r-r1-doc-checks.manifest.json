@@ -1,6 +1,6 @@
 {
   "qualification": "R1 preparation only. Cheap documentation/Git checks after the one passing full gate; no new compiler, test, formatter, generator or gate. Only the implementation note and this manifest file these results afterward. Production source and tests remain unchanged.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cut-r-r1-doc-checks",
+  "directory": "artroom-evidence/2026-11-14-cut-r-r1-doc-checks",
   "checkpoint": {
     "commit": "5261b39aa539844b19d142fa980a12020a1b7740",
     "tree": "26f19b603096b47ef6526569a7b0569a51331cf9"

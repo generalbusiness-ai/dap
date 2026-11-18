@@ -5,7 +5,7 @@
   "fileCount": 17,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s3-page-ci",
+      "directory": "artroom-evidence/2026-11-07-s3-page-ci",
       "files": [
         {
           "path": "SHA256SUMS",

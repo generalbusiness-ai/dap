@@ -1,6 +1,6 @@
 {
   "qualification": "Independent terminal metadata reconciliation of B gate2 at rebuilt3cf/treec278. Actual fullgate at this checkpoint is distinct from FAILED first90c7gate and the pre-Git setup-count refusal; BR13 historical failures remain failed. Integratedfocus/capture and Page/Card ran90c7; combinedPagebuild ran623 and assetadopted90; own-rowcontrol ran6869 and carries only its declared threeClientboundary source correspondence. Newbranch carry follows exact raw/tree proof, never a replay or relabel. All111wrappers remain unknown; omittedScale6 is not a skipped/pass result. Original flags/pools/workers/deadlines and passive10sRSS sampler remain. RSS is sampled single-process resident memory, not heap/sum/threshold; prior baseline scope differs. No deployment, hosted acceptance, SDKoutputchecker, private capture or publication claim.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-final-gate2-review",
+  "directory": "artroom-evidence/2026-11-10-t0b-final-gate2-review",
   "checkpoint": "3cf87cb5e409bbde6f7480493afd91d2d9b728f2",
   "tree": "c278e41675ec1db20f694bb04c4caf4e96c02aa3",
   "fileCount": 7,
@@ -39,7 +39,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-final-gate2",
+      "directory": "artroom-evidence/2026-11-10-t0b-final-gate2",
       "payloadFileCount": 2468,
       "fileCount": 2469,
       "payloadBytes": 82577509,
@@ -47,7 +47,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-final-gate2-launch",
+      "directory": "artroom-evidence/2026-11-10-t0b-final-gate2-launch",
       "payloadFileCount": 12,
       "fileCount": 13,
       "payloadBytes": 604296,
@@ -55,7 +55,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-final-gate2-analysis-private",
+      "directory": "artroom-evidence/2026-11-10-t0b-final-gate2-analysis-private",
       "payloadFileCount": 7,
       "fileCount": 8,
       "payloadBytes": 21393737,
@@ -308,7 +308,7 @@
     }
   ],
   "privateAnalysisCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-final-gate2-analysis-private",
+    "directory": "artroom-evidence/2026-11-10-t0b-final-gate2-analysis-private",
     "file": "full-reconciliation.private.json",
     "bytes": 15780338,
     "sha256": "22a20e1cd70453dbad7237e5a845fb2668cd2162b47a29344330d6d4b17e07d0",

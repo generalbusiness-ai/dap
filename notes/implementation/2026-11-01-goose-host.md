@@ -54,7 +54,7 @@ No observed result identifies a Goose protocol defect. The missing explicit `ui/
 
 ## The final evidence
 
-Checkpoint: `8093f9cecdeac454761b027c56c0059ff0231348`, tree `4789fd430513d4cfefc3b4da7f0c238572e66d5d`. Evidence directory: `/Users/hughpyle/play/artroom-evidence/2026-11-01-goose-host/`. Manifest: `evidence/2026-11-01-goose-host.manifest.json`. Manifest SHA256: `59fd05d5235c2180891c6407790998f9888697e934ae43aefeba2ef28d4a575d`. The manifest covers 127 files in two sealed units.
+Checkpoint: `8093f9cecdeac454761b027c56c0059ff0231348`, tree `4789fd430513d4cfefc3b4da7f0c238572e66d5d`. Evidence directory: `artroom-evidence/2026-11-01-goose-host/`. Manifest: `evidence/2026-11-01-goose-host.manifest.json`. Manifest SHA256: `59fd05d5235c2180891c6407790998f9888697e934ae43aefeba2ef28d4a575d`. The manifest covers 127 files in two sealed units.
 
 Elapsed seconds come from each Python driver’s wall-clock span. Protocol elapsed milliseconds come from the recorder’s request and reply timestamps. The recorder counts UTF-8 frame bytes without the final LF. The recorder adds a process and logging overhead, so these timings do not measure an uninstrumented host.
 

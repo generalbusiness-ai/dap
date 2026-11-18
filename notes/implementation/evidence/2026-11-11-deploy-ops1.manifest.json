@@ -1,7 +1,7 @@
 {
   "qualification": "One safe public review curation from actual OPS1 prerequisites and sealed current gate. No private payload recopy or body repeat. Original bytes and recorded metadata remain unchanged. The source/test checkpoint is f357; final documentary head, CI, review and planner deployment remain unallocated. Checksums omit their own row; the manifest omits its own self-row. Retain at least30days after landing.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-ops1-f357-final-review",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-ops1-f357-final-review",
+  "directory": "artroom-evidence/2026-11-11-ops1-f357-final-review",
+  "unit": "artroom-evidence/2026-11-11-ops1-f357-final-review",
   "request": "b380ea8cf03a0bc42fa028fbba57ea7bfccbf9e8",
   "promise": "f31ea829582ee76f0540c665e2c404c7456d4049",
   "head": "f3578a763bf66dead4a532d4de71e37e48d128a2",
@@ -371,7 +371,7 @@
   ],
   "terminalManifestSha256": "66ec5a86c69a942192edc99b40a4f58efc8fb59b159d01fe7b3f64347b40127e",
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-ops1-f357-one-full-gate-sealed/private",
+    "directory": "artroom-evidence/2026-11-11-ops1-f357-one-full-gate-sealed/private",
     "manifestSha256": "521054ad6262bc11720d013390787d801c71016547b6d7d09b4e1f45f6b26ddb",
     "files": 2602,
     "minimumRetentionDays": 30

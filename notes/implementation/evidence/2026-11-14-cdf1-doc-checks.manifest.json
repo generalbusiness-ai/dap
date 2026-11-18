@@ -1,6 +1,6 @@
 {
   "qualification": "Post-gate document checks at 9c64eeb7; the following evidence commit adds only note and manifest. Runtime evidence remains at 01bbd802.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cdf1-doc-checks",
+  "directory": "artroom-evidence/2026-11-14-cdf1-doc-checks",
   "checkpoint": {
     "commit": "9c64eeb7e2569549de212058238206b7f62e3236",
     "tree": "431aeac7f9ab6a01faf4e6fec355a8c5eebe402b"

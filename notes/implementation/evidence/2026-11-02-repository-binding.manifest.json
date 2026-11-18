@@ -9,7 +9,7 @@
  "fileCount": 195,
  "units": [
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-repository-binding-configuration",
+   "directory": "artroom-evidence/2026-11-02-repository-binding-configuration",
    "qualification": "Focused checks across successive drafts above main04f4af48,6f86a0c2 and4e98260079; source-freeze records qualify each checkpoint. Earlier failures, a surviving invalid-ID control and an inconclusive matcher remain so. Raw output stays private and indexed.",
    "checkpoint": {
     "commit": "b3da6de3f4db90fe0906d34be5cd5435388b450d",
@@ -586,7 +586,7 @@
    ]
   },
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-repository-binding-gate",
+   "directory": "artroom-evidence/2026-11-02-repository-binding-gate",
    "qualification": "First full gate failed six Node cases; counting, plain and Native unreached. Production boundary repair requires another gate.",
    "checkpoint": {
     "commit": "6f86a0c2be572482557489260dc2abff05f2e223",
@@ -633,7 +633,7 @@
    ]
   },
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-repository-binding-gate-corrected",
+   "directory": "artroom-evidence/2026-11-02-repository-binding-gate-corrected",
    "qualification": "Second full gate failed five plain cases; Native unreached. Goldens, fixture expectations and generated Page module repaired; neither follow-up exception applies.",
    "checkpoint": {
     "commit": "4e982600792a0f8198a968314da9d109296e9ff2",
@@ -680,7 +680,7 @@
    ]
   },
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-repository-binding-gate-final",
+   "directory": "artroom-evidence/2026-11-02-repository-binding-gate-final",
    "qualification": "Third full gate failed one Native shared-fixture case; every other stage finished. Shared session helper has importers, so isolated test-file exception does not apply.",
    "checkpoint": {
     "commit": "b3da6de3f4db90fe0906d34be5cd5435388b450d",
@@ -727,7 +727,7 @@
    ]
   },
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-repository-binding-page-ci",
+   "directory": "artroom-evidence/2026-11-02-repository-binding-page-ci",
    "qualification": "Page workflow41451113690 succeeded at b3; historical result, distinct from the final App-only source run. Safe job metadata only.",
    "checkpoint": {
     "commit": "b3da6de3f4db90fe0906d34be5cd5435388b450d",
@@ -754,7 +754,7 @@
    ]
   },
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-repository-binding-app-only",
+   "directory": "artroom-evidence/2026-11-02-repository-binding-app-only",
    "qualification": "Focused draft checks above b3 and7b for explicit App-only proposal, shared fixture repair and empty-ID no-HTTP assertion order. Current controls restore source and match final hashes. Raw request/credential output stays private; first empty-scope control remains inconclusive.",
    "checkpoint": {
     "commit": "ac8386c7a2e6e2fa7741e04c89f559ae82a5ad20",
@@ -976,7 +976,7 @@
    ]
   },
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-repository-binding-app-only-gate",
+   "directory": "artroom-evidence/2026-11-02-repository-binding-app-only-gate",
    "qualification": "Frozen complete gate at ac. The result records the actual exit and clean, unchanged source before/after. No real GitHub or mini scene.",
    "checkpoint": {
     "commit": "ac8386c7a2e6e2fa7741e04c89f559ae82a5ad20",
@@ -1023,7 +1023,7 @@
    ]
   },
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-repository-binding-app-only-page-ci",
+   "directory": "artroom-evidence/2026-11-02-repository-binding-app-only-page-ci",
    "qualification": "Page workflow41456309428 succeeded at the exact App-only source. Four browser commands use recorded fixture replies, not live acceptance. Safe job metadata only.",
    "checkpoint": {
     "commit": "ac8386c7a2e6e2fa7741e04c89f559ae82a5ad20",
@@ -1050,7 +1050,7 @@
    ]
   },
   {
-   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-repository-binding-documentation",
+   "directory": "artroom-evidence/2026-11-02-repository-binding-documentation",
    "qualification": "First documentation checkpoint after the frozen ac source. Six record, whitespace, commit-message, link, citation and note checks passed. All production, tests, configuration and workflow inputs equal ac. The final documentation record adds this check row and sealed unit to the manifest. Raw diagnostics remain private; no credential or request input ran.",
    "checkpoint": {
     "commit": "8395ec7065c775383d8e7e055448f1478b28e061",

@@ -9,7 +9,7 @@
   "fileCount": 318,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-readable-diff-design",
+      "directory": "artroom-evidence/2026-11-02-readable-diff-design",
       "checkpoint": {
         "commit": "892456defbfe41042d1a54d5b1d38159401b5c12",
         "tree": "396fb1fa6e236e002dae4150a677ce3a4df28a84"
@@ -1355,7 +1355,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-readable-diff-design-gutters",
+      "directory": "artroom-evidence/2026-11-02-readable-diff-design-gutters",
       "checkpoint": {
         "commit": "4fecb193df8084dbeb6b1bfe8eaab0ef37819147",
         "tree": "62c431dcb5ca3645f0c00f9824440142100b6de8"

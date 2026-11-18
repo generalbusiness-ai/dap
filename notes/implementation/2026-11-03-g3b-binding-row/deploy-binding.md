@@ -19,7 +19,7 @@ review and lands. Keep parent `3c6ec378` open throughout deployment.
 
 1. Verify the archive bytes and SHA-256 against [source-export.json](source-export.json).
    Export its exact main source into the new directory
-   `/Users/inguz/dap-host-g3b-20261103/source-binding-bf3bceb6`.
+   `<mini home>/dap-host-g3b-20261103/source-binding-bf3bceb6`.
    Compare every file and executable mode with the retained Git inventory.
 2. Use owned dependency copies with workspace links inside that export.
    The package manifests and lockfile match `source-cli-bb66b1ab`.
@@ -38,8 +38,8 @@ review and lands. Keep parent `3c6ec378` open throughout deployment.
 6. Set the new base's `worker.ts` to these exact two lines:
 
    ```ts
-   export * from "/Users/inguz/dap-host-g3b-20261103/source-binding-bf3bceb6/apps/room/worker.ts";
-   export { default } from "/Users/inguz/dap-host-g3b-20261103/source-binding-bf3bceb6/apps/room/worker.ts";
+   export * from "<mini home>/dap-host-g3b-20261103/source-binding-bf3bceb6/apps/room/worker.ts";
+   export { default } from "<mini home>/dap-host-g3b-20261103/source-binding-bf3bceb6/apps/room/worker.ts";
    ```
 
 7. Keep private directories at mode 0700 and private files at mode 0600.

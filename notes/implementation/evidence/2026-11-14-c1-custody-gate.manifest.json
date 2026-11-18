@@ -1,6 +1,6 @@
 {
   "qualification": "Single completed C1 full gate at the exact checkpoint below. Subsequent note/manifest-only follow-up keeps source/test/config/dependency files unchanged. Final terminal ledgers are complete; optional Native scope-stories callbacks are partial. Natural selector omits scale. Prior failed and qualified focused histories remain separate. All direct gate records cited by the note are listed; evidence-manifest.json and SHA256SUMS bind all 2631 sealed files including retained Node caches/test temp.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-c1-gate-attempt1",
+  "directory": "artroom-evidence/2026-11-14-c1-gate-attempt1",
   "head": "37be4a36a1ff744645bed53819f18416fd0df7c8",
   "tree": "84d975fd4bdeabdf6e104712df3d7c1fde8fb21b",
   "file_count": 59,

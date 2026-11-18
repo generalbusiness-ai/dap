@@ -1,7 +1,7 @@
 {
   "version": 1,
   "qualification": "One failed and one passing gate at their own checkpoints, kept separately. The named red and the whole-owner run were taken at a8034631, whose http.ts and http.test.ts equal those of the checkpoint. Diagnostic counts come from shell loops that printed counts only. No deployment or hosted run is claimed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-http-request-lifetime",
+  "directory": "artroom-evidence/2026-10-31-http-request-lifetime",
   "checkpoint": {
     "commit": "731bbfd8cd62e0b6201d90fe91e1836132033e63",
     "tree": "c9e1acb033305c6b5e8a93e1bb004c82dbcb9b00"

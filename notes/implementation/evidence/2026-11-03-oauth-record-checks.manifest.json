@@ -1,6 +1,6 @@
 {
   "qualification": "Documentation and evidence follow-up checks only. Nine prior sealed manifests verify all 231 public files. Source/test equivalence to Native and CI head 9bcb91f9 is checked before the record commit.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-record-checks",
+  "directory": "artroom-evidence/2026-11-03-oauth-record-checks",
   "checkpoint": "9bcb91f9931861fb47ef5fc6afb5ea60f58dfbb4",
   "fileCount": 11,
   "files": [

@@ -1,6 +1,6 @@
 {
   "qualification": "Focused H1/LV1 evidence, not a full gate. Final source 1d1f54b378dea3a8dc9005ab8bccde50cfd591ec, tree e637c3de179cade0ee305e8ed40882b96453bd98. Page assets were generated on this same source immediately before its commit. All seven compiler contexts and the selected plain/native owners passed with no final-source failure or rerun. Only untracked implementation note/manifests were outside the checkpoint; no executable source changed during checks. Prior initial missing-prettier failure remains separately sealed in the progress manifest. Actual AC Power and powermode 0 at start/end.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-h1-lv1-focused-attempt2",
+  "directory": "artroom-evidence/2026-11-14-h1-lv1-focused-attempt2",
   "checkpoint": {
     "commit": "1d1f54b378dea3a8dc9005ab8bccde50cfd591ec",
     "tree": "e637c3de179cade0ee305e8ed40882b96453bd98",

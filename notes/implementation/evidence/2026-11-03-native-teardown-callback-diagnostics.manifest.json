@@ -1,6 +1,6 @@
 {
   "qualification": "Actual MCP lending owner before and after callback-finish patch; temporary instrumentation, complete original cases, no full suite.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-native-teardown-callback-diagnostics",
+  "directory": "artroom-evidence/2026-11-03-native-teardown-callback-diagnostics",
   "checkpoint": "acdbc741608341f973793b6281d3abaf733ae9d6",
   "fileCount": 6,
   "files": [

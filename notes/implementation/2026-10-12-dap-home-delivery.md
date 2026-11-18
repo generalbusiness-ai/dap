@@ -37,7 +37,7 @@ approved Room capture at 320 pixels has a hovered button underline; the
 actual capture is unhovered. No product Source difference was found.
 
 The retained public evidence is under
-`/Users/hughpyle/play/artroom-diagnostics/`:
+`artroom-diagnostics/`:
 
 - `dap-home-focused-one/public-result.json`, SHA-256
   `78c8483a51f2188769a47915ebe9e4d38eb94990babc4413e5cf75a8b0d46a0d`.
@@ -75,7 +75,7 @@ Fresh read-only metadata confirms version `770aa9ee-ff4a-4a2c-a8f8-58825022963a`
 
 The served anchors preserve the homepage, GitHub repository, documentation, and application targets in the request. Application origins are unchanged. Those links were inspected, not visited. The reads use fresh authoritative DNS addresses with the exact domain Host header and SNI, trusted certificates, and hostname verification. No resolver or cache changed, and no TLS check was bypassed. Normal local recursive DNS recovery is not claimed.
 
-The deployment and diagnosis evidence remains private where it contains raw responses. Closed public records are under `/Users/hughpyle/play/artroom-diagnostics/dap-home-deploy-source/`:
+The deployment and diagnosis evidence remains private where it contains raw responses. Closed public records are under `artroom-diagnostics/dap-home-deploy-source/`:
 
 - `deploy-primary-one/public-result.json`: primary upload succeeded, original fetch failed, SHA-256 `de4d2c36fb1d61a5daac98d33da0c8756a52f8e63b2f1a3dffd691fba7e99078`.
 - `context-retained-public-result.json`: account and zone match; retained projection corrects the original dot-bearing permission-name filter failure, SHA-256 `20a5d9ad1d088bf940068900c0eba14f43c2042025335a3ce804d99902192d77`.

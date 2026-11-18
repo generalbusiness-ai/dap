@@ -1,6 +1,6 @@
 {
   "qualification": "Independent metadata-only reconciliation of the second C full gate as a real partial failure. Earlier gate1 whitespace failure and successful source/control focus stay separate. No validation body or application import ran in this audit. All raw payloads, generated TEST fixtures and signing custody stay private.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate2-partial-audit",
+  "directory": "artroom-evidence/2026-11-09-t1-gate2-partial-audit",
   "checkpoint": "e5c5f35367a345e9b53b3148a6088e8a6d0e14d0",
   "tree": "9461ab2bf637a2a62e8fdcdd6dc32976518e93ea",
   "fileCount": 7,
@@ -39,7 +39,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate2",
+      "directory": "artroom-evidence/2026-11-09-t1-gate2",
       "fileCount": 1104,
       "payloadFileCount": 1103,
       "payloadBytes": 38791443,
@@ -47,7 +47,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate2-launch",
+      "directory": "artroom-evidence/2026-11-09-t1-gate2-launch",
       "fileCount": 10,
       "payloadFileCount": 9,
       "payloadBytes": 12822,

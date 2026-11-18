@@ -1,6 +1,6 @@
 {
   "qualification": "Ruled post-gate checks at the single-comment checkpoint 54a1bcb5. Positive compiler, 34 plain files/339 tests and native turn 27 tests passed; fold fault distinguished. The intended type-control TS2322 exited 1, while the outer helper expected 2 and failed. Raw helper failure is retained; a separate offline audit verifies the diagnostic and exact source restoration without rerunning a test or compiler. The later audit power endpoint is not a reconstructed original endpoint.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-ie1-fg1-postgate",
+  "directory": "artroom-evidence/2026-11-14-ie1-fg1-postgate",
   "checkpoint": {
     "commit": "54a1bcb5a115b018f3d269e72de6eb8354ea4833",
     "tree": "0d07cc03822b2a566375d0d84aa9cffd6f627500"

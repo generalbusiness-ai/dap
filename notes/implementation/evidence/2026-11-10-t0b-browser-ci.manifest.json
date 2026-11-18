@@ -1,6 +1,6 @@
 {
   "qualification": "Sealed metadata-only reconciliation of exact90c7 Page/Card workflow_dispatch attempt1 actual successes. No raw fixture/log payload copied into safe unit; later candidate needs fresh source comparison.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-90c7-browser-ci/terminal-audit",
+  "directory": "artroom-evidence/2026-11-10-t0b-90c7-browser-ci/terminal-audit",
   "checkpoint": "90c7dd9b9614ca61a4d31448088608ec0e3621e6",
   "tree": "c278e41675ec1db20f694bb04c4caf4e96c02aa3",
   "fileCount": 5,
@@ -29,14 +29,14 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-90c7-browser-ci/20261110T084823087122Z",
+      "directory": "artroom-evidence/2026-11-10-t0b-90c7-browser-ci/20261110T084823087122Z",
       "fileCount": 47,
       "sha256Sums": "79ec8923c5a0540dfa402ead3fe46141d79f6fdecbd2e0e6418f68164eafbfac",
       "ownerPrivate": true,
       "nonwritable": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-90c7-browser-ci/dispatch-receipts",
+      "directory": "artroom-evidence/2026-11-10-t0b-90c7-browser-ci/dispatch-receipts",
       "fileCount": 53,
       "sha256Sums": "52b784286c300396f84e66ca0faee8af939f47c188b7e69fc46c9feb042e524a",
       "ownerPrivate": true,

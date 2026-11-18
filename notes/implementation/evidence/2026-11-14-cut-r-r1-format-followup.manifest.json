@@ -1,6 +1,6 @@
 {
   "qualification": "R1 formatter follow-up only. The maintained control runs the one Node owner before and after removing the fixture exemption; the formatter checks tracked JSON once. No compiler, Native test, scale owner, full gate, build, install, main merge or deployment.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cut-r-r1-format-followup-attempt2",
+  "directory": "artroom-evidence/2026-11-14-cut-r-r1-format-followup-attempt2",
   "checkpoint": {
     "commit": "2d511a531d1b5f4e6244c930ae1fcf6ae10b08b2",
     "tree": "592f520901f441f4912e105878dd1a0c94bbf940"

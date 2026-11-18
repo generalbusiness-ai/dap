@@ -1,7 +1,7 @@
 {
   "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
   "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-site-docs94-957/sigbus-failure-sealed/unit",
+  "unit": "artroom-evidence/2026-11-10-f-site-docs94-957/sigbus-failure-sealed/unit",
   "head": "9578637f6294ec85d6db639f25ce308cdb34d290",
   "tree": "ed0c92d305f7d2f802bd1060f1b99cc872ee6bbf",
   "booking": "93bb44f8ab5fbb621af8e5218ad5d6acfb1f125d",
@@ -49,7 +49,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-site-docs94-957/sigbus-failure-sealed/private",
+    "directory": "artroom-evidence/2026-11-10-f-site-docs94-957/sigbus-failure-sealed/private",
     "manifestSha256": "64bf0ec8fbdd41231c2a62b59d1756f64d25212be84576f68a415a708d567f9f",
     "files": 773,
     "retention": {

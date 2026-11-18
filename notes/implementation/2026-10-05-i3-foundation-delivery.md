@@ -292,7 +292,7 @@ By project, `npx vitest run --project <name>`, one run each, duration printed:
 | `git` | 3 | 6 | 1.98 s |
 | `platform` | 1 | 1 | 0.17 s |
 
-**Main's figures.** `/Users/hughpyle/play/artroom-worktrees/land-main` is not
+**Main's figures.** `artroom-worktrees/land-main` is not
 at `origin/main` (it is at `c373f078c`, and `origin/main` is `872d2537c`),
 so I did not run main there. The last recorded figure is in `vitest.config.ts`
 and commit `22157a0d4`: the whole vitest run about 4.5 s (observed on an

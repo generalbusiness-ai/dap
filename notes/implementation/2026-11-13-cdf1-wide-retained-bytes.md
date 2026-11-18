@@ -94,7 +94,7 @@ manifest includes that correspondence record.
 
 | Check | Command | Exit | Output sha256 |
 |---|---|---|---|
-| Entire native residency file, 4 passed | `ARTROOM_TEST_PHASE=native node_modules/.bin/vitest run --config vitest.native.config.ts --project scope-stories apps/room/lanes/test/directory-partition-lanes.scope.test.ts --reporter=json --outputFile /Users/hughpyle/play/artroom-evidence/2026-11-13-cdf1-residency-ac/native-results.json` | 0 | `f8c8008ed77953c327b005be427977dc694a6e475f2a3041ab3f268e9f03007d` |
+| Entire native residency file, 4 passed | `ARTROOM_TEST_PHASE=native node_modules/.bin/vitest run --config vitest.native.config.ts --project scope-stories apps/room/lanes/test/directory-partition-lanes.scope.test.ts --reporter=json --outputFile artroom-evidence/2026-11-13-cdf1-residency-ac/native-results.json` | 0 | `f8c8008ed77953c327b005be427977dc694a6e475f2a3041ab3f268e9f03007d` |
 
 CDF-1 still owes the Security conclusion. The wider cap holds the cutover deployment. RB-1 (request 0ce66e16)
 accepts audit 7f6f6834's finding: no constant bounds one rule row or one

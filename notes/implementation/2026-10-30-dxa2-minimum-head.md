@@ -271,7 +271,7 @@ naming manifests. Bind every output and complete runner unit once. Separate
 adopted and raw note bindings avoid seal hash cycles.
 
 The sealed unit is
-`/Users/hughpyle/play/artroom-evidence/2026-10-31-dxa2-bo1-integration-gate7`:
+`artroom-evidence/2026-10-31-dxa2-bo1-integration-gate7`:
 2,389 files, 478,818,524 bytes. Its full manifest has SHA256
 `134eb2d3e8c0eff194e2126f0d50212efd6b3183e6b6f7457eb974f0351bf0a3`;
 SUMS is `7052b1946709e443563e4c46f3c6f9ded47a491990d8430622b042b0c33cf10b`.

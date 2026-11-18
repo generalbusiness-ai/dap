@@ -1,7 +1,7 @@
 {
   "request": "260991d8d29bc2dd58a039062572f56c30b7735f",
   "promise": "b153688569e2a6c32e95e32d3c5c0a22c9a01f3c",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-source-metadata/unit",
+  "unit": "artroom-evidence/2026-11-09-t0b-source-metadata/unit",
   "qualification": "Curated public-safe source/setup metadata and exact pre-edit document bytes only. The original setup failure remains recorded. Parser execution was a separate root-owned metadata operation, not application validation. Original temporary receipts remain untouched.",
   "rawReadonlyScope": "Only this curated unit, after all files and manifest were written. Original temporary receipts and checkout remain writable.",
   "files": [

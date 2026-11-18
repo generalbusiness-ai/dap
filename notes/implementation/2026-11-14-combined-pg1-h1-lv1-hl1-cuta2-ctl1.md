@@ -289,7 +289,7 @@ This note cites existing focused records directly. It adds no committed
 focused manifest, supervisor plan, seal, sleep supplement, or landing
 record. The old part records remain unchanged.
 
-`F` names `/Users/hughpyle/play/artroom-evidence/2026-11-14-combined-batch-focused-attempt1`.
+`F` names `artroom-evidence/2026-11-14-combined-batch-focused-attempt1`.
 Focused START `4004a0fd448970dfcb3f063f73dc9d10781d803d` began at
 2026-11-14 15:13:54 UTC. END
 `d5e931269bb3841269558200915a6682843b4036` records 15:18:55 UTC.
@@ -300,7 +300,7 @@ The first direct gate ran at the same clean source checkpoint under START
 `b904b1d1a1f69200a5973a7e423253d989aea02f`. END
 `b2128c8c9e004e8f46ac544de18b3b25f5fcf7d0` records exit 1 and
 250.89 seconds wall time. Its unchanged log is
-`/Users/hughpyle/play/artroom-evidence/2026-11-14-combined-batch-gate-attempt1/gate.log`.
+`artroom-evidence/2026-11-14-combined-batch-gate-attempt1/gate.log`.
 It records Node 197 pass, counting 56 pass, plain 2 fail with 4,713 pass
 and 1 skip, and Native unreached. The failed gate does not change the
 standing focused result or supply a full-gate pass.
@@ -328,7 +328,7 @@ and measured wall time 1,800.26 seconds. The shell returned timing
 separately, so the log ends with the actual gate-passed verdict. Attempt 2
 uses a new directory and does not overwrite or relabel attempt 1.
 
-`G` names `/Users/hughpyle/play/artroom-evidence/2026-11-14-combined-batch-gate-attempt2`.
+`G` names `artroom-evidence/2026-11-14-combined-batch-gate-attempt2`.
 Its 7,156-byte `gate.log` starts with the tested head and tree and zero
 changed files. Kernel passed; Node passed 197; counting passed 56; plain
 passed 4,715 with 1 skip; Native passed 1,156 with 2 skips. The Native
@@ -353,7 +353,7 @@ Power is no condition of the gate or later runs under `f45b355a`.
 | Control exact baseline | Existing retained child TAP | 1 selected case fails by ERR_ASSERTION; actual 0, expected 1; total 1, skips 0 | `G/cuta2-baseline.tap` | `8825131554646a71a10f17907e77f6ade3c48078bb88bddc13f9647ca4146b21` |
 | Control helper output | Existing retained stderr | helper reports the named control and restored source | `G/cuta2-stderr.log` | `b7638a18ff7e429f25d3d857b873c1f6bf4224de8676f382046dfa992a298895` |
 | Focused outer interval | Five ordered commands and phase results in the retained record | all five actual exits 0 and verifications 0 | `F/interval-result.json` | `b09e76a05f8bc33ede264d01be2300d56765be43e109db11055ba655b1a88b6a` |
-| Gate attempt 1 | Direct `npm run gate` at `256673de` | FAILED: exit 1; wall 250.89 s; Node 197 pass; counting 56 pass; plain 2 fail, 4,713 pass, 1 skip; Native unreached | `/Users/hughpyle/play/artroom-evidence/2026-11-14-combined-batch-gate-attempt1/gate.log` | `1e868d3e98b87984b2f7f00c833628ad2057767cfba1a5a68000252cb4e1e0d4` |
+| Gate attempt 1 | Direct `npm run gate` at `256673de` | FAILED: exit 1; wall 250.89 s; Node 197 pass; counting 56 pass; plain 2 fail, 4,713 pass, 1 skip; Native unreached | `artroom-evidence/2026-11-14-combined-batch-gate-attempt1/gate.log` | `1e868d3e98b87984b2f7f00c833628ad2057767cfba1a5a68000252cb4e1e0d4` |
 | Gate attempt 2 | Direct `npm run gate` at `1c80cef3` after the authorized repair | PASS: exit 0; wall 1,800.26 s; Node 197 pass; counting 56 pass; plain 4,715 pass, 1 skip; Native 1,156 pass, 2 skips | `G/gate.log` | `84a48c9147d2f004e9fbaf08e29dce94b6e3d071786ec5661c3aa2fb46ec7988` |
 | Exact-head review | Architecture, Security, Simplification, kernel amendments, and final source correspondence | UNRUN | No checker verdict | No digest |
 

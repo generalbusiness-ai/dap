@@ -120,7 +120,7 @@ code refines the model or that a source is authentic.
 
 ## Where the audit lives
 
-All paths are under `/Users/hughpyle/play/artroom-evidence/`.
+All paths are under `artroom-evidence/`.
 
 - `2026-11-16-cv1-source-correspondence/retained-inputs/` holds byte-exact
   copies of the review inputs: the history export (every commit, parent,

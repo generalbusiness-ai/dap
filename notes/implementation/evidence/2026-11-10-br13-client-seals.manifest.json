@@ -32,7 +32,7 @@
   },
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-client-seals-c7fda1dd/run",
+      "directory": "artroom-evidence/2026-11-10-br13-client-seals-c7fda1dd/run",
       "fileCount": 18,
       "files": [
         {
@@ -160,7 +160,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-client-seals-c7fda1dd-review",
+      "directory": "artroom-evidence/2026-11-10-br13-client-seals-c7fda1dd-review",
       "fileCount": 4,
       "files": [
         {

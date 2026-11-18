@@ -1,6 +1,6 @@
 {
   "qualification": "Actual Page browser run42731853327 succeeded at8178 with its job and every step completed successfully. Ten conservative source/import roots including both fixed Native recorders and Worker roots have no changed input through623944ab and exclude Define. This carries source-input equivalence, not a new run or a hosted deployment/live acceptance claim. No browser, build, recorder, test, application import or private capture ran during custody.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-page-ci-carry",
+  "directory": "artroom-evidence/2026-11-09-t1-page-ci-carry",
   "checkpoint": "623944abbb3d7feba56e97958423d346bc8449d1",
   "CIHead": "8178fe63dca58e27d720e723fc1d1b9776405ec5",
   "fileCount": 4,

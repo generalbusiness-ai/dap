@@ -26,7 +26,7 @@ The older fixed replay recorded 30 stream HTTP 503 console diagnostics without b
 
 ## The final evidence
 
-Source checkpoint: `fb171f70ca5377c326f91f1249f71d0a5d2e8ad5`, tree `7bccb0a9b8d90deeee7dc2cca0fd8b70a1312386`. The manifest is `evidence/2026-11-02-stream-cause.manifest.json`, SHA256 `f2151bc88f0bdf0d6635ac8e7713a9f221067c4670675013adef27c88f431449`. It covers 108 files in three sealed units under `/Users/hughpyle/play/artroom-evidence/`.
+Source checkpoint: `fb171f70ca5377c326f91f1249f71d0a5d2e8ad5`, tree `7bccb0a9b8d90deeee7dc2cca0fd8b70a1312386`. The manifest is `evidence/2026-11-02-stream-cause.manifest.json`, SHA256 `f2151bc88f0bdf0d6635ac8e7713a9f221067c4670675013adef27c88f431449`. It covers 108 files in three sealed units under `artroom-evidence/`.
 
 The Python drivers use a monotonic wall clock around the run block. The spans include fixture setup, Worker startup, browser work, shutdown, and report extraction. They exclude preparation and sealing. They are not individual row latency or CPU measurements. Counts come from captured status events, Worker clones, native `serving()` replies, and the scene’s assertions.
 

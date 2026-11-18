@@ -4,7 +4,7 @@
   "tree": "61382429e3c01acb2e8684eb7fe9aee07605ae54",
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-demo-register26-sync-gate-validation",
+      "directory": "artroom-evidence/2026-11-07-demo-register26-sync-gate-validation",
       "files": [
         {
           "path": "after.json",
@@ -84,7 +84,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-demo-register26-sync-gate-validation-sealer-refusal",
+      "directory": "artroom-evidence/2026-11-07-demo-register26-sync-gate-validation-sealer-refusal",
       "files": [
         {
           "path": "after.json",

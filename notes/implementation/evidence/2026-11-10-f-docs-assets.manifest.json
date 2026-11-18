@@ -1,7 +1,7 @@
 {
   "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
   "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-docs-assets/independent-audit/unit",
+  "unit": "artroom-evidence/2026-11-10-f-docs-assets/independent-audit/unit",
   "head": "9bf8a1a8745ba25fae616957df59084f03281cb7",
   "tree": "805bd2e3dae55eac032d6ebf15333ef8e4ef21e5",
   "booking": "a378ab9f8dfb7b13e0382532f6b3f99d009ccf20",
@@ -34,7 +34,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-docs-assets/independent-audit/private",
+    "directory": "artroom-evidence/2026-11-10-f-docs-assets/independent-audit/private",
     "manifestSha256": "8868b0cd5d7352a05bc1641da43c3772b825b8d57b5dec2222fc0421a032fb41",
     "files": 444,
     "retention": {

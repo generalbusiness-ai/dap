@@ -5,7 +5,7 @@
   "baseHead": "6204ddaddeaf080d786d206eeddaca0165ca0936",
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-archive-floor-paired-validation",
+      "directory": "artroom-evidence/2026-11-07-archive-floor-paired-validation",
       "files": [
         {
           "path": "driver.py",

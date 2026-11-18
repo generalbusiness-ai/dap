@@ -1,6 +1,6 @@
 {
   "qualification": "Closed R7 delivery evidence copied from the original capture directories into one read-only directory with top-level SHA256SUMS. Original command metadata retains original execution paths. Gate V3 and the initial native continuation remain failed. The whole Rules file, then the Scope compiler and whole archive-target file passed after isolated test-only unsupported-version sentinel repairs. Production/configuration/dependencies/shared helpers unchanged after gate V3. Sequential limited-follow-up acceptability remains for the checker to assess; planner question 53707834 records the issue. Earlier accepted V17, generation, controls and Page evidence remain in the 2026-10-25 manifest and were not rerun.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-26-certified-rules-delivery",
+  "directory": "artroom-evidence/2026-10-26-certified-rules-delivery",
   "checkpoint": {
     "commit": "5a81692258c6ad1a04f375ee2b3bf00760a3304f",
     "tree": "4824d97f7004dba170dbb4e6f351bd58793db420"

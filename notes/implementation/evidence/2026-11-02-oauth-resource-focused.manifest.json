@@ -1,7 +1,7 @@
 {
   "version": 1,
   "qualification": "Incremental draft-focused checks retain their actual per-run checkpoints and failures; the separate frozen gate passed at 1ca60fee. Fixture raw output stays private with hashes. No production OAuth issuer, deployment or live host acceptance.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-oauth-resource-focused",
+  "directory": "artroom-evidence/2026-11-02-oauth-resource-focused",
   "checkpoint": {
     "commit": "1ca60fee5d8bebc2876ae1cb184061466ca28540",
     "tree": "55bb1505488601f629d9fce3a540b1ba84010297"

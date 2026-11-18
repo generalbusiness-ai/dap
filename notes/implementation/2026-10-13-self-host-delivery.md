@@ -13,7 +13,7 @@ locked npm dependencies, and pinned Wrangler 4.147.0. The closed ledger contains
 signal, timeout, output overflow, or spawn failure. An earlier summary said 39;
 the closed ledger supports 38. Exact command arrays, original terminal results,
 and proof hashes are retained in the
-[command evidence map](/Users/hughpyle/play/artroom-diagnostics/self-host-final-prose-draft/command-evidence-map.public.json).
+[command evidence map](artroom-diagnostics/self-host-final-prose-draft/command-evidence-map.public.json).
 
 Both literal `npm run deploy:scope` commands passed. The source launcher planned
 the register, installed that plan, claimed `first-room` for `@owner`, and invited

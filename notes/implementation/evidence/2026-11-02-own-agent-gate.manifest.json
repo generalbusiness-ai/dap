@@ -1,6 +1,6 @@
 {
   "qualification": "Failed frozen gate at 6744f49de2a6603a6516e36120c6521e62812e80, tree b802ec968fdeda97b331bdf13585cd260cdfcc07: actual exit 1; three plain test files fail and Native is unreached. Later repairs and gate are separate; no passing claim for this unit.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-own-agent-gate",
+  "directory": "artroom-evidence/2026-11-02-own-agent-gate",
   "checkpoint": "6744f49de2a6603a6516e36120c6521e62812e80",
   "tree": "b802ec968fdeda97b331bdf13585cd260cdfcc07",
   "fileCount": 6,

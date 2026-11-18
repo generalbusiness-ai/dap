@@ -1,6 +1,6 @@
 {
   "qualification": "Read-only historical audit, planner remaining-limit rulings, future private recorder, one offline pass and one intended control assertion. No live capture or product source change.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-stream-limit-record",
+  "directory": "artroom-evidence/2026-11-03-stream-limit-record",
   "checkpoint": "3693c9f81d074c2b0f792959bf2a419a3594602a",
   "fileCount": 20,
   "files": [

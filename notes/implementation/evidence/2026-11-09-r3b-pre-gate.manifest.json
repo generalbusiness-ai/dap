@@ -1,6 +1,6 @@
 {
   "qualification": "One focused pipeline and two named Native controls at the exact source checkpoint. All declared focused obligations passed. Each control has one passing named baseline and one expected assertion failure under its recorded fault. This proves the selected boundaries only, not a final gate, hosted outcome, deployment or live acceptance.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r3b-pre-gate-validation",
+  "directory": "artroom-evidence/2026-11-09-r3b-pre-gate-validation",
   "checkpoint": "ef12271d530856a9a16bbd51dcb716b4f19c8b6e",
   "tree": "561caa1f0eaa9aa767235ff8bd903234cc83627a",
   "fileCount": 2,

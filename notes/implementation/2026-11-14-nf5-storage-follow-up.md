@@ -446,7 +446,7 @@ unknown custody retains its slot, restored acceptance without receipt proof
 cannot clear, and disposal during the speaking notice retains the start
 without playback. No case failed, cancelled or skipped. The control took
 2.95 seconds; the targeted command took 0.72 seconds. Raw output remains in
-`/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-browser-custody-gate-attempt1/voice-c`.
+`artroom-evidence/2026-11-14-nf5-browser-custody-gate-attempt1/voice-c`.
 
 The coverage checkpoint `b4d6a7e9fe2720ed3d93c1204db4139a34342ada` pins
 that passing source and commit. The renewed model check passed: TLC generated
@@ -474,24 +474,24 @@ The later integration and gate above cover actual C2 main. Older precursor
 results keep their named heads; they do not become new runs through a merge.
 
 In the table, `N` is `/opt/homebrew/bin/node` and `E` is
-`/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-browser-custody-gate-attempt1`.
+`artroom-evidence/2026-11-14-nf5-browser-custody-gate-attempt1`.
 `Q` is `E/voice-q`. Relative output paths resolve under `E`; they name
 retained actual files, not new runs. Ordinary development rows describe
 readiness only. No formal focused result replaces the gate. Wall times follow
 the actual named process records; case counts come from JSON or Node terminal
 reports. The retained records stay for at least 30 days after landing.
 `F` is
-`/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-browser-custody-full-gate-attempt1`.
+`artroom-evidence/2026-11-14-nf5-browser-custody-full-gate-attempt1`.
 Its gate output, exact command, result record, and copied stage logs remain
 separate from the earlier precursor directory `E`.
-`D`, `C`, and `R` below resolve under `/Users/hughpyle/play/artroom-evidence/`
+`D`, `C`, and `R` below resolve under `artroom-evidence/`
 to `2026-11-14-nf5-natural-development-attempt1`,
 `2026-11-14-nf5-natural-canonical-attempt1`, and
 `2026-11-14-nf5-natural-reproduction-attempt1`. Their command and result
 records retain the exact argv, working directories, exits, and process walls.
-`G` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-browser-custody-full-gate-attempt2`.
-`T` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-browser-custody-full-gate-attempt3`.
-`V` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-nf5-native-caller-development-attempt1`.
+`G` is `artroom-evidence/2026-11-14-nf5-browser-custody-full-gate-attempt2`.
+`T` is `artroom-evidence/2026-11-14-nf5-browser-custody-full-gate-attempt3`.
+`V` is `artroom-evidence/2026-11-14-nf5-native-caller-development-attempt1`.
 The 36 control files in `T/retained-controls` are byte-exact copies of
 the original helper inputs, reports, and streams from `E/controls` and
 `E/voice-c/source-control`, with unchanged hashes and source qualifications.

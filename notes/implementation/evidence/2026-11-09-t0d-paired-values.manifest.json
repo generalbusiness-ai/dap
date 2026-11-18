@@ -1,6 +1,6 @@
 {
   "qualification": "Independent metadata-only audit of paired public model-value prints under identical retained synthetic inputs. No application, compiler, test, parser, browser or capture body ran in this audit. Counts describe evidence rows, not test cases or live/DOM acceptance. Complete synthetic values and raw stdout remain retained in owner-private source units.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-paired-values-audit",
+  "directory": "artroom-evidence/2026-11-09-t0d-paired-values-audit",
   "checkpoint": {
     "commit": "dcfa66866d842dd4a34106ac339c5d24025c17e6",
     "tree": "6b854d7e64c2a56a77e04e530b96cc55c306b8cd"
@@ -42,7 +42,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-paired-values",
+      "directory": "artroom-evidence/2026-11-09-t0d-paired-values",
       "payloadFileCount": 29,
       "fileCount": 30,
       "payloadBytes": 2684131,
@@ -51,7 +51,7 @@
       "symlinkCount": 0
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-paired-values-launch",
+      "directory": "artroom-evidence/2026-11-09-t0d-paired-values-launch",
       "payloadFileCount": 9,
       "fileCount": 10,
       "payloadBytes": 1835,
@@ -66,27 +66,27 @@
       "argv": [
         "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
         "--import",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/tsx/dist/loader.mjs",
+        ".builder-worktrees/typed-define-t1-20261109/node_modules/tsx/dist/loader.mjs",
         "/private/tmp/artroom-t0d-paired-values-20261109.capture.mjs",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109",
+        ".builder-worktrees/typed-define-t1-20261109",
         "/private/tmp/artroom-t0d-paired-values-20261109.inputs.json",
-        "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-paired-values/main19dd.values.json",
+        "artroom-evidence/2026-11-09-t0d-paired-values/main19dd.values.json",
         "main19dd"
       ],
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-paired-values/main19dd.stdout",
+      "output": "artroom-evidence/2026-11-09-t0d-paired-values/main19dd.stdout",
       "bytes": 34340,
       "sha256": "65293eb4cc03985b986aa0eb160eeba038aab69faf0b13876b0e6a165f021122",
-      "keptValues": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-paired-values/main19dd.values.json",
+      "keptValues": "artroom-evidence/2026-11-09-t0d-paired-values/main19dd.values.json",
       "keptValuesSha256": "65293eb4cc03985b986aa0eb160eeba038aab69faf0b13876b0e6a165f021122",
       "process": {
         "pid": 47626,
         "ppid": 47624,
         "execPath": "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
-        "cwd": "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109",
+        "cwd": ".builder-worktrees/typed-define-t1-20261109",
         "execArgv": [
           "--import",
-          "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/tsx/dist/loader.mjs"
+          ".builder-worktrees/typed-define-t1-20261109/node_modules/tsx/dist/loader.mjs"
         ],
         "config": "/private/tmp/artroom-t0d-paired-values-20261109.main19dd.tsconfig.json",
         "disableCache": "1"
@@ -103,27 +103,27 @@
       "argv": [
         "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
         "--import",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/node_modules/tsx/dist/loader.mjs",
+        ".builder-worktrees/typed-browser-models-t0d-20261109/node_modules/tsx/dist/loader.mjs",
         "/private/tmp/artroom-t0d-paired-values-20261109.capture.mjs",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109",
+        ".builder-worktrees/typed-browser-models-t0d-20261109",
         "/private/tmp/artroom-t0d-paired-values-20261109.inputs.json",
-        "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-paired-values/headDcfa.values.json",
+        "artroom-evidence/2026-11-09-t0d-paired-values/headDcfa.values.json",
         "headDcfa"
       ],
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-paired-values/headDcfa.stdout",
+      "output": "artroom-evidence/2026-11-09-t0d-paired-values/headDcfa.stdout",
       "bytes": 34367,
       "sha256": "3cff3cd5e3b5d7c5c281926385a9c83bb27c7291ebd1a2dda32917c4731dc838",
-      "keptValues": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-paired-values/headDcfa.values.json",
+      "keptValues": "artroom-evidence/2026-11-09-t0d-paired-values/headDcfa.values.json",
       "keptValuesSha256": "3cff3cd5e3b5d7c5c281926385a9c83bb27c7291ebd1a2dda32917c4731dc838",
       "process": {
         "pid": 47652,
         "ppid": 47650,
         "execPath": "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
-        "cwd": "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109",
+        "cwd": ".builder-worktrees/typed-browser-models-t0d-20261109",
         "execArgv": [
           "--import",
-          "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/node_modules/tsx/dist/loader.mjs"
+          ".builder-worktrees/typed-browser-models-t0d-20261109/node_modules/tsx/dist/loader.mjs"
         ],
         "config": "/private/tmp/artroom-t0d-paired-values-20261109.headDcfa.tsconfig.json",
         "disableCache": "1"

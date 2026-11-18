@@ -25,7 +25,7 @@ and retained four healthy readings plus an H3 Inbox birth. Its sealed
 The service keeps the private project `github-binding-project`, its
 three installed roots, session secret, and existing GitHub App custody.
 The maintained source export is
-`/Users/inguz/dap-host-g3b-20261103/source-binding-bf3bceb6`.
+`<mini home>/dap-host-g3b-20261103/source-binding-bf3bceb6`.
 The builder verified all 3,987 Git blobs and executable modes before the
 bind and again after publication. That export remains unchanged while it
 serves. The builder used only the existing G3b client and new scratch

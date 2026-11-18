@@ -2,7 +2,7 @@
   "qualification": "Index of unchanged raw originals for NF-2. Each evidence directory carries its own SHA256SUMS and is read-only. The gate at 95ff9a43 failed one Native test; the isolated follow-up at 456c1a05 covers the repaired test file. The first 95ff9a43 gate is void: host sleep.",
   "request": "9a321a0a3e7b63309d94210577e5163c5e2bfa98",
   "promise": "b7f2ffaa80883998ed89bb847397e47af5cdf471",
-  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "directory": "artroom-evidence",
   "base": "33836693a7439a13ee97ed887c58cf7191133878",
   "checkpointCommit": "456c1a05037d2a7425e6a91321d527d075e8ccef",
   "checkpointTree": "03d520f7a605947954f2c04246a4becfbdd12eca",

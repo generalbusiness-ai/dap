@@ -14,7 +14,7 @@
   },
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-formal-curated-c9f4dff626",
+      "directory": "artroom-evidence/2026-11-09-br13-formal-curated-c9f4dff626",
       "classification": "curated safe chart/report/correspondence metadata",
       "fileCount": 34,
       "files": [
@@ -191,7 +191,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-formal-c9f4dff626",
+      "directory": "artroom-evidence/2026-11-09-br13-formal-c9f4dff626",
       "classification": "retained actual original formal output; full logs external",
       "fileCount": 31,
       "files": [

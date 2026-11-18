@@ -1,6 +1,6 @@
 {
   "qualification": "FAILED first B gate: whitespace0 then immutable-ancestor commit-message subject-length failure1. All5841cases,45compilers and16typecheck scripts remain UNRUN; no pass analyzer ran. Historical BR13 failures, B setup refusals and distinguishing-control outcomes stay separate. No source/history rewrite, body retry, waiver, deployment, SDK output check or publication occurred in this metadata audit.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-final-gate-commit-message-failure-review",
+  "directory": "artroom-evidence/2026-11-10-t0b-final-gate-commit-message-failure-review",
   "sourceHead": "90c7dd9b9614ca61a4d31448088608ec0e3621e6",
   "sourceTree": "c278e41675ec1db20f694bb04c4caf4e96c02aa3",
   "booking": "dc75caae24fb37be68c43bec1d0f5a93ecbae64e",
@@ -38,7 +38,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-final-gate",
+      "directory": "artroom-evidence/2026-11-10-t0b-final-gate",
       "ownerPrivate": true,
       "files": [
         {
@@ -662,7 +662,7 @@
       "opaqueSymlinks": 0
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-final-gate-launch",
+      "directory": "artroom-evidence/2026-11-10-t0b-final-gate-launch",
       "ownerPrivate": true,
       "files": [
         {
@@ -731,7 +731,7 @@
       "opaqueSymlinks": 0
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-final-gate-commit-message-failure-private",
+      "directory": "artroom-evidence/2026-11-10-t0b-final-gate-commit-message-failure-private",
       "ownerPrivate": true,
       "files": [
         {

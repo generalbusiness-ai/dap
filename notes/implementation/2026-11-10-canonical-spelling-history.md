@@ -277,7 +277,7 @@ RSS from separate runs. [BR13 review][m-worker-br13]
 [m-focus7]: evidence/2026-11-10-f-native8-assertion-failure.manifest.json
 [m-focus-repaired]: evidence/2026-11-10-f-native7-scope23-repaired-focus.manifest.json
 [m-worker]: /private/tmp/artroom-f-43e9-worker-exit-forensics-20261110.md
-[m-worker-gc]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/gate/stage.unCiMSXK/test.log:267122
-[m-worker-rss]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/outer-launch/rss-samples/samples.jsonl:98
-[m-worker-progress]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/gate/case-progress.native.jsonl:2102
+[m-worker-gc]: artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/gate/stage.unCiMSXK/test.log:267122
+[m-worker-rss]: artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/outer-launch/rss-samples/samples.jsonl:98
+[m-worker-progress]: artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/gate/case-progress.native.jsonl:2102
 [m-worker-br13]: 2026-11-09-br13-version-questions.md

@@ -1,6 +1,6 @@
 {
   "qualification": "Actual incremental focused checks, with all failed and invalid attempts retained. Not a frozen aggregate pass.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-oauth-authorization-focused",
+  "directory": "artroom-evidence/2026-11-02-oauth-authorization-focused",
   "checkpoint": "9bcb91f9931861fb47ef5fc6afb5ea60f58dfbb4",
   "fileCount": 120,
   "files": [

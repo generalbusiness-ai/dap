@@ -1,7 +1,7 @@
 {
   "qualification": "Final H evidence aggregate. Actual gate and projection-only sealed continuation and retained Story classification retain their own results; three focused failures, the historical focused pass, CLI3, failed static and failed controller attempt retain their distinct heads and outcomes. The file list and private custody match the sealed aggregate. Its indexed metadata retains the detailed historical inventories.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h-final-9ff09d-v3/unit",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h-final-9ff09d-v3/unit",
+  "directory": "artroom-evidence/2026-11-11-h-final-9ff09d-v3/unit",
+  "unit": "artroom-evidence/2026-11-11-h-final-9ff09d-v3/unit",
   "checkpoint": "9ff09d548af3701d3645f7ee15ac5748bc158252",
   "head": "9ff09d548af3701d3645f7ee15ac5748bc158252",
   "tree": "6e6c51f0c683c4603d5686413e3d0abce053e6b3",
@@ -281,7 +281,7 @@
   "gateManifestSha256": "e8f900cdd0b4877916e433c5731c09d4d1f93cf8b2e84078ec8d1f7cd6dbf032",
   "projectionManifestSha256": "6e148d746294880c9e30d73743d251c437dd91b0adebf2d9639d4481c1d078ca",
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h-final-9ff09d-v3/private",
+    "directory": "artroom-evidence/2026-11-11-h-final-9ff09d-v3/private",
     "manifestSha256": "e5b86355df2e1eec15c5acbc0dc55a92ffabbfaf48470da8b810b2a51832f604",
     "files": 62,
     "minimumRetentionDays": 30
@@ -401,8 +401,8 @@
         "sha256": "e8f900cdd0b4877916e433c5731c09d4d1f93cf8b2e84078ec8d1f7cd6dbf032",
         "mode": 256
       },
-      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h9ff09d-gate-passed-sealed/unit",
-      "originalPrivateDirectory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h9ff09d-gate-passed-sealed/private",
+      "originalPublicUnit": "artroom-evidence/2026-11-11-h9ff09d-gate-passed-sealed/unit",
+      "originalPrivateDirectory": "artroom-evidence/2026-11-11-h9ff09d-gate-passed-sealed/private",
       "privateManifestSha256": "6226052501f11bd37f5eb95a29a3cb8abf85db68a0ae55600d0351ad1a37ebf5",
       "aggregateRawIndexLeaf": "final-gate-raw-index.original.json",
       "minimumRetentionDaysAfterLanding": 30,
@@ -415,8 +415,8 @@
         "sha256": "6e148d746294880c9e30d73743d251c437dd91b0adebf2d9639d4481c1d078ca",
         "mode": 256
       },
-      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h9ff09d-projection-continuation-passed-sealed/unit",
-      "originalPrivateDirectory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h9ff09d-projection-continuation-passed-sealed/private",
+      "originalPublicUnit": "artroom-evidence/2026-11-11-h9ff09d-projection-continuation-passed-sealed/unit",
+      "originalPrivateDirectory": "artroom-evidence/2026-11-11-h9ff09d-projection-continuation-passed-sealed/private",
       "privateManifestSha256": "dce3605b90ead53964aed8b10dc2c6d6706ccf705503c7fda1c097d972ec5305",
       "aggregateRawIndexLeaf": "final-projection-raw-index.original.json",
       "minimumRetentionDaysAfterLanding": 30,
@@ -424,7 +424,7 @@
     }
   },
   "sourceAggregateManifest": {
-    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h-final-9ff09d-v3/unit/manifest.json",
+    "path": "artroom-evidence/2026-11-11-h-final-9ff09d-v3/unit/manifest.json",
     "bytes": 57330,
     "sha256": "cb4c0d7ea618418e26b06044240169160130d9b615ce692aaa3af1730201deb9"
   }

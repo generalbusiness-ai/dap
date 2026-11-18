@@ -2,7 +2,7 @@
   "qualification": "Index of unchanged raw originals for LOG-1. Each evidence directory carries its own SHA256SUMS and is read-only. The gate at b54bb9f8 passed on its third start; the first two starts stopped with exit 130 and count as not run. Gate internals sit under gate-internals and are not listed here.",
   "request": "e79ccfafe4d92571218cc95aeea069685241d018",
   "promise": "80a0c32f31df2b556cebd4a294be06b4068f55ec",
-  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "directory": "artroom-evidence",
   "base": "e7db3872dbb239d0c42bb67720f614425a68e9cc",
   "checkpointCommit": "b54bb9f8cdb398eedda6f80c336ee4edf0e99a9f",
   "checkpointTree": "56d851c0c15af8ea943ddf906da19c92beaf41f3",

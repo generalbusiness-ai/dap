@@ -3,7 +3,7 @@
   "started": "2026-10-17T16:42:33.991Z",
   "base": "http://127.0.0.1:63452/notes/2026-10-17-journey-views-design/",
   "tools": {
-    "playwrightModule": "/Users/hughpyle/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs",
+    "playwrightModule": "~/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs",
     "chrome": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "browserVersion": "155.0.8059.80"
   },

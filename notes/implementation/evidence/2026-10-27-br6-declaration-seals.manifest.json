@@ -1,6 +1,6 @@
 {
   "qualification": "One naturally closed ordinary BR6 declaration-seals gate at the frozen checkpoint after the latest-base update. Actual 155-record parser adoption covers all150 declarations and five module records; all73 old owner seal outputs and68 nonconverted owners retained. Eight owning Node cases and three expected mutant assertion failures/restoration are separately qualified. Setup/adoption outer stdout is transcript-only; receipts and exact code/source snapshots are retained. Every tracked blob/mode except only this note and manifest equals the gate. Missing callbacks remain qualified. No Native authority, live provider, deployment or browser UI proof; review and landing remain due.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-br6-declaration-seals",
+  "directory": "artroom-evidence/2026-10-27-br6-declaration-seals",
   "checkpoint": {
     "commit": "2ba8595f4d8f72d18164319af9c0632203be17f0",
     "tree": "3c12c0e759d9d75e9756d06265cc5fad5eb9a21a"

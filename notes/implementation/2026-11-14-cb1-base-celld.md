@@ -36,7 +36,7 @@ changing the selector, or updating any other expectation.
 
 The earlier AE-1 owner failed with actual `e13a31cf` against retained `069eaf4c`.
 Its 12 cases ended with 11 passes and one failure. The output remains at
-`/Users/hughpyle/play/artroom-evidence/2026-11-14-ae1-development-attempt2/security-entry-points.stdout.log`
+`artroom-evidence/2026-11-14-ae1-development-attempt2/security-entry-points.stdout.log`
 with SHA-256 `d4f167e73793c6053324281d0cda925e8247ee6f2dba3a4218978381ebf91c29`.
 That failed run supplies the adopted result. The whole security-entry-point
 owner then passed all 12 cases at `20609219271fc127f76ef61d30c6a0171eeff8f0`,
@@ -228,7 +228,7 @@ rows bind 25f070a7/tree b2e9fb98. Comparison/apply/docs rows name their own
 source or resulting commit; follow-up preflight and stages bind 5fd226c6/tree
 388bbbac. All use the same published main 2055762c.
 
-`E=/Users/hughpyle/play/artroom-evidence`;
+`E=artroom-evidence`;
 `T=E/2026-11-15-cb1-ls1-lc3-final-source-preflight-attempt1`,
 `B=E/2026-11-15-cb1-ls1-lc3-bounded-owners-attempt1`,
 `P=E/2026-11-15-cb1-ls1-page-assets-owner-attempt1`,
@@ -280,7 +280,7 @@ copied records exclude the private synthetic fixture trees.
 | Four Page routes and root QA, END 718f2d46cc6d30b4a2587cb8160ca9a2e707cc97 | All four exit 0; outer 137.321146292 s; ten exact clean-source guards, all children and session 96824 reaped | `D/result.json` — `3e660bb31909b27337a6eb8495100db05a6f4e89891d6fdf0c009324b1971ba7`; `D/root-qa-safe-export.json` — `8098f24657bd21a062ee15797f8e58625cc97e75926a4623c7fa4feb55575668`. Root read all four reports, streams and two capture documents, and viewed seven PNGs. |
 
 The security-owner path above resolves under
-`/Users/hughpyle/play/artroom-evidence/`. Its `command.json` and `result.json`
+`artroom-evidence/`. Its `command.json` and `result.json`
 retain the actual command, source worktree, UTC interval, exit, process wall,
 and stream hashes. The command was
 `/opt/homebrew/bin/node --test scripts/security-entry-points.test.mjs`.

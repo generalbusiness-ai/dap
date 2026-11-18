@@ -1,6 +1,6 @@
 {
   "qualification": "Actual commit-message flags and planner ruling. Exact published merge identities remain unchanged; no product source, test, authority or deployment changes.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-stream-merge-flags",
+  "directory": "artroom-evidence/2026-11-03-stream-merge-flags",
   "checkpoint": "fdeeba887617c0535644a3dc4ca4e7fce548e08a",
   "fileCount": 6,
   "files": [

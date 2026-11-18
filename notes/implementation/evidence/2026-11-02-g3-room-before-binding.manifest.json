@@ -1,7 +1,7 @@
 {
   "version": 1,
   "qualification": "Real unpublished G3 room and pre-binding TEST issue, complete verified Native journal prefixes, exact filled App/map parser controls, and notes-only follow-up. No passing full gate, App key read/copy, binding, GitHub write, staging, deployment, or parent acceptance.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-g3-room-before-binding",
+  "directory": "artroom-evidence/2026-11-02-g3-room-before-binding",
   "checkpoint": {
     "commit": "6884772d771c1f9a4d752fffc48e6ef5a3baa447",
     "tree": "cb5a46008ec925d66e7e6f13bea066f99285fefe"

@@ -9,7 +9,7 @@
   "fileCount": 10,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-stream-http-close-gate",
+      "directory": "artroom-evidence/2026-11-03-stream-http-close-gate",
       "fileCount": 10,
       "files": [
         {
@@ -66,8 +66,8 @@
     }
   ],
   "privateOutput": {
-    "directory": "/Users/hughpyle/play/artroom-private-evidence/2026-11-03-stream-http-close-gate",
+    "directory": "artroom-private-evidence/2026-11-03-stream-http-close-gate",
     "dataFiles": 29,
-    "checksumFile": "/Users/hughpyle/play/artroom-private-evidence/2026-11-03-stream-http-close-gate/SHA256SUMS"
+    "checksumFile": "artroom-private-evidence/2026-11-03-stream-http-close-gate/SHA256SUMS"
   }
 }

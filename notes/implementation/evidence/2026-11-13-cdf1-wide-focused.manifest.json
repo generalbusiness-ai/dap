@@ -1,6 +1,6 @@
 {
   "qualification": "Functional focused evidence on actual Battery Power with powermode 0. First run: compiler narrowing failure repaired, then native 34 passed/2 fixture-setup failures. Follow-up changes only capacity-retained-rows.test.ts and passes its compiler and all four cases. No gate or AC residency timing claim.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-cdf1-wide-focused",
+  "directory": "artroom-evidence/2026-11-13-cdf1-wide-focused",
   "checkpoint_commit": "7d9506cb72039914cde7c93ece193665f775e28f",
   "checkpoint_tree": "8c0b84af35ca2ac4c0dc4990e265dd1e7b4cb158",
   "followup_commit": "ba05343e1e5003fc4982446b618553e15aba62e8",

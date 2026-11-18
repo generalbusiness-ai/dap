@@ -63,7 +63,7 @@ not mutant acceptance. Exact original and mutant source bytes, TAP, snapshots,
 and restoration evidence remain retained. Control-helper edits add observation
 only; they do not change its pass/fail decision.
 
-All table paths are relative to `/Users/hughpyle/play/artroom-evidence/2026-10-27-br6-declaration-seals`. Command references retain argv and cwd.
+All table paths are relative to `artroom-evidence/2026-10-27-br6-declaration-seals`. Command references retain argv and cwd.
 Receipt hashes are explicitly distinguished from process streams.
 
 | Check | Command or receipt reference | Exit | Artifact and SHA-256 |
@@ -120,7 +120,7 @@ neither wall time nor child CPU. `analysis-run.json` retains the actual analyzer
 argv, cwd, exit, timing, streams, and source/output hashes. Every input digest
 in its analysis is checked before finalization.
 
-Raw evidence is sealed read-only at `/Users/hughpyle/play/artroom-evidence/2026-10-27-br6-declaration-seals`. The single manifest indexes every
+Raw evidence is sealed read-only at `artroom-evidence/2026-10-27-br6-declaration-seals`. The single manifest indexes every
 file, including the root `SHA256SUMS`, which excludes itself. Any previously
 read-only evidence and nested indexes retain their bytes and permissions.
 `gate-source-equality.json` (SHA-256 `b7c29c08f41a250fb75ed1b8324f16c6c98133f39c0be959ae8037eb0e790736`) records the complete count,

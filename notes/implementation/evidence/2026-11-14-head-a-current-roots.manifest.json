@@ -1,6 +1,6 @@
 {
   "qualification": "One passing corrected Head A full gate at 259b5cb3. All three generated configurations use --only, singleton current roots, and mode 0644 before gate. Maintained selector omitted scale with outside-scale-paths against main 0ad4aa91; no override. Only notes/evidence may change after this checkpoint. Complete Native terminal evidence reports 1149 passes; optional live callbacks report 1103. All sealed raw files verified; this manifest lists every cited output and all non-periodic files, while the sealed gate manifest and SHA256SUMS cover all power samples. Old f8 gate remains passed-but-insufficient history, not current coverage. No deployment.",
-  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "directory": "artroom-evidence",
   "checkpoint": {
     "commit": "259b5cb367b4efd3364b522be2ac80a4e3f10438",
     "tree": "f965f8232a352cc9818ddbdb230b0f3bb9459643"
@@ -24,11 +24,11 @@
       "run",
       "gate"
     ],
-    "cwd": "/Users/hughpyle/play/artroom/.builder-worktrees/head-a-current-roots-20261114",
+    "cwd": ".builder-worktrees/head-a-current-roots-20261114",
     "head": "259b5cb367b4efd3364b522be2ac80a4e3f10438",
     "started": "2026-11-14T08:48:10.998992+00:00",
     "removedSelectorNames": [],
-    "progress": "/Users/hughpyle/play/artroom-evidence/2026-11-14-head-a-current-roots-gate/progress",
+    "progress": "artroom-evidence/2026-11-14-head-a-current-roots-gate/progress",
     "powerViolation": false,
     "pid": 28791,
     "exit": 0,
@@ -95,21 +95,21 @@
   "records": [
     {
       "kind": "script",
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-head-a-current-roots-script",
+      "directory": "artroom-evidence/2026-11-14-head-a-current-roots-script",
       "rawFileCount": 46,
       "checksumSha256": "6347cdd1bd36aaff25387bc9d62114854d4881579d099e30657fd65955e6c92f",
       "allRawFilesVerified": true
     },
     {
       "kind": "gate",
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-head-a-current-roots-gate",
+      "directory": "artroom-evidence/2026-11-14-head-a-current-roots-gate",
       "rawFileCount": 269,
       "checksumSha256": "191b6fc68553430a57380b57f72c32c8ba71d96b895015f7968530d2926d5a51",
       "allRawFilesVerified": true
     },
     {
       "kind": "docs",
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-head-a-current-roots-doc-checks",
+      "directory": "artroom-evidence/2026-11-14-head-a-current-roots-doc-checks",
       "rawFileCount": 11,
       "checksumSha256": "26c734ffe84e5272f6f9a6f50da606c8e4b103a637cb49199ce084dfa80d6ad6",
       "allRawFilesVerified": true

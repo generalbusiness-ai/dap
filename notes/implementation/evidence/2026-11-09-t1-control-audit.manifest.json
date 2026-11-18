@@ -1,6 +1,6 @@
 {
   "qualification": "Independent metadata audit only: Python stdlib, immutable Git metadata and file readback; no application imports or validation body.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-control-audit",
+  "directory": "artroom-evidence/2026-11-09-t1-control-audit",
   "checkpoint": {
     "commit": "9f9dacf591df07195d78b147bd729ee781736a34",
     "tree": "267261fc3921d63c0e0fd8d65f7f93ac7eb884e2"
@@ -26,7 +26,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-compile-refusal-control-v2",
+      "directory": "artroom-evidence/2026-11-09-t1-compile-refusal-control-v2",
       "payloadFileCount": 26,
       "fileCount": 27,
       "payloadBytes": 807368,
@@ -34,7 +34,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-compile-refusal-control-v2-launch",
+      "directory": "artroom-evidence/2026-11-09-t1-compile-refusal-control-v2-launch",
       "payloadFileCount": 10,
       "fileCount": 11,
       "payloadBytes": 2344,
@@ -43,7 +43,7 @@
     }
   ],
   "previousAudit": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-pre-gate-audit",
+    "directory": "artroom-evidence/2026-11-09-t1-pre-gate-audit",
     "sha256Sums": "057944d39ca155e29a26a9b71809752527340d0a2e2020b65617e323232ca5fe",
     "qualification": "Earlier audit remains unchanged and correctly records control UNRUN as of that audit."
   },

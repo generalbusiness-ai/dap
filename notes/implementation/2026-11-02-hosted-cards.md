@@ -150,7 +150,7 @@ agent separation, revocation, admission, sessions, expiry and custody.
 ## Evidence
 
 Raw output stays private under
-`/Users/hughpyle/.config/generalbusiness/hosted-cards-20261102/`.
+`~/.config/generalbusiness/hosted-cards-20261102/`.
 The public units contain result records, hashes, bounded count extracts and
 producer scripts. They contain no raw request bodies, bearer values or
 private keys. Keep the sealed units for at least 30 days after landing.

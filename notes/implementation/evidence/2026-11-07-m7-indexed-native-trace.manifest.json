@@ -1,6 +1,6 @@
 {
   "qualification": "The complete existing indexed-binding owner passes with whole delivery/context/count comparisons under exhausted and full Native tracing. The owner ran before the test-only checkpoint that retains its exact bytes; production source is unchanged from Page CI at 7f28e18a.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m7-indexed-native-trace",
+  "directory": "artroom-evidence/2026-11-07-m7-indexed-native-trace",
   "checkpoint_commit": "09d9d35a7c3419746ea299dec48be1b89f18dbaa",
   "checkpoint_tree": "2ae67392d0ada18f3a60615c2434f522ebe62236",
   "file_count": 14,

@@ -31,7 +31,7 @@ URL, seed, supported-version, recovery, and real-scope assertions remain.
 Validation exercised source through `b614c87d`, tree `48479bcd`.
 The [evidence manifest](evidence/2026-11-11-person-invitation-parity.manifest.json)
 indexes 30 public metadata files in
-`/Users/hughpyle/play/artroom-evidence/2026-11-12-jp1-b614-final-public-8726d6cf`.
+`artroom-evidence/2026-11-12-jp1-b614-final-public-8726d6cf`.
 Its SHA-256 is
 `88ed2aaa7f4b76c596a85db359046197cc7922858d1fb90903ed389f776f0b20`.
 The aggregation exited 0 and retained every original's bytes, identity,

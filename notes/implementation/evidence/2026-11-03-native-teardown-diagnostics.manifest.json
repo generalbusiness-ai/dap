@@ -1,5 +1,5 @@
 {
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-native-teardown-diagnostics",
+  "directory": "artroom-evidence/2026-11-03-native-teardown-diagnostics",
   "qualification": "Two unreproduced narrow teardown diagnostics; cause remains open.",
   "checkpoint": "2df72186c3672cefd35d9b4c894cd68085eb2171",
   "fileCount": 6,

@@ -8,7 +8,7 @@
   "fileCount": 21,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-retire-smoke-focused-validation",
+      "directory": "artroom-evidence/2026-11-09-retire-smoke-focused-validation",
       "fileCount": 10,
       "files": [
         {
@@ -64,7 +64,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-retire-smoke-ci-42620457832-validation",
+      "directory": "artroom-evidence/2026-11-09-retire-smoke-ci-42620457832-validation",
       "fileCount": 11,
       "files": [
         {

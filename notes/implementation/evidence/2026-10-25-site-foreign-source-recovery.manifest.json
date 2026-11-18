@@ -1,6 +1,6 @@
 {
   "qualification": "One ordinary gate passed at checkpoint, followed only by this note and manifest. Earlier focused checks and the distinguishing control retain their own explicit phase checkpoints; these are separate invocations. All 151 durable files are indexed and read-only. Private environment and physical vectors are withheld.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-25-site-foreign-source-recovery",
+  "directory": "artroom-evidence/2026-10-25-site-foreign-source-recovery",
   "checkpoint": {
     "commit": "89dac63259d2ee5e2dac93df0d151a51b4a1c957",
     "tree": "0fb2d4aa27c0422674c204e0de325e73d503fb6c"

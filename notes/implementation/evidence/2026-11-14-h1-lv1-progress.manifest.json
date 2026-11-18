@@ -1,6 +1,6 @@
 {
   "qualification": "Partial H1/LV1 checkpoint. H1 main integration generator ran on source subsequently committed as 2ca131acee5aa12e6d33537b29e3149adf6dbf65, tree914fe9b0f4652d5e02efcdaea47ca4c19bb2e265. LV1 followed that merge; source-before-compiler/ retains every one of its 16 changed/added files before sequential compiler checks. All seven compiler contexts passed, with an initial define-test dependency-resolution failure retained separately. No focused tests, native witnesses or full gate ran. LV1 trusted-platform policy request35a0cbe4 was unresolved when the slot released. No package installation or manifests/lock changes; only an ignored dependency link to existing pinned prettier3.9.10.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-h1-lv1-focused-attempt1",
+  "directory": "artroom-evidence/2026-11-14-h1-lv1-focused-attempt1",
   "checkpoint": {
     "commit": "2ca131acee5aa12e6d33537b29e3149adf6dbf65",
     "tree": "914fe9b0f4652d5e02efcdaea47ca4c19bb2e265",

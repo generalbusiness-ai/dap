@@ -1,6 +1,6 @@
 {
   "qualification": "Revised public Native witness asserts successful delivery draft judgesTime as well as a behind-clock refusal. Baseline/restored8 pass; declared-clock5, native-clock1 and future-leak1 exact expected assertion failures.71 unrelated cases filtered. Both source files restored. Three targeted controls, no sweep; no live operation.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-clock-controls-revised",
+  "directory": "artroom-evidence/2026-11-06-m3-clock-controls-revised",
   "fileCount": 33,
   "files": [
     {

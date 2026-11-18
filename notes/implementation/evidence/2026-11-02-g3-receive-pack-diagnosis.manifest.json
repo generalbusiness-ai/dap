@@ -1,6 +1,6 @@
 {
   "qualification": "One isolated live scratch-ref reproduction plus offline reply replay; all raw Git bytes and logs remain private. No original G3 room call, retry, fix, deployment or G3 acceptance.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-g3-receive-pack-diagnosis",
+  "directory": "artroom-evidence/2026-11-02-g3-receive-pack-diagnosis",
   "checkpoint": "ec48e2d526aa27c3746e7455c3eda6f8a3c87da4",
   "tree": "a1060ed6d26462b5ea58753a6b791b8816033c75",
   "fileCount": 32,

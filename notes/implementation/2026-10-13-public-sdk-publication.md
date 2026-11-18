@@ -111,7 +111,7 @@ unproved duties. Jam work remains deferred under planner steering.
 ## Closed public evidence
 
 Paths below are relative to
-`/Users/hughpyle/play/artroom-diagnostics`. Each is an explicitly named public
+`artroom-diagnostics`. Each is an explicitly named public
 result. Nested private references remain opaque.
 
 | Result | Path | SHA-256 |

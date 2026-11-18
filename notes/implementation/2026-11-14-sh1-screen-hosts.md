@@ -48,7 +48,7 @@ restored exactly, mode `0644`, SHA-256
 END `a4512f2e535e29ae05da1998dc08cc2d5dcddbf9` records that result.
 
 Prefix `E` below is
-`/Users/hughpyle/play/artroom-evidence/2026-11-14-sh1-full-gate-attempt1/controls/2026-11-14-sh1-development-control-attempt1`.
+`artroom-evidence/2026-11-14-sh1-full-gate-attempt1/controls/2026-11-14-sh1-development-control-attempt1`.
 Root verified this byte-exact copy; originals remain in the original directory
 at the evidence root. The copy adds no control run.
 `E/command.json` retains the actual whole-owner helper argv, including its
@@ -76,7 +76,7 @@ zero contradictions. Concurrent case/module durations are not process wall.
 Scale was omitted for `outside-scale-paths`; this gate proves no Scale case.
 The head, tree and clean status stayed unchanged through completion.
 
-Prefix `G` is `/Users/hughpyle/play/artroom-evidence/2026-11-14-sh1-full-gate-attempt1`.
+Prefix `G` is `artroom-evidence/2026-11-14-sh1-full-gate-attempt1`.
 It retains actual argv/results, the log and the system-temp stage-log copy.
 The control rows below bind `a06fbdec`; the gate rows bind `3753c02c`.
 These are local source checks, not deployment or real screen/browser proof.

@@ -50,7 +50,7 @@ The original source checkpoint is commit `8faa38dcf31855a0a6264e5912b58061b5eda2
 |---|---|---|---|
 | Original Transport final model and source | `node verification/state-machines/check.mjs Transport` | 0 | `0115fb46e72678165305ec7766a365aa3446e3824ffacaa25fa5ec1b517f2440` (`Delivery-Transport-check.log`) |
 | Original Transport final model | `delivery-Transport/report.md` | 0 | `f7a778d1851b32eb14291f58a95fe71282507c4a0412878631076fa526b78b14` (`delivery-Transport/tlc.out`) |
-| Original Transport source fault | `node verification/state-machines/control.mjs Transport /Users/hughpyle/play/artroom-evidence/2026-11-08-formal-five/transport-final-control` | 1 expected for broken source; baseline and restored 0 | `08603b10f0969e7f23cadffae84cc9533b4f1fe1cab4c5b2449f2bb0089abf8b` (`transport-final-control/broken.log`) |
+| Original Transport source fault | `node verification/state-machines/control.mjs Transport artroom-evidence/2026-11-08-formal-five/transport-final-control` | 1 expected for broken source; baseline and restored 0 | `08603b10f0969e7f23cadffae84cc9533b4f1fe1cab4c5b2449f2bb0089abf8b` (`transport-final-control/broken.log`) |
 | Original Observation final model and source | `node verification/state-machines/check.mjs Observation` | 0 | `53d97253a0f6f2160b14a1c20e373106fcd84e5d30206c04db42626050ec3839` (`Delivery-Observation-check.log`) |
 | Original Observation final model | `delivery-Observation/report.md` | 0 | `43c4f874d84c4e9df0bd73d181e4b6bd31ecfc5f32e337506b359e3e5e95fa80` (`delivery-Observation/tlc.out`) |
 | Original Observation source fault | `source-controls-used.py Observation` | 1 expected for broken source; baseline and restored 0 | `792e1137842983647b2db9106c0739856d127728944a80a6790db1706bb9b0e3` (`Observation-broken.log`) |

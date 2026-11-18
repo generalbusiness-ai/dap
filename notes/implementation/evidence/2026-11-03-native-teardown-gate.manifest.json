@@ -1,6 +1,6 @@
 {
   "qualification": "Actual frozen full gate exit 0 with unchanged source. Every phase completes; no unhandled error. Earlier O3, flush and DCR gates remain failures on their separate records.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-native-teardown-gate",
+  "directory": "artroom-evidence/2026-11-03-native-teardown-gate",
   "checkpoint": "03102b56c30cd583662863470da27565501cd809",
   "tree": "898c138e1c59f803b9d14af4647e3e3e4a73b085",
   "fileCount": 8,

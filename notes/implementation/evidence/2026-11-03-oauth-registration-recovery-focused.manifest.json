@@ -1,6 +1,6 @@
 {
   "qualification": "Incremental owning compilers, real-SQL and Native owners, two expected-failure controls with exact restoration, source inventory and helper checks. Not one frozen aggregate; the separate full gate retains its actual failure.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-registration-recovery-focused",
+  "directory": "artroom-evidence/2026-11-03-oauth-registration-recovery-focused",
   "checkpoint": "41a4a7e91a03edbce45c39e7fe8f1b556d74e308",
   "tree": "94f916e1a79b8a9d7c44d0a1f1dec703e9f92044",
   "fileCount": 17,

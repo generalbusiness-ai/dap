@@ -1,6 +1,6 @@
 {
   "qualification": "Actual local H1 evidence: failed gate remains failed/native partial; isolated exact owning-file repair followed by five passed health cases and Scope compiler0. Checker assesses the exception. Every failed execution and reporting attempt stays distinct. No hosted deployment, fleet recovery, physical device or private payload claim. SHA256SUMS excludes itself; manifest includes it. Keep at least 30 days after landing.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-celld-public-origin",
+  "directory": "artroom-evidence/2026-10-27-celld-public-origin",
   "checkpoint": {
     "commit": "27be0284ecf780463d79a5504f1730e4c547a9d3",
     "tree": "d0f356a65af462f85e5b8261957b1a91b54f2ddc"

@@ -1,6 +1,6 @@
 {
   "qualification": "JP1 final public metadata and CURATED PROVENANCE atb614. Original ordinary outputs stay plain/external. Failures62/51/963, focus27, full gate and MCP-only continuation remain separate; no older private payload is opened/copied. Page distinction remains under cd42 with original963 failed2. Final document-head CI belongs to external review attachments.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-12-jp1-b614-final-public-8726d6cf",
+  "directory": "artroom-evidence/2026-11-12-jp1-b614-final-public-8726d6cf",
   "checkpoint": "b614c87d141239701c5ecd99bb0f25fca8e9a733",
   "tree": "48479bcd12c39f77510ed02c5d74e87ccedfbe0a",
   "request": "3c9a0f81bf21428b3613cd710a0ad57da8184101",
@@ -206,7 +206,7 @@
       "descriptorSha256": "280c3521db42afed29b21867cb97f175219f604d21303d98d0788b99d530447c",
       "descriptorTarget": "units/focus62-failed/manifest.json",
       "privateCustody": {
-        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-jp1-babfb07a-focus62-failed-sealed/private",
+        "directory": "artroom-evidence/2026-11-11-jp1-babfb07a-focus62-failed-sealed/private",
         "manifestSha256": "8cc9b4be625ba50b374f02635d36cab9f77836adc5c9f38029f7dd6784f1399f",
         "files": 87,
         "minimumRetentionDays": 30
@@ -230,7 +230,7 @@
       "descriptorSha256": "0d1cfa8ed9d374fdc2e726775ef2a23ff318559a9f55b09b60f307f4fa985628",
       "descriptorTarget": "units/continuation51-refused/manifest.json",
       "privateCustody": {
-        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-jp1-cb79e7fa-continuation51-guard-refusal-sealed/private",
+        "directory": "artroom-evidence/2026-11-11-jp1-cb79e7fa-continuation51-guard-refusal-sealed/private",
         "manifestSha256": "bda949f2f03d67b97787640148f05f3445afc472e74ccde1ecdcee2debde0a82",
         "files": 81,
         "minimumRetentionDays": 30
@@ -256,7 +256,7 @@
       "descriptorSha256": "5c0719e30713c11c4630e90ce608d17a86ed8270959289e7f591cb39db8a4a89",
       "descriptorTarget": "units/continuation27-passed/manifest.json",
       "privateCustody": {
-        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-jp1-cb79e7fa-continuation27-success-sealed/private",
+        "directory": "artroom-evidence/2026-11-11-jp1-cb79e7fa-continuation27-success-sealed/private",
         "manifestSha256": "46250ed2e9436b8a9d2caac09dbfd119cfdebd2772ec7922685cb1554783d6b7",
         "files": 439,
         "minimumRetentionDays": 30
@@ -280,7 +280,7 @@
       "descriptorSha256": "1b07f1318eb6c62ae260b1022932f07069eaddc3af930086ad244dff5bafc73c",
       "descriptorTarget": "units/full-gate/manifest.json",
       "privateCustody": {
-        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-jp1-b614-one-full-gate-sealed-ab77/private",
+        "directory": "artroom-evidence/2026-11-11-jp1-b614-one-full-gate-sealed-ab77/private",
         "manifestSha256": "6854e5fd570a4e70dab580730a896a97b504831b28ed3ea1719d2cd93eed3012",
         "files": 2608,
         "minimumRetentionDays": 30
@@ -305,7 +305,7 @@
       "descriptorSha256": "7f0e01308cfd356b5753874ab6f589be9f9db118fd34e8b4ec78df7ea5bf0613",
       "descriptorTarget": "units/page-control963-failed/manifest.json",
       "privateCustody": {
-        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-jp1-b614-controls963-failed-sealed-c7e6b68b/private",
+        "directory": "artroom-evidence/2026-11-11-jp1-b614-controls963-failed-sealed-c7e6b68b/private",
         "manifestSha256": "38853e2d1f0c47fbd9a326471b0b532110c9560e546aff8c10eb68100189ce6f",
         "files": 10315,
         "minimumRetentionDays": 30
@@ -329,7 +329,7 @@
     "descriptorSha256": "bdfc35d1f5dba0ac6e736a939868e0cbcae7f9adc06f130233356cfd924c3258",
     "descriptorTarget": "units/mcp-only/manifest.json",
     "privateCustody": {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-jp1-b614-mcp-only-sealed-dcbd8963/private",
+      "directory": "artroom-evidence/2026-11-11-jp1-b614-mcp-only-sealed-dcbd8963/private",
       "manifestSha256": "d98c961b2df5556b06ea510eedd9110c16973c02dc3b57d26317c7bdb340d5bd",
       "files": 10325,
       "minimumRetentionDays": 30

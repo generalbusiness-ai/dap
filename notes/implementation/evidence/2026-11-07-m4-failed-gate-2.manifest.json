@@ -4,7 +4,7 @@
   "sourceTree": "dd3e21070ed28fa1d5c6007fce40be09737b8f82",
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-failed-gate-2-validation",
+      "directory": "artroom-evidence/2026-11-07-m4-failed-gate-2-validation",
       "files": [
         {
           "path": "after.json",

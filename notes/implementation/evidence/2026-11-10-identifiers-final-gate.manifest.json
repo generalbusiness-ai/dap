@@ -1,6 +1,6 @@
 {
   "qualification": "Independent terminal metadata reconciliation of the identifiers note at 126c6c90/tree 7639a537. Only two notes differ from actual landed D main f5d59983; all 702 case owners retain their source bytes. Every outcome below comes from the actual terminal gate and independent full ledger reconciliation. All 111 wrappers remain unknown; omitted Scale 6 is not a skipped or passed result. The three prechecks have separate actual receipts and END e59d476e. RSS is sampled single-process resident memory, not heap, a sum, an instantaneous peak or a threshold; the prior baseline scope differs. The parent 05d618e2 remains open. No identifier cutover, code change, live activation, deployment or acceptance follows.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-identifiers-final-gate-review",
+  "directory": "artroom-evidence/2026-11-10-identifiers-final-gate-review",
   "checkpoint": "126c6c90f929eb13ec5e6dd1a725d71f75266482",
   "tree": "7639a53714c8d429abb96db48a3d29858aa0c271",
   "fileCount": 7,
@@ -39,7 +39,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-identifiers-final-gate",
+      "directory": "artroom-evidence/2026-11-10-identifiers-final-gate",
       "payloadFileCount": 2453,
       "fileCount": 2454,
       "payloadBytes": 80816416,
@@ -47,7 +47,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-identifiers-final-gate-launch",
+      "directory": "artroom-evidence/2026-11-10-identifiers-final-gate-launch",
       "payloadFileCount": 12,
       "fileCount": 13,
       "payloadBytes": 605822,
@@ -55,7 +55,7 @@
       "ownerPrivate": true
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-identifiers-final-gate-analysis-private",
+      "directory": "artroom-evidence/2026-11-10-identifiers-final-gate-analysis-private",
       "payloadFileCount": 7,
       "fileCount": 8,
       "payloadBytes": 21199233,
@@ -152,7 +152,7 @@
     }
   ],
   "privateAnalysisCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-identifiers-final-gate-analysis-private",
+    "directory": "artroom-evidence/2026-11-10-identifiers-final-gate-analysis-private",
     "file": "full-reconciliation.private.json",
     "bytes": 15602587,
     "sha256": "f78f2276e0d4ddf2c63f703f9ec5bd5169ed4520bd37ecd4af19027f99a804a6",

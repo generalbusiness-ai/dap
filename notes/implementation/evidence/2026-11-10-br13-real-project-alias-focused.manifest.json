@@ -1,6 +1,6 @@
 {
   "qualification": "Independent metadata-only alias repair witness audit. All26 existing cases passed through the real maintained counting/lending project configs and all7 owners, with no scratch resolve/include override. The subsequent actual Counter-browser Vite probe resolved2 exact supported paths; these observations are not test cases. No compiler rerun, new case, mutant, server, application bundle, install or live acceptance. This audit ran no application/test/resolver body. Earlier v4 module failures remain separate atfb98; no current checkout equality claim.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-real-project-alias-focused-audit",
+  "directory": "artroom-evidence/2026-11-10-br13-real-project-alias-focused-audit",
   "checkpoint": {
     "commit": "a591595eda340db589a5db776b0a78741bbd4c89",
     "tree": "3bbc916a64e0b4c52b278099cc924280fab3732e"
@@ -41,7 +41,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-real-project-alias-focused/run",
+      "directory": "artroom-evidence/2026-11-10-br13-real-project-alias-focused/run",
       "payloadFileCount": 42,
       "fileCount": 43,
       "payloadBytes": 7629344,
@@ -55,15 +55,15 @@
       "name": "real-project-cases",
       "argv": [
         "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/node_modules/vitest/vitest.mjs",
+        ".builder-worktrees/version-questions-br13-20261109/node_modules/vitest/vitest.mjs",
         "run",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/apps/counter/commitments.test.ts",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/apps/counter/definition.test.ts",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/examples/lending/browser/custody.test.ts",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/examples/lending/browser/model.test.ts",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/examples/lending/browser/publication.test.ts",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/examples/lending/definition.test.ts",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/examples/lending/shelf.test.ts",
+        ".builder-worktrees/version-questions-br13-20261109/apps/counter/commitments.test.ts",
+        ".builder-worktrees/version-questions-br13-20261109/apps/counter/definition.test.ts",
+        ".builder-worktrees/version-questions-br13-20261109/examples/lending/browser/custody.test.ts",
+        ".builder-worktrees/version-questions-br13-20261109/examples/lending/browser/model.test.ts",
+        ".builder-worktrees/version-questions-br13-20261109/examples/lending/browser/publication.test.ts",
+        ".builder-worktrees/version-questions-br13-20261109/examples/lending/definition.test.ts",
+        ".builder-worktrees/version-questions-br13-20261109/examples/lending/shelf.test.ts",
         "--config",
         "/private/tmp/artroom-br13-real-project-alias-focused-20261110.config.mts",
         "--bail=1",
@@ -71,11 +71,11 @@
         "--passWithNoTests=false",
         "--reporter=verbose",
         "--reporter=json",
-        "--reporter=/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/scripts/focused-check.mjs",
-        "--outputFile.json=/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-real-project-alias-focused/run/body/focused/vitest.json"
+        "--reporter=.builder-worktrees/version-questions-br13-20261109/scripts/focused-check.mjs",
+        "--outputFile.json=artroom-evidence/2026-11-10-br13-real-project-alias-focused/run/body/focused/vitest.json"
       ],
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-real-project-alias-focused/run/body/focused/body.log",
+      "output": "artroom-evidence/2026-11-10-br13-real-project-alias-focused/run/body/focused/body.log",
       "bytes": 4160,
       "sha256": "5849f363c1bfcc69f92071d447e21f04290e7b1d0105db7f476bc0eb89cb39f3"
     },
@@ -85,10 +85,10 @@
         "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
         "/private/tmp/artroom-br13-real-project-alias-focused-20261110.resolver.mjs",
         "/private/tmp/artroom-br13-real-project-alias-focused-20261110.plan.json",
-        "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-real-project-alias-focused/run/body/resolver-observations.json"
+        "artroom-evidence/2026-11-10-br13-real-project-alias-focused/run/body/resolver-observations.json"
       ],
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-real-project-alias-focused/run/body/resolver.log",
+      "output": "artroom-evidence/2026-11-10-br13-real-project-alias-focused/run/body/resolver.log",
       "bytes": 2048,
       "sha256": "c5c400b3e3350d7f72608d366ff25daaa59ced9ff41ba3cb3254613a5bc11d36"
     }

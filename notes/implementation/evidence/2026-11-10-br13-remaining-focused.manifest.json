@@ -34,7 +34,7 @@
   },
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-remaining-focused-6cbc96f05b-review",
+      "directory": "artroom-evidence/2026-11-10-br13-remaining-focused-6cbc96f05b-review",
       "classification": "Only curated status/count/identity metadata. No original logs, assertion payloads, fixture bytes, signing keys or requests copied.",
       "fileCount": 6,
       "files": [
@@ -71,7 +71,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-remaining-focused-6cbc96f05b/run",
+      "directory": "artroom-evidence/2026-11-09-br13-remaining-focused-6cbc96f05b/run",
       "classification": "Opaque retained originals; original bytes remain in place, not public copies. Paths, sizes and hashes only.",
       "fileCount": 63,
       "files": [

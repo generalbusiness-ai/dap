@@ -1,6 +1,6 @@
 {
   "qualification": "C1 focused evidence only, with original failed compiler, failed ledger wrapper and inconclusive helper exits preserved. Separate offline label crosscheck and planner 716ad40d qualify observed assertions; no gate/checker approval or real publication. Nested sealed manifests/checksums bind all raw directories, including unlisted transform caches.",
-  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "directory": "artroom-evidence",
   "checkpoint": {
     "commit": "59beee2f397d4a713ce554433229c3449d1064bd",
     "tree": "e62a4042b1c4cb20680f7fc2f9554c11897505e4",

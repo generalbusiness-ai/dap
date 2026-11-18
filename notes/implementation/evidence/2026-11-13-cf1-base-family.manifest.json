@@ -1,6 +1,6 @@
 {
   "qualification": "CF-1 gate attempt 3 at unchanged source checkpoint; previous power-refused launches ran no gate.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-13-cf1-base-family-gate-attempt3",
+  "directory": "artroom-evidence/2026-11-13-cf1-base-family-gate-attempt3",
   "checkpoint": {
     "commit": "4369fddf0d07f680c61a9dff12f557967545a3ce",
     "tree": "da0bdbb8b4fe5721fe73a60dd314e6d7f7644501"

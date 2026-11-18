@@ -1,6 +1,6 @@
 {
   "qualification": "CUT-A isolated hosted-loop fixture follow-up after failed gate 554187d4. Only that test file changes; every original case/deadline remains, compiler and whole owner pass, and the exact originally unreached native stage (including scale) passes. The failed gate is a separate record and stays failed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cut-a-fixture-followup",
+  "directory": "artroom-evidence/2026-11-14-cut-a-fixture-followup",
   "checkpoint": {
     "commit": "d19e945336f8623a728691adae05a4f2d4e3697c",
     "tree": "4327b264c78888fdf1bb05ca14aa27372a4eb9d2"

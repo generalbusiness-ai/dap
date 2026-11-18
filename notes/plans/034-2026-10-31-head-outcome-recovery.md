@@ -296,7 +296,7 @@ hold-to-opening association still needs the bounded journal projection.
 Planner assertion `3ed61daa013c04b5886fa44c08c22c10d8d5c264`, corrected by
 `787203a804b00b26abf50dd881afe7605bdee817`, reports read-only sink queries at
 01:01–01:05 Eastern (05:01–05:05 UTC) on 31 October. Their sealed public
-unit is `/Users/hughpyle/play/artroom-evidence/2026-10-31-s1-head-telemetry`:
+unit is `artroom-evidence/2026-10-31-s1-head-telemetry`:
 14 read-only files, 418,806 bytes, root `SHA256SUMS`
 `8c4f9c5d8f8e8717587f197cb0a54b7b2d4e4519befa60c641b247200bbf4008`.
 This repair verified every file, mode, hash and exact membership; it ran no

@@ -2,7 +2,7 @@
   "qualification": "Index of unchanged raw originals for F-2. The gate and CI directories carry their own SHA256SUMS and are read-only. The create-room witness ran in CI, not locally.",
   "request": "0f327b6b207defe01cb9a4a3fab743e3d6fc89aa",
   "promise": "21938a69695a9f45303b1d96c0ea05b48a713ae3",
-  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "directory": "artroom-evidence",
   "base": "28aa0446ab0f5cac2753fa802a186ecb7843daca",
   "checkpointCommit": "e3563420b1aedf8ca4bd62da2d67e08bed0a877c",
   "checkpointTree": "8800c4b3018f6a7295f2212b69ffda11fb982706",

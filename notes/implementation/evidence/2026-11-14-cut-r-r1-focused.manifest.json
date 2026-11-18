@@ -1,6 +1,6 @@
 {
   "qualification": "Bounded CUT-R R1 generation and focused compiler/owner checks only. Eleven native closure owners, all scale owners and the full gate remain unrun. No public packet or real publisher signing.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-14-cut-r-r1-focused",
+  "directory": "artroom-evidence/2026-11-14-cut-r-r1-focused",
   "checkpoint": {
     "commit": "cc06fa2b4a3321995e87857ff6a61e7749bed964",
     "tree": "5a327bdd31a2200055e80f2f14b8faaa75dade68"

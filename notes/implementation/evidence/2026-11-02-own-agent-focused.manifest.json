@@ -1,6 +1,6 @@
 {
   "qualification": "Incremental focused O2 checks; all earlier pin and declaration bytes unchanged. Failed runs remain failures; raw credential-bearing output stays private. Final gate and browser CI are separate units.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-own-agent-focused",
+  "directory": "artroom-evidence/2026-11-02-own-agent-focused",
   "checkpoint": "5929ca7cd76f180e062fcbf0cd340243fdb2c729",
   "tree": "9285a3daa4436aff5fd30010d3b84a3393b7f181",
   "fileCount": 59,

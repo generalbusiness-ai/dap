@@ -1,6 +1,6 @@
 {
   "qualification": "Documents-only merge after the approval of head b02fe46b. The head merges main b0af01d2, and only documents differ from main (non-doc-paths.log). Under the documents-only rule the gate did not run again. The tests that read docs/mcp.md, docs/security and the lane reference ran again, with the documentation checks, at the checkpoint. The final head adds this manifest and the record's evidence table and changes no page. No acceptance is inferred from sealing.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review-4",
+  "directory": "artroom-evidence/2026-10-30-docs-review-4",
   "base": {
     "commit": "b0af01d25914a532c973f4e7ab7cd4ac6206459a",
     "tree": "5228c576e5e579bb7d36606088cb33ba80a9411f"
@@ -10,7 +10,7 @@
     "tree": "294bdb17d93b962c1a8f08e3c580118412fee2c5"
   },
   "priorEvidence": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review",
+    "directory": "artroom-evidence/2026-10-30-docs-review",
     "checkpoint": {
       "commit": "d10d153078cd2a7c42c0a2bc0304ecfc0b19141f",
       "tree": "8ca875e20e6376865cb03f67e70eaecd1bec3623"
@@ -111,7 +111,7 @@
   "retention": "Directory and files are read-only; retain for at least 30 days after landing.",
   "withheld": "No raw environment, secret, token or request body was captured.",
   "priorFollowUp": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review-3",
+    "directory": "artroom-evidence/2026-10-30-docs-review-3",
     "checkpoint": {
       "commit": "6e6a94224a2f45179411620e87e3f8db96b37084",
       "tree": "8a00bf51b3d013364ff035b1478a48ab40e2f51e"

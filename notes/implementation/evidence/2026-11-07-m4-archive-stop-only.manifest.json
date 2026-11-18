@@ -5,7 +5,7 @@
   "baseHead": "5908a78cbc3eaffe4f8ba8dadf59a102ccc18bde",
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-archive-floor-stop-only-validation",
+      "directory": "artroom-evidence/2026-11-07-archive-floor-stop-only-validation",
       "files": [
         {
           "path": "driver.py",

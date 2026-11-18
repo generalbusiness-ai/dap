@@ -131,26 +131,26 @@ pinned Node 26.13.0_2. Hashes cover stdout unless a row names another file.
 Manifest indexes retain exact argv, timing, environment, and cleanup.
 
 ```text
-F /Users/hughpyle/play/artroom/.builder-worktrees/canonical-spelling-f-20261110
-R0 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-focus-successor143/run
-R1 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-focus-continuation18-8dc/run
-R2 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-node-native-0ca2/run
-R3 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-editor-8dc1381c/run
-R5 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-combined82-3de/run
-R6 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-site-docs94-957/run
-R7 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-same957-crash-control/run
-R8 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-native8-only/run
-R9 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-native7-scope23/run
-R10 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run
-R11 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/run
+F .builder-worktrees/canonical-spelling-f-20261110
+R0 artroom-evidence/2026-11-10-f-focus-successor143/run
+R1 artroom-evidence/2026-11-10-f-focus-continuation18-8dc/run
+R2 artroom-evidence/2026-11-10-f-node-native-0ca2/run
+R3 artroom-evidence/2026-11-10-f-editor-8dc1381c/run
+R5 artroom-evidence/2026-11-10-f-combined82-3de/run
+R6 artroom-evidence/2026-11-10-f-site-docs94-957/run
+R7 artroom-evidence/2026-11-10-f-same957-crash-control/run
+R8 artroom-evidence/2026-11-10-f-native8-only/run
+R9 artroom-evidence/2026-11-10-f-native7-scope23/run
+R10 artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run
+R11 artroom-evidence/2026-11-10-f-archive-only-control-3979/run
 S0 /private/tmp/artroom-f-source-seal-frozen-93a87a7b-20261110
 S1 /private/tmp/artroom-f-supports-edit-seal-frozen-038480f8-20261110
-RD /Users/hughpyle/play/artroom-evidence/2026-11-10-f-docs-assets/run
-G /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-43e9
+RD artroom-evidence/2026-11-10-f-docs-assets/run
+G artroom-evidence/2026-11-10-f-final-gate-43e9
 BASE d7736fa3de1c75d588f003f3d7e467545cf8ed06
 HEAD 43e9b32801908301066d83de2ab5725edccd3f2a
 FINAL 688cda1ef5b3a70a917bc9132bd6984943cca5be
-GF /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-688c
+GF artroom-evidence/2026-11-10-f-final-gate-688c
 ```
 
 | Check and source | Actual command | Exit | Output SHA-256 | Manifest |
@@ -409,29 +409,29 @@ acceptance.
 [m-static]: evidence/2026-11-10-f-final-static-43e9-v3.manifest.json
 [m-gate]: evidence/2026-11-10-f-final-gate-43e9.manifest.json
 [m-worker]: /private/tmp/artroom-f-43e9-worker-exit-forensics-20261110.md
-[m-worker-gc]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/gate/stage.unCiMSXK/test.log:267122
-[m-worker-rss]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/outer-launch/rss-samples/samples.jsonl:98
-[m-worker-progress]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/gate/case-progress.native.jsonl:2102
+[m-worker-gc]: artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/gate/stage.unCiMSXK/test.log:267122
+[m-worker-rss]: artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/outer-launch/rss-samples/samples.jsonl:98
+[m-worker-progress]: artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/gate/case-progress.native.jsonl:2102
 [m-worker-br13]: 2026-11-09-br13-version-questions.md
 [m-grow-source]: /private/tmp/artroom-jp1-f-archive-grow-fixture-patch-source-v2-20261110/SOURCE.PROOF.json
 [m-grow-cost]: /private/tmp/artroom-jp1-f-archive-grow-v2-historical-receipt-proof-20261110.json
-[m-grow-run-result]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/body/native-focused/result.json
-[m-grow-run-rss]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/rss-peaks.json
-[m-grow-run-log]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/body/native-focused/body.log:6810
-[m-grow-run-cases]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/body/native-focused/coverage.jsonl
-[m-grow-run-json]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/body/native-focused/vitest.json
+[m-grow-run-result]: artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/body/native-focused/result.json
+[m-grow-run-rss]: artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/rss-peaks.json
+[m-grow-run-log]: artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/body/native-focused/body.log:6810
+[m-grow-run-cases]: artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/body/native-focused/coverage.jsonl
+[m-grow-run-json]: artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/body/native-focused/vitest.json
 [m-grow-run-seal]: evidence/2026-11-10-f-archive-repair-focus-3979-failure.manifest.json
-[m-grow-run-terminal]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/failed-focus-sealed/unit/terminal-summary.json
+[m-grow-run-terminal]: artroom-evidence/2026-11-10-f-archive-repair-focus-3979/failed-focus-sealed/unit/terminal-summary.json
 [m-grow-run-peer]: /private/tmp/artroom-jp1-f-3979-focus-failure-seal-peer-20261110.json
-[m-archive-control-command]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/run/body/native-focused/result.json
-[m-archive-control-cases]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/run/body/native-focused/coverage.jsonl
-[m-archive-control-json]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/run/body/native-focused/vitest.json
-[m-archive-control-rss]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/run/rss-peaks.json
+[m-archive-control-command]: artroom-evidence/2026-11-10-f-archive-only-control-3979/run/body/native-focused/result.json
+[m-archive-control-cases]: artroom-evidence/2026-11-10-f-archive-only-control-3979/run/body/native-focused/coverage.jsonl
+[m-archive-control-json]: artroom-evidence/2026-11-10-f-archive-only-control-3979/run/body/native-focused/vitest.json
+[m-archive-control-rss]: artroom-evidence/2026-11-10-f-archive-only-control-3979/run/rss-peaks.json
 [m-archive-control-peer]: /private/tmp/artroom-f-archive-only-3979-frozen-independent-readback-20261110.json
 [m-archive-control-seal]: evidence/2026-11-10-f-archive-only-focus-3979.manifest.json
-[m-archive-control-terminal]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/archive-focus-sealed/unit/terminal-summary.json
+[m-archive-control-terminal]: artroom-evidence/2026-11-10-f-archive-only-control-3979/archive-focus-sealed/unit/terminal-summary.json
 [m-archive-control-seal-peer]: /private/tmp/artroom-jp1-f-archive-only-3979-pass-seal-peer-20261110.json
 [m-static-final]: evidence/2026-11-10-f-final-static-688c.manifest.json
 [m-gate-final]: evidence/2026-11-10-f-final-gate-688c.manifest.json
-[m-gate-final-summary]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-688c-sealed/unit/terminal-summary.json
+[m-gate-final-summary]: artroom-evidence/2026-11-10-f-final-gate-688c-sealed/unit/terminal-summary.json
 [m-final-closure]: /private/tmp/artroom-jp1-f-688c-final-review-draft-20261110/LIVE-COVERAGE.PLAN.json

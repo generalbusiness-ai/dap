@@ -75,7 +75,7 @@ cases passed with one skipped, and 780 native cases passed with two skipped. Who
 
 The [final delivery manifest](evidence/2026-10-26-br3-worker-parallelism-delivery.manifest.json)
 indexes 181 files under
-`/Users/hughpyle/play/artroom-evidence/2026-10-26-br3-worker-parallelism-delivery`;
+`artroom-evidence/2026-10-26-br3-worker-parallelism-delivery`;
 its SHA-256 is `288bbc2a966e94914562e068a498233deee3105849cf812b8f0bee96e838e4c0`. The directory is retained read-only,
 with top-level `SHA256SUMS`. It keeps each original BR3 raw directory and
 index, prior unlanded manifests as provenance, source owners, and the

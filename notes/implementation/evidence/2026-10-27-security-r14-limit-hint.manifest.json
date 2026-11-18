@@ -1,6 +1,6 @@
 {
   "qualification": "One naturally closed ordinary R14 limit-hint gate, nine passing owning Node cases, one deliberately restored old-hint rejection failing by assertion, exact restoration, and post-test guide wrapping only. Authored TEST rows reconstruct the reported provider envelope; no live SQL, private provider rows, account coverage, telemetry change or deployment. Only this implementation note and manifest follow the tested checkpoint; all other tracked blobs/modes equal it. Missing callbacks remain qualified.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-security-r14-limit-hint",
+  "directory": "artroom-evidence/2026-10-27-security-r14-limit-hint",
   "checkpoint": {
     "commit": "9bbf4a9e572dbff78687e0fbc040dc4be483db11",
     "tree": "b24a320feb4709b223485a6fd8b82d0749bffe5d"

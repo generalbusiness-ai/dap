@@ -1,5 +1,5 @@
 {
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-gate-fixes-focused",
+  "directory": "artroom-evidence/2026-11-06-m3-gate-fixes-focused",
   "qualification": "Scope addendum907088f9. Replay/Page test compilers and all56 cases in3 owning files pass. Source patch reconstructs correction checkpoint exactly. No production replay change.",
   "fileCount": 14,
   "files": [

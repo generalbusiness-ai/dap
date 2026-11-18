@@ -107,7 +107,7 @@ cause, readiness or missing duration. Concurrent case/module duration sums are
 neither wall time nor CPU. The retained analyzer hashes its 39 gate inputs.
 
 Raw evidence is indexed and read-only at
-`/Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-listing`.
+`artroom-evidence/2026-10-27-application-release-listing`.
 The checked-in manifest is
 `notes/implementation/evidence/2026-10-27-application-release-listing.manifest.json`.
 It names every retained file, including the checksum index. All 1,844 tracked

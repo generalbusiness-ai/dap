@@ -1,7 +1,7 @@
 {
   "request": "d5fa31c9c36fc1afb93f401b61e3b3f3b31d92f9",
   "promise": "230f5474cedda62059b5c9f4f89d11bb61a6f638",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-source-seal-producer-v2-audit/unit",
+  "unit": "artroom-evidence/2026-11-10-t0e-source-seal-producer-v2-audit/unit",
   "sourceHead": "5cf4209c5298fb0386cb36790c1d476811a37fd4",
   "sourceTree": "dc0bc979b91a042c19aa286a10c393fa9f959b88",
   "booking": "7eeac917d3c11b480729cd8d12651a9efdfbc37f",
@@ -67,7 +67,7 @@
     "qualification": "One maintained sourceSeal metadata-parser run. It extracts the exact maintained function and imports only Rolldown. The audit does not execute a producer, parser, compiler, test, application, build, control or capture. Numeric proposals are not applied; no security test or gate result follows."
   },
   "privateArchive": {
-    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-source-seal-producer-v2-audit/private-archive",
+    "path": "artroom-evidence/2026-11-10-t0e-source-seal-producer-v2-audit/private-archive",
     "archiveIndexSha256": "a56b8918c2027ab6efd2eba1c4744df6b87f207b7f1cd55aac8166302f3b087d",
     "rawRunFiles": 17,
     "scratchValueFiles": 2,

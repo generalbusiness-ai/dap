@@ -88,7 +88,7 @@ time or assigned the whole command's child CPU.
 
 The [final delivery manifest](evidence/2026-10-26-br10-cleanup.manifest.json)
 indexes 60 read-only files under
-`/Users/hughpyle/play/artroom-evidence/2026-10-26-br10-cleanup-delivery`,
+`artroom-evidence/2026-10-26-br10-cleanup-delivery`,
 including the top-level `SHA256SUMS`. Its SHA-256 is
 `de2dbd1dd4af875de3db315ff10178396617dee4261be0befc1f827b17af6040`. The `owning/` and `gate/` subdirectories
 retain all original source-directory files and indexes. The original
@@ -125,7 +125,7 @@ directories, outcomes, elapsed time, child CPU, machine, and load.
 | Page source compiler | `node node_modules/typescript/bin/tsc -p apps/room/page/tsconfig.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`owning/page-source-compiler.log`) | `9414b878` |
 | Page test compiler | `node node_modules/typescript/bin/tsc -p apps/room/page/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`owning/page-test-compiler.log`) | `9414b878` |
 | Page scope compiler | `node node_modules/typescript/bin/tsc -p apps/room/page/tsconfig.scope.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`owning/page-scope-compiler.log`) | `9414b878` |
-| Whole Page UI and asset files | `node /private/tmp/artroom-builder-br10-cleanup-20261026/node_modules/vitest/vitest.mjs run --config vitest.config.ts test/start-ui.test.ts test/assets.test.ts --reporter=default --reporter=json --outputFile.json=/Users/hughpyle/play/artroom-evidence/2026-10-26-br10-owning-validation/page-tests.json --reporter=/private/tmp/artroom-builder-br10-cleanup-20261026/scripts/test-progress.mjs` | 0; 2 passed | `3c439db91c734c0d6fd00ccd1ed4cf0297ac46ec06b2a626db85c869c3f382d0` (`owning/page-owning-tests.log`) | `9414b878` |
+| Whole Page UI and asset files | `node /private/tmp/artroom-builder-br10-cleanup-20261026/node_modules/vitest/vitest.mjs run --config vitest.config.ts test/start-ui.test.ts test/assets.test.ts --reporter=default --reporter=json --outputFile.json=artroom-evidence/2026-10-26-br10-owning-validation/page-tests.json --reporter=/private/tmp/artroom-builder-br10-cleanup-20261026/scripts/test-progress.mjs` | 0; 2 passed | `3c439db91c734c0d6fd00ccd1ed4cf0297ac46ec06b2a626db85c869c3f382d0` (`owning/page-owning-tests.log`) | `9414b878` |
 | Active source | `node --test scripts/active-source.test.mjs` | 0; 11 passed | `7fa958fb3c4fdfb89b0d2f04780cfbeb458b35160bf2dc9a9b442cea0543d46d` (`owning/active-source.log`) | `9414b878` |
 | Ordinary gate | `npm run gate` | 0; all stages passed | `32885cd9e2dcc96d2b604b7f6dfe3a18f5c0338a733d287cb1c75311d41fbf68` (`gate/gate.log`) | `5ff4fc52` |
 

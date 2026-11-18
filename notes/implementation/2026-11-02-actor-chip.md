@@ -20,7 +20,7 @@ Two controls distinguish the result. Substituting the card author for the submit
 
 ## The evidence separates the failed gate from its follow-up
 
-Source checkpoint: `19da8139f506af9476c870e6d4b6cc89093e9640`, tree `50e41aa7b34ed2d848aa384c71616814853ca941`. Manifest: `evidence/2026-11-02-actor-chip.manifest.json`, SHA256 `349fc843f352844c6165985aa7fdcf1c10183cb20541d29d0e92d05c0939c7b6`. It covers 199 files in four readonly units under `/Users/hughpyle/play/artroom-evidence/`.
+Source checkpoint: `19da8139f506af9476c870e6d4b6cc89093e9640`, tree `50e41aa7b34ed2d848aa384c71616814853ca941`. Manifest: `evidence/2026-11-02-actor-chip.manifest.json`, SHA256 `349fc843f352844c6165985aa7fdcf1c10183cb20541d29d0e92d05c0939c7b6`. It covers 199 files in four readonly units under `artroom-evidence/`.
 
 The full gate ran once at `401853e59e9978d297aed6e37f19519c0fc8cf66`, tree `03d977e3ac0be0c84045861fb2974123a60d557b`. Its actual `gate.exit` reads `exit 1`. All pretest checks, typecheck, and kernel pass. The Node phase passes 129 of 130 cases. One case rejects the stale service source seal. Counting, plain, and native remain unreached in that gate.
 

@@ -1,6 +1,6 @@
 {
   "qualification": "Incremental Native compiler, complete owning files, expected-failure callback-join control with exact restoration, and shared-helper inventory. Initial failed witness retained.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-native-teardown-focused",
+  "directory": "artroom-evidence/2026-11-03-native-teardown-focused",
   "checkpoint": "acdbc741608341f973793b6281d3abaf733ae9d6",
   "fileCount": 12,
   "files": [

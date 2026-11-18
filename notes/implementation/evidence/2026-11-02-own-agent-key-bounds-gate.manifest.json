@@ -1,6 +1,6 @@
 {
   "qualification": "Actual terminal gate and runner totals. Timing observations can repeat and are partial; their event counts are not runner case counts. Both prior O2 gates remain failures. No deployment or live-host acceptance.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-own-agent-key-bounds-gate",
+  "directory": "artroom-evidence/2026-11-02-own-agent-key-bounds-gate",
   "checkpoint": "faa45ac2dcf308ac651cb6ae2248f7f29132c769",
   "tree": "99640d87d7c9cec6ce93f098c93a540e05bc9399",
   "fileCount": 9,

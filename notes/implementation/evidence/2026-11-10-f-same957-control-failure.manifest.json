@@ -1,7 +1,7 @@
 {
   "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
   "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-same957-crash-control/different-failure-sealed/unit",
+  "unit": "artroom-evidence/2026-11-10-f-same957-crash-control/different-failure-sealed/unit",
   "head": "9578637f6294ec85d6db639f25ce308cdb34d290",
   "tree": "ed0c92d305f7d2f802bd1060f1b99cc872ee6bbf",
   "booking": "dc114da57536adbb6124e1f995d99b215975b6eb",
@@ -44,7 +44,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-same957-crash-control/different-failure-sealed/private",
+    "directory": "artroom-evidence/2026-11-10-f-same957-crash-control/different-failure-sealed/private",
     "manifestSha256": "e85f0caad2fc424b7fa241c0bec2ada649725a96f9bd98f606ce9410e6e0c1b8",
     "files": 801,
     "retention": {

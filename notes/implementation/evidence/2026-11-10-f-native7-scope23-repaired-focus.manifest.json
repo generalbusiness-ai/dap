@@ -1,7 +1,7 @@
 {
   "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
   "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-native7-scope23/repaired-focus-sealed/unit",
+  "unit": "artroom-evidence/2026-11-10-f-native7-scope23/repaired-focus-sealed/unit",
   "head": "a9727fb3cc3a5b428652d01481271392a3221284",
   "tree": "dd03adb503a2086e03089b346f2cc3527fd72d13",
   "booking": "3a7a63cc29533088321b06344b4db5a0ea13d18d",
@@ -30,7 +30,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-native7-scope23/repaired-focus-sealed/private",
+    "directory": "artroom-evidence/2026-11-10-f-native7-scope23/repaired-focus-sealed/private",
     "manifestSha256": "8faf79a3239e31ea212700364c34a96518856e6922a16679f55010bee4275db9",
     "files": 734,
     "retention": {

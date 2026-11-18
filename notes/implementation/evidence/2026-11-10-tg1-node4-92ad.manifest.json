@@ -5,7 +5,7 @@
   "tree": "e016ef97fd6468ea6477cf53b46605c1bef67585",
   "booking": "9030f979438b9b3b69c2aaebfb70450e7de90438",
   "end": "e29ee5c673591c6e0deaec63dc9b5b7e65e7286d",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-node4-92ad/sealed/unit",
+  "unit": "artroom-evidence/2026-11-10-tg1-node4-92ad/sealed/unit",
   "files": [
     {
       "path": "actual-exits.json",
@@ -34,7 +34,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-node4-92ad/sealed/private",
+    "directory": "artroom-evidence/2026-11-10-tg1-node4-92ad/sealed/private",
     "manifestSha256": "35d82ed4e338a09427ce0fd1ee56f1868ee94959d087b41d211c55cffb5a9a57",
     "files": 48,
     "mappedOriginalDirectories": 8,

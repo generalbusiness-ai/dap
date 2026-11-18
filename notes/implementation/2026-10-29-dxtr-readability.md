@@ -52,7 +52,7 @@ reviewed tree beside G's tree under the documents-only follow-up rule in
 ## Final evidence
 
 The durable collection is
-`/Users/hughpyle/play/artroom-evidence/2026-10-29-dxtr-readability`.
+`artroom-evidence/2026-10-29-dxtr-readability`.
 [The manifest](evidence/2026-10-29-dxtr-readability.manifest.json) binds its
 checkpoint, complete root index, cited files, and directory units.
 The collection is read-only after final hash and mode readback. Retain it

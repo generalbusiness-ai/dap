@@ -19,12 +19,12 @@
       "originalSha256": "1dc69765e7132dcaeea59b984d7cd843fb03db16dd39dc6e56d162e1f53cd86c",
       "parsedCanonicalSha256": "68379e4f90e24d9b2b5b0e0533efc5610491d19ebeb5a99fac3b6f86f5d19547",
       "nonWhitespaceTokenSha256": "095caef8c51711983f3ac05a443c4703de80eda23b398875eaa879b5e64ca213",
-      "retainedOriginal": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/originals/packages/platform/test/fixtures/version-questions-86179b0c.json",
+      "retainedOriginal": "artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/originals/packages/platform/test/fixtures/version-questions-86179b0c.json",
       "formattedBytes": 747009,
       "formattedSha256": "338c39c4d7d2093e67987c97484591f50f9c48624518add1efab5fc46dda501f",
       "completeParsedValueEquality": true,
       "stringAwareNonWhitespaceTokenEquality": true,
-      "retainedFormatted": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/after-proof/formatted/packages/platform/test/fixtures/version-questions-86179b0c.json"
+      "retainedFormatted": "artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/after-proof/formatted/packages/platform/test/fixtures/version-questions-86179b0c.json"
     },
     {
       "path": "packages/platform/test/fixtures/version-standing-86179b0c.json",
@@ -32,12 +32,12 @@
       "originalSha256": "b1c40922d79b71ce1ce6ed202ab7fb1de7dd0324557f55539eb5d9979222188a",
       "parsedCanonicalSha256": "a7e7dc84c6b0ba1ae9e6b47338d4ed756c4b943fc8edf4aee67c763b782c1fe0",
       "nonWhitespaceTokenSha256": "0c41ac8f645d6421b090627a68bd4693c110a9d1c0018e1b5f8739d8cdac52de",
-      "retainedOriginal": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/originals/packages/platform/test/fixtures/version-standing-86179b0c.json",
+      "retainedOriginal": "artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/originals/packages/platform/test/fixtures/version-standing-86179b0c.json",
       "formattedBytes": 8327,
       "formattedSha256": "c3d15c30a770587a44a1598da67455546cbc3826d904a9e5ab632800366b026b",
       "completeParsedValueEquality": true,
       "stringAwareNonWhitespaceTokenEquality": true,
-      "retainedFormatted": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/after-proof/formatted/packages/platform/test/fixtures/version-standing-86179b0c.json"
+      "retainedFormatted": "artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/after-proof/formatted/packages/platform/test/fixtures/version-standing-86179b0c.json"
     },
     {
       "path": "scripts/public-release.json",
@@ -45,12 +45,12 @@
       "originalSha256": "5b358e78d8094ac1d56c87d888aef366a10085899375d9f361a7a0be11c403d3",
       "parsedCanonicalSha256": "2f1415f4db11279b04f0703c9478f2a0dc1dcae12ccb6beeaf50cc12eefe2027",
       "nonWhitespaceTokenSha256": "12b149613e82685d1db76a0a5bc23e24befc87501c2898786e74123c5aff34ac",
-      "retainedOriginal": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/originals/scripts/public-release.json",
+      "retainedOriginal": "artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/originals/scripts/public-release.json",
       "formattedBytes": 4103,
       "formattedSha256": "58aadf84a19d6b81dfc9ab600783444bb35135baca644eb6724bfa531195192d",
       "completeParsedValueEquality": true,
       "stringAwareNonWhitespaceTokenEquality": true,
-      "retainedFormatted": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/after-proof/formatted/scripts/public-release.json"
+      "retainedFormatted": "artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/after-proof/formatted/scripts/public-release.json"
     }
   ],
   "unchangedFences": {
@@ -67,7 +67,7 @@
   },
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1",
+      "directory": "artroom-evidence/2026-11-10-br13-format-repair-538670bbb1",
       "fileCount": 22,
       "files": [
         {
@@ -271,7 +271,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1-review",
+      "directory": "artroom-evidence/2026-11-10-br13-format-repair-538670bbb1-review",
       "fileCount": 5,
       "files": [
         {

@@ -314,9 +314,9 @@ that exception and needs another full gate.
 ## Evidence
 
 The new repair collection is
-`/Users/hughpyle/play/artroom-evidence/2026-10-30-j4-review-repair`.
+`artroom-evidence/2026-10-30-j4-review-repair`.
 The sealed historical collection is
-`/Users/hughpyle/play/artroom-evidence/2026-10-30-j4-workspaces-source`. It has
+`artroom-evidence/2026-10-30-j4-workspaces-source`. It has
 1,471 files and 98,061,085 bytes. Its existing root SHA256SUMS has 196,996
 bytes and SHA-256
 `375a2d0078400d4c418c817f741ee08712b0238001fe945e7be04742911fc936`. No

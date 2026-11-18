@@ -46,7 +46,7 @@ plain: 0 without ready and 0 without result callbacks; 0 duplicate ready and 0 d
 missing duration. Concurrent case-duration sums are not wall time or CPU.
 Focused checks and the control are excluded from gate totals.
 
-Evidence is sealed read-only at `/Users/hughpyle/play/artroom-evidence/2026-10-27-security-r14-limit-hint`. Every raw file is indexed, including
+Evidence is sealed read-only at `artroom-evidence/2026-10-27-security-r14-limit-hint`. Every raw file is indexed, including
 `SHA256SUMS`; that index excludes itself. Only this note and its manifest change
 after the tested checkpoint. All other tracked blobs/modes, including other
 notes, match the gate. `gate-source-equality.json` (SHA-256 `638d6ad7aea19f174b57d7d5b51a925ca4cab2a006cd9b8d3f8d19a65a3f423d`)

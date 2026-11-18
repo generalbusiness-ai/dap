@@ -87,7 +87,7 @@ repair. The copied previous report retains the earlier failures, controls,
 clock qualifications and exact checkpoints.
 
 Fresh evidence is retained at
-`/Users/hughpyle/play/artroom-evidence/2026-10-27-scope-index-census-admission-repair/`.
+`artroom-evidence/2026-10-27-scope-index-census-admission-repair/`.
 Fresh checks and the gate bind the checkpoint below. The complete fresh
 collector is indexed and sealed after its last write.
 

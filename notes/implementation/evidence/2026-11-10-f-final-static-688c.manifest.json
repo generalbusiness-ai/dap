@@ -1,7 +1,7 @@
 {
   "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
   "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-688c-sealed/unit",
+  "unit": "artroom-evidence/2026-11-10-f-final-static-688c-sealed/unit",
   "head": "688cda1ef5b3a70a917bc9132bd6984943cca5be",
   "tree": "be8a8e57d87b9b53a6f53f3f16f9587eed18a17c",
   "main": "d7736fa3de1c75d588f003f3d7e467545cf8ed06",
@@ -12,42 +12,42 @@
   "endEventSha256": "e99e9905251d897452253a0317aab596b511a746e6672cf97474f3b432bb577d",
   "actualExitFiles": {
     "whitespace": {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-688c/whitespace.exit",
+      "path": "artroom-evidence/2026-11-10-f-final-static-688c/whitespace.exit",
       "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
       "bytes": 7,
       "mode": 384,
       "actualExit": 0
     },
     "commit-messages": {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-688c/commit-messages.exit",
+      "path": "artroom-evidence/2026-11-10-f-final-static-688c/commit-messages.exit",
       "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
       "bytes": 7,
       "mode": 384,
       "actualExit": 0
     },
     "format": {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-688c/format.exit",
+      "path": "artroom-evidence/2026-11-10-f-final-static-688c/format.exit",
       "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
       "bytes": 7,
       "mode": 384,
       "actualExit": 0
     },
     "driver": {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-688c/driver.exit",
+      "path": "artroom-evidence/2026-11-10-f-final-static-688c/driver.exit",
       "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
       "bytes": 7,
       "mode": 384,
       "actualExit": 0
     },
     "outerDriver": {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-688c-launch/actualdriver.exit",
+      "path": "artroom-evidence/2026-11-10-f-final-static-688c-launch/actualdriver.exit",
       "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
       "bytes": 7,
       "mode": 384,
       "actualExit": 0
     },
     "launcher": {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-688c-launch/launcher.exit",
+      "path": "artroom-evidence/2026-11-10-f-final-static-688c-launch/launcher.exit",
       "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
       "bytes": 7,
       "mode": 384,
@@ -139,7 +139,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-688c-sealed/private",
+    "directory": "artroom-evidence/2026-11-10-f-final-static-688c-sealed/private",
     "manifestSha256": "bd80548ab61a4b5718080da099ba31f77cdf1bd5b8f8183a89ff1166a1be69f2",
     "files": 230
   },

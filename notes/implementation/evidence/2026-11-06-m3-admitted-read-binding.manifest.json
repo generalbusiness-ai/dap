@@ -1,6 +1,6 @@
 {
   "qualification": "Compiler and four descriptor/context witnesses only. No structural body graph, production caller cutover, final gate, deployment, or acceptance.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-admitted-read-binding",
+  "directory": "artroom-evidence/2026-11-06-m3-admitted-read-binding",
   "checkpoint": "2eee9a46d331323da12ea7abc7df3d200428d2e6",
   "tree": "e3d033d81cf1475a73476fc6d3b1d732aeb6e1e4",
   "fileCount": 15,

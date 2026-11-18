@@ -2,7 +2,7 @@
   "qualification": "Index of unchanged raw originals for OPS-2. Each gate directory carries its own SHA256SUMS over its internals and is read-only. No command ran Wrangler, a deployment or a smoke against a Worker.",
   "request": "60f5b7137e64ddbf6ff6c0461f4805f07f781b98",
   "promise": "b5ad29e68c27963dbec522c097840438d5e78c38",
-  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "directory": "artroom-evidence",
   "base": "28aa0446ab0f5cac2753fa802a186ecb7843daca",
   "checkpointCommit": "fea6ab4d7b1344dfa9655eb55100fcb6adf0a618",
   "checkpointTree": "265059ce522724ea0f49b45f1a4159e8d6b53f6f",

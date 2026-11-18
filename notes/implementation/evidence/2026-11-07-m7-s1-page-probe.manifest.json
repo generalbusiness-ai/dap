@@ -1,6 +1,6 @@
 {
   "qualification": "One read-only Page probe after stacking S1 candidate0abdac41 on M7. Exact predicted bytes equal committed assets; no generator mutation or tracked change. Earlier CI remains qualified at7f28; combined-source CI and M7 gate are pending.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m7-s1-page-probe",
+  "directory": "artroom-evidence/2026-11-07-m7-s1-page-probe",
   "sourceHead": "2bc297662282962f53922d07a351ec649a980a83",
   "sourceTree": "69d08ca8e70ebaed1a2984c5929b031e2f985088",
   "file_count": 9,

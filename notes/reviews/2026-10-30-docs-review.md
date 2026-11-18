@@ -226,14 +226,14 @@ removed text, 16,862 words, is in
 ## 5. Checks run
 
 The gate passed at the first checkpoint, `d10d153078cd2a7c42c0a2bc0304ecfc0b19141f`,
-and its evidence stays in `/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review/`.
+and its evidence stays in `artroom-evidence/2026-10-30-docs-review/`.
 This head merges main `b0af01d2`, and only documents differ from main. Under
 the [documents-only rule](../../docs/testing.md#follow-up-after-a-gate), the
 gate did not run again. Main's tree hash is `5228c576e5e579bb7d36606088cb33ba80a9411f`, and the
 checkpoint's is `294bdb17d93b962c1a8f08e3c580118412fee2c5`.
 
 The checks below ran once at the checkpoint `39e293f063342e2605b54913351ae84744238bf0`. Raw output is in the read-only folder
-`/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review-4/`, listed in
+`artroom-evidence/2026-10-30-docs-review-4/`, listed in
 [the manifest](../implementation/evidence/2026-10-30-docs-review.manifest.json).
 
 The link checker resolved its links with none broken. The six MCP test files

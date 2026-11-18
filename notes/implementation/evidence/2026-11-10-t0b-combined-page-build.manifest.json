@@ -1,7 +1,7 @@
 {
   "request": "260991d8d29bc2dd58a039062572f56c30b7735f",
   "promise": "b153688569e2a6c32e95e32d3c5c0a22c9a01f3c",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-combined-page-build/independent-audit/unit",
+  "unit": "artroom-evidence/2026-11-10-t0b-combined-page-build/independent-audit/unit",
   "sourceHead": "623ae740e12cfdbc56a11ad1caebae7e5beda871",
   "sourceTree": "fd4278e948e78dff82d6f79d1a5e0ef7b9bfc83b",
   "booking": "f1967929c8147c56f8d3afcc1162a754c1899ab3",
@@ -36,7 +36,7 @@
     }
   ],
   "privateArchive": {
-    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-combined-page-build/independent-audit/private-archive",
+    "path": "artroom-evidence/2026-11-10-t0b-combined-page-build/independent-audit/private-archive",
     "archiveIndexSha256": "7a4c3c4a312197ca27744df0a4a7e48b01f6ba5f7ed9ba356b5b4586f1f8e6f1",
     "rawFiles": 134,
     "retentionThrough": "2026-12-10"

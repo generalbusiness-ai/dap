@@ -9,7 +9,7 @@
   "fileCount": 269,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-first-press-baseline",
+      "directory": "artroom-evidence/2026-11-02-first-press-baseline",
       "qualification": "Observed before measurements at clean main.",
       "checkpoint": {
         "commit": "2950cff9c7d36f476640685b429105f6536a82fb",
@@ -121,7 +121,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-first-press-after",
+      "directory": "artroom-evidence/2026-11-02-first-press-after",
       "qualification": "Initial after measurements; superseded for final timing by after-2, preserved unchanged.",
       "checkpoint": {
         "commit": "7b691a39b756df584bbeaa1d73a1730dec509b4b",
@@ -238,7 +238,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-first-press-focused",
+      "directory": "artroom-evidence/2026-11-02-first-press-focused",
       "qualification": "Uncommitted implementation work atop this Git base. Initial.patch and reconstructed commands qualify draft attempts; frozen-source.patch records later head 7b691a39. Final-source gate/follow-up owns acceptance. No claim that this base tree contains every draft input.",
       "checkpoint": {
         "commit": "2950cff9c7d36f476640685b429105f6536a82fb",
@@ -490,7 +490,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-first-press-ci",
+      "directory": "artroom-evidence/2026-11-02-first-press-ci",
       "qualification": "Initial exact-source Card workflow.",
       "checkpoint": {
         "commit": "7b691a39b756df584bbeaa1d73a1730dec509b4b",
@@ -542,7 +542,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-first-press-gate",
+      "directory": "artroom-evidence/2026-11-02-first-press-gate",
       "qualification": "Actual full gate exits 1. Native known-foreign-incarnation request-count failure. No later pass changes this outcome.",
       "checkpoint": {
         "commit": "7b691a39b756df584bbeaa1d73a1730dec509b4b",
@@ -764,7 +764,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-first-press-foreign-context-fix",
+      "directory": "artroom-evidence/2026-11-02-first-press-foreign-context-fix",
       "qualification": "Uncommitted production repair atop 7b691a39, then frozen as 3e2c000b with only a blank-line cleanup. Repair.patch, unchanged Native owner and named control retain the work; full repaired-source gate and follow-up own final acceptance.",
       "checkpoint": {
         "commit": "7b691a39b756df584bbeaa1d73a1730dec509b4b",
@@ -866,7 +866,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-first-press-after-2",
+      "directory": "artroom-evidence/2026-11-02-first-press-after-2",
       "qualification": "Final production source observed after measurements, with exact source and identity guards.",
       "checkpoint": {
         "commit": "3e2c000b984de22cc5f7ce0a896b097a73a4055a",
@@ -998,7 +998,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-first-press-ci-2",
+      "directory": "artroom-evidence/2026-11-02-first-press-ci-2",
       "qualification": "Successful Card workflow at exact final production source; only an unimported test and notes follow.",
       "checkpoint": {
         "commit": "3e2c000b984de22cc5f7ce0a896b097a73a4055a",
@@ -1050,7 +1050,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-first-press-gate-2",
+      "directory": "artroom-evidence/2026-11-02-first-press-gate-2",
       "qualification": "Actual full gate exits 1. A plain stand-in lacks a new method and reaches its unchanged deadline. Native is unreached. No later pass changes this outcome.",
       "checkpoint": {
         "commit": "3e2c000b984de22cc5f7ce0a896b097a73a4055a",
@@ -1257,7 +1257,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-first-press-test-followup",
+      "directory": "artroom-evidence/2026-11-02-first-press-test-followup",
       "qualification": "Isolated unimported test-only repair under docs/testing.md; all original assertions and deadlines remain. Changed compiler, whole four-case owner and only the unreached Native stage exit 0. Source guards stay equal.",
       "checkpoint": {
         "commit": "2f825e324073a692c6a0eab85da3d79686f04866",
@@ -1389,7 +1389,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-first-press-documentation",
+      "directory": "artroom-evidence/2026-11-02-first-press-documentation",
       "qualification": "Documentation, manifest and source-equality checks at ed06b98a. The final record adds only an evidence row and this unit to the note/manifest. No source or test changes. Final review checks repeat the cheap documentation verification separately.",
       "checkpoint": {
         "commit": "ed06b98af6aa34ef48132562004e2567710ba997",

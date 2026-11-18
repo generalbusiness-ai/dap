@@ -116,7 +116,7 @@ All 17 root/workspace lock and manifest files matched, and all fifteen
 relative workspace links resolved inside GS3. No install or download ran.
 
 The development log is
-`/Users/hughpyle/play/artroom-evidence/2026-11-14-gs3-fh1-development-attempt1/development.log`,
+`artroom-evidence/2026-11-14-gs3-fh1-development-attempt1/development.log`,
 SHA-256 `8d9e25ec7e75fa3e35b86c77eee02b6449175c4528060800c0e4c4a9d5143007`.
 It retains each actual command, output, exit and time; raw per-command
 logs and time files sit beside it. Checks ran sequentially once and all
@@ -124,8 +124,8 @@ passed. The five Node owners ran seventeen cases with no skips. The
 table retains that dated interval and the later shared-helper attempts.
 
 Current rows use `D` =
-`/Users/hughpyle/play/artroom-evidence/2026-11-15-tooling-on-c3-sh1-development-attempt1`
-and `G` = `/Users/hughpyle/play/artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1`.
+`artroom-evidence/2026-11-15-tooling-on-c3-sh1-development-attempt1`
+and `G` = `artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1`.
 Actual argv/PIDs/UTC/exit/wall/stream hashes are in D/commands.json and
 D/result.json; preflight-result.json records the two required checks.
 Command cells abbreviate only the declared absolute D prefix. No historical
@@ -191,9 +191,9 @@ failures or skips; its outer wall time was 5.696680333 seconds. END
 
 Both attempts retain `commands.json`, `result.json` and all streams in
 their respective external directories:
-`/Users/hughpyle/play/artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1/controls/2026-11-14-gs3-fh1-helper-development-attempt1`
+`artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1/controls/2026-11-14-gs3-fh1-helper-development-attempt1`
 and
-`/Users/hughpyle/play/artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1/controls/2026-11-14-gs3-fh1-helper-development-attempt2`.
+`artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1/controls/2026-11-14-gs3-fh1-helper-development-attempt2`.
 Attempt 2's `helper-owner.stdout.log` has SHA-256
 `9e45cc57048731837b39d27a0fdb47047ee8f8505b7c2560a6388e7649aa23e4`;
 `git-hooks.stdout.log` has
@@ -202,7 +202,7 @@ Attempt 2's `helper-owner.stdout.log` has SHA-256
 `8394695cdc6268e3a05754865e0ca3dddb95db9617ad3bb2fef8e831feb78dd2`.
 The hook output names its four actual scratch repositories and retained
 Git child streams. The retained local-helper child records are at
-`/Users/hughpyle/play/artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1/controls/2026-11-14-gs3-fh1-helper-development-attempt2/scratch-child-records/artroom-git-hooks-SqQxxG`.
+`artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1/controls/2026-11-14-gs3-fh1-helper-development-attempt2/scratch-child-records/artroom-git-hooks-SqQxxG`.
 The selection owner's 22-case and 16-case reports are scripted data for
 the runner contract; they prove no real Scale case. No separate fault
 run, third green run or sweep followed the helper repair.
@@ -218,7 +218,7 @@ test failed at line 111 with `ERR_ASSERTION`: actual `all`, expected
 sweep or test-seed change occurred.
 
 The control log is
-`/Users/hughpyle/play/artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1/controls/selector-control-20261114/selector-control.log`,
+`artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1/controls/selector-control-20261114/selector-control.log`,
 SHA-256 `56df87d49dec7a51c1ce9238ae871e6820a34be255e779a77597f840bf1114d6`.
 It includes the actual baseline and mutant TAP, both stderr streams,
 the control outcome and its time. The retention-only helper copy changes

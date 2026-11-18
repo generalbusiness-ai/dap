@@ -1,6 +1,6 @@
 {
   "qualification": "Closed BR9 owning/control and both ordinary gates, copied without altering original capture metadata into one read-only delivery directory. Gate V1 failed pretest because the module root was symlinked; gate V2 passed after moving the same private dependency copy into a real directory. Candidate source/tests and head stayed fixed. Main moved separately during V2 from9daa to6852. Raw native callback gaps remain unknown; terminal records are separate observations. No R7 evidence was re-authenticated.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-26-br9-migration-prefixes-delivery",
+  "directory": "artroom-evidence/2026-10-26-br9-migration-prefixes-delivery",
   "checkpoint": {
     "commit": "f4735c5435224d9dbe828099cc280a6e3adef1b2",
     "tree": "849083ea95a3630556531dd6ac7d441632a2c83d"

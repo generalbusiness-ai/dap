@@ -71,10 +71,10 @@ Its process wall time was 4.235859250 seconds. END
 scale-selection owner remained **UNREACHED**; no retry ran.
 
 The actual argv, results and streams remain under
-`/Users/hughpyle/play/artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1/controls/2026-11-14-gs3-fh1-helper-development-attempt1`:
+`artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1/controls/2026-11-14-gs3-fh1-helper-development-attempt1`:
 `commands.json`, `result.json`, and `git-hooks.stdout.log` and
 `git-hooks.stderr.log`. The retained scratch child records at
-`/Users/hughpyle/play/artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1/controls/2026-11-14-gs3-fh1-helper-development-attempt1/scratch-child-records/artroom-git-hooks-GnQ1id`
+`artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1/controls/2026-11-14-gs3-fh1-helper-development-attempt1/scratch-child-records/artroom-git-hooks-GnQ1id`
 keep each Git child's streams. Its `logs/09.stderr.log` shows that
 the hook ran both checks but enumerated only the 26 copied bytes source
 files; `logs/09.stdout.log` shows that the resulting commit included the
@@ -100,7 +100,7 @@ skipped. The outer run took 5.696680333 seconds. END
 `bdc7f61aa26c608b132f4115f46f44869e2172cb` records these actual results.
 
 Raw argv, results and all streams remain under
-`/Users/hughpyle/play/artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1/controls/2026-11-14-gs3-fh1-helper-development-attempt2`.
+`artroom-evidence/2026-11-15-gs3-fh1-full-gate-attempt1/controls/2026-11-14-gs3-fh1-helper-development-attempt2`.
 The [combined evidence table](2026-11-14-gs3-two-scale-groups.md#development-and-control-evidence)
 retains both attempts and the cited stdout hashes. The unchanged hook
 case now refuses the staged duplicate and accepts its shared import;

@@ -9,7 +9,7 @@
   "retention": "Retain this read-only evidence at least30days after landing.",
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-stream-http-close-browser",
+      "directory": "artroom-evidence/2026-11-03-stream-http-close-browser",
       "fileCount": 30,
       "files": [
         {

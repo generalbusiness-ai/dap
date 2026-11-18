@@ -9,7 +9,7 @@
   "fileCount": 108,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-stream-cause",
+      "directory": "artroom-evidence/2026-11-02-stream-cause",
       "checkpoint": {
         "commit": "fb171f70ca5377c326f91f1249f71d0a5d2e8ad5",
         "tree": "7bccb0a9b8d90deeee7dc2cca0fd8b70a1312386"
@@ -225,7 +225,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-stream-cause-2",
+      "directory": "artroom-evidence/2026-11-02-stream-cause-2",
       "checkpoint": {
         "commit": "fb171f70ca5377c326f91f1249f71d0a5d2e8ad5",
         "tree": "7bccb0a9b8d90deeee7dc2cca0fd8b70a1312386"
@@ -551,7 +551,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-stream-cause-source-proof",
+      "directory": "artroom-evidence/2026-11-02-stream-cause-source-proof",
       "checkpoint": {
         "commit": "fb171f70ca5377c326f91f1249f71d0a5d2e8ad5",
         "tree": "7bccb0a9b8d90deeee7dc2cca0fd8b70a1312386"

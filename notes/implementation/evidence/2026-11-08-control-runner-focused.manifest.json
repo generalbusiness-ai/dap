@@ -8,7 +8,7 @@
   "fileCount": 51,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-control-runner-focused",
+      "directory": "artroom-evidence/2026-11-08-control-runner-focused",
       "files": [
         {
           "path": "SHA256SUMS",
@@ -128,7 +128,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-control-runner-control",
+      "directory": "artroom-evidence/2026-11-08-control-runner-control",
       "files": [
         {
           "path": "SHA256SUMS",

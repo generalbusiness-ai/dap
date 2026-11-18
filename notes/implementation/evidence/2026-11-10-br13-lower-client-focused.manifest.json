@@ -1,6 +1,6 @@
 {
   "qualification": "Independent metadata-only lower-client repair focus audit. Exact5owningcompiler contexts, whole Platform347+Clientroute2 and active-source12+security-entry12 passed at e4. Earlier v3 actual bad-import failures remain separately failed atc182; this is the positive repair witness, no added mutant. No compiler/test/application/browser/build body ran in this audit. Page producer/CI and final full gate remain separate owed evidence. No current-source equality claim after a subsequent Page producer.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-lower-client-focused-audit",
+  "directory": "artroom-evidence/2026-11-10-br13-lower-client-focused-audit",
   "checkpoint": {
     "commit": "e4d60604198153602d89a6f45d20de54593187fd",
     "tree": "2ff63bbaa0794ed4309efada854c08b89e3a060f"
@@ -36,7 +36,7 @@
   ],
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-lower-client-focused/run",
+      "directory": "artroom-evidence/2026-11-10-br13-lower-client-focused/run",
       "payloadFileCount": 47,
       "fileCount": 48,
       "payloadBytes": 8810108,
@@ -50,12 +50,12 @@
       "name": "context-00",
       "argv": [
         "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/node_modules/typescript/bin/tsc",
+        ".builder-worktrees/version-questions-br13-20261109/node_modules/typescript/bin/tsc",
         "-p",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/packages/contract/tsconfig.json"
+        ".builder-worktrees/version-questions-br13-20261109/packages/contract/tsconfig.json"
       ],
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/focused/context-00.log",
+      "output": "artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/focused/context-00.log",
       "bytes": 29,
       "sha256": "f3ed6ab9a35019175fae9f0148b196c90685d906523d50aedb97c6cd9c099d7a"
     },
@@ -63,12 +63,12 @@
       "name": "context-01",
       "argv": [
         "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/node_modules/typescript/bin/tsc",
+        ".builder-worktrees/version-questions-br13-20261109/node_modules/typescript/bin/tsc",
         "-p",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/packages/platform/tsconfig.json"
+        ".builder-worktrees/version-questions-br13-20261109/packages/platform/tsconfig.json"
       ],
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/focused/context-01.log",
+      "output": "artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/focused/context-01.log",
       "bytes": 29,
       "sha256": "dfc39ac62b9423839ac7ed113d0762a81566d177830f6af476962132b32aa46f"
     },
@@ -76,12 +76,12 @@
       "name": "context-02",
       "argv": [
         "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/node_modules/typescript/bin/tsc",
+        ".builder-worktrees/version-questions-br13-20261109/node_modules/typescript/bin/tsc",
         "-p",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/packages/platform/tsconfig.test.json"
+        ".builder-worktrees/version-questions-br13-20261109/packages/platform/tsconfig.test.json"
       ],
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/focused/context-02.log",
+      "output": "artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/focused/context-02.log",
       "bytes": 29,
       "sha256": "a3a08007a9047e6846a3cf8ae11eea07d4ffc19595b7736bac4f026a841d440e"
     },
@@ -89,12 +89,12 @@
       "name": "context-03",
       "argv": [
         "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/node_modules/typescript/bin/tsc",
+        ".builder-worktrees/version-questions-br13-20261109/node_modules/typescript/bin/tsc",
         "-p",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/packages/client/tsconfig.json"
+        ".builder-worktrees/version-questions-br13-20261109/packages/client/tsconfig.json"
       ],
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/focused/context-03.log",
+      "output": "artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/focused/context-03.log",
       "bytes": 29,
       "sha256": "66e6072a388d0b49b5af154f24b9429aaeb922f0e2065b104f91ae36242409ee"
     },
@@ -102,12 +102,12 @@
       "name": "context-04",
       "argv": [
         "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/node_modules/typescript/bin/tsc",
+        ".builder-worktrees/version-questions-br13-20261109/node_modules/typescript/bin/tsc",
         "-p",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/packages/client/tsconfig.test.json"
+        ".builder-worktrees/version-questions-br13-20261109/packages/client/tsconfig.test.json"
       ],
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/focused/context-04.log",
+      "output": "artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/focused/context-04.log",
       "bytes": 29,
       "sha256": "7e6ed02062ee81e0f85be0aa3f4e5328d8ed3119f46c48336a118528b2ab565d"
     },
@@ -115,11 +115,11 @@
       "name": "body",
       "argv": [
         "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/node_modules/vitest/vitest.mjs",
+        ".builder-worktrees/version-questions-br13-20261109/node_modules/vitest/vitest.mjs",
         "run",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/packages/platform/test/version-questions.test.ts",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/packages/platform/test/version-relations.test.ts",
-        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/packages/client/test/application-route.test.ts",
+        ".builder-worktrees/version-questions-br13-20261109/packages/platform/test/version-questions.test.ts",
+        ".builder-worktrees/version-questions-br13-20261109/packages/platform/test/version-relations.test.ts",
+        ".builder-worktrees/version-questions-br13-20261109/packages/client/test/application-route.test.ts",
         "--config",
         "/private/tmp/artroom-br13-lower-client-focused-20261110.config.mts",
         "--bail=1",
@@ -127,11 +127,11 @@
         "--passWithNoTests=false",
         "--reporter=verbose",
         "--reporter=json",
-        "--reporter=/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/scripts/focused-check.mjs",
-        "--outputFile.json=/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/focused/vitest.json"
+        "--reporter=.builder-worktrees/version-questions-br13-20261109/scripts/focused-check.mjs",
+        "--outputFile.json=artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/focused/vitest.json"
       ],
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/focused/body.log",
+      "output": "artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/focused/body.log",
       "bytes": 43324,
       "sha256": "0c77ac270ada3bb63a86ec169f2b132fcb949db368a7f4a042459daf89cbe45b"
     },
@@ -141,14 +141,14 @@
         "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
         "--test",
         "--test-reporter=spec",
-        "--test-reporter=file:///Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/scripts/test-summary.mjs",
+        "--test-reporter=file://.builder-worktrees/version-questions-br13-20261109/scripts/test-summary.mjs",
         "--test-reporter-destination=stdout",
-        "--test-reporter-destination=/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/node.jsonl",
+        "--test-reporter-destination=artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/node.jsonl",
         "scripts/active-source.test.mjs",
         "scripts/security-entry-points.test.mjs"
       ],
       "exitCode": 0,
-      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/node.log",
+      "output": "artroom-evidence/2026-11-10-br13-lower-client-focused/run/body/node.log",
       "bytes": 2807,
       "sha256": "51026851402197cc055fd98f948fb0fd9d9026b1b28cef4856e52e5dc64f9680"
     }

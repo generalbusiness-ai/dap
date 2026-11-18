@@ -109,7 +109,7 @@ created current generated head `d6a70a5edec32f8c8cd45027cafbed8b2c00e1fc`, tree
 SHA-256 `8d70222fe7aa518ac4520d4056ff269d9ee93356b5839a539283ff8f94462ecf`.
 JavaScript remains byte-identical to the first producer. No unaffected compiler
 or completed browser case was repeated for these CSS steps. Producer proof:
-`/Users/hughpyle/play/artroom-diagnostics/forms-toolbar-page-build-preparation-r2/build-one/result.json`,
+`artroom-diagnostics/forms-toolbar-page-build-preparation-r2/build-one/result.json`,
 SHA-256 `6c96d6c63c07e5b597c8c686ecd5f9f001a643dfe9ad76629c30355e575592cd`.
 
 The ordinary gate wrapper at the historical 0ec87 head, original session 23738,
@@ -120,7 +120,7 @@ the unchanged Source and dependencies and copied the existing phase files; it
 ran no gate again. Its exit zero is distinct from the failed original wrapper.
 Gate exit zero there is an explicitly qualified inference from the pinned exit
 policy, not a directly retained value. Recovery proof:
-`/Users/hughpyle/play/artroom-diagnostics/forms-round2-css-gate-completion-source/output-one/public-proof.json`,
+`artroom-diagnostics/forms-round2-css-gate-completion-source/output-one/public-proof.json`,
 SHA-256 `88ececcc2ec0877a4fb5de8cdbcde5bbafb4ee65fd7e142aaf2c7e7a8a89ad50`.
 
 After the remaining browser check passed, the one final ordinary gate, original
@@ -132,7 +132,7 @@ skipped against the exact lock stamp. Before and after guards checked 1,430
 Source files, 3,882 resolved dependency files and 12 workspace links, with the
 checkout clean. Measured npm wall time was 103.9834365 seconds. These are local
 observations, not a speed comparison or physical drain claim. Final proof:
-`/Users/hughpyle/play/artroom-diagnostics/forms-round2-final-gate-d6-source/gate-one/public-proof.json`,
+`artroom-diagnostics/forms-round2-final-gate-d6-source/gate-one/public-proof.json`,
 SHA-256 `24909fbff4fce3a43506843ee66008ac259cb1179a07f29e1ede1d2331977452`.
 
 ## Historical qualified rendered completion and browser history
@@ -168,10 +168,10 @@ those captures and the final dismissal. The final screenshot did not recollect
 seven computed measures: it is byte-identical to the earlier measured current
 d6 mobile image. Root's seven qualitative comparisons apply; the generic proof
 field is not a new measurement census. Closed completion proof:
-`/Users/hughpyle/play/artroom-diagnostics/forms-round2-browser-mobile-outside-source/output-one/public-result.json`,
+`artroom-diagnostics/forms-round2-browser-mobile-outside-source/output-one/public-result.json`,
 SHA-256 `100cb98a6cb70cd41b8014fd047ebdd56897d0de566503177637ac4436f0c2e2`.
 Root's qualified fidelity is
-`/Users/hughpyle/play/artroom-diagnostics/forms-round2-browser-mobile-outside-source/root-fidelity-final.public.json`,
+`artroom-diagnostics/forms-round2-browser-mobile-outside-source/root-fidelity-final.public.json`,
 SHA-256 `f2d4269edafd6ec3c2a9830cb0e0378feec2cbc436b62d10eab2f885d8028f34`.
 This is completion across qualified local attempts, not a same-run aggregate.
 
@@ -212,7 +212,7 @@ mutations are unchanged. The following results cover this renderer correction. E
 
 Effective assertion `38655619faa10ef8c2cb6c19f3e45da35ed758b3` permits the checker
 to read exactly 17 closed public JSON bodies in the reviewed allowlist:
-`/Users/hughpyle/play/artroom-diagnostics/forms-round2-checker-public-allowlist-source/allowlist-final-inert.json`,
+`artroom-diagnostics/forms-round2-checker-public-allowlist-source/allowlist-final-inert.json`,
 SHA-256 `8031fa60c516692fa84bd584a1ad51f36be73ab5855d09be60043cf0e07d2e96`.
 That permission covers only those bodies after their hashes and sizes match.
 Nested paths and URLs grant no access to private logs, programs, credentials,
@@ -231,7 +231,7 @@ passed, with its existing two internal pageFiles calls. Source, dependency,
 workspace and alias guards passed before and after each phase. The generated
 HTML matches Source and dist; the embedded JavaScript matches dist and contains
 the actionable instruction with both issue/change articles. Header digests match.
-[Focused and producer proof](/Users/hughpyle/play/artroom-diagnostics/forms-filtered-empty-verification-39bc-source/run-one/public-result.json),
+[Focused and producer proof](artroom-diagnostics/forms-filtered-empty-verification-39bc-source/run-one/public-result.json),
 SHA-256 `322c33aaa2783bd32a7267f08d70cc13de80eb3e59c026818989f08d3e48f0e1`.
 
 The asset-only successor is `b38445b396b195d4e1173bf960ee279ebfa6c01e`, tree
@@ -241,7 +241,7 @@ Its JavaScript is 581,399 bytes, SHA-256
 `10602d6215317c46386c7460c4c44100f81a65d37c12544cc1920b11f854eb81`.
 HTML is unchanged at 25,162 bytes, SHA-256
 `94589216e00f4605e78d2e936381eb49037c149b956c3da9c338d8595cd8073b`.
-[Generated asset metadata](/Users/hughpyle/play/artroom-diagnostics/forms-filtered-empty-verification-39bc-source/asset-commit.public.json),
+[Generated asset metadata](artroom-diagnostics/forms-filtered-empty-verification-39bc-source/asset-commit.public.json),
 SHA-256 `4f433c2c571afc6a6bf641d8960710c3a04748f2544b942b8ff0ffc7d93a5a4d`.
 
 Original browser session `74668` exited zero at b384. It rendered only the two
@@ -254,11 +254,11 @@ captures and accepted six local comparisons: copy, typography, palette,
 navigation, layout and controls. The prior fourteen positive states were not
 repeated. This is local scripted rendering, with no native authority, hosted
 service, provider or Hugh acceptance claim.
-[Rendered proof](/Users/hughpyle/play/artroom-diagnostics/forms-filtered-empty-browser-preparation/output-one/public-result.json),
+[Rendered proof](artroom-diagnostics/forms-filtered-empty-browser-preparation/output-one/public-result.json),
 SHA-256 `cb759090966ab59d068874b0eab48b3f77d63c2668c1545261e7e9c5a84f89c9`.
-[Original browser terminal](/Users/hughpyle/play/artroom-diagnostics/forms-filtered-empty-browser-preparation/output-one/owner-terminal-public.json),
+[Original browser terminal](artroom-diagnostics/forms-filtered-empty-browser-preparation/output-one/owner-terminal-public.json),
 SHA-256 `3d1ccbda3cc85ad5d92d193b4e1fdac662b842c1c34b7720840b7345cb856848`.
-[Root fidelity record](/Users/hughpyle/play/artroom-diagnostics/forms-filtered-empty-browser-preparation/root-fidelity.public.json),
+[Root fidelity record](artroom-diagnostics/forms-filtered-empty-browser-preparation/root-fidelity.public.json),
 SHA-256 `bacfce28966afd98c9f36fb7884771afc02895c6c58b5cd7d8d7b000af9d399b`.
 
 The ordinary changed-Source gate, original session `19998`, passed at b384.
@@ -270,14 +270,14 @@ clean and verified 1,430 Source files, 3,882 resolved dependency files and twelv
 workspace links. The measured npm wall time was 106.3966 seconds. The raw test
 log contains zero RefcountedCanceler tokens and two SQLITE_CONSTRAINT tokens;
 no physical drain or clean-log claim follows.
-[Current gate proof](/Users/hughpyle/play/artroom-diagnostics/forms-round2-final-gate-p2-source/gate-one/public-proof.json),
+[Current gate proof](artroom-diagnostics/forms-round2-final-gate-p2-source/gate-one/public-proof.json),
 SHA-256 `a9b607bb1605177e8af545e0f37d941f2208587067707969b872c4a6cfcea8aa`.
-[Original gate command exit](/Users/hughpyle/play/artroom-diagnostics/forms-round2-final-gate-p2-source/gate-one/command-exit.public.json),
+[Original gate command exit](artroom-diagnostics/forms-round2-final-gate-p2-source/gate-one/command-exit.public.json),
 SHA-256 `17bd0117e5e7ff07594cea0abcb0ffb40aac096b3830e543204eb28cb2ec2632`.
 
 Effective supplemental permission `c5a8e538e141615315f7fc80478ed0ac80316070`
 adds exactly seven closed public JSON bodies to the earlier seventeen-body
-permission. [Supplemental allowlist](/Users/hughpyle/play/artroom-diagnostics/forms-filtered-empty-public-evidence/allowlist.json),
+permission. [Supplemental allowlist](artroom-diagnostics/forms-filtered-empty-public-evidence/allowlist.json),
 2,756 bytes, SHA-256
 `da64cb1b23c87081061e22c1188dc29878798922f350bcf73611f8c2f4b0702a`.
 The same exact-body boundary applies: nested paths do not permit reads of

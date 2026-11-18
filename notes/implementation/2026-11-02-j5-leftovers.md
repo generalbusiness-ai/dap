@@ -26,7 +26,7 @@ The row-probe owner tests the actual report boundary with one recognized stream 
 
 ## The failed gate and passing follow-up remain separate
 
-Final source checkpoint: `88b84adaf06d278ab1595fee06696e1bd75330ef`, tree `62378540ab5f183b0d1dbed6a2da2846a3f7d083`. Manifest: `evidence/2026-11-02-j5-leftovers.manifest.json`, SHA256 `66951a7c52bccfeb2d9195f1d86c278d649cad8c71b03245eb3d4ff75e94e723`. It covers 195 files in eleven readonly units under `/Users/hughpyle/play/artroom-evidence/`.
+Final source checkpoint: `88b84adaf06d278ab1595fee06696e1bd75330ef`, tree `62378540ab5f183b0d1dbed6a2da2846a3f7d083`. Manifest: `evidence/2026-11-02-j5-leftovers.manifest.json`, SHA256 `66951a7c52bccfeb2d9195f1d86c278d649cad8c71b03245eb3d4ff75e94e723`. It covers 195 files in eleven readonly units under `artroom-evidence/`.
 
 The one full gate ran at `b64ad0261d3c6227b9a8fef4fabda33d0bbb1361`, tree `6f53350b9d1e4c39085ebe90ffb20bff1262f41b`. Its actual `gate.exit` reads `exit 1`. All pretest checks, typecheck, kernel, 132 Node cases, and 56 Counting cases pass. Plain reports 3,556 passes, one skip, and one failure. That sole failure expects the old entire generic Rules sentence in `apps/room/page/test/sending.test.ts`. Native remains unreached.
 

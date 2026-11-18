@@ -8,7 +8,7 @@
   "fileCount": 15,
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br5-typed-boundary-validation",
+      "directory": "artroom-evidence/2026-11-09-br5-typed-boundary-validation",
       "files": [
         {
           "path": "SHA256SUMS",

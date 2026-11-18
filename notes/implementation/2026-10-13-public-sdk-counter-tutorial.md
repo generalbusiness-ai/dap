@@ -95,7 +95,7 @@ lockfile is 5,050 bytes, SHA-256
 The closed result SHA-256 is
 `a86bc99a0f3942d4e36b67475bbc191d61660ff7183852aef41351ca6519be86`.
 The scratch run was preserved separately at
-`/Users/hughpyle/play/artroom-diagnostics/public-sdk-counter-tutorial-cold-one`.
+`artroom-diagnostics/public-sdk-counter-tutorial-cold-one`.
 Its result bytes and original paths are unchanged. This update read only the
 closed result and the five named step stdout files, after verifying their
 recorded lengths and hashes. No other nested logs were followed.

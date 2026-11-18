@@ -84,7 +84,7 @@
   },
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-query-controls-6cbc96f05b-review",
+      "directory": "artroom-evidence/2026-11-10-br13-query-controls-6cbc96f05b-review",
       "classification": "safe derived statuses and original process metadata",
       "fileCount": 5,
       "files": [
@@ -116,7 +116,7 @@
       ]
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-query-controls-6cbc96f05b/run",
+      "directory": "artroom-evidence/2026-11-09-br13-query-controls-6cbc96f05b/run",
       "classification": "actual external run, raw reports, returned buffers, source copies, receipts and compile cache",
       "fileCount": 1135,
       "files": [

@@ -7,7 +7,7 @@ The builder creates no register or room during preparation.
 ## Prepare the source and inputs before the plan
 
 1. Export main `9c7ae712d6281a1f32bbbf180e70cfa4329d6e7c` into
-   `/Users/inguz/dap-host-g3b-20261103/source`. Compare the export with
+   `<mini home>/dap-host-g3b-20261103/source`. Compare the export with
    [source-export.json](source-export.json). Its archive contains only
    tracked Git files. The lockfile SHA-256 is
    `c835dfee04d7dc8bb946ab08e38d79d54aa2bade3c03d917319a835431014fc6`.
@@ -38,11 +38,11 @@ The builder creates no register or room during preparation.
 Set these paths in inguz's shell. These values name a new client home.
 
 ```sh
-export G3B_ROOT=/Users/inguz/dap-host-g3b-20261103
+export G3B_ROOT=<mini home>/dap-host-g3b-20261103
 export G3B_PREFIX=/Library/dap-host-h3-20261029
 export DAP_HOME="$G3B_ROOT/client"
-export NODE_EXTRA_CA_CERTS=/Users/inguz/dap-host-h3-20261029/tls/cert.pem
-export PATH=/Users/inguz/dap-validate/bin/node-v26.12.1-darwin-arm64/bin:/usr/bin:/bin:/usr/sbin:/sbin
+export NODE_EXTRA_CA_CERTS=<mini home>/dap-host-h3-20261029/tls/cert.pem
+export PATH=<mini home>/dap-validate/bin/node-v26.12.1-darwin-arm64/bin:/usr/bin:/bin:/usr/sbin:/sbin
 ```
 
 1. Create the fresh client directory at mode 0700. Require that it has no
@@ -121,7 +121,7 @@ any retry. Never reuse either refused fresh-owner root.
 
 ## Create one room after the planner records readiness
 
-The builder uses only `/Users/inguz/dap-host-g3b-20261103/client` and creates
+The builder uses only `<mini home>/dap-host-g3b-20261103/client` and creates
 one room with a new owner handle and title, selecting `--branch g3-witness-2`.
 The builder writes the content to preserve and records the actual new
 Destination with its incarnation. Another room needs another plan and home.

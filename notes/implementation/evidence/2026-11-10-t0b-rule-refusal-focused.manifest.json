@@ -1,7 +1,7 @@
 {
   "request": "260991d8d29bc2dd58a039062572f56c30b7735f",
   "promise": "b153688569e2a6c32e95e32d3c5c0a22c9a01f3c",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-rule-refusal-focused/unit",
+  "unit": "artroom-evidence/2026-11-10-t0b-rule-refusal-focused/unit",
   "qualification": "One bounded completed focus at exact adopted246: Client2/MCP4 compiler contexts and ONLYwholeMCPdescribe8cases. No additional Client/control/Node/build/document-capture/gate body. Metadata sealing reran nothing. Final BR13 integration, integrated Page build/workflow, strict original doc/Lending bytes and final gate remain due.",
   "files": [
     {
@@ -11,7 +11,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-rule-refusal-focused/private",
+    "directory": "artroom-evidence/2026-11-10-t0b-rule-refusal-focused/private",
     "files": 43,
     "manifestSha256": "7d8858512fc26362b8afc97d5894da983208008a39bd907ffad921efa0362f9e",
     "retention": {

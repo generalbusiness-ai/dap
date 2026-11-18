@@ -5,7 +5,7 @@
   "tree": "be8a8e57d87b9b53a6f53f3f16f9587eed18a17c",
   "booking": "1a99b2d6b694842c1703ded47dc6d557a39bfb79",
   "end": "e0d7d8ae20f7e0ad4a934782a23c058b238ca68c",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-688c-sealed/unit",
+  "unit": "artroom-evidence/2026-11-10-f-final-gate-688c-sealed/unit",
   "originalOutcome": "PASSED",
   "actualExits": {
     "gate": 0,
@@ -35,7 +35,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-688c-sealed/private",
+    "directory": "artroom-evidence/2026-11-10-f-final-gate-688c-sealed/private",
     "manifestSha256": "1b20b7e8c042a8def36ab0766565d1a930727a7fc07e10baca6bbe98bd34279b",
     "files": 2820,
     "retention": {

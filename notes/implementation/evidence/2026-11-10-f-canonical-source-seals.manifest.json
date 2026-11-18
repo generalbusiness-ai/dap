@@ -1,7 +1,7 @@
 {
   "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
   "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-canonical-source-seals/unit",
+  "unit": "artroom-evidence/2026-11-10-f-canonical-source-seals/unit",
   "head": "93a87a7b9808d9eb7d5873d4005de8216d05b791",
   "tree": "1856dc5b5308ffa63ff33e4f8fbc64d7855798e2",
   "booking": "dc19c6cbe45f824e9e6edc70824643a89cc95d77",
@@ -15,7 +15,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-canonical-source-seals/private",
+    "directory": "artroom-evidence/2026-11-10-f-canonical-source-seals/private",
     "manifestSha256": "18a2840a3515567774f500619359e7e27f589605d31ce1d4800b9bc24fd33b33",
     "files": 37,
     "retention": {

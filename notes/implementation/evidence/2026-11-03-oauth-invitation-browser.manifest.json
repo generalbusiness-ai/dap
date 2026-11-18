@@ -1,6 +1,6 @@
 {
   "qualification": "Actual local HTTPS Worker and Native scopes with browser consent/key custody. The OAuth/MCP host is an explicit scripted fixture. Earlier failed setup and failed control remain qualified; no deployed host acceptance.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-invitation-browser",
+  "directory": "artroom-evidence/2026-11-03-oauth-invitation-browser",
   "checkpoint": "eb43ac23930a14bdd3102ff46266fe9adbf36426",
   "fileCount": 20,
   "files": [

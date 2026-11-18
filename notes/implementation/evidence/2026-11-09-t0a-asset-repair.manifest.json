@@ -1,6 +1,6 @@
 {
   "qualification": "First gate failed. One later production Page build returned0; its wrapper returned2 for a proven status-parser error. Separate metadata-only follow-up proves only owned outputs changed. A Page browser workflow citation at the review head and a second full gate remain required. No original unit was edited or rebuild run.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0a-repair-metadata-review",
+  "directory": "artroom-evidence/2026-11-09-t0a-repair-metadata-review",
   "checkpoint": "6a5d6acef38cd353b40d3b744a2e222ba2a43dc9",
   "tree": "ee3a32bc43424f620e683a9f48eb7ae58fb90673",
   "workingTreeOwnedOutput": "apps/room/page/assets.ts",

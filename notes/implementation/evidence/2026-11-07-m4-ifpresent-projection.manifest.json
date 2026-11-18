@@ -4,7 +4,7 @@
   "baseHead": "74164fd3b22c82fe6f6d1ed78488cc33f0b791d8",
   "units": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-ifpresent-projection",
+      "directory": "artroom-evidence/2026-11-07-m4-ifpresent-projection",
       "files": [
         {
           "path": "after-owners.exit",

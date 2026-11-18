@@ -2,7 +2,7 @@
   "qualification": "D required own-source Page and Card push runs at1088, attempt1. This collector triggers no action. Full original API payloads/logs stay private. Every actual step succeeds; counts describe steps, not individual cases. No compiler/test/build/browser body, dispatch, retry, fallback, deployment, live-room or real-DOM Lending acceptance claim. B main/correction automatic-poll data is excluded. A later candidate needs explicit source equivalence.",
   "checkpoint": "1088dc060c29ead773ed76b59a6fbb4a8a258f37",
   "tree": "6664cc8e0bd4626aae586330f5b64547cc235fc3",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-1088-browser-ci/unit",
+  "directory": "artroom-evidence/2026-11-10-t0d-1088-browser-ci/unit",
   "fileCount": 5,
   "files": [
     {
@@ -41,7 +41,7 @@
   "actualGetProcesses": 14,
   "sourceUnits": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-1088-browser-ci/raw-private",
+      "directory": "artroom-evidence/2026-11-10-t0d-1088-browser-ci/raw-private",
       "fileCount": 62,
       "sha256Sums": "cd0b5c1041710121bbf6aeac13063d7348bb027ae6125d4ffd785653faa435b6",
       "files": [

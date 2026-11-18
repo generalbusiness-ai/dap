@@ -1,7 +1,7 @@
 {
   "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
   "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-combined82-3de/combined-failure-sealed/unit",
+  "unit": "artroom-evidence/2026-11-10-f-combined82-3de/combined-failure-sealed/unit",
   "head": "3de5bb68b3deac34267f42187c8065454211e530",
   "tree": "35d0e22790fef2d6f31c20758b6bd3cd3c04efdd",
   "booking": "4e257607c25625312000186bcd08a734a448ef62",
@@ -44,7 +44,7 @@
     }
   ],
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-combined82-3de/combined-failure-sealed/private",
+    "directory": "artroom-evidence/2026-11-10-f-combined82-3de/combined-failure-sealed/private",
     "manifestSha256": "0b12eedb234ecd5161a95aa57202149c5acdac061072bed1e8071894779bafa3",
     "files": 125,
     "retention": {

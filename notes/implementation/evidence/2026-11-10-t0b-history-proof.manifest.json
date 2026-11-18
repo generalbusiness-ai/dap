@@ -3,7 +3,7 @@
   "checkpoint": "3cf87cb5e409bbde6f7480493afd91d2d9b728f2",
   "oldCheckpoint": "90c7dd9b9614ca61a4d31448088608ec0e3621e6",
   "tree": "c278e41675ec1db20f694bb04c4caf4e96c02aa3",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-history-proof/unit",
+  "directory": "artroom-evidence/2026-11-10-t0b-history-proof/unit",
   "fileCount": 5,
   "files": [
     {
@@ -40,7 +40,7 @@
   "directoryMode": "0500",
   "fileMode": "0400",
   "privateArchive": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-history-proof-raw-private",
+    "directory": "artroom-evidence/2026-11-10-t0b-history-proof-raw-private",
     "fileCount": 21,
     "files": [
       {
