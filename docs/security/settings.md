@@ -91,14 +91,23 @@ and `https://counter-upgrade.inguz.space` for Counter. The sandbox maps
 each origin to the existing `LENDING` service binding to `dap-lending`.
 Each screen origin names one installation.
 
-These nonsecret rows name the active installations in `upgrade-witness`,
+These nonsecret rows name the installations in `upgrade-witness`,
 directory `sc_zyofzb2ffitaapn2qavxv2nbdtlxzcjohc2t3mtrgqhvh2nt4dtq`:
 
 | Setting and source | Screen origin | Installation descriptor |
 | --- | --- | --- |
-| `APPLICATION_SCREEN_HOSTS` in [`wrangler.lending.jsonc`](../../apps/room/wrangler.lending.jsonc) | `https://lending-shelf.inguz.space` | Room `https://dap-lending.inguz.workers.dev`, item 5 (Lending 0.4.0), presentation `sha256:188f7b84e6b1ba29c2090265f4d7884a29884beff6ea58774a34ce8fbeef9f81` |
-| `APPLICATION_SCREEN_HOSTS` in [`wrangler.lending.jsonc`](../../apps/room/wrangler.lending.jsonc) | `https://counter-upgrade.inguz.space` | Room `https://dap-lending.inguz.workers.dev`, item 2 (Counter 0.6.0), presentation `sha256:905a3f7e088278894937f41bd27bf612bafac9b65fe030dbf0e2e0f584cd444f` |
+| `APPLICATION_SCREEN_HOSTS` in [`wrangler.lending.jsonc`](../../apps/room/wrangler.lending.jsonc) | `https://lending-shelf.inguz.space` | Room `https://dap-lending.inguz.workers.dev`, item 5, reviewed presentation `sha256:6153d94842dffeadaab5cfb8c6db3f417021daf8c1f9e2fb07a3bdfd110f1e84` (Lending 0.6.0) |
+| `APPLICATION_SCREEN_HOSTS` in [`wrangler.lending.jsonc`](../../apps/room/wrangler.lending.jsonc) | `https://counter-upgrade.inguz.space` | Room `https://dap-lending.inguz.workers.dev`, item 2, reviewed presentation `sha256:70c32e9edc50ac6c5128fb0573f9703773bcac7098269fdd7b51b70832e5c15c` (Counter 0.7.0) |
 | `SCREEN_HOSTS` in [`wrangler.rollout.jsonc`](../../apps/sandbox/wrangler.rollout.jsonc) | Both origins above | The same descriptors with `service: "LENDING"` |
+
+A row's presentation is the reviewed presentation: the presentation of the
+release that an operator reviewed for this screen origin. It is not a reading
+of the room. The room serves the item's current presentation for every
+screen request, so an in-place upgrade moves the screen before any row
+changes. The trust head that adds a release moves the rows of the items
+scheduled for that release, in both files. A deploy-smoke case requires each
+row's presentation to belong to a release in the same Worker's
+`APPLICATION_TRUST`.
 
 The `lending-shelf` room keeps its Lending 0.4.0 installation, but no screen
 origin names it.
