@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:76a48b4f01cec9fdc704e89270df4836ecd826dd","text":"Merge retired a covered predecessor; the successor is at apps/counter/release-identifiers.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:78d5a95f50cf734a1d1a53a84ed8f93a1d7d6766","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/install-room.ts."}
