@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e60a3ca5ce320ba4af84478ff5f88ff4d6be63fe","text":"Closed in the 2026-11-18 open-request review, with Hugh's approval. obsolete: October two-sprint demo schedule; the event passed and the cutover overtook it."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e6a7c791c2093cc8d45da96218c118331c195de8","text":"Closed in the 2026-11-18 open-request review, with Hugh's approval. done: IR-1 reported f8fbe5ec; led to the application-upgrade note, built as U1-U3 (c8189f7c)."}
