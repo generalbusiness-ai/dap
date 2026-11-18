@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bb912d1db018efbcd518145023993bd63d8f0624","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/creation-admission.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bea72c858128bd35fa8cac47ba314f4944371213","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-18-s3-fail-closed-configuration.md."}
