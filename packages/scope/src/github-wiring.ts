@@ -4,11 +4,10 @@
  * Missing or invalid configuration leaves every outside effect unsent.
  * No configuration, key, token or plaintext belongs in a scope's history.
  */
-import type { ScopeId } from "@generalbusiness/dap-contract";
-import { isRecord, isScopeId, parseStrict, timeMs } from "@generalbusiness/dap-bytes";
+import { parseStrict, timeMs } from "@generalbusiness/dap-bytes";
 import { destinationBranch, isOf, platform } from "@generalbusiness/dap-platform";
 import { gitHubPrivateKey } from "@generalbusiness/dap-git/github";
-import type { GitHubAccount, GitHubInstallationToken } from "@generalbusiness/dap-git/github";
+import type { GitHubInstallationToken } from "@generalbusiness/dap-git/github";
 import { CredentialStore } from "./credential-store.ts";
 import { DestinationHost, type SnapshotReader } from "./destination-host.ts";
 import { GitHubProvider } from "./github-host.ts";
@@ -18,6 +17,8 @@ import { credentialHandle, exact, hostBound } from "./host-wiring.ts";
 import type { OutsideGiven } from "./object.ts";
 import { NO_OUTSIDE, type EffectRequest, type Outside } from "./operations.ts";
 import { RegisterHost } from "./register-host.ts";
+import { gitHubConfiguration, positive, type GitHubConfiguration } from "./github-config.ts";
+export { gitHubConfiguration, gitHubRegisterScope, type GitHubConfiguration } from "./github-config.ts";
 
 export interface GitHubBindings extends HostRegisterSettings {
   /** Nonsecret JSON; every field is explicit. Precompute the install's register scope ID and pin it here before deployment. */
@@ -31,35 +32,8 @@ export interface GitHubBindings extends HostRegisterSettings {
   /** Nonsecret, reviewed destination incarnation/repository/branch pairs. No implicit later-binding authority. */
   GITHUB_REPOSITORY_BINDINGS?: string;
 }
-export interface GitHubConfiguration {
-  issuer: string; installationId: number; account: GitHubAccount; maxBytes: number;
-  /** Pins host authority only. Installation authorization (N5) remains unimplemented. */
-  registerScope: ScopeId;
-  privateRepositories: boolean; publicReads: boolean; credentialIdentity: "adapter-attempt";
-  /** Opt-in private reads with one-repository, read-only installation tokens. */
-  installationReads?: true;
-}
 interface Cleanup { name: string; token: GitHubInstallationToken }
-const positive = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value > 0;
 const secret = (value: unknown): value is string => typeof value === "string" && /^[A-Za-z0-9_.-]{1,4096}$/.test(value);
-/** The same nonsecret host selector used by the production wiring. */
-export function gitHubRegisterScope(raw: unknown): ScopeId | null {
-  try { return gitHubConfiguration(raw)?.registerScope ?? null; }
-  catch { return null; }
-}
-export function gitHubConfiguration(raw: unknown): GitHubConfiguration | null {
-  if (typeof raw !== "string" || !raw || raw.length > 4096) return null;
-  let value: ReturnType<typeof exact>;
-  try {
-    const parsed = parseStrict(raw);
-    value = exact(parsed, ["issuer", "installationId", "account", "maxBytes", "registerScope", "privateRepositories", "publicReads", "credentialIdentity",
-      ...(isRecord(parsed) && Object.hasOwn(parsed, "installationReads") ? ["installationReads"] : [])]);
-  } catch { return null; }
-  const account = exact(value?.["account"], ["id", "login", "type"]);
-  if (!value || !account || typeof value["issuer"] !== "string" || !/^[A-Za-z0-9_.-]{1,128}$/.test(value["issuer"]) || !positive(value["installationId"]) || !isScopeId(value["registerScope"]) || !positive(account["id"]) || typeof account["login"] !== "string" || !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(account["login"]) || (account["type"] !== "User" && account["type"] !== "Organization") || !positive(value["maxBytes"]) || value["maxBytes"] < 32 || typeof value["privateRepositories"] !== "boolean" || typeof value["publicReads"] !== "boolean" || value["credentialIdentity"] !== "adapter-attempt" || (value["privateRepositories"] && value["publicReads"])) return null;
-  if (Object.hasOwn(value, "installationReads") && (value["installationReads"] !== true || value["privateRepositories"] !== true || value["publicReads"] !== false)) return null;
-  return value as unknown as GitHubConfiguration;
-}
 function cleanupTokens(raw: unknown): ReadonlyMap<string, Cleanup> | null {
   const cleanup = new Map<string, Cleanup>();
   if (raw === undefined) return cleanup;

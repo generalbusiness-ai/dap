@@ -55,8 +55,8 @@ signed entry reads.
 
 ## Health
 
-`GET /health` returns a JSON body with five fields: `deployment`,
-`version`, `sessions`, `register` and `wiring`. `HEAD /health` returns the
+`GET /health` returns a JSON body with seven fields: `deployment`,
+`version`, `sessions`, `register`, `wiring`, `policy` and `missing`. `HEAD /health` returns the
 same status with no body. A query string or a request body is refused
 with 400. Other methods return 405.
 
@@ -67,6 +67,8 @@ with 400. Other methods return 405.
 | `sessions` | `ok` when the deployment name and session secret pass the session configuration checks, otherwise `unavailable`. |
 | `register` | `ready`, `absent`, `not-ready`, `unavailable`, `unconfigured` or `ambiguous`, as described below. |
 | `wiring` | `artifacts` and `github`, each `{"state": "wired"}` or `{"state": "off", "reason": ...}`. |
+| `policy` | `index` (`enforce`, `register` or `invalid`, from `SCOPE_INDEX_MODE`), `mcp` (`open` when `MCP_ENABLED` is `true`, otherwise `closed`) and `openCreation` (`true` when `DEPLOYMENT` is unset or `ALLOW_OPEN_CREATION` is `true`). |
+| `missing` | The names of absent settings that a deployed Worker needs: `DEPLOYMENT`, `SESSION_SECRET`, and `REGISTER_SCOPE` when neither `REGISTER_SCOPE` nor `ARTIFACTS_CONFIG` is set. An empty list means none is absent. |
 
 The register comes from `REGISTER_SCOPE`, the primary register setting.
 When `REGISTER_SCOPE` is set, it must be a valid scope ID, and an
@@ -75,7 +77,8 @@ Otherwise `register` is `unavailable`. When `REGISTER_SCOPE` is unset, the `regi
 `GITHUB_APP_CONFIG` or `ARTIFACTS_CONFIG` is the fallback. No valid
 fallback gives `unconfigured`, and two different fallbacks give
 `ambiguous`. An invalid `INSTALLED_REGISTER_SCOPES` list also gives
-`unavailable`.
+`unavailable`, and so does a valid `GITHUB_APP_CONFIG` whose
+`registerScope` is not one of the installed registers.
 
 The Worker probes the selected register's metadata without a scope read
 session, a provider call or a native turn. The probe gives `ready` for an
@@ -88,6 +91,9 @@ is absent. Other reasons name the part that is wrong: for Artifacts
 `invalid-config`, `namespace-mismatch` or `missing-binding`, and for
 GitHub `invalid-config`, `private-key`, `read-token`, `creation-token`,
 `cleanup-tokens` or `repository-bindings`.
+
+`policy` and `missing` name settings only. They show no setting value and
+do not change the status.
 
 Health returns 200 only when `sessions` is `ok`, `register` is `ready`,
 and no configured host has its wiring `off`. Every other result returns

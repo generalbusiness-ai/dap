@@ -14,6 +14,7 @@ export interface CreationAdmission extends PlatformCreationSettings {
   REGISTER_SCOPE?: string;
   INSTALLED_REGISTER_SCOPES?: string;
   ARTIFACTS_CONFIG?: string;
+  GITHUB_APP_CONFIG?: string;
   ARTIFACTS?: unknown;
   /** Explicit local/test escape. A deployment still needs a valid Register pin. */
   ALLOW_OPEN_CREATION?: string;

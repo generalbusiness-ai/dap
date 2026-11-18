@@ -65,6 +65,46 @@ class DeploymentSafety(unittest.TestCase):
             with self.assertRaises(Refusal):
                 deploy.prepared_project(project)
 
+    def test_hosted_mcp_may_stay_closed_or_keep_the_exact_legacy_opening(self):
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+            project = self.project(Path(scratch))
+            path = project / "wrangler.json"
+            config = json.loads(path.read_text())
+            closed = {k: v for k, v in config["vars"].items() if k not in ("MCP_ENABLED", "MCP_TOOL_ADDITIONS")}
+            for variables in (closed, {**closed, "MCP_TOOL_ADDITIONS": "[]"},
+                              {**closed, "MCP_ENABLED": "true", "MCP_TOOL_ADDITIONS": "[]"}):
+                with self.subTest(variables=sorted(set(variables) - set(closed))):
+                    path.write_text(json.dumps({**config, "vars": variables}))
+                    self.assertEqual(deploy.prepared_project(project), project)
+            for changed in ({"MCP_ENABLED": "false"}, {"MCP_ENABLED": "true"}, {"MCP_ENABLED": "TRUE", "MCP_TOOL_ADDITIONS": "[]"},
+                            {"MCP_ENABLED": "false", "MCP_TOOL_ADDITIONS": "[]"}, {"MCP_TOOL_ADDITIONS": '["create"]'},
+                            {"MCP_ENABLED": "true", "MCP_TOOL_ADDITIONS": '["create"]'}):
+                with self.subTest(changed=changed):
+                    path.write_text(json.dumps({**config, "vars": {**closed, **changed}}))
+                    with self.assertRaises(Refusal):
+                        deploy.prepared_project(project)
+
+    def test_deployment_stages_the_installation_proxy_token_without_rewriting_the_project(self):
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+            project = self.project(Path(scratch))
+            before = {name: (project / name).read_bytes() for name in ("worker.ts", "wrangler.json")}
+            token = "TEST" + "t" * 39
+            staged = deploy.staged_project(project, token)
+            self.assertEqual(staged.parent, project)
+            self.assertEqual(staged.stat().st_mode & 0o777, 0o700)
+            self.assertEqual({name: (project / name).read_bytes() for name in before}, before)
+            self.assertEqual((staged / "worker.ts").read_bytes(), before["worker.ts"])
+            for name in ("worker.ts", "wrangler.json"):
+                self.assertEqual((staged / name).stat().st_mode & 0o777, 0o600)
+            original = json.loads(before["wrangler.json"])
+            self.assertEqual(json.loads((staged / "wrangler.json").read_text()),
+                             {**original, "vars": {**original["vars"], "CELLD_PROXY_TOKEN": token}})
+            # The operator's project cannot carry the setting itself; only the installation supplies it.
+            path = project / "wrangler.json"
+            path.write_text(json.dumps({**original, "vars": {**original["vars"], "CELLD_PROXY_TOKEN": token}}))
+            with self.assertRaisesRegex(Refusal, "project variables differ"):
+                deploy.prepared_project(project)
+
     def application_project(self, root, raw="[]"):
         project = self.project(root)
         path = project / "wrangler.json"

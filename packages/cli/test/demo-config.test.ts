@@ -117,8 +117,13 @@ test("the self-host template has no project resources and the retired Worker ret
   expect(template.migrations).toEqual(retired.migrations);
   for (const field of ["r2_buckets", "analytics_engine_datasets"]) expect(template).not.toHaveProperty(field);
   for (const config of [template, retired]) {
-    for (const field of ["DEMO_START_CONFIG", "DEPLOYMENT", "SESSION_SECRET", "GITHUB_APP_PRIVATE_KEY", "GITHUB_CREATION_TOKEN", "GITHUB_READ_TOKEN"]) expect(config.vars).not.toHaveProperty(field);
+    for (const field of ["DEMO_START_CONFIG", "SESSION_SECRET", "GITHUB_APP_PRIVATE_KEY", "GITHUB_CREATION_TOKEN", "GITHUB_READ_TOKEN"]) expect(config.vars).not.toHaveProperty(field);
   }
+  // S3: the template names its deployment before the first deploy, so a new
+  // Worker admits no unpinned creation. The retired Worker keeps DEPLOYMENT
+  // as a secret, and a var of the same name would conflict with it.
+  expect(template.vars.DEPLOYMENT).toBe("dap-self-host");
+  expect(retired.vars).not.toHaveProperty("DEPLOYMENT");
   expect([retired.name, retired.main, retired.vars.SCOPE_INDEX_MODE]).toEqual(["artroom-scope", "worker.ts", "enforce"]);
   expect(retired.r2_buckets).toEqual([{ binding: "APPLICATION_CONTENT", bucket_name: "artroom-application-content" }]);
   const packageJson = JSON.parse(readFileSync(new URL("../../../package.json", import.meta.url), "utf8"));

@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 
-from kit import Refusal, aws_request, configuration, private_credentials, read_installation, read_json, require
+from kit import Refusal, aws_request, configuration, private_credentials, proxy_token, read_installation, read_json, require
 
 
 def fsync_enabled(output):
@@ -50,7 +50,9 @@ def main():
                 "-metricsPort=27190", "-metricsIp=127.0.0.1"]
         os.chdir(prefix / "data/seaweedfs")
     elif name == "caddy":
-        env.update({"XDG_DATA_HOME": str(prefix / "data/caddy"), "XDG_CONFIG_HOME": str(prefix / "data/caddy-config")})
+        # The Caddyfile reads the token from this private environment, never from a public file.
+        env.update({"XDG_DATA_HOME": str(prefix / "data/caddy"), "XDG_CONFIG_HOME": str(prefix / "data/caddy-config"),
+                    "CELLD_PROXY_TOKEN": proxy_token(prefix, user.pw_uid)})
         args = [config["caddy"], "run", "--config", str(prefix / "config/Caddyfile"), "--adapter", "caddyfile"]
     else:
         # Check the installed copy of the single maintained pin as the unprivileged service user.

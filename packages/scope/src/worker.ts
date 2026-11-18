@@ -108,6 +108,7 @@ import { ScopeIndexCensus, scopeIndexCensusRoute } from "./scope-index-census.ts
 import { admitCreationAddress, admitServing, boundedParentlessIntent, boundedServingIntent, ServingAdmission, type CreationAddressReservation, type ServingEnvironment, type ServingRequest } from "./serving-admission.ts";
 import { SiteTokenReuse, type SiteTokenRequest } from "./site/token-reuse.ts";
 import { presentsSignedRead } from "./signed-reads.ts";
+import { proxiedRequest, type CallerAddressSettings } from "./caller-address.ts";
 
 /**
  * The bindings of the deployed Worker (`wrangler.jsonc`): the one scope
@@ -116,7 +117,7 @@ import { presentsSignedRead } from "./signed-reads.ts";
  * the operator sets it, and no file of this repository holds one.
  * `DEPLOYMENT` is the deployment's name, which a session's token names.
  */
-export interface Env extends GitHubBindings, DemoCreationBindings, ArtifactsBindings, ApplicationBindings, MetricEnvironment, CreationAdmission, ScopeIndexEnvironment, ServingEnvironment, HostedMcpSettings { SCOPES: DurableObjectNamespace; SESSION_SECRET?: string; DEPLOYMENT?: string }
+export interface Env extends GitHubBindings, DemoCreationBindings, ArtifactsBindings, ApplicationBindings, MetricEnvironment, CreationAdmission, ScopeIndexEnvironment, ServingEnvironment, HostedMcpSettings, CallerAddressSettings { SCOPES: DurableObjectNamespace; SESSION_SECRET?: string; DEPLOYMENT?: string }
 
 /** Fixed internal owner; HTTP exposes only its authenticated census page. */
 export class ScopeIndex extends DurableObject<Env> {
@@ -882,6 +883,8 @@ export class ApplicationScreenService<E extends Env = Env> extends WorkerEntrypo
 /** Generic Scope, Site and MCP dispatch. Application pages and demo offers belong to apps/room. */
 export default {
   fetch: async (request: Request, env: Env & Partial<Pick<McpEnv, "REGISTRIES" | "AGENTS">>, ctx?: Pick<ExecutionContext, "waitUntil">): Promise<Response> => {
+    // Every later reader, Durable Objects included, sees only an admitted caller address.
+    request = proxiedRequest(request, env);
     return measuredRequest(request, env, async () => {
     const scopes = indexedScopes(env.SCOPES, env), lookups = { ...env, SCOPES: scopes };
     if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });

@@ -91,6 +91,18 @@ administrator account.
    The installer refuses a prefix or service label that is in use. If a
    service fails to start, it keeps the data.
 
+   The installer also writes a random proxy token to
+   `private/proxy-token` under the prefix, with mode 0600. Caddy reads the
+   token from its private environment and sends it with each request,
+   beside the caller's address. `deploy.py` gives the same token to the
+   Worker as `CELLD_PROXY_TOKEN`. The Worker counts the caller's address
+   only on a request that carries the token. A local process that calls
+   celld at `127.0.0.1:28900` directly has no address. Caddy runs with
+   its admin endpoint off, so no local process can read the token from
+   Caddy's configuration. `deploy.py` refuses an installation that has no
+   proxy token. A host installed with an earlier kit has no proxy token:
+   install again under a new prefix.
+
 5. In the application firewall, allow incoming connections to the exact
    Caddy path from `dap-host.json`. Keep the firewall on. Check the entry:
 
@@ -183,7 +195,12 @@ and later archive scene belong to CB-2.
 
 The prepared project keeps the production
 Worker and its bindings, sets `REGISTER_SCOPE` to the planned register, and
-keeps the session secret in private configuration. Deployment creates the
+keeps the session secret in private configuration. It sets no
+`MCP_ENABLED`, so the hosted MCP endpoint stays closed. `deploy.py` also
+accepts a project from an earlier kit that sets `MCP_ENABLED` to `"true"`
+and `MCP_TOOL_ADDITIONS` to `"[]"`. It refuses any other MCP setting.
+`deploy.py` uploads a private copy of the project, in a `staged-`
+directory inside it, that adds the installation's proxy token. Deployment creates the
 installation's bucket and uploads the Worker. Run these commands as the
 service user. After a failure or an uncertain result, keep the project and
 its private deployment logs.

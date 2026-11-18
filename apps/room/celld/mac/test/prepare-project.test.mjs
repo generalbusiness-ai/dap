@@ -65,7 +65,7 @@ test('explicit package trust stages only its exact content binding and preserves
     assert.equal((await readFile(join(paths.home, 'config.json'))).equals(custody), true);
     const { SESSION_SECRET, APPLICATION_TRUST, ...vars } = project.vars;
     const maintained = JSON.parse(await readFile(new URL('../../wrangler.json', import.meta.url), 'utf8'));
-    assert.deepEqual(vars, { ...maintained.vars, REGISTER_SCOPE: register, PUBLIC_ORIGIN: origin, MCP_ENABLED: 'true', MCP_TOOL_ADDITIONS: '[]' });
+    assert.deepEqual(vars, { ...maintained.vars, REGISTER_SCOPE: register, PUBLIC_ORIGIN: origin });
     assert.equal(typeof SESSION_SECRET, 'string');
   }
 });
@@ -109,8 +109,8 @@ test('a new private project preserves the maintained configuration and cannot re
   assert.equal(typeof secret, 'string');
   assert.equal(/^[A-Za-z0-9_-]{43}$/.test(secret), true);
   assert.equal(Buffer.from(secret, 'base64url').length, 32);
-  assert.deepEqual(publicVars, { ...maintained.vars, REGISTER_SCOPE: register, PUBLIC_ORIGIN: origin,
-    MCP_ENABLED: 'true', MCP_TOOL_ADDITIONS: '[]' });
+  // Hosted MCP stays closed: the project names neither MCP setting.
+  assert.deepEqual(publicVars, { ...maintained.vars, REGISTER_SCOPE: register, PUBLIC_ORIGIN: origin });
   assert.equal(JSON.stringify({ ...project, vars: publicVars }) === JSON.stringify({ ...maintained, vars: publicVars }), true);
   const worker = fileURLToPath(new URL('../../../worker.ts', import.meta.url));
   assert.equal(await readFile(join(paths.out, 'worker.ts'), 'utf8'), `export * from ${JSON.stringify(worker)};\nexport { default } from ${JSON.stringify(worker)};\n`);

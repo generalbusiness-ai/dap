@@ -48,6 +48,10 @@ checkout.
    `dap-my-room` for both. Edit `apps/room/wrangler.self-host.jsonc`:
 
    - Set `name` to your Worker name.
+   - Set `vars.DEPLOYMENT` to your Worker name. The Worker reads this
+     name before its first request. With `DEPLOYMENT` set and no register
+     pin, the Worker refuses every creation, so a deployed Worker admits
+     no room before step 6.
    - Set `vars.ARTIFACTS_NAMESPACE` and the `artifacts` entry's `namespace`
      to your Artifacts namespace.
    - Keep `SCOPE_INDEX_MODE` set to `"enforce"`. A new Worker has no older
@@ -71,21 +75,20 @@ checkout.
    The entry's `remote: true` makes local Wrangler development use the live
    Artifacts binding. It is not a second deployment or a credential.
 
-4. Deploy, then send the deployment name and a new session secret to
-   Wrangler on standard input.
+4. Deploy, then send a new session secret to Wrangler on standard input.
 
    ```sh
    npm run deploy:scope
    cd apps/room
-   node --input-type=module -e 'import { randomBytes } from "node:crypto"; process.stdout.write(JSON.stringify({DEPLOYMENT:"dap-my-room",SESSION_SECRET:randomBytes(32).toString("base64url")}));' | npx -y wrangler@4.147.0 secret bulk --config wrangler.self-host.jsonc
+   node --input-type=module -e 'import { randomBytes } from "node:crypto"; process.stdout.write(JSON.stringify({SESSION_SECRET:randomBytes(32).toString("base64url")}));' | npx -y wrangler@4.147.0 secret bulk --config wrangler.self-host.jsonc
    cd ../..
    ```
 
    Deployment prints the Worker's `https://<name>.<subdomain>.workers.dev`
    address and version ID. Secret storage reports success and does not
-   print the values. `DEPLOYMENT` is not secret, but Wrangler stores it
-   as a secret binding because it arrives through the same command. The
-   Worker issues no session without both values.
+   print the value. The Worker issues no session without `DEPLOYMENT` and
+   `SESSION_SECRET`. Until step 6, `/health` answers `503` and its
+   `missing` list names `SESSION_SECRET` or `REGISTER_SCOPE`.
 
 5. Keep this room's signing keys in a new private directory. Plan the
    install with your deployed address and namespace.
