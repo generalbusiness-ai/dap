@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval f883ab31: land head Q (48a2361b) onto 1c0e4757 and ask for the landing check. Merging may run beside the U4-T gate. No separate deployment for Q: its settings equal LENDING_W; the next lending deployment (with U4-T and the SCREEN_HOSTS head) goes from a main that contains Q, by deploy.mjs.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f883ab31c9af2b9da0cf8aa9c6197018123e4895"}
