@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:501bcbfbca736b12ae960bc17f3421450bf3ccc7","text":"Merge retired a covered predecessor; the successor is at docs/self-host-cloudflare.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5591b8e78a816fb2259f135f051cb06d42629caf","text":"Merge retired a covered predecessor; the successor is at apps/room/fetch.ts."}
