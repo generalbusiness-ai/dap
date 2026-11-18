@@ -14,7 +14,7 @@ import subprocess
 import sys
 import time
 
-from kit import LABELS, Refusal, absolute, aws_request, job_state, no_links, read_installation, require
+from kit import LABELS, Refusal, absolute, aws_request, job_state, no_links, read_installation, require, service_missing
 
 MAX_LOG_SEGMENT = 1024 * 1024
 UNAVAILABLE = (Refusal, OSError, ValueError, subprocess.SubprocessError, http.client.HTTPException)
@@ -126,6 +126,9 @@ class MacPorts:
         if state != "loaded":
             return state, None
         result = self.command("print", "system/" + label)
+        # launchd can remove the label between job_state's read and this one.
+        if service_missing(label, result):
+            return "absent", None
         require(result.returncode == 0, "supervisor became unavailable")
         pids = re.findall(rb"(?m)^\s*pid = ([1-9][0-9]*)\s*$", result.stdout)
         require(len(pids) <= 1, "ambiguous supervisor PID")
