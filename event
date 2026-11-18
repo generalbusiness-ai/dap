@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-12-cli-json-output-design.md","body":{"commit":"facb24f9de9a15fcfa98315f1ab78d820984e2fb","path":"notes/2026-10-12-cli-json-output-design.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:30bbc77b0d276ade9689e00eaa0fc4e26df8fdc0","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-12-cli-json-output-design.md."}
