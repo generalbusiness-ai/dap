@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-11-18-local-artifacts-simulator.md","body":{"commit":"2631ad70871f97654816187a89799738d60019be","path":"notes/2026-11-18-local-artifacts-simulator.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:34dd757308e2351c5f4a5551b166c68f6bcd0934","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-18-local-artifacts-simulator.md."}
