@@ -448,3 +448,40 @@ Named reds, in `artroom-evidence/2026-11-18-u4t-red/`:
 - With the 0.7.0 row listed and no packet, the test fails to open
   `apps/counter/releases/0.7.0/application.dap.json`. `red-2-no-packet.txt`,
   SHA-256 `92f391d8aa3ba505ef68c9de5a06f25bddff4f45d3b72cb959ecc8ee07dbb529`.
+
+## LC-7: trust Lending 0.6.0, 18 November
+
+LC-7 request `0e5bf3ba` adds Lending 0.6.0 for the upgrade-witness room.
+Lending 0.5.0 was signed before U3, and its page refuses a screen row whose
+presentation differs from its own. The planner therefore skips 0.5.0 in
+that room (ruling `b9e6a2d4`). The planner signed 0.6.0 from main
+`277ae9f0` (act `af108d79`), which carries U3's client. The semantic
+identifier `48616803` is unchanged from 0.4.0, so item 5 upgrades in place
+from 0.4.0 to 0.6.0, and the `lending-shelf.inguz.space` row needs no
+change. The head commits the signed bytes unchanged:
+
+- `examples/lending/releases/0.6.0/application.dap.json`: 2,522,701 bytes,
+  blob `ab5c335a94f9e5f59326083bdf26a521d404468f`, SHA-256
+  `d02edf87c05d8c8ef3405b946472d13e9b0aa8b5abaac5763ae550231aa3bb3d`,
+  release `sha256:2ba6c359ff7e030cc43e37de2630dcad4ba19e3224ab741dfbec5fcedb9e3789`,
+  presentation `sha256:6153d94842dffeadaab5cfb8c6db3f417021daf8c1f9e2fb07a3bdfd110f1e84`.
+
+The packet's presentation equals the open presentation on main `277ae9f0`.
+
+The dap-lending trust rows now name eight releases: Lending 0.3.0, 0.4.0,
+0.5.0 and 0.6.0, and Counter 0.4.0, 0.5.0, 0.6.0 and 0.7.0, each with the
+same publisher and host. The formatter protects the new packet path, and
+the reproduction test reads the packet against its row.
+
+The head opens Lending 0.7.0 (ruling `163de663`). The page shows the
+manifest version, so the open presentation moves to `cdcc3678`.
+
+Named reds, in `artroom-evidence/2026-11-18-lc7-red/`:
+
+- With the packet and main's trust rows, the reproduction test fails with
+  "dap-lending must trust each committed packet exactly once" (7 rows, 8
+  packets). `red-1-no-row.txt`, SHA-256
+  `4f6d27f5c2fc816d61b3a3e3efb9f875399868aaa9eaaf49b5d3540ea7aaec06`.
+- With the 0.6.0 row listed and no packet, the test fails to open
+  `examples/lending/releases/0.6.0/application.dap.json`. `red-2-no-packet.txt`,
+  SHA-256 `9ac6808f0ae51321a842eb80a5c9e060fed2f226c9771929684f3a67148da1d3`.

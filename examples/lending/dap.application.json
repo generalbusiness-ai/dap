@@ -1,7 +1,7 @@
 {
   "v": 2,
   "name": "ai.generalbusiness.lending",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "entry": "examples/lending/definition.json",
   "definitions": ["examples/lending/definition.json"],
   "host": {
