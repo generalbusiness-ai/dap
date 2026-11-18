@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Gate START for S3 at head a991974794 (one commit on 782fa2b4), in .builder-worktrees/s3-20261118. Evidence: artroom-evidence/2026-11-18-s3-gate/.","body":{"gate":"start","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:326740407f2675508c0217f41a3fc9c11172e0da"}
