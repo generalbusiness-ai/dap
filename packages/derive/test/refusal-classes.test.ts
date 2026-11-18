@@ -9,9 +9,9 @@ import { Scope, born, created, deliver, directory, d, fields, keys, lateFixture,
 
 const { rita } = keys;
 
-test("the table classes 6 reasons never, 5 protocol and 25 head", () => {
+test("the table classes 6 reasons never, 5 protocol and 26 head", () => {
   const count = (name: string) => Object.values(REFUSAL_CLASSES).filter((c) => c === name).length;
-  expect([count("never"), count("protocol"), count("head")]).toEqual([6, 5, 25]);
+  expect([count("never"), count("protocol"), count("head")]).toEqual([6, 5, 26]);
   expect(Object.keys(REFUSAL_CLASSES).filter((r) => REFUSAL_CLASSES[r as keyof typeof REFUSAL_CLASSES] === "never").sort())
     .toEqual(["archived", "floor-ahead", "floor-back", "floor-keep", "late", "scope-refused"]);
 });

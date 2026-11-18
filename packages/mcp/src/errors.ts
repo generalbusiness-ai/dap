@@ -60,6 +60,7 @@ export const REFUSALS: Readonly<Record<RefusalReason, (asked: Asked, name: strin
   expired: () => ({ sentence: "the intent's deadline (notAfter) had passed when the scope judged it", next: "Sign again with a new idempotencyKey." }),
   "scope-refused": () => ({ sentence: "the scope refused its own creation and admits nothing", next: "Use another scope." }),
   "application-revoked": () => ({ sentence: "the deployment no longer trusts this installed application release", next: "Ask the deployment operator to inspect application trust. Previously accepted receipts remain recoverable." }),
+  "application-replaced": () => ({ sentence: "an upgrade replaced this scope's application installation, so the scope admits no new act", next: "Act in the scope of the installation that replaced it. Previously accepted receipts remain recoverable." }),
   limit: () => ({ sentence: "the member already holds eight open read-token reservations", next: "Wait for a reservation to end, then request another read token with a new idempotencyKey. Taking or dropping a token does not free its place." }),
   "unknown-act": () => ({ sentence: "the kind is not an act of the scope's definition", next: "List tools again; call the tool that serves this scope." }),
   "bad-field": (_, name) => ({ sentence: `a field is unknown, missing or not a value of its type${name ? "" : ". The scope does not name the field"}`, next: HINTS.fields }),

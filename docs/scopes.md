@@ -219,7 +219,8 @@ The reason types are:
   `fact-mismatch`, `unauthorized`, `guard-failed`, `late`,
   `capability-refused`, `slot-full`, `type-full`, `entry-too-large`,
   `send-unresolved`, `unknown-message`, `unsupported-definition`,
-  `application-revoked` and `bad-input`. The source file comments each one.
+  `application-revoked`, `application-replaced` and `bad-input`. The source
+  file comments each one.
 - `UnavailableReason`: why the scope did not judge an input. A retry is
   judged again. The reasons are `dependency-unavailable`, `busy`,
   `clock-behind`, `scope-provisional`, `guard-incomplete`,
@@ -235,7 +236,10 @@ The reason types are:
 absent from the current `APPLICATION_TRUST` setting. Missing or malformed
 trust also refuses installed releases. The host proves the release from
 native creation records, including a declared child's ancestors. It does
-not infer a release from a definition digest. Incomplete provenance returns
+not infer a release from a definition digest. Under Rules 16, the host
+reads the installation item's current release from Rules, so an in-place
+upgrade moves the release it checks. When an upgrade replaced the item, the
+host refuses every new act with `application-replaced`. Incomplete provenance returns
 `unavailable` with `dependency-unavailable`. The host checks trust before
 new dependency reads and again before it writes the act. The check writes
 no entry and changes no recorded judgment. An actor and idempotency key that

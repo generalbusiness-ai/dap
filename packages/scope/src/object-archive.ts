@@ -15,9 +15,9 @@ export function configuredArchive(wiring: Wiring, outsideGiven: OutsideGiven, ar
   return archive;
 }
 
-export function archiveDriver(archive: ReturnType<typeof configuredArchive>, archiveSql: Sql, store: SqliteStore, ports: Ports, bounds: Bounds): ArchiveDriver | null {
+export function archiveDriver(archive: ReturnType<typeof configuredArchive>, archiveSql: Sql, store: SqliteStore, ports: Ports, bounds: Bounds, finalSeen?: (reason: string) => void): ArchiveDriver | null {
   return archive ? new ArchiveDriver({
-    ...archive, sql: archiveSql,
+    ...archive, sql: archiveSql, ...(finalSeen && "production" in archive ? { finalSeen } : {}),
     current: () => store.scope(), clock: () => ports.clock.read(), bounds,
   }) : null;
 }

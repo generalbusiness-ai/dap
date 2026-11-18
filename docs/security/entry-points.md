@@ -927,7 +927,14 @@ The ancestry walk reads at most 18 ancestors, 37 bodies, 16 MiB of body
 bytes, and 36 native RPCs, with a 1 MiB limit per body. The local birth
 uses the existing preparation allowance. One ten-second flight owns
 unresolved native work, and a caller timeout does not release it. Only
-immutable provenance is cached. The check reads no package, R2, Git, or
+immutable provenance is cached. Under Rules 16, whose `upgrade-application`
+act changes the installation item N, the check also reads N's current state
+and release from Rules with `applicationInstallationState`, at most once a
+minute per scope incarnation while acts arrive. It checks trust for N's
+current release, and a `replaced` N returns `application-replaced`. That
+state is final, so the scope reads no more. A failed read returns
+`dependency-unavailable`. Under any other Rules pin, N never changes, and
+the check reads nothing more. The check reads no package, R2, Git, or
 provider data, and writes no entry.
 
 ### Preparation
