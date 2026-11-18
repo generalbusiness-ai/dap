@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Deploy the prepared production project to this installation's store."""
 import argparse
+import contextlib
 import hashlib
 import json
 import os
@@ -205,17 +206,37 @@ def prepared_project(directory):
     return directory
 
 
+@contextlib.contextmanager
 def staged_project(project, token):
-    """A private copy with the installation's proxy token; the operator's project stays unchanged."""
+    """A private copy with the installation's proxy token; the operator's project stays unchanged.
+
+    The copy lives only inside the with block. Leaving the block removes it.
+    """
     config = read_json(project / "wrangler.json", 64 * 1024)
     config["vars"] = {**config["vars"], "CELLD_PROXY_TOKEN": token}
     staged = Path(tempfile.mkdtemp(prefix="staged-", dir=project))
-    for name, data in (("wrangler.json", (json.dumps(config, indent=2) + "\n").encode()),
-                       ("worker.ts", (project / "worker.ts").read_bytes())):
-        fd = os.open(staged / name, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
-        with os.fdopen(fd, "wb") as output:
-            output.write(data)
-    return staged
+    try:
+        for name, data in (("wrangler.json", (json.dumps(config, indent=2) + "\n").encode()),
+                           ("worker.ts", (project / "worker.ts").read_bytes())):
+            fd = os.open(staged / name, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
+            with os.fdopen(fd, "wb") as output:
+                output.write(data)
+        yield staged
+    except BaseException:
+        try:
+            remove_staged(project, staged)
+        except Exception:
+            pass  # The deployment error stays the reported error.
+        raise
+    remove_staged(project, staged)
+
+
+def remove_staged(project, staged):
+    """Remove only the staged-* directory that staged_project made directly under the project."""
+    info = os.lstat(staged)
+    require(staged.parent == project and staged.name.startswith("staged-")
+            and stat.S_ISDIR(info.st_mode) and info.st_uid == os.getuid(), "staged project differs")
+    shutil.rmtree(staged)
 
 
 def run_deployment(argv, env, directory):
@@ -333,9 +354,10 @@ def deploy(prefix, project, esbuild):
     # The installer owns a new store directory. PUT creates or opens its own
     # fixed bucket; it does not clear an existing bucket or change node data.
     ensure_bucket(prefix)
-    staged = staged_project(project, token)
-    run_deployment([config["celld"], "deploy", str(staged), "--bucket", "s3://" + record["bucket"],
-                    "--endpoint", record["endpoint"], "--region", "us-east-1", "--json"], env, staged)
+    # Private logs stay in the operator's project; the staged copy holds the token and ends with the run.
+    with staged_project(project, token) as staged:
+        run_deployment([config["celld"], "deploy", str(staged), "--bucket", "s3://" + record["bucket"],
+                        "--endpoint", record["endpoint"], "--region", "us-east-1", "--json"], env, project)
     return {"version": 1, "deploymentCommandSucceeded": True,
             "qualification": "Run the retained CLI plan to verify actual Worker readiness"}
 

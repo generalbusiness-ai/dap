@@ -200,7 +200,9 @@ keeps the session secret in private configuration. It sets no
 accepts a project from an earlier kit that sets `MCP_ENABLED` to `"true"`
 and `MCP_TOOL_ADDITIONS` to `"[]"`. It refuses any other MCP setting.
 `deploy.py` uploads a private copy of the project, in a `staged-`
-directory inside it, that adds the installation's proxy token. Deployment creates the
+directory inside it, that adds the installation's proxy token. `deploy.py`
+removes that directory when the deployment ends, on success or failure, and
+keeps the private deployment logs in the project. Deployment creates the
 installation's bucket and uploads the Worker. Run these commands as the
 service user. After a failure or an uncertain result, keep the project and
 its private deployment logs.
