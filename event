@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:74ac31a46176017c8bdce81d052e549a7e7f26cb"}
+{"kind":"assert","text":"Correction to S3-F 57a0b37b: ignore its gate wording. S3-F owes the full gate END like every non-notes head.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
