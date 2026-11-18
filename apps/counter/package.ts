@@ -28,7 +28,7 @@ const presentation = {
   activity: view.log("activity", "events", ({ row, text }) => ({ actor: "actor", display: "fullscreen", back: "board", title: "type", facts: ["time"], context: text`Recent entry ${row.id}: ${row.type}`, fallback: text`Recent entry ${row.id}: ${row.type}` })),
 };
 export const counterPackage = manifest({
-  name: "ai.generalbusiness.counter", version: "0.7.0", definition: { path, value: countingCommitments },
+  name: "ai.generalbusiness.counter", version: "0.8.0", definition: { path, value: countingCommitments },
   projections: { state, activity }, views: presentation,
   roles: counterRoles.roles,
   scenarios: ["apps/counter/scenarios/application.json"],

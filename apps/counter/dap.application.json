@@ -1,7 +1,7 @@
 {
   "v": 2,
   "name": "ai.generalbusiness.counter",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "entry": "apps/counter/commitments.json",
   "definitions": ["apps/counter/commitments.json"],
   "host": {
