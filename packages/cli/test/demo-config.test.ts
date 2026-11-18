@@ -166,6 +166,14 @@ test("the lending Worker's creation policy admits the upgrade cohort beside base
   const lending = read("wrangler.lending.jsonc"), policy = readPlatformCreationPolicy({ PLATFORM_CREATION_PINS: lending.vars.PLATFORM_CREATION_PINS });
   for (const pin of Object.values(UPGRADE_COHORT)) expect(permitsNewPlatformScope(policy, pin), pin).toBe(true);
   for (const pin of Object.values(BASE_COHORT)) expect(permitsNewPlatformScope(policy, pin), pin).toBe(true);
-  // The pins add no register: the current root alone stays installed until the window.
-  expect(readInstalledRegisters(lending.vars)).toMatchObject({ kind: "pinned", scope: lending.vars.REGISTER_SCOPE, scopes: [lending.vars.REGISTER_SCOPE] });
+});
+
+// Head Q (window 6bb41a23): the upgrade-cohort register is current, and the base register
+// stays installed. Rooms under the base register keep child creation, Git and the archive.
+const LENDING_BASE_REGISTER = "sc_psbin3zi4ld7kqxg4vdbmb2eudyca64e5mxarz3k4qmklrpyfokq";
+test("the lending Worker keeps its base register installed beside the current register", () => {
+  const vars = read("wrangler.lending.jsonc").vars, roots = readInstalledRegisters(vars);
+  expect(roots).toMatchObject({ kind: "pinned", scope: vars.REGISTER_SCOPE });
+  expect(vars.REGISTER_SCOPE).not.toBe(LENDING_BASE_REGISTER);
+  if (roots.kind === "pinned") expect([...roots.scopes].sort()).toEqual([LENDING_BASE_REGISTER, vars.REGISTER_SCOPE].sort());
 });
