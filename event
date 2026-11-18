@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:237bd6a2645dbf6ff0068084fb071cdc9014cf85","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-17-u2-upgrade-archive.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2dac570b3c2ef6ae0eaaa9013b8b792702b3c526","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-driver.ts."}
