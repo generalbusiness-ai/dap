@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:377841a9b1e0583d2b44787e2433010bb37a14ac","text":"Merge retired a covered predecessor; the successor is at docs/security/entry-points.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3ca8f6c17361ec500621e0b39f9115773255ce41","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/act-admission-upgrade.test.ts."}
