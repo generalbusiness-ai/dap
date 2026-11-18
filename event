@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval e08c9150: land KD-1 (head 2b80f0e1) onto 7dc016cf and ask for the landing check. No deployment; the installed kit on hakuin.local changes only at a later owner reinstall, which I do not ask for now.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e08c915021240b80b683791efe58a736d2348e67"}
