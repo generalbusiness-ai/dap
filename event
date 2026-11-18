@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/git/src/journal-v2-append.ts","body":{"commit":"f5ad38323793721422de4465a24e1b33ad0f2a71","path":"packages/git/src/journal-v2-append.ts"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/git/test/journal-v2-append.test.ts","body":{"commit":"f5ad38323793721422de4465a24e1b33ad0f2a71","path":"packages/git/test/journal-v2-append.test.ts"}}
