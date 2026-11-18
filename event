@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a87a6d19211032e33c79ac8a2e9d42e753c9590b","text":"Closed in the 2026-11-18 open-request review, with Hugh's approval. obsolete: the live-developer-interface note was overtaken by ScopeClient and the act-environment note."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a9551a6dd977a69d2d89b7065daa4240e2cc9547","text":"Closed in the 2026-11-18 open-request review, with Hugh's approval. done: compact cards design note and card kit in packages/mcp/browser."}
