@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at apps/counter/package.ts","body":{"commit":"d902e1405287577b652c0812d3710689f92b8c2d","path":"apps/counter/package.ts"}}
+{"kind":"artifact","text":"Merge published the current artifact at apps/counter/release-identifiers.json","body":{"commit":"d902e1405287577b652c0812d3710689f92b8c2d","path":"apps/counter/release-identifiers.json"}}
