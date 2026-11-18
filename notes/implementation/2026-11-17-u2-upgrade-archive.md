@@ -68,6 +68,34 @@ the head of the pass that reaches it, then stops. Members who still hold the
 old scope can act there (note section 2.6); an entry that they seal after
 the archive reached the head is not published.
 
+**Limit (ruling 2b1bae37).** The first archive pass that reads N as
+`replaced` publishes the scope's journal through its head at that pass,
+then stops. No later entry of that scope reaches the archive.
+
+**A replaced scope still accepts new entries.** Act admission in an
+application scope reads only the scope's birth provenance and the trust
+list (`packages/scope/src/applications/act-admission.ts:87-100`). It
+caches the provenance as immutable ("Head growth does not change immutable
+installation ownership", `:89`) and never reads the installation item's
+state. So a member's act in the scope of a `replaced` N is admitted while
+the birth release stays in `APPLICATION_TRUST`. The planner files a
+separate request to refuse new entries in a replaced scope.
+
+The same admission rule bears on the in-place form. After an in-place
+upgrade, admission still keys on the birth release, not on N's current
+release (`act-admission.ts:98`). If the birth release leaves
+`APPLICATION_TRUST`, the scope refuses every act as `application-revoked`,
+while the archive continues on the new release. U2 does not change
+admission.
+
+**Two costs and gaps.**
+
+1. U2 removes the birth-release trust check before the proof. An install
+   whose release is already untrusted now pays one proof request before it
+   stops as revoked.
+2. The end-to-end case rewrites the Rules reply through a proxy. A Rules
+   16 room with a real upgrade waits for the U4 witness.
+
 ## Wake floor and request rate
 
 These figures come from the code and the AR-1 and AR-4 measurements, not
