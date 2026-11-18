@@ -33,7 +33,8 @@ export async function sendArchiveAppend(request: ArchiveSend, transport: SmartHt
     },
   } });
   if (!checked.ok) {
-    if (["limit", "timeout", "unavailable"].includes(checked.reason)) work.stop(checked.reason as "limit" | "timeout" | "unavailable", null, { site: "verifier", verifier: archiveStopName(checked.reason) });
+    if (["limit", "timeout", "unavailable"].includes(checked.reason)) work.stop(checked.reason as "limit" | "timeout" | "unavailable", null,
+      { site: "verifier", verifier: archiveStopName(checked.reason), ...(checked.error !== undefined ? { error: archiveStopName(checked.error) } : {}) });
     return bad();
   }
   work.spend({ inputWork: archiveSendPackWork(bytes) });

@@ -93,3 +93,20 @@ test("an append preserves old edges only at their exact parent paths and supplie
   expect(await check(foreign, full)).toEqual({ ok: false, reason: "parent" });
 
 }, 30_000);
+
+// AS-2: an error thrown outside a budget wait maps to unavailable and keeps
+// its class name only. Limit and timeout keep their exact result.
+test("an append check that maps a thrown error to unavailable names its class, never its message", async () => {
+  const at = syntheticJournal(1).at, id = "0".repeat(40);
+  const failing = (thrown: unknown) => verifyJournalAppend({ format: "sha1", at, old: id, commit: id, source: { object: async () => null },
+    budget: { check: () => { throw thrown; }, spend: () => {}, wait: work => work(), admitted: () => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 }) } });
+  const typed = await failing(new TypeError("TEST PRIVATE ERROR SENTINEL"));
+  expect(typed).toEqual({ ok: false, reason: "unavailable", error: "TypeError" });
+  expect(JSON.stringify(typed)).not.toContain("SENTINEL");
+  expect(await failing("TEST PRIVATE ERROR SENTINEL")).toEqual({ ok: false, reason: "unavailable", error: "non-error" });
+  const long = new Error("x"); long.name = "N".repeat(100);
+  expect(await failing(long)).toEqual({ ok: false, reason: "unavailable", error: "N".repeat(65) });
+  expect(await failing(Object.assign(new Error("x"), { reason: "unreadable" }))).toEqual({ ok: false, reason: "unavailable", error: "Error" });
+  expect(await failing(Object.assign(new Error("x"), { reason: "limit" }))).toEqual({ ok: false, reason: "limit" });
+  expect(await failing(Object.assign(new Error("x"), { reason: "timeout" }))).toEqual({ ok: false, reason: "timeout" });
+});

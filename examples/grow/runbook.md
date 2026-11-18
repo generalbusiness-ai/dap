@@ -526,7 +526,9 @@ stopped it:
   never its message. A name that is not a short identifier shows as
   `other`, and a thrown value that is not an error shows as `non-error`.
 - `{ "site": "verifier", "verifier": "<reason>" }`: the append verifier
-  stopped the send before any request went out.
+  stopped the send before any request went out. When the verifier turned a
+  thrown error into `unavailable`, the field also has `"error": "<name>"`,
+  with the same naming rules as the wait site.
 
 The first stop of a pass keeps its cause. Every other stop records
 `null`.

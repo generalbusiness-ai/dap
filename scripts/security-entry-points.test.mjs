@@ -362,7 +362,7 @@ const pendingArchiveSeals = {
   "apps/room/archive-setup-cost.ts": "ff70caaf56adfc4501cb1fe6606fa7f9283f2207b7e2d50d29063d9e9d41baed", // AE-1 reviewed boundary; actual maintained AST output.
   "packages/platform/src/application-archive-reader.ts": "19bb24e8367f70384d9843c63dc158e7bf2ad09ae34fa5e3b753b9aec69d5d73", // AE-1 uses shared canonical same; U1 adds Rules 16; actual maintained AST output.
   "packages/scope/src/applications/archive-proof.ts": "656367117f636c22f17a23fe4c5c7482673170daf50c501f3c287ff726cc1cba", // U2 proves a replaced item, wrapped as { replaced }. AE-1 reviewed boundary; actual maintained AST output.
-  "packages/scope/src/archive-budget.ts": "a02ee3dc4e2edc55562d4de87d953ae562c65b59dc0df7e6b493e9990764aece", // AS-2: the first stop records its clock, wait or verifier cause; limits and stop reasons unchanged.
+  "packages/scope/src/archive-budget.ts": "40d212d673eb2307cd8ee4d54b709846640493b0cc65a8d5eb2d0898b8a24e51", // AS-2: the first stop records its clock, wait or verifier cause; limits and stop reasons unchanged.
   "packages/scope/src/archive-adaptive.ts": "ddf7c2ec284340fe10b965d73e373ca639563cdad19dcbd510b5e7b2b83953b8", // AE-1 reviewed boundary; actual maintained AST output.
   "packages/scope/src/archive-row-cost.ts": "cb9a949c1f9a0d8be8dc678b0c82371ab2f25cf51d980e25a8bf6f21f7178855", // AE-1 reviewed boundary; actual maintained AST output.
   "packages/scope/src/archive-outcome-values.ts": "d142fa0fb776d6558a5c1101bab05105fe904e1cf4c71fc883fc8a5c5425bd67", // Certified rules evidence projection; actual maintained parser output.

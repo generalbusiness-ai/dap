@@ -58,6 +58,32 @@ test("a send whose append verifier stops names the verifier and its reason", asy
   expect(budget.stopCause()).toEqual({ site: "verifier", verifier: "limit" });
 });
 
+// AS-2 route (a): the verifier maps an error thrown outside a budget wait to
+// unavailable. The stop names the verifier and the error's class only.
+test("a send whose append verifier maps a thrown error to unavailable names the error class", async () => {
+  // The copy reservation passes; the verifier's first budget check throws.
+  class Faulting extends ArchiveBudget {
+    armed = false;
+    override spend(cost: Parameters<ArchiveBudget["spend"]>[0]): void { super.spend(cost); this.armed = true; }
+    override check(): void { if (this.armed) throw new TypeError("TEST PRIVATE ERROR SENTINEL"); super.check(); }
+  }
+  const budget = new Faulting({}, () => 0);
+  const data = new TextEncoder().encode(`tree ${"0".repeat(40)}\n`);
+  const old = idOf("commit", data);
+  const request = {
+    at: { scope: "sc_5hagamavauu5lcejxqxqkd6xl3ol26bke2ipkhaiwxtxono2gujq", genesis: `sha256:${"0".repeat(64)}` }, ref: "refs/heads/journal", old, commit: old, allowed: () => true,
+    objects: [{ id: old, type: "commit", data }], incremental: { budget },
+  } as unknown as ArchiveSend;
+  let fetched = 0;
+  const sent = sendArchiveAppend(request, { remote: "https://archive.invalid/test.git", maxBytes: 1024 * 1024,
+    fetch: async () => { fetched++; return new Response(null, { status: 500 }); } }, async () => null);
+  await expect(sent).rejects.toBeInstanceOf(ArchiveStopped);
+  await expect(sent).rejects.toHaveProperty("reason", "unavailable");
+  expect(fetched).toBe(0);
+  expect(budget.stopCause()).toEqual({ site: "verifier", verifier: "unavailable", error: "TypeError" });
+  expect(JSON.stringify(budget.stopCause())).not.toContain("SENTINEL");
+});
+
 test("the first stop keeps its cause, and a stop with no named cause records none", () => {
   let time = 10;
   const budget = new ArchiveBudget({ attempts: 1 }, () => time);
