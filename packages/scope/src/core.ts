@@ -691,10 +691,10 @@ export class Scope {
     let admission: Awaited<ReturnType<NonNullable<Ports["freshActAdmission"]>["read"]>> = null;
     const admissionRefusal = (head: Head): Answer | null => {
       if (!admissionPort) return null;
-      let state: "allowed" | "application-revoked" | "unavailable" = "unavailable";
+      let state: "allowed" | "application-revoked" | "application-replaced" | "unavailable" = "unavailable";
       try { state = admission?.current() ?? "unavailable"; } catch { /* incomplete admission stays closed */ }
-      return state === "allowed" ? null : state === "application-revoked"
-        ? { answer: "refused", reason: "application-revoked", judgedAt: head }
+      return state === "allowed" ? null : state === "application-revoked" || state === "application-replaced"
+        ? { answer: "refused", reason: state, judgedAt: head }
         : unavailable("dependency-unavailable");
     };
     if (!known && admissionPort) {

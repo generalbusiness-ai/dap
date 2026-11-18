@@ -131,7 +131,9 @@ new scope.
 `APPLICATION_TRUST` controls package installation, screen serving and new
 acts under installed releases. When an operator withdraws a release, the
 Worker refuses new acts on it with `application-revoked`, including its
-declared descendants. Native creation records identify the release. Missing
+declared descendants. Native creation records identify the installation;
+under Rules 16 the installation item's current release is the one checked,
+and a replaced installation refuses new acts with `application-replaced`. Missing
 provenance answers unavailable. Recovery of accepted keys, replay and
 pending settlement do not consult this setting.
 [Deploy the scope Worker](../deploy.md#trusted-application-screens) gives

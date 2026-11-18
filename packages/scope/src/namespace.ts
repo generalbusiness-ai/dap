@@ -34,6 +34,7 @@ import { sourceReadRemaining } from "./turn.ts";
 import { encodeSessionReference, sessionReferenceRequest, SESSION_REFERENCE_BOUNDS, type SessionReferenceSource } from "./session-reference.ts";
 import { readNativeBirth, type NativeBirth, type NativeBirthSource, type NativeBirthNameSource } from "./native-birth.ts";
 import { operational, type OperationalIdentity } from "./operational.ts";
+import { readInstallationState, type InstallationStateSource } from "./applications/installation-state.ts";
 
 /**
  * What the object at a name answers to a read of one of its entries. `bytes`
@@ -54,6 +55,8 @@ export interface Peer {
   /** Raw checked birth only; never a producer-selected privileged identity. */
   nativeBirth?(at: ScopeRef, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null | RoomRetiredStop>;
   nativeBirthByName?(name: ScopeId, kind: ScopeKind, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null | RoomRetiredStop>;
+  /** AD-1: one installation item's current state and release, only from its Rules incarnation. */
+  applicationInstallationState?(rules: ScopeRef, directory: ScopeRef, item: number): Promise<unknown>;
   /** Bounded immutable declaration bytes, only from an authenticated native Directory. */
   creationDeclaration?(at: ScopeRef, digest: Digest, maxBytes: number, milliseconds: number): Promise<string | null | RoomRetiredStop>;
   /** Optional bounded native directory witness; never fall back to summary. */
@@ -409,7 +412,7 @@ export function admitSourced(answer: unknown, fact: FactRef, maxBytes: number): 
  * namespace binding. A call that fails is no answer: the entry cannot be
  * read now, or the attempt is unanswered.
  */
-export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proofs: ProofSource; births: NativeBirthSource; birthNames: NativeBirthNameSource; transport: Transport; definitions: Definitions; texts: SentTexts } {
+export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proofs: ProofSource; births: NativeBirthSource; birthNames: NativeBirthNameSource; installations: InstallationStateSource; transport: Transport; definitions: Definitions; texts: SentTexts } {
   const peer = (name: ScopeId): Peer => binding.get(binding.idFromName(name)) as Peer;
   return {
     birthNames: {
@@ -437,6 +440,17 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
           const result = milliseconds === undefined ? await source.proofSource(fact, Math.min(maxBytes, PROOF_BYTE_BOUNDS.body))
             : await source.proofSource(fact, Math.min(maxBytes, PROOF_BYTE_BOUNDS.body), milliseconds);
           return isRoomRetiredStop(result) ? null : result;
+        } catch { return null; }
+      },
+    },
+    installations: {
+      async read(rules, directory, item) {
+        if (!isScopeRef(rules) || !isScopeRef(directory) || !Number.isSafeInteger(item) || item < 0) return null;
+        try {
+          const source = peer(rules.scope);
+          if (typeof source.applicationInstallationState !== "function") return null;
+          // The receiver answers only for its own incarnation; the caller checks the closed reply.
+          return readInstallationState(await source.applicationInstallationState(rules, directory, item));
         } catch { return null; }
       },
     },

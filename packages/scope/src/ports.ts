@@ -10,6 +10,7 @@
  */
 
 import type { NativeBirthSource } from "./native-birth.ts";
+import type { InstallationStateSource } from "./applications/installation-state.ts";
 import type { FreshActAdmission } from "./applications/act-admission.ts";
 import type { ReadTokenAdmission } from "./read-token-quota.ts";
 import type { ProofSource } from "./proof-bytes.ts";
@@ -283,6 +284,8 @@ export interface Ports {
   proofs?: ProofSource;
   /** Bounded raw native birth metadata; no identity alias or authority. */
   births?: NativeBirthSource;
+  /** AD-1: an installation item's current state and release, read by act admission. */
+  installations?: InstallationStateSource;
   /** Told each delivery's sealed entry, inside its transaction. A failure here aborts the delivery, and the sender keeps the task. */
   sealedDelivery?(entry: Entry): void;
   clock: Clock; random: Random; authority: Authority; resolver: Resolver; rules: Rules; alarm: Alarm; definitions: Definitions; texts: SentTexts; readers: Readers;

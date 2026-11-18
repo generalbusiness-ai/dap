@@ -74,7 +74,7 @@ export const REFUSAL_REASONS: Record<RefusalReason, true> = {
   archived: true, "floor-receipt": true, "floor-ahead": true, "floor-back": true, "floor-step": true, "floor-recent": true, "floor-keep": true, "floor-kept": true,
   "revision-moved": true, alias: true, "duplicate-relation": true, "required-unset": true, "scope-full": true, "bad-intent": true, misaddressed: true, expired: true, "scope-refused": true,
   "unknown-act": true, "bad-field": true, "no-item": true, final: true, "fact-mismatch": true, unauthorized: true, "guard-failed": true, "capability-refused": true, "slot-full": true, "type-full": true, "entry-too-large": true, "send-unresolved": true,
-  "unknown-message": true, "wrong-pin": true, "unsupported-definition": true, "application-revoked": true, limit: true, "bad-input": true, late: true,
+  "unknown-message": true, "wrong-pin": true, "unsupported-definition": true, "application-revoked": true, "application-replaced": true, limit: true, "bad-input": true, late: true,
 };
 /**
  * What a refusal tells a client about the same signed bytes at a later head.
@@ -89,7 +89,7 @@ export type RefusalClass = "never" | "head" | "protocol";
  * `genesis-conflict` are not refusal reasons, so the table has no row for them.
  */
 export const REFUSAL_CLASSES: Record<RefusalReason, RefusalClass> = {
-  archived: "never", "floor-ahead": "never", "floor-back": "never", "floor-keep": "never", "scope-refused": "never", late: "never",
+  archived: "never", "floor-ahead": "never", "floor-back": "never", "floor-keep": "never", "scope-refused": "never", "application-replaced": "never", late: "never",
   misaddressed: "protocol", "unknown-act": "protocol", "unknown-message": "protocol", "wrong-pin": "protocol", "unsupported-definition": "protocol",
   "floor-receipt": "head", "floor-step": "head", "floor-recent": "head", "floor-kept": "head", "revision-moved": "head", alias: "head", "duplicate-relation": "head",
   "required-unset": "head", "scope-full": "head", "bad-intent": "head", expired: "head", "bad-field": "head", "no-item": "head", final: "head",

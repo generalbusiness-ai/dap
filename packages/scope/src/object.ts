@@ -66,6 +66,7 @@ import { ApplicationProjections } from "./applications/projection.ts";
 import { ApplicationActAdmission } from "./applications/act-admission.ts";
 import { APPLICATION_DECLARATION_BYTES, type ApplicationDeclarationSource } from "./applications/projection-source.ts";
 import { storedApplicationArchiveProof, type ApplicationArchiveProofResult } from "./applications/archive-proof.ts";
+import { storedInstallationState, type InstallationState } from "./applications/installation-state.ts";
 import { readArchivePin } from "./archive-pin.ts";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
 import { ReadPreparation } from "./read-preparation.ts";
@@ -336,7 +337,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       declared: bytes => this.#scope.validate(bytes), platform: named => this.#scope.platform(named),
     });
     this.#applicationActAdmission = wiring.applicationTrust ? new ApplicationActAdmission({ preparation: this.#readPreparation,
-      local: this.#proofBytes, births: ports.births ?? null, proofs: ports.proofs ?? null, trust: wiring.applicationTrust,
+      local: this.#proofBytes, births: ports.births ?? null, proofs: ports.proofs ?? null, installations: ports.installations ?? null, trust: wiring.applicationTrust,
+      now: () => timeMs(this.#clock.read()) ?? Date.now(),
       ...(wiring.queryTimer ? { timer: wiring.queryTimer } : {}) }) : null;
     this.#sessionReferences = new SessionReferences(this.#readPreparation, this.#sessions, this.#clock);
     this.#sessionPreparation = new SessionPreparation(this.#readPreparation, this.#sessions, this.#clock, wiring.sessionReferenceSource ?? null);
@@ -876,6 +878,16 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const identity = this.#proofBytes.identity();
     const pin = identity ? readArchivePin(this.#readSql, identity.genesis.at) : null;
     return pin ? storedApplicationArchiveProof(this.#store, pin.seed.definition, directory, item) : { reason: "malformed-or-unsupported" };
+  }
+  /** AD-1: item N's current state and release, for act admission in the
+   * scope that N owns. Answers only as this Rules incarnation under an
+   * upgradable Rules pin; no item record or proof bytes leave. */
+  applicationInstallationState(rules: unknown, directory: unknown, item: unknown): InstallationState | null | RoomRetiredStop {
+    if (this.#retired) return ROOM_RETIRED_STOP;
+    // As for the archive proof: no first-ingress dispatch or cold-pin repair.
+    const identity = this.#proofBytes.identity();
+    const pin = identity ? readArchivePin(this.#readSql, identity.genesis.at) : null;
+    return pin ? storedInstallationState(this.#store, pin.seed.definition, rules, directory, item) : null;
   }
   applicationProjectionDeclaration(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number, name: string) {
     if (this.#retired) return ROOM_RETIRED_STOP;

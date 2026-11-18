@@ -1,12 +1,15 @@
 import { applicationAdmissionCohort, platform } from "@generalbusiness/dap-platform";
 
 /** Deployment admission for fresh acts only. Immutable native creation proves
- * which installed release owns a scope; current trust is never cached. */
-import type { Digest, Entry, FactRef } from "@generalbusiness/dap-contract";
+ * which installation item N owns a scope; current trust is never cached.
+ * Under an upgradable Rules pin, admission also reads N's current state and
+ * release from Rules, at most once per refresh interval (AD-1). */
+import type { Digest, Entry, FactRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, deliveryCauseDigest, isDigest, type CheckedSequence, isFactRef, isMemberRef, isPlatformDefinition, isRecord, isScopeRef, isSeed, messageDigest, resolveGenesisSelf, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { same, sentBy } from "@generalbusiness/dap-derive";
 
 import { readApplicationTrust } from "./admission.ts";
+import { UPGRADABLE_RULES, type InstallationState, type InstallationStateSource } from "./installation-state.ts";
 import type { ProofTimer } from "../genesis-proof.ts";
 import { readNativeBirth, type NativeBirthSource } from "../native-birth.ts";
 import { PreparationBudget } from "../preparation-budget.ts";
@@ -14,22 +17,34 @@ import { PreparationFlights, type PreparationRun } from "../preparation-flight.t
 import { PROOF_BYTE_BOUNDS, proofEntry, type ProofBytes, type ProofBody, type ProofSource } from "../proof-bytes.ts";
 import type { ReadPreparation } from "../read-preparation.ts";
 
-export type FreshActAdmissionDecision = "allowed" | "application-revoked" | "unavailable";
+export type FreshActAdmissionDecision = "allowed" | "application-revoked" | "application-replaced" | "unavailable";
 export interface FreshActAdmission { read(): Promise<{ current(): FreshActAdmissionDecision } | null> }
 export interface ApplicationActAdmissionOptions {
   preparation: ReadPreparation;
   local: ProofBytes;
   births: NativeBirthSource | null;
   proofs: ProofSource | null;
+  /** AD-1: N's current state and release. Absent: an upgradable install is unavailable. */
+  installations?: InstallationStateSource | null;
   trust(): unknown;
   timer?: ProofTimer;
+  /** Milliseconds for the refresh interval; Date.now by default. */
+  now?: () => number;
 }
 
 /** Seventeen package definitions can form a chain, followed by its Directory.
  * These are proof-work limits, not a new package quota or a heap guarantee. */
 export const APPLICATION_ACT_ADMISSION_BOUNDS = Object.freeze({ ancestors: 18, bodies: 37, bytes: 16 * 1024 * 1024, rpcs: 36, body: PROOF_BYTE_BOUNDS.body });
-type Provenance = { kind: "unpackaged" } | { kind: "installed"; release: Digest };
-type Cache = { identity: string; provenance: Provenance };
+/** AD-1: how long a read of N's current state and release answers. N changes
+ * only by an `upgrade-application` act at Rules, which sends nothing to this
+ * scope, so no cheaper change signal reaches admission. `replaced` is final
+ * and never expires. */
+export const APPLICATION_ACT_ADMISSION_REFRESH_MS = 60_000;
+/** `item` names N under an upgradable Rules pin; otherwise N never changes. */
+type Installed = { kind: "installed"; release: Digest; item: { rules: ScopeRef; directory: ScopeRef; item: number } | null };
+type Provenance = { kind: "unpackaged" } | Installed;
+type View = { state: InstallationState; at: number };
+type Cache = { identity: string; provenance: Provenance; view: View | null };
 type AdmissionAnswer = { current(): FreshActAdmissionDecision };
 type Flight = { identity: string; promise: Promise<AdmissionAnswer | null> };
 type GenesisEntry = Entry & { input: Extract<Entry["input"], { type: "genesis" }> };
@@ -53,7 +68,9 @@ export class ApplicationActAdmission implements FreshActAdmission {
       if (!identity) return Promise.resolve(null);
       // An already verified immutable identity needs no preparation flight.
       // Each use still checks local identity and reads current trust.
-      if (this.#cache?.identity === identity) return Promise.resolve(this.#answer(identity, this.#cache.provenance));
+      // Under an upgradable Rules pin, a view of N older than the refresh
+      // interval takes a new flight, which reads N again and nothing else.
+      if (this.#cache?.identity === identity && this.#fresh(this.#cache)) return Promise.resolve(this.#answer(identity, this.#cache));
       // Provenance has no caller-specific input or standing. Concurrent
       // readers of this exact birth share its original task and deadline.
       if (this.#pending) return this.#pending.identity === identity ? this.#pending.promise : Promise.resolve(null);
@@ -84,7 +101,18 @@ export class ApplicationActAdmission implements FreshActAdmission {
     return own ? canonicalize(own.genesis) : null;
   }
 
-  #answer(identity: string, provenance: Provenance): { current(): FreshActAdmissionDecision } {
+  #now(): number { return (this.#options.now ?? Date.now)(); }
+
+  #fresh(cache: Cache): boolean {
+    if (cache.provenance.kind === "unpackaged" || cache.provenance.item === null) return true;
+    if (!cache.view) return false;
+    if (cache.view.state.state === "replaced") return true;
+    const age = this.#now() - cache.view.at;
+    return age >= 0 && age < APPLICATION_ACT_ADMISSION_REFRESH_MS;
+  }
+
+  #answer(identity: string, cache: Cache): { current(): FreshActAdmissionDecision } {
+    const { provenance, view } = cache;
     return { current: () => {
       // Head growth does not change immutable installation ownership. A
       // different scope/incarnation/genesis never borrows this result.
@@ -92,10 +120,15 @@ export class ApplicationActAdmission implements FreshActAdmission {
       try { if (this.#identity() !== identity) return "unavailable"; }
       catch { return "unavailable"; }
       if (provenance.kind === "unpackaged") return "allowed";
+      // N's current release decides once Rules can change it. A replaced N
+      // admits no new act, whatever the trust list holds.
+      if (provenance.item !== null && !view) return "unavailable";
+      if (view?.state.state === "replaced") return "application-replaced";
+      const release = view ? view.state.release : provenance.release;
       try {
         const setting = this.#options.trust();
         if (setting !== undefined && typeof setting !== "string") return "application-revoked";
-        return readApplicationTrust(setting).some(row => row.release === provenance.release) ? "allowed" : "application-revoked";
+        return readApplicationTrust(setting).some(row => row.release === release) ? "allowed" : "application-revoked";
       } catch { return "application-revoked"; }
     } };
   }
@@ -107,13 +140,22 @@ export class ApplicationActAdmission implements FreshActAdmission {
       const identity = canonicalize(frame.birth.fact);
       if (identity !== expectedIdentity || this.#identity() !== identity) return null;
       if (this.#cache?.identity !== identity) this.#cache = null;
-      const provenance: Provenance | null = isPlatformDefinition(frame.pinned.named) ? { kind: "unpackaged" }
-        : await this.#discover(frame.birth, frame.sequence, run);
+      // Proven provenance is immutable; a refresh reads only N's view.
+      const provenance: Provenance | null = this.#cache?.provenance ?? (isPlatformDefinition(frame.pinned.named) ? { kind: "unpackaged" }
+        : await this.#discover(frame.birth, frame.sequence, run));
       if (!provenance || !run.active() || this.#identity() !== identity) return null;
       // No peer reply, entry body, trust row, or failed proof survives this
       // flight. Only authenticated immutable provenance is reusable.
-      this.#cache = { identity, provenance };
-      return run.active() ? this.#answer(identity, provenance) : null;
+      this.#cache = { identity, provenance, view: null };
+      let view: View | null = null;
+      if (provenance.kind === "installed" && provenance.item !== null) {
+        const source = this.#options.installations, at = this.#now();
+        const state = source ? await source.read(provenance.item.rules, provenance.item.directory, provenance.item.item) : null;
+        if (!state || !run.active() || this.#identity() !== identity || this.#cache?.identity !== identity) return null;
+        view = { state, at };
+        this.#cache = { identity, provenance, view };
+      }
+      return run.active() ? this.#answer(identity, { identity, provenance, view }) : null;
     } catch { return null; }
   }
 
@@ -208,7 +250,8 @@ export class ApplicationActAdmission implements FreshActAdmission {
         || born.seed.cause !== deliveryCauseDigest({ v: 1, from: made.from, n: made.n, message: messageDigest(made.message) })
         || !isRecord(born.message.body) || !same(born.message.body["directory"], parent)
         || !same(born.message.body["membership"], fields["installer"].membership)) return null;
-      return { kind: "installed", release: fields["release"] };
+      return { kind: "installed", release: fields["release"],
+        item: UPGRADABLE_RULES.includes(cohort.rules) ? { rules: made.from.at, directory: parent, item: fields["job"] } : null };
     }
     return null;
   }

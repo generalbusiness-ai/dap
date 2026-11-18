@@ -161,7 +161,8 @@ The deployed host also decides whether it accepts new acts from installed
 application releases. Before it reads an unknown act's dependencies, it
 checks the release against the current `APPLICATION_TRUST` setting, and
 it repeats that check before it writes the act. A release the operator has
-withdrawn gets `application-revoked`, and no act is recorded. That check
+withdrawn gets `application-revoked`, and no act is recorded. A scope whose
+installation an upgrade replaced gets `application-replaced`. That check
 is deployment policy, outside the pure judges. Keys that were accepted
 earlier keep their receipts. Replay, deliveries, timed inputs and the
 settlement of existing work continue under their recorded definitions.
