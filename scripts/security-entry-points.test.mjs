@@ -11,13 +11,13 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 // its own source-ordered line. Root adopts actual parser values after review.
 const namedOwners = {
   "packages/scope/src/object.ts": {
-    "packages/scope/src/object.ts:$module": "b5a75b1b796e41010438ce99353defd43169ad1dc36c5a5a5cba8a5cdb95a6e5",
-    "packages/scope/src/object.ts:ScopeObject": "2fdf4ee3e46d326267dc316910535d3d882452e8fb47b96706330780a097d575" // AD-1: applicationInstallationState, admission installations and clock
+    "packages/scope/src/object.ts:$module": "5e2a6838a478fc03bebba25aaa6d6d3ff7b3b3dda01249ef7ed0980a87047fde",
+    "packages/scope/src/object.ts:ScopeObject": "293c011fd6e01a1c46d3d19e213d917c01e3fc6e07e9e240c9e9c1abc03ae307" // AD-1: applicationInstallationState, admission installations and clock
   },
   "packages/scope/src/object-archive.ts": {
-    "packages/scope/src/object-archive.ts:$module": "7d7c0da57c8b69bc953c19a59e3bd6af25a5f02863bac10ef6fd839fc9dd5adc",
+    "packages/scope/src/object-archive.ts:$module": "e7430b7ed51040dd00253653d928b5a829912472cff2f5139f56478c2565f3e7",
     "packages/scope/src/object-archive.ts:configuredArchive": "f87b94060681ad7de5afa06eff80baf1f67bbc803cb1f5f41185b5bf35a3e11c",
-    "packages/scope/src/object-archive.ts:archiveDriver": "d7d94f8700e5c3fc868896b85272d2ca555dfaef9b7a5f7abab38d86be0fdf67",
+    "packages/scope/src/object-archive.ts:archiveDriver": "4d9919217465d16a43156dcf952537768c028d673fb2415d3e5d88d16888c1e6",
     "packages/scope/src/object-archive.ts:floorOffer": "439eeffe0d220f86b4f704be80668afe8d9e0f8e3926dcb8f949e2b06274e519"
   },
   "packages/scope/src/worker.ts": {
@@ -310,7 +310,7 @@ const seals = {
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "packages/scope/src/object-archive.ts": namedOwners["packages/scope/src/object-archive.ts"],
   "packages/scope/src/core.ts": namedOwners["packages/scope/src/core.ts"],
-  "packages/scope/src/applications/act-admission.ts": "25a5f80e6cfb83bc8b268fa86051212802e228bd028370dde4ddaa2691b05652", // Exact native provenance and current trust; actual maintained parser output.
+  "packages/scope/src/applications/act-admission.ts": "75eacce9d74db3cb8600ae7ea322508f22bdc8c96703dfcd233a9e577665c92a", // Exact native provenance and current trust; actual maintained parser output.
   "packages/derive/src/genesis.ts": "d2a6165d424376a9057cc9390e721a1970341ad937d739a6f94eb9575d9f1cc2",
   "packages/derive/src/judge.ts": "2abf7ccdf023c74e33616ad88ec238ac23d7795d0c94c58e0df4414fb6512688", // A1 derives expected names through shared expectedKeys without changing judgment order.
   "packages/scope/src/sessions.ts": "12254a4ccbc51fb5b16eabc0bce84c4c764bb233e023cefd788b99dcf5189af8",
@@ -374,7 +374,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "300e4a3f51f23b93a2ce026b98993700e3c0b8947d35b68de195adc5c522ae45",
   "packages/scope/src/archive-publication.ts": "6c13c9f864b559e26d75982eca85c058975a12f18ad00b660c227577aae76d9b",
   "packages/scope/src/archive-build.ts": "bf1c79debbe0141140174c9a3d79f63d1952b874bce1d8713207dea8c817b8a0", // Actual pin SQL payload settles; final identity fence unchanged.
-  "packages/scope/src/archive-driver.ts": "b658e0fc6f2fc5ce9699f0e01f5ae231d34b67bd24b740fb4862884fa7242a66", // U2 ends a final policy with a terminal once the archive reaches the head. AR-5 passes committed(sealed) to signal().  AR-4 ends a pass whose Directory answers "unbound" as disabled, with the unbound marker and a one-day recheck. AS-2 adds stopCause to archive-pass-diagnostic-v1 only. AR-1 bounds every archive retry (60 s floor, one-hour cap, persisted retry count), leaves no stored wake in the past, and returns before policy work while the stored wake is in the future; actual maintained AST output.
+  "packages/scope/src/archive-driver.ts": "61c0e3a0bff6fbed11661c3ff627932967c84d52708fe24b2ab3435035e653fa", // U2 ends a final policy with a terminal once the archive reaches the head. AR-5 passes committed(sealed) to signal().  AR-4 ends a pass whose Directory answers "unbound" as disabled, with the unbound marker and a one-day recheck. AS-2 adds stopCause to archive-pass-diagnostic-v1 only. AR-1 bounds every archive retry (60 s floor, one-hour cap, persisted retry count), leaves no stored wake in the past, and returns before policy work while the stored wake is in the future; actual maintained AST output.
   "packages/scope/src/archive-row.ts": "c70a21a8d0efd2cde5e2be373a7cfac19fb878cba111d47bc5819a355a857df6", // AR-5: an activation signal leaves the Directory marker.  AR-4 adds the optional unbound marker to the wake record; a member's commits leave it, a Directory commit drops it. AR-1 adds the bounded retry count to the wake record; defer takes the delay as a function of it; actual maintained AST output.
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],

@@ -2,7 +2,7 @@
  * Genuine native Register 29, Directory 28, Membership 14, Rules 16 and Destination 21, the MCP install, real
  * `upgrade-application` acts with their host fetches, and the real Worker's act admission. Repository creation,
  * Git/package HTTP, clock and setup reads are TEST fixtures. */
-import { env } from "cloudflare:test";
+import { env, runDurableObjectAlarm } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { isSeed, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { UPGRADE_COHORT as C } from "@generalbusiness/dap-platform";
@@ -13,10 +13,16 @@ import { APPLICATION_ACT_ADMISSION_REFRESH_MS } from "../src/applications/act-ad
 import { applicationOwnedScopesPacket, applicationWorkerBindings, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture } from "./fixtures-native.ts";
 import { rita, routed } from "./repository.ts";
 import { soon } from "./net.ts";
+import { roomArchiveWiring } from "./worker.ts";
+import { ScriptedHost } from "./support/archive-driver.ts";
+import { roomArchivePackages } from "../../../apps/room/archive-packages.ts";
+import { nativeArchivePolicies } from "../../../apps/room/archive-policy.ts";
 
 type Fixture = Awaited<ReturnType<typeof applicationResolverFixture>>;
 
-test("AD-1: after an in-place upgrade the scope acts under N's current release; after a replace it refuses application-replaced", async () => {
+// `archive`: the old root runs the production archive wiring with U2's real policy owner, `roomArchivePackages`, which reads
+// N's proof from the real Rules. Its target and provider are TEST stand-ins: the pass ends before any provider work.
+test.each([{ archive: false }, { archive: true }])("AD-1 (archive: $archive): after an in-place upgrade the scope acts under N's current release; after a replace it refuses application-replaced", async ({ archive }) => {
   const first = await applicationOwnedScopesPacket("test-ad1-root", "1"), moved = await applicationOwnedScopesPacket("test-ad1-root", "2");
   const other = await applicationOwnedScopesPacket("test-ad1-other", "1");
   // The in-place release keeps the semantic identifier; the replacing release changes it.
@@ -32,6 +38,7 @@ test("AD-1: after an in-place upgrade the scope acts under N's current release; 
   const fetchPackage = (request: Request) => packageFetch(request);
   const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify([...f1.trust, ...f2.trust, ...f3.trust]), env.SCOPE_INDEX);
   life.applicationTrust(() => bindings.APPLICATION_TRUST);
+  let wired: string | null = null;
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
@@ -48,7 +55,18 @@ test("AD-1: after an in-place upgrade the scope acts under N's current release; 
     const created = async (rootId: string) => (await D.entries()).flatMap(entry => entry.sends).filter(one => isSeed(one.to) && one.to.definition === rootId).at(-1);
     const rootSend = await life.wait(() => created(first.rootId));
     if (!rootSend || !isSeed(rootSend.to)) throw Error("The native Directory must create the root.");
-    const root = life.platform(scopeIdOf(rootSend.to)); nodes.push(root); await driveFixture(nodes, life.wait);
+    const rootName = scopeIdOf(rootSend.to);
+    if (archive) {
+      wired = rootName;
+      roomArchiveWiring.set(rootName, (given, sql, bounds) => {
+        const policies = new Map(nativeArchivePolicies()), owner = roomArchivePackages(given, sql, env.PLATFORM, bindings, policies, bounds);
+        return { production: "room-binding", provider: new ScriptedHost("sha1"), policies: { registry: policies }, admit: () => true,
+          preparePolicies: owner.prepare, policyCurrent: owner.current, target: { resolve: async () => null } };
+      });
+    }
+    const root = life.platform(rootName); nodes.push(root); await driveFixture(nodes, life.wait);
+    // The Directory's creation delivery constructed the root object; a new object reads the archive wiring.
+    if (archive) await life.wait(() => root.restart());
     const childSend = (await life.wait(() => root.entries())).flatMap(entry => entry.sends).find(one => isSeed(one.to));
     if (childSend && isSeed(childSend.to)) { nodes.push(life.platform(scopeIdOf(childSend.to))); await driveFixture(nodes, life.wait); }
     expect(await life.wait(() => A.item(job))).toMatchObject({ state: "active", values: { release: first.packet.ids.release } });
@@ -79,14 +97,22 @@ test("AD-1: after an in-place upgrade the scope acts under N's current release; 
     expect((await bump()).answer).toBe("accepted");
 
     // r1: replace. The successor becomes active and N ends replaced.
+    const viewed = life.now();
     await upgrade(other.packet, f3, false, "TEST-ad1-replace");
     const successorSend = await life.wait(() => created(other.rootId));
     if (!successorSend || !isSeed(successorSend.to)) throw Error("The native Directory must create the successor root.");
     const successor = life.platform(scopeIdOf(successorSend.to)); nodes.push(successor); await driveFixture(nodes, life.wait);
     // A final item leaves the summary's live items; its end is the state effect.
     expect((await life.wait(() => A.entries())).flatMap(entry => entry.effects)).toContainEqual(expect.objectContaining({ effect: "state", item: job, state: "replaced" }));
-    // The cached view answers until the refresh interval ends; then the old scope refuses every new act.
-    life.advance(APPLICATION_ACT_ADMISSION_REFRESH_MS);
+    if (archive) {
+      // r4: inside the refresh interval the cached view still says active. The archive pass reads N as replaced, and the
+      // same object then refuses every new act at once.
+      expect(life.now() - viewed).toBeLessThan(APPLICATION_ACT_ADMISSION_REFRESH_MS);
+      await life.wait(() => runDurableObjectAlarm(root.object));
+    } else {
+      // Without an archive, the cached view answers until the refresh interval ends; then the old scope refuses every new act.
+      life.advance(APPLICATION_ACT_ADMISSION_REFRESH_MS);
+    }
     const before = await life.wait(() => root.sealed());
     const refused = await bump();
     expect(refused, "a fresh act in the scope of a replaced N refuses").toEqual({ answer: "refused", reason: "application-replaced",
@@ -98,5 +124,5 @@ test("AD-1: after an in-place upgrade the scope acts under N's current release; 
     expect(await bump()).toMatchObject({ answer: "refused", reason: "application-replaced" });
     // Control: the successor's own scope acts under its active installation.
     expect((await life.wait(async () => successor.act(rita, "bump", { on: 0, expected: await successor.expected({ on: 0 }) }))).answer).toBe("accepted");
-  } finally { life.release(); }
+  } finally { if (wired) roomArchiveWiring.delete(wired); life.release(); }
 });

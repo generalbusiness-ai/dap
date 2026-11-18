@@ -40,6 +40,8 @@ export const APPLICATION_ACT_ADMISSION_BOUNDS = Object.freeze({ ancestors: 18, b
  * scope, so no cheaper change signal reaches admission. `replaced` is final
  * and never expires. */
 export const APPLICATION_ACT_ADMISSION_REFRESH_MS = 60_000;
+/** The archive's final reason when it reads N as replaced (U2), and this refusal. */
+export const APPLICATION_REPLACED = "application-replaced";
 /** `item` names N under an upgradable Rules pin; otherwise N never changes. */
 type Installed = { kind: "installed"; release: Digest; item: { rules: ScopeRef; directory: ScopeRef; item: number } | null };
 type Provenance = { kind: "unpackaged" } | Installed;
@@ -56,6 +58,8 @@ export class ApplicationActAdmission implements FreshActAdmission {
   readonly #options: ApplicationActAdmissionOptions;
   readonly #flights: PreparationFlights;
   #cache: Cache | null = null;
+  /** AD-1: the identity whose archive read N as replaced. Final. */
+  #replaced: string | null = null;
   #pending: Flight | null = null;
   constructor(options: ApplicationActAdmissionOptions) {
     this.#options = { ...options };
@@ -68,6 +72,10 @@ export class ApplicationActAdmission implements FreshActAdmission {
       if (!identity) return Promise.resolve(null);
       // An already verified immutable identity needs no preparation flight.
       // Each use still checks local identity and reads current trust.
+      // A marked incarnation needs no proof or Rules read.
+      if (this.#replaced === identity) return Promise.resolve({ current: () => {
+        try { return this.#identity() === identity ? "application-replaced" : "unavailable"; } catch { return "unavailable"; }
+      } });
       // Under an upgradable Rules pin, a view of N older than the refresh
       // interval takes a new flight, which reads N again and nothing else.
       if (this.#cache?.identity === identity && this.#fresh(this.#cache)) return Promise.resolve(this.#answer(identity, this.#cache));
@@ -101,6 +109,12 @@ export class ApplicationActAdmission implements FreshActAdmission {
     return own ? canonicalize(own.genesis) : null;
   }
 
+  /** AD-1: this object's archive read N as replaced. Every later check of
+   * this incarnation, including one of an answer already given, refuses. */
+  replaced(): void {
+    try { const identity = this.#identity(); if (identity) this.#replaced = identity; } catch { /* no identity, no scope to mark */ }
+  }
+
   #now(): number { return (this.#options.now ?? Date.now)(); }
 
   #fresh(cache: Cache): boolean {
@@ -119,6 +133,7 @@ export class ApplicationActAdmission implements FreshActAdmission {
       // A failed identity read is missing proof, not evidence of revocation.
       try { if (this.#identity() !== identity) return "unavailable"; }
       catch { return "unavailable"; }
+      if (this.#replaced === identity) return "application-replaced";
       if (provenance.kind === "unpackaged") return "allowed";
       // N's current release decides once Rules can change it. A replaced N
       // admits no new act, whatever the trust list holds.

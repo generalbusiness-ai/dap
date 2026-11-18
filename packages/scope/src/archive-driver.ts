@@ -68,6 +68,9 @@ export interface RoomArchiveDriverOptions extends Omit<FixtureArchiveDriverOptio
    * `stop` ends the archive now. A `final` reason (U2) lets the pass publish
    * through the scope's head and then ends the archive with that reason. */
   readonly preparePolicies?: (at: SequenceRef, seed: Seed, budget: ArchiveBudget) => Promise<{ readonly stop: string } | { readonly final: string } | void>;
+  /** AD-1: told a `final` reason synchronously when `preparePolicies` answers
+   * it, before the pass reads its row or writes any terminal. */
+  readonly finalSeen?: (reason: string) => void;
   readonly policyCurrent?: () => boolean;
 
   /** Fresh bounded source identity preparation, charged to the same pass. */
@@ -240,7 +243,12 @@ export class ArchiveDriver {
           halt!(prepared.stop);
           return done({ state: "stopped", next: null, reason: prepared.stop });
         }
-        if (prepared && "final" in prepared) final = prepared.final;
+        if (prepared && "final" in prepared) {
+          final = prepared.final;
+          // AD-1: from here the object admits no new act, so no entry seals
+          // above the head that a later terminal confirms (see #final).
+          this.#options.finalSeen?.(final);
+        }
         detail = "none";
       }
       let row = rows.load(budget);

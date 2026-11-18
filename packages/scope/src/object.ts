@@ -67,6 +67,7 @@ import { ApplicationActAdmission } from "./applications/act-admission.ts";
 import { APPLICATION_DECLARATION_BYTES, type ApplicationDeclarationSource } from "./applications/projection-source.ts";
 import { storedApplicationArchiveProof, type ApplicationArchiveProofResult } from "./applications/archive-proof.ts";
 import { storedInstallationState, type InstallationState } from "./applications/installation-state.ts";
+import { APPLICATION_REPLACED } from "./applications/act-admission.ts";
 import { readArchivePin } from "./archive-pin.ts";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
 import { ReadPreparation } from "./read-preparation.ts";
@@ -313,7 +314,10 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const archiveSql: Sql = { ...this.#readSql, transaction: closure => ctx.storage.transactionSync(closure) };
     const archive = configuredArchive(wiring, outsideGiven, archiveSql, bounds);
     this.#archiveRestart = wiring.archiveRestart;
-    this.#archive = archiveDriver(archive, archiveSql, store, ports, bounds);
+    // AD-1: the archive's `application-replaced` reading marks admission.
+    this.#archive = archiveDriver(archive, archiveSql, store, ports, bounds, reason => {
+      if (reason === APPLICATION_REPLACED) this.#applicationActAdmission?.replaced();
+    });
     this.#floorOffer = floorOffer(wiring, this.#readSql, ctx, store, this.#scope, this.#chains, ports, bounds);
     // Every commit that seals an entry is followed at once, whoever asked for its turn: a pass in the background and a late answer
     // of an outside operation write their entries in no caller's request, and nothing guarantees an alarm after the last of them.
