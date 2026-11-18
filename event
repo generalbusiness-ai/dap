@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4e8d989b1464c334109e121d403796392aeaece6","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/templates/Caddyfile."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:501bcbfbca736b12ae960bc17f3421450bf3ccc7","text":"Merge retired a covered predecessor; the successor is at docs/self-host-cloudflare.md."}
