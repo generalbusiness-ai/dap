@@ -29,7 +29,7 @@ export function applicationOperationRequest(request: EffectRequest): { uri: stri
   const input = request.origin.entry.input;
   if (!acceptsApplicationOperation(request.owner, request.kind) || request.attempt !== 1 || request.operation !== `${request.origin.entry.seq}:0`
     || !isEntryBodyOf(request.origin.entry, { at: request.scope, seq: request.origin.entry.seq, hash: request.origin.hash })) return null;
-  const fields = prepares(request.owner, request.kind) && input.type === "act" && input.signed.intent.kind === "install-application" ? input.signed.intent.fields
+  const fields = prepares(request.owner, request.kind) && input.type === "act" && ["install-application", "upgrade-application"].includes(input.signed.intent.kind) ? input.signed.intent.fields
     : admits(request.owner, request.kind) && input.type === "outcome" && input.kind === "fetch-application" && input.result === "confirmed" && input.evidence.basis === "read" ? input.evidence.body : null;
   return isRecord(fields) && typeof fields["uri"] === "string" && isDigest(fields["release"]) ? { uri: fields["uri"], release: fields["release"] } : null;
 }

@@ -83,11 +83,11 @@ const namedOwners = {
     "packages/cli/src/command-targets.ts:laneOf": "628ff633a6ede2a3f75ae5b5f6e701f6692214a1902898b504ab33b96e658712"
   },
   "packages/cli/src/command-install.ts": {
-    "packages/cli/src/command-install.ts:$module": "2f2e4690fc429f57d7a47795b986f3d1ca335775f6c43aa946982a4a6c7808dd",
+    "packages/cli/src/command-install.ts:$module": "81144b60ef61fa1623759185ddcaf5f5ee1da493e89d61727d3c6e73df18f560",
     "packages/cli/src/command-install.ts:NEW_REGISTER": "f828e83eeb39a37566e323156efb63274fc43b1d6b9e95b38fbf0cdbba327fbf",
     "packages/cli/src/command-install.ts:INSTALL_COHORTS": "2fa587b0df6d9e471ce031fd5d3d1f7553d5673650ae2f271281ae6e774c4d69",
-    "packages/cli/src/command-install.ts:CREATION_INSTALL_COHORTS": "c007f288c599052489abdd8f0e301920e5752b39104bb2e22f2b79cf9bf8da9e",
-    "packages/cli/src/command-install.ts:selectedRegister": "41e1ec4c908a3cec8ea0a0c03081215dfb5adf7b9879134ac14e95e1d0e39635",
+    "packages/cli/src/command-install.ts:CREATION_INSTALL_COHORTS": "3bc72a98d0af6179d7cec8894302187bd31d4cc70ba331fcd23c6330bb1f1bc5",
+    "packages/cli/src/command-install.ts:selectedRegister": "f0bbd3c0a7d66884c5d16ac1df5b277de4d2140466e0c0da4c62a9afb98a3ceb",
     "packages/cli/src/command-install.ts:planSent": "9419fa14ca00c84bfbc468192900fd822717cb76e1ba8e178d616c009ae054a6",
     "packages/cli/src/command-install.ts:installSelection": "6e2ddb787b5d2d20db0c1dedebeea9bfe8a5a12ed5ab2130b8d646256ade6e46",
     "packages/cli/src/command-install.ts:selectedPlan": "d7365c8ecdaf43a83329a680e7073716936bea43f1f53e9e52cdbff91c6d083a",
@@ -248,9 +248,9 @@ const seals = {
   "packages/derive/src/validate/index.ts": "d6b90a6b4e6e8319cb0a73e50d2864751cab6fb1974bc578d5937d9ee99f1efa", // F canonical identity/retained-origin boundary; actual maintained parser output.
   "packages/derive/src/validate/spelling.ts": "1c53e1ec4503e15be23d409b4862162a52f24f9e7e504a96922db90845a31a11", // F canonical identity/retained-origin boundary; actual maintained parser output.
   "packages/platform/src/evidence-incident-origin-v17.ts": "6d6e6af6897688829bd9710e0e3c736dce0028e56218970f5bce3efd5e266cf4", // F canonical identity/retained-origin boundary; actual maintained parser output.
-  "packages/contract/src/catalog-vocabulary.ts": "458e087b56935e8c198016c476d11aff10ca24e9ab131d90d31fe282a6b731f1", // BR13 exact native question/relation owner; CF-1 adds the five new family pins to its questions; actual maintained parser output.
-  "packages/platform/src/version-questions.ts": "1db22b0f15e32ac2f221530a7070f2c3ecf2a2db35503afe7ccfd81134b6e178", // CR2 adds the exact register28 installer-founder question; existing pin groups stay unchanged.
-  "packages/platform/src/version-relations.ts": "1eb52555e06569c8f76d9de97a03717828996f2de7500c6c17e66413eef25f0a", // BR13 exact native question/relation owner; CF-1 adds the base cohort and the Membership 14 and Register 28 relations; actual maintained parser output.
+  "packages/contract/src/catalog-vocabulary.ts": "1f58a135e016811c53f92b2d78c35a449d80b54e75059ea1b6f9e43a31be421d", // BR13 exact native question/relation owner; CF-1 adds the five new family pins to its questions; U1 adds Register 29; actual maintained parser output.
+  "packages/platform/src/version-questions.ts": "715333df2a0bfeb66a1c9dc82814bfe24d03f3e95da21121d77e7901debfa3a9", // CR2 adds the exact register28 installer-founder question; U1 adds Register 29, Directory 28 and Rules 16 where Register 28, Directory 27 and Rules 15 answer.
+  "packages/platform/src/version-relations.ts": "84a5df8be0ca9c654faffa2493faba513606c4e82709d89a42decd3d930f464f", // BR13 exact native question/relation owner; CF-1 adds the base cohort and the Membership 14 and Register 28 relations; U1 adds the upgrade cohort; actual maintained parser output.
   "packages/scope/src/http-stream.ts": "ac798ac542c6295bda6495ef9c3f46f2c78511bfb89b88ee4b2d4df7711e2168", // Retain the exact existing close capability on observed HTTP disconnect.
   "packages/bytes/src/session.ts": "71a16d6d2d02b2f424e711a80ca28fe8e10204d3daacc4d0cf23f85ebe80903e", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "packages/mcp/src/oauth-parameters.ts": "b48c22470c29dfa7c11260fc874128859650791294ec93d8ae0007bdca95534c", // O3 OAuth authority, public-client policy or retained browser consent owner.
@@ -360,7 +360,7 @@ const pendingArchiveSeals = {
   "apps/room/archive-identity.ts": "1d96727f139ac309b5632c1aa9b1b0b2e51dd0e204b5ebcaabe52f5d06042089", // AE-1 reviewed boundary; actual maintained AST output.
   "apps/room/archive-packages.ts": "f4155b32056fef2ae38ac64b553b83a0de5427d97a7b30fceef76347c80edc9b", // AE-1 reviewed six-query map and SELECT-space repair; native guard stays fixed.
   "apps/room/archive-setup-cost.ts": "ff70caaf56adfc4501cb1fe6606fa7f9283f2207b7e2d50d29063d9e9d41baed", // AE-1 reviewed boundary; actual maintained AST output.
-  "packages/platform/src/application-archive-reader.ts": "e261d7d0e052702daf16b07eba0a7457df30f7a9591ba1a13524456c27a4ee2e", // AE-1 uses shared canonical same; actual maintained AST output.
+  "packages/platform/src/application-archive-reader.ts": "19bb24e8367f70384d9843c63dc158e7bf2ad09ae34fa5e3b753b9aec69d5d73", // AE-1 uses shared canonical same; U1 adds Rules 16; actual maintained AST output.
   "packages/scope/src/applications/archive-proof.ts": "163a8b2f7710752ee09e24d4b81704bc2fe8ce1484ad4a58b42edb9a89d5004b", // AE-1 reviewed boundary; actual maintained AST output.
   "packages/scope/src/archive-budget.ts": "a02ee3dc4e2edc55562d4de87d953ae562c65b59dc0df7e6b493e9990764aece", // AS-2: the first stop records its clock, wait or verifier cause; limits and stop reasons unchanged.
   "packages/scope/src/archive-adaptive.ts": "ddf7c2ec284340fe10b965d73e373ca639563cdad19dcbd510b5e7b2b83953b8", // AE-1 reviewed boundary; actual maintained AST output.
@@ -410,7 +410,7 @@ const pendingR8Seals = {
   "packages/cli/src/verification.ts": "4875139168f453ff917ff565deefccc60b377ab529b42a236c6025bc7bf429d9", // Reviewed unique-entry ledger, source conflicts and owner retirement; actual maintained output.
   "packages/cli/src/files.ts": "692ad5257d940da6eefe571283600befb1db3323510d2ab2065654dcc2e780e7", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/store.ts": "e710dc929252a3f413fb889344fc4fdad1bc2bc3340b9fd4e91a57c4891295a5", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "packages/cli/src/line.ts": "d54491faa255f4a0aa96af07b8a972f090b5e486c14afaf760ad39582d85beaf", // Reviewed CLI session or verification boundary; actual maintained parser output; dap issue wait signs no act. CF-1 changes it.
+  "packages/cli/src/line.ts": "3cb0933073668b77d6aef44676168445f418a735af7c6e4c22c59ab3d409fcb3", // Reviewed CLI session or verification boundary; actual maintained parser output; dap issue wait signs no act. CF-1 changes it; U1 accepts --cohort upgrade.
   "packages/cli/src/invitations.ts": "45d96db128f59bbb5a5319120371aafa0e234fb9dc1baa213ba3f92a5811a4e0", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-applications-command.ts": "5af0f495fb9af7ba04b64deda0019e39649c81971196c3999ab60d1d75a26571", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-manifest.ts": "4bd67e5543b060c24e235a15f03983ad590ee77fc94a8a96627e2ad1adcd0155", // Preserve trusted session refusal outcomes; actual maintained parser output.

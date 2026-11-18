@@ -204,6 +204,7 @@ test("every catalog Rules pin has an explicit projection-declaration answer", as
     "platform:rules@13": false,
     "platform:rules@14": true,
     "platform:rules@15": true,
+    "platform:rules@16": true,
   };
   expect(Object.keys(answers).sort()).toEqual(Object.keys(VERSIONS).filter(named => named.startsWith("platform:rules@")).sort());
   const completed = await completeProjectionInstall(projectionCohorts[0]);

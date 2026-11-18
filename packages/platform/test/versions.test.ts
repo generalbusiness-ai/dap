@@ -27,6 +27,10 @@ const DIGESTS: Readonly<Record<string, string>> = {
   "platform:directory@27": "sha256:3bcc3fef39c145c2de415debf0d45b4d9873df689aae898209835487f1044a23",
   "platform:destination@21": "sha256:6c6bb1a919e3eeef6d8c486a6fca6b7d8e690090b54f17225944ed8e3c69fe6d",
   "platform:register@28": "sha256:cc5fadbde47db6dc9a833af1a15536d22ecbf33c69faeaf0aa3acc8aa349ce12",
+  // U1 upgrade family, observed from the generator: Register 29 and Directory 28 keep the bytes of Register 28 and Directory 27.
+  "platform:register@29": "sha256:cc5fadbde47db6dc9a833af1a15536d22ecbf33c69faeaf0aa3acc8aa349ce12",
+  "platform:directory@28": "sha256:3bcc3fef39c145c2de415debf0d45b4d9873df689aae898209835487f1044a23",
+  "platform:rules@16": "sha256:9e31b5daf81944fa260fb5901370168160b16f84ff6c0beb6f5adfca2f3549ca",
   // Own-agent generation preserves all 92 earlier pin and declaration byte pairs.
   "platform:destination@20": "sha256:400ab350d2593ec2a8c6139810e1a0160fa2842833668ab4f9851043c057542a",
   "platform:directory@26": "sha256:7e0a9d4cb8c2227c35878c0db62dd4bc09b969f2f338fcec16de653b5d443f63",

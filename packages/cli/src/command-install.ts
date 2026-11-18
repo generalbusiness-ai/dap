@@ -13,7 +13,7 @@ const NEW_REGISTER = NEWEST["platform:register"]!;
 // ---------------------------------------------------------------- the commands
 
 /** Named creation families; every host, none included, defaults to the base family (ruling bccd8dd1, Q5). */
-export type InstallCohort = "base" | "own-agent" | "failed-claim" | "repository-binding" | "separate-recovery" | "commons" | "unpublished" | "file-publication" | "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-device-publication" | "archive-certified-rules" | "hardened-certified-rules" | "archive-declared-application" | "invitation-key";
+export type InstallCohort = "base" | "upgrade" | "own-agent" | "failed-claim" | "repository-binding" | "separate-recovery" | "commons" | "unpublished" | "file-publication" | "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-device-publication" | "archive-certified-rules" | "hardened-certified-rules" | "archive-declared-application" | "invitation-key";
 
 export type RegisterPolicy = "keys" | "open";
 
@@ -23,11 +23,12 @@ const INSTALL_COHORTS = CLI_INSTALL_REGISTERS;
 
 /** New plans only. Historical selectors remain in INSTALL_COHORTS for retained custody.
  * The owning test pins these register versions to Scope's CREATION_COHORTS. */
-export const CREATION_INSTALL_COHORTS = ["base", "own-agent", "failed-claim", "repository-binding", "separate-recovery", "commons", "unpublished", "application", "archive-device-application", "archive-device-publication", "archive-certified-rules", "hardened-certified-rules"] as const satisfies readonly InstallCohort[];
+export const CREATION_INSTALL_COHORTS = ["base", "upgrade", "own-agent", "failed-claim", "repository-binding", "separate-recovery", "commons", "unpublished", "application", "archive-device-application", "archive-device-publication", "archive-certified-rules", "hardened-certified-rules"] as const satisfies readonly InstallCohort[];
 
 function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === undefined) return undefined;
   if (cohort === "base") return INSTALL_COHORTS.base;
+  if (cohort === "upgrade") return INSTALL_COHORTS.upgrade;
   if (cohort === "own-agent") return INSTALL_COHORTS["own-agent"];
   if (cohort === "failed-claim") return INSTALL_COHORTS["failed-claim"];
 

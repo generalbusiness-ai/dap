@@ -1,6 +1,8 @@
 # An application upgrade act
 
-Status: proposed, for Hugh's decision. Request `d7f77eeb`. Nothing here is
+Status: approved by Hugh on 2026-11-17 (decision `c69cb559`), with the
+recommendation of section 4 and the answers of section 5. Request
+`d7f77eeb`. U1 (`ea7faed9`) builds step 1 of section 6. Nothing else is
 built.
 
 IR-1 (`f8fbe5ec`) found that each Counter upgrade opens a new installation
@@ -237,32 +239,41 @@ option A, and option A creates no new scope. Option B gives semantic
 changes a clean end for the old scope's screen, cards and archive without a
 kernel change.
 
-## 5. What Hugh decides
+## 5. What Hugh decided
+
+Hugh answered each question on 2026-11-17 (decision `c69cb559`).
 
 Kernel decisions:
 
-1. Whether a scope can have a final status (option C). This changes
-   `Status` in `packages/contract/src/read.ts:49` and every scope's act
-   path.
-2. Whether the archive proof may accept an item whose `release` and
-   `presentation` differ from the scope's birth (option A). This changes
-   the policy check in `apps/room/archive-packages.ts:130-131`, which the
-   security entry-point seals cover.
+1. A scope gets no final status now. Option C stays with definition
+   succession. `Status` in `packages/contract/src/read.ts:49` does not
+   change.
+2. Yes: the archive proof accepts an item whose `release` and
+   `presentation` differ from the scope's birth, when its `semantic` and
+   `definition` equal the birth's. This changes the policy check in
+   `apps/room/archive-packages.ts:130-131`, which the security entry-point
+   seals cover.
 
 Room and platform decisions:
 
-3. Whether the installation item may change `release` and `presentation`
-   through one act (option A), and gain the final state `replaced` (option
-   B). Both need a new rules definition.
-4. How existing rooms get the act: a new room for each, or definition
-   succession first. Counter's witness room runs a rules definition without
-   the act.
+3. Yes: one `upgrade-application` act, with the in-place form and the final
+   state `replaced`, in a new rules definition.
+4. Existing rooms get the act through a new room, the U4 witness room. They
+   do not wait for definition succession.
 
-## 6. Steps if Hugh agrees
+The checker added one condition (`66e1c3fb`), which the decision adopts.
+The in-place form also requires an equal `publisher`, and the new release
+must be one that `APPLICATION_TRUST` names.
+
+## 6. Steps
 
 1. U1: the new rules definition with `upgrade-application`, the in-place
-   form and the `replaced` state. Reds: an upgrade with a changed semantic
-   identifier is refused in place; a second active Counter cannot result.
+   form and the `replaced` state. The in-place form requires equal
+   `semantic`, `definition` and `publisher`, and a release that
+   `APPLICATION_TRUST` names. Reds: an upgrade with a changed semantic
+   identifier is refused in place; a changed publisher is refused; a
+   release outside `APPLICATION_TRUST` is refused; a second active Counter
+   cannot result.
 2. U2: the archive proof for both forms. Reds: no hourly retry after an
    in-place upgrade; a replaced scope publishes up to the act, then stops
    with `application-replaced`.

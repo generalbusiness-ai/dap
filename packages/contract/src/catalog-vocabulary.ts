@@ -22,14 +22,14 @@ const QUESTION_PINS = {
   ],
   archiveRegisterForeignCopy: [
     "platform:register@17", "platform:register@18", "platform:register@19", "platform:register@20",
-    "platform:register@26", "platform:register@28",
+    "platform:register@26", "platform:register@28", "platform:register@29",
   ],
   applicationScreenMembership: [
     "platform:membership@10", "platform:membership@11", "platform:membership@12", "platform:membership@13",
     "platform:membership@14", "platform:membership@7", "platform:membership@8", "platform:membership@9",
   ],
   clientCreationOfferRegister: [
-    "platform:register@17", "platform:register@26", "platform:register@28",
+    "platform:register@17", "platform:register@26", "platform:register@28", "platform:register@29",
   ],
   clientAgentKeyInvitationMembership: [
     "platform:membership@10", "platform:membership@11", "platform:membership@12", "platform:membership@13",

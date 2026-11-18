@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 import type { PlatformDefinition, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
-import { BASE_COHORT, OWN_AGENT_COHORT, FAILED_CLAIM_COHORT, REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
+import { BASE_COHORT, UPGRADE_COHORT, OWN_AGENT_COHORT, FAILED_CLAIM_COHORT, REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
 
 import { CREATION_COHORTS } from "../../scope/src/creation-lineage.ts";
 import { CREATION_INSTALL_COHORTS, USAGE, command, install, installPlanned, memoryStore, planInstall, type Config, type Context, type Store } from "../src/index.ts";
@@ -12,6 +12,7 @@ const SERVICE = "https://cohort.test";
 const COHORT = "trusted-application" as const;
 const COHORTS = [
   { name: "base", definition: BASE_COHORT.register, other: COHORT },
+  { name: "upgrade", definition: UPGRADE_COHORT.register, other: COHORT },
   { name: "own-agent", definition: OWN_AGENT_COHORT.register, other: COHORT },
   { name: "failed-claim", definition: FAILED_CLAIM_COHORT.register, other: COHORT },
 

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 import * as relation from "../src/version-relations.ts";
-import { BASE_COHORT, NEWEST } from "../src/index.ts";
+import { BASE_COHORT, NEWEST, UPGRADE_COHORT } from "../src/index.ts";
 
 interface Row {
   input?: unknown;
@@ -48,8 +48,9 @@ test.each(frozen.relations)("the independent old relation holds: $name", record 
         expect(row.answer).toBe("platform:register@26");
         expect(NEWEST["platform:register"]).toBe(BASE_COHORT.register); break;
       case "cliScopeIndexCreationCohorts": {
-        const [base, ...rest] = relation.cliScopeIndexCreationCohorts();
+        const [base, upgrade, ...rest] = relation.cliScopeIndexCreationCohorts();
         expect(base).toEqual({ name: "base", pins: BASE_COHORT });
+        expect(upgrade).toEqual({ name: "upgrade", pins: UPGRADE_COHORT });
         expect(rest.map(value => value.pins)).toEqual((row.answer as { pins: unknown }[]).map(value => value.pins)); break;
       }
       case "claimDirectoryDefinitionForRegister":
@@ -111,7 +112,7 @@ test("pair relations preserve every old negative pin pair", () => {
 
 test("the ordered source descriptors retain their report names", () => {
   expect(relation.cliScopeIndexCreationCohorts().map(row => row.name)).toEqual([
-    "base", "failed-claim", "archive-device-publication", "archive-device-application", "application",
+    "base", "upgrade", "failed-claim", "archive-device-publication", "archive-device-application", "application",
     "archive-certified-rules", "hardened-certified-rules", "commons", "separate-recovery", "repository-binding", "own-agent",
   ]);
 });
