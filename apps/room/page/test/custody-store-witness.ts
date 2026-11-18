@@ -134,7 +134,7 @@ export function custodyStoreWitness(seed: CustodyRecord, signer: Signer) {
     const after = await custody.find(who);
     check("scripted settlement preserves the exact envelope after real IDB spills", settled?.record.phase === "accepted" && after?.count === 138 && equal(after.envelope, before.envelope) && builds - beforeBuilds === 1);
     const db = await database(name);
-    check("the first released schema has only positional outcome stores", db.version === 2 && equal(Array.from(db.objectStoreNames).sort(), ["archive", "lengths", "outcomes", "records"]));
+    check("the version 3 schema adds only the authorization store to the positional outcome stores", db.version === 3 && equal(Array.from(db.objectStoreNames).sort(), ["archive", "authorizations", "lengths", "outcomes", "records"]));
     db.close();
   }
 
@@ -270,12 +270,12 @@ export function custodyStoreWitness(seed: CustodyRecord, signer: Signer) {
     check("a real connection delivered after close is refused and closed", await lateRead && await gone(lateName));
 
     const changed = make("versionchange"); await keep(changed.custody, "before-versionchange");
-    const opened = indexedDB.open(changed.name, 3);
+    const opened = indexedDB.open(changed.name, 4);
     const upgraded = await new Promise<boolean>((resolve, reject) => {
       opened.onsuccess = () => { opened.result.close(); resolve(true); };
       opened.onblocked = () => resolve(false); opened.onerror = () => reject(opened.error);
     });
-    check("versionchange closes the native connection and retires its instance", upgraded && await rejected(() => changed.store.read(identityId(identity("before-versionchange")))));
+    check("versionchange closes the native connection and retires its instance", upgraded && changed.store.retired() === "version-change" && await rejected(() => changed.store.read(identityId(identity("before-versionchange")))));
 
     const pendingName = `TEST-nf5-${run}-pending-open`;
     const blocker = await database(pendingName, 1, db => db.createObjectStore("unrecognized-draft"));
@@ -290,7 +290,7 @@ export function custodyStoreWitness(seed: CustodyRecord, signer: Signer) {
     const unknown = make("unknown-layout");
     const alien = await database(unknown.name, 2, db => db.createObjectStore("unrecognized")); alien.close();
     const before = await snapshot(unknown.name);
-    check("an unknown exact-version layout stays unreadable and unchanged", await rejected(() => keep(unknown.custody, "alien")) && equal(await snapshot(unknown.name), before));
+    check("an unknown version 2 layout does not upgrade, stays unreadable and unchanged", await rejected(() => keep(unknown.custody, "alien")) && equal(await snapshot(unknown.name), before));
     for (const defect of ["inline-key", "auto-increment"] as const) {
       const unexpected = make(`unknown-${defect}`);
       const db = await database(unexpected.name, 2, db => {
@@ -301,7 +301,7 @@ export function custodyStoreWitness(seed: CustodyRecord, signer: Signer) {
       });
       db.close();
       const before = await snapshot(unexpected.name), priorBuilds = builds;
-      check(`same names and version with ${defect} is unreadable before signing`, await rejected(() => keep(unexpected.custody, defect)) && builds === priorBuilds && equal(await snapshot(unexpected.name), before));
+      check(`version 2 names with ${defect} do not upgrade and are unreadable before signing`, await rejected(() => keep(unexpected.custody, defect)) && builds === priorBuilds && equal(await snapshot(unexpected.name), before));
     }
   }
 
@@ -384,7 +384,7 @@ export function custodyStoreWitness(seed: CustodyRecord, signer: Signer) {
         await network.store.exclusive(async () => { admissionEntered = true; });
         network.store.close();
         network.before = await nativeState(network.name, network.id);
-        const opening = indexedDB.open(network.name, 3);
+        const opening = indexedDB.open(network.name, 4);
         const upgraded = await new Promise<boolean>((resolve, reject) => {
           opening.onsuccess = () => { opening.result.close(); resolve(true); };
           opening.onblocked = () => resolve(false); opening.onerror = () => reject(opening.error);

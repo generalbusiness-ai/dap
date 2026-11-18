@@ -1,13 +1,15 @@
 /**
- * The browser custody store (NF-5) under `Custody`. IndexedDB, Web Locks and BroadcastChannel are STAND-INs in memory: a
- * transaction applies each write at once and an abort rolls nothing back. They show what the store reads, writes, lists and
- * signals. The real browser path is the witness of request c288c917.
+ * The browser custody store (NF-5) under `Custody`, on the STAND-INs of `support/browser-idb.ts`: IndexedDB, Web Locks and
+ * BroadcastChannel in memory. They show what the store reads, writes, lists and signals. The real browser path is the
+ * witness of request c288c917.
  */
 import { expect, test } from "vitest";
 import type { Head, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
-import { BROWSER_TERMINAL_LIVE, Custody, Lost, browserCustodyStore, identityId, meaningOf, sendableAt, signedIntent, type BrowserCustodyPlatform, type Outcome, type StoredCustodyRecord } from "../src/index.ts";
+import { BROWSER_TERMINAL_LIVE, Custody, Lost, browserCustodyStore, identityId, meaningOf, sendableAt, signedIntent, type Outcome, type StoredCustodyRecord } from "../src/index.ts";
+import type { Authorization } from "../src/authorization.ts";
+import { origin } from "./support/browser-idb.ts";
 import { T0, build as fixtureBuild, identity as fixtureIdentity, notAfter, receiptOf as fixtureReceipt, refused, signer } from "./support/custody.ts";
 
 // Browser storage admits wire shapes. Use real sequence references here; generic trusted-store fixtures keep their old bytes.
@@ -21,111 +23,6 @@ const build = (key: string) => async () => {
 const receiptOf = (signed: SignedIntent, seq: number) => ({ ...fixtureReceipt(signed, seq), fact: { ...fixtureReceipt(signed, seq).fact, at: lane } });
 const accepted = (signed: SignedIntent) => ({ answer: "accepted" as const, receipt: receiptOf(signed, 3) });
 
-type Handler = (() => void) | null;
-/** One origin: its databases, its locks and its channels, shared by each tab that `tab()` opens. */
-function origin(channelFailure?: "construct" | "post") {
-  type Key = string | (string | number)[];
-  type Range = { lower: Key; upper: Key; lowerOpen: boolean; upperOpen: boolean };
-  const databases = new Map<string, Map<string, Map<string, unknown>>>();
-  const key = (value: Key): string => JSON.stringify(value);
-  const compare = (a: Key, b: Key): number => {
-    if (typeof a === "string" && typeof b === "string") return a.localeCompare(b);
-    if (!Array.isArray(a) || !Array.isArray(b)) throw Error("TEST incomparable key");
-    for (let i = 0; i < Math.min(a.length, b.length); i++) if (a[i] !== b[i]) return a[i]! < b[i]! ? -1 : 1;
-    return a.length - b.length;
-  };
-  const held = new Set<string>(), waiting = new Map<string, (() => void)[]>();
-  const channels = new Map<string, Set<{ onmessage: ((event: { data: unknown }) => void) | null }>>();
-  const later = (work: () => void) => { setTimeout(work, 0); };
-  const transaction = (db: Map<string, Map<string, unknown>>) => {
-    let pending = 0, ended = false;
-    const tx = { oncomplete: null as Handler, onabort: null as Handler, onerror: null as Handler,
-      abort() { ended = true; later(() => tx.onabort?.()); },
-      objectStore(name: string) {
-        const store = db.get(name)!;
-        const request = <T>(run: () => T) => {
-          const r = { result: undefined as T, onsuccess: null as Handler, onerror: null as Handler };
-          pending++;
-          queueMicrotask(() => { r.result = run(); r.onsuccess?.(); pending--; settle(); });
-          return r;
-        };
-        return {
-          keyPath: null, autoIncrement: false,
-          get: (value: Key) => request(() => structuredClone(store.get(key(value)))),
-          getKey: (value: Key) => request(() => store.has(key(value)) ? value : undefined),
-          openCursor: (range?: Range) => {
-            const entries = [...store.entries()].map(([encoded, value]) => ({ key: JSON.parse(encoded) as Key, value }))
-              .filter(({ key: value }) => !range || (compare(value, range.lower) >= (range.lowerOpen ? 1 : 0) && compare(value, range.upper) <= (range.upperOpen ? -1 : 0)))
-              .sort((a, b) => compare(a.key, b.key));
-            let index = 0;
-            type Cursor = { key: Key; value: unknown; continue(): void } | null;
-            const r = { result: null as Cursor, onsuccess: null as Handler, onerror: null as Handler };
-            const next = () => {
-              pending++;
-              queueMicrotask(() => {
-                const entry = entries[index++];
-                r.result = entry ? { key: entry.key, value: structuredClone(entry.value), continue: next } : null;
-                r.onsuccess?.(); pending--; settle();
-              });
-            };
-            next();
-            return r;
-          },
-          put: (value: unknown, at: Key) => { store.set(key(at), structuredClone(value)); return {}; },
-          delete: (at: Key | Range) => {
-            if (typeof at === "string" || Array.isArray(at)) store.delete(key(at));
-            else for (const encoded of store.keys()) {
-              const value = JSON.parse(encoded) as Key;
-              if (compare(value, at.lower) >= (at.lowerOpen ? 1 : 0) && compare(value, at.upper) <= (at.upperOpen ? -1 : 0)) store.delete(encoded);
-            }
-            return {};
-          },
-        };
-      },
-    };
-    const settle = () => later(() => { if (pending === 0 && !ended) { ended = true; tx.oncomplete?.(); } });
-    later(() => settle());
-    return tx;
-  };
-  const platform = (): BrowserCustodyPlatform => ({
-    indexedDB: { open(name: string, version: number) {
-      const r = { result: undefined as never, transaction: null, onsuccess: null as Handler, onerror: null as Handler, onblocked: null as Handler,
-        onupgradeneeded: null as ((event: { oldVersion: number }) => void) | null };
-      later(() => {
-        const fresh = !databases.has(name);
-        const db = databases.get(name) ?? new Map<string, Map<string, unknown>>();
-        databases.set(name, db);
-        r.result = { version, close() {}, onversionchange: null, onclose: null,
-          objectStoreNames: { get length() { return db.size; }, contains: (n: string) => db.has(n) },
-          createObjectStore: (n: string) => db.set(n, new Map()), transaction: () => transaction(db) } as never;
-        if (fresh) r.onupgradeneeded?.({ oldVersion: 0 });
-        r.onsuccess?.();
-      });
-      return r;
-    } },
-    IDBKeyRange: { bound: (lower, upper, lowerOpen = false, upperOpen = false) => ({ lower, upper, lowerOpen, upperOpen }) },
-    locks: { async request<T>(name: string, options: { ifAvailable?: boolean }, work: (lock: unknown) => Promise<T>): Promise<T> {
-      if (held.has(name)) {
-        if (options.ifAvailable) return work(null);
-        await new Promise<void>((resolve) => { waiting.set(name, [...(waiting.get(name) ?? []), resolve]); });
-      }
-      held.add(name);
-      try { return await work({ name }); } finally {
-        const next = waiting.get(name)?.shift();
-        if (next) next(); else held.delete(name);
-      }
-    } },
-    BroadcastChannel: class {
-      onmessage: ((event: { data: unknown }) => void) | null = null;
-      constructor(readonly name: string) { if (channelFailure === "construct") throw Error("TEST channel"); channels.set(name, (channels.get(name) ?? new Set()).add(this)); }
-      postMessage(data: unknown) { if (channelFailure === "post") throw Error("TEST channel"); for (const other of channels.get(this.name) ?? []) if (other !== this) later(() => other.onmessage?.({ data })); }
-      close() { channels.get(this.name)?.delete(this); }
-    } as never,
-  });
-  const tab = (more: { terminalLive?: number } = {}) => browserCustodyStore({ database: "TEST custody", lock: "TEST custody", platform: platform(), ...more });
-  const raw = (store: string) => databases.get("TEST custody")!.get(store)!;
-  return { tab, raw, key };
-}
 const settled = () => new Promise((resolve) => { setTimeout(resolve, 5); });
 
 async function absentInBrowser(o: ReturnType<typeof origin>) {
@@ -337,8 +234,80 @@ test("close refuses new and queued work using the existing unreadable storage an
   let ran = false;
   const queued = second.exclusive(async () => { ran = true; });
   second.close(); second.close();
+  expect(second.retired()).toBe("closed");
   const rejected = expect(queued).rejects.toMatchObject({ why: { held: "unreadable" } });
   unblock(); await blocked; await rejected;
   expect(ran).toBe(false);
   await expect(second.read("new")).rejects.toMatchObject({ why: { held: "unreadable" } });
+});
+
+// Invariant (E4-B item 4): a version 2 database opens at version 3 with an empty authorization store; its custody rows stay
+// byte for byte, and each signing in them reads with no authorization reference (legacy, ruling 34791662).
+test("browser store (IndexedDB stand-in): a version 2 database upgrades by adding the authorization store and keeps every custody row", async () => {
+  const o = origin(), writer = o.tab();
+  const kept = await new Custody(writer, () => timeOf(T0)).keep(identity("earlier"), meaningOf("earlier"), build("earlier"), notAfter);
+  writer.close();
+  o.released();
+  expect(o.layout()).toEqual({ version: 2, stores: ["archive", "lengths", "outcomes", "records"] });
+  const rows = structuredClone([...o.raw("records")]);
+  const reader = o.tab();
+  try {
+    const record = await new Custody(reader, () => timeOf(T0)).find(identity("earlier"));
+    expect(o.layout()).toEqual({ version: 3, stores: ["archive", "authorizations", "lengths", "outcomes", "records"] });
+    expect([...o.raw("records")]).toEqual(rows);
+    expect(record).toEqual(kept);
+    expect(record!.signings.map(signing => signing.authorization ?? "legacy")).toEqual(["legacy"]);
+    expect(await reader.authorizations.read(signer.key, lane)).toEqual([]);
+  } finally { reader.close(); }
+});
+
+// Invariant (E4-B item 4): an earlier database that is not the exact version 2 layout stays as it was and holds nothing.
+test("browser store (IndexedDB stand-in): an earlier database without the version 2 layout does not upgrade and signs nothing", async () => {
+  const o = origin(), writer = o.tab();
+  await new Custody(writer, () => timeOf(T0)).keep(identity("partial"), meaningOf("partial"), build("partial"), notAfter);
+  writer.close();
+  o.released("lengths");
+  const reader = o.tab();
+  let builds = 0;
+  await expect(new Custody(reader, () => timeOf(T0)).send(identity("next"), meaningOf("next"), async () => { builds++; return build("next")(); }, async () => { throw new Error("must not send"); }, { notAfter }))
+    .rejects.toMatchObject({ why: { held: "unreadable" } });
+  await expect(reader.authorizations.read(signer.key, lane)).rejects.toMatchObject({ why: { held: "unreadable" } });
+  expect(builds).toBe(0);
+  expect(o.layout()).toEqual({ version: 2, stores: ["archive", "outcomes", "records"] });
+});
+
+// Invariant (E4-B item 3): the archive moves a custody record and removes none, so the authorization history of its key stays.
+test("browser store (IndexedDB stand-in): archiving a terminal record leaves the authorization history of its key", async () => {
+  const o = origin(), store = o.tab({ terminalLive: 1 });
+  try {
+    const history = (key: string) => ({ key, owner: signer.key, scope: lane, versions: [], materializations: [], permissions: [] }) as unknown as Authorization;
+    await store.authorizations.write(signer.key, lane, [history("a"), history("b")]);
+    const before = await store.authorizations.read(signer.key, lane), text = structuredClone([...o.raw("authorizations")]);
+    let clock = T0;
+    const custody = new Custody(store, () => timeOf(clock));
+    for (const key of ["a", "b"]) { clock += 1000; await custody.send(identity(key), meaningOf(key), build(key), async e => accepted(e.signed), { notAfter }); }
+    expect(o.raw("archive").has(o.key(identityId(identity("a"))))).toBe(true);
+    expect(o.raw("records").has(o.key(identityId(identity("a"))))).toBe(false);
+    expect(await store.authorizations.read(signer.key, lane)).toEqual(before);
+    expect([...o.raw("authorizations")]).toEqual(text);
+  } finally { store.close(); }
+});
+
+// Invariant (E4-B, ruling be902732): a newer version opened by another page retires this store at once, so the upgrade is not
+// blocked. Each observer hears it once, its re-read is refused `unreadable`, and the store names the cause so the page can ask
+// for a reload.
+test("browser store (IndexedDB stand-in): a newer database version opened elsewhere retires the store, tells each observer once and names the version change", async () => {
+  const o = origin(), store = o.tab(), who = identity("before-upgrade");
+  await new Custody(store, () => timeOf(T0)).keep(who, meaningOf("before-upgrade"), build("before-upgrade"), notAfter);
+  const reads: Promise<unknown>[] = [];
+  let heard = 0;
+  store.observe(() => { heard++; reads.push(store.read(identityId(who)).catch((error: unknown) => error)); });
+  expect(store.retired()).toBeNull();
+  expect(await o.upgrade(4)).toBe("upgraded");
+  expect([heard, store.retired()]).toEqual([1, "version-change"]);
+  expect(await Promise.all(reads)).toMatchObject([{ why: { held: "unreadable" } }]);
+  await expect(store.read(identityId(who))).rejects.toMatchObject({ why: { held: "unreadable" } });
+  store.close();
+  await settled();
+  expect([heard, store.retired()]).toEqual([1, "version-change"]);
 });

@@ -7,7 +7,8 @@ import { DeclaredHandle } from "../src/declared.ts";
 import { secretSigner } from "../src/intent.ts";
 import type { ClientClock } from "../src/request-schedule.ts";
 import { Feed, citingDefinition, served } from "./replica-support.ts";
-import { envelopeOf, memoryStore, type StoredCustodyRecord } from "../src/custody.ts";
+import { envelopeOf, type StoredCustodyRecord } from "../src/custody.ts";
+import type { AuthorizationPort } from "../src/authorization-store.ts";
 import { signingPermitted } from "../src/authorization.ts";
 
 /** The digest of each act of the definition, by kind: the lookup that the instance builds from its own definition. */
@@ -87,7 +88,8 @@ export function requestScene(definition = citingDefinition) {
 }
 
 /** Check actual custody metadata, including earlier closed envelopes whose bytes were legitimately dropped. */
-export async function checkSigningAuthorizations(scene: ReturnType<typeof requestScene>, store: ReturnType<typeof memoryStore>): Promise<void> {
+export async function checkSigningAuthorizations(scene: ReturnType<typeof requestScene>,
+  store: { readonly authorizations: AuthorizationPort; readonly records: ReadonlyMap<string, string> }): Promise<void> {
   const rows = await store.authorizations.read(scene.signer.key, scene.handle.at), legacy = new Map<Digest, number>();
   for (const text of store.records.values()) {
     const record = JSON.parse(text) as StoredCustodyRecord;

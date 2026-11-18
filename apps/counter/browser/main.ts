@@ -4,7 +4,7 @@ import { nativeGateway } from "./client.ts";
 import { mountCountingStage } from "./app.ts";
 import { deviceSigner, importDemoBundle, importLegacyDevice, type SavedDevice } from "./device-key.ts";
 import { browserSpeech } from "./speech.ts";
-import { browserLock, counterCustody, dropRetiredSlots, privateDeviceStore, privatePendingStore } from "./storage.ts";
+import { browserLock, counterCustody, dropRetiredSlots, privateDeviceStore, privatePendingStore, whenCustodyUpdated } from "./storage.ts";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { applicationScreenTransport, loadApplicationScreenContext } from "@generalbusiness/dap-client";
 import { counterEnrollment } from "./installed.ts";
@@ -99,6 +99,7 @@ form.addEventListener("submit",event=>{event.preventDefault();void(async()=>{
 function clearMounted(){active++;app.disconnect();custodyEpoch=undefined;devices=[];selectedKey=undefined;selectedVoice=undefined;remember=false;form.reset();message.textContent="";renderPicker();}
 async function forget(){clearMounted();const at=active;try{if(enrollment)await enrollment(()=>at===active).forget();await custody.forget();channel?.postMessage({type:"forgotten",installed:installed??null});}catch{if(at===active){openDialog();message.textContent="refused because remembered identity custody could not be cleared";}}}
 // BroadcastChannel only updates presentation; the persisted epoch is authoritative.
+whenCustodyUpdated(text=>{openDialog();message.textContent=text;});
 channel?.addEventListener("message",event=>{if(event.data?.type==="forgotten"&&(event.data?.installed??null)===(installed??null))clearMounted();});
 void(async()=>{const at=++active;try{const held=await custody.load(()=>at===active);if(at!==active)return;custodyEpoch=held.epoch;devices=held.devices;if(enrollment&&!devices.length){const restored=await enrollment(() => at === active).restore();if(at!==active)return;if(restored){await custody.save([restored],undefined,()=>at===active,held.epoch);devices=[restored];}}if(held.choice){selectedKey=held.choice.publicKey;selectedVoice=held.choice.voiceId;remember=true;const device=currentDevice();if(device)await mountDevice(device);}renderPicker();}catch{if(at===active){openDialog();message.textContent="refused because remembered identity custody is unavailable";}}})();
 
