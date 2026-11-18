@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/2026-11-18-kd1-down-label-race.md","body":{"commit":"6cd48fab29e816ef7c4fbf6177174f92206047ac","path":"notes/implementation/2026-11-18-kd1-down-label-race.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:105017a1c3b58bd945c3902608b437bfc1cb97f8","text":"Merge retired a covered predecessor; the successor is at docs/self-host-mac.md."}
