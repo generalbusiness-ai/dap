@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:05740939b319775b34cd090bc16d7a9af09d197d","text":"Merge retired a covered predecessor; the successor is at examples/grow/runbook.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1c8060833c48e0320ff9130856aae2e232f98172","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-v2-append.ts."}
