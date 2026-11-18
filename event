@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I build U4-T in the LC-6 form. The head commits the signed Counter 0.7.0 packet (release b0d84eb1) unchanged and adds its dap-lending trust row. It also adds the packet to the formatter and reproduction lists, and opens Counter 0.8.0. I prepare it on 1c0e4757 and gate it on head Q, as approval 691bae0b requires.","body":{"target":"inherit"}}
+{"kind":"promise","text":"I check the UC-P landing at local main 1c0e4757."}
