@@ -305,6 +305,62 @@ export function custodyStoreWitness(seed: CustodyRecord, signer: Signer) {
     }
   }
 
+  /** The upgrade that deployed pages take: a real version 2 database with the released layout and rows opens as version 3. */
+  async function releasedUpgrade() {
+    // The version 3 store writes the rows; version 3 changes no custody row, so these are the rows a version 2 store holds.
+    const source = make("upgrade-source", { terminalLive: 1 });
+    const keys = ["upgrade-archived", "upgrade-settled", "upgrade-live"];
+    for (const key of keys) {
+      // The live record retries past the inline window, so outcome and length rows exist.
+      for (let attempt = 0; attempt < (key === "upgrade-live" ? 70 : 1); attempt++) {
+        clock++;
+        await source.custody.send(identity(key), meaningOf(key), build(key), async () => { sends++; throw new Lost(); }, { notAfter: deadline() });
+      }
+      const record = await source.custody.find(identity(key));
+      if (key !== "upgrade-live" && record) await source.custody.settle(identity(key), async () => receipt(record));
+    }
+    const found = await Promise.all(keys.map(key => source.custody.find(identity(key))));
+    const released = ["archive", "lengths", "outcomes", "records"];
+    const rows = async (name: string) => {
+      const db = await database(name);
+      try {
+        const tx = db.transaction(released, "readonly"), ended = complete(tx);
+        const read = await Promise.all(released.map(async store => ({ store,
+          keys: await request(tx.objectStore(store).getAllKeys()), values: await request(tx.objectStore(store).getAll()) })));
+        await ended;
+        return read;
+      } finally { db.close(); }
+    };
+    const copied = await rows(source.name);
+    const counts = Object.fromEntries(copied.map(({ store, keys }) => [store, keys.length]));
+    const target = `TEST-nf5-${run}-upgrade-released`;
+    const v2 = await database(target, 2, db => { for (const name of released) db.createObjectStore(name); });
+    const fill = v2.transaction(released, "readwrite"), filled = complete(fill);
+    for (const { store, keys: at, values } of copied) at.forEach((key, index) => fill.objectStore(store).put(values[index], key));
+    await filled; v2.close();
+    const before = await snapshot(target);
+
+    const upgraded = browserCustodyStore({ database: target, lock: target, terminalLive: 1 }); stores.add(upgraded);
+    const custody = new Custody(upgraded, now), priorBuilds = builds;
+    const reread = await Promise.all(keys.map(key => custody.find(identity(key))));
+    const db = await database(target), layout = { version: db.version, stores: Array.from(db.objectStoreNames).sort() }; db.close();
+    const after = await snapshot(target) as { name: string }[];
+    const empty = { name: "authorizations", keyPath: null, autoIncrement: false, keys: [], values: [] };
+    const owner = "TEST-upgrade-owner", scope = seed.envelope.signed.intent.to;
+    const batch = [{ owner, scope, definition: `sha256:${"0".repeat(64)}`, descriptor: `sha256:${"1".repeat(64)}`, versions: [], materializations: [], permissions: [] }] as never;
+    await upgraded.authorizations.write(owner as never, scope as never, batch);
+    const readBack = await upgraded.authorizations.read(owner as never, scope as never);
+    const custodyAfter = (await snapshot(target) as { name: string }[]).filter(store => store.name !== "authorizations");
+    check("a released version 2 database with records, an archive row and outcome positions upgrades to version 3 unchanged",
+      released.every(store => counts[store]! > 0)
+        && equal(layout, { version: 3, stores: ["archive", "authorizations", "lengths", "outcomes", "records"] })
+        && equal(after.filter(store => store.name !== "authorizations"), before) && equal(after.find(store => store.name === "authorizations"), empty)
+        && equal(reread, found) && reread.every(record => record !== null) && builds === priorBuilds,
+      { counts, layout });
+    check("the upgraded database writes and reads back an authorization batch natively, apart from the custody rows",
+      equal(readBack, batch) && equal(custodyAfter, before));
+  }
+
   async function optionalChannel() {
     for (const failure of ["construction", "post"] as const) {
       const platform = { indexedDB, IDBKeyRange, locks: navigator.locks, BroadcastChannel: class {
@@ -359,7 +415,7 @@ export function custodyStoreWitness(seed: CustodyRecord, signer: Signer) {
   let network: { name: string; id: string; store: BrowserStore; exactSent: () => string; result: Promise<HeldBack | null>; before?: Awaited<ReturnType<typeof nativeState>> } | null = null;
   return {
     async run() {
-      try { await boundedHistory(); await rollback(); await malformed(); await lifecycle(); await optionalChannel(); await beforeDispatch(); }
+      try { await boundedHistory(); await rollback(); await malformed(); await lifecycle(); await releasedUpgrade(); await optionalChannel(); await beforeDispatch(); }
       finally { for (const store of stores) store.close(); }
       return { transport: "scripted Lost and receipt ports; IndexedDB and Web Locks are real", cases: results, builds, sends };
     },

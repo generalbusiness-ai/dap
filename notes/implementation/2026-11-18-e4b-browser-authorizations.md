@@ -1,7 +1,7 @@
 # E4-B: the browser store keeps authorizations
 
-Status: draft. The tests are written and not yet run. The evidence table
-below is empty.
+Status: built. The tests, the control, the real-browser witness and the
+gate passed; the Evidence section lists each run.
 
 E4 gave the client an authorization port (`AuthorizationPort` in
 `packages/client/src/authorization-store.ts`) and a memory store. A
@@ -223,5 +223,10 @@ Files are in `artroom-evidence/2026-11-18-e4b-red/` and `artroom-evidence/2026-1
 | E4-B browser store | 40 pass | `store-green.txt` | `ea9aff6e0c23fdb93c4f2f05cd204883497e0a3749ae48ce84b2a6125b420fe2` |
 | Control: `scope-client.ts:1039` `await transaction.commit();` removed, `authorization.test.ts` only | 7 of 15 fail, the reload test among them | `control-order.txt` | `9fb5b494b12bdbab713e790b4292d30117b09615127598d0e18d304b91d40843` |
 | Real-browser custody witness, `apps/room/page/test/custody-witness.mjs` local mode, Chromium 1243 | 31 of 31 storage cases pass; the join settles one envelope | `witness.json` | `5cec46b2ab14b6e611cddcf0b23a10c2eb8f60f483e0af41a615147b78d3f3c5` |
+| Real-browser custody witness again, with the released version 2 upgrade case (`releasedUpgrade`): 2 records, 1 archive row, 6 outcome rows and 1 length row open as version 3 | 33 of 33 storage cases pass | `witness-2.json` | `f4b52dc6164373332913da60cf0e67854bfaf65fc7140ac4d825339012ec804f` |
 
-The gate runs once on the committed head; its START and END acts name `artroom-evidence/2026-11-18-e4b-gate/`.
+A first run of the new case failed on its own fixture: one attempt per
+record leaves every outcome inline, so the copied database had no outcome or
+length rows. The live record now retries 70 times and spills them.
+
+The gate runs on the committed head; its START and END acts name `artroom-evidence/2026-11-18-e4b-gate/`.
