@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Gate START for AS-2 at head 4fc1197b (one commit on 2631ad70; merges cleanly onto 9255e1f8), in .builder-worktrees/as2-20261118. Red 1 of 2 and 1 of 6 on base source; green 2 and 6; seal archive-budget.ts adopted. Evidence: artroom-evidence/2026-11-18-as2-gate/.","body":{"gate":"start","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
+{"kind":"promise","text":"I review E4-B revision 2 at exact head f947a8df: the released version 2 upgrade witness and the note status."}
