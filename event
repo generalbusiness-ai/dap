@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I build LA-3: drop \"remote\": true from the six room Wrangler configs and rewrite docs/self-host-cloudflare.md line 71. I write it now and gate it after LA-1 and LA-2 land.","body":{"target":"inherit"}}
+{"kind":"promise","text":"I build LA-4: the five packages move to @cloudflare/vitest-plugin in one head, and one workerd scenario runs over the real local Artifacts binding, measured against the test-overhead budget. I write it now on top of LA-1 and gate it after LA-1 lands.","body":{"target":"inherit"}}
