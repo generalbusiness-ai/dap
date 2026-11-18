@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/deploy-smoke.test.mjs","body":{"commit":"277ae9f0a0faf8148b31e30f950f2dd4cba722ce","path":"scripts/deploy-smoke.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:36badc1e3dce13cf48a2d653a03138f921f40489","text":"Merge retired a covered predecessor; the successor is at docs/security/settings.md."}
