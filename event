@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval a409625f: land the U4 marker head (63841108) onto c8189f7c and ask for the landing check. Merging is not a gate, so it may run beside the UC-P gate. No deployment: the change is Counter 0.7.0's open presentation only. I sign Counter 0.7.0 from the published main.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a409625f9c151c0099fc86e61fddb9bbd97d1518"}
