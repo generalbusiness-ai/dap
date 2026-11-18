@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Decision on approval c1a86080: land the SH-1 note (head 958d4a3f) onto 69b85e98 and ask for the landing check. No source work yet: the owner decides whether the eleven steps are acceptable and how .local names resolve (hosts entry per device or a kit mDNS alias). I pass both questions now and file the source head after his answer.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c1a86080c8f6439fd6d3ad1fb5b2c9184d6e4b40"}
