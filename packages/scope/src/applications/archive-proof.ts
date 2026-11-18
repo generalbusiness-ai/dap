@@ -27,11 +27,17 @@ type ArchiveProofStore = StateView & Pick<Store, "retainedSize" | "retained"> & 
 export interface ApplicationArchiveProofExpected { readonly named: string; readonly rules: ScopeRef; readonly directory: ScopeRef; readonly item: number }
 export type ApplicationArchiveProofRefusalReason = "installation-not-active" | "retained-proof-missing" | "metadata-limit" | "malformed-or-unsupported";
 export interface ApplicationArchiveProofRefusal { readonly reason: ApplicationArchiveProofRefusalReason }
-export type ApplicationArchiveProofResult = string | ApplicationArchiveProofRefusal;
+/** U2: the proof of an installation that an upgrade replaced. Its archive
+ * publishes through its scope's head, then stops (`application-replaced`). */
+export interface ApplicationArchiveProofReplaced { readonly replaced: string }
+export type ApplicationArchiveProofResult = string | ApplicationArchiveProofReplaced | ApplicationArchiveProofRefusal;
 const refusalReasons: readonly string[] = ["installation-not-active", "retained-proof-missing", "metadata-limit", "malformed-or-unsupported"];
 export function isApplicationArchiveProofRefusal(value: unknown): value is ApplicationArchiveProofRefusal {
   return isRecord(value) && Object.keys(value).length === 1 && Object.hasOwn(value, "reason")
     && typeof value["reason"] === "string" && refusalReasons.includes(value["reason"]);
+}
+export function isApplicationArchiveProofReplaced(value: unknown): value is ApplicationArchiveProofReplaced {
+  return isRecord(value) && Object.keys(value).length === 1 && typeof value["replaced"] === "string";
 }
 const refuse = (reason: ApplicationArchiveProofRefusalReason): ApplicationArchiveProofRefusal => ({ reason });
 
@@ -71,8 +77,12 @@ export function storedApplicationArchiveProof(state: ArchiveProofStore,
     if (room.id !== rules[0]!.id || room.type !== "rules" || room.state !== "current"
       || !same(room.refs["directory"], directory) || job?.type !== "installation") return refuse("malformed-or-unsupported");
     if (job.state === "pending") return refuse("installation-not-active");
-    if (job.state !== "active") return refuse("malformed-or-unsupported");
-    const cached = { scope: () => scope, page: () => page, item: () => job } as unknown as StateView;
+    // U2: a replaced item keeps the slots it held when it ended, so its proof
+    // reads it as the active installation it was.
+    const replaced = job.state === "replaced";
+    if (job.state !== "active" && !replaced) return refuse("malformed-or-unsupported");
+    const shown = replaced ? { ...job, state: "active" } : job;
+    const cached = { scope: () => scope, page: () => page, item: () => shown } as unknown as StateView;
     let missing = false;
     const proof = applicationArchiveProof(cached, named, directory, item, (domain, digest, most) => {
       const size = state.retainedSize("value", digest, domain);
@@ -83,6 +93,8 @@ export function storedApplicationArchiveProof(state: ArchiveProofStore,
       const value: unknown = parseStrict(held.bytes);
       return canonicalize(value) === held.bytes ? value : undefined;
     });
-    return proof ? applicationJson(proof, APPLICATION_ARCHIVE_PROOF_BYTES) : refuse(missing ? "retained-proof-missing" : "malformed-or-unsupported");
+    if (!proof) return refuse(missing ? "retained-proof-missing" : "malformed-or-unsupported");
+    const bytes = applicationJson(proof, APPLICATION_ARCHIVE_PROOF_BYTES);
+    return replaced ? { replaced: bytes } : bytes;
   } catch { return refuse("malformed-or-unsupported"); }
 }

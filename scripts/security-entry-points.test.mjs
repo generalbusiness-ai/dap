@@ -358,10 +358,10 @@ const seals = {
 // Root adopted the reviewed outputs; the historical map name is retained here.
 const pendingArchiveSeals = {
   "apps/room/archive-identity.ts": "1d96727f139ac309b5632c1aa9b1b0b2e51dd0e204b5ebcaabe52f5d06042089", // AE-1 reviewed boundary; actual maintained AST output.
-  "apps/room/archive-packages.ts": "f4155b32056fef2ae38ac64b553b83a0de5427d97a7b30fceef76347c80edc9b", // AE-1 reviewed six-query map and SELECT-space repair; native guard stays fixed.
+  "apps/room/archive-packages.ts": "498af8abfd2a1f156246e9a61c992534cffb5accaca14705716a4f89db2797f7", // U2 compares the semantic identifier, not release and presentation, checks trust of the current release only, and answers final for a replaced item. AE-1 reviewed six-query map and SELECT-space repair; native guard stays fixed.
   "apps/room/archive-setup-cost.ts": "ff70caaf56adfc4501cb1fe6606fa7f9283f2207b7e2d50d29063d9e9d41baed", // AE-1 reviewed boundary; actual maintained AST output.
   "packages/platform/src/application-archive-reader.ts": "19bb24e8367f70384d9843c63dc158e7bf2ad09ae34fa5e3b753b9aec69d5d73", // AE-1 uses shared canonical same; U1 adds Rules 16; actual maintained AST output.
-  "packages/scope/src/applications/archive-proof.ts": "163a8b2f7710752ee09e24d4b81704bc2fe8ce1484ad4a58b42edb9a89d5004b", // AE-1 reviewed boundary; actual maintained AST output.
+  "packages/scope/src/applications/archive-proof.ts": "656367117f636c22f17a23fe4c5c7482673170daf50c501f3c287ff726cc1cba", // U2 proves a replaced item, wrapped as { replaced }. AE-1 reviewed boundary; actual maintained AST output.
   "packages/scope/src/archive-budget.ts": "a02ee3dc4e2edc55562d4de87d953ae562c65b59dc0df7e6b493e9990764aece", // AS-2: the first stop records its clock, wait or verifier cause; limits and stop reasons unchanged.
   "packages/scope/src/archive-adaptive.ts": "ddf7c2ec284340fe10b965d73e373ca639563cdad19dcbd510b5e7b2b83953b8", // AE-1 reviewed boundary; actual maintained AST output.
   "packages/scope/src/archive-row-cost.ts": "cb9a949c1f9a0d8be8dc678b0c82371ab2f25cf51d980e25a8bf6f21f7178855", // AE-1 reviewed boundary; actual maintained AST output.
@@ -374,14 +374,14 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "300e4a3f51f23b93a2ce026b98993700e3c0b8947d35b68de195adc5c522ae45",
   "packages/scope/src/archive-publication.ts": "6c13c9f864b559e26d75982eca85c058975a12f18ad00b660c227577aae76d9b",
   "packages/scope/src/archive-build.ts": "bf1c79debbe0141140174c9a3d79f63d1952b874bce1d8713207dea8c817b8a0", // Actual pin SQL payload settles; final identity fence unchanged.
-  "packages/scope/src/archive-driver.ts": "b62a1a7da449452b95b44a2124692021023ab1f1ffe8e7020c28580b3c77b345", // AR-5 passes committed(sealed) to signal().  AR-4 ends a pass whose Directory answers "unbound" as disabled, with the unbound marker and a one-day recheck. AS-2 adds stopCause to archive-pass-diagnostic-v1 only. AR-1 bounds every archive retry (60 s floor, one-hour cap, persisted retry count), leaves no stored wake in the past, and returns before policy work while the stored wake is in the future; actual maintained AST output.
+  "packages/scope/src/archive-driver.ts": "b658e0fc6f2fc5ce9699f0e01f5ae231d34b67bd24b740fb4862884fa7242a66", // U2 ends a final policy with a terminal once the archive reaches the head. AR-5 passes committed(sealed) to signal().  AR-4 ends a pass whose Directory answers "unbound" as disabled, with the unbound marker and a one-day recheck. AS-2 adds stopCause to archive-pass-diagnostic-v1 only. AR-1 bounds every archive retry (60 s floor, one-hour cap, persisted retry count), leaves no stored wake in the past, and returns before policy work while the stored wake is in the future; actual maintained AST output.
   "packages/scope/src/archive-row.ts": "c70a21a8d0efd2cde5e2be373a7cfac19fb878cba111d47bc5819a355a857df6", // AR-5: an activation signal leaves the Directory marker.  AR-4 adds the optional unbound marker to the wake record; a member's commits leave it, a Directory commit drops it. AR-1 adds the bounded retry count to the wake record; defer takes the delay as a function of it; actual maintained AST output.
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "packages/scope/src/object-archive.ts": namedOwners["packages/scope/src/object-archive.ts"],
   "apps/room/worker.grow.ts": "c525a1b0d13e6243099d03b80c5207b76f082c71432db2b8ecaf86ccf8cb1160",
   "apps/room/archive-policy.ts": "3723eb633f5da1572d3adc3c1321de3e37cd3a0ee2ea3da77186d6a7b374483c",
-  "apps/room/archive.ts": "b024fdfc2c69cfe3b835e02dadf6a9aab822ebb1b66885244642c817a5342ae0", // AR-4 passes only the checked Directory's "unbound" answer and reads the route through target.bound(). AE-1 shared Artifacts adapter and authenticated package policy; actual maintained AST output.
+  "apps/room/archive.ts": "46c55978ad31bbabc4a414d2f1ee1d9f8f432b447fb303109634367c2025e30f", // U2 passes a final policy answer. AR-4 passes only the checked Directory's "unbound" answer and reads the route through target.bound(). AE-1 shared Artifacts adapter and authenticated package policy; actual maintained AST output.
   "packages/scope/src/archive-host-item.ts": "41dfb134296ce3bb1d16f1a743dfa88eab5d17c788702279e40ed2bd2a81547e", // AR-4 answers "unbound" only after every Directory check; every other failure stays forbidden.
   "packages/scope/src/archive-host.ts": "ad759aff6f090fab3401d2f75274af294269f7db488ae2d5c56954759cdf754a", // Migration collectors settle only checked POST byte receipts; decoder fees and authority fences unchanged.
   "packages/scope/src/artifacts-host.ts": "17169f775db94ec5544115119385ab979854b43679185f4360b07311e1a8a516", // Reviewed durable fork setup custody; the journal owns its later revocation.
