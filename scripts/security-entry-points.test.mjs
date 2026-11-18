@@ -21,7 +21,7 @@ const namedOwners = {
     "packages/scope/src/object-archive.ts:floorOffer": "439eeffe0d220f86b4f704be80668afe8d9e0f8e3926dcb8f949e2b06274e519"
   },
   "packages/scope/src/worker.ts": {
-    "packages/scope/src/worker.ts:$module": "9eb628cccc575d48d5e96ef22785ecbc03ea629c71557ca8fadace0d44e3f6e7",
+    "packages/scope/src/worker.ts:$module": "5e466c5bcba977c99089644451451c2cabd5ce08491d9a086d13329221f84013",
     "packages/scope/src/worker.ts:ScopeIndex": "b4c4e5bee990564e602083d69157ed24a9e8022adf2649227d337b8dd58dd86a",
     "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
     "packages/scope/src/worker.ts:RETIRED_HTTP": "5445b5b53d5b6b1f2b8c456b224b37e4f2ea525c5b412d8ffec299108e9d6d1d",
@@ -281,10 +281,10 @@ const seals = {
   "packages/platform/src/versions.ts": "6b9b184d22fbffaa617049e1b6ec01bc64fd6039b068ac534d0adaf443868962", // Closed native publication protocol policy; actual maintained parser output.
   "apps/room/worker.ts": "0460fe0647f5494a0ed8fb38ff49a09bdf5d7c89b2fadf988ffd446be8aa465d", // AR-1 restores the archive wiring as before hotfix 32866453, now with a bounded wake rate; actual maintained parser output.
   "apps/room/worker.commons.ts": "c525a1b0d13e6243099d03b80c5207b76f082c71432db2b8ecaf86ccf8cb1160", // Reviewed separate deployment entry; actual maintained parser output.
-  "apps/room/fetch.ts": "83b2a56552c5f6874935d1491f487fd7d2b9e2651a9acceb87d731139897ad2c", // Forward the HTTP context to the existing scope route; dispatcher gates stay fixed.
+  "apps/room/fetch.ts": "aeda8944515a96b6bed2f16ba35cf54dbfc85b5b14a9f39c178fba5dd2a94414", // Forward the HTTP context to the existing scope route; dispatcher gates stay fixed. S3 admits the caller address first (caller-address.ts); actual maintained parser output.
   "apps/room/demo-creation.ts": "18124da145e98edf887394d92a1d3e37f2e350127c4e268e16729acfe8cdfc23",
   "packages/scope/src/demo-creation.ts": "ad2696564e94d810c619968d623ff97b39e917b0aa4ff6c96bfd4f2b8e83c424", // Reviewed current demo projection or ordinary GitHub authority owner. CF-1 changes it; actual maintained parser output.
-  "packages/scope/src/github-wiring.ts": "6bccc5a379825c66d77723394fe7b37c2cfdfc722953e6cebca13ff1befaf66d", // Reviewed current demo projection or ordinary GitHub authority owner.
+  "packages/scope/src/github-wiring.ts": "0aff2692d25dfc57af3e66c87c3afb851751327ae77f44a6d9471a61811eaf14", // Reviewed current demo projection or ordinary GitHub authority owner. S3 moves the configuration parser to github-config.ts and re-exports it; actual maintained parser output.
   "apps/room/page/route.ts": "8eccc79a8a3e3cd8b33c38c65374db5d01583b5e9afd76384fc2133bae4cb475",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": namedOwners["packages/scope/src/worker.ts"],
@@ -292,14 +292,14 @@ const seals = {
   "packages/scope/src/scope-index.ts": "a81743f771c39157153dedcd2fb5a410ba4d5fa02487e45aa658ef4e01e60dbc", // AD-1: applicationInstallationState answers null for an unindexed scope. AR-10: a positive kind answer also answers has(name); AR-8 keeps positive answers per isolate (insert-only known_scope rows).
   "packages/scope/src/host-wiring.ts": "6cbde3017c210bc1875d07c470bc588c452bc855171646ce889bf39cd9065fa5", // Installed-register authority retains exact Native birth and host binding.
   "packages/scope/src/installed-registers.ts": "39618d91dba4884b866f1823d5bc2ee89e7ca0b78b47b884387e7bfeba2dee5e", // Installed-register authority retains exact Native birth and host binding.
-  "packages/scope/src/register-setting.ts": "1ead9e620589e3707e2a6515951cc095b44308a34aee6855b3bb8da37bd230ca", // Shared exact Register selector; actual maintained parser output.
+  "packages/scope/src/register-setting.ts": "2c9adba64fdd98bb63f93ee4375952ed0fcc465258968e00701bcc7528e02bcf", // Shared exact Register selector. S3 requires a valid GitHub root to be an installed register; actual maintained parser output.
   "packages/scope/src/scope-index-census.ts": "f405bfcf12db50596d81ae19ce4478a46763e4b6bbeba7a45403a834376316ad", // Address/key admission precedes owner proof; exact census authority and page guards retained, without duplicate owner charge.
-  "packages/scope/src/creation-admission.ts": "c0b2ff1d552b17b42710b9128a652c478e7c32ce96640c6c0d543f5748e2d4be", // Reviewed R1 ancestry owner; adopted AST value.
+  "packages/scope/src/creation-admission.ts": "db69b6f9e9ca603f9f918d395681ec498a4d555bdc6d9d395418592a97f8b3e3", // Reviewed R1 ancestry owner. S3 adds GITHUB_APP_CONFIG to the admission settings type; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "12f2ab7d81f26f0a7c9d75095928d39e450f7eeca94e51793c7b7892760d2ee9", // Reviewed whole-lineage boundary; adopted AST value.
   "packages/scope/src/creation-versions.ts": "872e383c736e3d77b3377dec67ca29855612f1bbf2e9a6754c4c58db72fce97d", // Reviewed R6 creation-policy parser; actual maintained output.
   "packages/scope/src/creation-declaration.ts": "0aca81538bf80d643ff74166d99e535b68abf3b7dca2b06b65cee543806a3fd9", // Bounded immutable native Directory custody, not authority.
   "packages/scope/src/namespace.ts": "ad0f9dd3e83f8890552c7ba8828a8310935f34fef7456534bdea630dc89329f2", // Reviewed internal declaration RPC; adopted AST value.
-  "packages/scope/src/health.ts": "fab90430e09a90ea73a9f9e663f17ef9e393d2a81a98327d9625b9041cb6a872",
+  "packages/scope/src/health.ts": "3bc54d08e569c894c3c8c905feb99d95d9d951ed83d156815f039525e8741c6f", // S3 adds policy and missing, setting names only; actual maintained parser output.
   "packages/scope/src/site/route.ts": "a0dd2fc19f24b87ff033d8ebbe89718b8a953c291fc5f2689d064ade92e40166",
   "packages/scope/src/site/host.ts": "7ba177e4cf693beaad6ecef85cc3d33455a5896cd35565f50a98e03ba848cd07", // Private Site token custody; actual maintained parser output.
   "packages/scope/src/site/token-reuse.ts": "7df9e0eb8e1c5bbfc050f52729ffaed86f00ea6d56ed04ac1efdf9e6cbf51ab0", // Reviewed pre-mint generation cleanup rescheduling; custody checks unchanged.

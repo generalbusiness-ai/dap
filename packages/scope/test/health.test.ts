@@ -35,7 +35,7 @@ test("host-none health probes its actual active Native Register without reposito
   const response = await life.wait(() => health(new Request("http://internal:8787/health"), {
     SCOPES: env.PLATFORM, REGISTER_SCOPE: node.name, SESSION_SECRET: secret, DEPLOYMENT: "TEST host-none health",
   }, new HealthProbe()));
-  expect([response?.status, await response!.json()]).toEqual([200, { deployment: "TEST host-none health", version: "unknown", sessions: "ok", register: "ready", wiring: { artifacts: { state: "off", reason: "unconfigured" }, github: { state: "off", reason: "unconfigured" } } }]);
+  expect([response?.status, await response!.json()]).toEqual([200, { deployment: "TEST host-none health", version: "unknown", sessions: "ok", register: "ready", wiring: { artifacts: { state: "off", reason: "unconfigured" }, github: { state: "off", reason: "unconfigured" } }, policy: { index: "enforce", mcp: "closed", openCreation: false }, missing: [] }]);
   expect(await life.wait(() => node.entries())).toEqual(before);
 });
 
@@ -105,7 +105,11 @@ test("health configuration, selector and request admission have closed answers w
     const body = await response!.json<Record<string, unknown>>();
     expect(body["sessions"]).toBe("unavailable");
     if (Object.hasOwn(changed, "DEPLOYMENT")) expect(body["deployment"]).toBe("unknown");
-    expect(Object.keys(body).sort()).toEqual(["deployment", "register", "sessions", "version", "wiring"]);
+    expect(Object.keys(body).sort()).toEqual(["deployment", "missing", "policy", "register", "sessions", "version", "wiring"]);
+    // A missing setting is named; a malformed one is not missing.
+    const absent = Object.entries(changed).filter(([, value]) => value === undefined).map(([key]) => key);
+    expect(body["missing"]).toEqual([...absent, "REGISTER_SCOPE"]);
+    expect(body["policy"]).toEqual({ index: "enforce", mcp: "closed", openCreation: absent.includes("DEPLOYMENT") });
     expect(JSON.stringify(body)).not.toContain(settings.SESSION_SECRET);
     expect(JSON.stringify(body)).not.toContain(name);
   }
@@ -120,7 +124,7 @@ test("health configuration, selector and request admission have closed answers w
   for (const [suffix, method, status] of [["?x=1", "GET", 400], ["", "POST", 405], ["", "PUT", 405]] as const) expect((await health(request(suffix, method), base))?.status).toBe(status);
   expect(calls).toBe(0);
   const good = await health(request(), { ...base, ARTIFACTS_CONFIG: artifacts(name) }, new HealthProbe());
-  expect([good?.status, await good!.json()]).toEqual([200, { deployment: settings.DEPLOYMENT, version, sessions: "ok", register: "ready", wiring: { artifacts: { state: "wired" }, github: { state: "wired" } } }]);
+  expect([good?.status, await good!.json()]).toEqual([200, { deployment: settings.DEPLOYMENT, version, sessions: "ok", register: "ready", wiring: { artifacts: { state: "wired" }, github: { state: "wired" } }, policy: { index: "enforce", mcp: "closed", openCreation: false }, missing: [] }]);
   // The explicit Register owns the bounded metadata probe independently of
   // any provider. The RPC below remains the same labelled readiness stand-in.
   const selected: string[] = [];
@@ -131,9 +135,12 @@ test("health configuration, selector and request admission have closed answers w
   expect(selected.splice(0)).toEqual([name]);
   expect((await health(request(), { ...registerOnly, INSTALLED_REGISTER_SCOPES: JSON.stringify([name, other]) }, new HealthProbe()))?.status).toBe(200);
   expect(selected.splice(0)).toEqual([name]);
-  // An older hosted room may have a different GitHub Register; provider
-  // readiness is still evaluated, but does not replace the explicit probe.
-  expect((await health(request(), { ...base, ...registerOnly, GITHUB_APP_CONFIG: github(other) }, new HealthProbe()))?.status).toBe(200);
+  // S3 (ruling e6fd1f7f): an older GitHub Register that the installed list
+  // does not name is misconfigured; listing it keeps the explicit probe.
+  const unlisted = await health(request(), { ...base, ...registerOnly, GITHUB_APP_CONFIG: github(other) }, new HealthProbe());
+  expect([unlisted?.status, (await unlisted!.json<{ register: string }>()).register]).toEqual([503, "unavailable"]);
+  expect(selected.splice(0)).toEqual([]);
+  expect((await health(request(), { ...base, ...registerOnly, GITHUB_APP_CONFIG: github(other), INSTALLED_REGISTER_SCOPES: JSON.stringify([other, name]) }, new HealthProbe()))?.status).toBe(200);
   expect(selected.splice(0)).toEqual([name]);
   for (const changed of [{ REGISTER_SCOPE: ` ${name}` }, { ARTIFACTS_CONFIG: "{}" }, { ARTIFACTS_CONFIG: artifacts(other) }, { INSTALLED_REGISTER_SCOPES: "{}" }, { INSTALLED_REGISTER_SCOPES: JSON.stringify([other]) }]) {
     const response = await health(request(), { ...registerOnly, ...changed }, new HealthProbe());
@@ -212,4 +219,26 @@ test("native readiness reports absent, active register, non-register, provisiona
   expect(await runInDurableObject(object, (_instance, state) => state.storage.sql.exec("SELECT * FROM entry ORDER BY seq").toArray())).toEqual(native.rows);
   const lane = await create();
   expect(await (lane.object as unknown as { readiness(): Promise<string> }).readiness()).toBe("not-ready");
+});
+
+// S3, findings 2.1 and 2.3: /health names what weakens admission and what a
+// fresh deployment still lacks, by name only, and never shows a value.
+test("health names its index mode, hosted MCP and open creation, and the settings a deployment still lacks", async () => {
+  const name = scopeIdOf({ v: 1, kind: "register", definition: "platform:register@3", creator: null, cause: `sha256:${"0".repeat(64)}`, ordinal: 0 });
+  const binding = { idFromName: () => name, get: () => ({ readiness: async () => "ready" }) };
+  const base = { SCOPES: binding as never, SESSION_SECRET: settings.SESSION_SECRET, DEPLOYMENT: "TEST-policy", REGISTER_SCOPE: name };
+  const read = async (changed: Record<string, unknown>) => {
+    const response = await health(request(), { ...base, ...changed }, new HealthProbe());
+    const body = await response!.json<{ policy: unknown; missing: unknown }>();
+    expect(JSON.stringify(body)).not.toContain(settings.SESSION_SECRET);
+    return [response!.status, body.policy, body.missing];
+  };
+  expect(await read({})).toEqual([200, { index: "enforce", mcp: "closed", openCreation: false }, []]);
+  expect(await read({ SCOPE_INDEX_MODE: "enforce", MCP_ENABLED: "true" })).toEqual([200, { index: "enforce", mcp: "open", openCreation: false }, []]);
+  expect(await read({ SCOPE_INDEX_MODE: "register", ALLOW_OPEN_CREATION: "true" })).toEqual([200, { index: "register", mcp: "closed", openCreation: true }, []]);
+  expect(await read({ SCOPE_INDEX_MODE: "registered", MCP_ENABLED: "yes" })).toEqual([200, { index: "invalid", mcp: "closed", openCreation: false }, []]);
+  // The self-host window: the Worker is deployed with its name, before its
+  // secret and its register pin.
+  expect(await read({ SESSION_SECRET: undefined, REGISTER_SCOPE: undefined })).toEqual([503, { index: "enforce", mcp: "closed", openCreation: false }, ["SESSION_SECRET", "REGISTER_SCOPE"]]);
+  expect(await read({ DEPLOYMENT: undefined })).toEqual([503, { index: "enforce", mcp: "closed", openCreation: true }, ["DEPLOYMENT"]]);
 });

@@ -3,8 +3,9 @@ import type { ScopeId } from "@generalbusiness/dap-contract";
 import { isScopeId } from "@generalbusiness/dap-bytes";
 import { installedRegisterScopes } from "./installed-registers.ts";
 import { artifactsConfiguration } from "./artifacts-wiring.ts";
+import { gitHubRegisterScope } from "./github-config.ts";
 
-export interface RegisterSettings { REGISTER_SCOPE?: unknown; ARTIFACTS_CONFIG?: unknown; INSTALLED_REGISTER_SCOPES?: unknown }
+export interface RegisterSettings { REGISTER_SCOPE?: unknown; ARTIFACTS_CONFIG?: unknown; GITHUB_APP_CONFIG?: unknown; INSTALLED_REGISTER_SCOPES?: unknown }
 export type RegisterSelection = { readonly kind: "pinned"; readonly scope: ScopeId }
   | { readonly kind: "absent" } | { readonly kind: "misconfigured" };
 
@@ -26,10 +27,15 @@ export type InstalledRegisterSelection = { readonly kind: "pinned"; readonly sco
   | { readonly kind: "absent" } | { readonly kind: "misconfigured" };
 
 /** The operator records historical roots, never a caller or the scope index.
- * Listing a root selects policy; native lineage still proves it. */
+ * Listing a root selects policy; native lineage still proves it. A valid
+ * GitHub setting names the root that the GitHub host serves; it must be one
+ * of these installed roots (S3, review 79daff0f finding 2.4, ruling e6fd1f7f).
+ * An invalid GitHub setting leaves that host off and selects nothing here. */
 export function readInstalledRegisters(settings: RegisterSettings): InstalledRegisterSelection {
   const current = readRegisterScope(settings), raw = settings.INSTALLED_REGISTER_SCOPES;
   if (current.kind !== "pinned") return raw === undefined ? current : { kind: "misconfigured" };
   const scopes = installedRegisterScopes(current.scope, raw);
-  return scopes ? { ...current, scopes } : { kind: "misconfigured" };
+  if (!scopes) return { kind: "misconfigured" };
+  const github = settings.GITHUB_APP_CONFIG === undefined ? null : gitHubRegisterScope(settings.GITHUB_APP_CONFIG);
+  return github === null || scopes.includes(github) ? { ...current, scopes } : { kind: "misconfigured" };
 }

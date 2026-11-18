@@ -28,8 +28,10 @@ apps at `/mcp`, read [Run the hosted MCP endpoint](hosted-mcp.md).
    curl -s https://dap-my-room.example.workers.dev/health
    ```
 
-   The body has five fields: `deployment`, `version`, `sessions`,
-   `register` and `wiring`. The route answers `200` when `sessions` is
+   The body has seven fields: `deployment`, `version`, `sessions`,
+   `register`, `wiring`, `policy` and `missing`. `policy` names the index
+   mode, whether hosted MCP is open and whether open creation is allowed.
+   `missing` names the settings that the Worker still lacks. The route answers `200` when `sessions` is
    `ok`, `register` is `ready`, and no configured host is `off`. Otherwise
    it answers `503`. [Health](operations.md#health) gives each value.
 

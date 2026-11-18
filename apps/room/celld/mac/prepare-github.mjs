@@ -8,7 +8,7 @@ import { applicationProjectSettings, readApplicationProject } from './applicatio
 const maintained = new URL('../wrangler.json', import.meta.url);
 const worker = fileURLToPath(new URL('../../worker.ts', import.meta.url));
 const cliRequire = createRequire(new URL('../../../../packages/cli/bin/dap.js', import.meta.url));
-const required = ['REGISTER_SCOPE', 'PUBLIC_ORIGIN', 'MCP_ENABLED', 'MCP_TOOL_ADDITIONS', 'SESSION_SECRET'];
+const required = ['REGISTER_SCOPE', 'PUBLIC_ORIGIN', 'SESSION_SECRET'];
 const absolute = value => typeof value === 'string' && value.length <= 4096 && isAbsolute(value)
   && resolve(value) === value && !/[\x00-\x1f\x7f]/.test(value);
 let native;
@@ -47,7 +47,8 @@ async function originalProject(project) {
   const template = JSON.parse(await readFile(maintained, 'utf8'));
   const applications = await applicationProjectSettings(config);
   const { vars, ...settings } = applications.settings, { vars: defaults, ...maintainedSettings } = template;
-  const optional = [...applications.optional, ...['PLATFORM_CREATION_PINS', 'INSTALLED_REGISTER_SCOPES'].filter(key => vars && Object.hasOwn(vars, key))];
+  // Hosted MCP stays closed unless a legacy project keeps the exact opening "true" with no additions.
+  const optional = [...applications.optional, ...['PLATFORM_CREATION_PINS', 'INSTALLED_REGISTER_SCOPES', 'MCP_ENABLED', 'MCP_TOOL_ADDITIONS'].filter(key => vars && Object.hasOwn(vars, key))];
   if (optional.includes('PLATFORM_CREATION_PINS')) {
     const policy = JSON.parse(await readFile(new URL('./repository-binding-policy.json', import.meta.url), 'utf8'));
     if (vars.PLATFORM_CREATION_PINS !== JSON.stringify(policy.PLATFORM_CREATION_PINS)) throw Error();
@@ -57,7 +58,8 @@ async function originalProject(project) {
     || ![...Object.keys(defaults), ...required, ...optional].every(key => Object.hasOwn(vars, key))
     || !Object.entries(defaults).every(([key, value]) => vars[key] === value)
     || !/^sc_[a-z2-7]{52}$/.test(vars.REGISTER_SCOPE)
-    || vars.MCP_ENABLED !== 'true' || vars.MCP_TOOL_ADDITIONS !== '[]'
+    || Object.hasOwn(vars, 'MCP_ENABLED') && (vars.MCP_ENABLED !== 'true' || vars.MCP_TOOL_ADDITIONS !== '[]')
+    || Object.hasOwn(vars, 'MCP_TOOL_ADDITIONS') && vars.MCP_TOOL_ADDITIONS !== '[]'
     || !/^[A-Za-z0-9_-]{43}$/.test(vars.SESSION_SECRET)) throw Error();
   if (optional.includes('INSTALLED_REGISTER_SCOPES')) {
     const { readInstalledRegisters } = await github();

@@ -1,6 +1,8 @@
 // Self-host template. Copy to wrangler.self-host.jsonc before editing.
 // docs/self-host.md names the settings and secrets the operator supplies.
 // A fresh Worker starts in enforce mode with its own Durable Object namespaces.
+// DEPLOYMENT names the Worker before its first deploy, so the Worker admits no
+// unpinned creation while its secret and register pin are still unset (S3).
 // No project bucket, metrics dataset, register or credential belongs here.
 {
   "name": "dap-self-host",
@@ -8,6 +10,7 @@
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
   "vars": {
+    "DEPLOYMENT": "dap-self-host",
     "SCOPE_INDEX_MODE": "enforce",
     "ARTIFACTS_NAMESPACE": "dap-self-host",
     "APPLICATION_SCREEN_HOSTS": "[]",

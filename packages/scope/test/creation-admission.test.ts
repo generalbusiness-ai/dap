@@ -11,6 +11,7 @@ import type { CreationAdmission } from "../src/creation-admission.ts";
 import { parentlessCreationAdmission } from "../src/creation-admission.ts";
 import { readInstalledRegisters, readRegisterScope } from "../src/register-setting.ts";
 import { COMMONS_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+import template from "../../../apps/room/wrangler.jsonc?raw";
 
 // Invariant: a deployed parentless creation is refused before any namespace
 // addressing unless it is the exact signed pinned-register install.
@@ -93,6 +94,17 @@ test("Register selection is host-independent and deployed host checks follow exa
   expect(readInstalledRegisters(settings)).toEqual({ kind: "pinned", scope: name, scopes: [name] });
   const admitted = JSON.stringify([other, name]);
   expect(readInstalledRegisters({ ...settings, INSTALLED_REGISTER_SCOPES: admitted })).toEqual({ kind: "pinned", scope: name, scopes: [other, name] });
+  // S3 (review 79daff0f finding 2.4, ruling e6fd1f7f): a valid GitHub root
+  // must be one of the installed roots. An older root counts once the
+  // operator lists it; an unparseable setting leaves the GitHub host off.
+  const gitHub = (registerScope: string) => JSON.stringify({ issuer: "fixture", installationId: 1, account: { id: 1, login: "fixture", type: "Organization" }, maxBytes: 1024, registerScope, privateRepositories: true, publicReads: false, credentialIdentity: "adapter-attempt" });
+  expect(readInstalledRegisters({ ...settings, GITHUB_APP_CONFIG: gitHub(name) })).toEqual({ kind: "pinned", scope: name, scopes: [name] });
+  expect(readInstalledRegisters({ ...settings, GITHUB_APP_CONFIG: gitHub(other) })).toEqual({ kind: "misconfigured" });
+  expect(parentlessCreationAdmission({ ...settings, GITHUB_APP_CONFIG: gitHub(other) }, signed, seed)).toEqual({ ok: false, reason: "misconfigured" });
+  expect(readInstalledRegisters({ ...settings, GITHUB_APP_CONFIG: gitHub(other), INSTALLED_REGISTER_SCOPES: admitted })).toEqual({ kind: "pinned", scope: name, scopes: [other, name] });
+  expect(parentlessCreationAdmission({ ...settings, GITHUB_APP_CONFIG: gitHub(other), INSTALLED_REGISTER_SCOPES: admitted }, signed, seed))
+    .toEqual({ ok: true });
+  expect(readInstalledRegisters({ ...settings, GITHUB_APP_CONFIG: "{" })).toEqual({ kind: "pinned", scope: name, scopes: [name] });
   const most = Array.from({ length: 32 }, (_, ordinal) => scopeIdOf({ ...seed, ordinal }));
   expect(readInstalledRegisters({ ...settings, INSTALLED_REGISTER_SCOPES: JSON.stringify(most) }).kind).toBe("pinned");
   for (const INSTALLED_REGISTER_SCOPES of ["{}", "[]", JSON.stringify([other]), JSON.stringify([name, name]), JSON.stringify([name, " " + other]), JSON.stringify([...most, scopeIdOf({ ...seed, ordinal: 32 })]), JSON.stringify([name]) + " ".repeat(4096)]) {
@@ -124,4 +136,18 @@ test("Register selection is host-independent and deployed host checks follow exa
   expect(addressed.splice(0)).toEqual([name]);
   expect(await api(binding, null, { ...settings, REGISTER_SCOPE: other, SCOPE_INDEX: env.SCOPE_INDEX }).create(signed, seed.definition)).toEqual({ answer: "refused", reason: "unauthorized" });
   expect(addressed).toEqual([]);
+});
+
+// S3, finding 2.1 (review 79daff0f, trace4.mjs): the self-host template's own
+// settings, deployed before the secret and the register pin, admit no
+// parentless creation. Before S3 the template named no DEPLOYMENT, so the
+// Worker counted as local and admitted a directory `found`.
+test("the self-host template's settings refuse a directory found before its register pin", () => {
+  const vars = (JSON.parse(template.replace(/^\s*\/\/.*$/gm, "")) as { vars: Record<string, string> }).vars;
+  expect(typeof vars["DEPLOYMENT"]).toBe("string");
+  const seed: Seed = { v: 1, kind: "directory", definition: "platform:directory@26", creator: null, cause: `sha256:${"0".repeat(64)}`, ordinal: 0 };
+  const signed = { intent: { kind: "found", to: null }, signature: "x" } as never;
+  expect(parentlessCreationAdmission(vars, signed, seed)).toEqual({ ok: false, reason: "unauthorized" });
+  // Local development with no DEPLOYMENT keeps the parentless API open.
+  expect(parentlessCreationAdmission({}, signed, seed)).toEqual({ ok: true });
 });

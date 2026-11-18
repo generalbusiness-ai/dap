@@ -16,7 +16,7 @@ import time
 import xml.etree.ElementTree as ET
 
 from kit import (Refusal, absolute, aws_request, configuration, private_credentials,
-                 parse_json, read_installation, read_json, regular, require)
+                 parse_json, proxy_token, read_installation, read_json, regular, require)
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
@@ -154,7 +154,13 @@ def prepared_project(directory):
     excluded = {"vars", "r2_buckets"} if application else {"vars"}
     require({k: v for k, v in config.items() if k not in excluded}
             == {k: v for k, v in maintained.items() if k != "vars"}, "project configuration differs")
-    required = {"REGISTER_SCOPE", "PUBLIC_ORIGIN", "MCP_ENABLED", "MCP_TOOL_ADDITIONS", "SESSION_SECRET"}
+    required = {"REGISTER_SCOPE", "PUBLIC_ORIGIN", "SESSION_SECRET"}
+    # Hosted MCP stays closed unless a legacy project keeps the exact opening "true" with no additions.
+    if "MCP_ENABLED" in variables:
+        require(variables["MCP_ENABLED"] == "true" and variables.get("MCP_TOOL_ADDITIONS") == "[]",
+                "MCP configuration differs")
+    require(variables.get("MCP_TOOL_ADDITIONS", "[]") == "[]", "MCP configuration differs")
+    required |= {"MCP_ENABLED", "MCP_TOOL_ADDITIONS"} & set(variables)
     if "PLATFORM_CREATION_PINS" in variables:
         policy = read_json(HERE / "repository-binding-policy.json", 4096)
         require(isinstance(variables["PLATFORM_CREATION_PINS"], str)
@@ -178,8 +184,6 @@ def prepared_project(directory):
     github = github_project_settings(variables)
     require(set(variables) == set(maintained["vars"]) | required | github | application, "project variables differ")
     require(all(variables.get(k) == v for k, v in maintained["vars"].items()), "maintained variable differs")
-    require(variables.get("MCP_ENABLED") == "true" and variables.get("MCP_TOOL_ADDITIONS") == "[]",
-            "MCP configuration differs")
     import re
     from urllib.parse import urlsplit
     require(isinstance(variables.get("REGISTER_SCOPE"), str)
@@ -199,6 +203,19 @@ def prepared_project(directory):
         # The closed project/configuration checks precede any local child process.
         check_application_trust(variables["APPLICATION_TRUST"])
     return directory
+
+
+def staged_project(project, token):
+    """A private copy with the installation's proxy token; the operator's project stays unchanged."""
+    config = read_json(project / "wrangler.json", 64 * 1024)
+    config["vars"] = {**config["vars"], "CELLD_PROXY_TOKEN": token}
+    staged = Path(tempfile.mkdtemp(prefix="staged-", dir=project))
+    for name, data in (("wrangler.json", (json.dumps(config, indent=2) + "\n").encode()),
+                       ("worker.ts", (project / "worker.ts").read_bytes())):
+        fd = os.open(staged / name, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
+        with os.fdopen(fd, "wb") as output:
+            output.write(data)
+    return staged
 
 
 def run_deployment(argv, env, directory):
@@ -306,6 +323,7 @@ def deploy(prefix, project, esbuild):
     config, user = configuration(read_json(Path(prefix) / "config/host.json"))
     require(user.pw_uid == record["uid"] and config["prefix"] == str(prefix), "installation differs")
     credentials = private_credentials(Path(prefix) / "private/aws.json", user.pw_uid)
+    token = proxy_token(Path(prefix), user.pw_uid)
     pin = (Path(prefix) / "config/celld.version").read_text().strip()
     env = {"HOME": pwd.getpwuid(os.getuid()).pw_dir, "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
            "LANG": "en_US.UTF-8", "AWS_REGION": "us-east-1", "CELLD_ESBUILD": str(esbuild), **credentials}
@@ -315,8 +333,9 @@ def deploy(prefix, project, esbuild):
     # The installer owns a new store directory. PUT creates or opens its own
     # fixed bucket; it does not clear an existing bucket or change node data.
     ensure_bucket(prefix)
-    run_deployment([config["celld"], "deploy", str(project), "--bucket", "s3://" + record["bucket"],
-                    "--endpoint", record["endpoint"], "--region", "us-east-1", "--json"], env, project)
+    staged = staged_project(project, token)
+    run_deployment([config["celld"], "deploy", str(staged), "--bucket", "s3://" + record["bucket"],
+                    "--endpoint", record["endpoint"], "--region", "us-east-1", "--json"], env, staged)
     return {"version": 1, "deploymentCommandSucceeded": True,
             "qualification": "Run the retained CLI plan to verify actual Worker readiness"}
 

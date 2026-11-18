@@ -94,6 +94,31 @@ test('package settings survive GitHub staging byte-for-byte with the exact conte
   assert.equal(checked.stdout.includes(f.key) || checked.stderr.includes(f.token), false);
 });
 
+test('hosted MCP may stay closed or keep the exact legacy opening; any other MCP setting refuses', async t => {
+  const f = await fixture(t), path = join(f.project, 'wrangler.json');
+  const original = JSON.parse(await readFile(path));
+  const project = vars => JSON.stringify({ ...original, vars });
+  const { MCP_ENABLED, MCP_TOOL_ADDITIONS, ...closed } = original.vars;
+  for (const [index, vars] of [closed, { ...closed, MCP_TOOL_ADDITIONS: '[]' },
+    { ...closed, MCP_ENABLED: 'true', MCP_TOOL_ADDITIONS: '[]' }].entries()) {
+    await writeFile(path, project(vars));
+    const out = join(f.directory, 'accepted-' + index);
+    await prepareGitHubProject({ ...f, out });
+    const { GITHUB_APP_CONFIG, GITHUB_APP_PRIVATE_KEY, GITHUB_READ_TOKEN, GITHUB_REPOSITORY_BINDINGS, ...staged } = JSON.parse(await readFile(join(out, 'wrangler.json'))).vars;
+    assert.deepEqual(staged, vars);
+  }
+  for (const vars of [{ ...closed, MCP_ENABLED: 'false' }, { ...closed, MCP_ENABLED: 'true' },
+    { ...closed, MCP_ENABLED: 'false', MCP_TOOL_ADDITIONS: '[]' }, { ...closed, MCP_ENABLED: 'TRUE', MCP_TOOL_ADDITIONS: '[]' },
+    { ...closed, MCP_TOOL_ADDITIONS: '["create"]' }, { ...closed, MCP_ENABLED: 'true', MCP_TOOL_ADDITIONS: '["create"]' }]) {
+    const text = project(vars);
+    await writeFile(path, text);
+    await assert.rejects(prepareGitHubProject({ ...f, privateKeyFile: join(f.directory, 'NEVER-READ-private-key') }),
+      error => error instanceof GitHubProjectPreparationError && error.stage === 'project');
+    await assert.rejects(lstat(f.out), { code: 'ENOENT' });
+    assert.equal(await readFile(path, 'utf8'), text);
+  }
+});
+
 test('package settings stay closed and reject before private-key access or new output', async t => {
   const f = await fixture(t), path = join(f.project, 'wrangler.json');
   const original = JSON.parse(await readFile(path));

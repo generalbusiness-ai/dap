@@ -45,9 +45,10 @@ line computes the ID before the register exists. The Worker accepts only
 the register that `REGISTER_SCOPE` names. Plan first, set the pin, then
 install:
 
-1. **Deploy** the Worker. Set `DEPLOYMENT` and `SESSION_SECRET` from
-   standard input, as
+1. **Deploy** the Worker with `DEPLOYMENT` in its `vars`, then set
+   `SESSION_SECRET` from standard input, as
    [Run your own service on Cloudflare](self-host-cloudflare.md) shows.
+   A Worker with `DEPLOYMENT` and no register pin refuses every creation.
 2. **Plan.** Run `dap install --plan <base-url> --host <host>` with the
    host's namespace:
 
@@ -143,6 +144,10 @@ with its reader, parser and failure behavior. The order uses these:
   bytes. Without it, creation admits only the current register, and each host keeps
   its configured single register. An invalid list closes creation and Git
   host authority and makes register health unavailable.
+  The `registerScope` of a valid `GITHUB_APP_CONFIG` must be one of the
+  installed registers. If your GitHub host names an earlier register, list
+  that register in `INSTALLED_REGISTER_SCOPES` before you deploy. Otherwise
+  the Worker refuses every creation and `/health` answers `503`.
 - `ARTIFACTS_CONFIG` and `ARTIFACTS_NAMESPACE`: the Artifacts host. See
   [Configure a Git host](hosts.md#cloudflare-artifacts-host-artifacts).
 - `GITHUB_APP_CONFIG`, `GITHUB_APP_PRIVATE_KEY`, `GITHUB_CREATION_TOKEN`,

@@ -187,6 +187,7 @@ failure behavior, health visibility and the other readers.
 | `ARTIFACTS` | binding | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `ARTIFACTS_CONFIG` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `ARTIFACTS_NAMESPACE` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `CELLD_PROXY_TOKEN` | secret | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/caller-address.ts`](../../packages/scope/src/caller-address.ts) |
 | `DEMO_START_CONFIG` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`apps/room/demo-creation.ts`](../../apps/room/demo-creation.ts) |
 | `DEPLOYMENT` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `GITHUB_APP_CONFIG` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
@@ -488,7 +489,8 @@ failure behavior, health visibility and the other readers.
         "packages/scope/src/worker.ts",
         "packages/scope/src/github-wiring.ts",
         "packages/scope/src/health.ts",
-        "packages/scope/src/site/host.ts"
+        "packages/scope/src/site/host.ts",
+        "packages/scope/src/register-setting.ts"
       ],
       "parser": "gitHubConfiguration: at most 4096 characters, strict closed fields for issuer, installationId, account, maxBytes, registerScope, privateRepositories, publicReads and adapter-attempt identity. Optional installationReads must be exactly true, with privateRepositories true and publicReads false; it enables only exactly authorized later-bound destinations.",
       "missing": "GitHub outside port off.",
@@ -631,12 +633,35 @@ failure behavior, health visibility and the other readers.
       "readers": [
         "packages/scope/src/creation-admission.ts",
         "packages/scope/src/creation-lineage.ts",
-        "packages/scope/src/scope-index.ts"
+        "packages/scope/src/scope-index.ts",
+        "packages/scope/src/health.ts"
       ],
       "parser": "Only the exact string true opens the local/test creation escape. DEPLOYMENT and supplied register settings are validated first; a deployed escape still requires a valid register pin and does not bypass the new host/cohort checks.",
       "missing": "A configured deployment requires its pinned register and verified creator chain; absent local DEPLOYMENT preserves local behavior.",
       "invalid": "Values other than true do not open the escape.",
-      "health": "Not reported; a healthy response does not attest this policy."
+      "health": "Reported as policy.openCreation, true when DEPLOYMENT is unset or this value is true."
+    },
+    {
+      "deployments": [
+        "dap-self-host",
+        "artroom-scope",
+        "dap-connect",
+        "dap-celld-local",
+        "dap-demo",
+        "dap-commons",
+        "dap-lending",
+        "dap-grow"
+      ],
+      "name": "CELLD_PROXY_TOKEN",
+      "kind": "secret",
+      "status": "read",
+      "readers": [
+        "packages/scope/src/caller-address.ts"
+      ],
+      "parser": "A celld host's per-install proxy token. When set, the Worker keeps cf-connecting-ip only on a request that carries the same value in x-dap-proxy-token, and removes the token header before any reader.",
+      "missing": "Cloudflare deployments leave it unset; cf-connecting-ip comes from the edge and passes unchanged.",
+      "invalid": "A value that a request does not match removes the caller address; an empty value matches no request.",
+      "health": "Not reported."
     },
     {
       "deployments": [
@@ -679,12 +704,13 @@ failure behavior, health visibility and the other readers.
       "readers": [
         "packages/scope/src/worker.ts",
         "packages/scope/src/scope-index.ts",
-        "packages/scope/src/worker-mcp.ts"
+        "packages/scope/src/worker-mcp.ts",
+        "packages/scope/src/health.ts"
       ],
       "parser": "scopeIndex/indexedScopes accept register or enforce; undefined selects enforce. Census serves in enforce only; register returns unsupported.",
       "missing": "Uses enforce with a valid index binding.",
       "invalid": "Invalid mode refuses indexed target lookup.",
-      "health": "Not a mode, backfill or enforcement attestation."
+      "health": "Reported as policy.index: enforce, register or invalid. Not a backfill or enforcement attestation."
     },
     {
       "deployments": [
@@ -802,12 +828,13 @@ failure behavior, health visibility and the other readers.
       "kind": "text",
       "status": "read",
       "readers": [
-        "packages/mcp/src/hosted-tools.ts"
+        "packages/mcp/src/hosted-tools.ts",
+        "packages/scope/src/health.ts"
       ],
       "parser": "hostedMcpTools requires exact true.",
       "missing": "Hosted MCP route 404.",
       "invalid": "Any other value closes the hosted endpoint.",
-      "health": "Not reported; health can be healthy with MCP off."
+      "health": "Reported as policy.mcp: open only for the exact value true. Health can be healthy with MCP off."
     },
     {
       "deployments": [

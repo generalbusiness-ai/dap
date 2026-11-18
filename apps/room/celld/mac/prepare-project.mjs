@@ -44,8 +44,9 @@ export async function prepareProject(options) {
       || !/^sc_[a-z2-7]{52}$/.test(config.plan.register)
       || config.plan.founding?.intent?.fields?.host !== 'none' || config.plan.founding.intent.fields.namespace !== '') throw Error();
     let project = JSON.parse(await readFile(maintained, 'utf8'));
+    // No MCP setting: hosted MCP stays closed on this host.
     project.vars = { ...project.vars, REGISTER_SCOPE: config.plan.register, PUBLIC_ORIGIN: origin,
-      MCP_ENABLED: 'true', MCP_TOOL_ADDITIONS: '[]', SESSION_SECRET: randomBytes(32).toString('base64url') };
+      SESSION_SECRET: randomBytes(32).toString('base64url') };
     if (await celldAnswersVersionQuestion(config.plan.definition, "celldPreparedBindingPolicyRegister")) {
       const policy = JSON.parse(await readFile(new URL('./repository-binding-policy.json', import.meta.url), 'utf8'));
       project.vars.PLATFORM_CREATION_PINS = JSON.stringify(policy.PLATFORM_CREATION_PINS);

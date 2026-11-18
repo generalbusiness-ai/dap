@@ -38,12 +38,43 @@ class InstallerSafety(unittest.TestCase):
             caddy = files["config/Caddyfile"].decode()
             self.assertIn('tls ' + json.dumps(config["certificate"]) + ' ' + json.dumps(config["privateKey"]), caddy)
             self.assertIn("header_up CF-Connecting-IP {remote_host}", caddy)
+            # Caddy reads the proxy token from its private environment; the public Caddyfile names no value.
+            self.assertIn("header_up X-Dap-Proxy-Token {$CELLD_PROXY_TOKEN}", caddy)
+            # No local admin endpoint can read the adapted configuration that holds the token.
+            self.assertIn("\tadmin off\n", caddy)
             self.assertIn("grace_period 10s", caddy)
             self.assertEqual(files["config/celld.version"], (kit.HERE.parent / "celld.version").read_bytes())
             for maintenance in ("down", "shutdown.py"):
                 self.assertEqual(files["bin/" + maintenance], (kit.HERE / maintenance).read_bytes())
             kit.new_tree(Path(scratch) / "rendered", files)
             self.assertFalse((Path(scratch) / "NEVER").exists())
+
+    def test_install_writes_a_private_proxy_token_that_service_and_deploy_read_back(self):
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+            prefix = Path(scratch)
+            (prefix / "private").mkdir(mode=0o700)
+            user = pwd.getpwuid(os.getuid())
+            kit.new_proxy_token(prefix, user)
+            path = prefix / kit.PROXY_TOKEN
+            self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+            self.assertEqual(path.stat().st_uid, user.pw_uid)
+            token = kit.proxy_token(prefix, user.pw_uid)
+            self.assertRegex(token, r"^[A-Za-z0-9_-]{43}$")
+            self.assertEqual(path.read_text(), token)
+            with self.assertRaises(FileExistsError):
+                kit.new_proxy_token(prefix, user)
+            with self.assertRaises(kit.Refusal):
+                kit.proxy_token(prefix, user.pw_uid + 1)
+            path.chmod(0o644)
+            with self.assertRaises(kit.Refusal):
+                kit.proxy_token(prefix, user.pw_uid)
+            path.chmod(0o600)
+            path.write_text(token[:-1] + "!")
+            with self.assertRaises(kit.Refusal):
+                kit.proxy_token(prefix, user.pw_uid)
+            path.unlink()
+            with self.assertRaises(OSError):
+                kit.proxy_token(prefix, user.pw_uid)
 
     def test_render_refuses_existing_paths_and_symlink_parents_without_touching_them(self):
         with tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:

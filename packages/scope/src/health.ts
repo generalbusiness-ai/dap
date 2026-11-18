@@ -25,6 +25,23 @@ interface HealthEnvironment extends Omit<MetricEnvironment, "DEPLOYMENT"> {
   GITHUB_READ_TOKEN?: unknown;
   GITHUB_CREATION_TOKEN?: unknown;
   GITHUB_CLEANUP_TOKENS?: unknown;
+  SCOPE_INDEX_MODE?: unknown;
+  MCP_ENABLED?: unknown;
+  ALLOW_OPEN_CREATION?: unknown;
+}
+/** S3, finding 2.3: the three settings that weaken admission, by name only.
+ * `openCreation` is true where the settings admit any parentless creation. */
+export interface HealthPolicy { readonly index: "enforce" | "register" | "invalid"; readonly mcp: "open" | "closed"; readonly openCreation: boolean }
+export function healthPolicy(env: Pick<HealthEnvironment, "SCOPE_INDEX_MODE" | "MCP_ENABLED" | "ALLOW_OPEN_CREATION" | "DEPLOYMENT">): HealthPolicy {
+  const mode = env.SCOPE_INDEX_MODE;
+  return { index: mode === undefined || mode === "enforce" ? "enforce" : mode === "register" ? "register" : "invalid",
+    mcp: env.MCP_ENABLED === "true" ? "open" : "closed", openCreation: env.DEPLOYMENT === undefined || env.ALLOW_OPEN_CREATION === "true" };
+}
+/** S3, finding 2.1: the names of absent settings that a deployed Worker needs
+ * before it issues a session or admits a creation. It never shows a value. */
+export function missingSettings(env: Pick<HealthEnvironment, "DEPLOYMENT" | "SESSION_SECRET" | "REGISTER_SCOPE" | "ARTIFACTS_CONFIG">): string[] {
+  return [...(env.DEPLOYMENT === undefined ? ["DEPLOYMENT"] : []), ...(env.SESSION_SECRET === undefined ? ["SESSION_SECRET"] : []),
+    ...(env.REGISTER_SCOPE === undefined && env.ARTIFACTS_CONFIG === undefined ? ["REGISTER_SCOPE"] : [])];
 }
 interface Key { binding: Binding; scope: ScopeId }
 const sameHealthKey = (a: Key, b: Key): boolean => a.binding === b.binding && a.scope === b.scope;
@@ -79,5 +96,5 @@ export async function health(request: Request, env: HealthEnvironment, observer 
     github: githubState.state === "wired" ? { state: "wired" as const } : githubState };
   const configuredOff = [artifactsState, githubState].some(state => state.state === "off" && state.reason !== "unconfigured");
   const version = typeof env.VERSION_METADATA?.id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(env.VERSION_METADATA.id) ? env.VERSION_METADATA.id : "unknown";
-  return new Response(request.method === "HEAD" ? null : JSON.stringify({ deployment, version, sessions, register, wiring }), { status: sessions === "ok" && register === "ready" && !configuredOff ? 200 : 503, headers });
+  return new Response(request.method === "HEAD" ? null : JSON.stringify({ deployment, version, sessions, register, wiring, policy: healthPolicy(env), missing: missingSettings(env) }), { status: sessions === "ok" && register === "ready" && !configuredOff ? 200 : 503, headers });
 }

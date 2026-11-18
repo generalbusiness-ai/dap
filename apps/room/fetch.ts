@@ -12,9 +12,12 @@ import { oauthPage } from "./page/oauth-route.ts";
 import { isBrand, brand } from "./brand/route.ts";
 import { measuredRequest } from "../../packages/scope/src/operational.ts";
 import { indexedScopes } from "../../packages/scope/src/scope-index.ts";
+import { proxiedRequest } from "../../packages/scope/src/caller-address.ts";
 
 export default {
   fetch: async (request: Request, env: Env & Partial<Pick<McpEnv, "REGISTRIES" | "AGENTS">>, ctx?: Pick<ExecutionContext, "waitUntil">): Promise<Response> => {
+    // Every later reader, Durable Objects included, sees only an admitted caller address.
+    request = proxiedRequest(request, env);
     return measuredRequest(request, env, async () => {
     const scopes = indexedScopes(env.SCOPES, env), lookups = { ...env, SCOPES: scopes };
     if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });

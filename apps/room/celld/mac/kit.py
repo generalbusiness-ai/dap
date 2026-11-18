@@ -9,6 +9,7 @@ from pathlib import Path
 import plistlib
 import pwd
 import re
+import secrets
 import stat
 import selectors
 import subprocess
@@ -23,6 +24,8 @@ BUCKET = "celld-fleet"
 ENDPOINT = "http://127.0.0.1:28133"
 CONFIG_KEYS = {"user", "prefix", "celld", "weed", "caddy", "node", "volumeMax", "hosts", "certificate", "privateKey"}
 MAX_CONFIG = 16 * 1024
+# Caddy sends this private token beside the caller address; celld admits the address only with it.
+PROXY_TOKEN = "private/proxy-token"
 
 
 class Refusal(Exception):
@@ -206,6 +209,26 @@ def private_credentials(path, uid):
     return value
 
 
+def new_proxy_token(prefix, user):
+    write_new(prefix / PROXY_TOKEN, secrets.token_urlsafe(32).encode(), 0o600, user)
+
+
+def proxy_token(prefix, uid):
+    path = prefix / PROXY_TOKEN
+    no_links(path.parent)
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        info = os.fstat(fd)
+        require(stat.S_ISREG(info.st_mode) and info.st_uid == uid and stat.S_IMODE(info.st_mode) == 0o600,
+                "proxy token must be a regular file owned by the service user with mode 0600")
+        with os.fdopen(fd, "rb", closefd=False) as stream:
+            data = stream.read(64)
+    finally:
+        os.close(fd)
+    require(re.fullmatch(rb"[A-Za-z0-9_-]{43}", data), "invalid proxy token")
+    return data.decode()
+
+
 def launchctl(*args):
     return subprocess.run(["/bin/launchctl", *args], stdin=subprocess.DEVNULL,
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=90, check=False).returncode
@@ -336,6 +359,7 @@ def install(args):
     write_new(prefix / "private/aws.json", encoded(credentials), 0o600, user)
     s3 = {"identities": [{"name": "dap-host", "credentials": [{"accessKey": credentials["AWS_ACCESS_KEY_ID"], "secretKey": credentials["AWS_SECRET_ACCESS_KEY"]}], "actions": ["Admin", "Read", "Write", "List", "Tagging"]}]}
     write_new(prefix / "private/seaweed-s3.json", encoded(s3), 0o600, user)
+    new_proxy_token(prefix, user)
     installed = {}
     for name, data in files.items():
         path = prefix / name
