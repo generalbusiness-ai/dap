@@ -152,7 +152,7 @@ test("sandbox smoke refuses an untracked host or an invalid room before fetch an
   assert.equal(await deploySmokeMain(["sandbox", "--host", screen, "--room", room, "--url", screen], { ...ports, write: () => {} }), 2);
   assert.equal(calls, 0);
   const tracked = await readFile(new URL("../apps/sandbox/wrangler.rollout.jsonc", import.meta.url), "utf8");
-  assert.deepEqual(sandboxScreenOrigins(parseConfig(tracked)), ["https://grow.inguz.space", "https://lending.inguz.space", "https://counter.inguz.space", "https://lending-shelf.inguz.space"]);
+  assert.deepEqual(sandboxScreenOrigins(parseConfig(tracked)), ["https://grow.inguz.space", "https://lending.inguz.space", "https://counter.inguz.space", "https://lending-shelf.inguz.space", "https://counter-upgrade.inguz.space"]);
 });
 
 test("room screen descriptors and sandbox mappings agree in both directions on the matching Worker service", async () => {
@@ -184,10 +184,16 @@ test("room screen descriptors and sandbox mappings agree in both directions on t
   }], "Lending 0.3.0 keeps lending-library's installed screen on its original host");
   assert.deepEqual(mapped.filter(row => row.host.screenOrigin === "https://lending-shelf.inguz.space"), [{
     host: { v: 1, screenOrigin: "https://lending-shelf.inguz.space", roomOrigin: "https://dap-lending.inguz.workers.dev",
-      directory: "sc_a7fawlxbqabykqatabrx2ldhx4ufji2s4wlm6l4mh5krmqvrzrta", item: 2,
+      directory: "sc_zyofzb2ffitaapn2qavxv2nbdtlxzcjohc2t3mtrgqhvh2nt4dtq", item: 5,
       presentation: "sha256:188f7b84e6b1ba29c2090265f4d7884a29884beff6ea58774a34ce8fbeef9f81" },
     service: "LENDING",
-  }], "Lending 0.4.0 gives lending-shelf a distinct installed screen host through dap-lending");
+  }], "lending-shelf.inguz.space serves Lending 0.4.0 at upgrade-witness item 5 through dap-lending");
+  assert.deepEqual(mapped.filter(row => row.host.screenOrigin === "https://counter-upgrade.inguz.space"), [{
+    host: { v: 1, screenOrigin: "https://counter-upgrade.inguz.space", roomOrigin: "https://dap-lending.inguz.workers.dev",
+      directory: "sc_zyofzb2ffitaapn2qavxv2nbdtlxzcjohc2t3mtrgqhvh2nt4dtq", item: 2,
+      presentation: "sha256:905a3f7e088278894937f41bd27bf612bafac9b65fe030dbf0e2e0f584cd444f" },
+    service: "LENDING",
+  }], "counter-upgrade.inguz.space serves Counter 0.6.0 at upgrade-witness item 2 through dap-lending");
   const byHost = (a, b) => a.host.screenOrigin.localeCompare(b.host.screenOrigin) || a.service.localeCompare(b.service);
   assert.deepEqual(mapped.sort(byHost), expected.sort(byHost), "room and sandbox screen descriptors must match, with no row on one side alone");
 });
