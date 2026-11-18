@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9e5d1a5dba95b74c79eb3f24ec5b40c98046a30e","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-04-settlement-ledger-validation.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9e99dd7ae004b95919de1c4e588789a0d0bd0bdf","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-26-br3-worker-parallelism-delivery.manifest.json."}
