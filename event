@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e567249a45a829833334906e2e14cd4f4b3782c8","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-18-ad1-admission-current-release.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:eaf86c95a052a50c2d2576d6529e1a049e5f3bfd","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/scope-index.ts."}
