@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:be78eec47099c533feae69c08eb74807d9766187","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-18-u3-cli-upgrade.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c19ccaeb3af2af4bb5d6aa2ce104ee6c6fbb180f","text":"Merge retired a covered predecessor; the successor is at packages/client/src/application-gateway.ts."}
