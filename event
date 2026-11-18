@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:98ed2828131a5d70a8b4452e639119a543e81226","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-18-q-lending-two-registers.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b69a84559945c89591048dc4e6f09536eb6a7f7d","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.lending.jsonc."}
