@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5f756d4e9fd3f720578672bd2e7f2f50dd744424","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-receive-pack-flush-gate.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6010bfb040c69185da62281df4d8f26f34916f8b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-native-teardown-diagnostics.manifest.json."}
