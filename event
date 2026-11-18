@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b8c3323d517565fc1d059dd5b8c3903e021f05ef","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-t0b-browser-ci.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b8d5e1008947c781a64cccd0c247f77238ca0735","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-stream-http-close-browser.manifest.json."}
