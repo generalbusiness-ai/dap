@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I build SD-2 on main 60223c5c: docs wording, the two row moves in both files, a deploy-smoke trust check with a named red, and the trust-head procedure line. Full gate.","body":{"target":"inherit"}}
+{"kind":"assert","text":"Gate START: SD-2 head 0dacc82f (one commit on main 60223c5c), full gate, evidence 2026-11-18-sd2-gate.","body":{"gate":"start","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
