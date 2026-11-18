@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:acf85bfab5936bfce75ba2f8821c86b33516d443","text":"Closed in the 2026-11-18 open-request review, with Hugh's approval. done: RC-1 landed (4fe6c6cf, a9037570); REFUSAL_CLASSES in bytes/src/records.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ade0a5ded569c996060b746fe69b535091721238","text":"Closed in the 2026-11-18 open-request review, with Hugh's approval. fulfilled: the checked main fc42cf3e is an ancestor of origin main 60223c5c; the checker answered with an assert."}
