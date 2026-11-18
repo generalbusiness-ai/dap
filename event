@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:04159dad23e40cdc48a344db7c280f294f74ab11","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-18-e4b-browser-authorizations.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1267165d4d0ebc282fc09e19510ed8cd7a543620","text":"Merge retired a covered predecessor; the successor is at packages/client/test/authorization.test.ts."}
