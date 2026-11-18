@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:84aec6ab0be9410f8aaaf67b8a0e291afe095222","text":"Closed in the 2026-11-18 open-request review, with Hugh's approval. obsolete: builder self-tracking from an earlier phase; the work landed or was replaced."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9cadddbccb4908a57e27693c5f80beab38487e4f","text":"Closed in the 2026-11-18 open-request review, with Hugh's approval. obsolete: overtaken by the identifier cutover and the Register 28 base family."}
