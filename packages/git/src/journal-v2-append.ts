@@ -12,7 +12,7 @@ import { JournalLayoutRefusal, JournalWork, refuseJournal, type JournalBudget, t
 
 export async function verifyJournalAppend(options: { readonly format: JournalFormat; readonly at: ScopeRef;
   readonly old: string; readonly commit: string; readonly source: JournalObjectSource; readonly budget: JournalBudget;
-}): Promise<{ readonly ok: true } | { readonly ok: false; readonly reason: JournalLayoutReason }> {
+}): Promise<{ readonly ok: true } | { readonly ok: false; readonly reason: JournalLayoutReason; readonly error?: string }> {
   try {
     const format = journalFormat(options.format), work = new JournalWork(options.budget);
     if (!isScopeRef(options.at)) return refuseJournal("parent");
@@ -66,6 +66,15 @@ export async function verifyJournalAppend(options: { readonly format: JournalFor
   } catch (error) {
     if (error instanceof JournalLayoutRefusal) return { ok: false, reason: error.reason };
     const reason = error && typeof error === "object" && "reason" in error ? error.reason : "unavailable";
-    return { ok: false, reason: reason === "limit" || reason === "timeout" ? reason : "unavailable" };
+    return reason === "limit" || reason === "timeout" ? { ok: false, reason } : { ok: false, reason: "unavailable", error: errorClass(error) };
   }
+}
+
+/** AS-2: the class of an error mapped to unavailable, never its message.
+ * At most 65 characters, so the caller's 64-character check still refuses
+ * a longer name; the caller owns the identifier allow-list. */
+function errorClass(error: unknown): string {
+  if (!(error instanceof Error)) return "non-error";
+  try { const name: unknown = error.name; return typeof name === "string" ? name.slice(0, 65) : "other"; }
+  catch { return "other"; }
 }

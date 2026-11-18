@@ -11,11 +11,12 @@ export type ArchiveCost = { -readonly [K in keyof typeof ARCHIVE_BOUNDS]: number
 const keys = ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const;
 export type ArchiveStopReason = "limit" | "timeout" | "unavailable";
 /** AS-2: why a pass stopped as unavailable, for archive-pass-diagnostic-v1.
- * Only the clock check, a failed wait and the send verifier name a cause. */
+ * Only the clock check, a failed wait and the send verifier name a cause.
+ * A verifier that maps a thrown error to unavailable also names its class. */
 export type ArchiveStopCause =
   | { readonly site: "clock"; readonly clock: "not-finite" | "regressed" }
   | { readonly site: "wait"; readonly error: string }
-  | { readonly site: "verifier"; readonly verifier: string };
+  | { readonly site: "verifier"; readonly verifier: string; readonly error?: string };
 /** A bounded identifier for the log: an error or verifier name, never a message. */
 export function archiveStopName(value: unknown): string {
   return typeof value === "string" && /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(value) ? value : "other";
