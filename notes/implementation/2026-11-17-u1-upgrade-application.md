@@ -16,7 +16,7 @@ nothing, and no deployment happens before U2.
 | Register | `platform:register@29` | `sha256:cc5fadbde47db6dc9a833af1a15536d22ecbf33c69faeaf0aa3acc8aa349ce12`, the bytes of Register 28 |
 | Directory | `platform:directory@28` | `sha256:3bcc3fef39c145c2de415debf0d45b4d9873df689aae898209835487f1044a23`, the bytes of Directory 27 |
 | Membership | `platform:membership@14` | unchanged |
-| Rules | `platform:rules@16` | `sha256:8bc4fafd5dd734ef76db8416f2a40fb4eeb87433deea2631670872aa10817185` |
+| Rules | `platform:rules@16` | `sha256:9e31b5daf81944fa260fb5901370168160b16f84ff6c0beb6f5adfca2f3549ca` |
 | Destination | `platform:destination@21` | unchanged |
 | Inbox | `platform:inbox@1` | unchanged |
 
@@ -40,10 +40,12 @@ historical failed-claim defect test skips it, as it skips Register 28.
 ## Rules 16
 
 `packages/platform/src/upgrade-rules.ts` builds Rules 16 on Rules 15. The
-installation item changes in three ways:
+installation item changes in four ways:
 
 - A new final state, `replaced`.
 - A new fixed reference, `replaces`, to another installation item.
+- A new changeable reference, `upgradeAt`: the position of the latest
+  in-place `upgrade-application` act on the item.
 - `uri`, `release` and `presentation` are no longer fixed slots, so the
   fetch outcome of an in-place upgrade can write them. No other rule writes
   them after the opening entry.
@@ -59,7 +61,9 @@ The proof guard reads the signed v2 proof of the named release and refuses:
 - `application-publisher-changed` when the release's publisher differs from
   N's, in both forms (D2);
 - `application-release-unchanged` when the release equals N's;
-- `application-upgrade-pending` while a pending successor of N exists;
+- `application-upgrade-pending` while a pending successor of N exists, or
+  while the fetch of an in-place act on N has no confirmed or refused
+  outcome;
 - `invalid-application-package` when the in-place form carries `roles`,
   `values` or `owner`, or when the replace form fails the install proof of
   Rules 15.
@@ -72,7 +76,10 @@ identifier names the root definition, so an equal identifier keeps it.
 answer must carry the act's `uri` and `release`, N's semantic identifier and
 N's publisher. It then sets N's `uri`, `release` and `presentation`, and no
 other slot (D1). The signed manifest names the presentation, so the release
-digest fixes it. A refused answer changes nothing (F5).
+digest fixes it. A refused answer changes nothing (F5). The in-place form
+accepts any trusted release with the same semantic identifier, newer or
+older; APPLICATION_TRUST is the bound, and a move to an older trusted
+release is the rollback path (ruling 1704aaca).
 
 **Replace** (any other semantic identifier). The act opens a pending
 successor installation at its own position, with `replaces` = N, and opens
@@ -80,6 +87,28 @@ the same fetch operation as an install. The successor then runs the Rules 15
 pipeline: fetch, admission, grants and creation. The entry that makes the
 successor `active` also moves N to `replaced` (D3). Until then N stays
 active. A refused successor leaves N active.
+
+### One upgrade of N at a time
+
+N takes one upgrade at a time, in either form. A pending successor with
+`replaces` = N records an open replace. An open in-place act opens no item,
+so N records it: the in-place act sets N's `upgradeAt` to the act's
+position. The act opens its fetch at that position with ordinal 0, so the
+guard reads exactly one operation from the ledger, `<upgradeAt>:0`. While
+that operation is not settled, `application-upgrade-proof` refuses
+`application-upgrade-pending`, in both forms.
+
+The guard reads the operation's own record, so no outcome clears the
+reference. A confirmed outcome and a refused outcome each settle the
+operation, and so release N. The host answer rule refuses an `unknown`
+outcome for an upgrade fetch, and an `unknown` outcome would leave the
+operation open for its late answer in any case. A fetch that never gets an
+answer keeps N waiting, as it keeps an install's job pending.
+
+`upgradeAt` is a reference slot of type `int`. The installation item already
+holds 12 value slots, the bound. A `fact` reference needs the entry's hash,
+which the act's own judgment cannot name. An `int` reference retains no
+entry below the floor.
 
 `install-application` keeps its rules. Red (d) covers `upgrade-application`
 only (D4).
@@ -129,9 +158,9 @@ application room now names the new pin beside it:
 | Seal of `packages/platform/src/version-questions.ts` | `1db22b0f15e32ac2f221530a7070f2c3ecf2a2db35503afe7ccfd81134b6e178` | `715333df2a0bfeb66a1c9dc82814bfe24d03f3e95da21121d77e7901debfa3a9` |
 | Seal of `packages/platform/src/version-relations.ts` | `1eb52555e06569c8f76d9de97a03717828996f2de7500c6c17e66413eef25f0a` | `84a5df8be0ca9c654faffa2493faba513606c4e82709d89a42decd3d930f464f` |
 | Seal of `packages/platform/src/application-archive-reader.ts` | `e261d7d0e052702daf16b07eba0a7457df30f7a9591ba1a13524456c27a4ee2e` | `19bb24e8367f70384d9843c63dc158e7bf2ad09ae34fa5e3b753b9aec69d5d73` |
-| Open Lending 0.6.0 presentation | `sha256:db139b7398bda6dc5562e4904023e8c067a348c59807d8ad816180dc8cad6180` | `sha256:9f7d92b3f2cf9ff8caa192a37a7d0d7fa890b8fff8cdeac2b2677f4a5a7b17be` |
-| Open Counter 0.7.0 presentation | `sha256:9d6995c8523ea6e59cbd3dfb4694501fdfe7420ee8e0d59f5e839f9a6529a300` | `sha256:d08f341c706008f5de61dadff37c1c11a2d85e3bd24a05c531253821d4a40102` |
-| Page module `apps/room/page/assets.ts` | 2485796 bytes | 2499692 bytes |
+| Open Lending 0.6.0 presentation | `sha256:db139b7398bda6dc5562e4904023e8c067a348c59807d8ad816180dc8cad6180` | `sha256:b69ff12dc9dde27ee2620cc3a0c3c534836d1e15ba60a767d7a12778d5570dd1` |
+| Open Counter 0.7.0 presentation | `sha256:9d6995c8523ea6e59cbd3dfb4694501fdfe7420ee8e0d59f5e839f9a6529a300` | `sha256:3d5b065e9af8ac35a3ede715028064cc3435d4ac97cffb23b1ab41913c4c0cf1` |
+| Page module `apps/room/page/assets.ts` | 2485796 bytes | 2500268 bytes |
 | Seal of `packages/cli/src/command-install.ts` `$module` | `2f2e4690fc429f57d7a47795b986f3d1ca335775f6c43aa946982a4a6c7808dd` | `81144b60ef61fa1623759185ddcaf5f5ee1da493e89d61727d3c6e73df18f560` |
 | Seal of `command-install.ts` `CREATION_INSTALL_COHORTS` | `c007f288c599052489abdd8f0e301920e5752b39104bb2e22f2b79cf9bf8da9e` | `3bc72a98d0af6179d7cec8894302187bd31d4cc70ba331fcd23c6330bb1f1bc5` |
 | Seal of `command-install.ts` `selectedRegister` | `41e1ec4c908a3cec8ea0a0c03081215dfb5adf7b9879134ac14e95e1d0e39635` | `f0bbd3c0a7d66884c5d16ac1df5b277de4d2140466e0c0da4c62a9afb98a3ceb` |
@@ -157,6 +186,7 @@ directory, with these SHA-256 values.
 | (c) a release outside `APPLICATION_TRUST` refuses, and the item stays unchanged | `red (c): …` in `packages/scope/test/upgrade-application-host.test.ts` | the trust check before any source opens, in `resolve.ts`, disabled | `expected [ { …(6) } ] to deeply equal []` (the host opened the source) | `08fd3b19824bfd2a6250876d62fd0adeca62e861ec938e0b18bdc4ddeb986286` |
 | (c) the host prepares an upgrade's fetch | same test | `outside.ts` accepts `install-application` only | `expected null to match object { result: 'refused', … }` | `8cbdc256785ba0bd7b435ca5b6d39bc163e5c3d11259a6317483ca10c6834d75` |
 | (d) at every entry at most one of N and its successor is active, and exactly one | `red (d): …` in `packages/platform/test/upgrade-application.test.ts` | the `replaced` effect in `application-keep-creation` removed | `expected [ 'active', 'active' ] to deeply equal [ 'replaced', 'active' ]` | `4dd175f16b026970c48d42dedeff842ead62716be9e0a575482437dbed4d135b` |
+| (e) an open in-place fetch of N refuses a second upgrade of N until its outcome | `red (e): …` in `packages/platform/test/upgrade-application.test.ts` | the `inPlaceOpen` check in `application-upgrade-proof` removed | `expected { result: 'write', … } to match object { result: 'refused', … }` | `ed92220a23ec46bd23040d0c5efc24412232f33b37960d8d94ec6fe5cb65b9d1` |
 
 Red (c) runs the real outside port, `applicationOutside`, with a trust list
 that names Counter 1 only, against the real Native judges of Rules 16. The
@@ -175,7 +205,7 @@ U1 adds no alarm and no timed transition. These counts come from the code;
 no run measured them.
 
 - In place: one Rules act entry, one host fetch operation, and one outcome
-  entry. The host reads the release from its Git source once and stores it.
+  entry. The guard reads one operation record. The host reads the release from its Git source once and stores it.
   Nothing else wakes.
 - Replace: the act entry, then the install pipeline of Rules 15 on the
   successor, the same cost as `install-application`: fetch and admission
