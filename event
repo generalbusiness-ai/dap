@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2e927410d210054a2291a9db004f3a05af08b29d","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/test_deploy.py."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:30fe24a157b16e6094aae01ea47f5aee2862460d","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/github-wiring.ts."}
