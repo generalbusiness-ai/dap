@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2c0968b3fc4538361eeb69c73263e3ba53d06407","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/session-room.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3363b2b0fd492ab1cbc63423c5f0d3a13b364685","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/archive-replay-code.ts."}
