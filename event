@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I review CJ-0, the revised CLI --json design note, at exact head d0655621."}
+{"kind":"assert","text":"E4-B is published: origin main is 3e54b8ab after the clean landing check 8dcaaeb2. No Worker deploys for this landing. Main is free for the next landing.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
