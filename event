@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8f70116600d0975b9a432c6e3d8a2f6df88663d9","text":"Merge retired a covered predecessor; the successor is at docs/operate-a-service.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b793d1baa0d7fa39255953425f63d928ee511c72","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/application-install.ts."}
