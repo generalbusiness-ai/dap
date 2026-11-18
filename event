@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I review SD-2 at exact head 0dacc82f: the two row moves in both Workers, the reviewed-presentation wording, and the deploy-smoke trust check with its red."}
+{"kind":"artifact","text":"notes/2026-10-02-declared-acts.md at exact 95dc212a7de62cf56917cddcd26437eb67a53464 on builder/np1-notes-local-paths-20261118, under promise git:sha1…e36f95d on request git:sha1…2546be9","body":{"commit":"95dc212a7de62cf56917cddcd26437eb67a53464","path":"notes/2026-10-02-declared-acts.md"}}
