@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:75f06d1612648a0dc52bace33d07b4374ef113c0","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-v2-append.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7ab7e3fcd05ef7056551074a5c9f9bd6df6757b7","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-18-as2-archive-error-class.md."}
