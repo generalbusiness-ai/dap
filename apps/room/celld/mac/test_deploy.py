@@ -89,21 +89,100 @@ class DeploymentSafety(unittest.TestCase):
             project = self.project(Path(scratch))
             before = {name: (project / name).read_bytes() for name in ("worker.ts", "wrangler.json")}
             token = "TEST" + "t" * 39
-            staged = deploy.staged_project(project, token)
-            self.assertEqual(staged.parent, project)
-            self.assertEqual(staged.stat().st_mode & 0o777, 0o700)
-            self.assertEqual({name: (project / name).read_bytes() for name in before}, before)
-            self.assertEqual((staged / "worker.ts").read_bytes(), before["worker.ts"])
-            for name in ("worker.ts", "wrangler.json"):
-                self.assertEqual((staged / name).stat().st_mode & 0o777, 0o600)
             original = json.loads(before["wrangler.json"])
-            self.assertEqual(json.loads((staged / "wrangler.json").read_text()),
-                             {**original, "vars": {**original["vars"], "CELLD_PROXY_TOKEN": token}})
+            with deploy.staged_project(project, token) as staged:
+                self.assertEqual(staged.parent, project)
+                self.assertEqual(staged.stat().st_mode & 0o777, 0o700)
+                self.assertEqual({name: (project / name).read_bytes() for name in before}, before)
+                self.assertEqual((staged / "worker.ts").read_bytes(), before["worker.ts"])
+                for name in ("worker.ts", "wrangler.json"):
+                    self.assertEqual((staged / name).stat().st_mode & 0o777, 0o600)
+                self.assertEqual(json.loads((staged / "wrangler.json").read_text()),
+                                 {**original, "vars": {**original["vars"], "CELLD_PROXY_TOKEN": token}})
+            self.assertFalse(staged.exists())
+            self.assertEqual({name: (project / name).read_bytes() for name in before}, before)
             # The operator's project cannot carry the setting itself; only the installation supplies it.
             path = project / "wrangler.json"
             path.write_text(json.dumps({**original, "vars": {**original["vars"], "CELLD_PROXY_TOKEN": token}}))
             with self.assertRaisesRegex(Refusal, "project variables differ"):
                 deploy.prepared_project(project)
+
+    def scripted_deploy(self, root, project, outcome):
+        """Run deploy() with a scripted installation and a scripted deployment CLI; return what the CLI saw."""
+        prefix = root / "prefix"
+        (prefix / "config").mkdir(parents=True)
+        (prefix / "config/host.json").write_text("{}")
+        (prefix / "config/celld.version").write_text("v0.0.0-TEST\n")
+        esbuild = root / "esbuild"
+        esbuild.write_text("")
+        esbuild.chmod(0o700)
+        token = "TEST" + "p" * 39
+        seen = {}
+
+        def deployment(argv, env, directory):
+            staged = Path(argv[2])
+            seen.update(staged=staged, directory=directory,
+                        token=token in (staged / "wrangler.json").read_text())
+            outcome()
+
+        user = deploy.pwd.getpwuid(os.getuid())
+        with patch.object(deploy, "read_installation",
+                          return_value={"uid": os.getuid(), "bucket": "TEST-bucket", "endpoint": "https://TEST.invalid"}), \
+                patch.object(deploy, "configuration", return_value=({"prefix": str(prefix), "celld": "TEST-celld"}, user)), \
+                patch.object(deploy, "private_credentials", return_value={}), \
+                patch.object(deploy, "proxy_token", return_value=token), \
+                patch.object(deploy, "ensure_bucket"), \
+                patch.object(deploy.subprocess, "run",
+                             return_value=deploy.subprocess.CompletedProcess(["TEST-celld"], 0, b"celld v0.0.0-TEST\n", b"")), \
+                patch.object(deploy, "run_deployment", side_effect=deployment):
+            try:
+                return seen, token, deploy.deploy(prefix, project, str(esbuild))
+            except BaseException as error:
+                return seen, token, error
+
+    def assert_no_staged_token(self, project, token):
+        self.assertEqual(list(project.glob("staged-*")), [])
+        for path in project.rglob("*"):
+            if path.is_file():
+                self.assertNotIn(token.encode(), path.read_bytes(), str(path.relative_to(project)))
+
+    def test_deployment_removes_the_staged_copy_after_success(self):
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+            project = self.project(Path(scratch))
+            seen, token, result = self.scripted_deploy(Path(scratch), project, lambda: None)
+            self.assertEqual(result["deploymentCommandSucceeded"], True)
+            # The CLI read the token from the staged copy; private logs go to the operator's project.
+            self.assertTrue(seen["token"])
+            self.assertEqual(seen["staged"].parent, project)
+            self.assertEqual(seen["directory"], project)
+            self.assert_no_staged_token(project, token)
+
+    def test_deployment_removes_the_staged_copy_after_failure_and_keeps_the_error(self):
+        failure = Refusal("deployment failed; retain private project logs")
+        interrupt = KeyboardInterrupt()
+        for error in (failure, PermissionError("TEST-cleanup"), interrupt):
+            def outcome(error=error):
+                raise error
+            with self.subTest(error=type(error).__name__), tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+                project = self.project(Path(scratch))
+                seen, token, result = self.scripted_deploy(Path(scratch), project, outcome)
+                self.assertIs(result, error)
+                self.assertTrue(seen["token"])
+                self.assert_no_staged_token(project, token)
+
+    def test_staged_removal_refuses_a_path_it_did_not_make(self):
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+            project = self.project(Path(scratch))
+            other = project / "deployment-TEST"
+            other.mkdir(mode=0o700)
+            outside = Path(scratch) / "staged-TEST"
+            outside.mkdir(mode=0o700)
+            link = project / "staged-link"
+            link.symlink_to(outside)
+            for path in (other, outside, link):
+                with self.subTest(path=path.name), self.assertRaisesRegex(Refusal, "staged project differs"):
+                    deploy.remove_staged(project, path)
+            self.assertTrue(other.is_dir() and outside.is_dir() and link.is_symlink())
 
     def application_project(self, root, raw="[]"):
         project = self.project(root)
