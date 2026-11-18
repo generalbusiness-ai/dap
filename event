@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/reviews/2026-10-30-docs-review.md","body":{"commit":"782fa2b4daca1f5f5abd5c4d7b84481a12f00768","path":"notes/reviews/2026-10-30-docs-review.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:000b939f00158bee2d73eedd7fcfce910bfaf4ab","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-04-notes-reconciliation/collections.md."}
