@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5e3b585059bd10694c615df426dc9c96411eee38","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m7-indexed-native-trace.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5e6693cef44b016aab485c9011783ef3bc4650ac","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-26-br3-worker-parallelism.md."}
