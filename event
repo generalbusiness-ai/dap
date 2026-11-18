@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b24b9dc59cc8a1ab521cc04554c8ec5d93058f49","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r13-failed-quota-phase.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b252537e63a545beb0e6a96965c7daa602ccebe3","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-31-head-outcome-recovery-design.md."}
