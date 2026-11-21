@@ -178,3 +178,19 @@ test("GitHub Site identity reuse evicts the oldest entry at its key cap", async 
   await open(0);
   expect(calls).toBe(SITE_GITHUB_IDENTITY_KEYS + 2);
 });
+
+// Invariant: default dispatch retains the global receiver and one cache identity.
+test("GitHub Site calls global fetch as a method and reuses its identity answer", async () => {
+  let calls = 0;
+  vi.stubGlobal("fetch", async function (this: unknown, _request: Request) {
+    expect(this).toBe(globalThis);
+    calls++;
+    return json(repository());
+  });
+  try {
+    const open = () => readerOf(environment(true), room)!();
+    await (await open()).close();
+    await (await open()).close();
+    expect(calls).toBe(1);
+  } finally { vi.unstubAllGlobals(); }
+});

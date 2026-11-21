@@ -91,8 +91,8 @@ async function wantedObject(request: Request): Promise<string> {
     if (bytes.some(byte => byte > 0x7f)) throw new GitRefusal("unreadable", "fixture upload pkt-line");
     lines.push(new TextDecoder().decode(bytes)); at += size;
   }
-  const want = /^want ([0-9a-f]{40}) shallow filter\n$/.exec(lines[0] ?? "");
-  if (lines.length !== 5 || !want || lines[1] !== "deepen 1\n" || lines[2] !== "filter tree:0\n" || lines[3] !== null || lines[4] !== "done\n") throw new GitRefusal("unreadable", "fixture upload negotiation");
+  const want = /^want ([0-9a-f]{40})(?: ofs-delta)?\n$/.exec(lines[0] ?? "");
+  if (lines.length !== 3 || !want || lines[1] !== null || lines[2] !== "done\n") throw new GitRefusal("unreadable", "fixture upload negotiation");
   return objectId(want[1], "fixture wanted object");
 }
 
@@ -221,7 +221,7 @@ class Scripted {
     if (this.failing === "refs" && url.pathname.endsWith("/info/refs")) return new Response("scripted", { status: 500 });
     if (this.failing === "pack" && url.pathname.endsWith("/git-upload-pack")) return new Response("scripted", { status: 403, headers: { "content-type": "text/plain" } });
     if (request.method === "GET" && url.pathname.endsWith("/info/refs") && url.searchParams.get("service") === "git-upload-pack") {
-      const lines = [...this.refs].map(([ref, id], i) => pkt(`${id} ${ref}${i === 0 ? "\0ofs-delta shallow filter allow-reachable-sha1-in-want\n" : "\n"}`));
+      const lines = [...this.refs].map(([ref, id], i) => pkt(`${id} ${ref}${i === 0 ? "\0ofs-delta allow-reachable-sha1-in-want\n" : "\n"}`));
       return new Response(`${pkt("# service=git-upload-pack\n")}0000${lines.join("")}0000`, { headers: { "content-type": "application/x-git-upload-pack-advertisement" } });
     }
     if (request.method === "POST" && url.pathname.endsWith("/git-upload-pack")) {
@@ -229,7 +229,7 @@ class Scripted {
       // Route reads use the real packetized want. Complete-map mode belongs
       // only to the independent cache mutation witness below.
       const pack = this.allObjects ? await this.pack() : await this.wantedPack(await wantedObject(request));
-      return new Response(join(utf8("0000" + pkt("NAK\n")), pack), { headers: { "content-type": "application/x-git-upload-pack-result" } });
+      return new Response(join(utf8(pkt("NAK\n")), pack), { headers: { "content-type": "application/x-git-upload-pack-result" } });
     }
     return new Response("unscripted", { status: 404 });
   };
@@ -453,7 +453,7 @@ test("GFM completeness fixture: constructs render through Site, relative page an
 });
 
 // Invariant: a directory answers its index page if it has one, else a listing of its entries.
-test("an index: the root answers its README, a directory its index.md, and a directory with neither a listing of its files (STAND-IN host)", async () => {
+test("Artifacts Site serves its index without shallow or filter capabilities (STAND-IN host)", async () => {
   const root = await page(await get(`/site/${D.name}/HEAD/`));
   expect(root.status).toBe(200);
   expect(root.body).toContain('<h1 id="handbook">Handbook</h1>');
@@ -863,9 +863,9 @@ test("Scripted pack cache invalidates replacements, byte mutations, deletion and
   const unrelated = [...host.objects.values()].find(object => object.type === "blob" && object.data.length === FILE_BYTES + 1)!;
   selected.objects.set(unrelated.id, unrelated);
   const token = await (await selected.ns.get(selected.name)).createToken("read", 120) as { plaintext: string };
-  const wanted = (object: string, body = `${pkt(`want ${object} shallow filter\n`)}${pkt("deepen 1\n")}${pkt("filter tree:0\n")}0000${pkt("done\n")}`) => new Request(`${selected.remote(selected.name!)}/git-upload-pack`, { method: "POST", headers: { authorization: `Bearer ${token.plaintext}` }, body });
+  const wanted = (object: string, body = `${pkt(`want ${object} ofs-delta\n`)}0000${pkt("done\n")}`) => new Request(`${selected.remote(selected.name!)}/git-upload-pack`, { method: "POST", headers: { authorization: `Bearer ${token.plaintext}` }, body });
   const response = await selected.fetch(wanted(id)), wire = new Uint8Array(await response.arrayBuffer());
-  const nak = utf8("0000" + pkt("NAK\n"));
+  const nak = utf8(pkt("NAK\n"));
   expect(wire.subarray(0, nak.length)).toEqual(nak);
   const { decodePack } = await import("@generalbusiness/dap-git/http-read");
   const decoded = await decodePack(wire.subarray(nak.length), { maxBytes: MAX_BYTES });
