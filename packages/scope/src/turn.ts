@@ -324,7 +324,7 @@ export class Turns {
     for (let attempt = resume; ; attempt = null) {
       if (!attempt) {
         // Alarms alone drain timed work. An active live scope's timed rules run in memory (`live.ts`), never here.
-        const stopped = waiting || liveActive(definition, this.#store.scope()) ? null : this.#drain(definition, turn);
+        const stopped = waiting || this.#activeLive(definition) ? null : this.#drain(definition, turn);
         if (stopped) return this.#close<A>(definition, turn, stopped);
         if (!waiting) return this.#close<A>(definition, turn, { end: "idle" });
         turn.last = clockOf(this.#store, this.#ports.clock.read());
@@ -501,7 +501,7 @@ export class Turns {
    */
   #seal(definition: ValidDefinition, draft: Draft, clock: Reading, retain: readonly Retained[], facts?: readonly Fetched[], born: readonly Fetched[] = []): { sealed: Sealed; pin: ResolvedPin; added: number } {
     // An answer that writes nothing still passes, such as the repeat of a recorded delivery. A write does not.
-    if (liveActive(definition, this.#store.scope())) throw new LiveSeals();
+    if (this.#activeLive(definition)) throw new LiveSeals();
     // The foreign-entry term uses this scope's entry ceiling. Constrain
     // accepted retained copies at the same boundary, including results;
     // a peer's independently configured ceiling is not that guarantee.
@@ -545,10 +545,14 @@ export class Turns {
     return { sealed: { entry, hash }, pin, added };
   }
 
+  #activeLive(definition: ValidDefinition): boolean {
+    return definition.declared.level?.name === "live" && liveActive(definition, this.#store.scope());
+  }
+
   /** The end of a turn. If it wrote, left work due, or was an alarm's, the alarm is set for what is due next. */
   async #close<A>(definition: ValidDefinition | null | undefined, turn: Counts, end: End<A>): Promise<End<A>> {
     // An active live scope sets no alarm for its timed rules: they run from memory (`live.ts`).
-    if (definition && (turn.wrote || end.end !== "answer") && !liveActive(definition, this.#store.scope())) await this.#wake(definition, turn);
+    if (definition && (turn.wrote || end.end !== "answer") && !this.#activeLive(definition)) await this.#wake(definition, turn);
     return end;
   }
 

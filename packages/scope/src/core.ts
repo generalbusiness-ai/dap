@@ -339,13 +339,15 @@ export class Scope {
   readonly #ports: Ports;
   readonly #bounds: Bounds;
   readonly #turns: Turns;
-  readonly #live: LiveTurns;
+  #live: LiveTurns | undefined;
   readonly #pinCell: PinCell = { value: null };
 
   /** The one queue of this scope. Every writer's input waits in it: an act here, a delivery and a diagnosis from their own modules. */
   get turns(): Turns { return this.#turns; }
   /** The live turn of an active live scope (live note, section 3.3). For a scope of another level it answers `unavailable`. */
-  get live(): LiveTurns { return this.#live; }
+  get live(): LiveTurns {
+    return this.#live ??= new LiveTurns(this.#store, this.#ports, this.#bounds, () => this.pinned(), (asked) => this.#standing(asked));
+  }
 
   /** One input's receiver policy and evidence budget. No derived name is
    * cached on Scope or used by the global producer Source API. */
@@ -377,7 +379,6 @@ export class Scope {
     this.#store = store;
     this.#ports = ports;
     this.#bounds = bounds;
-    this.#live = new LiveTurns(store, ports, bounds, () => this.pinned(), (asked) => this.#standing(asked));
     this.#turns = new Turns(store, ports, bounds, () => { const pinned = this.pinned(); return pinned ? pinned.definition : undefined; }, pinned => pinned ? (pinned.definition ? ownersOf(pinned.definition, pinned.platform, this.#ports.owners) : this.#ports.owners ?? undefined) : this.owners(), this.#pinCell, candidate => this.#resolvePin(candidate));
   }
 

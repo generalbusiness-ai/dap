@@ -17,7 +17,7 @@ the scope wakes for, and which test witnesses each claim.
 | The live fold | `packages/derive/src/fold.ts`, `applyLive` and `liveActive` | See [The kernel change](#the-kernel-change-that-the-judges-need). |
 | The four answers | `packages/platform/src/live.ts`, `LiveAnswer` | The answer type, outside `packages/contract`. `packages/platform` exports it. |
 | The live turn | `packages/scope/src/live.ts`, `LiveTurns` | The generation, the state in memory, the turn of an act, the timed rules and the timer. |
-| The live mode | `packages/scope/src/core.ts`, `Scope.live` | Each `Scope` holds one `LiveTurns`. The pinned level selects it: for a scope of another level, `act` answers `unavailable`. |
+| The live mode | `packages/scope/src/core.ts`, `Scope.live` | A live call creates one `LiveTurns` on demand. The pinned level selects the mode. For a scope of another level, `act` answers `unavailable`. |
 | The RPC call | `packages/scope/src/object.ts`, `ScopeObject.live` | `live(signed, grants, generation)` answers a `LiveAnswer`. No Worker route calls it yet: LV4 owns the client call and the tool. |
 | The seam for LV3 | `packages/scope/src/live.ts`, `liveTurnsOf`, `LiveGeneration` | `instance[liveTurnsOf]()` gives the object's `LiveTurns` inside its isolate. `current()` gives the generation, the tick and a `StateView` of the state in memory. `onChanged` tells a listener the generation and the new tick after each change. |
 | The memory timer | `packages/scope/src/ports.ts`, `LiveTimer` and `Ports.liveTimer` | One timer for the earliest deadline. The default is `setTimeout` (`timeoutTimer` in `live.ts`). The test ports replace it with a timer that the test fires. |
@@ -26,9 +26,9 @@ the scope wakes for, and which test witnesses each claim.
 
 ### The generation and the tick
 
-`LiveTurns` mints a generation of 16 random bytes, as hex, when the object
-starts. It builds the state in memory on first use: a `MemoryState` that
-folds the stored creation entries with `applyEntry`. That state is the fold
+`LiveTurns` mints a generation of 16 random bytes as hex on first use.
+It builds a `MemoryState` that folds the stored creation entries with
+`applyEntry`. That state is the fold
 of the genesis and the confirmation, as section 3.1 of the live note
 requires. A creator-less live scope has one creation entry, its genesis,
 because its genesis makes it active.
@@ -51,17 +51,18 @@ names no fact, and a live scope sends nothing that could cite it.
 2. A generation other than the current one answers `reset` with the
    current generation. Nothing is judged.
 3. The signature and the shape are checked.
-4. Unless this generation already applied the intent, the authority port
-   reads the signer's standing once, and deployment admission
-   (`freshActAdmission`) is read, as for a recorded act.
+4. Unless this generation already applied the intent, the live turn reads
+   the signer's standing and deployment admission as for a recorded act.
+   If the generation changes during either read, the act gets `reset`.
 5. In one synchronous section: what is due drains first, and
    `prepareRules` finds the rules that the act's guards meet.
 6. The rules are evaluated within `preparationSeconds`. This is the one
    wait.
-7. In a second synchronous section: if the tick moved, the act starts
+7. In a second synchronous section, if the tick moved, the act starts
    again from step 5, at most `turnRestarts` times. Otherwise `judgeAct`
-   judges the act at the commit's one clock reading, and `applyLive` folds
-   a written draft.
+   judges the act at the commit's clock reading. Before a fresh act
+   changes memory, the turn checks that deployment admission still allows
+   it. An exact repeat in the current generation retains its tick.
 
 A draft that is not canonical, or that is larger than `entryBytes` as an
 entry, is refused as the recorded turn refuses it: `unauthorized` or
@@ -76,7 +77,8 @@ with `judgeTimed` and `applyLive`, within `timedAttemptsPerTurn`. Each
 applied rule adds one to the tick. After each change, `LiveTurns` sets the
 memory timer for the earliest deadline that the state holds. When the
 timer fires, `LiveTurns.drain` runs the same drain and sets the timer
-again. A deadline that has passed when the timer is set, because the clock
+again. The search includes the last millisecond of 9999. A deadline
+that has passed when the timer is set, because the clock
 is behind or the budget is spent, is retried after `drainRetrySeconds`. A
 reset drops every deadline with the state that held it.
 
@@ -86,8 +88,8 @@ Both orders write the same transitions before the act.
 
 ## The kernel change that the judges need
 
-Section 4.1 of the live note asks the head to name each change that a
-judge needs to run with no sealed entry. The judges need none: `judgeAct`,
+The review follows [section 7 of the kernel rule](../../docs/kernel.md#7-rule-for-adding-to-the-kernel)
+and section 4.1 of the live note. The judges need no change. `judgeAct`,
 `judgeTimed`, `prepareRules`, `entryOf` and the grant, guard and effect
 code run unchanged over a `MemoryState`. The fold needs one change.
 
@@ -99,10 +101,14 @@ code run unchanged over a `MemoryState`. The fold needs one change.
   transition, and the entry sends nothing. Otherwise it throws `FoldError`.
   `applyEntry` keeps the refusal, so replay still reports a third entry.
   Both run the one fold body, so a live run and a recorded run of one input
-  change state the same way.
+  change state the same way. The shared body stays in `derive` because it
+  gives recorded and live items the same meaning. A separate platform fold
+  would duplicate those state transitions.
 
-`liveActive` is the predicate of that refusal, exported so that the
-runtime's recorded paths read the same rule. The change adds no entry kind,
+`liveActive` is the predicate of that refusal. The runtime also uses it
+to keep active live scopes out of recorded sealing and alarm drains. The
+recorded fold passes its existing scope read through to the shared body.
+The change adds no entry kind,
 no field type, no capability and no `contract` type. It is kernel because
 it is in `fold.ts`. The review of this head is its review.
 
@@ -132,9 +138,8 @@ answer, and LV2 changes no contract type. A repeat of a delivery that the
 scope recorded still gets its recorded answer. The live scope's stored rows
 do not change.
 
-The planner's ruling also asks for a test that shows the sender's own
-deadline settles its request. Under the current dispatcher, no such test
-can pass:
+Planner ruling `3a8a2e6b` assigns sender settlement to LV2-O2, request
+`a9455de4`. The test for this head shows what the current dispatcher does.
 
 - The dispatcher (`packages/scope/src/outbox.ts`) gives a request up only
   when its log holds `routingRefusals` routing refusals (`wrong-genesis` or
@@ -145,9 +150,9 @@ can pass:
 - At that cap, each such request costs the sender 12 alarms an hour and
   the live scope 12 delivery requests an hour, with no end.
 
-The O2 test in `live-turn.test.ts` shows this behavior: four `retry`
-attempts, no diagnosis, no result, and no stored change in the live scope.
-Open question 5 asks the planner to choose a fix.
+The O2 test in `live-turn.test.ts` observes four retries. The sender keeps
+the request outstanding and the receiver's stored rows match their state
+after creation.
 
 ## Wake floor and requests per room per hour
 
@@ -182,7 +187,9 @@ The figures come from the code of this head.
 | A repeat of an applied intent after a reset applies again | the same test |
 | The stored rows after many live acts equal the stored rows after creation | the same test, and the timed-rule test |
 | Timed rules from memory: the timer fires at the deadline, and an act drains what is due first | `live-turn.test.ts`, "a timed rule runs from memory" |
-| O2: a delivery after the confirmation is answered `retry` and recorded nothing. The ruled witness, that the sender's own deadline settles the request, does not hold (open question 5) | `live-turn.test.ts`, "O2: an active live scope answers a delivery retry ..." |
+| The live timer arms for the last valid timestamp | `live-turn.test.ts`, "a live timer arms for the last representable deadline" |
+| Application admission can refuse a live act after rule evaluation. An accepted repeat keeps its original tick | `live-turn.test.ts`, "a live act rechecks application admission after waiting for its rules" |
+| O2: a delivery after confirmation gets `retry` and leaves the receiver's storage untouched. The sender keeps its request outstanding | `live-turn.test.ts`, "O2: an active live scope answers a delivery retry ..." |
 | `applyLive` folds an act at the next tick, and refuses a checkpoint and a recorded scope; `applyEntry` keeps the LV1 refusal | `packages/derive/test/forms-live.test.ts`, "applyLive folds a judged act ..." |
 | Runtime creation admits live | `packages/scope/test/live-creation.test.ts`. LV1's witness, with the live answer changed to admission, as ruling `a1fe9aaf` asks |
 | A live definition is derivable | `forms-live.test.ts`, "LV2 derives a live definition as it derives the recorded one" |
@@ -209,12 +216,6 @@ it by hand, so no test waits on the wall clock.
    retains it as `reused`. A live act leaves that note unset. Proposed: no
    change. A live act retains nothing, so no entry needs the note, and each
    live act reads standing again.
-5. **O2: what settles the sender's request.** A `retry` answer never ends
-   the sender's dispatch (see [O2](#o2-a-delivery-after-the-confirmation)).
-   Two fixes are possible. Proposed: the live scope answers a new delivery
-   as a routing refusal, `not-found`, so that the sender writes an
-   `undelivered` diagnosis after `routingRefusals` attempts, and the send's
-   `undelivered` clause settles its item. The other fix gives the
-   dispatcher a deadline for a request that only gets `retry`, which
-   changes every scope. Until the planner rules, LV2 keeps the ruled
-   `retry`. The package check of LV4 refuses such a send before it is made.
+5. **O2: what settles the sender's request.** LV2-O2 owns the sender's
+   settlement under request `a9455de4`. The package check of LV4 refuses
+   a package that sends to a live scope.

@@ -30,4 +30,3 @@ export type LiveAnswer =
   | { answer: "refused"; reason: RefusalReason; name?: string; generation: string; tick: number }
   | { answer: "reset"; generation: string }
   | { answer: "unavailable"; reason: UnavailableReason };
-

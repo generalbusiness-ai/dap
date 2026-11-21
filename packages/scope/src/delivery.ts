@@ -143,9 +143,10 @@ export class Deliveries {
       && isObject(message.body) && message.body["message"] === "publish-file";
     const previous = store.decided(from.at, from.seq, delivered.n);
     const known = previous !== null;
-    // Live note, section 11, O2: an active live scope admits no delivery after its confirmation. The sender's deadline settles a
-    // request. A repeat of a recorded delivery is still answered from its entry.
-    if (!known && receiving?.definition && liveActive(receiving.definition, store.scope())) return retry("unavailable");
+    // LV2-O2 owns sender settlement. The live receiver asks for a retry;
+    // a repeated recorded delivery still gets its stored answer.
+    const receivedDefinition = receiving?.definition;
+    if (!known && receivedDefinition?.declared.level?.name === "live" && liveActive(receivedDefinition, store.scope())) return retry("unavailable");
     const creates = message.class === "request" && message.type === "create" && !isScopeRef(delivered.to);
     if (creates && !isSeed(delivered.to)) return UNVERIFIED;
     let reader = !known && message.class !== "control" && receiving?.definition ? await this.#scope.receiverReads() : null;

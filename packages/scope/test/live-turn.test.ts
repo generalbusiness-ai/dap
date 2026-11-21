@@ -12,10 +12,12 @@ import { timeMs, timeOf, type StateSnapshot } from "@generalbusiness/dap-derive"
 import { grantOf, keys, type Actor, type Over } from "@generalbusiness/dap-derive/testing";
 import type { LiveAnswer } from "@generalbusiness/dap-platform";
 import { liveForms } from "../../derive/test/definition-corpus/live-data.ts";
+import type { FreshActAdmissionDecision } from "../src/applications/act-admission.ts";
 import { liveTurnsOf, type LiveTurns } from "../src/live.ts";
 import { controls, type Controls } from "../src/testing.ts";
 import { START, objectOf, reader, stubOf } from "./fixtures-native.ts";
 import { Node, desk, later, net, settle, ticket } from "./net.ts";
+import { wired } from "./outside.ts";
 
 const { rita, una } = keys;
 
@@ -33,13 +35,12 @@ class Room {
   #keys = 0;
   constructor(readonly name: ScopeId, readonly c: Controls, readonly at: ScopeRef, readonly namespace: DurableObjectNamespace) {}
   /** `now`: the time of the namespace's clock. */
-  static async create(live: boolean, namespace: DurableObjectNamespace = env.SCOPES, now = START): Promise<Room> {
-    const declared = room(live);
+  static async create(live: boolean, namespace: DurableObjectNamespace = env.SCOPES, now = START, declared = room(live)): Promise<Room> {
     const intent: Intent = { v: 1, to: null, actor: rita.key, kind: declared.genesis, on: null, expected: {}, fields: {},
       idempotencyKey: crypto.randomUUID(), notAfter: timeOf(timeMs(now)! + 60_000) };
     const seed: Seed = { v: 1, kind: "directory", definition: definitionDigest(declared), creator: null, cause: intentDigest(intent), ordinal: 0 };
     const name = scopeIdOf(seed);
-    const c = controls(name, START);
+    const c = controls(name, now);
     const answer = await stubOf(name, namespace).create(signIntent(intent, rita.secret), declared);
     if (answer.answer !== "accepted") throw new Error(`not created: ${JSON.stringify(answer)}`);
     return new Room(name, c, answer.receipt.fact.at, namespace);
@@ -108,6 +109,30 @@ describe("the live turn on native storage", () => {
     expect(await R.stored()).toEqual(created);
   });
 
+  test("a live act rechecks application admission after waiting for its rules", async ({ onTestFinished }) => {
+    // The trust decision is a scripted port. The object uses its real turn and rule evaluator.
+    const R = await Room.create(true, env.SCOPES, START, liveForms.rule());
+    let admission: FreshActAdmissionDecision = "allowed";
+    wired.set(R.name, () => ({ freshActAdmission: { read: async () => ({ current: () => admission }) } }));
+    onTestFinished(() => { wired.delete(R.name); });
+    await evictDurableObject(R.object);
+    const before = (await R.state())!;
+    const act = R.count(1, 1);
+
+    R.c.gate.hold();
+    const answer = R.live(act, before.generation);
+    await R.c.gate.held();
+    admission = "application-revoked";
+    R.c.gate.release();
+
+    expect(await answer).toEqual({ answer: "refused", reason: "application-revoked", generation: before.generation, tick: before.tick });
+    expect(await R.state()).toEqual(before);
+    admission = "allowed";
+    expect(await R.live(act, before.generation)).toEqual({ answer: "applied", generation: before.generation, tick: before.tick + 1 });
+    admission = "application-revoked";
+    expect(await R.live(act, before.generation)).toEqual({ answer: "applied", generation: before.generation, tick: before.tick + 1 });
+  });
+
   test("a timed rule runs from memory: its timer fires at the deadline, and an act drains what is due before it is judged", async () => {
     const R = await Room.create(true);
     const created = await R.stored();
@@ -125,6 +150,16 @@ describe("the live turn on native storage", () => {
     expect(await R.live(R.count(1, 1), generation)).toEqual({ answer: "applied", generation, tick: 5 });
     expect((await R.state())?.snapshot.items.map(({ id, state }) => [id, state])).toEqual([[0, "open"], [1, "ended"], [3, "ended"]]);
     expect(await R.stored()).toEqual(created);
+  });
+
+  test("a live timer arms for the last representable deadline", async () => {
+    const R = await Room.create(true, env.SCOPES, "9999-12-31T23:58:59.999Z");
+    const before = (await R.state())!;
+    expect(await R.live(R.lease(), before.generation)).toMatchObject({ answer: "applied" });
+    expect(R.c.liveTimer?.milliseconds).toBe(60_000);
+    R.later(60);
+    await runInDurableObject(R.object, () => R.c.liveTimer!.fire());
+    expect(await R.state()).toMatchObject({ tick: before.tick + 2, snapshot: { items: [{ id: 0 }, { id: 1, state: "ended" }] } });
   });
 });
 
@@ -160,10 +195,8 @@ test("one definition and one sequence of acts: the live run and the recorded run
 });
 
 /**
- * O2 as ruled: a delivery after the confirmation is answered `unavailable`, as transport carries it: `retry`. The sender's
- * dispatcher gives a request up only after `routingRefusals` routing refusals, so a request that is answered `retry` stays
- * outstanding and is offered again at a doubling delay, up to `dispatchRetryMaxSeconds`. No diagnosis settles it. The note's
- * open question 5 asks the planner how the sender's deadline settles it.
+ * The live receiver answers a delivery after confirmation with `retry` and the reason `unavailable`.
+ * The sender keeps its request outstanding. LV2-O2 owns settling the sender's request.
  */
 test("O2: an active live scope answers a delivery retry and records nothing; the sender keeps its request outstanding", async () => {
   const D = await desk();

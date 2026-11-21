@@ -1,8 +1,8 @@
 /**
  * The fold: how one sealed entry changes the state (scope contract, sections
- * 4.1 to 4.3, 6.3 and 7.2 to 7.4). `applyEntry` is the only code that changes
- * state. The runtime runs it against storage inside the commit and a
- * verifier runs it in memory, so the two cannot drift.
+ * 4.1 to 4.3, 6.3 and 7.2 to 7.4). `applyEntry` folds sealed entries during
+ * runtime commits and verification. `applyLive` folds live inputs into
+ * memory. Both use the same state changes.
  *
  * It applies the entry's recorded effects and the bookkeeping that its input
  * and sends imply. It judges nothing: whether the effects are the right ones
@@ -20,7 +20,7 @@ import { fixedRowsOf, rekeyFixed } from "./fixed-index.ts";
 import { changeItem, newItem, signerOf } from "./item-effects.ts";
 export { changeItem, isItemEffect, newItem, signerOf, HOLDER, type ItemEffect } from "./item-effects.ts";
 import { attemptedBy, openedBy, operationId } from "./ledger.ts";
-import type { Item, ObservedHead, StateView, StateWriter, Status } from "./state.ts";
+import type { Item, ObservedHead, ScopeState, StateView, StateWriter, Status } from "./state.ts";
 import { isLocalId, isObject, isScopeRef, own, same } from "./values.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { checkStandingEntry, StandingError } from "./standing.ts";
@@ -75,13 +75,14 @@ function relationOwnerKind(entry: Entry, at: ScopeRef, localKind: ScopeKind | nu
 }
 
 /** True for a scope of the live level after its confirmation: its journal is whole, and live state changes in memory only. */
-export const liveActive = (definition: ValidDefinition, scope: Pick<NonNullable<ReturnType<StateView["scope"]>>, "status"> | null): boolean =>
+export const liveActive = (definition: ValidDefinition, scope: Pick<ScopeState, "status"> | null): boolean =>
   definition.declared.level?.name === "live" && scope?.status === "active";
 
 export function applyEntry(writer: StateWriter, definition: ValidDefinition, entry: Entry, hash: Digest, options: DrawOptions = {}): void {
+  const scope = writer.scope();
   // Live note, sections 3.1 and 7: creation and confirmation are the whole retained journal.
-  if (liveActive(definition, writer.scope())) throw new FoldError("a live scope records no entry after confirmation");
-  folded(writer, definition, entry, hash, options);
+  if (liveActive(definition, scope)) throw new FoldError("a live scope records no entry after confirmation");
+  folded(writer, scope, definition, entry, hash, options);
 }
 
 /**
@@ -95,14 +96,14 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
  * scope, and nothing else.
  */
 export function applyLive(writer: StateWriter, definition: ValidDefinition, entry: Entry, hash: Digest, options: DrawOptions = {}): void {
-  if (!liveActive(definition, writer.scope())) throw new FoldError("only an active live scope applies a live input");
+  const scope = writer.scope();
+  if (!liveActive(definition, scope)) throw new FoldError("only an active live scope applies a live input");
   if (entry.input.type !== "act" && entry.input.type !== "timed") throw new FoldError(`a live scope applies no ${entry.input.type} input`);
   if (entry.sends.length > 0) throw new FoldError("a live input sends nothing");
-  folded(writer, definition, entry, hash, options);
+  folded(writer, scope, definition, entry, hash, options);
 }
 
-function folded(writer: StateWriter, definition: ValidDefinition, entry: Entry, hash: Digest, options: DrawOptions): void {
-  const scope = writer.scope();
+function folded(writer: StateWriter, scope: ScopeState | null, definition: ValidDefinition, entry: Entry, hash: Digest, options: DrawOptions): void {
   const input = entry.input;
   const at: ScopeRef = input.type === "genesis" ? { scope: scopeIdOf(input.seed), genesis: hash } : scope?.at ?? (() => { throw new FoldError("a later entry has no sequence"); })();
   if (input.type !== "genesis" && (!("genesis" in entry) || entry.genesis !== at.genesis)) throw new FoldError("the entry names another sequence");

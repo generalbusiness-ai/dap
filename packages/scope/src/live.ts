@@ -25,9 +25,10 @@
 
 import type { Bounds, Entry, Grant, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { CanonicalError, canonicalize, entryHash, isGrant, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
-import { actionOf, applyEntry, applyLive, clockOf, entryOf, judgeAct, judgeTimed, liveActive, MemoryState, nextDue, own, prepareRules, timeMs, windowOf } from "@generalbusiness/dap-derive";
+import { actionOf, applyEntry, applyLive, clockOf, entryOf, judgeAct, judgeTimed, LAST_MS, liveActive, MemoryState, nextDue, own, prepareRules, timeMs, timeOf, windowOf } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Draft, JudgeContext, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import type { LiveAnswer } from "@generalbusiness/dap-platform";
+import type { FreshActAdmission, FreshActAdmissionDecision } from "./applications/act-admission.ts";
 // A cycle with core.ts: heldBy is read only when an act runs, after both modules have loaded.
 import { heldBy, type Pinned } from "./core.ts";
 import type { Asked, LiveTimer, Ports, Standing } from "./ports.ts";
@@ -43,8 +44,8 @@ export interface LiveGeneration { readonly generation: string; readonly tick: nu
 /** Phase one of the authority port for one act (`Scope`'s read, within the fetch time limit). */
 export type LiveStanding = (asked: Asked) => Promise<Standing | "limit" | null>;
 
-/** Later than any deadline: `nextDue` as of this time gives the earliest deadline held. */
-const FOREVER = "9999-12-31T23:59:59Z";
+/** Includes every valid deadline when searching for the next timer. */
+const LAST_DEADLINE = timeOf(LAST_MS);
 /** The longest delay that `setTimeout` keeps. */
 const LONGEST = 2 ** 31 - 1;
 
@@ -111,7 +112,8 @@ export class LiveTurns {
     const scope = this.#store.scope();
     if (!pinned?.definition || !scope || pinned.definition.declared.level?.name !== "live") return unavailable("unavailable");
     if (scope.status === "provisional") return unavailable("scope-provisional");
-    if (generation !== this.#generation) return { answer: "reset", generation: this.#generation };
+    const reset = (): LiveAnswer => ({ answer: "reset", generation: this.#generation });
+    if (generation !== this.#generation) return reset();
     const definition = pinned.definition;
     const first = this.#live();
     if (!first) return scope.status === "refused" ? { answer: "refused", reason: "scope-refused", generation: this.#generation, tick: scope.head.seq } : unavailable("unavailable");
@@ -123,13 +125,28 @@ export class LiveTurns {
 
     // Before the turn, as for a recorded act: one read of the signer's authority, unless this generation applied the intent.
     let standing: Standing | null = null;
-    if (!first.state.accepted(intent.actor, intent.idempotencyKey)) {
+    let admission: Awaited<ReturnType<FreshActAdmission["read"]>> = null;
+    const admissionPort = this.#ports.freshActAdmission;
+    const known = () => first.state.accepted(intent.actor, intent.idempotencyKey) !== null;
+    const admissionRefusal = (): LiveAnswer | null => {
+      if (!admissionPort) return null;
+      let decision: FreshActAdmissionDecision = "unavailable";
+      try { decision = admission?.current() ?? "unavailable"; } catch { /* missing proof is unavailable */ }
+      if (decision === "allowed") return null;
+      return decision === "unavailable" ? unavailable("dependency-unavailable") : refused(decision);
+    };
+    if (!known()) {
       const read = await this.#standing({ scope: scope.at, signed, action: act ? actionOf(act, definition) : null,
         grants: (Array.isArray(grants) ? grants : []).filter(isGrant), window: windowOf(definition, scope.kind, intent.kind) });
-      if (read === "limit") return refused("limit");
-      standing = read;
-      const admitted = await this.#admitted();
-      if (admitted) return admitted === "unavailable" ? unavailable("dependency-unavailable") : refused(admitted);
+      if (generation !== this.#generation) return reset();
+      if (read === "limit" && !known()) return refused("limit");
+      standing = read === "limit" ? null : read;
+      if (admissionPort && !known()) {
+        try { admission = await admissionPort.read(); } catch { /* missing proof is unavailable */ }
+        if (generation !== this.#generation) return reset();
+        const refusal = known() ? null : admissionRefusal();
+        if (refusal) return refusal;
+      }
     }
     const context = (view: StateView, clock: Reading): Omit<JudgeContext, "prepared"> => ({
       clock, bounds: this.#bounds, facts: [], presented: {}, capabilities: this.#ports.capabilities ?? undefined,
@@ -140,21 +157,22 @@ export class LiveTurns {
       if (restarts > this.#bounds.turnRestarts) return unavailable("busy");
       // Before the rules: what is due runs first, and the walk that finds the rules judges nothing.
       const before = this.#section(definition, (state): LiveAnswer | { tick: number; asks: RuleInput[] } => {
-        if (this.#generation !== generation) return { answer: "reset", generation: this.#generation };
         const drained = this.#drain(state, definition);
         if (drained) return drained;
         return { tick: state.scope()!.head.seq, asks: prepareRules(state, definition, { act: signed, context: { ...context(state, this.#clock(state)), prepared: [] } }) };
       });
       if ("answer" in before) return before;
       const prepared = before.asks.length === 0 ? [] : await turnDeadline(() => this.#ports.rules.evaluate(before.asks), this.#bounds.preparationSeconds);
+      if (generation !== this.#generation) return reset();
       if (prepared === LATE) return unavailable("unavailable");
       const done = this.#section(definition, (state): LiveAnswer | "again" => {
-        if (this.#generation !== generation) return { answer: "reset", generation: this.#generation };
         if (state.scope()!.head.seq !== before.tick) return "again";
         const clock = this.#clock(state);
         const judged = judgeAct(state, definition, signed, { ...context(state, clock), prepared });
         switch (judged.result) {
           case "write": {
+            const refusal = admissionRefusal();
+            if (refusal) return refusal;
             const applied = this.#apply(state, definition, judged.draft, clock);
             return typeof applied === "number" ? { answer: "applied", generation: this.#generation, tick: applied }
               : refused(applied === "size" ? "bad-field" : "unauthorized");
@@ -235,18 +253,6 @@ export class LiveTurns {
     return entry.seq;
   }
 
-  /** Deployment admission of a new act, as a recorded scope reads it. Null: admitted, or no admission port. */
-  async #admitted(): Promise<"application-revoked" | "application-replaced" | "unavailable" | null> {
-    const port = this.#ports.freshActAdmission;
-    if (!port) return null;
-    try {
-      const state = (await port.read())?.current() ?? "unavailable";
-      return state === "allowed" ? null : state;
-    } catch {
-      return "unavailable";
-    }
-  }
-
   /** The state of this generation, folded from the stored creation entries on first use. Null: no active live scope, or entries that do not fold. */
   #live(): { state: MemoryState } | null {
     const definition = this.#pinned()?.definition;
@@ -287,7 +293,7 @@ export class LiveTurns {
 
   /** The timer, at the earliest deadline that the state holds. A deadline that has passed is retried after the drain's retry delay. */
   #arm(state: MemoryState, definition: ValidDefinition): void {
-    const next = definition.timedTypes.length === 0 ? null : nextDue(state, definition, FOREVER);
+    const next = definition.timedTypes.length === 0 ? null : nextDue(state, definition, LAST_DEADLINE);
     if (!next) return this.#timer.set(null, () => undefined);
     const now = timeMs(this.#ports.clock.read())!;
     const wait = timeMs(next.due)! - now;
