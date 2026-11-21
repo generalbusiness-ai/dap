@@ -283,7 +283,7 @@ const seals = {
   "packages/platform/src/versions.ts": "6b9b184d22fbffaa617049e1b6ec01bc64fd6039b068ac534d0adaf443868962", // Closed native publication protocol policy; actual maintained parser output.
   "apps/room/worker.ts": "0460fe0647f5494a0ed8fb38ff49a09bdf5d7c89b2fadf988ffd446be8aa465d", // AR-1 restores the archive wiring as before hotfix 32866453, now with a bounded wake rate; actual maintained parser output.
   "apps/room/worker.commons.ts": "c525a1b0d13e6243099d03b80c5207b76f082c71432db2b8ecaf86ccf8cb1160", // Reviewed separate deployment entry; actual maintained parser output.
-  "apps/room/fetch.ts": "0af5a066e0f6540f05b870039fc6e22e3660bfb389a1d127d16c578b0e2c7af8", // Forward the HTTP context to the existing scope route; dispatcher gates stay fixed. S3 admits the caller address first (caller-address.ts); actual maintained parser output.
+  "apps/room/fetch.ts": "ad3f25654b4692959ce570d31f3d36daa2fca5b12342d80d59436d2e4eb22d7f", // Forward the HTTP context to the existing scope route; dispatcher gates stay fixed. S3 admits the caller address first (caller-address.ts); actual maintained parser output.
   "apps/room/demo-creation.ts": "18124da145e98edf887394d92a1d3e37f2e350127c4e268e16729acfe8cdfc23",
   "packages/scope/src/demo-creation.ts": "ad2696564e94d810c619968d623ff97b39e917b0aa4ff6c96bfd4f2b8e83c424", // Reviewed current demo projection or ordinary GitHub authority owner. CF-1 changes it; actual maintained parser output.
   "packages/scope/src/github-wiring.ts": "0aff2692d25dfc57af3e66c87c3afb851751327ae77f44a6d9471a61811eaf14", // Reviewed current demo projection or ordinary GitHub authority owner. S3 moves the configuration parser to github-config.ts and re-exports it; actual maintained parser output.
