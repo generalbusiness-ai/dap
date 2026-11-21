@@ -23,6 +23,13 @@ The standalone Room with label maximum 81 is positive. Its digest also appears
 as a deliberately mismatched peer pin in two graph inputs. Those Site and Room
 declarations remain positive and are registered separately.
 
+`liveTallyData(tell, live)` adds a Tally child from `liveBase(live)` in
+`live-data.ts`, a Site `tally` item, a `create-tally` act and, with `tell`,
+a `count-tally` act. Its actual argument sets are `(false, true)`,
+`(true, true)` and `(true, false)`. Each Site, Room and Tally is positive.
+The told live Tally fails its package graph with `send-to-live`, and the
+told recorded Tally fails with `unknown-message`.
+
 Changing only package roles, rights, order, connections, composition omission,
 signatures, codec bounds, or release selection adds no declaration. Those cases
 reuse the baseline or the named variants above. The two retained declarations

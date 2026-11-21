@@ -3,7 +3,9 @@ import { expect } from "vitest";
 import type { DeclaredDefinition, Guard } from "@generalbusiness/dap-contract";
 import type { PackageGraphInput } from "@generalbusiness/dap-package-graph";
 import { room } from "../../../../examples/grow/room.ts";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { growData as grow } from "./package-graph-data.ts";
+import { liveBase } from "./live-data.ts";
 type GraphChange = (parent: DeclaredDefinition, child: DeclaredDefinition) => void;
 export function lifetimeVariantsData(): { name: string; input: PackageGraphInput }[] {
   const backup = (parent: DeclaredDefinition) => {
@@ -197,4 +199,24 @@ export function differentRoomData(): DeclaredDefinition {
   if (label.type !== "text") return expect.fail("Grow label must be text");
   label.max = 81;
   return different;
+}
+
+/** Grow's Site also creates one Tally child, live unless `live` is false.
+ * With `tell`, a Site act tells the Tally through the endpoint that the
+ * applied creation result wrote. No Tally can name the Site in a handler's
+ * pin, because the Site's create send already names the Tally's digest. */
+export function liveTallyData(tell: boolean, live = true): PackageGraphInput {
+  const tally = liveBase(live), tallyId = definitionDigest(tally);
+  const input = grow(parent => {
+    parent.items["tally"] = { many: false, max: 1, initial: "pending", parties: {}, values: {},
+      states: { pending: { final: false }, active: { final: false }, conflicted: { final: false }, failed: { final: true } },
+      refs: { scope: { fixed: false, required: false, to: { type: "scope", kind: "lane" } } } };
+    parent.acts["create-tally"] = { step: "open", on: "tally", grant: "grow.configure", fields: {}, also: {}, guards: [], effects: [], attention: [],
+      sends: [{ create: { kind: "lane", definition: tallyId, fields: {}, result: {
+        applied: [{ state: "active" }, { ref: { slot: "scope", from: { sender: true } } }], refused: [{ state: "failed" }], undelivered: [], conflict: [{ state: "conflicted" }] } } }] };
+    if (tell) parent.acts["count-tally"] = { step: "transition", on: "tally", grant: "grow.configure", fields: {}, also: {}, guards: [{ state: ["active"] }], effects: [], attention: [],
+      sends: [{ tell: { to: { slot: "scope" }, message: "count", fields: { next: { const: 1 } }, result: { refused: [], undelivered: [] } } }] };
+  }, undefined, [tally]);
+  return { ...input, composition: { ...input.composition, connections: [...input.composition.connections,
+    { from: input.entry, item: "tally", slot: "scope", to: tallyId }, { from: tallyId, item: "tally", slot: "peer", to: "outside" }] } };
 }

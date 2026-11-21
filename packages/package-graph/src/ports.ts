@@ -1,6 +1,6 @@
 import type { Digest } from "@generalbusiness/dap-contract";
 import type { PackageComposition, PackageFinding, PackageGraphDefinition } from "./types.ts";
-import { record, sendEndpoint, type GraphCreate, type GraphRow, type GraphSend } from "./model.ts";
+import { definitionLevel, record, sendEndpoint, type GraphCreate, type GraphRow, type GraphSend } from "./model.ts";
 
 export interface PortLink { readonly send: GraphSend; readonly handler: GraphRow }
 /** Resolve only declared in-package ports. Field compatibility is a separate
@@ -8,6 +8,7 @@ export interface PortLink { readonly send: GraphSend; readonly handler: GraphRow
 export function packagePorts(entry: Digest, definitions: readonly PackageGraphDefinition[], composition: PackageComposition, rows: readonly GraphRow[], sends: readonly GraphSend[], creations: readonly GraphCreate[]) {
   const links: PortLink[] = [], findings: PackageFinding[] = [];
   const kinds = new Map<Digest, Set<string>>();
+  const live = new Set(definitions.filter(part => definitionLevel(part) === "live").map(part => part.id));
   kinds.set(entry, new Set(["lane"])); // native application install root
   for (const edge of creations) {
     const values = kinds.get(edge.target) ?? new Set<string>();
@@ -20,6 +21,8 @@ export function packagePorts(entry: Digest, definitions: readonly PackageGraphDe
     const refuse = (reason: PackageFinding["reason"], message: string) => findings.push({ definition: send.row.owner.id, row: send.path, check: "port-typing", reason, severity: "refusal", message });
     if (!endpoint) { refuse("unbound-endpoint", "Declare this send's scope endpoint connection."); continue; }
     if (endpoint.to === "outside") continue;
+    // A live scope admits no delivery after its confirmation (live note, 3.8).
+    if (live.has(endpoint.to)) { refuse("send-to-live", "The connected definition is live. A live scope admits no message after its creation."); continue; }
     const message = send.kind === "tell" ? send.data["message"] : send.data["name"];
     const candidates = rows.filter(row => row.owner.id === endpoint.to && row.family === "receives" && row.path === row.logical
       && row.data["class"] === send.kind && row.data["message"] === message);

@@ -1,9 +1,9 @@
 /** Package-only checks over bounded declaration data. Whole native admission
  * remains a separate step of the public validator; these findings never
  * stand in for it, including early codec checks before signing. */
-import type { Bounds, Digest } from "@generalbusiness/dap-contract";
+import type { Bounds, Digest, DurabilityLevel } from "@generalbusiness/dap-contract";
 import type { PackageComposition, PackageFinding, PackageGraphDefinition } from "./types.ts";
-import { array, graphCreates, graphRows, graphSends, graphWriters, own, record, reportedCount, subjectType, type GraphRow, type GraphWriter } from "./model.ts";
+import { array, definitionLevel, graphCreates, graphRows, graphSends, graphWriters, own, record, reportedCount, subjectType, type GraphRow, type GraphWriter } from "./model.ts";
 import { instanceBounds, relateKeyDomain } from "./fan-in.ts";
 import { packagePorts } from "./ports.ts";
 import { portFieldFindings, type PackageValueRules } from "./port-fields.ts";
@@ -21,8 +21,8 @@ export interface PackageGraphInput extends PackageValueRules {
 }
 export interface PackageGraphReport {
   readonly findings: readonly PackageFinding[];
-  /** Successful scope instances over their lifetime. Null means unproved. */
-  readonly instances: readonly { readonly definition: Digest; readonly maximum: number | string | null }[];
+  /** Successful scope instances over their lifetime, with the level each definition pins. Null means unproved. */
+  readonly instances: readonly { readonly definition: Digest; readonly level: DurabilityLevel["name"]; readonly maximum: number | string | null }[];
   readonly projected: ReturnType<typeof projectedUse> | null;
 }
 
@@ -152,6 +152,6 @@ export function checkPackageGraph(input: PackageGraphInput): PackageGraphReport 
       if (typeof copies === "number" && maximum > BigInt(copies)) add(handler.owner.id, handler.path, "port-typing", "fan-in-exceeds-copies", `Lifetime fan-in ${maximum} exceeds copies ${copies}.`);
     }
   }
-  return { findings, instances: definitions.map(part => ({ definition: part.id, maximum: reportedCount(bounds.get(part.id) ?? null) })),
+  return { findings, instances: definitions.map(part => ({ definition: part.id, level: definitionLevel(part), maximum: reportedCount(bounds.get(part.id) ?? null) })),
     projected: projectedUse(input.entry, definitions, rows, creations, bounds, input.bounds) };
 }
