@@ -1,25 +1,25 @@
 # LV3: the live reads and the watch
 
-Status: in progress. Head LV3 of the [live level note](../2026-11-10-live-level.md),
+Status: in progress. Child request `f7d79745176c0d278e9e0bed3c5ba7a096dcfde9` of LV3 of the [live level note](../2026-11-10-live-level.md),
 on branch `builder/lv3-on-lv2-20261121`, based on the LV2 landing
 `c20e5315`.
 
 LV3 lets a viewer read the state of an active live scope and watch it
-change. The idle measurement records what pinned local workerd did with
-an open watch. The whole-state byte bound remains open.
+change. The historical idle measurement records what pinned local workerd did with
+an open watch on an earlier source. The parent LV3 owns the whole-state
+bound under ruling `4266b531`.
 
 ## What changed, and where
 
 | Part | Where | What it does |
 |---|---|---|
 | The read and watch shapes | `packages/platform/src/live.ts` | `LiveRead`, `LiveSummary`, `LiveLine` and `LiveReadRefusal`, beside LV2's `LiveAnswer`. `packages/platform` exports them. |
-| The draft item bound | `packages/platform/src/live.ts`, `liveBytes` and `LIVE_BYTES`, and `packages/scope/src/live.ts`, `HeldState` | See [the O1 item bound](#o1-the-draft-item-bound). |
 | The live reads | `packages/scope/src/live-reads.ts`, `LiveReads` | The summary, the final items of one type, and the watch's line, over LV2's `LiveTurns.current()`. |
 | One summary and one page for both families | `packages/scope/src/reads.ts`, `summaryOf` and `finalPage` | The summary of the record and the live summary run the same function over a `StateView`: the store for the record, the state in memory for live state. The same holds for the page of final items. |
 | The watch | `packages/scope/src/sessions.ts`, `Streams` | A stream now sends a `Line`: a function that gives the line and a key that changes when the line does. The head stream's line is `{ at: head }`, as before. The watch's line is `{ generation, tick }`. |
 | The RPC calls | `packages/scope/src/object.ts` | `liveSummary(reader)`, `liveItems(reader, type, cursor?)` and `watch(reader)`. The object passes `LiveTurns.onChanged` to `Streams.publish`. |
 | The routes | `packages/scope/src/worker.ts` | `GET /v1/scopes/{scope}/live`, `GET /v1/scopes/{scope}/live-items/{type}` and `GET /v1/scopes/{scope}/live-stream`. `Api` gains `liveSummary`, `liveItems` and `watchExchange`. |
-| The comment on `Answer` | `packages/contract/src/result.ts` | See [The change to `contract`](#the-change-to-contract). |
+| The security inventory | `scripts/security-entry-points.mjs` and `docs/security/entry-points.md` | The three routes use the session gate. Source seals cover the route, object, session, and live-read checks. |
 
 The application gateway's stream route (`nativeStream`) and the client
 are unchanged. LV4 owns the client call, the tool and `dap act`.
@@ -97,50 +97,9 @@ timed rule, and when a fault starts a new generation. The object's
 existing `#followed` also publishes after each call. A publish with no new
 line sends nothing.
 
-## O1: the draft item bound
-
-The measurement candidate bounds the canonical bytes of retained items.
-It uses
-
-```
-liveBytes = sum over the item types of (type.max × entryBytes)
-```
-
-`type.max` is the most live items of a type, from the definition.
-`entryBytes` is the bound on one entry, 256 KiB in `PROPOSED_BOUNDS`.
-The formula scales the draft budget with the definition's item limits.
-
-`HeldState`, in `packages/scope/src/live.ts`, is the `MemoryState` of a
-generation. It counts the canonical bytes of every item that it holds,
-final items too, because the state keeps them until the generation ends.
-Before `LiveTurns` folds an act, it adds the bytes of the act's entry to
-the bytes held. If the sum passes `liveBytes`, the act is refused:
-
-```ts
-{ answer: "refused", reason: "scope-full", name: "liveBytes", generation, tick }
-```
-
-The refusal leaves the live state untouched. The draft uses the entry
-length to estimate the change before the fold.
-
-The measurement candidate lets timed rules bypass the item bound so a
-full scope can end its open items. Ruling `4266b531` requires a bound on
-all state retained for a generation, including accepted intents and the
-writes of timed rules. The item bound is an intermediate step.
-
-### The change to `contract`
-
-The comment on `Answer` in `packages/contract/src/result.ts` gave `name` of
-a refusal to "a declared guard reason or the exhausted whole-scope budget".
-LV3 adds that the budget counts the state that the scope holds: stored
-state, and for a live scope its state in memory. This is a change to
-`contract`, as open point O1 rules. It changes no type and no value. The
-live answer is `LiveAnswer` and not `Answer`, but the reason
-`scope-full` and its `name` keep one meaning in both.
-
 ## O3: an idle live scope while a watch is open
 
-The local experiment ran on workerd `1.20260815.1`, compatibility date
+The historical experiment ran on workerd `1.20260815.1`, compatibility date
 `2026-08-15`, at head `9c243705c1c43a1a6c34f8198f22e80308f6b004`, tree
 `8397861e776e7a18f4a399c0b88fdec19f363690`. The harness opened two equal
 `liveForms.level` scopes with no timed rules. It advanced both to tick 1
@@ -151,6 +110,8 @@ both scopes idle for 155,001 milliseconds before reading them again.
 |---|---|---|
 | Unwatched | Tick 1 | New generation at tick 0 |
 | Watched | Tick 1, watch pending | Same generation at tick 1, watch still pending |
+
+This result applies to that source, which included a draft item bound. It does not measure this child source. The child-source measurement remains pending.
 
 The harness measured the elapsed idle interval inside the probe. The
 full command took 159.91 seconds of wall time and exited 0. This observed
@@ -184,31 +145,31 @@ SQLite storage and the Worker's routes in workerd.
 | A read names the generation and the tick | "a read names the generation and the tick, and the reads of the record and of live state never mix" |
 | A viewer with no session is refused | "a viewer with no session is refused: the real read sessions authorize the live reads and the watch" |
 | A new generation sends a line | "a new generation sends a line, at the same tick" |
-| O1: an act that would pass the bound is refused `scope-full`, and a timed rule still runs | "O1: an act that would pass the byte bound ..." |
 
 The stand-ins are the test authority, the scripted clock, the live timer
 and the test readers, which allow every read. The session test uses the
 real readers port of `sessions.ts`, under a test secret, with a stand-in
 membership reference: a creator-less live scope records no membership.
 The test of a new generation uses a stand-in live turn, because the host
-gives no way to fault the fold on purpose. The O1 test sets `entryBytes`
-to 4,096 bytes, so the bound is 20,480 bytes. The existing head-stream
+gives no way to fault the fold on purpose. The existing head-stream
 tests in `sessions.test.ts` cover the `Streams` change.
 
 ## Evidence
 
-The local probe used the committed measurement candidate. The focused
-run covered the reads, live turns, and sessions in that source. A separate
-run included the stronger item-byte assertion after timed drain.
+The first five rows cover the historical measurement candidate. The
+remaining focused rows cover the reads and watch child.
 
 | Check | Command | Exit | Output | SHA-256 |
 |---|---|---:|---|---|
 | Local idle-watch probe | `run.sh <LV3 worktree> <evidence directory> 155000` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-o3/lv3-o3-natural-idle.log` | `1970d861cab6fc4be6cba6ffa0f9edde5a9e5bc389de897fdc40187f9a79a7c5` |
 | Local idle-watch result | `run.sh <LV3 worktree> <evidence directory> 155000` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-o3/lv3-o3-natural-idle.json` | `a5130975b5c954e8d3537ddcc0a069a931f2391400c6308a49936653892b380f` |
 | Scope reads, turns, and sessions, 21 tests | From `packages/scope`, `../../node_modules/.bin/vitest run --config vitest.worker.config.ts test/live-reads.test.ts test/live-turn.test.ts test/sessions.test.ts` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-measurement-focused/focused-localhost.log` | `8db62cd7b72ec1b07ef71d601a31d21def85fb908130bc82a0056450a7803090` |
-| Updated item witness | From `packages/scope`, `../../node_modules/.bin/vitest run --config vitest.worker.config.ts test/live-reads.test.ts` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-measurement-focused/live-reads-drain.log` | `5eefadc15858f0efc7a26d1b08d4ccb871b3aae429ae46f15b86cfebd85c8cb5` |
 | Platform types | `npm run typecheck --workspace @generalbusiness/dap-platform` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-measurement-focused/platform-typecheck.log` | `8e1906f22f3ac7a95ff9fe28fb85bb3e0cdc12b3ff75f3f416de9d1c010998f3` |
 | Scope types | `npm run typecheck --workspace @generalbusiness/dap-scope` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-measurement-focused/scope-typecheck.log` | `fb2b1b20daea8ec6bdc1bf8b7eceb9b3703b9e4ffe7530b18d9218bb23d34976` |
+| Child reads, turns, and sessions, 20 tests | From `packages/scope`, `../../node_modules/.bin/vitest run --config vitest.worker.config.ts test/live-reads.test.ts test/live-turn.test.ts test/sessions.test.ts` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-reads-gate/focused.log` | `7300d611fd88996c1dbf6e5493447e6b040aff26d492e9aa4b08692e75298925` |
+| Child platform types | `npm run typecheck --workspace @generalbusiness/dap-platform` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-reads-gate/platform.log` | `8e1906f22f3ac7a95ff9fe28fb85bb3e0cdc12b3ff75f3f416de9d1c010998f3` |
+| Child scope types | `npm run typecheck --workspace @generalbusiness/dap-scope` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-reads-gate/scope.log` | `fb2b1b20daea8ec6bdc1bf8b7eceb9b3703b9e4ffe7530b18d9218bb23d34976` |
+| Child entry-point inventory, 13 tests | `node --test scripts/security-entry-points.test.mjs` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-reads-gate/inventory.log` | `9969387fe3dd0509b4063bc23f8d464cdc7f48f432ec4b8b71288bfcde77628c` |
 
 The O3 evidence directory holds `run.sh`, `natural-idle.test.ts`, and
 `vitest.o3.config.ts`. To repeat the experiment, run the retained script
@@ -217,20 +178,8 @@ the output.
 
 ## Open limits
 
-1. **Final items fill a live scope.** The state in memory keeps final
-   items until the generation ends, and they count against `liveBytes`. A
-   presence scope whose leases open and end fills its bound after about
-   `liveBytes` divided by the bytes of one lease, and then refuses every
-   act until the object restarts. Proposed: keep this in version 1, since
-   a quiet room restarts often (section 3.7 of the live note). A later
-   head can drop final items from live state, which changes the counts
-   that a live summary shows.
-2. **Full retained state.** Ruling `4266b531` requires room for the accepted
-   keys, fixed hashes, other retained indexes, and timed writes. The
-   measurement candidate still needs that accounting before final review.
-3. **The routes.** The note asks for the watch "on the HTTP stream that
-   the head stream uses". LV3 reads that as the same `Streams`, the same
-   relay and release, and the same bound, on its own path,
-   `/live-stream`, so that `/stream` keeps sending only heads of the
-   record. Proposed: keep the three `live` paths. Renaming them is
-   reversible until LV4's client reads them.
+The parent LV3 owns the whole-state bound under ruling `4266b531`. The
+bound must account for accepted keys, retained indexes, and timed writes.
+
+The watch uses the same `Streams`, relay, release, and bound as the head
+stream, on `/live-stream`. The `/stream` route keeps sending record heads.

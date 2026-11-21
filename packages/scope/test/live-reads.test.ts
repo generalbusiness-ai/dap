@@ -1,18 +1,16 @@
 /**
- * LV3, the live reads and the watch (live note, section 3.5, and open point
- * O1). Real runtime, SQLite storage and the Worker's routes in workerd. The
+ * LV3, the live reads and the watch (live note, section 3.5). Real runtime, SQLite storage and the Worker's routes in workerd. The
  * test authority, the scripted clock and the live timer are stand-ins. The
  * readers port is the test readers, a STAND-IN that allows every read,
  * except where a test names the real read sessions of `sessions.ts`.
  */
 import { env } from "cloudflare:workers";
 import { describe, expect, test } from "vitest";
-import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition, Grant, Intent, Item, ScopeId, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, intentDigest, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, definitionDigest, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { timeMs, timeOf, type ScopeState } from "@generalbusiness/dap-derive";
 import { grantOf, keys, membership, type Actor, type Over } from "@generalbusiness/dap-derive/testing";
-import { LIVE_BYTES, liveBytes, type LiveAnswer, type LiveLine, type LiveRead, type LiveSummary } from "@generalbusiness/dap-platform";
+import { type LiveAnswer, type LiveLine, type LiveRead, type LiveSummary } from "@generalbusiness/dap-platform";
 import { liveForms } from "../../derive/test/definition-corpus/live-data.ts";
 import { LiveReads } from "../src/live-reads.ts";
 import type { LiveTurns } from "../src/live.ts";
@@ -81,8 +79,6 @@ class Room {
     };
   }
 }
-
-const bytesOf = (items: readonly Item[]): number => items.reduce((n, item) => n + utf8(canonicalize(item)).length, 0);
 
 describe("the live reads and the watch", () => {
   test("a read names the generation and the tick, and the reads of the record and of live state never mix", async () => {
@@ -162,35 +158,7 @@ describe("the live reads and the watch", () => {
     await watch.cancel();
   });
 
-  test("O1: an act that would pass the byte bound of the definition's item limits is refused scope-full, and a timed rule still runs", async () => {
-    // A small configured `entryBytes`: the bound is (tally max 1 + lease max 4) times it.
-    const entryBytes = 4096, bound = liveBytes(liveForms.timed().items, entryBytes);
-    const R = await Room.create((_name, c) => { c.bounds = { ...PROPOSED_BOUNDS, entryBytes }; });
-    let refused: LiveAnswer | null = null;
-    for (let round = 0; round < 40 && !refused; round++) {
-      for (let lease = 0; lease < 4 && !refused; lease++) {
-        const answer = await R.live(R.lease());
-        if (answer.answer !== "applied") refused = answer;
-      }
-      R.c.clock.now = timeOf(timeMs(R.c.clock.now)! + 60_000);
-    }
-    expect(refused).toMatchObject({ answer: "refused", reason: "scope-full", name: LIVE_BYTES, generation: R.generation });
-    const [, held] = await R.read<Item[]>("/live-items/lease");
-    const [, summary] = await R.read<LiveSummary>("/live");
-    if (!held.ok || !summary.ok) throw new Error("no read");
-    expect(bytesOf([...summary.value.items, ...held.value])).toBeLessThanOrEqual(bound);
-    // The timed rule that ends the open leases is not held to the bound.
-    const open = summary.value.items.filter(item => item.type === "lease").length;
-    expect(open).toBeGreaterThan(0);
-    R.c.clock.now = timeOf(timeMs(R.c.clock.now)! + 60_000);
-    // The act drains the due rules first, then is judged: the count is smaller than a lease, and may still fit.
-    const counted = await R.live(R.count(1, 1));
-    expect(await R.read<LiveSummary>("/live")).toMatchObject([200, { tick: summary.tick + open + (counted.answer === "applied" ? 1 : 0), value: { items: [{ type: "tally" }] } }]);
-    const [, afterHeld] = await R.read<Item[]>("/live-items/lease");
-    const [, afterSummary] = await R.read<LiveSummary>("/live");
-    if (!afterHeld.ok || !afterSummary.ok) throw new Error("no read after timed drain");
-    expect(bytesOf([...afterSummary.value.items, ...afterHeld.value])).toBeLessThanOrEqual(bound);
-  });
+
 });
 
 describe("the watch's line", () => {

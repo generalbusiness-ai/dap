@@ -1,6 +1,5 @@
 export { COMMONS_COHORT } from "./commons-cohort.ts";
 export type { LiveAnswer, LiveLine, LiveRead, LiveReadRefusal, LiveSummary } from "./live.ts";
-export { LIVE_BYTES, liveBytes } from "./live.ts";
 export { OWN_AGENT_COHORT } from "./own-agent-cohort.ts";
 export { BASE_COHORT } from "./base-cohort.ts";
 export { UPGRADE_COHORT } from "./upgrade-cohort.ts";

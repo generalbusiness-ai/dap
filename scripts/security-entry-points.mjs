@@ -81,7 +81,7 @@ const gates = {
   // Census is signed only by the pinned register's standing founding-install
   // signer. It is not an ordinary member/session read; its whole owner is sealed.
   census: "self-signed",
-  summary: readGate("summary"), items: readGate("items"), history: readGate("history"), entry: readGate("entry"), outbox: readGate("outbox"), outboxItem: readGate("outbox"), log: readGate("log"), retained: readGate("retained"), queryItems: readGate("query-items"), applicationProjection: "session", stream: "session", streamExchange: "session", credential: "session",
+  summary: readGate("summary"), items: readGate("items"), history: readGate("history"), entry: readGate("entry"), outbox: readGate("outbox"), outboxItem: readGate("outbox"), log: readGate("log"), retained: readGate("retained"), queryItems: readGate("query-items"), applicationProjection: "session", stream: "session", streamExchange: "session", liveSummary: "session", liveItems: "session", watchExchange: "session", credential: "session",
   incidents: readGate("incidents"), requests: readGate("requests"), waiting: readGate("waiting"),
   // A session of the row's own member, checked against the object's own head on each request.
   keepOriginal: "session", listOriginals: "session", readOriginal: "session", endOriginal: "session",
@@ -125,7 +125,7 @@ export async function scopeRows(text, snapshotDispatches = []) {
     requestQuery: () => true, positionOf: value => /^\d+$/.test(value ?? "") ? Number(value) : null,
     ITEM_QUERY_WIRE_BOUNDS, APPLICATION_PROJECTION_WIRE_BOUNDS,
     isScopeId: value => value === scope, utf8: value => new TextEncoder().encode(value),
-    queryResponse: () => new Response(), projectionResponse: () => new Response(),
+    liveRead: () => new Response(), queryResponse: () => new Response(), projectionResponse: () => new Response(),
   };
   const wire = load(readSource("packages/scope/src/item-query-wire.ts"), ["REQUEST_URL_BYTES", "ITEM_QUERY_URL_BYTES", "ITEM_QUERY_ENCODED_CHARS", "queryTarget", "queryUrl", "admittedRequestUrl", "itemQueryWire"], globals);
   const projection = load(readSource("packages/scope/src/applications/projection-wire.ts"), ["path", "applicationProjectionWire"], { ...globals, B: APPLICATION_PROJECTION_WIRE_BOUNDS });
@@ -204,7 +204,7 @@ export async function scopeRows(text, snapshotDispatches = []) {
           assert.ok(Object.hasOwn(gates, operation), `Unclassified dispatch: ${operation}`);
           // Normalize only unconstrained arguments. Literal matcher choices,
           // such as waiting's two lists, stay distinct.
-          const parameters = { readOriginal: ["digest"], endOriginal: ["digest"], items: ["type"], entry: ["seq"], outboxItem: ["duty"], retained: ["kind", "digest"], credential: ["handle"] };
+          const parameters = { readOriginal: ["digest"], endOriginal: ["digest"], items: ["type"], liveItems: ["type"], entry: ["seq"], outboxItem: ["duty"], retained: ["kind", "digest"], credential: ["handle"] };
           const normalized = parts === null ? path : "/" + parts.filter(part => part !== undefined).map((part, index) => index === 2 ? ":scope" : index >= 4 && parameters[operation] ? ":" + parameters[operation][index - 4] : part).join("/");
           const route = row(method, normalized, gates[operation]);
           if (operation === "reservationSnapshot" || operation === "stageSnapshot") snapshotDispatches.push({ ...route, operation, body: requestBody });

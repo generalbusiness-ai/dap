@@ -11,8 +11,8 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 // its own source-ordered line. Root adopts actual parser values after review.
 const namedOwners = {
   "packages/scope/src/object.ts": {
-    "packages/scope/src/object.ts:$module": "197aa1e8eef69d56fe391932d82170bfb5e1fb11d857671c2b0023d01fbffcbb",
-    "packages/scope/src/object.ts:ScopeObject": "ccabde46612a3d860739c06b64581abcc003cea037e208dd794c55bb5f6e83df" // AD-1: applicationInstallationState, admission installations and clock
+    "packages/scope/src/object.ts:$module": "ffdabf5a2d806fe29a0960da110aacb09a64866b9ec7e8f8f997f5350c23aba8",
+    "packages/scope/src/object.ts:ScopeObject": "7fabe0fc7fd4f8a85ba0de8d3b858643d8a1f289236e12c9859666ff74a14a16" // AD-1: applicationInstallationState, admission installations and clock
   },
   "packages/scope/src/object-archive.ts": {
     "packages/scope/src/object-archive.ts:$module": "e7430b7ed51040dd00253653d928b5a829912472cff2f5139f56478c2565f3e7",
@@ -21,19 +21,20 @@ const namedOwners = {
     "packages/scope/src/object-archive.ts:floorOffer": "439eeffe0d220f86b4f704be80668afe8d9e0f8e3926dcb8f949e2b06274e519"
   },
   "packages/scope/src/worker.ts": {
-    "packages/scope/src/worker.ts:$module": "5e466c5bcba977c99089644451451c2cabd5ce08491d9a086d13329221f84013",
+    "packages/scope/src/worker.ts:$module": "00a0b42235b0a6a22d4847ea8bf67c82105edf477531dace819afd67d47ce372",
     "packages/scope/src/worker.ts:ScopeIndex": "b4c4e5bee990564e602083d69157ed24a9e8022adf2649227d337b8dd58dd86a",
     "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
     "packages/scope/src/worker.ts:RETIRED_HTTP": "5445b5b53d5b6b1f2b8c456b224b37e4f2ea525c5b412d8ffec299108e9d6d1d",
-    "packages/scope/src/worker.ts:ROOM_RPC_METHODS": "f3d87e46eba68eacb7f390d1d2a221127794af44f017f976b0c8636fae5a54ba",
+    "packages/scope/src/worker.ts:ROOM_RPC_METHODS": "b37c1678ef6f2ed90dbf7d0cf7978049eba073bb943bd090d9a5d484195b6f73",
     "packages/scope/src/worker.ts:retiredRoomAnswer": "8fe669ecc7f0f242aa4d01b2fece28c68ccb5e6c1bc878609b07dc63372a5ae2",
     "packages/scope/src/worker.ts:api": "1a91c1253cbff547b01353c554e2ea425cbcb432e9f7e2a545f96d490082eff6",
-    "packages/scope/src/worker.ts:roomApi": "d12c8e662484c14bf899b60b22b6e5f80b99fa9134f8640dd94364ea3add1150",
+    "packages/scope/src/worker.ts:roomApi": "ef33c810c398bcc19f262a45e88ff84cef68f32efa6559958efe741fe3bee95b",
     "packages/scope/src/worker.ts:BODY_BYTES": "158a6579a52843b40416a1f4d27e7bffb5e0f5df07105254bd3e87c3d3d203fd",
     "packages/scope/src/worker.ts:answered": "f1c36263f63cc8977a334b803d6c89c4863d2e078704d7cdffdce1c3dc2eaea0",
     "packages/scope/src/worker.ts:READ_STATUS": "d8b56891bb8825791d082b46be7845faa2cb7094dee8f758a0ed59ba51e2c51b",
     "packages/scope/src/worker.ts:SESSION_STATUS": "99632b0bd230a76488353a2e1fce61925bbb595605a27d0f9e8c8e67f77a9587",
     "packages/scope/src/worker.ts:read": "4a083fdf987741284f15628b0c45881da42de526268465ee66f4c37422636dd9",
+    "packages/scope/src/worker.ts:liveRead": "5c0971b6c5b9e449a087c3eca082ff839dca6a8bb93e0115c200c9555e566fd6",
     "packages/scope/src/worker.ts:ORIGINAL_STATUS": "95b36ba73a5c328ed72c0c4f2427012dadcd1e29d84570ed380d70836892559b",
     "packages/scope/src/worker.ts:NO_STORE": "3c2d731f8eea8254d81b670ab342feba2ee0d809f59778a0b8e8760f0f31e082",
     "packages/scope/src/worker.ts:originalReply": "f2ab7919d41666a605dcd260843300ca0aa03de5c3dea95b8089661449cc5e31",
@@ -44,7 +45,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:PROJECTION_STATUS": "a4e03bbeb2eacbb5e02d3228366fea9c7ffc218d5f814f72f4a1b3b291760742",
     "packages/scope/src/worker.ts:projectionResponse": "e17f1f4aa800bc06b4f8d065f77e8a594c2738c77873a52671fa7f1b22bf249b",
     "packages/scope/src/worker.ts:route": "631ced1082eca113b04fd2e53f96c8ccd02a9bcebb7c7e9ee8fb8b74230774c4",
-    "packages/scope/src/worker.ts:routedRequest": "66fabe2c600aabb0dc9755436617c7ea3267e4ab61f8c901b9b77bd692e34341",
+    "packages/scope/src/worker.ts:routedRequest": "c899323261d280a13251f1d542e793fbc730fc2872b7f1604df2bba7a3573ec2",
     "packages/scope/src/worker.ts:outsideOf": "81fd747eaf5d1d22d8a445fa3348d87ddf9079699e75a59b329022bcd6985b9e",
     "packages/scope/src/worker.ts:sessionWiring": "efbb51a65f5a24f3d1bfc006206deaf61d3e35f55e6ff611dd710e466db787eb",
     "packages/scope/src/worker.ts:snapshotReaderOf": "24485585bf55db1edb79dbde6d2617c6606541a245dd24a778b8e269d6b19669",
@@ -313,10 +314,11 @@ const seals = {
   "packages/scope/src/applications/act-admission.ts": "75eacce9d74db3cb8600ae7ea322508f22bdc8c96703dfcd233a9e577665c92a", // Exact native provenance and current trust; actual maintained parser output.
   "packages/derive/src/genesis.ts": "d2a6165d424376a9057cc9390e721a1970341ad937d739a6f94eb9575d9f1cc2",
   "packages/derive/src/judge.ts": "2abf7ccdf023c74e33616ad88ec238ac23d7795d0c94c58e0df4414fb6512688", // A1 derives expected names through shared expectedKeys without changing judgment order.
-  "packages/scope/src/sessions.ts": "12254a4ccbc51fb5b16eabc0bce84c4c764bb233e023cefd788b99dcf5189af8",
+  "packages/scope/src/sessions.ts": "43916abc192b8e45ca34fd129cbf3c73e79155be5562743e8786c4b3d46bc095",
   "packages/scope/src/originals.ts": "f6091ac370a3346c493eb795ef72b2392217708a00492c59fcaf1f3df9903ac4", // Reviewed J1 owner: the member compare, the signature and actor check, and the caps.
   "packages/client/src/originals.ts": "4b77af1b7f1d97f573f072efbe278cd3fa38ee4809b031d648fa57c5d5d17cf4", // Reviewed J1 owner: the bytes that a second device verifies before it sends them again.
-  "packages/scope/src/reads.ts": "27fb18acf08aee7b2c9f9abda0f0b8387f8dab4aab7cd5545efabacc29da6cb0",
+  "packages/scope/src/live-reads.ts": "8aa951f718da5a8541ad94a73313e0c613673a55b38e50734d634b310d492e20", // Live reads and watches check read sessions before exposing state.
+  "packages/scope/src/reads.ts": "a6b8327c0f9ae6f428641b00f3dfb7f1953a218644f001394cf9b0f053058393",
   "packages/scope/src/signed-reads.ts": "3beb23ca30b343a71dd87673c3e1252cf3fc15d622b92632c499cc42056d4e89", // Census wire name; its separate fixed-index predicate grants no ordinary scope read.
   "packages/scope/src/limits.ts": "dfab21444a03339291f51f500941dc1b0d23926fa01fb173e7cd7cc91983f099", // R12 verified-key join failure window.
   "packages/scope/src/serving-limits.ts": "94f6987027c7638ebe0aad6899f1dbf352a25029aceca60c00476b600e7d410b", // New bounded memory-only counter, no live eviction.

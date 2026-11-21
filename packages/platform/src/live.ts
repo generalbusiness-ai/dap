@@ -68,20 +68,3 @@ export interface LiveSummary {
 
 /** One line of the watch: the live state changed, or a new generation started. A viewer that receives it reads again. */
 export interface LiveLine { generation: string; tick: number }
-
-/** The name that a `scope-full` refusal of a live act carries: the byte bound on the state in memory (live note, open point O1). */
-export const LIVE_BYTES = "liveBytes";
-
-/**
- * The byte bound on a live scope's state in memory, from the item limits
- * of its definition: for each item type, its `max` of live items times
- * `entryBytes`. Every value that an item holds was written by one entry
- * of at most `entryBytes`, so the bound holds the most live items that the
- * definition allows at their largest. Final items count against it too,
- * because the state in memory keeps them until the generation ends.
- */
-export function liveBytes(items: Readonly<Record<string, { readonly max: number }>>, entryBytes: number): number {
-  let bytes = 0;
-  for (const type of Object.values(items)) bytes += type.max * entryBytes;
-  return bytes;
-}
