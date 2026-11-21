@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:282dd1fa78b574cea5bf27256ffd463f76995e96","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/ports.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2a8a5f387edc92451bf0e395b60e8d3d7e840ce5","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-21-lv2-live-turn.md."}
