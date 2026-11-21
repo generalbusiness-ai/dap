@@ -149,6 +149,27 @@ scope item limit, times one entry width plus the type's longest timer
 reserve. The amount saturates at the ceiling. The limit stays fixed for
 the generation, and each fresh turn must fit its actual post-fold charge.
 
+## Generated browser output
+
+The first preflight caught Lending's changed presentation identifier.
+Its browser entry imports `MemoryState` and `validateDefinition`. The
+same esbuild configuration produced a different script when the shared
+derive inputs included the staged state and meter. Counter and the room
+page use those inputs too. The open versions Lending 0.7.0 and Counter
+0.8.0 take the reproduced presentation identifiers below. Their entry,
+definition, and semantic identifiers stay equal. Signed packages and
+deployment trust rows keep their existing bytes.
+
+| Output | Previous | Reproduced |
+|---|---|---|
+| Lending 0.7.0 presentation | `53b47c3bef4b8801894191fabab7e62a75e8fd173a60ff4099e1ee6cc99d0e8b` | `5b129add361afada59c5f734e880987cd11b369df289d25c4e7380be65744281` |
+| Counter 0.8.0 presentation | `f01c1e3a156854d237c0b30a1cc2ed2d77428d2b338544aa070bd43265866152` | `789f6fe20feb2083164a9162ae4688776f60334a19e45825a59db5c4bd24b710` |
+| Generated room asset module | `1111d8481af4b76911790002d5502434dca3058aa9f1707d275d5a282b043267` | `f2b9c0168b41639183b2da3cbd8e1de0efcebab4ff0ad2f2048bb89253df4cd2` |
+
+`node apps/room/page/scripts/assets.mjs` reproduced the room asset module.
+The first preflight failure and generated comparison are retained in
+`~/play/artroom-evidence/2026-11-21-lv3-o1-gate/`.
+
 ## Focused evidence
 
 Logs under `~/play/artroom-evidence/2026-11-21-lv3-o1-prototype/`.
@@ -175,3 +196,7 @@ Production wiring logs under `~/play/artroom-evidence/2026-11-21-lv3-o1-gate/`.
 | Security entry-point inventory | 13 passed | `artroom-o1-ship-security.log` | `6afca70bbd2e6460dfe0c515f6d7015b877350fddabf20ffb6ba74abef578be3` |
 | Marker duty and own-name accounting | 7 passed | `artroom-o1-marker-derive.log` | `982361921480320c5995edb0ca373326adaaebedeb138240ed8bfc54f98e10ed` |
 | Native marked timer and creation | 8 passed | `artroom-o1-marker-scope.log` | `8bbd3b40596cfc91458806c0b0e5f4912103cf9b024b736fb153b986f22c9d31` |
+| Initial release pin | exit 1 | `pre-gate-pins-release-mismatch.log` | `39396d9eedbe39d3185ebca2f16d688c9338c37bbae5b431290350a07c360c5f` |
+| Generated before and after manifest | eight signed packets match | `artroom-o1-generated-manifest.json` | `e62b5fc0de1402430e15e015092c1d20105a67107ecd430b8f737d3fb8d5e310` |
+| Refreshed release reproduction | 1 passed | `artroom-o1-refresh-release.log` | `97c59d89127dbd3ceab7adbd02768591139ef12cde26c9e5392de9359dc94bf7` |
+| Refreshed page assets | 1 passed | `artroom-o1-refresh-page.log` | `02de96cdc72fd8e1eaeea102aa0bf239aa68095fc567394fc0bd369ab20f2450` |
