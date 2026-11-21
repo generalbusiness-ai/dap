@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:94da6981e55fdbed5d69f0ecf69a20e910abea77","text":"Merge retired a covered predecessor; the successor is at scripts/deploy-config.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a282d667398f411db0707ffcc9624bcba46eb02e","text":"Merge retired a covered predecessor; the successor is at docs/self-host-cloudflare.md."}
