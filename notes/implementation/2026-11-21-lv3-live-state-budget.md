@@ -200,3 +200,13 @@ Production wiring logs under `~/play/artroom-evidence/2026-11-21-lv3-o1-gate/`.
 | Generated before and after manifest | eight signed packets match | `artroom-o1-generated-manifest.json` | `e62b5fc0de1402430e15e015092c1d20105a67107ecd430b8f737d3fb8d5e310` |
 | Refreshed release reproduction | 1 passed | `artroom-o1-refresh-release.log` | `97c59d89127dbd3ceab7adbd02768591139ef12cde26c9e5392de9359dc94bf7` |
 | Refreshed page assets | 1 passed | `artroom-o1-refresh-page.log` | `02de96cdc72fd8e1eaeea102aa0bf239aa68095fc567394fc0bd369ab20f2450` |
+| Review gate, `npm run gate` | exit 0 | `gate.txt` | `35a0758bf731f46de726ef81f2a60de5a05df3ee5571d9a1a8b41b96a74ff27a` |
+
+The gate ran on clean head `3243aad242b31dc6f92b5e7d5e6fb7e0ed2b18cf`,
+tree `b23a9ccce24de1fadb836668c87cf10701422ff8`, against `origin/main`
+`f9ff3958e079e7f36c85be1b455382794b1c87f4`. It took 1782.47 seconds
+and passed 5,063 plain and 1,229 native tests, with one plain and two
+native skips. It observed 246 Node cases and 58 counting cases and ran
+all 13 native scale modules. Each stage had complete terminal evidence.
+The native driver reported zero lost crossings, four stale crossings,
+and zero crossings without an owner. Only this note changed after the gate.
