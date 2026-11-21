@@ -165,15 +165,20 @@ const allowIsolation = (remote: string) => {
 // The HTTP adapter is a stand-in backed by real local git http-backend.
 // Invariant: explicit isolated reads transfer only the wanted verified object,
 // including nonadvertised tree/blob and empty shallow phases, never ancestry.
-test("isolated upload-pack reads one commit, root and blob without unrelated history or a large sibling", async () => {
+test("isolated upload-pack reads one commit, root and blob with over 4096 history objects and a large sibling", async () => {
   const remote = bare(); allowIsolation(remote);
   const content = put(remote, "blob", "selected\n");
   const large = put(remote, "blob", "large unrelated body\n".repeat(100_000));
   const root = put(remote, "tree", Buffer.concat([Buffer.from("100644 other\0"), Buffer.from(large, "hex"), Buffer.from("100755 selected\0"), Buffer.from(content, "hex")]));
   const first = put(remote, "commit", commitText(root, [], "root"));
-  let head = first;
-  for (let n = 0; n < 40; n++) head = put(remote, "commit", commitText(root, [head], `history ${n}`));
-  setRef(remote, REF, head);
+  // One real Git fast-import makes more than the 4096-object closure bound.
+  const commits = Array.from({ length: 4097 }, (_, n) => {
+    const message = `history ${n}`;
+    return `commit ${REF}\nmark :${n + 1}\ncommitter Test <test@artroom.invalid> 1700000000 +0000\ndata ${message.length}\n${message}\nfrom ${n === 0 ? first : `:${n}`}\n\n`;
+  }).join("");
+  git(remote, ["fast-import", "--quiet"], commits);
+  const head = git(remote, ["rev-parse", REF]).trim();
+  expect(Number(git(remote, ["rev-list", "--count", head]).trim())).toBe(4098);
   const host = new Host(remote, TOKEN), seen: { body: string; bytes: number; objects: number; prefix: string }[] = [];
   const source = new SmartHttpSource({ ...isolatedOptions, fetch: async request => {
     const body = await request.clone().text();
@@ -192,11 +197,10 @@ test("isolated upload-pack reads one commit, root and blob without unrelated his
   expect(seen.every(read => read.objects === 1 && read.body.includes("deepen 1\n") && read.body.includes("filter tree:0\n"))).toBe(true);
   expect(seen.reduce((n, read) => n + read.bytes, 0)).toBeLessThan(5000);
   expect(seen.slice(1, 3).every(read => read.prefix.startsWith("0000"))).toBe(true);
-  // This unchanged full-mode request needs the large sibling and fails its
-  // own byte allowance. Isolation does not turn the head into a closure.
+  // Full-mode fails the Site closure bound even with enough wire bytes.
   const { isolateObjects: _isolated, ...fullOptions } = isolatedOptions;
-  const full = new SmartHttpSource({ ...fullOptions, fetch: host.upstream });
-  await expect(new Reader(full).commit(head)).rejects.toMatchObject({ reason: "too-large" });
+  const full = new SmartHttpSource({ ...fullOptions, maxBytes: 8 * 1024 * 1024, bounds: { ...READ_BOUNDS, closureObjects: 4096 }, fetch: host.upstream });
+  await expect(new Reader(full).commit(head)).rejects.toMatchObject({ reason: "too-large", what: "pack objects" });
 });
 
 test("isolation refuses absent capabilities and tip-only permission before a POST", async () => {

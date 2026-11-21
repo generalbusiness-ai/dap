@@ -302,8 +302,8 @@ const seals = {
   "packages/scope/src/creation-declaration.ts": "0aca81538bf80d643ff74166d99e535b68abf3b7dca2b06b65cee543806a3fd9", // Bounded immutable native Directory custody, not authority.
   "packages/scope/src/namespace.ts": "8364d60a9af7fbdeed776dbe7defad492265e52bd798359fbd2900f0ad8f7da4", // Reviewed internal declaration RPC; adopted AST value.
   "packages/scope/src/health.ts": "3bc54d08e569c894c3c8c905feb99d95d9d951ed83d156815f039525e8741c6f", // S3 adds policy and missing, setting names only; actual maintained parser output.
-  "packages/scope/src/site/route.ts": "a0dd2fc19f24b87ff033d8ebbe89718b8a953c291fc5f2689d064ade92e40166",
-  "packages/scope/src/site/host.ts": "7ba177e4cf693beaad6ecef85cc3d33455a5896cd35565f50a98e03ba848cd07", // Private Site token custody; actual maintained parser output.
+  "packages/scope/src/site/route.ts": "40d7aa66c83b32f4216092c1de0486c8d501b4e26a10fa08dbf9c77326937c16",
+  "packages/scope/src/site/host.ts": "20f3d43f9ecee8ad1601490395902d52af31fa6e0f3952cf07bd51ba4ac7e207", // Private Site token custody; actual maintained parser output.
   "packages/scope/src/site/token-reuse.ts": "f13f69f6ac385f48620bc9a08eaf1b957c35de0c6cef37ca785033ee8e56bb19", // Reviewed pre-mint generation cleanup rescheduling; custody checks unchanged.
   "packages/scope/src/site/window.ts": "1b0e1d820a7840063d35d39dc74d61a2b9caa6ffb5763e82a21b6ae5524d4936", // Bounded site-read window; actual maintained parser output.
   "packages/scope/src/applications/route.ts": "1b36c95f39b85224469aa260eebae3fe44163bc3e0f81662afbfc0528c1ee953", // Actual union parser value adopted by root.

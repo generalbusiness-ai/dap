@@ -1,9 +1,9 @@
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { canonicalize, digestBytes, entryHash, newGenesisNonce, scopeIdOf, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import type { Entry, Seed } from "@generalbusiness/dap-contract";
 import { COMMONS_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 import { otherLane } from "@generalbusiness/dap-derive/testing";
-import { readerOf, roomOf, type Room, type SiteEnv } from "../src/site/host.ts";
+import { readerOf, roomOf, SITE_GITHUB_IDENTITY_KEYS, SITE_GITHUB_IDENTITY_TTL_MS, type Room, type SiteEnv } from "../src/site/host.ts";
 import type { Binding } from "../src/namespace.ts";
 
 const ACCOUNT = { id: 17, login: "demo-owner", type: "Organization" } as const;
@@ -136,4 +136,45 @@ test("GitHub Sites retain listed old roots and close cached readers when the lis
     await expect(open()).rejects.toBeDefined();
     await cached.close();
   }
+});
+
+// Invariant: a fresh identity answer is reused only for the same configuration,
+// credential, and transport, and expires at the declared boundary.
+test("GitHub Site reuses a bounded fresh identity answer and refreshes at expiry", async () => {
+  let now = 1_700_000_000_000, calls = 0;
+  const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
+  const send = async (_request: Request) => { calls++; return json(repository()); };
+  try {
+    const settings = environment(false);
+    const open = () => readerOf(settings, room, send)!();
+    await (await open()).close();
+    await (await open()).close();
+    expect(calls).toBe(1);
+    now += SITE_GITHUB_IDENTITY_TTL_MS;
+    await (await open()).close();
+    expect(calls).toBe(2);
+    settings.GITHUB_READ_TOKEN = "ghs_changed_site_read";
+    await (await open()).close();
+    expect(calls).toBe(3);
+    settings.GITHUB_APP_CONFIG = canonicalize({ ...JSON.parse(settings.GITHUB_APP_CONFIG!), installationId: 2 });
+    await (await open()).close();
+    expect(calls).toBe(4);
+    await (await readerOf(settings, room, async request => send(request))!()).close();
+    expect(calls).toBe(5);
+  } finally { clock.mockRestore(); }
+});
+
+// Invariant: fresh successes occupy at most the declared number of keys.
+test("GitHub Site identity reuse evicts the oldest entry at its key cap", async () => {
+  let calls = 0;
+  const send = async (request: Request) => {
+    calls++;
+    const name = new URL(request.url).pathname.split("/").at(-1)!;
+    return json({ ...repository(), name, full_name: `${ACCOUNT.login}/${name}`, html_url: `https://github.com/${ACCOUNT.login}/${name}`, clone_url: `https://github.com/${ACCOUNT.login}/${name}.git` });
+  };
+  const open = async (n: number) => (await readerOf(environment(true), { ...room, repository: { ...room.repository, name: `cache-${n}` } }, send)!()).close();
+  for (let n = 0; n <= SITE_GITHUB_IDENTITY_KEYS; n++) await open(n);
+  expect(calls).toBe(SITE_GITHUB_IDENTITY_KEYS + 1);
+  await open(0);
+  expect(calls).toBe(SITE_GITHUB_IDENTITY_KEYS + 2);
 });

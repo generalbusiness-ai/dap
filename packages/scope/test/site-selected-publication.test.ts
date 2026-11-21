@@ -40,9 +40,13 @@ const fetchHost = async (request: Request) => {
     return new Response(JSON.stringify({ id: providerId, name: repository.name, owner: ACCOUNT, private: true, full_name: `${ACCOUNT.login}/${repository.name}`, html_url: `https://github.com/${ACCOUNT.login}/${repository.name}`, clone_url: `https://github.com/${ACCOUNT.login}/${repository.name}.git` }), { headers: { "content-type": "application/json" } });
   }
   expect(request.headers.get("authorization")).toBe(`Basic ${btoa(`x-access-token:${TOKEN}`)}`);
-  if (url.pathname.endsWith("/info/refs")) return new Response(`${pkt("# service=git-upload-pack\n")}0000${pkt(`${"f".repeat(40)} refs/heads/main\0object-format=sha1 allow-reachable-sha1-in-want\n`)}${pkt(`${"e".repeat(40)} refs/heads/private-draft\n`)}${pkt(`${receiptTarget ?? receiptCommit} ${receiptRef}\n`)}0000`, { headers: { "content-type": "application/x-git-upload-pack-advertisement" } });
-  expect(new TextDecoder().decode(await request.arrayBuffer())).toMatch(new RegExp(`want (${published}|${receiptCommit})`));
-  return new Response(concat(utf8(pkt("NAK\n")), await buildPack(objects, { maxBytes: 8 * 1024 * 1024 })), { headers: { "content-type": "application/x-git-upload-pack-result" } });
+  if (url.pathname.endsWith("/info/refs")) return new Response(`${pkt("# service=git-upload-pack\n")}0000${pkt(`${"f".repeat(40)} refs/heads/main\0object-format=sha1 shallow filter allow-reachable-sha1-in-want\n`)}${pkt(`${"e".repeat(40)} refs/heads/private-draft\n`)}${pkt(`${receiptTarget ?? receiptCommit} ${receiptRef}\n`)}0000`, { headers: { "content-type": "application/x-git-upload-pack-advertisement" } });
+  const body = new TextDecoder().decode(await request.arrayBuffer());
+  const wanted = /want ([0-9a-f]{40}) shallow filter\n/.exec(body)?.[1];
+  expect(body).toContain("deepen 1\n"); expect(body).toContain("filter tree:0\n");
+  const object = objects.find(row => row.id === wanted);
+  expect(object).toBeDefined();
+  return new Response(concat(utf8("0000" + pkt("NAK\n")), await buildPack([object!], { maxBytes: 8 * 1024 * 1024 })), { headers: { "content-type": "application/x-git-upload-pack-result" } });
 };
 async function creation(publish: boolean) {
   const install: Intent = { v: 1, to: null, actor: paul.key, kind: "install", on: null, expected: {}, fields: { host: "github.com", namespace: ACCOUNT.login, policy: "keys", "founders": [rita.key] }, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) };
@@ -105,7 +109,7 @@ test("unpublished branch, tag and commit names refused before provider access (r
 // Invariant: selected publication never bypasses the provider's stable repository ID check.
 test("foreign repository ID refused before Git objects despite a recorded publication (real scopes, STAND-IN provider)", async () => {
   const before = calls.length; providerId = 72;
-  try { const response = await get("HEAD", { headers: { "if-none-match": "*" } }); expect([response.status, response.headers.get("x-site-step")]).toEqual([502, "info"]); }
+  try { const response = await site(new Request(`https://scopes.test/site/${D.name}/HEAD/README.md`, { headers: { "if-none-match": "*" } }), siteEnv, request => fetchHost(request), `fixture:${D.name}`); expect([response.status, response.headers.get("x-site-step")]).toEqual([502, "info"]); }
   finally { providerId = 71; }
   expect(calls.slice(before)).toEqual([`https://api.github.com/repos/${ACCOUNT.login}/${repository.name}`]);
 });
