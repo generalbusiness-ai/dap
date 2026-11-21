@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a147d18457cb6be8e52bb6047d16d83286e3b0be"}
+{"kind":"assert","text":"Gate END for LA-2 head 31e6167917: gate passed, exit 0, test stage 1929.4 s. artroom-evidence/2026-11-21-la2-gate/gate.txt sha256 a31c49e5dfd5311fc853530a1346271ef3362beea1ee816d745605e8cc8bb36b. The gate slot is free.","body":{"gate":"end","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
