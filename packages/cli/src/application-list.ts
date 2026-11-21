@@ -7,7 +7,7 @@ import type { Outcome } from "./commands.ts";
 
 export const APPLICATION_LIST_ROWS = 25;
 const cell = (text: string) => JSON.stringify(text).slice(1, -1)
-  .replace(/[\u007f-\u009f\u2028\u2029]/g, char => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`).replaceAll("|", "\\|");
+  .replace(/[\u007f-\u009f\u061c\u200e\u200f\u2028-\u202e\u2066-\u2069]/g, char => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`).replaceAll("|", "\\|");
 
 export async function applicationList(transport: Transport, reader: unknown, directory: ScopeRef, cursor: string | null): Promise<Outcome> {
   const page = await new ScopeHandle(transport, directory.scope, reader).queryItems({

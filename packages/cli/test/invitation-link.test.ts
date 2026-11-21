@@ -111,3 +111,54 @@ test("person-link parity uses the actual pending CLI entry and fresh discovery i
     }
   }
 });
+
+test("a confirmed spent person invitation drops its private request and keeps a terminal refusal", async () => {
+  const store = memoryStore();
+  const row = PERSON_INVITATION_CASES.find(row => row.name === "valid")!;
+  let posts = 0;
+  const ctx = { store, now: () => Date.parse("2099-01-01T00:00:00Z"), fetch: async () => {
+    posts++;
+    return Response.json({ answer: "refused", reason: "guard-failed", name: "invitation-used", judgedAt: { seq: 1, hash: textDigest("spent") } });
+  } };
+  expect((await command(ctx, ["join", row.text])).code).toBe(1);
+  const pending = (await store.config())!.join!;
+  expect(await store.private(pending.request)).toBeNull();
+  expect(pending.refused).toMatchObject({ answer: "refused", name: "invitation-used" });
+  expect((await command(ctx, ["join", row.text])).code).toBe(1);
+  expect(posts).toBe(1);
+});
+
+test("unknown join replies retain the exact request, while interrupted spent cleanup resumes", async () => {
+  const row = PERSON_INVITATION_CASES.find(row => row.name === "valid")!, store = memoryStore();
+  const time = () => Date.parse("2099-01-01T00:00:00Z");
+  let posts = 0;
+  const lost = { store, now: time, fetch: async () => { posts++; throw Error("scripted lost reply"); } };
+  expect((await command(lost, ["join", row.text])).code).toBe(1);
+  const pending = (await store.config())!.join!, original = await store.private(pending.request);
+  expect(original === null).toBe(false);
+  let attempts = 0;
+  const interrupted: Store = { ...store, discardPrivate: async name => { attempts++; if (attempts === 1) throw Error("scripted interruption"); await store.discardPrivate!(name); } };
+  const spent = { store: interrupted, now: time, fetch: async () => { posts++; return Response.json({ answer: "refused", reason: "guard-failed", name: "invitation-expired", judgedAt: { seq: 1, hash: textDigest("spent") } }); } };
+  await expect(command(spent, ["join", row.text])).rejects.toThrow("scripted interruption");
+  expect((await store.config())!.join!.refused).toMatchObject({ name: "invitation-expired" });
+  expect(await store.private(pending.request)).toEqual(original);
+  expect((await command(spent, ["join", row.text])).code).toBe(1);
+  expect(await store.private(pending.request)).toBeNull();
+  expect(posts).toBe(2);
+});
+
+test("completed join cleanup survives interruption without another submission", async () => {
+  const row = PERSON_INVITATION_CASES.find(row => row.name === "valid")!, store = memoryStore();
+  const link = invitationOf(row.text)!;
+  await store.keepPrivate("join-complete", utf8("TEST original"));
+  await store.save({ v: 2, service: link.service, key: "device", handle: link.handle,
+    repository: { ...link.repository, inbox: link.repository.destination }, join: { request: "join-complete", intent: textDigest("TEST intent"),
+      link: textDigest(canonicalize(link)), repository: link.repository, handle: link.handle,
+      accepted: { at: link.repository.membership, seq: 1, hash: textDigest("TEST receipt") }, complete: true } });
+  let posts = 0;
+  const result = await command({ store, fetch: async () => { posts++; throw Error("must not submit"); } }, ["join", row.text]);
+  expect(result.code).toBe(0);
+  expect(await store.private("join-complete")).toBeNull();
+  expect((await store.config())!.join).toBeUndefined();
+  expect(posts).toBe(0);
+});

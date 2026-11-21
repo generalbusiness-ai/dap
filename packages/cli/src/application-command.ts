@@ -1,4 +1,5 @@
 /** Local package commands run under Node; they do not contact a room. */
+import { shownJson, shownText } from "./shown-text.ts";
 import { resolve } from "node:path";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { ApplicationPackageValidationError } from "@generalbusiness/dap-platform/application-v2";
@@ -18,7 +19,7 @@ export const CHECK_USAGE = "dap check [<directory>] [--config <relative-file>]";
 export const NEW_USAGE = "dap new <directory>";
 /** Keep each finding on one physical line, even for native names containing
  * control characters or table separators. These are evidence rows, not HTML. */
-const cell = (value: string): string => JSON.stringify(value).slice(1, -1).replaceAll("|", "\\|").replace(/[\u007f-\u009f\u2028\u2029]/g, character => `\\u${character.charCodeAt(0).toString(16).padStart(4, "0")}`);
+const cell = (value: string): string => JSON.stringify(value).slice(1, -1).replaceAll("|", "\\|").replace(/[\u007f-\u009f\u061c\u200e\u200f\u2028-\u202e\u2066-\u2069]/g, character => `\\u${character.charCodeAt(0).toString(16).padStart(4, "0")}`);
 function findingRows(findings: readonly PackageValidationFinding[]): string[] {
   return findings.length ? ["Definition | Row | Check | Severity | Reason | Message", ...findings.map(finding => [finding.definition ?? "package", finding.row, finding.check, finding.severity, finding.reason, finding.message].map(cell).join(" | "))] : [];
 }
@@ -57,20 +58,20 @@ export async function checkCommand(argv: readonly string[], cwd = process.cwd())
       lines.push(result.capabilityGrant
         ? `Local definition: ${result.definition}; scripted parent creation proof with explicit replay anchor, then actual Core/SQLite child genesis. This is not a native install.`
         : `Local root definition: ${result.definition}; scripted directory fixture, without child transport.`);
-      lines.push(`Scenario ${result.name}: ${result.steps} steps passed; native replay consistent through ${result.replay.report.target.seq}.`);
+      lines.push(`Scenario ${shownText(result.name)}: ${result.steps} steps passed; native replay consistent through ${result.replay.report.target.seq}.`);
       if (result.projectionChecks) lines.push(`Declared projection checks: ${result.projectionChecks} passed at native journal heads.`);
       if (result.ownerRecords.length) lines.push(`Non-native scenario-owner records: ${result.ownerRecords.length}; outside the journal and native replay claim.`);
-      if (result.capabilityGrant) lines.push(`Scripted device owner: ${canonicalize(result.capabilityGrant.owner)}. Replay anchors: ${canonicalize(result.capabilityGrant.anchors)}. Genuine native issuance witness: ${result.capabilityGrant.nativeIssuanceWitness}.`);
+      if (result.capabilityGrant) lines.push(`Scripted device owner: ${shownJson(canonicalize(result.capabilityGrant.owner))}. Replay anchors: ${shownJson(canonicalize(result.capabilityGrant.anchors))}. Genuine native issuance witness: ${shownText(result.capabilityGrant.nativeIssuanceWitness)}.`);
       if (result.preparations) lines.push(`Native owner preparations in the journal: ${result.preparations}.`);
     }
     const requested = prepared.packet.package.semantic.capabilities;
-    lines.push(`Declared capability requirements: ${requested.length ? requested.map(capability => capability.name).join(", ") : "none"}.`);
-    for (const capability of requested) lines.push(`Requested ${capability.name} bounds: ${canonicalize(capability.bounds)}`);
+    lines.push(`Declared capability requirements: ${requested.length ? requested.map(capability => shownText(capability.name)).join(", ") : "none"}.`);
+    for (const capability of requested) lines.push(`Requested ${shownText(capability.name)} bounds: ${shownJson(canonicalize(capability.bounds))}`);
     lines.push("Local external effects are disabled; this check does not admit a package or audit screen code.");
     return { code: 0, lines };
   } catch (error) {
     if (error instanceof ApplicationPackageValidationError) return { code: 1, lines: ["Package validation refused.", ...findingRows(error.findings)] };
-    if (error instanceof ApplicationSourceError || error instanceof ApplicationPackageError || error instanceof ApplicationScenarioError) return { code: 1, lines: [error.message] };
+    if (error instanceof ApplicationSourceError || error instanceof ApplicationPackageError || error instanceof ApplicationScenarioError) return { code: 1, lines: [shownText(error.message)] };
     const code = (error as NodeJS.ErrnoException).code;
     if (code === "ENOENT" || code === "ENOTDIR" || code === "ELOOP" || code === "EACCES" || code === "EPERM") return { code: 1, lines: ["An application source or scenario file is missing, inaccessible or a symlink."] };
     return { code: 1, lines: ["Could not check the local application."] };
@@ -94,7 +95,7 @@ export async function packCommand(store: Store, argv: readonly string[], cwd = p
     return { code: 0, lines: [`Package: ${output}`, `Semantic: ${packed.ids.semantic}`, `Presentation: ${packed.ids.presentation}`, `Release: ${packed.ids.release}`, `Publisher: ${packed.package.release.manifest.publisher}`] };
   } catch (error) {
     if (error instanceof ApplicationPackageValidationError) return { code: 1, lines: ["Package validation refused.", ...findingRows(error.findings)] };
-    if (error instanceof ApplicationSourceError || error instanceof ApplicationPackageError) return { code: 1, lines: [error.message] };
+    if (error instanceof ApplicationSourceError || error instanceof ApplicationPackageError) return { code: 1, lines: [shownText(error.message)] };
     const code = (error as NodeJS.ErrnoException).code;
     if (code === "EEXIST") return { code: 1, lines: ["Output already exists; choose a new --out file."] };
     if (code === "ENOENT" || code === "ENOTDIR" || code === "ELOOP" || code === "EACCES" || code === "EPERM") return { code: 1, lines: ["An application source or output directory is missing, inaccessible or a symlink."] };

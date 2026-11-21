@@ -55,3 +55,16 @@ test("the Worker serves the page at /page/: its HTML and script under a same-ori
   const routed = await get("/v1/scopes/not-a-scope");
   expect([routed.status, routed.headers.get("content-type"), await routed.text()]).toEqual([404, "application/json", JSON.stringify({ ok: false, reason: "not-found" })]);
 });
+
+// The page keeps its policy on responses from its route and the outer entry.
+test("page documents keep their opener policy on success and refusals", async () => {
+  const get = (path: string, method = "GET", settings: Record<string, string> = {}) => worker.fetch(new Request(`https://scopes.test${path}`, { method }), { ...env, SCOPES: env.PLATFORM, MCP_ENABLED: "true", ...settings } as Env);
+  for (const [path, method, status] of [
+    ["/page", "GET", 301], ["/page/", "GET", 200], ["/page/", "HEAD", 200], ["/page/page.js", "GET", 200], ["/page/", "POST", 405],
+    ["/page/?token=value", "GET", 400], ["/page/keys.json", "GET", 404],
+  ] as const) {
+    const response = await get(path, method);
+    expect([response.status, response.headers.get("cross-origin-opener-policy")]).toEqual([status, "same-origin-allow-popups"]);
+  }
+  expect((await get("/oauth/authorize")).headers.get("cross-origin-opener-policy")).toBeNull();
+});

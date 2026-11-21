@@ -65,6 +65,8 @@ const ROOM_TABLES = [
   "private_read_credential",
   "private_read_quota",
   "private_read_quota_start",
+  "private_workspace_expiry",
+  "private_workspace_expiry_backfill",
   "private_workspace_token",
   "record",
   "request_index",

@@ -118,11 +118,19 @@ test("private pending envelopes persist owner-only separately from public config
     await store.save({ v: 2, service: "https://service.test", key: "device" });
     const reopened = fileStore(dir);
     expect(await reopened.private("join-pending")).toEqual(bytes);
+    await reopened.discardPrivate!("join-pending");
+    expect(await reopened.private("join-pending")).toBeNull();
+    await reopened.discardPrivate!("join-pending");
+    await reopened.keepPrivate("join-pending", bytes);
     expect([statSync(join(dir, "private")).mode & 0o777, statSync(join(dir, "private", "join-pending.data")).mode & 0o777]).toEqual([0o700, 0o600]);
     expect(readFileSync(join(dir, "config.json"), "utf8")).not.toContain("invitation secret");
     expect(await reopened.secret("join-pending")).toBeNull();
     await expect(reopened.keepPrivate("join-pending", new Uint8Array([1]))).rejects.toThrow(/exists already; it is not replaced/);
     expect(await reopened.private("join-pending")).toEqual(bytes);
+    await reopened.discardPrivate!("join-pending");
+    expect(await reopened.private("join-pending")).toBeNull();
+    await reopened.discardPrivate!("join-pending");
+    await reopened.keepPrivate("join-pending", bytes);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

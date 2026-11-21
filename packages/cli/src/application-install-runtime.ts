@@ -1,4 +1,5 @@
 /** CLI entry to the client's native install request and installation read, under the persistent custody that MCP shares. */
+import { shownText } from "./shown-text.ts";
 import { isScopeRef, timeOf } from "@generalbusiness/dap-bytes";
 import { Custody, CustodyError, Lost, Reads, TransportError, secretSigner, type CustodyStore } from "@generalbusiness/dap-client";
 import { applicationInstallation, installApplication, upgradeApplication, type InstallationRefusal, type InstallHandle, type InstallOptions, type InstallRefusal, type PackageBytes, type UpgradeRefusal } from "@generalbusiness/dap-client/install";
@@ -60,7 +61,7 @@ async function call(ctx: Context, store: CustodyStore, applicationFetch: ((reque
           ...(early(upgraded.refusal) ? await earlier(store, config.service, signer.key, args["idempotencyKey"]) : []),
         ] };
         case "archived": return { code: 1, lines: ["Upgrade request: archived. The exact original is retained."] };
-        case "answered": return { code: 1, lines: [`Upgrade request: ${upgraded.answer.answer}${"reason" in upgraded.answer ? ` (${upgraded.answer.reason}${"name" in upgraded.answer && upgraded.answer.name ? `: ${upgraded.answer.name}` : ""})` : ""}. The exact original is retained.`] };
+        case "answered": return { code: 1, lines: [`Upgrade request: ${upgraded.answer.answer}${"reason" in upgraded.answer ? ` (${upgraded.answer.reason}${"name" in upgraded.answer && upgraded.answer.name ? `: ${shownText(upgraded.answer.name)}` : ""})` : ""}. The exact original is retained.`] };
         case "accepted": return { code: 0, lines: upgraded.form === "in-place"
           ? [`Upgrade request recorded: act ${upgraded.act} moves item ${upgraded.on} in place.`, `Read its result with: dap application ${upgraded.on}`,
             "Acceptance records the request. The native fetch may still be pending or refused."]
@@ -87,7 +88,7 @@ async function call(ctx: Context, store: CustodyStore, applicationFetch: ((reque
     const value = read.installation;
     return { code: value.state === "refused" ? 1 : 0, lines: [
       `Application install ${value.item}: ${value.state} (${String(value.phase)}).`,
-      ...(typeof value.reason === "string" ? [`Reason: ${value.reason}. Earlier committed grants and activation remain in force.`] : []),
+      ...(typeof value.reason === "string" ? [`Reason: ${shownText(value.reason)}. Earlier committed grants and activation remain in force.`] : []),
       ...(value.screen !== null ? [`Screen: ${value.screen}`] : []),
     ] };
   } catch (error) {

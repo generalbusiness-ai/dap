@@ -18,7 +18,7 @@ export default {
   fetch: async (request: Request, env: Env & Partial<Pick<McpEnv, "REGISTRIES" | "AGENTS">>, ctx?: Pick<ExecutionContext, "waitUntil">): Promise<Response> => {
     // Every later reader, Durable Objects included, sees only an admitted caller address.
     request = proxiedRequest(request, env);
-    return measuredRequest(request, env, async () => {
+    const response = await measuredRequest(request, env, async () => {
     const scopes = indexedScopes(env.SCOPES, env), lookups = { ...env, SCOPES: scopes };
     if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
     if (credentialInUrl(new URL(request.url))) return json(400, { error: "credential-in-url" });
@@ -32,5 +32,9 @@ export default {
     if (application) return application;
     return new URL(request.url).pathname === DEMO_OFFER_PATH ? demoCreationRoute(request, lookups) : isSite(request) ? site(request, lookups, undefined, request.headers.get("cf-connecting-ip")) : isPage(request) ? page(request, env.DEMO_START_CONFIG !== undefined) : isBrand(request) ? brand(request) : route(request, scopes, env, request.headers.get("cf-connecting-ip"), ctx);
     });
+    if (!isPage(request)) return response;
+    const headers = new Headers(response.headers);
+    headers.set("cross-origin-opener-policy", "same-origin-allow-popups");
+    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   },
 };

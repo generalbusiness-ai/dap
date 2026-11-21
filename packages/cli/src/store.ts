@@ -50,6 +50,8 @@ export interface PendingJoin {
   accepted?: FactRef;
   /** Absent is the legacy person join. Agent, checker and device enrolments have separate tags. */
   kind?: "enrol" | "checker-enrol" | "device-enrol";
+  /** The exact enrollment and inbox were verified; only private cleanup remains. */
+  complete?: true;
   /** A definite terminal native refusal is retained for key enrollment. */
   refused?: Extract<import("@generalbusiness/dap-contract").Answer, { answer: "refused" }>;
 }
@@ -127,6 +129,8 @@ export interface Store {
   keep(name: string, secret: Uint8Array): Promise<void>;
   /** Owner-only opaque bytes, distinct from signing keys and public config. */
   private(name: string): Promise<Uint8Array | null>;
+  /** Discard a terminal private request; absent when this store cannot remove it. */
+  discardPrivate?(name: string): Promise<void>;
   /** Publish complete private bytes without replacing an existing record. */
   keepPrivate(name: string, bytes: Uint8Array): Promise<void>;
 }
@@ -149,6 +153,7 @@ export function memoryStore(): Store {
       },
     },
     private: async (name) => privateBytes.get(name)?.slice() ?? null,
+    discardPrivate: async name => { privateBytes.delete(name); },
     keepPrivate: async (name, bytes) => {
       if (privateBytes.has(name)) throw new Error(`a private record named ${name} exists already; it is not replaced`);
       privateBytes.set(name, bytes.slice());

@@ -11,6 +11,7 @@ import { bodyAndDigestProofEntry, PROOF_BYTE_BOUNDS } from "./proof-bytes.ts";
 import { ArtifactsProvider } from "./artifacts-host.ts";
 import { workspaceRepository, type WorkspaceRepository, type WorkspaceSources } from "./workspace-lineage.ts";
 import { report, toConsole } from "./diag.ts";
+import { WorkspaceExpiry } from "./workspace-expiry.ts";
 
 const OWNER = "hold@2";
 const kinds = new Set(["head", "fork", "stage", "check", "mint", "revoke", "delete", "deletion"]);
@@ -34,6 +35,7 @@ export class WorkspaceHost implements Outside {
   constructor(given: OutsideGiven, sql: Pick<Sql, "exec">, provider: ArtifactsProvider, sources: WorkspaceSources, registers: ScopeId | readonly ScopeId[], namespace: string) {
     this.#given = given; this.#sql = sql; this.#provider = provider; this.#sources = sources; this.#registers = registers; this.#namespace = namespace;
     sql.exec(SCHEMA).toArray();
+    new WorkspaceExpiry(sql).prepare();
     this.#tokens = new TokenDriver({ host: { mint: ask => this.#mint(ask), revoke: ask => this.#revoke(ask) }, custody: { take: token => this.#take(token) } });
   }
   accepts(owner: string, kind: string): boolean {

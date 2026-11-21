@@ -1,4 +1,5 @@
 /** Shared command outcomes and read/wait primitives. The stop has one identity. */
+import { shownText } from "./shown-text.ts";
 import type { Answer, Created, KeyId, ReadMinimum, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, isFactRef, readMinimum, scopeIdOf, timeMs, timeOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, authorityRefusal, httpTransport, signedReads, requestSession, signerSessionRequest, type OperationalApi, type ReadSigning, type Session, type Signer, type Signing, type Transport } from "@generalbusiness/dap-client";
@@ -298,7 +299,7 @@ export function answered(scope: ScopeId, answer: Answer, took: string, full?: st
   switch (answer.answer) {
     case "archived": return archivedAnswer(answer);
     case "accepted": return done(`${took}: entry ${scope}:${answer.receipt.fact.seq}, hash ${answer.receipt.fact.hash.slice(0, 19)}.`);
-    case "refused": return failed(`Refused: ${answer.reason}${"name" in answer && answer.name ? ` (${answer.name === "founding-policy" ? "creation-policy" : answer.name === "founding-key" ? "initial-key" : answer.name})` : ""}, judged at entry ${scope}:${answer.judgedAt.seq}. ${answer.reason === "type-full" && full !== undefined ? full : "The request was refused."}`);
+    case "refused": return failed(`Refused: ${answer.reason}${"name" in answer && answer.name ? ` (${answer.name === "founding-policy" ? "creation-policy" : answer.name === "founding-key" ? "initial-key" : shownText(answer.name)})` : ""}, judged at entry ${scope}:${answer.judgedAt.seq}. ${answer.reason === "type-full" && full !== undefined ? full : "The request was refused."}`);
     case "unavailable": return unavailableAnswer(answer.reason, scope);
     case "mismatch": return mismatchAnswer(answer.reason, scope);
   }

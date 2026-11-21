@@ -1,4 +1,5 @@
 import { nativeLiveTarget } from "./native-live-target.ts";
+import { WorkspaceExpiry } from "./workspace-expiry.ts";
 import { scopeWiring, scopeMetricEnvironment, scopeGenesisEligibility, scopeSessionEligibility } from "./internal/room-hooks.ts";
 import { classifyRoomFormat, writeRoomFormat2 } from "./room-format.ts";
 import { ROOM_RETIRED_STOP, isRoomRetiredStop, type RoomRetiredStop } from "./room-retired.ts";
@@ -172,6 +173,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #operations!: Operations;
   readonly #wakes!: Wakes;
   readonly #credentialExpiry!: CredentialStore;
+  readonly #workspaceExpiry!: WorkspaceExpiry;
   readonly #originals!: Originals;
   readonly #clock!: Clock;
   readonly #transport!: Transport | null;
@@ -236,9 +238,11 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const schedulingAlarm: Alarm = { set: at => { this.#alarmRevision++; return given.alarm.set(at); } };
     const credentialExpiry = new CredentialStore(this.#readSql, () => store.scope()?.at ?? null);
     this.#credentialExpiry = credentialExpiry;
+    const workspaceExpiry = new WorkspaceExpiry(this.#readSql);
+    this.#workspaceExpiry = workspaceExpiry;
     // `#originals` is made below, once the readers port exists.
     const wakes = new Wakes(store, schedulingAlarm, given.transport !== null, wiring.fixtureArchive || wiring.archive ? () => this.#archive?.wake() ?? null : undefined,
-      () => credentialExpiry.expiryWake(() => given.clock.read()), () => this.#originals?.wake() ?? null);
+      () => { const a = credentialExpiry.expiryWake(() => given.clock.read()), b = workspaceExpiry.wake(() => given.clock.read()); return a === null ? b : b === null ? a : timeMs(a)! <= timeMs(b)! ? a : b; }, () => this.#originals?.wake() ?? null);
     this.#wakes = wakes;
     // The authority of a deployed scope reads this scope's own genesis entry, for the membership scope that it records.
     const genesis = (): Extract<Input, { type: "genesis" }> | null => {
@@ -375,7 +379,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     // Scheduling only on activation; legacy custody work stays alarm-owned.
     // The shared arbiter also reads the archive wake, so it waits for the
     // activation observation just like archive recovery.
-    if (credentialExpiry.expiryWake(() => given.clock.read()) !== null || this.#originals.wake() !== null) {
+    if (credentialExpiry.expiryWake(() => given.clock.read()) !== null || workspaceExpiry.wake(() => given.clock.read()) !== null || this.#originals.wake() !== null) {
       const expiry = diagnostic.then(() => wakes.set()).catch(() => undefined);
       try { ctx.waitUntil(expiry); }
       catch { /* A later activation or ingress can retry scheduling. */ }
@@ -1054,6 +1058,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
           // Private expiry has its own bounded quantum and durable earliest wake.
           try { this.#credentialExpiry.expire(this.#clock.read()); }
           catch { /* Final wake arbitration preserves the due queue for retry. */ }
+          try { this.#workspaceExpiry.expire(this.#clock.read()); }
+          catch { /* Final wake arbitration retries the workspace queue. */ }
           try { this.#originals.expire(this.#clock.read()); }
           catch { /* The same final arbitration retries the time bound. */ }
           // One synchronous bounded quantum gets a turn before potentially

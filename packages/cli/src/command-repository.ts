@@ -1,5 +1,6 @@
 /** Recorded repository remotes and credential-bearing clones. */
-import { archiveRemote, archiveValue } from "./archive-remote.ts";
+import { shownText } from "./shown-text.ts";
+import { archiveRemote, archiveValue, credentialRemote } from "./archive-remote.ts";
 import { outcomeFetch, outcomeWaitLines, pauseOutcome, waitOutcome } from "./clone-outcome.ts";
 import { readTokenEntry, readTokenOpening, readTokenOutcome, readTokenReceipt } from "./clone-proof.ts";
 import type { Context, Outcome } from "./command-context.ts";
@@ -7,7 +8,7 @@ import { knownPlatform } from "./command-install.ts";
 import { accepted, configOf, done, failed, handleOf, readerOf, requiredReadsOf, run, signerOf, signing, Stop, stopCommand, usage } from "./command-support.ts";
 import type { Config } from "./store.ts";
 import { canonicalize, isReceipt, isSignedIntentShape, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
-import { type Fetch, readCredential, ScopeHandle, signedIntent } from "@generalbusiness/dap-client";
+import { type Fetch, type ReadCredential, readCredential, ScopeHandle, signedIntent } from "@generalbusiness/dap-client";
 import type { PlatformDefinition, Receipt, SignedIntent, Summary } from "@generalbusiness/dap-contract";
 import { answersVersionQuestion, platform, READ_TOKEN_HOURS } from "@generalbusiness/dap-platform";
 
@@ -65,7 +66,7 @@ export function remote(ctx: Context): Promise<Outcome> {
     const config = await configOf(ctx);
     const { repository } = await destinationStateOf(ctx, config);
     if (repository === null) return done("Mode: unpublished", "no-repository: this room has no publication.");
-    return done(`Host: ${repository.host}`, `Namespace: ${repository.namespace}`, `Name: ${repository.name}`, `Remote URL: ${remoteLine(config, repository)}`);
+    return done(`Host: ${shownText(repository.host)}`, `Namespace: ${shownText(repository.namespace)}`, `Name: ${shownText(repository.name)}`, `Remote URL: ${shownText(remoteLine(config, repository))}`);
   });
 }
 
@@ -182,13 +183,21 @@ function cloneUsing(ctx: Context, directory: string | undefined, options: { hour
     // Never retry this GET: even a lost reply may have consumed the token.
     const answer = await readCredential(config.service, scope, reader, handle, ctx.fetch ? { fetch: ctx.fetch } : {});
     if (!answer.ok) return failed(`Cannot read the read token ${handle}: ${answer.reason}.`);
-    const value = answer.value;
+    return finishCredentialClone(ctx, config, repository, answer.value, scope, seq, directory, options);
+  });
+}
+
+
+/** Finish a consumed credential without re-reading or re-minting it. */
+export async function finishCredentialClone(ctx: Context, config: Config, repository: Recorded, value: ReadCredential, scope: string, seq: number, directory: string | undefined, options: { archive?: boolean }): Promise<Outcome> {
+  const args = (url: string) => ["clone", "--", url, ...(directory === undefined ? [] : [directory])];
     const header = authorization(repository, value.token);
     const payload = header.slice(header.indexOf(" ") + 1);
     if (options.archive && (!archiveRemote(value.remote) || !archiveValue(value.remote, [value.token, payload]))) return failed("The archive credential named an unsafe remote. The one-time credential may have been consumed; no remote was saved or printed and no Git command was started.");
+    if (!options.archive && !credentialRemote(value.remote, repository, [value.token, payload])) return failed("The credential named an unsafe or mismatched remote. The one-time credential may have been consumed; no remote was saved or printed and no Git command was started.");
     if (value.remote !== config.remote) await ctx.store.save({ ...config, remote: value.remote });
     const environment = headerEnv(header);
-    const runGit = options.archive ? ctx.git.archiveRun!.bind(ctx.git) : ctx.git.run.bind(ctx.git);
+    const runGit = options.archive ? ctx.git!.archiveRun!.bind(ctx.git) : ctx.git!.run.bind(ctx.git);
     const code = await runGit(args(value.remote), environment);
     const lines = [`Read token: ${scope}:${seq}, until ${value.ends}.`, `Remote URL: ${value.remote}`];
     if (code === 0) {
@@ -198,8 +207,7 @@ function cloneUsing(ctx: Context, directory: string | undefined, options: { hour
         const fetched = await runGit(["-C", directory!, "fetch", "--no-tags", "--", "origin", "+refs/artroom/journal/*:refs/artroom/journal/*"], environment);
         if (fetched !== 0) return failed(...lines, "The working clone exists, but fetching archive journal refs failed. No replay was attempted; the read token is not kept.");
       }
-      return done(...lines, `Cloned into ${directory ?? value.remote.replace(/\.git$/, "").split("/").at(-1)}.`, ...(options.archive ? ["Fetched refs/artroom/journal/* with the same read token. Verify the expected journal set offline before accepting the archive."] : []));
+      return done(...lines, `Cloned into ${shownText(directory ?? value.remote.replace(/\.git$/, "").split("/").at(-1) ?? "")}.`, ...(options.archive ? ["Fetched refs/artroom/journal/* with the same read token. Verify the expected journal set offline before accepting the archive."] : []));
     }
     return failed(...lines, code === null ? "git could not be run; the token was read and is not kept." : `git clone exited with ${code}; the token was read and is not kept.`);
-  });
 }

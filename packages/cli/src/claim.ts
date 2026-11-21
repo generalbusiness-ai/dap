@@ -1,4 +1,5 @@
 /** Room creation and exact retained claim recovery, shared with the browser. */
+import { shownText } from "./shown-text.ts";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { readFields } from "@generalbusiness/dap-derive";
 import type { ActType, Digest, Entry, FactRef, Item, KeyId, PlatformDefinition, ScopeId, ScopeRef, Seed, Settlement, Summary } from "@generalbusiness/dap-contract";
@@ -103,10 +104,10 @@ export interface ClaimSteps {
   afterFull?(name: string): string;
 }
 const COMMAND_STEPS: ClaimSteps = {
-  failed: name => `This claim failed and freed its place in the register. It cannot create a room. When the Git host is available, run dap create ${name} --again to start a new claim.`,
-  directory: (name) => `The register accepted this claim, and its directory has not appeared. This command cannot tell whether the claim is still being tried or all its attempts have failed. Run dap create ${name} to go on waiting. That sends nothing new, and it cannot restart a failed claim, even after the Git host returns. When the Git host is up, dap create ${name} --again signs a new claim. The new claim takes a new place in the register, the old claim keeps its place, and if the old claim still finishes you have a second repository.`,
-  children: (name) => `run dap create ${name} again to go on waiting for this claim, or with --again to sign a new one, which takes a new place in the register and creates a second repository.`,
-  afterFull: (name) => `dap create ${name} --again asks the register again with a new request.`,
+  failed: name => `This claim failed and freed its place in the register. It cannot create a room. When the Git host is available, run dap create ${shownText(name)} --again to start a new claim.`,
+  directory: (name) => `The register accepted this claim, and its directory has not appeared. This command cannot tell whether the claim is still being tried or all its attempts have failed. Run dap create ${shownText(name)} to go on waiting. That sends nothing new, and it cannot restart a failed claim, even after the Git host returns. When the Git host is up, dap create ${shownText(name)} --again signs a new claim. The new claim takes a new place in the register, the old claim keeps its place, and if the old claim still finishes you have a second repository.`,
+  children: (name) => `run dap create ${shownText(name)} again to go on waiting for this claim, or with --again to sign a new one, which takes a new place in the register and creates a second repository.`,
+  afterFull: (name) => `dap create ${shownText(name)} --again asks the register again with a new request.`,
 };
 
 /**
@@ -385,9 +386,9 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
     }
     await ctx.store.save({ ...base, repository, handle });
     return done(
-      `Created ${name}: directory ${repository.directory.scope}, membership ${repository.membership.scope}, rules ${repository.rules}, destination ${repository.destination}; each created and confirmed.`,
+      `Created ${shownText(name)}: directory ${repository.directory.scope}, membership ${repository.membership.scope}, rules ${repository.rules}, destination ${repository.destination}; each created and confirmed.`,
       `Definitions: ${directoryDefinition}, ${[siblings.membership, siblings.rules, siblings.destination].join(", ")}.`,
-      `You are ${handle}, an admin, on key ${signer.key}${inbox ? `; your inbox is ${inbox}` : ""}.`,
+      `You are ${shownText(handle)}, an admin, on key ${signer.key}${inbox ? `; your inbox is ${inbox}` : ""}.`,
     );
   });
 }
