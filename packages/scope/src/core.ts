@@ -10,7 +10,7 @@ import { countedEntries, archivedPosition, heldPositions, judgeFloor } from "@ge
 
 import type { ActType, Answer, Beside, Bounds, ScopeBoundName, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, Effect, FactRef, Created, Grant, Head, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, SequenceRef, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalBytes, canonicalize, digestBytes, definitionDigest, intentDigest, isDigest, isEntry, isGrant, rawRetainedJSON, isPlatformDefinition, newGenesisNonce, parseStrict, sealedFactRef, platformName, retainedValueKey, scopeIdOf, textDigest, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
-import { readRetainedUses, same, actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, preparationScopeGrant, prepareRules, presentedTypes, readFields, resolvedEntryEffects, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
+import { readRetainedUses, same, actNeeds, liveActive, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, preparationScopeGrant, prepareRules, presentedTypes, readFields, resolvedEntryEffects, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
 import type { ClassifiedRetainedUse, RetainedResultOperand, SelectedRetainedUse, ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, OwnRetainedRow, RetainedOwn, Owners, Placed, PlatformRules, Presented, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ReceiverReads } from "./receiver-reads.ts";
@@ -18,6 +18,7 @@ import { producerName } from "./receiver-facts.ts";
 import { namedBy } from "./definitions.ts";
 import type { Asked, DefinitionRead, Further, Ports, Standing } from "./ports.ts";
 import type { Retained, Sealed, Store } from "./store.ts";
+import { LiveTurns } from "./live.ts";
 import { LATE, ARCHIVED_FACT, SOURCE_TOO_LARGE, Turns, fetchFacts, isSigned, within, type Verdict } from "./turn.ts";
 
 export type { Created };
@@ -236,7 +237,7 @@ const said = <A>(answer: A): Verdict<A> => ({ verdict: "answer", answer });
  * it cannot serve this commit. A port that fails here has decided nothing,
  * so the act is not judged.
  */
-function heldBy(standing: Standing, view: StateView, clock: Reading): readonly Presented[] | null {
+export function heldBy(standing: Standing, view: StateView, clock: Reading): readonly Presented[] | null {
   try {
     const held = standing.held(view, clock);
     return Array.isArray(held) ? held as readonly Presented[] : null;
@@ -338,10 +339,15 @@ export class Scope {
   readonly #ports: Ports;
   readonly #bounds: Bounds;
   readonly #turns: Turns;
+  #live: LiveTurns | undefined;
   readonly #pinCell: PinCell = { value: null };
 
   /** The one queue of this scope. Every writer's input waits in it: an act here, a delivery and a diagnosis from their own modules. */
   get turns(): Turns { return this.#turns; }
+  /** The live turn of an active live scope (live note, section 3.3). For a scope of another level it answers `unavailable`. */
+  get live(): LiveTurns {
+    return this.#live ??= new LiveTurns(this.#store, this.#ports, this.#bounds, () => this.pinned(), (asked) => this.#standing(asked));
+  }
 
   /** One input's receiver policy and evidence budget. No derived name is
    * cached on Scope or used by the global producer Source API. */
@@ -656,6 +662,8 @@ export class Scope {
     const pinned = this.pinned();
     const scope = this.#store.scope();
     if (!pinned?.definition || !scope) return unavailable("unavailable");
+    // Live note, section 3.3: an active live scope takes acts through its live turn (`live.ts`) and records none.
+    if (liveActive(pinned.definition, scope)) return unavailable("unavailable");
     const { definition, named } = pinned;
     const platform = pinned.platform ?? undefined;
     const bounds = this.#bounds;

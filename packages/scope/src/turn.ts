@@ -22,7 +22,7 @@ import type { Bounds, ScopeBoundName, FactRef, Head, Prepared, SignedIntent } fr
 import { isScopeBoundName } from "@generalbusiness/dap-contract";
 import { carryProducerName } from "./receiver-facts.ts";
 import { CanonicalError, admitSequenceGenesis, isEntry, canonicalize, entryHash, scopeIdOf, parseStrict, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { AmountError, applyEntry, clockOf, entryOf, capacityFull, reserved, fits, isEntryOf, isIntent, judgeTimed, nextDue, StandingError, timeMs, timeOf } from "@generalbusiness/dap-derive";
+import { AmountError, applyEntry, clockOf, liveActive, entryOf, capacityFull, reserved, fits, isEntryOf, isIntent, judgeTimed, nextDue, StandingError, timeMs, timeOf } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Draft, Due, Fetched, RetainedOwn, Owners, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import { bornOf, genuineRetained, ownOf, retainedUsesOf, snapshotsOf, type BirthCandidate, type PinCell, type Pinned, type ResolvedPin } from "./core.ts";
 import type { Ports, Resolver, SourceReadContext } from "./ports.ts";
@@ -193,6 +193,8 @@ class Full extends Error {}
 
 /** A local birth/pin could not be admitted. It must unwind the transaction, never commit as Unfit. */
 class PinUnavailable extends Error {}
+/** Live note, section 3.1: an active live scope seals no entry. Thrown before anything is written. */
+class LiveSeals extends Error {}
 interface Committed<T> { ordinary: T; birth: ResolvedPin | null }
 const committed = <T>(ordinary: T, birth: ResolvedPin | null = null): Committed<T> => ({ ordinary, birth });
 
@@ -321,7 +323,8 @@ export class Turns {
     if (!definition) return { end: "unavailable" };
     for (let attempt = resume; ; attempt = null) {
       if (!attempt) {
-        const stopped = waiting ? null : this.#drain(definition, turn); // alarms alone drain timed work
+        // Alarms alone drain timed work. An active live scope's timed rules run in memory (`live.ts`), never here.
+        const stopped = waiting || this.#activeLive(definition) ? null : this.#drain(definition, turn);
         if (stopped) return this.#close<A>(definition, turn, stopped);
         if (!waiting) return this.#close<A>(definition, turn, { end: "idle" });
         turn.last = clockOf(this.#store, this.#ports.clock.read());
@@ -384,7 +387,7 @@ export class Turns {
         return result.ordinary;
       });
     } catch (error) {
-      if (error instanceof Unfit || error instanceof Full || error instanceof AmountError || error instanceof PinUnavailable) return "unfit"; // the transaction retained no write
+      if (error instanceof Unfit || error instanceof Full || error instanceof AmountError || error instanceof PinUnavailable || error instanceof LiveSeals) return "unfit"; // the transaction retained no write
       throw error;
     }
   }
@@ -420,7 +423,7 @@ export class Turns {
     } catch (error) {
       // The entry would have left an admitted task no room to settle. The transaction wrote nothing.
       if (error instanceof Full && full) return { end: "answer", answer: (full as () => A)() };
-      if (error instanceof StandingError || error instanceof AmountError || error instanceof PinUnavailable) return { end: "unavailable" };
+      if (error instanceof StandingError || error instanceof AmountError || error instanceof PinUnavailable || error instanceof LiveSeals) return { end: "unavailable" };
       throw error;
     }
   }
@@ -497,6 +500,8 @@ export class Turns {
    * `applyEntry` is the only code that changes folded state.
    */
   #seal(definition: ValidDefinition, draft: Draft, clock: Reading, retain: readonly Retained[], facts?: readonly Fetched[], born: readonly Fetched[] = []): { sealed: Sealed; pin: ResolvedPin; added: number } {
+    // An answer that writes nothing still passes, such as the repeat of a recorded delivery. A write does not.
+    if (this.#activeLive(definition)) throw new LiveSeals();
     // The foreign-entry term uses this scope's entry ceiling. Constrain
     // accepted retained copies at the same boundary, including results;
     // a peer's independently configured ceiling is not that guarantee.
@@ -540,9 +545,14 @@ export class Turns {
     return { sealed: { entry, hash }, pin, added };
   }
 
+  #activeLive(definition: ValidDefinition): boolean {
+    return definition.declared.level?.name === "live" && liveActive(definition, this.#store.scope());
+  }
+
   /** The end of a turn. If it wrote, left work due, or was an alarm's, the alarm is set for what is due next. */
   async #close<A>(definition: ValidDefinition | null | undefined, turn: Counts, end: End<A>): Promise<End<A>> {
-    if (definition && (turn.wrote || end.end !== "answer")) await this.#wake(definition, turn);
+    // An active live scope sets no alarm for its timed rules: they run from memory (`live.ts`).
+    if (definition && (turn.wrote || end.end !== "answer") && !this.#activeLive(definition)) await this.#wake(definition, turn);
     return end;
   }
 

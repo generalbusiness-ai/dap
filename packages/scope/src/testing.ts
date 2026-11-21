@@ -285,6 +285,8 @@ export interface Controls {
   membership: MembershipScript | null;
   /** The scripted rules scope, a stand-in. Null: the scope records no rules reference, and nothing is read for a row of the rules. */
   rulebook: RulesScript | null;
+  /** The live timer as the scope last set it, a stand-in for `setTimeout`: its delay and what it runs. Null: none is set. A test fires it. */
+  liveTimer: { milliseconds: number; fire: () => void } | null;
 }
 
 const all = new Map<string, Controls>();
@@ -292,7 +294,7 @@ const all = new Map<string, Controls>();
 /** The controls of the scope with that name, made on first use with a clock at `start`. They outlive a restart of the object. */
 export function controls(name: string, start: Timestamp = "2099-01-01T00:00:00Z"): Controls {
   let made = all.get(name);
-  if (!made) all.set(name, (made = { clock: new ScriptedClock(start), gate: new Gate(), foreign: new Map(), bounds: PROPOSED_BOUNDS, reads: READ_BOUNDS, capability: null, authority: true, platformCode: true, membership: null, rulebook: null }));
+  if (!made) all.set(name, (made = { clock: new ScriptedClock(start), gate: new Gate(), foreign: new Map(), bounds: PROPOSED_BOUNDS, reads: READ_BOUNDS, capability: null, authority: true, platformCode: true, membership: null, rulebook: null, liveTimer: null }));
   return made;
 }
 
@@ -323,7 +325,8 @@ export function testPorts(c: Controls): Partial<Ports> {
   const standIn = testAuthority(() => c.authority);
   const authority: Authority = { read: (asked, seconds) => (c.membership ? observed : standIn).read(asked, seconds), further: (scope) => observed.further!(scope) };
   // The scripted capability owns no operation. A test that needs owners' rules supplies its own stand-in for them.
-  return { clock: c.clock, authority, readers: testReaders, resolver, rules: gated, definitions, capabilities: scriptedCapability(() => c.capability), owners: null };
+  const liveTimer = { set: (milliseconds: number | null, fire: () => void) => { c.liveTimer = milliseconds === null ? null : { milliseconds, fire }; } };
+  return { clock: c.clock, authority, readers: testReaders, resolver, rules: gated, definitions, capabilities: scriptedCapability(() => c.capability), owners: null, liveTimer };
 }
 
 // ---------------------------------------------------------------- several scopes in one namespace

@@ -2,7 +2,7 @@
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Entry } from "@generalbusiness/dap-contract";
 import { entryHash } from "@generalbusiness/dap-bytes";
-import { applyEntry, checkpointOf, clockOf, derivable, judgeGenesis, validateDefinition, type Problem } from "../src/index.ts";
+import { applyEntry, applyLive, checkpointOf, clockOf, derivable, entryOf, judgeGenesis, validateDefinition, type Problem } from "../src/index.ts";
 import { liveBase, liveDurableForms, liveForms, liveOutcomeSend } from "./definition-corpus/live-data.ts";
 import { contextParentData } from "./definition-corpus/general-creation-data.ts";
 import { Ledger, T0, creation, deliver, created, keys, valid } from "./fixtures-entry.ts";
@@ -43,10 +43,10 @@ test("live admission implements exactly version 1", () => {
   expect(problems({ ...liveBase(), level: { name: "live", version: 2 } })).toEqual([{ code: "unsupported-definition", path: "level" }]);
 });
 
-test("LV1 validates live creation forms but keeps runtime derivation disabled until LV2", () => {
+test("LV2 derives a live definition as it derives the recorded one", () => {
   const live = valid(validateDefinition(liveBase(), PROPOSED_BOUNDS));
   const recorded = valid(validateDefinition(liveBase(false), PROPOSED_BOUNDS));
-  expect([derivable(live, null), derivable(recorded, null)]).toEqual([false, true]);
+  expect([derivable(live, null), derivable(recorded, null)]).toEqual([true, true]);
 });
 
 function confirmed(declaration: DeclaredDefinition) {
@@ -81,4 +81,23 @@ test("ordinary create and confirmation fold, but a third live entry fails before
   const permitted: Entry = { ...third, genesis: recorded.at.genesis, prev: recorded.head.hash, input: { type: "checkpoint", ...checkpointOf(recorded.state) } };
   expect(() => recorded.fold(permitted)).not.toThrow();
   expect(recorded.head.seq).toBe(2);
+});
+
+test("applyLive folds a judged act into an active live scope's memory at the next tick, and nothing else", () => {
+  const child = confirmed(liveBase());
+  const judged = child.judge(child.intent(keys.rita, "count", { on: 0, expected: { on: 1 }, fields: { next: 3 } }));
+  if (judged.result !== "write") throw new Error(`count was not judged to write: ${JSON.stringify(judged)}`);
+  const entry = entryOf(child.state, judged.draft, clockOf(child.state, T0));
+  expect(() => applyEntry(child.state, child.definition, entry, entryHash(entry), child.foldOptions)).toThrow("a live scope records no entry after confirmation");
+  applyLive(child.state, child.definition, entry, entryHash(entry), child.foldOptions);
+  expect([child.state.scope()!.head, child.item(0).values["count"], child.item(0).revision, child.entries.length]).toEqual([{ seq: 2, hash: entryHash(entry) }, 3, 2, 2]);
+
+  // A checkpoint is no live input. A recorded scope, and a live scope before its confirmation, take no live input.
+  const checkpoint: Entry = { ...entry, genesis: child.at.genesis, seq: 3, prev: entryHash(entry), input: { type: "checkpoint", ...checkpointOf(child.state) }, effects: [] };
+  expect(() => applyLive(child.state, child.definition, checkpoint, entryHash(checkpoint))).toThrow("a live scope applies no checkpoint input");
+  const recorded = confirmed(liveBase(false));
+  const counted = recorded.judge(recorded.intent(keys.rita, "count", { on: 0, expected: { on: 1 }, fields: { next: 3 } }));
+  if (counted.result !== "write") throw new Error("count was not judged to write");
+  const sealed = entryOf(recorded.state, counted.draft, clockOf(recorded.state, T0));
+  expect(() => applyLive(recorded.state, recorded.definition, sealed, entryHash(sealed))).toThrow("only an active live scope applies a live input");
 });
