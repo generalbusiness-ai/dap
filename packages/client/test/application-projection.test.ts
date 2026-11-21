@@ -114,3 +114,26 @@ test("declared item observations resolve aliases and merge identical subjects wi
   const absent = structuredClone(data); delete (absent.sources.board[0]!.fields as Partial<typeof data.sources.board[0]["fields"]>).writer;
   expect(() => applicationItemSnapshot(declaration, absent)).toThrow("does not match");
 });
+
+test("live application reads and acts bind the canonical installation query", async () => {
+  const scope = `sc_${"a".repeat(52)}` as const, digest = `sha256:${"a".repeat(64)}` as const;
+  const at = { scope, genesis: digest }, query = { v: 1 as const, scope: at, directory: at, install: 4, projection: "board", items: {} };
+  const encoded = encodeApplicationProjectionQuery(query), queryDigest = applicationProjectionQueryDigest(query);
+  let reply: unknown = { ok: true, query: queryDigest, generation: "g", tick: 1, complete: true,
+    value: { scope: at, definition: digest, projection: digest, sources: { cards: [] } } };
+  const transport = httpTransport("https://scopes.test", { fetch: async (url, init) => {
+    expect(init?.headers?.["authorization"]).toBe("Session token");
+    if (init?.method === "POST") {
+      expect(url).toBe(`https://scopes.test/v1/scopes/${scope}/live-act`);
+      expect(JSON.parse(init.body!)).toEqual({ signed: {}, grants: [], generation: "g", binding: encoded });
+      return { status: 200, body: new Response(JSON.stringify({ answer: "applied", generation: "g", tick: 2 })).body };
+    }
+    expect(url).toBe(`https://scopes.test/v1/scopes/${scope}/application-projection?p=${encoded}&live=1`);
+    return { status: 200, body: new Response(JSON.stringify(reply)).body };
+  } });
+  const handle = new ScopeHandle(transport, scope, "Session token");
+  expect(await handle.applicationLiveProjection(query)).toEqual(reply);
+  expect(await handle.liveAct({} as never, "g", [], query)).toEqual({ answer: "applied", generation: "g", tick: 2 });
+  reply = { ...(reply as object), query: digest };
+  await expect(handle.applicationLiveProjection(query)).rejects.toThrow(TransportError);
+});

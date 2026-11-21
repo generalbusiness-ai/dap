@@ -113,3 +113,25 @@ Combined logs under `~/play/artroom-evidence/2026-11-21-lv4-on-o1-focused/`.
 | Refreshed package reproduction | 1 passed | `artroom-lv4-refresh-release.log` | `4fa4f00c11967333dac9e7a38766d1db3ce589ce9d4ebbe114299ab7c36e8b96` |
 | Refreshed room assets | 1 passed | `artroom-lv4-refresh-page.log` | `224e01598b8649b00af9e59e7b8ce351263c292c771da45aaafdef9a550a662a` |
 | Generated before and after manifest | 11 protected files match | `artroom-lv4-generated-manifest.json` | `e5ffe1645d22a646fc11c43a96b2d3bd977509d477dc4fb6e60f7a8b64d3f8f9` |
+
+## Client test dependency boundary
+
+The first full gate at `4192998081e8f83e1fa10d4b5902bf795f343b58`, tree
+`f2012f8a4833198cbbceee81eb349d5182ea06ff`, exited 1 in 188.37 seconds.
+The Node stage passed 245 cases and failed `scripts/active-source.test.mjs`
+because the intent test imported the platform codec directly. The gate
+stopped before counting, plain, and native tests. Its log at
+`~/play/artroom-evidence/2026-11-21-lv4-gate/gate.txt` has SHA-256
+`1a3477dd827d8da8e709cd77ebe2e3c211d5cb32788aabb6e24a38fe240c09d8`.
+
+The exact-query witness now lives in the client's authorized
+application projection test owner. Its positive and negative cases
+remain intact. The correction changes only those two client test files
+and this note. Corrected logs are under
+`~/play/artroom-evidence/2026-11-21-lv4-retry-gate/`.
+
+| Check | Result | Log | SHA-256 |
+|---|---|---|---|
+| Active-source inventory | 12 passed | `active.log` | `69495edcb580c47a015893d24aff6f8e3854fb70cba0e240b793d39e00aba2b6` |
+| Client intent and application projection | 16 passed | `client.log` | `4544efab93c437b194333aeb0e41cf68034d1c6bd5b816aefbefc8e94f0ed98b` |
+| Client types | exit 0 | `typecheck.log` | `93d077e30835a17c82425abeab78e368f3aaae2d1ee44b05b5fa8291b6391430` |
