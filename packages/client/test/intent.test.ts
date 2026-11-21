@@ -275,3 +275,38 @@ test("the bounded reader gives back nothing after its exchange expires, whatever
   const parts: Chunk[] = [{ done: false, value: new Uint8Array(0) }, { done: false, value: busy }, { done: false, value: new Uint8Array(0) }, { done: true }];
   expect(await takeBytes({ getReader: () => ({ read: () => Promise.resolve(parts.shift()!), cancel: () => Promise.resolve() }) }, 4096, new AbortController().signal)).toEqual(busy);
 });
+
+test("live transport sends its session and checks the four live answers", async () => {
+  const scope = `sc_${"a".repeat(52)}` as const;
+  const signed = {} as never, grants: never[] = [];
+  let reply: unknown = { answer: "applied", generation: "g", tick: 2 };
+  const transport = httpTransport("https://scopes.test", { fetch: async (url, init) => {
+    expect(url).toBe(`https://scopes.test/v1/scopes/${scope}/live-act`);
+    expect(init?.headers?.["authorization"]).toBe("Session token");
+    expect(JSON.parse(init!.body!)).toEqual({ signed, grants, generation: "g" });
+    return { status: 200, body: new Response(JSON.stringify(reply)).body };
+  } });
+  const handle = new ScopeHandle(transport, scope, "Session token");
+  for (reply of [{ answer: "applied", generation: "g", tick: 2 }, { answer: "reset", generation: "g" },
+    { answer: "refused", reason: "revision-moved", generation: "g", tick: 2 }, { answer: "unavailable", reason: "unavailable" }]) {
+    expect(await handle.liveAct(signed, "g", grants)).toEqual(reply);
+  }
+  for (reply of [{ answer: "applied", generation: "g", tick: -1 }, { answer: "reset" }, { answer: "accepted", receipt: {} },
+    { answer: "applied", generation: "g", tick: 2, receipt: {} }]) await expect(handle.liveAct(signed, "g", grants)).rejects.toThrow(TransportError);
+});
+
+test("live summary uses the session and rejects a recorded or malformed reply", async () => {
+  const scope = `sc_${"a".repeat(52)}` as const, digest = `sha256:${"a".repeat(64)}` as const;
+  let reply: unknown = { ok: true, generation: "g", tick: 1, complete: true, value: { scope: { scope, genesis: digest }, definition: digest, items: [], counts: [["tally", "open", 1]] } };
+  const transport = httpTransport("https://scopes.test", { fetch: async (url, init) => {
+    expect(url).toBe(`https://scopes.test/v1/scopes/${scope}/live`);
+    expect(init?.headers?.["authorization"]).toBe("Session token");
+    return { status: 200, body: new Response(JSON.stringify(reply)).body };
+  } });
+  const handle = new ScopeHandle(transport, scope, "Session token");
+  expect(await handle.liveSummary()).toEqual(reply);
+  reply = { ok: false, reason: "forbidden" };
+  expect(await handle.liveSummary()).toEqual(reply);
+  for (reply of [{ ok: true, at: { seq: 1, hash: digest }, value: {}, complete: true },
+    { ok: true, generation: "g", tick: -1, value: {}, complete: true }]) await expect(handle.liveSummary()).rejects.toThrow(TransportError);
+});

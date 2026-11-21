@@ -64,7 +64,7 @@ export function viewTools(sessions: ViewSessions, screens?: readonly { name: str
   };
   for (const { name: screen, resource } of screens ?? VIEW_KINDS.map(name => ({ name, resource: `ui://dap/${name}` }))) {
     const name = viewToolName(screen, screens !== undefined);
-    if (Object.hasOwn(tools, name) || name === "view_read" || name === "view_act") throw new Error("Declared view tool names collide.");
+    if (Object.hasOwn(tools, name) || name === "view_read" || name === "view_act" || name === "view_live_act") throw new Error("Declared view tool names collide.");
     add(name, `Open ${screen} as a compact card. Choose and keep a view key for this opening. The tool text exposes only ${screens ? "the declared fallback and identity" : "identity, exact revision, screen and counts"}. Private card details are fetched separately by the app. Without views, use inspect and the ordinary read tools for the named subject.`, { view: key, subject: { type: "string", maxLength: 256 }, ...(screens || sessions.source.listsAfterScope ? { scope: { type: "object", properties: { scope: { type: "string" }, genesis: { type: "string", pattern: "^sha256:[0-9a-f]{64}$" } }, required: ["scope", "genesis"], additionalProperties: false, ...(screens ? {} : { description: "On a list, the lane that the list continues after." }) } } : {}), ...(screens ? { items: { type: "object", maxProperties: 8, propertyNames: { pattern: "^[A-Za-z][A-Za-z0-9_-]{0,63}$" }, additionalProperties: { type: "integer", minimum: 0 } } } : {}) }, ["view"], false, resource, async (args, dispatch) => {
       const subject = args["subject"] === undefined ? undefined : string(args, "subject");
       if (subject !== undefined && subject.length > 256) throw new ViewError("shape", "subject exceeds 256 characters.");
@@ -89,6 +89,10 @@ export function viewTools(sessions: ViewSessions, screens?: readonly { name: str
     const answer = await sessions.act(string(args, "view"), integerArgument(args, "cut"), string(args, "action"), dispatch);
     return result(answer, copyOf(answer));
   });
+  add("view_live_act", "Invoke a live action retained by the displayed card. The result describes live state, not a journal receipt.", { view: key, cut, action: key }, ["view", "cut", "action"], true, undefined, async (args, dispatch) => {
+    const answer = await sessions.liveAct(string(args, "view"), integerArgument(args, "cut"), string(args, "action"), dispatch);
+    return result(answer, copyOf(answer));
+  }, true);
   for (const action of sessions.source.inputActs ?? []) {
     const name = viewInputToolName(action.screen, action.id);
     if (Object.hasOwn(tools, name)) throw new Error("Declared input tool names collide.");

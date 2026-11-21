@@ -1,6 +1,6 @@
 import type { CallResult } from "../results.ts";
 import type { PresentationPackage, ViewKind } from "./resources.ts";
-import type { ReadMinimum, ApplicationProjectionData, FactRef, FieldValue, Head, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import type { ReadMinimum, ApplicationProjectionData, ApplicationProjectionQuery, FactRef, FieldValue, Head, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import type { ApplicationView, ApplicationViewParameters } from "@generalbusiness/dap-platform/application-v2";
 import type { MemberTable } from "./member-types.ts";
 
@@ -50,6 +50,8 @@ export interface NativeCardAction {
   /** A native kind and its already captured input; the browser never supplies these. */
   kind: string;
   args: Record<string, unknown>;
+  /** Retained live binding; never sent to the app. */
+  live?: { query: ApplicationProjectionQuery; generation: string };
   /** Server-owned declaration and transient model input; never app action arguments. */
   parameters?: ApplicationViewParameters;
   parameterInput?: unknown;

@@ -176,6 +176,14 @@ describe("the live turn on native storage", () => {
     expect(await R.live(R.lease(), generation)).toEqual({ answer: "applied", generation, tick: 2 });
     R.later(61);
     expect(await R.live(first, generation)).toEqual({ answer: "applied", generation, tick: 1 });
+    const bound = (allowed: boolean) => runInDurableObject(R.object, async instance => {
+      let calls = 0;
+      const turns = (instance as unknown as { [liveTurnsOf](): LiveTurns | null })[liveTurnsOf]();
+      if (!turns) throw Error("The live turn must exist.");
+      return turns.act(first, R.grants(), generation, async () => ++calls === 1 || allowed);
+    });
+    expect(await bound(true)).toEqual({ answer: "applied", generation, tick: 1 });
+    expect(await bound(false)).toEqual({ answer: "unavailable", reason: "unavailable" });
     expect(await R.state()).toMatchObject({ generation, tick: 2, snapshot: { items: [
       { id: 0 }, { id: 1, state: "open" }, { id: 2, state: "open" },
     ] } });
@@ -241,4 +249,41 @@ test("O2: an active live scope answers a delivery retry and records nothing; the
   expect(send?.attempts.map((attempt) => attempt.answer)).toEqual(["retry", "retry", "retry", "retry"]);
   expect((await S.entries()).some((entry) => entry.input.type === "diagnosis")).toBe(false);
   expect(await L.stored()).toEqual(created);
+});
+
+// The callback stands in for the installed application's remote ownership read.
+test("the final live-turn binding check refuses a changed installation before applying", async () => {
+  const room = await Room.create(true), signed = room.count(4, 1), initial = await room.state();
+  if (!initial) throw Error("The live scope must have a generation.");
+  const result = await runInDurableObject(room.object, async instance => {
+    const turns = (instance as unknown as { [liveTurnsOf](): LiveTurns | null })[liveTurnsOf]();
+    if (!turns) throw Error("The live turn must exist.");
+    return turns.act(signed, room.grants(), initial.generation, async () => false);
+  });
+  expect(result).toEqual({ answer: "unavailable", reason: "unavailable" });
+  expect((await room.state())?.tick).toBe(initial.tick);
+});
+
+// The binding callback stands in for the installation metadata read; the
+// authority port, rules gate, and live turn use the native test runtime.
+test("a replacement seen after the rules prevents a bound live commit", async ({ onTestFinished }) => {
+  const room = await Room.create(true, env.SCOPES, START, liveForms.rule());
+  let admissions = 0, bindingReads = 0, installed = true;
+  wired.set(room.name, () => ({ freshActAdmission: { read: async () => { admissions++; return { current: () => "allowed" as const }; } } }));
+  onTestFinished(() => { wired.delete(room.name); });
+  await evictDurableObject(room.object);
+  const initial = await room.state(); if (!initial) throw Error("The live scope must have a generation.");
+  const signed = room.count(8, 1);
+  room.c.gate.hold();
+  const waiting = runInDurableObject(room.object, async instance => {
+    const turns = (instance as unknown as { [liveTurnsOf](): LiveTurns | null })[liveTurnsOf]();
+    if (!turns) throw Error("The live turn must exist.");
+    return turns.act(signed, room.grants(), initial.generation, async () => { bindingReads++; return installed; });
+  });
+  await room.c.gate.held();
+  installed = false;
+  room.c.gate.release();
+  expect(await waiting).toEqual({ answer: "unavailable", reason: "unavailable" });
+  expect(admissions).toBe(1); expect(bindingReads).toBe(2);
+  expect(await room.state()).toEqual(initial);
 });

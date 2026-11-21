@@ -77,3 +77,11 @@ test("projection ancestry resolves a parent named by the genesis self reference"
   expect(child.frame.genesis.seed.creator).toEqual({ scope: root.at.scope, genesis: null });
   expect(await projectionScopeOwned(child.frame, root.at, digest, directory, { read: async () => root.birth }, run)).toBe("owned");
 });
+
+// The two roots use the same definition; only the actual ancestor owns the child.
+test("a same-definition installation does not own another installation's child", async () => {
+  const first = node(directory, 121), second = node(directory, 122), child = node(first.at, 123);
+  const source = { read: async (at: ScopeRef) => canonicalize(at) === canonicalize(first.at) ? first.birth : null };
+  expect(await projectionScopeOwned(child.frame, first.at, digest, directory, source, run)).toBe("owned");
+  expect(await projectionScopeOwned(child.frame, second.at, digest, directory, source, run)).toBe("unowned");
+});

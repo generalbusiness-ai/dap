@@ -1,6 +1,6 @@
 import { isRoomRetiredStop, roomRetiredResponse, type RoomRetiredStop } from "./room-retired.ts";
 import { scopeWiring, scopeNamespace } from "./internal/room-hooks.ts";
-import { answersVersionQuestion, type LiveRead, type LiveReadRefusal, type LiveSummary } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, type LiveAnswer, type LiveRead, type LiveReadRefusal, type LiveSummary } from "@generalbusiness/dap-platform";
 import { mcpRoute, type McpEnv } from "./worker-mcp.ts";
 import { readMinimumParameter } from "@generalbusiness/dap-bytes";
 import type { ReadMinimum } from "@generalbusiness/dap-contract";
@@ -198,6 +198,7 @@ interface Remote {
   reservationSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-contract").ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null>;
   stageSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-platform").StageSnapshotReply>;
   create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions?: readonly DeclaredDefinition[], beside?: Beside): Promise<Created>;
+  liveAct(reader: unknown, signed: SignedIntent, grants: readonly Grant[], generation: unknown, binding?: unknown): Promise<LiveAnswer>;
   submit(signed: SignedIntent, grants: readonly Grant[], beside?: Beside, address?: string | null): Promise<Answer>;
   prepare(signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer>;
   settle(signed: SignedIntent): Promise<Settlement>;
@@ -210,6 +211,7 @@ interface Remote {
   log(reader: unknown, cursor?: Cursor): Promise<Read<LogPage>>;
   retained(reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput>>;
   queryItems(encoded: unknown, reader: unknown): Promise<NativeItemQuery>;
+  applicationLiveProjection(encoded: unknown, reader: unknown): Promise<NativeApplicationProjection>;
   applicationProjection(encoded: unknown, reader: unknown, atLeast?: ReadMinimum): Promise<NativeApplicationProjection>;
   session(asked: unknown, options?: SessionIssueOptions): Promise<SessionIssueAnswer>;
   stream(reader: unknown): Promise<Opened | StreamRefusal>;
@@ -242,6 +244,7 @@ export interface Api extends ScopeApi {
   /** The watch of a live scope, on the head stream's exchange (live note, section 3.5): its lines are the generation and the tick. */
   watchExchange(scope: string, reader: unknown): Promise<StreamExchange | StreamRefusal | { ok: false; reason: LiveReadRefusal } | typeof MISSING>;
   /** The reads of live state (live note, section 3.5). Platform answers, outside `ScopeApi`. */
+  liveAct(scope: string, reader: unknown, signed: SignedIntent, grants: readonly Grant[], generation: unknown, binding?: unknown): Promise<LiveAnswer>;
   liveSummary(scope: string, reader: unknown): Promise<LiveRead<LiveSummary>>;
   liveItems(scope: string, reader: unknown, type: string, cursor?: Cursor): Promise<LiveRead<readonly Item[]>>;
   incidents(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Incident[]>>;
@@ -264,11 +267,11 @@ export interface Api extends ScopeApi {
 const RETIRED_HTTP = Symbol("retired HTTP room");
 const ROOM_RPC_METHODS = new Set([
   "reservationSnapshot", "stageSnapshot", "create", "submit", "prepare", "settle", "summary", "items", "history", "entry",
-  "outbox", "outboxItem", "log", "retained", "queryItems", "applicationProjection", "session", "stream", "watch", "liveSummary", "liveItems", "release",
+  "outbox", "outboxItem", "log", "retained", "queryItems", "applicationProjection", "applicationLiveProjection", "session", "stream", "watch", "liveAct", "liveSummary", "liveItems", "release",
   "incidents", "waiting", "credential", "requests", "keepOriginal", "listOriginals", "readOriginal", "endOriginal",
 ]);
 function retiredRoomAnswer(method: string): unknown {
-  if (["create", "submit", "prepare"].includes(method)) return { answer: "unavailable", reason: "unavailable" };
+  if (["create", "submit", "prepare", "liveAct"].includes(method)) return { answer: "unavailable", reason: "unavailable" };
   if (["reservationSnapshot", "stageSnapshot"].includes(method)) return null;
   if (["session", "keepOriginal", "listOriginals", "readOriginal", "endOriginal"].includes(method)) return { ok: false, reason: "sessions-unavailable" };
   if (method === "release") throw new Error("Room release is unavailable.");
@@ -379,6 +382,10 @@ function roomApi(binding: Binding, address: string | null, creationAdmission: Cr
         return { answer: "refused", reason: "source-unverified" };   // not values that have canonical bytes
       }
       return at(name)!.create(creation, definition, definitions, beside);
+    },
+    async liveAct(scope: string, reader: unknown, signed: SignedIntent, grants: readonly Grant[], generation: unknown, binding?: unknown): Promise<LiveAnswer> {
+      if (typeof reader !== "string" || !reader.startsWith("Session ")) return { answer: "unavailable", reason: "unavailable" };
+      return (await at(scope)?.liveAct(reader, signed, grants, generation, binding)) ?? { answer: "unavailable", reason: "unavailable" };
     },
     async submit(scope: string, signed: SignedIntent, grants: readonly Grant[], beside: Beside = {}): Promise<Answer> {
       if (signed?.intent?.kind === "found") {
@@ -567,8 +574,13 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
     if (!wire.ok) return projectionResponse(wire);
     if (typeof reader !== "string" || reader.length > APPLICATION_PROJECTION_WIRE_BOUNDS.sessionChars || reader.startsWith("Signed ")) return projectionResponse({ ok: false, reason: "forbidden" });
     const object = binding.get(binding.idFromName(scope!)) as Remote;
-    const result = await object.applicationProjection(wire.encoded, reader, wire.atLeast);
-    return isRoomRetiredStop(result) ? roomRetiredResponse() : projectionResponse(result);
+    const result = wire.live ? await object.applicationLiveProjection(wire.encoded, reader) : await object.applicationProjection(wire.encoded, reader, wire.atLeast);
+    if (isRoomRetiredStop(result)) return roomRetiredResponse();
+    if (wire.live && !result.ok) {
+      const reason = ["forbidden", "sessions-unavailable", "clock-behind", "not-found", "rate-limited", "incomplete"].includes(result.reason) ? result.reason : "unavailable";
+      return json(reason === "forbidden" ? 403 : reason === "incomplete" ? 409 : 503, { ok: false, reason });
+    }
+    return projectionResponse(result);
   }
   if (what === "query-items") {
     const wire = itemQueryWire(request, scope ?? "");
@@ -600,7 +612,7 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
     const keys = [...url.searchParams.keys()];
     if (keys.some(key => !["request", "trace", "cursor"].includes(key)) || new Set(keys).size !== keys.length || !requestQuery(requestId, traceId, cursor)) return read(MISSING);
   }
-  const posts = (scope === undefined && what === undefined) || ((what === "acts" || what === "preparations" || what === "settle" || what === "sessions" || what === "reservation-snapshot") && which === undefined);
+  const posts = (scope === undefined && what === undefined) || ((what === "acts" || what === "live-act" || what === "preparations" || what === "settle" || what === "sessions" || what === "reservation-snapshot") && which === undefined);
   if (request.method !== (posts ? "POST" : "GET")) return json(405, { error: "method-not-allowed" });
 
   if (posts) {
@@ -626,6 +638,11 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
       // The new owner already bounds proof and object bytes; retain a whole-wire ceiling too.
       if (given["stage"] === true && utf8(payload).length > 24 * 1024 * 1024) return json(503, { error: "stage-origin-unavailable" });
       return new Response(payload, { status: snapshot ? 200 : 403, headers: { "content-type": "application/json", "cache-control": "no-store" } });
+    }
+    if (what === "live-act") {
+      if ((Object.keys(given).length !== 3 && !(Object.keys(given).length === 4 && Object.hasOwn(given, "binding"))) || !Object.hasOwn(given, "signed") || !Object.hasOwn(given, "grants") || !Object.hasOwn(given, "generation")) return json(400, { error: "bad-request" });
+      const answer = await scopes.liveAct(scope, reader, given["signed"] as SignedIntent, given["grants"] as Grant[], given["generation"], given["binding"]);
+      return json(answer.answer === "applied" ? 200 : answer.answer === "reset" ? 409 : answer.answer === "unavailable" ? 503 : 422, answer);
     }
     if (what === "acts") return answered(await scopes.submit(scope, given["signed"] as SignedIntent, (given["grants"] ?? []) as Grant[], beside), 200);
     if (what === "sessions") {

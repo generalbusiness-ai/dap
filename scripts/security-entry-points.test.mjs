@@ -12,7 +12,7 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 const namedOwners = {
   "packages/scope/src/object.ts": {
     "packages/scope/src/object.ts:$module": "ffdabf5a2d806fe29a0960da110aacb09a64866b9ec7e8f8f997f5350c23aba8",
-    "packages/scope/src/object.ts:ScopeObject": "7fabe0fc7fd4f8a85ba0de8d3b858643d8a1f289236e12c9859666ff74a14a16" // AD-1: applicationInstallationState, admission installations and clock
+    "packages/scope/src/object.ts:ScopeObject": "ecaa5714b1a2b4707deb197128fae63731f2e53e08c7600b1e20ccfce4172c5f" // AD-1: applicationInstallationState, admission installations and clock
   },
   "packages/scope/src/object-archive.ts": {
     "packages/scope/src/object-archive.ts:$module": "e7430b7ed51040dd00253653d928b5a829912472cff2f5139f56478c2565f3e7",
@@ -21,14 +21,14 @@ const namedOwners = {
     "packages/scope/src/object-archive.ts:floorOffer": "439eeffe0d220f86b4f704be80668afe8d9e0f8e3926dcb8f949e2b06274e519"
   },
   "packages/scope/src/worker.ts": {
-    "packages/scope/src/worker.ts:$module": "00a0b42235b0a6a22d4847ea8bf67c82105edf477531dace819afd67d47ce372",
+    "packages/scope/src/worker.ts:$module": "03c85c265796b704dba34dcdd80d65c47fbc87809080a42e172406dda3f0fe9b",
     "packages/scope/src/worker.ts:ScopeIndex": "b4c4e5bee990564e602083d69157ed24a9e8022adf2649227d337b8dd58dd86a",
     "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
     "packages/scope/src/worker.ts:RETIRED_HTTP": "5445b5b53d5b6b1f2b8c456b224b37e4f2ea525c5b412d8ffec299108e9d6d1d",
-    "packages/scope/src/worker.ts:ROOM_RPC_METHODS": "b37c1678ef6f2ed90dbf7d0cf7978049eba073bb943bd090d9a5d484195b6f73",
-    "packages/scope/src/worker.ts:retiredRoomAnswer": "8fe669ecc7f0f242aa4d01b2fece28c68ccb5e6c1bc878609b07dc63372a5ae2",
+    "packages/scope/src/worker.ts:ROOM_RPC_METHODS": "d63ab96f7e251a458ea583889b3fb7056090013321a4248602bf689a59f845fc",
+    "packages/scope/src/worker.ts:retiredRoomAnswer": "4acbf20faaedc26f9651329d1637f9f2f7f50293431c578fbad4fe71fe747593",
     "packages/scope/src/worker.ts:api": "1a91c1253cbff547b01353c554e2ea425cbcb432e9f7e2a545f96d490082eff6",
-    "packages/scope/src/worker.ts:roomApi": "ef33c810c398bcc19f262a45e88ff84cef68f32efa6559958efe741fe3bee95b",
+    "packages/scope/src/worker.ts:roomApi": "e5a15057c4ce6b0b00b44938c6f9a8be54b166be1e4af654873dcae878f28ce1",
     "packages/scope/src/worker.ts:BODY_BYTES": "158a6579a52843b40416a1f4d27e7bffb5e0f5df07105254bd3e87c3d3d203fd",
     "packages/scope/src/worker.ts:answered": "f1c36263f63cc8977a334b803d6c89c4863d2e078704d7cdffdce1c3dc2eaea0",
     "packages/scope/src/worker.ts:READ_STATUS": "d8b56891bb8825791d082b46be7845faa2cb7094dee8f758a0ed59ba51e2c51b",
@@ -45,7 +45,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:PROJECTION_STATUS": "a4e03bbeb2eacbb5e02d3228366fea9c7ffc218d5f814f72f4a1b3b291760742",
     "packages/scope/src/worker.ts:projectionResponse": "e17f1f4aa800bc06b4f8d065f77e8a594c2738c77873a52671fa7f1b22bf249b",
     "packages/scope/src/worker.ts:route": "631ced1082eca113b04fd2e53f96c8ccd02a9bcebb7c7e9ee8fb8b74230774c4",
-    "packages/scope/src/worker.ts:routedRequest": "c899323261d280a13251f1d542e793fbc730fc2872b7f1604df2bba7a3573ec2",
+    "packages/scope/src/worker.ts:routedRequest": "1654c7c5812f8051a9a295127cfb38a54577309a13217273bc33cc998e816b5b",
     "packages/scope/src/worker.ts:outsideOf": "81fd747eaf5d1d22d8a445fa3348d87ddf9079699e75a59b329022bcd6985b9e",
     "packages/scope/src/worker.ts:sessionWiring": "efbb51a65f5a24f3d1bfc006206deaf61d3e35f55e6ff611dd710e466db787eb",
     "packages/scope/src/worker.ts:snapshotReaderOf": "24485585bf55db1edb79dbde6d2617c6606541a245dd24a778b8e269d6b19669",
@@ -114,11 +114,11 @@ const namedOwners = {
     "packages/cli/src/command-membership.ts:join": "9ce6dba25ee527f1ab574633d3621d892e931be8866a7c165eeaf370fff1d483"
   },
   "packages/cli/src/command-scope.ts": {
-    "packages/cli/src/command-scope.ts:$module": "c5d62d2a95b310c978fc985455da12c1e0c50f6e59577af34a37921fd63d1366",
+    "packages/cli/src/command-scope.ts:$module": "4283c60688411e61f5b9713f0d420f604ecf543f5b32468b9fb0ebb6598d5561",
     "packages/cli/src/command-scope.ts:scopeIndexAccess": "b54a6859075907491f4c19313b149572acd5b3bd94c492d61fb342601759c299",
     "packages/cli/src/command-scope.ts:standing": "57372328838e0f9bcb936554f41738f9445ed53384112aae1cdad745a4dc1fce",
     "packages/cli/src/command-scope.ts:acts": "f4577a1dbe4bb307bf92057f101967b5fd2f9a11240342f4f3377e177a81fd53",
-    "packages/cli/src/command-scope.ts:act": "9dba33bc8a44de2133077ca6fcd7c68f8839284ca97f84f80c1ee9e702957137",
+    "packages/cli/src/command-scope.ts:act": "368638102f7df801a33c32c233d92b7edca77f94f997737eaf8d2558f7af840a",
     "packages/cli/src/command-scope.ts:apps": "02729fd520eb4ed349fad0e776f974929a3663d442a0588e9b95ee104ed9ed8c",
     "packages/cli/src/command-scope.ts:items": "035ef813ce6aea0c10a2215c856e5e8c30fed9e0db64dcd24eb43e98ee713baa",
     "packages/cli/src/command-scope.ts:entryLine": "b33d37dabac548663d32587fba50c36f20cb002801fd297222f5669af8bc05c4",
@@ -213,7 +213,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:scopeRefArg": "54eb8fcb90bd3e5dbacec1eb71f853e5a3b578aae10d11a24d3c0ee0d69a88b3",
     "packages/mcp/src/service.ts:memberRefArg": "80b4a7634bee92e5b6d8b03dea6102cbf701fcab94198e54de219783961ee281",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "e6dbfd46c1d590110a7638a5e32793e703703a3e7ee34f9d6b11ee24da4335da", // C4 adds after, now and #nowFor; EK-1 takes the application standing from sessionAt and forgets the session on an authority refusal.
+    "packages/mcp/src/service.ts:McpService": "77af2d936740089e4a2fe42cbe3b97cac8860d1a0d18974c1dfafd2bcfcf2c1b", // LV4 signs a retained live view action and sends it with its installed binding.
     "packages/mcp/src/service.ts:commitIdFault": "36b75703f0eb36b5abca60906629f23df18a233d26c395f0b61c792eddabe405",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
@@ -307,7 +307,7 @@ const seals = {
   "packages/scope/src/site/window.ts": "1b0e1d820a7840063d35d39dc74d61a2b9caa6ffb5763e82a21b6ae5524d4936", // Bounded site-read window; actual maintained parser output.
   "packages/scope/src/applications/route.ts": "1b36c95f39b85224469aa260eebae3fe44163bc3e0f81662afbfc0528c1ee953", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
-  "packages/scope/src/applications/projection-wire.ts": "289a66b25bf2dc63e0e7d4b0726c1eda067d21e9238bbf29737b4d8d89c1fa00",
+  "packages/scope/src/applications/projection-wire.ts": "68c5da823c0df0105306a9a05f8837288194181a998f42c562ef822a2264c1c8",
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "packages/scope/src/object-archive.ts": namedOwners["packages/scope/src/object-archive.ts"],
   "packages/scope/src/core.ts": namedOwners["packages/scope/src/core.ts"],
@@ -327,7 +327,7 @@ const seals = {
   "packages/scope/src/session-preparation.ts": "49b091ff2910c0c2602fce76330e7084479a3bd4cb3bc1617005c18f2cd3fac3",
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection-source.ts": "4045ccd66ccc971a08a2a31e5f7daaf8f20453c03af8fe0f1cb134bf77ac86b7", // Closed native room metadata with optional supported membership pin.
-  "packages/scope/src/applications/projection.ts": "c2a55ac89621321a2802cbfd65a431b319ca85ad962a78f16187dbf2353205e2",
+  "packages/scope/src/applications/projection.ts": "d6c43cb0726ff3d11a08b3e5820a86a6b2ac725fd4cf6b5d79db074839ef3a6c",
   "packages/scope/src/destination-host.ts": "0a6d7b7ec08fb73ec6471b11fa2e6d444d0f4a98422bfd705b48e8f154c6b905", // Token refusal: a key that a compromised notice named takes no read token. CF-1 changes it; actual maintained parser output.
   "packages/scope/src/publication-policy.ts": "1ed9e0c923205b108ea161f52581a2a67ec9d20f65e1a650b6f25c8f8d82df02", // R16 bounded host publication policy; no Native evidence or pin change. CF-1 changes it; actual maintained parser output.
   "packages/scope/src/credential-store.ts": "cfe657393dedd0fafa09018742bee31a5dfa3837c857186f115cfb096f7d3523", // R13 private reservation and custody owner; actual maintained parser output.

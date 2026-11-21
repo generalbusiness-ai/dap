@@ -11,7 +11,7 @@
  * journal's head, and each applied act or timed rule adds one.
  */
 
-import type { Cursor, Digest, Item, ReadRefusal, RefusalReason, ScopeRef, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { ApplicationProjectionRow, Cursor, Digest, Item, ReadRefusal, RefusalReason, ScopeRef, UnavailableReason } from "@generalbusiness/dap-contract";
 
 /**
  * The four answers to a live act.
@@ -64,6 +64,18 @@ export interface LiveSummary {
   items: readonly Item[];
   counts: readonly (readonly [type: string, state: string, n: number])[];
 }
+
+/** A live summary bound to one installed application's canonical query. */
+export interface LiveApplicationProjectionData {
+  scope: ScopeRef;
+  definition: Digest;
+  projection: Digest;
+  sources: Readonly<Record<string, readonly ApplicationProjectionRow[]>>;
+}
+export type LiveApplicationProjectionRead =
+  | (Extract<LiveRead<LiveApplicationProjectionData>, { ok: true }> & { query: Digest })
+  | Extract<LiveRead<LiveSummary>, { ok: false }>
+  | { ok: false; reason: "incomplete" };
 
 /** One line of the watch: the live state changed, or a new generation started. A viewer that receives it reads again. */
 export interface LiveLine { generation: string; tick: number }

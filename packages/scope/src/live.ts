@@ -110,12 +110,22 @@ export class LiveTurns {
    * and the effects. A repeat of an applied intent in this generation is
    * answered with the tick that applied it.
    */
-  async act(signed: SignedIntent, grants: readonly Grant[], generation: unknown): Promise<LiveAnswer> {
+  async act(signed: SignedIntent, grants: readonly Grant[], generation: unknown, binding?: () => Promise<boolean>): Promise<LiveAnswer> {
+    // App calls disclose a live generation only after verifying the installed
+    // view. The last verified installation cut does not serialize a later
+    // remote replacement with this scope's local turn.
+    if (binding && !await binding()) return unavailable("unavailable");
     const pinned = this.#pinned();
     const scope = this.#store.scope();
     if (!pinned?.definition || !scope || pinned.definition.declared.level?.name !== "live") return unavailable("unavailable");
     if (scope.status === "provisional") return unavailable("scope-provisional");
     const reset = (): LiveAnswer => ({ answer: "reset", generation: this.#generation });
+    // Early generation-bearing answers after an authority read use the last
+    // verified installation cut, then read the local generation synchronously.
+    const early = async (answer: () => LiveAnswer): Promise<LiveAnswer> => {
+      if (binding && !await binding()) return unavailable("unavailable");
+      return generation !== this.#generation ? reset() : answer();
+    };
     if (generation !== this.#generation) return reset();
     const definition = pinned.definition;
     const first = this.#live();
@@ -141,14 +151,17 @@ export class LiveTurns {
     if (!known()) {
       const read = await this.#standing({ scope: scope.at, signed, action: act ? actionOf(act, definition) : null,
         grants: (Array.isArray(grants) ? grants : []).filter(isGrant), window: windowOf(definition, scope.kind, intent.kind) });
-      if (generation !== this.#generation) return reset();
-      if (read === "limit" && !known()) return refused("limit");
+      if (generation !== this.#generation) return binding ? early(reset) : reset();
+      if (read === "limit" && !known()) return binding ? early(() => known() ? unavailable("unavailable") : refused("limit")) : refused("limit");
       standing = read === "limit" ? null : read;
       if (admissionPort && !known()) {
         try { admission = await admissionPort.read(); } catch { /* missing proof is unavailable */ }
-        if (generation !== this.#generation) return reset();
+        if (generation !== this.#generation) return binding ? early(reset) : reset();
         const refusal = known() ? null : admissionRefusal();
-        if (refusal) return refusal;
+        if (refusal) {
+          if (!binding || refusal.answer === "unavailable") return refusal;
+          return early(() => known() ? unavailable("unavailable") : admissionRefusal() ?? unavailable("unavailable"));
+        }
       }
     }
     const context = (view: StateView, clock: Reading): Omit<JudgeContext, "prepared"> => ({
@@ -168,16 +181,33 @@ export class LiveTurns {
 
     for (let restarts = 0; ; restarts++) {
       // Before the rules: what is due runs first, and the walk that finds the rules judges nothing.
-      const before = this.#section(definition, (state): LiveAnswer | { tick: number; asks: RuleInput[] } => {
-        const repeat = accepted(state);
+      const before = this.#section(definition, (state): LiveAnswer | { tick: number; asks: RuleInput[] } | { repeat: true } => {
+        if (binding && state.accepted(intent.actor, intent.idempotencyKey) !== null) return { repeat: true };
+        const repeat = binding ? null : accepted(state);
         if (repeat) return repeat;
         if (restarts > this.#bounds.turnRestarts) return unavailable("busy");
         const drained = this.#drain(state, definition);
         if (drained) return drained;
         return { tick: state.scope()!.head.seq, asks: prepareRules(state, definition, { act: signed, context: { ...context(state, this.#clock(state)), prepared: [] } }) };
       });
-      if ("answer" in before) return before;
+      if ("repeat" in before) {
+        // The proof is the final remote read; neither a repeat nor a key
+        // mismatch may drain the due backlog or expose a replaced binding.
+        if (!await binding!()) return unavailable("unavailable");
+        if (generation !== this.#generation) return reset();
+        const repeat = this.#section(definition, state => accepted(state));
+        if (repeat) return repeat;
+        continue;
+      }
+      if ("answer" in before) {
+        if (!binding || before.answer === "unavailable") return before;
+        return early(() => "tick" in before && before.tick !== this.#tick() ? unavailable("unavailable") : before);
+      }
       const prepared = before.asks.length === 0 ? [] : await turnDeadline(() => this.#ports.rules.evaluate(before.asks), this.#bounds.preparationSeconds);
+      if (!binding && generation !== this.#generation) return reset();
+      // This is the last remote read before the synchronous judge. A changed
+      // local tick restarts the turn and repeats this check.
+      if (binding && !await binding()) return unavailable("unavailable");
       if (generation !== this.#generation) return reset();
       const done = this.#section(definition, (state): LiveAnswer | "again" => {
         const repeat = accepted(state);
