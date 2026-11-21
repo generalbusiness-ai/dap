@@ -33,7 +33,7 @@ import { usesStagedPublicationProtocol } from "@generalbusiness/dap-platform";
 import { DOMAINS, ENTRY_READ_BYTES, HISTORY_PAGE_BYTES, HISTORY_PAGE_ENTRIES, OUTBOX_PAGE_ITEMS, RETAINED_INPUT_BYTES, RETAINED_ITEMS_PAGE } from "@generalbusiness/dap-contract";
 import type { Cursor, Digest, FactRef, OutboxId, Entry, FieldValue, KeyId, LogPage, OperationId, Read, ReadRefusal as ContractReadRefusal, RetainedInput, Summary } from "@generalbusiness/dap-contract";
 import { isDigest, isOutboxId, isOperationId, isSeed, positionOf, retainedReadArgument, timeMs } from "@generalbusiness/dap-bytes";
-import { bound, byteOrder, creationFields, evidenceValues, inputTexts, namedBy, own, placesOf, retainsOf, same, type Item, type Owners, type ScopeState, type ValidDefinition } from "@generalbusiness/dap-derive";
+import { bound, byteOrder, creationFields, evidenceValues, inputTexts, namedBy, own, placesOf, retainsOf, same, type Item, type Owners, type ScopeState, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
 import type { Pinned } from "./core.ts";
 import { waitingIn, type Incident, type OperatorRecord } from "./operator.ts";
 import type { ReadName, Readers } from "./ports.ts";
@@ -58,6 +58,38 @@ export type { Summary };
 const no = (reason: ReadRefusal) => ({ ok: false, reason }) as const;
 /** A cursor made here is a decimal number. */
 const position = (cursor: Cursor | undefined, first: number | null): number | null | undefined => (cursor === undefined ? first : (positionOf(cursor) ?? undefined));
+
+/**
+ * What a summary shows of a state: the items of each type in no final
+ * state, at most the type's `max`, by ID, and the count of every type and
+ * state of the definition. `complete` is false when a type holds more
+ * items in no final state than its `max`. The summary of the record reads
+ * it from the store, and the live summary from the state in memory.
+ */
+export function summaryOf(view: StateView, definition: ValidDefinition): { items: Item[]; counts: [string, string, number][]; complete: boolean } {
+  const items: Item[] = [];
+  const counts: [string, string, number][] = [];
+  let complete = true;
+  for (const [name, type] of Object.entries(definition.declared.items).sort(([a], [b]) => byteOrder(a, b))) {
+    const states = Object.keys(type.states).sort(byteOrder);
+    for (const state of states) counts.push([name, state, view.count(name, state)]);
+    const live = view.page(name, states.filter((s) => !own(type.states, s)!.final), null, type.max);
+    items.push(...live.items);
+    if (live.more) complete = false;
+  }
+  items.sort((a, b) => a.id - b.id);
+  return { items, counts, complete };
+}
+
+/** One page of the final items of one type after the cursor, by ID, at most `limit`. `next`: the cursor of the next page. Null: no such type, or a cursor that names no position. */
+export function finalPage(view: StateView, definition: ValidDefinition, type: string, cursor: Cursor | undefined, limit: number): { items: readonly Item[]; next?: Cursor } | null {
+  const declared = own(definition.declared.items, type);
+  const after = position(cursor, null);
+  if (!declared || after === undefined) return null;
+  const final = Object.keys(declared.states).filter((s) => own(declared.states, s)!.final);
+  const page = view.page(type, final, after, limit);
+  return { items: page.items, ...(page.more ? { next: String(page.items.at(-1)!.id) } : {}) };
+}
 
 /** An outbox ID: the `seq` of an entry and the ordinal of one of its sends. */
 /** The entry and the ordinal an outbox ID names, or null. The form is the bytes package's to judge. */
@@ -229,17 +261,7 @@ export class Reads {
     const open = this.#defined(reader, "summary", "summary");
     if (!("scope" in open)) return open;
     const { scope, pinned, definition } = open;
-    const items: Item[] = [];
-    const counts: [string, string, number][] = [];
-    let complete = true;
-    for (const [name, type] of Object.entries(definition.declared.items).sort(([a], [b]) => byteOrder(a, b))) {
-      const states = Object.keys(type.states).sort(byteOrder);
-      for (const state of states) counts.push([name, state, this.#store.count(name, state)]);
-      const live = this.#store.page(name, states.filter((s) => !own(type.states, s)!.final), null, type.max);
-      items.push(...live.items);
-      if (live.more) complete = false;
-    }
-    items.sort((a, b) => a.id - b.id);
+    const { items, counts, complete } = summaryOf(this.#store, definition);
     // Projection only: no timed judgment, write, alarm or provider call.
     // Read one clock after collecting the recorded state at this same head.
     let reservationExpiry: Summary["reservationExpiry"];
@@ -261,12 +283,9 @@ export class Reads {
   items(reader: unknown, type: string, cursor?: Cursor): Read<readonly Item[]> {
     const open = this.#defined(reader, "items");
     if (!("scope" in open)) return open;
-    const declared = own(open.definition.declared.items, type);
-    const after = position(cursor, null);
-    if (!declared || after === undefined) return no("not-found");
-    const final = Object.keys(declared.states).filter((s) => own(declared.states, s)!.final);
-    const page = this.#store.page(type, final, after, this.#bounds.retainedItems);
-    return { ok: true, at: open.scope.head, value: page.items, complete: !page.more, ...(page.more ? { next: String(page.items.at(-1)!.id) } : {}) };
+    const page = finalPage(this.#store, open.definition, type, cursor, this.#bounds.retainedItems);
+    if (!page) return no("not-found");
+    return { ok: true, at: open.scope.head, value: page.items, complete: page.next === undefined, ...page.next === undefined ? {} : { next: page.next } };
   }
 
   /** The stored rows of one history page from `from`: at most the bound's entries and bytes, and at least one entry. */

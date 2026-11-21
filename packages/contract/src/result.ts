@@ -77,6 +77,6 @@ export interface Head { seq: number; hash: Digest }
 export type Answer =
   | { answer: "archived"; archived: Archived; fact: FactRef }
   | { answer: "accepted"; receipt: Receipt }
-  | { answer: "refused"; reason: RefusalReason; name?: string; judgedAt: Head }   // `name`: a declared guard reason or the exhausted whole-scope budget
+  | { answer: "refused"; reason: RefusalReason; name?: string; judgedAt: Head }   // `name`: a declared guard reason or the exhausted whole-scope budget. The budget counts the state that the scope holds: stored state, and for a live scope its state in memory (live note, O1)
   | { answer: "unavailable"; reason: UnavailableReason }
   | { answer: "mismatch"; reason: MismatchReason };

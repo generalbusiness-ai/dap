@@ -48,7 +48,8 @@ import { isEntryOf, same, timeMs, timeOf, type Item } from "@generalbusiness/dap
 import type { Delivered, StateView } from "@generalbusiness/dap-derive";
 import { Scope, creationKind, ownOf, type Checkpointed, type Created } from "./core.ts";
 import { liveTurnsOf, type LiveTurns } from "./live.ts";
-import type { LiveAnswer } from "@generalbusiness/dap-platform";
+import { LiveReads } from "./live-reads.ts";
+import type { LiveAnswer, LiveRead, LiveReadRefusal, LiveSummary } from "@generalbusiness/dap-platform";
 import { Deliveries } from "./delivery.ts";
 import { admittedOrigin, declaredBy, observedAt, hostedRoleStandingAt, primaryCopy, routed, sentText, sourced, sourceOrigin, type SourceCopy, type Sourced } from "./namespace.ts";
 import { JoinLimits, isJoin, type LimitConfig } from "./limits.ts";
@@ -163,6 +164,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #sessionPreparation!: SessionPreparation;
   readonly #scope!: Scope;
   readonly #reads!: Reads;
+  readonly #liveReads!: LiveReads;
   readonly #readWait!: ReadWait;
   readonly #deliveries!: Deliveries;
   readonly #dispatcher!: Dispatcher | null;
@@ -313,6 +315,9 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     this.#resolver = ports.resolver;
     this.#record = record;
     this.#streams = new Streams(ports.readers, () => store.scope()?.head ?? null);
+    this.#liveReads = new LiveReads(ports.readers, () => this[liveTurnsOf](), () => this.#scope.pinned()?.definition ?? null, (wiring.reads ?? READ_BOUNDS).retainedItems);
+    // The watch (live note, section 3.5): each change of live state, and each new generation, is sent on the open watches.
+    this.#scope.live.onChanged(() => { try { this.#streams.publish(); } catch { /* a line was lost, and no state */ } });
     const archiveSql: Sql = { ...this.#readSql, transaction: closure => ctx.storage.transactionSync(closure) };
     const archive = configuredArchive(wiring, outsideGiven, archiveSql, bounds);
     this.#archiveRestart = wiring.archiveRestart;
@@ -657,6 +662,19 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   }
   /** The live turn, for the live reads and the watch in this object's isolate. Null: a retired room. */
   [liveTurnsOf](): LiveTurns | null { return this.#retired ? null : this.#scope.live; }
+  /** The live summary of an active live scope, at the generation and tick that it names (`live-reads.ts`). A read session authorizes it, as it authorizes the summary. */
+  async liveSummary(reader: unknown): Promise<LiveRead<LiveSummary> | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("summary", async () => { this.#first(); await this.#prepared(reader, "summary"); return this.#liveReads.summary(reader); }); }
+  /** A page of the final live items of one type, at the generation and tick that it names (`live-reads.ts`). */
+  async liveItems(reader: unknown, type: string, cursor?: Cursor): Promise<LiveRead<readonly Item[]> | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("items", async () => { this.#first(); await this.#prepared(reader, "items"); return this.#liveReads.items(reader, type, cursor); }); }
+  /** The watch of an active live scope: a stream of its generation and tick, under the rules of the head stream (`sessions.ts`, `Streams`). */
+  async watch(reader: unknown): Promise<Opened | StreamRefusal | { ok: false; reason: LiveReadRefusal } | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("stream", async () => {
+    this.#first(); await this.#prepared(reader, "summary");
+    const refused = this.#liveReads.watchable(reader);
+    const answer = refused ?? this.#streams.open(reader, this.#liveReads.line);
+    const streams = this.#streams.counts();
+    metric({ kind: "stream", place: "stream", end: "ok", a: streams.open, b: streams.released });
+    return answer;
+  }); }
   /** One step of a capability, asked for with the signed intent that it prepares for (section 5.5). */
   async prepare(signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#publicInvoke("preparations", async () => this.#sent(await this.#scope.prepare(signed, grants, capability, step))); }
   settle(signed: SignedIntent): Settlement | RoomRetiredStop {

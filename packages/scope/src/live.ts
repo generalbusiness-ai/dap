@@ -23,11 +23,11 @@
  * restarts.
  */
 
-import type { Bounds, Entry, Grant, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Bounds, Entry, Grant, Item, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { CanonicalError, canonicalize, entryHash, isGrant, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { actionOf, applyEntry, applyLive, clockOf, entryOf, judgeAct, judgeTimed, LAST_MS, liveActive, MemoryState, nextDue, own, prepareRules, timeMs, timeOf, windowOf } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Draft, JudgeContext, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
-import type { LiveAnswer } from "@generalbusiness/dap-platform";
+import { LIVE_BYTES, liveBytes, type LiveAnswer } from "@generalbusiness/dap-platform";
 import type { FreshActAdmission, FreshActAdmissionDecision } from "./applications/act-admission.ts";
 // A cycle with core.ts: heldBy is read only when an act runs, after both modules have loaded.
 import { heldBy, type Pinned } from "./core.ts";
@@ -60,6 +60,26 @@ export function timeoutTimer(): LiveTimer {
   };
 }
 
+/**
+ * The state in memory, with the canonical bytes of the items it holds
+ * (live note, open point O1). Final items count, because the state keeps
+ * them until the generation ends. Nothing else that the fold keeps is
+ * counted: the index of accepted intents grows with the acts of a
+ * generation, and the bound does not cover it.
+ */
+class HeldState extends MemoryState {
+  readonly #sizes = new Map<number, number>();
+  #held = 0;
+  /** The canonical bytes of every item held now. */
+  get held(): number { return this.#held; }
+  override putItem(item: Item): void {
+    super.putItem(item);
+    const size = utf8(canonicalize(item)).length;
+    this.#held += size - (this.#sizes.get(item.id) ?? 0);
+    this.#sizes.set(item.id, size);
+  }
+}
+
 /** The apply step failed in the fold, so the state in memory may hold part of an input. The generation ends. */
 class Broken extends Error {}
 
@@ -73,7 +93,7 @@ export class LiveTurns {
   readonly #standing: LiveStanding;
   readonly #timer: LiveTimer;
   #generation: string;
-  #state: MemoryState | null = null;
+  #state: HeldState | null = null;
   #changed: ((generation: string, tick: number) => void) | null = null;
 
   constructor(store: Store, ports: Pick<Ports, "clock" | "random" | "rules" | "capabilities" | "freshActAdmission" | "liveTimer">, bounds: Bounds, pinned: () => Pinned | null, standing: LiveStanding) {
@@ -187,9 +207,9 @@ export class LiveTurns {
           case "write": {
             const refusal = admissionRefusal();
             if (refusal) return refusal;
-            const applied = this.#apply(state, definition, judged.draft, clock);
+            const applied = this.#apply(state, definition, judged.draft, clock, true);
             return typeof applied === "number" ? { answer: "applied", generation: this.#generation, tick: applied }
-              : refused(applied === "size" ? "bad-field" : "unauthorized");
+              : applied === "full" ? refused("scope-full", LIVE_BYTES) : refused(applied === "size" ? "bad-field" : "unauthorized");
           }
           case "accepted-before": return { answer: "applied", generation: this.#generation, tick: judged.seq };
           case "refused": return refused(judged.reason, judged.name);
@@ -212,7 +232,7 @@ export class LiveTurns {
   }
 
   /** One synchronous section over this generation's state. A fault in the fold ends the generation, and the input is unavailable. */
-  #section<T>(definition: ValidDefinition, work: (state: MemoryState) => T): T | LiveAnswer {
+  #section<T>(definition: ValidDefinition, work: (state: HeldState) => T): T | LiveAnswer {
     const live = this.#live();
     if (!live) return unavailable("unavailable");
     const tick = live.state.scope()!.head.seq;
@@ -234,7 +254,7 @@ export class LiveTurns {
    * nothing more is due. A transition that is due while the clock is behind
    * waits, as in a recorded scope.
    */
-  #drain(state: MemoryState, definition: ValidDefinition): LiveAnswer | null {
+  #drain(state: HeldState, definition: ValidDefinition): LiveAnswer | null {
     for (let attempts = 0; ; attempts++) {
       const clock = this.#clock(state);
       const due = nextDue(state, definition, clock.asOf);
@@ -244,12 +264,18 @@ export class LiveTurns {
       if (judged.result === "dropped") continue;
       if (judged.result === "unavailable") return unavailable(judged.reason);
       // The validator bounds a timed entry's size. A timed input that cannot be an entry is a fault, as in the recorded drain.
-      if (typeof this.#apply(state, definition, judged.draft, clock) !== "number") return unavailable("unavailable");
+      // A timed rule is not held to the byte bound: it ends what an act opened, and a full scope still needs it to run.
+      if (typeof this.#apply(state, definition, judged.draft, clock, false) !== "number") return unavailable("unavailable");
     }
   }
 
-  /** The draft as the entry it would be at this tick, its hash, and the fold of it into memory. The new tick, or why it cannot be an entry. */
-  #apply(state: MemoryState, definition: ValidDefinition, draft: Draft, clock: Reading): number | "size" | "form" {
+  /**
+   * The draft as the entry it would be at this tick, its hash, and the fold of it into memory. The new tick, or why it cannot be an
+   * entry. `bounded`: the input is an act, held to the byte bound of open point O1. An item gains no value that its entry does not
+   * write, so the bytes that the entry adds to the items are at most the entry's own bytes. An act whose entry's bytes, added to
+   * the bytes held now, would pass the bound is `full`, and nothing is folded.
+   */
+  #apply(state: HeldState, definition: ValidDefinition, draft: Draft, clock: Reading, bounded: boolean): number | "size" | "form" | "full" {
     const entry = entryOf(state, draft, clock);
     let bytes: string;
     try {
@@ -258,7 +284,9 @@ export class LiveTurns {
       if (error instanceof CanonicalError) return "form";
       throw error;
     }
-    if (utf8(bytes).length > this.#bounds.entryBytes) return "size";
+    const size = utf8(bytes).length;
+    if (size > this.#bounds.entryBytes) return "size";
+    if (bounded && state.held + size > liveBytes(definition.declared.items, this.#bounds.entryBytes)) return "full";
     try {
       applyLive(state, definition, entry, entryHash(entry), { bounds: this.#bounds });
     } catch (error) {
@@ -268,12 +296,12 @@ export class LiveTurns {
   }
 
   /** The state of this generation, folded from the stored creation entries on first use. Null: no active live scope, or entries that do not fold. */
-  #live(): { state: MemoryState } | null {
+  #live(): { state: HeldState } | null {
     const definition = this.#pinned()?.definition;
     const scope = this.#store.scope();
     if (!definition || !scope || !liveActive(definition, scope)) return null;
     if (this.#state) return { state: this.#state };
-    const state = new MemoryState();
+    const state = new HeldState();
     try {
       for (let seq = 0; seq <= scope.head.seq; seq++) {
         const kept = this.#store.stored(seq);
@@ -300,13 +328,13 @@ export class LiveTurns {
     try { this.#changed?.(this.#generation, this.#store.scope()?.head.seq ?? 0); } catch { /* a notice was lost, and no state */ }
   }
 
-  #told(state: MemoryState, definition: ValidDefinition): void {
+  #told(state: HeldState, definition: ValidDefinition): void {
     this.#arm(state, definition);
     try { this.#changed?.(this.#generation, state.scope()!.head.seq); } catch { /* a notice was lost, and no state */ }
   }
 
   /** The timer, at the earliest deadline that the state holds. A deadline that has passed is retried after the drain's retry delay. */
-  #arm(state: MemoryState, definition: ValidDefinition): void {
+  #arm(state: HeldState, definition: ValidDefinition): void {
     const next = definition.timedTypes.length === 0 ? null : nextDue(state, definition, LAST_DEADLINE);
     if (!next) return this.#timer.set(null, () => undefined);
     const now = timeMs(this.#ports.clock.read())!;
