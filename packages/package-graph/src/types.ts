@@ -18,7 +18,7 @@ export interface PackageComposition {
   readonly parameters: Readonly<Record<string, PackageParameter>>;
 }
 export interface PackageGraphDefinition { readonly id: Digest; readonly definition: DeclaredDefinition }
-export type PackageCheckReason = "unknown-message" | "field-mismatch" | "unreachable-handler" | "fan-in-unproved" | "fan-in-exceeds-copies"
+export type PackageCheckReason = "unknown-message" | "send-to-live" | "field-mismatch" | "unreachable-handler" | "fan-in-unproved" | "fan-in-exceeds-copies"
   | "unbound-endpoint" | "wrong-peer" | "group-member-not-singleton" | "unhandled-result" | "unsettled-pending" | "ungranted-act"
   | "right-not-owned" | "unowned-bound" | "order-undeclared" | "reads-outside-group" | "sequenced-for-nothing" | "unsequenced-read-target"
   | "cycle-unacknowledged" | "unreachable-state" | "patch-fails" | "sealed-row" | "parameter-bounds" | "bounds" | "unsupported-form";

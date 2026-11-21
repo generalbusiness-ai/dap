@@ -84,6 +84,12 @@ cycles need a stated state condition. This structural check gives no
 storm or termination bound. Rights and exercises describe the listed
 rows. They do not discover every writer of a business constraint.
 
+A package may create a scope whose definition pins the level `live`.
+The graph report gives each definition's level beside its instance
+count. A live scope admits no message after its creation, so the graph
+refuses a `tell` or `relate` whose connected target is a live
+definition, with reason `send-to-live`.
+
 A relation's `copies` counts retained keys over its lifetime. A live item
 maximum alone cannot prove that count, because a final item may free a
 slot for another key. The validator refuses an unproved count as

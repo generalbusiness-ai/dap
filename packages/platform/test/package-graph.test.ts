@@ -11,12 +11,13 @@ import { room } from "../../../examples/grow/room.ts";
 import { keys } from "../../derive/test/fixtures.ts";
 import { grow, preFailureRelation, checkedGraph } from "../../derive/test/fixtures-package-graph.ts";
 import { EARLIER_GROW_RELEASE, EARLIER_GROW_PUBLISHER } from "../../../examples/grow/earlier-release.ts";
-import { publishedCopies, insufficientCopies, twoItems as twoItemsData, conflictFrees, recyclable as recyclableData, rewritable as rewritableData, missingResult, openingReport, narrowField, unknownMessage, unusedHandler, packerCopies, pairedUnusedHandler, pairedCopies, pairedRebind, pairedMissingResult, pairedUnknownMessage, pairedNarrowField, lifetimeVariantsData, repeatedReporterData, automaticCycleData, cycleAlternativesData, pendingCreationData, differentRoomData } from "../../derive/test/definition-corpus/package-graph-variants.ts";
+import { publishedCopies, insufficientCopies, twoItems as twoItemsData, conflictFrees, recyclable as recyclableData, rewritable as rewritableData, missingResult, openingReport, narrowField, unknownMessage, unusedHandler, packerCopies, pairedUnusedHandler, pairedCopies, pairedRebind, pairedMissingResult, pairedUnknownMessage, pairedNarrowField, lifetimeVariantsData, repeatedReporterData, automaticCycleData, cycleAlternativesData, pendingCreationData, differentRoomData, liveTallyData } from "../../derive/test/definition-corpus/package-graph-variants.ts";
 const lifetimeVariants = () => lifetimeVariantsData().map(row => ({ ...row, input: checkedGraph(row.input) }));
 const repeatedReporter = (copies = 3) => checkedGraph(repeatedReporterData(copies));
 const automaticCycle = (guarded: boolean, additional: readonly Guard[] = []) => checkedGraph(automaticCycleData(guarded, additional));
 const cycleAlternatives = () => cycleAlternativesData().map(row => ({ ...row, good: checkedGraph(row.good), bad: checkedGraph(row.bad) }));
 const pendingCreation = (timer: boolean) => checkedGraph(pendingCreationData(timer));
+const liveTally = (tell: boolean, live = true) => checkedGraph(liveTallyData(tell, live));
 const maintained = JSON.parse(readFileSync(new URL("../../../examples/grow/check/dap.application.json", import.meta.url), "utf8")) as {
   capabilities: ApplicationPackageInput2["semantic"]["capabilities"];
 };
@@ -76,7 +77,7 @@ test("published consumption preserves the exact old Grow packet while new pack a
 test("Grow's three retained child slots prove three lifetime relation keys, rather than live maxima alone", async () => {
   const input = grow(), checked = checkPackageGraph(input);
   expect(checked.findings).toEqual([]);
-  expect(checked.instances).toEqual([{ definition: input.entry, maximum: 1 }, { definition: input.definitions[1]!.id, maximum: 3 }]);
+  expect(checked.instances).toEqual([{ definition: input.entry, level: "recorded", maximum: 1 }, { definition: input.definitions[1]!.id, level: "recorded", maximum: 3 }]);
   // Hand count: Site live 1+3+32=36; each Room live 1+4+12+4+4+100+32+1+32=190.
   // Three successful children add three creator entries, geneses and results;
   // their backing items and root items add six keys beside the Site's root.
@@ -236,6 +237,20 @@ test("Grow's declared pending creation work needs its own timed exit without rec
   expect(settled.findings).toEqual([]);
   expect(settled.instances[1]!.maximum).toBe(3);
   expect(checkPackageGraph(pendingCreation(false)).findings.map(finding => finding.reason)).toEqual(["unsettled-pending"]);
+});
+
+// Live note, section 3.8: a live scope admits no delivery after its creation.
+test("a package with a live child passes, and a send to the live child refuses send-to-live alone", () => {
+  const created = liveTally(false), tally = created.definitions[2]!.id;
+  const checked = checkPackageGraph(created);
+  expect(checked.findings).toEqual([]);
+  expect(checked.instances.map(part => [part.definition, part.level])).toEqual([[created.entry, "recorded"], [created.definitions[1]!.id, "recorded"], [tally, "live"]]);
+  const told = checkPackageGraph(liveTally(true)).findings;
+  expect(told.map(finding => [finding.reason, finding.row])).toEqual([["send-to-live", "acts.count-tally.sends.0"]]);
+  // Control: only the Tally's level differs. A recorded Tally with no handler keeps the ordinary refusal.
+  const recorded = liveTally(true, false);
+  expect(recorded.definitions[2]!.definition.level).toBeUndefined();
+  expect(checkPackageGraph(recorded).findings.map(finding => finding.reason)).toEqual(["unknown-message"]);
 });
 
 // These intentional future-form inputs bypass native validation in the

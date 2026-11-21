@@ -1,5 +1,5 @@
 /** Written forms only. The native caller still validates each definition. */
-import type { Digest } from "@generalbusiness/dap-contract";
+import type { Digest, DurabilityLevel } from "@generalbusiness/dap-contract";
 import type { PackageConnection, PackageGraphDefinition } from "./types.ts";
 
 export const record = (value: unknown): Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -85,6 +85,11 @@ export function sendEndpoint(send: GraphSend, connections: readonly PackageConne
 export function finalStates(definition: PackageGraphDefinition, type: string): ReadonlySet<string> {
   const item = record(own(record(definition.definition.items), type));
   return new Set(Object.entries(record(item["states"])).filter(([, state]) => record(state)["final"] === true).map(([name]) => name));
+}
+/** The durability level that a definition pins. Absent means recorded. */
+export function definitionLevel(definition: PackageGraphDefinition): DurabilityLevel["name"] {
+  const name = record(record(definition.definition)["level"])["name"];
+  return name === "live" || name === "sequenced" ? name : "recorded";
 }
 export const countOf = (value: unknown): bigint | null => typeof value === "number" && Number.isSafeInteger(value) && value >= 1 ? BigInt(value) : null;
 export const reportedCount = (value: bigint | null): number | string | null => value === null ? null : value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : value.toString();

@@ -51,6 +51,8 @@ export const growPackageGraphDefinitions: readonly DefinitionCorpusRow[] = [
       : origin("preFailureRelation(false,8)")], () => preFailureRelationData(failedFinal, copies), ["Site", "Room", "Leaf"])),
   { name: "derive/Grow graph/Room label maximum 81", origins: [origin("different"), origin("alternate")],
     declaration: variants.differentRoomData, bounds: PROPOSED_BOUNDS, profiles: RULE_PROFILES },
+  ...([[false, true], [true, true], [true, false]] as const).flatMap(([tell, live]) => graphRows(`${live ? "live" : "recorded"} Tally; tell ${tell}`,
+    ["packages/platform/test/package-graph.test.ts#liveTally"], () => variants.liveTallyData(tell, live), ["Site", "Room", "Tally"])),
   ...graphRows("different peer pin", [origin("wrong-peer direct"), origin("wrong-peer paired")],
     () => growData(() => {}, definitionDigest(variants.differentRoomData()))),
 ];
