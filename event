@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7541dcb79120c660bdae9918f15d89daac02576f","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/authored-cutoff.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7e54b1eff8a82899698181f4d0114ad5f0ba6e4e","text":"Merge retired a covered predecessor; the successor is at verification/state-machines/coverage.json."}
