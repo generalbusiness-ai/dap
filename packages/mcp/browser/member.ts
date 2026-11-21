@@ -1,4 +1,4 @@
-import type { MemberRef } from "@generalbusiness/dap-contract";
+import type { MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isMemberRef } from "@generalbusiness/dap-bytes";
 import type { MemberTable } from "../src/views/member-types.ts";
 import { memberDescription } from "../src/views/member-text.ts";
@@ -23,15 +23,21 @@ export function memberStyleElement(): HTMLStyleElement {
   style.textContent = styles;
   return style;
 }
-export function memberElement(ref: MemberRef, table?: MemberTable): HTMLElement {
+export function memberElement(ref: MemberRef, table?: MemberTable, presence?: { focus: ScopeRef; current?: ScopeRef }): HTMLElement {
   if (!isMemberRef(ref)) throw Error("A member element needs a full member reference.");
   const element = document.createElement("span"); element.className = "dap-member";
   const member = table?.records[canonicalize(ref)], words = document.createElement("span"); words.className = "dap-member-words";
+  const addPresence = () => {
+    if (!presence) return;
+    const text = document.createElement("span"); text.className = "dap-member-description";
+    text.textContent = presence.current && canonicalize(presence.focus) === canonicalize(presence.current) ? "here" : presence.focus.scope;
+    words.append(text);
+  };
   if (!member?.identity) {
     const label = document.createElement("strong"), raw = document.createElement("code");
     label.textContent = "Member unavailable"; raw.textContent = canonicalize(ref); raw.className = "dap-member-reference";
     const unknown = document.createElement("span"); unknown.textContent = "eligibility unknown"; unknown.className = "dap-member-description";
-    words.append(label, raw, unknown); element.append(words); return element;
+    words.append(label, raw, unknown); addPresence(); element.append(words); return element;
   }
   const mark = document.createElement("span"), handle = document.createElement("span"), description = document.createElement("span");
   mark.className = `dap-member-mark dap-member-${member.identity.kind}${member.standing ? ` dap-member-${member.standing.state}` : ""}`;
@@ -46,6 +52,6 @@ export function memberElement(ref: MemberRef, table?: MemberTable): HTMLElement 
       const state = document.createElement("span"); state.className = "dap-member-removed-word"; state.textContent = part; description.append(state);
     } else description.append(document.createTextNode(part));
   }
-  words.append(handle, description); element.append(mark, words);
+  words.append(handle, description); addPresence(); element.append(mark, words);
   return element;
 }

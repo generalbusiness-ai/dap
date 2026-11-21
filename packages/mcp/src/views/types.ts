@@ -1,6 +1,6 @@
 import type { CallResult } from "../results.ts";
 import type { PresentationPackage, ViewKind } from "./resources.ts";
-import type { ReadMinimum, ApplicationProjectionData, ApplicationProjectionQuery, FactRef, FieldValue, Head, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import type { ReadMinimum, ApplicationProjectionData, ApplicationProjectionQuery, FactRef, FieldValue, Head, MemberRef, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import type { ApplicationView, ApplicationViewParameters } from "@generalbusiness/dap-platform/application-v2";
 import type { MemberTable } from "./member-types.ts";
 
@@ -51,7 +51,7 @@ export interface NativeCardAction {
   kind: string;
   args: Record<string, unknown>;
   /** Retained live binding; never sent to the app. */
-  live?: { query: ApplicationProjectionQuery; generation: string };
+  live?: { query: ApplicationProjectionQuery; generation: string; presence?: { viewer: MemberRef; member: string; focus: string } };
   /** Server-owned declaration and transient model input; never app action arguments. */
   parameters?: ApplicationViewParameters;
   parameterInput?: unknown;
@@ -163,6 +163,9 @@ export interface ViewQuery {
   refresh?: true;
 }
 export interface Projection {
+  presence?: PresenceDisplay;
+  /** Server-owned actions corresponding to presence IDs. */
+  presenceActions?: NativeCardAction[];
   members?: MemberTable;
   status: "ready" | "empty" | "unavailable" | "denied" | "absent" | "incomplete" | "stale";
   position: number;
@@ -219,6 +222,7 @@ export interface CardContext {
 }
 /** App data excludes executable action inputs: only opaque action IDs and labels cross to the browser. */
 export interface Display {
+  presence?: PresenceDisplay;
   members?: MemberTable;
   view: string;
   cut: number;
@@ -243,4 +247,11 @@ export interface Display {
   surface?: DeclaredSurface;
   context: CardContext;
   receipt?: string;
+}
+export interface PresenceDisplay {
+  viewer: MemberRef;
+  rows: readonly { member: MemberRef; focus: ScopeRef; expires: Timestamp }[];
+  enter?: string;
+  renew?: string;
+  leave?: string;
 }

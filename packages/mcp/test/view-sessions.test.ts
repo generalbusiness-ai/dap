@@ -15,6 +15,38 @@ import { StandIn, SERVICE } from "./support/standin.ts";
 
 const answer = (value: string): CallResult => ({ content: [{ type: "text", text: value }], structuredContent: { answer: value }, isError: false });
 
+test("presence retains one cut's result and permits more than 32 refreshes", async () => {
+  const scope = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` } as const;
+  const viewer = { membership: scope, member: "@alice" as const }, query = { v: 1 as const, scope, directory: scope, install: 1, projection: "presence", items: {} };
+  const source: ViewSource = { read: async () => ({ status: "empty", position: 0, count: 0, fallback: "Presence", presence: { viewer, rows: [], enter: "presence-enter" },
+    presenceActions: [{ id: "presence-enter", label: "Enter", purpose: "act", kind: "enter", args: { on: null, at: {}, fields: { focus: scope } }, live: { query, generation: "one", presence: { viewer, member: "member", focus: "focus" } } }] }) };
+  let sent = 0;
+  const sessions = new ViewSessions(source, () => ({ call: async () => answer("read") }), async () => answer("recorded"), async () => answer("settled"), () => null,
+    { liveAct: async (_action, admit) => { admit(); sent++; return answer("applied"); } });
+  await sessions.open("presence", "needs-you");
+  for (let cut = 0; cut < 40; cut++) {
+    expect(sessions.display("presence").presence?.enter).toBe("presence-enter");
+    await sessions.liveAct("presence", cut, "presence-enter");
+    await sessions.liveAct("presence", cut, "presence-enter");
+    expect(sent).toBe(cut + 1);
+    await sessions.read("presence", cut, { refresh: true });
+    await expect(sessions.liveAct("presence", cut, "presence-enter")).rejects.toMatchObject({ reason: "stale" });
+  }
+});
+
+test("presence-only rows offer no card navigation or recorded custody lookup", async () => {
+  const scope = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` } as const;
+  const viewer = { membership: scope, member: "@alice" as const }, row = { member: viewer, focus: scope, expires: "2026-11-21T12:00:30Z" as const };
+  let lookups = 0;
+  const source: ViewSource = { checksOriginals: () => true, read: async () => ({ status: "ready", position: 0, count: 2, fallback: "Presence", presence: { viewer, rows: [row, row] } }) };
+  const sessions = new ViewSessions(source, () => ({ call: async () => answer("read") }), async () => answer("recorded"), async () => answer("settled"), () => null,
+    { unresolved: async () => { lookups++; return null; } });
+  await sessions.open("presence", "needs-you");
+  expect(sessions.display("presence")).toMatchObject({ status: "ready", context: { navigation: [], identity: null } });
+  expect(sessions.display("presence").card).toBeUndefined();
+  expect(lookups).toBe(0);
+});
+
 test("a live action uses only the mounted card's current cut and offered action", async () => {
   const scope = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` } as const;
   const query = { v: 1 as const, scope, directory: scope, install: 1, projection: "board", items: {} };

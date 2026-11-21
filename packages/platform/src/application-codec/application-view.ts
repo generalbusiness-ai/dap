@@ -40,7 +40,13 @@ export interface ApplicationViewSeries {
   readonly scale: number; readonly unit: string; readonly last: number;
 }
 export interface ApplicationViewLink { readonly view: string; readonly field: string; readonly label: string }
+export interface ApplicationViewPresence {
+  readonly member: string; readonly focus: string; readonly expires: string;
+  readonly focusField: string; readonly enter: string; readonly renew: string; readonly leave: string;
+}
 export interface ApplicationItemView extends ViewBase {
+  /** Explicit live presence controls and their projected identity fields. */
+  readonly presence?: ApplicationViewPresence;
   /** Carousel membership: a restricted@1 boolean over trusted viewer and item.
    * Record-by-id views do not apply this rule. It grants no read authority. */
   readonly for?: string;
@@ -110,7 +116,7 @@ export function readApplicationViews(value: unknown): ApplicationViews {
   for (const given of Object.values(views)) {
     if (!isRecord(given)) return viewFailure();
     const common = "acts,back,context,display,fallback,item,kind,projection,refresh,revision,waiting";
-    const view = only(given, (common + (given["kind"] === "surface" ? ",opens,resource" : ",actor,facts,summary,title" + (Object.hasOwn(given, "links") ? ",links" : "") + (Object.hasOwn(given, "series") ? ",series" : "") + (Object.hasOwn(given, "order") ? ",order" : "") + (Object.hasOwn(given, "for") ? ",for" : "") + (Object.hasOwn(given, "reads") ? ",reads" : ""))).split(",").sort().join());
+    const view = only(given, (common + (given["kind"] === "surface" ? ",opens,resource" : ",actor,facts,summary,title" + (Object.hasOwn(given, "links") ? ",links" : "") + (Object.hasOwn(given, "series") ? ",series" : "") + (Object.hasOwn(given, "order") ? ",order" : "") + (Object.hasOwn(given, "for") ? ",for" : "") + (Object.hasOwn(given, "reads") ? ",reads" : "") + (Object.hasOwn(given, "presence") ? ",presence" : ""))).split(",").sort().join());
     name(view["projection"]); name(view["item"]);
     if (view["revision"] !== "revision" || typeof view["display"] !== "string" || !["inline", "fullscreen"].includes(view["display"])) return viewFailure();
     if (view["back"] !== null) name(view["back"]);
@@ -119,7 +125,7 @@ export function readApplicationViews(value: unknown): ApplicationViews {
     for (const key of ["context", "fallback"]) applicationViewTemplateFields(viewText(view[key], B.templateBytes));
     for (const template of Object.values(dict(view["waiting"], 16))) applicationViewTemplateFields(viewText(template, B.templateBytes));
     const acts = view["acts"];
-    if (!Array.isArray(acts) || acts.length > B.acts) return viewFailure("limit");
+    if (!Array.isArray(acts) || acts.length > (Object.hasOwn(view, "presence") ? 3 : B.acts)) return viewFailure("limit");
     const used = new Set<string>();
     for (const given of acts) {
       const act = only(given, ("act,label,needs,when" + (isRecord(given) && Object.hasOwn(given, "args") ? ",args" : "") + (isRecord(given) && Object.hasOwn(given, "parameters") ? ",parameters" : "")).split(",").sort().join()), kind = name(act["act"]);
@@ -137,6 +143,13 @@ export function readApplicationViews(value: unknown): ApplicationViews {
       for (const target of Object.values(dict(view["opens"], 16))) name(target);
     } else {
       if (typeof view["kind"] !== "string" || !["card", "carousel", "record", "log"].includes(view["kind"])) return viewFailure();
+      if (Object.hasOwn(view, "presence")) {
+        if (view["kind"] !== "carousel") return viewFailure();
+        const presence = only(view["presence"], "enter,expires,focus,focusField,leave,member,renew");
+        for (const value of Object.values(presence)) name(value);
+        if (new Set([presence["member"], presence["focus"], presence["expires"]]).size !== 3
+          || new Set([presence["enter"], presence["renew"], presence["leave"]]).size !== 3) return viewFailure();
+      }
       if (Object.hasOwn(view, "for")) {
         if (view["kind"] !== "carousel") return viewFailure();
         viewText(view["for"], B.expressionBytes);

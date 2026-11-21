@@ -38,6 +38,20 @@ interface DeclaredAddress { screen: string; items?: Readonly<Record<string, numb
 const declaredHistory: DeclaredAddress[] = [];
 const scopeKey = (scope?: ScopeRef) => scope ? JSON.stringify([scope.scope, scope.genesis]) : "";
 const surfaceOf = () => display?.card?.declared?.surface ?? display?.surface;
+const presenceOf = () => display?.presence;
+
+/** Runs under the current read or refresh lock. A changed view cannot accept a late result. */
+async function presenceAct(kind: "enter" | "renew"): Promise<void> {
+  const offered = presenceOf()?.[kind], current = display, selected = view;
+  if (!alive || !current?.active || current.cut === null || !offered) return;
+  const address = cardIdentity();
+  try {
+    await bridge.tool("view_live_act", { view: selected, cut: current.cut, action: offered });
+    if (alive && view === selected && cardIdentity() === address) await readDisplay({ refresh: true });
+  } catch {
+    // The lease expires if the host or service cannot complete this call.
+  }
+}
 
 function scheduleRefresh() {
   window.clearTimeout(refreshTimer);
@@ -53,7 +67,7 @@ function refresh(): Promise<void> {
     // next press, read or act. A press that waits on this read sets its own notice afterwards.
     if (notice !== CHANGED_GESTURE) notice = "";
     readAgain = false;
-    try { await readDisplay({ refresh: true }); }
+    try { await readDisplay({ refresh: true }); await presenceAct(presenceOf()?.enter ? "enter" : "renew"); }
     catch (error) { if (error instanceof AppToolError && error.reason === "busy") scheduleRefresh(); else showError(error); }
     finally { refreshing = null; render(); }
   })();
@@ -183,7 +197,7 @@ async function read(move?: ReadMove) {
   while (refreshing) await refreshing;
   if (busy || !alive) return;
   busy = true; notice = ""; readAgain = false; render();
-  try { await readDisplay(move); }
+  try { await readDisplay(move); await presenceAct("enter"); }
   finally { busy = false; render(); }
 }
 /** Read under the busy state already held by read() or act(). */
@@ -368,6 +382,18 @@ function renderCard(desired: DocumentFragment, identity: string, sections: Reado
     nav.append(button("back", "← Back", back, "quiet")); desired.append(nav);
   }
   const surface = surfaceOf(), data = card?.declared?.data ?? display.data;
+  const presence = presenceOf();
+  if (presence?.rows.length) {
+    const list = keyed(node("section", undefined, "declared-members"), "presence");
+    list.setAttribute("aria-label", "Present members");
+    for (const row of presence.rows) {
+      if (!isMemberRef(row.member)) continue;
+      const item = keyed(node("div"), `presence:${canonicalize(row.member)}:${canonicalize(row.focus)}`);
+      item.append(memberElement(row.member, display.members, { focus: row.focus, ...(display.scope ? { current: display.scope } : {}) }));
+      list.append(item);
+    }
+    desired.append(list);
+  }
   if (display.members?.overflow) desired.append(keyed(node("p", `${display.members.overflow} member reference${display.members.overflow === 1 ? " exceeds" : "s exceed"} the 32-member display limit.`, "notice"), "member-overflow"));
   if (surface && data) {
     try {
@@ -379,6 +405,7 @@ function renderCard(desired: DocumentFragment, identity: string, sections: Reado
     } catch (error) { desired.append(keyed(node("p", error instanceof Error ? error.message : "The declared surface is unavailable.", "notice"), "surface-error")); }
     return;
   }
+  if (!card && presence && display.status === "ready") return;
   if (!card) {
     desired.append(keyed(node("p", display.fallback || display.status, "empty"), "empty"));
     if (display.status !== "empty") desired.append(button("retry-read", "Retry read", () => read({ refresh: true }), "quiet"));
@@ -572,21 +599,25 @@ window.addEventListener("resize", measure);
 document.fonts.addEventListener("loadingdone", measure);
 void document.fonts.ready.then(measure);
 bridge.on((method) => {
-  if (method === "ui/resource-teardown") { close(); return; }
+  if (method === "ui/resource-teardown") { close(true); return; }
   if (method === "ui/notifications/host-context-changed") {
     // The bridge applies host styles to the root. Keep mounted controls intact while a pointer or key is held.
     document.documentElement.dataset["mode"] = bridge.context.displayMode ?? "inline";
     measure();
   }
 });
-function close() {
+function close(teardown = false) {
+  if (!alive) return;
+  const leave = teardown ? presenceOf()?.leave : undefined;
+  if (leave && display?.active && display.cut !== null && !busy && !refreshing)
+    void bridge.tool("view_live_act", { view, cut: display.cut, action: leave }).catch(() => {});
   window.clearTimeout(refreshTimer);
   retireControls(root); surfaces.close();
   alive = false; connected = false; cancelAnimationFrame(frame); resize.disconnect();
   window.removeEventListener("keydown", keyboard); window.removeEventListener("resize", measure);
   document.fonts.removeEventListener("loadingdone", measure); bridge.close();
 }
-window.addEventListener("pagehide", close, { once: true });
+window.addEventListener("pagehide", () => close(), { once: true });
 render();
 void (async () => {
   await bridge.initialize();

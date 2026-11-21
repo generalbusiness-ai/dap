@@ -1,7 +1,7 @@
 /** Bind presentation data to declared reads and native acts. Restricted rule
  * admission/evaluation and current viewer authority belong to the host. */
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
-import { fitsFieldType, isRecord, parseStrict } from "@generalbusiness/dap-bytes";
+import { canonicalize, fitsFieldType, isRecord, parseStrict } from "@generalbusiness/dap-bytes";
 import { viewParameterFits } from "./application-view-parameters.ts";
 import { applicationJson } from "./application-json.ts";
 import { APPLICATION_PACKAGE_LIMITS, type ApplicationDefinition } from "./application-types.ts";
@@ -74,6 +74,57 @@ export function bindApplicationViews(value: unknown, projections: Readonly<Recor
           if (journal || !target || target.kind !== "record" || !targetProjection || targetProjection.definition !== projection.definition
             || !selected || isApplicationJournalSource(selected) || selected.read !== "item" || !field || field.of.type !== "item" || field.of.of !== selected.item) return fail();
         }
+        if (view.presence) {
+          const p = view.presence;
+          if (journal || source.read !== "many" || Object.keys(bound.sources).length !== 1
+            || definition.level?.name !== "live" || definition.level.version !== 1 || source.states.length !== 1
+            || !item || item.states[source.states[0]!]?.final !== false) return fail();
+          const member = source.fields[p.member], focus = source.fields[p.focus], expires = source.fields[p.expires];
+          if (!member || member.nullable || member.of.type !== "member" || member.from.kind !== "party"
+            || !focus || focus.nullable || focus.of.type !== "scope" || focus.from.kind !== "ref"
+            || !expires || expires.nullable || expires.of.type !== "time" || expires.from.kind !== "value") return fail();
+          const controls = [p.enter, p.renew, p.leave].map(name => view.acts.filter(act => act.act === name));
+          if (view.acts.length !== 3 || controls.some(found => found.length !== 1)) return fail();
+          const [enter, renew, leave] = controls.map(found => found[0]!);
+          if (enter!.when !== "true" || [enter, renew, leave].some(offered => Object.keys(offered!.args ?? {}).length || Object.keys(offered!.parameters ?? {}).length)) return fail();
+          const open = definition.acts[p.enter], update = definition.acts[p.renew], end = definition.acts[p.leave];
+          const focusInput = open?.fields[p.focusField];
+          if (!open || !update || !end || open.step !== "open" || update.step !== "transition" || end.step !== "transition"
+            || [open, update, end].some(act => act.on !== source.item || act.grant !== open.grant || Object.keys(act.also).length)
+            || !Object.hasOwn(open.fields, p.focusField) || Object.keys(open.fields).length !== 1
+            || focusInput?.type !== "scope" || !focusInput.required
+            || Object.keys(update.fields).length || Object.keys(end.fields).length
+            || [open, update, end].some(act => act.sends.length || act.attention.length)
+            || focusInput.kind !== focus.of.kind) return fail();
+          const same = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
+          const unique = { type: source.item, states: source.states, where: [
+            { equals: { a: { slot: member.from.name }, b: { signer: true } } },
+            { equals: { a: { slot: focus.from.name }, b: { field: p.focusField } } },
+          ] };
+          if (!open.guards.some(guard => "none" in guard && same(guard.none, unique))) return fail();
+          const signerGuard = { equals: { a: { slot: member.from.name }, b: { signer: true } } };
+          if (![update, end].every(act => act.guards.some(guard => "equals" in guard && same(guard.equals, signerGuard.equals)))) return fail();
+          if (!open.effects.some(effect => "party" in effect && same(effect.party, { slot: member.from.name, from: { signer: true } }))
+            || !open.effects.some(effect => "ref" in effect && same(effect.ref, { slot: focus.from.name, from: { field: p.focusField } }))) return fail();
+          const leaseEffect = (effect: typeof open.effects[number]) => "value" in effect && effect.value.slot === expires.from.name
+            && isRecord(effect.value.from) && "time" in effect.value.from && isRecord(effect.value.from.time)
+            && typeof effect.value.from.time["plusSeconds"] === "number" && effect.value.from.time["plusSeconds"] > 0;
+          const lease = open.effects.find(leaseEffect);
+          const seconds = lease && "value" in lease && isRecord(lease.value.from) && "time" in lease.value.from && isRecord(lease.value.from.time)
+            ? lease.value.from.time["plusSeconds"] : null;
+          // View refresh is milliseconds; lease duration is whole seconds.
+          // Two refresh intervals must fit within the validated lease.
+          if (typeof seconds !== "number" || !Number.isSafeInteger(seconds) || seconds <= 0 || view.refresh / 500 > seconds) return fail();
+          const finalEffect = end.effects[0];
+          if ([open, update, end].some(act => act.effects.some(effect => Object.keys(effect).length !== 1))
+            || open.effects.length !== 3 || open.effects.filter(leaseEffect).length !== 1
+            || update.effects.length !== 1 || !leaseEffect(update.effects[0]!)
+            || !same(open.effects.find(leaseEffect), update.effects[0])
+            || end.effects.length !== 1 || !finalEffect || !("state" in finalEffect) || !item.states[finalEffect.state]?.final
+            || !Object.values(definition.timed).some(rule => rule.on === source.item && rule.deadline === expires.from.name
+              && rule.states.length === 1 && rule.states[0] === source.states[0]
+              && rule.effects.length === 1 && same(rule.effects[0], finalEffect))) return fail();
+        }
         for (const offered of view.acts) {
           const act = Object.hasOwn(definition.acts, offered.act) ? definition.acts[offered.act] : undefined;
           if (isApplicationJournalSource(source) || !act || act.on !== source.item || act.grant !== offered.needs || !isRecord(act.fields)) return fail();
@@ -90,6 +141,7 @@ export function bindApplicationViews(value: unknown, projections: Readonly<Recor
             if (Object.hasOwn(args, name) || !field || !("type" in field) || !viewParameterFits(parameter, field)) return fail();
           }
           if (Object.entries(act.fields).some(([name, field]) => field.required && !Object.hasOwn(field, "default") && !Object.hasOwn(args, name)
+            && !(view.presence && offered.act === view.presence.enter && name === view.presence.focusField)
             && (!Object.hasOwn(parameters, name) || !parameters[name]!.required))) return fail();
         }
       }

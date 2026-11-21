@@ -2,13 +2,14 @@
  * The package peer, clock and scheduler are test fixtures. */
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { isSeed, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, isSeed, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { declaredHandle, httpTransport, memoryStore, requestSession, ScopeHandle, secretSigner, sessionRequest } from "@generalbusiness/dap-client";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { McpService, type ServerPort } from "@generalbusiness/dap-mcp";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
+import { liveTurnsOf, type LiveTurns } from "../src/live.ts";
 import { applicationWorkerBindings, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture } from "./fixtures-native.ts";
 import { applicationPresencePacket } from "./support/application-presence-fixture.ts";
 import { rita, routed } from "./repository.ts";
@@ -141,5 +142,101 @@ test("an installed live presence card enters, renews and leaves without writing 
     expect(reset.generation).not.toBe(generation);
     expect(await life.wait(storage)).toEqual(before);
     expect(await life.wait(() => child.entries())).toEqual(entries);
+  } finally { life.release(); }
+});
+
+test("the opt-in presence package carries a native member, focus and expiring lease", async () => {
+  const { packet, child } = await applicationPresencePacket("lease", true);
+  expect(packet.ids.release).toBeTruthy();
+  await expect(applicationPresencePacket("unsafe-cadence", true, 15_001)).rejects.toThrow();
+  expect(child.items["card"]?.parties["member"]?.required).toBe(true);
+  expect(child.items["card"]?.refs["focus"]?.to).toEqual({ type: "scope", kind: "lane" });
+  expect(child.timed["expire"]).toMatchObject({ on: "card", deadline: "expires", states: ["here"], effects: [{ state: "left" }] });
+});
+
+test("an installed opted-in presence enters, renews, leaves and expires on its live clock", async () => {
+  const { packet, rootId, childId } = await applicationPresencePacket("lease-installed", true);
+  const { life, R, D, children } = await sessionRoom(C.register), [M, A, G] = children;
+  if (!M || !A || !G) throw Error("The declared cohort needs its three siblings.");
+  const fixture = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(fixture);
+  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(fixture.trust), env.SCOPE_INDEX);
+  life.applicationTrust(() => bindings.APPLICATION_TRUST);
+  try {
+    const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
+    await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
+    for (const node of [D, A]) { life.outside(node.name, (given, sql) => hostOutside(given, sql, bindings, peer.fetch)); await life.wait(() => node.restart()); }
+    const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at());
+    const port: ServerPort = { service: "https://scopes.test", signer: secretSigner(rita.secret), custody: memoryStore(), now: life.now,
+      config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }), addRoot: async () => { throw Error("Use native installation."); } },
+      applicationFetch: peer.fetch, applicationTrust: bindings.APPLICATION_TRUST, fetch: (url, init) => life.wait(() => routed(url, init)) };
+    const installed = await life.wait(() => new McpService(port).call("install_application", { uri: fixture.uri, release: packet.ids.release, roles: ["admin"], values: {}, idempotencyKey: "TEST-presence-lease" }));
+    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
+    const job = Number(installed.structuredContent["item"]);
+    await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
+    const rootSend = (await life.wait(() => D.entries())).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.definition === rootId);
+    if (!rootSend || !isSeed(rootSend.to)) throw Error("The directory must create the installed root.");
+    const root = life.platform(scopeIdOf(rootSend.to)); await driveFixture([R, D, M, A, G, root], life.wait);
+    const childSend = (await life.wait(() => root.entries())).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.definition === childId);
+    if (!childSend || !isSeed(childSend.to)) throw Error("The installed root must create the live child.");
+    const child = life.platform(scopeIdOf(childSend.to));
+    const timer: { current: { milliseconds: number; fire: () => void } | null } = { current: null };
+    life.wire(child.name, () => ({ liveTimer: { set: (milliseconds, fire) => {
+      timer.current = milliseconds === null ? null : { milliseconds, fire };
+    } } }));
+    await life.wait(() => child.restart());
+    await driveFixture([R, D, M, A, G, root, child], life.wait);
+    const childAt = await life.wait(() => child.at());
+    const views = new McpService({ ...port, declaredViews: { bytes: packet.bytes, release: packet.ids.release, item: job },
+      fetch: (url, init) => new URL(url).pathname.startsWith(`/v1/scopes/${child.name}/`)
+        ? nativeWorker.fetch(new Request(url, init), bindings) : port.fetch!(url, init) });
+    const opened = await life.wait(() => views.call("view_cards", { view: "presence", scope: childAt }));
+    expect(opened.structuredContent).toMatchObject({ status: "empty" });
+    const read = async (cut: number) => (await life.wait(() => views.call("view_read", { view: "presence", cut, refresh: true }))).structuredContent["display"] as {
+      cut: number; card?: unknown; members?: { records: Record<string, unknown> }; presence: { viewer: unknown; rows: { member: unknown; focus: unknown; expires: string }[]; enter?: string; renew?: string; leave?: string };
+    };
+    const act = async (cut: number, action: string) => (await life.wait(() => views.call("view_live_act", { view: "presence", cut, action }))).structuredContent;
+    const initial = await read(0);
+    const member = { membership, member: rita.member.member };
+    expect(initial.presence).toMatchObject({ viewer: member, rows: [], enter: "presence-enter" });
+    expect(initial.card).toBeUndefined();
+    expect(await act(initial.cut, "presence-enter")).toMatchObject({ result: { structuredContent: { answer: "applied" } } });
+    const entered = await read(initial.cut);
+    expect(entered.presence).toMatchObject({ viewer: member, rows: [{ member, focus: childAt }], renew: "presence-renew", leave: "presence-leave" });
+    expect(entered.card).toBeUndefined();
+    expect(entered.members?.records[canonicalize(member)]).toMatchObject({ ref: member, identity: { handle: "@rita", kind: "person" } });
+    expect(Object.keys(entered.presence.rows[0]!).sort()).toEqual(["expires", "focus", "member"]);
+    const firstExpiry = Date.parse(entered.presence.rows[0]!.expires);
+    expect(firstExpiry).toBe(life.now() + 30_000);
+    life.advance(5_000);
+    expect(await act(entered.cut, "presence-renew")).toMatchObject({ result: { structuredContent: { answer: "applied" } } });
+    const renewed = await read(entered.cut);
+    expect(Date.parse(renewed.presence.rows[0]!.expires)).toBe(firstExpiry + 5_000);
+    expect(await act(renewed.cut, "presence-leave")).toMatchObject({ result: { structuredContent: { answer: "applied" } } });
+    const left = await read(renewed.cut);
+    expect(left.presence).toMatchObject({ rows: [], enter: "presence-enter" });
+    expect(await act(left.cut, "presence-enter")).toMatchObject({ result: { structuredContent: { answer: "applied" } } });
+    const abandoned = await read(left.cut);
+    expect(abandoned.presence.rows).toHaveLength(1);
+    expect(timer.current?.milliseconds).toBe(30_000);
+    const liveState = () => runInDurableObject(child.object, instance => {
+      const current = (instance as unknown as { [liveTurnsOf](): LiveTurns | null })[liveTurnsOf]()?.current();
+      return current ? { tick: current.tick, items: current.view.all().items } : null;
+    });
+    const beforeTimer = await life.wait(liveState);
+    const activeLease = beforeTimer?.items.find(item => item.type === "card" && item.state === "here");
+    if (!beforeTimer || !activeLease) throw Error("The abandoned lease must be live before the timer.");
+    life.advance(30_001);
+    await life.wait(() => runInDurableObject(child.object, () => {
+      if (!timer.current) throw Error("The live timer must hold the lease deadline.");
+      timer.current.fire();
+    }));
+    expect(timer.current).toBeNull();
+    const afterTimer = await life.wait(liveState);
+    expect(afterTimer?.tick).toBe(beforeTimer.tick + 1);
+    expect(afterTimer?.items.find(item => item.id === activeLease.id)).toMatchObject({ state: "left" });
+    const expired = await read(abandoned.cut);
+    expect(expired.presence).toMatchObject({ rows: [], enter: "presence-enter" });
+    const entries = await life.wait(() => child.entries());
+    expect(entries).toHaveLength(2);
   } finally { life.release(); }
 });
