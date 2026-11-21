@@ -92,7 +92,7 @@ export class ActProjection {
   }
 
   project<D extends DeclaredDefinition>(inputSource: Source, body: BodyWrite, owners: Owners | null): {
-    projection: ActProjection; after: ActView<D>; effects: readonly ActEffect[]; opens: ItemName | null;
+    projection: ActProjection; after: ActView<D>; effects: readonly ActEffect[]; opens: ItemName | null; changed: readonly ItemName[];
   } {
     const source = Object.freeze(structuredClone(inputSource));
     const scope = this.recorded.scope();
@@ -218,6 +218,6 @@ export class ActProjection {
       }
       return "item" in effect && name !== null ? { ...effect, item: name } : effect;
     });
-    return { projection: next, after, effects: exposed, opens: opened ? { output: source } : null };
+    return { projection: next, after, effects: exposed, changed: [...projected.items.values()].map(item => structuredClone(references.row(item).name)), opens: opened ? { output: source } : null };
   }
 }

@@ -49,8 +49,9 @@ export interface DraftExploreResult<D extends DeclaredDefinition, K extends Kind
   readonly movement: DraftMovement | null;
 }
 
+export interface ExploreAuthority { readonly session: Session; readonly requestedAt: Timestamp; readonly clock: () => Timestamp }
 export type ExploreOperation<D extends DeclaredDefinition> =
-  <K extends Kind<D>>(key: string, act: PartialAct<D, K>) => Promise<DraftExploreResult<D, K>>;
+  <K extends Kind<D>>(key: string, act: PartialAct<D, K>, authority?: ExploreAuthority) => Promise<DraftExploreResult<D, K>>;
 const operations = new WeakMap<object, unknown>();
 
 /** Constructors register only their own closure over the actual Replica. */
@@ -58,9 +59,9 @@ export function registerExplore<D extends DeclaredDefinition>(owner: object, ope
   operations.set(owner, operation);
 }
 export function exploreReplica<D extends DeclaredDefinition, K extends Kind<D>>(
-  replica: Replica<D>, key: string, act: PartialAct<D, K>,
+  replica: Replica<D>, key: string, act: PartialAct<D, K>, authority?: ExploreAuthority,
 ): Promise<DraftExploreResult<D, K>> {
-  return operation<D>(replica)(key, act);
+  return operation<D>(replica)(key, act, authority);
 }
 
 /** C4's later draft operation uses this registration, never clientReplica's test seam. */

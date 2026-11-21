@@ -7,7 +7,7 @@
  * anywhere: `Session` keeps it out of its JSON and text.
  */
 
-import type { Answer, Digest, Head, ReadRefusal, RefusalReason, ReadMinimum, ItemQueryRead, Read, ScopeId, ScopeRef, ApplicationProjectionQuery, ApplicationProjectionRead } from "@generalbusiness/dap-contract";
+import type { Answer, Digest, Head, ReadRefusal, RefusalReason, ReadMinimum, ItemQueryRead, Read, ScopeId, ScopeRef, Timestamp, ApplicationProjectionQuery, ApplicationProjectionRead } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, intentDigest, isDefinitionName, isDigest, isEntry, isEntryOf, isHead, isRecord, isScopeRef, parseStrict, timeMs, timeOf, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { LogProtocolError, TransportError, ScopeHandle, type Transport } from "./handle.ts";
 import type { AbsenceSnapshot, Custody, CustodyRecord, Folded, Identity } from "./custody.ts";
@@ -58,6 +58,7 @@ interface SessionEntry {
   identity: string;
   scope: ScopeId;
   session: Session | null;
+  requestedAt: Timestamp | null;
 }
 
 /** Completed read credentials only. Each reader keeps its own transport and pending requests. */
@@ -68,11 +69,16 @@ export class ReadSessions {
     const identity = JSON.stringify([service, key, membership.scope, membership.genesis]);
     let entry = this.#entries.get(identity);
     if (!entry) {
-      entry = { identity, scope: membership.scope, session: null };
+      entry = { identity, scope: membership.scope, session: null, requestedAt: null };
       if (this.#entries.size >= 64) this.#entries.delete(this.#entries.keys().next().value!);
       this.#entries.set(identity, entry);
     }
     return entry;
+  }
+
+  requestedAt(service: string, key: string, membership: ScopeRef, session: Session): Timestamp | null {
+    const held = this.#entries.get(JSON.stringify([service, key, membership.scope, membership.genesis]));
+    return held?.session === session ? held.requestedAt : null;
   }
 
   current(entry: SessionEntry): boolean { return this.#entries.get(entry.identity) === entry; }
@@ -129,13 +135,18 @@ export class Reads {
     try { return await ask; } finally { if (this.#pending.get(held) === ask) this.#pending.delete(held); }
   }
 
+  /** The original local request start for this exact still-held session. */
+  sessionRequestedAt(membership: ScopeRef, session: Session): Timestamp | null {
+    return this.#sessions.requestedAt(this.#port.service, this.#port.signer.key, membership, session);
+  }
+
   async #ask(membership: ScopeRef, held: SessionEntry, now: number): Promise<Session | null> {
     try {
       const notAfter = timeOf(Math.floor(now / 1000) * 1000 + 60_000);
       const asked = await signerSessionRequest(membership, this.#port.signer, notAfter, crypto.randomUUID());
       const answer = await requestSession(this.#port.service, membership.scope, asked, { standing: true, ...(this.#port.fetch ? { fetch: this.#port.fetch } : {}) });
       if (!this.#sessions.current(held)) return null;
-      if (answer.ok) { held.session = answer.session; this.#refused.delete(held); }
+      if (answer.ok) { held.session = answer.session; held.requestedAt = timeOf(now); this.#refused.delete(held); }
       else this.#refused.set(held, now);
       if (answer.ok) this.#heldScopes.add(membership.scope);
       if (answer.ok) this.#held.add(`${membership.scope} ${membership.genesis}`);
