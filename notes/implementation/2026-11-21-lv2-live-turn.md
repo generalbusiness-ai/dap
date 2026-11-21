@@ -22,7 +22,7 @@ the scope wakes for, and which test witnesses each claim.
 | The seam for LV3 | `packages/scope/src/live.ts`, `liveTurnsOf`, `LiveGeneration` | `instance[liveTurnsOf]()` gives the object's `LiveTurns` inside its isolate. `current()` gives the generation, the tick and a `StateView` of the state in memory. `onChanged` tells a listener the generation and the new tick after each change. |
 | The memory timer | `packages/scope/src/ports.ts`, `LiveTimer` and `Ports.liveTimer` | One timer for the earliest deadline. The default is `setTimeout` (`timeoutTimer` in `live.ts`). The test ports replace it with a timer that the test fires. |
 | Recorded paths of a live scope | `packages/scope/src/turn.ts`, `core.ts`, `delivery.ts` | After the confirmation, the recorded turn of a live scope seals nothing, drains no timed rule and sets no alarm. `Scope.submit` answers `unavailable`. A new delivery gets `retry` with the reason `unavailable` (O2). |
-| `heldBy` | moved from `core.ts` to `ports.ts` | The recorded act and the live act read the authority port's second phase through one function. |
+| `heldBy` | `packages/scope/src/core.ts`, now exported | The recorded act and the live act read the authority port's second phase through one function. |
 
 ### The generation and the tick
 
@@ -126,15 +126,28 @@ Open question 1 asks the planner to confirm that answer.
 ## O2: a delivery after the confirmation
 
 An active live scope answers a new delivery `retry`, with the reason
-`unavailable`, before it reads the source entry. A repeat of a delivery
-that the scope recorded still gets its recorded answer. The sender's
-dispatcher retries until its own deadline, then records a diagnosis. Every
-attempt was answered `retry`, so the finding is `delivery-unavailable`: no
-clause runs, the request stays pending, and the dispatcher stops. The
-live scope's stored rows do not change.
+`unavailable`, before it reads the source entry. `retry` is the delivery
+answer for "not judged now": the `Delivery` type has no `unavailable`
+answer, and LV2 changes no contract type. A repeat of a delivery that the
+scope recorded still gets its recorded answer. The live scope's stored rows
+do not change.
 
-`retry` is the delivery answer for "not judged now". The `Delivery` type has
-no `unavailable` answer, and LV2 changes no contract type.
+The planner's ruling also asks for a test that shows the sender's own
+deadline settles its request. Under the current dispatcher, no such test
+can pass:
+
+- The dispatcher (`packages/scope/src/outbox.ts`) gives a request up only
+  when its log holds `routingRefusals` routing refusals (`wrong-genesis` or
+  `not-found`). A `retry` answer is no routing refusal.
+- So a request that the live scope answers `retry` stays outstanding. The
+  dispatcher offers it again after a delay that doubles up to
+  `dispatchRetryMaxSeconds` (300 seconds), and no diagnosis is written.
+- At that cap, each such request costs the sender 12 alarms an hour and
+  the live scope 12 delivery requests an hour, with no end.
+
+The O2 test in `live-turn.test.ts` shows this behavior: four `retry`
+attempts, no diagnosis, no result, and no stored change in the live scope.
+Open question 5 asks the planner to choose a fix.
 
 ## Wake floor and requests per room per hour
 
@@ -169,7 +182,7 @@ The figures come from the code of this head.
 | A repeat of an applied intent after a reset applies again | the same test |
 | The stored rows after many live acts equal the stored rows after creation | the same test, and the timed-rule test |
 | Timed rules from memory: the timer fires at the deadline, and an act drains what is due first | `live-turn.test.ts`, "a timed rule runs from memory" |
-| O2: the sender's own deadline settles its request | `live-turn.test.ts`, "O2: a delivery to an active live scope ..." |
+| O2: a delivery after the confirmation is answered `retry` and recorded nothing. The ruled witness, that the sender's own deadline settles the request, does not hold (open question 5) | `live-turn.test.ts`, "O2: an active live scope answers a delivery retry ..." |
 | `applyLive` folds an act at the next tick, and refuses a checkpoint and a recorded scope; `applyEntry` keeps the LV1 refusal | `packages/derive/test/forms-live.test.ts`, "applyLive folds a judged act ..." |
 | Runtime creation admits live | `packages/scope/test/live-creation.test.ts`. LV1's witness, with the live answer changed to admission, as ruling `a1fe9aaf` asks |
 | A live definition is derivable | `forms-live.test.ts`, "LV2 derives a live definition as it derives the recorded one" |
@@ -196,3 +209,12 @@ it by hand, so no test waits on the wall clock.
    retains it as `reused`. A live act leaves that note unset. Proposed: no
    change. A live act retains nothing, so no entry needs the note, and each
    live act reads standing again.
+5. **O2: what settles the sender's request.** A `retry` answer never ends
+   the sender's dispatch (see [O2](#o2-a-delivery-after-the-confirmation)).
+   Two fixes are possible. Proposed: the live scope answers a new delivery
+   as a routing refusal, `not-found`, so that the sender writes an
+   `undelivered` diagnosis after `routingRefusals` attempts, and the send's
+   `undelivered` clause settles its item. The other fix gives the
+   dispatcher a deadline for a request that only gets `retry`, which
+   changes every scope. Until the planner rules, LV2 keeps the ruled
+   `retry`. The package check of LV4 refuses such a send before it is made.

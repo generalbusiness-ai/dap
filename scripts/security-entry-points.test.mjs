@@ -11,8 +11,8 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 // its own source-ordered line. Root adopts actual parser values after review.
 const namedOwners = {
   "packages/scope/src/object.ts": {
-    "packages/scope/src/object.ts:$module": "5e2a6838a478fc03bebba25aaa6d6d3ff7b3b3dda01249ef7ed0980a87047fde",
-    "packages/scope/src/object.ts:ScopeObject": "293c011fd6e01a1c46d3d19e213d917c01e3fc6e07e9e240c9e9c1abc03ae307" // AD-1: applicationInstallationState, admission installations and clock
+    "packages/scope/src/object.ts:$module": "197aa1e8eef69d56fe391932d82170bfb5e1fb11d857671c2b0023d01fbffcbb",
+    "packages/scope/src/object.ts:ScopeObject": "ccabde46612a3d860739c06b64581abcc003cea037e208dd794c55bb5f6e83df" // AD-1: applicationInstallationState, admission installations and clock
   },
   "packages/scope/src/object-archive.ts": {
     "packages/scope/src/object-archive.ts:$module": "e7430b7ed51040dd00253653d928b5a829912472cff2f5139f56478c2565f3e7",
@@ -219,7 +219,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:valueDigest": "e745a5f9e668cd13e52b41194b57f43576380feabc7065d00146c76ce0910e73"
   },
   "packages/scope/src/core.ts": {
-    "packages/scope/src/core.ts:$module": "98b4181ddc94969b5ccca22c9f3219f2be69608bbb420be4fd4348337ee5c566",
+    "packages/scope/src/core.ts:$module": "a0de53d2092e1adcd1ff6318227ef47a2f5ca1ddd9a0e3a0da0f4e2d2e45bf6c",
     "packages/scope/src/core.ts:receiptOf": "882323565d2d715e74148cce168c83851e5e916222a67494b13f2230468ccd60",
     "packages/scope/src/core.ts:snapshotsOf": "b7ecf53e025201a0a328b1d370656d801024c5671ff3af57f4aa2aa56678c7d7",
     "packages/scope/src/core.ts:ownOf": "c1beba742f13528a1355408d0634168a67cad08a6b753faa4476f7f4819e9f59",
@@ -239,7 +239,7 @@ const namedOwners = {
     "packages/scope/src/core.ts:heldBy": "a66b415809db685c99cc8961ba592bd8bdcb8bda8f2f4ea1e73fe71c4b052fd1",
     "packages/scope/src/core.ts:told": "bc25d088d5c51694f6e3a813f11f2875144c7a3bdfaa8d124063dc1f65e2fe67",
     "packages/scope/src/core.ts:Observes": "9a0e37bc23db915ebdfd3ec4eef21172918f50fc3e19de840d2b03746efc3710",
-    "packages/scope/src/core.ts:Scope": "c8242aeb84e2578de49ad02a02fe48ea3ecaa15ff86b27cb747fa446bae497a2" // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
+    "packages/scope/src/core.ts:Scope": "aee8133add5aa8462f60e9fa7a8ba654a19e9be006eeed9855aebfb389607fe1" // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
   }
 };
 
@@ -268,7 +268,7 @@ const seals = {
   "packages/scope/src/read-wait.ts": "d1f3f58f089f89164b270bac3263172c8d9bc0ece2cb3a375ca7b000b6507573", // DX-A2 reviewed minimum admission and wait owner; actual maintained AST value.
   "packages/scope/src/authority.ts": "8072e369fa879a6072fb0d546598962696d05df11f4b38fcf83469addbd0d5f9", // Token refusal: the commit of read-token asks whether a compromised notice named the key; maintained whole-AST value.
   "packages/scope/src/observation-cache.ts": "d43f96c5f634d188e1c989d39b75669c89fdf8a062ab2450b0f9b6621b227186", // Bounded reusable observation payload and FIFO owner; actual maintained parser output.
-  "packages/scope/src/turn.ts": "10286cfbc947638bb19ce35e6fad8281139da7f6efb14d79740c30bae6540a3e", // CDF-1 total retained bytes and fits settlement exemptions; queue and timed drain unchanged.
+  "packages/scope/src/turn.ts": "7a45fcfc414c981b889fb6b2c9accd13a244322c3af4690010e89f319c9121d8", // CDF-1 total retained bytes and fits settlement exemptions; queue and timed drain unchanged.
   "packages/platform/src/reservation-v17.ts": "ab6816b23c9e4edfd034b24d481e6a14b9baf065808b3cc26496bcd531b0cafc", // Reviewed retained-policy decoder; actual maintained parser output.
   "packages/platform/src/evidence.ts": "77da4fdc1cf2601ee64849d2051ecdba0e8391d6b93b6ce74d7e59df90033897", // Reviewed platform binding codec under ruling 1bc4f7fd; actual maintained parser output.
   "packages/git/src/checkout-snapshot.ts": "82f53717d419b70fe208801b6d0bf2fc0c947ac2beffb27b2e2d01898f48ee25", // Detached object identity and closure bounds; imports do not seal this implementation.

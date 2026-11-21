@@ -28,8 +28,9 @@ import { CanonicalError, canonicalize, entryHash, isGrant, parseStrict, utf8 } f
 import { actionOf, applyEntry, applyLive, clockOf, entryOf, judgeAct, judgeTimed, liveActive, MemoryState, nextDue, own, prepareRules, timeMs, windowOf } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Draft, JudgeContext, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import type { LiveAnswer } from "@generalbusiness/dap-platform";
-import type { Pinned } from "./core.ts";
-import { heldBy, type Asked, type LiveTimer, type Ports, type Standing } from "./ports.ts";
+// A cycle with core.ts: heldBy is read only when an act runs, after both modules have loaded.
+import { heldBy, type Pinned } from "./core.ts";
+import type { Asked, LiveTimer, Ports, Standing } from "./ports.ts";
 import type { Store } from "./store.ts";
 import { LATE, isSigned, turnDeadline } from "./turn.ts";
 
