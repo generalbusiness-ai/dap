@@ -45,3 +45,10 @@ export function addressKey(address: string | null): string | null {
   if (first >= 0xfc00 && first <= 0xfdff) return `v6u:${all.map((g) => g.toString(16)).join(":")}`;
   return `v6:${all.slice(0, 4).map((g) => g.toString(16)).join(":")}`;
 }
+
+/** Address key for bounded creation and control tables. */
+export function admissionAddressKey(address: string | null): string | null {
+  const key = addressKey(address);
+  if (!key || !/^v6(?:l|u)?:/.test(key)) return key;
+  return `v6-48:${key.slice(key.indexOf(":") + 1).split(":").slice(0, 3).join(":")}`;
+}

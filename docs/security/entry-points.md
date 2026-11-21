@@ -157,8 +157,8 @@ An invalid signature charges no claimed key. A closed native admission can
 still consume its serving attempt, but selects no target or scope state.
 
 Creation and register `found` each count 10 attempts per verified key and
-30 per trusted edge address per hour, in separate tables. Signed reads
-count 240 per key and 600 per address per minute. Each table holds at most
+30 per trusted edge address per hour, in separate tables. Creation groups
+IPv6 by /48; found retains the /64 key. Signed reads count 240 per key and 600 per address per minute. Each table holds at most
 8192 identity windows plus one shared overflow window. An address past its
 limit creates no key window. At capacity, new identities share the bounded
 overflow window instead of being refused merely because the table is full.
@@ -170,11 +170,13 @@ path carries this identity; neither a public API argument nor a body supplies
 that receipt. No live window is evicted. Only expired rows leave a table.
 
 The creation table holds 8,192 windows for an hour. One address key opens
-at most 31 of them: its own window and 30 key windows. About 265 distinct
-IPv4 addresses or IPv6 /64s fill the table. After that, every new identity
-shares 10 creations an hour in the overflow window until rows expire.
-Callers that already hold windows keep them. A sender with one IPv6 /48
-holds 65,536 /64s, so it can reach that state.
+at most 31 of them: its own window and 30 key windows. At the default
+limits, at least 265 distinct IPv4 addresses or IPv6 /48s can fill
+the table with 30 distinct keys each. New identities then share 10 creations
+an hour in the overflow window until rows expire. Callers that already hold
+windows keep them. Creation groups all /64s within one /48, so they share
+its address allowance. This uses one counter per /48 and keeps the existing
+address-first order and bounded overflow without another counter table.
 
 Every `found` submit charges its address in the `found` table. An intent
 over 1 MiB, or one that fails the strict parse, charges the address and
@@ -842,7 +844,10 @@ minting and disclosure.
 
 The [request windows](../../packages/mcp/src/request-window.ts) allow 120
 calls per 60 seconds, with 4096 identities and one shared overflow row per
-purpose. Ordinary controls and cleanup use separate purposes. Both
+purpose. The central control address window groups IPv6 by /48 and
+keeps IPv4 per address. At most 120 new keys share one address window, so
+at least 34 distinct IPv4 addresses or IPv6 /48s can fill a purpose table.
+Ordinary controls and cleanup use separate purposes. Both
 the central public-client Registry and the destination object retain their
 own counts. Retirement and grant revocation use cleanup windows, so an
 exhausted ordinary window does not block those requests. Each purpose

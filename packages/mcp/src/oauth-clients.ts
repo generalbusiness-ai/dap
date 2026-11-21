@@ -1,6 +1,6 @@
 /** Bounded public-client registration and metadata cache. Listed origins and
  * their DNS are trusted. This policy does not inspect the socket address. */
-import { addressKey, b64url, canonicalize, digestBytes, LATE, parseStrict, takeBytes, utf8 } from "@generalbusiness/dap-bytes";
+import { admissionAddressKey, addressKey, b64url, canonicalize, digestBytes, LATE, parseStrict, takeBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { OAUTH_GRANT_MS } from "./oauth-access.ts";
 import { isRegisteredOAuthClient, OAUTH_CLIENT_UNUSED_MS, oauthClient, oauthRedirectPolicy, OAuthError, OAUTH_CLIENT_BYTES, OAUTH_CLIENT_CACHE_MS, OAUTH_CLIENTS_MOST, type OAuthClient, type OAuthRedirectPolicy } from "./oauth-parameters.ts";
 import type { Sql } from "./sqlite-custody.ts";
@@ -107,7 +107,7 @@ export class OAuthClients {
   /** The trusted control adapter verifies signature/body/bindings/deadline first. */
   admitControl(actor: string, cleanup: boolean, address: string | null): void {
     const now = this.ports.now(), purpose = cleanup ? "cleanup" : "control";
-    const addressIdentity = "address:" + (addressKey(typeof address === "string" ? address : null) ?? "addressless");
+    const addressIdentity = "address:" + (admissionAddressKey(typeof address === "string" ? address : null) ?? "addressless");
     const addressAdmission = this.#requestWindows.admit(purpose, addressIdentity, now);
     if (addressAdmission !== "allowed") throw new OAuthError(addressAdmission === "limited" ? "rate-limited" : "temporarily_unavailable", addressAdmission === "limited" ? 429 : 503);
     const admission = this.#requestWindows.admit(purpose, "key:" + actor, now);

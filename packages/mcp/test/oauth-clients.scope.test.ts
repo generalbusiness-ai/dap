@@ -14,6 +14,25 @@ const ID = "https://claude.ai/oauth/client.json", REDIRECT = "https://claude.ai/
 const document = (id = ID) => ({ client_id: id, client_name: "Claude", redirect_uris: [REDIRECT], token_endpoint_auth_method: "none", logo_uri: "http://127.0.0.1/private" });
 const reply = (id = ID) => new Response(JSON.stringify(document(id)), { headers: { "content-type": "application/json; charset=utf-8" } });
 
+test("one IPv6 /48 cannot consume control windows by rotating /64s", async () => {
+  const stub = env.REGISTRIES.get(env.REGISTRIES.newUniqueId());
+  await runInDurableObject(stub, (_instance, state) => {
+    const sql: Sql = { exec: (q, ...v) => state.storage.sql.exec(q, ...v), transaction: run => state.storage.transactionSync(run) };
+    const clients = new OAuthClients(sql, { now: () => START, random: n => new Uint8Array(n), fetch: async () => { throw Error("No network"); } });
+    let admitted = 0;
+    for (let prefix = 0; prefix < 40; prefix++) for (let key = 0; key < 120; key++) {
+      try { clients.admitControl(`key-${prefix}-${key}`, false, `2001:db8:1234:${prefix.toString(16)}::1`); admitted++; }
+      catch (error) { expect(error).toMatchObject({ status: 429 }); }
+    }
+    expect(admitted).toBe(120);
+    expect(Number(sql.exec("SELECT count(*) AS n FROM mcp_request_window WHERE purpose = 'control'").toArray()[0]!["n"])).toBe(121);
+    expect(() => clients.admitControl("other", false, "2001:db8:1235::1")).not.toThrow();
+    expect(() => clients.admitControl("other-cleanup", true, "2001:db8:1235::1")).not.toThrow();
+    expect(() => clients.admitControl("ipv4-one", false, "192.0.2.1")).not.toThrow();
+    expect(() => clients.admitControl("ipv4-two", false, "192.0.2.2")).not.toThrow();
+  });
+});
+
 test("metadata refuses unknown origins before fetch and caches only exact, bounded, redirect-free documents", async () => {
   const stub = env.REGISTRIES.get(env.REGISTRIES.newUniqueId());
   await runInDurableObject(stub, async (_instance, state) => {

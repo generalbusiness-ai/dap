@@ -580,14 +580,16 @@ custody and accounting rules.
 
 The public control adapter first charges the trusted transport address,
 then the verified key. Each address has separate 120-call windows for
-control and cleanup. Global IPv6 addresses share a `/64` window; missing
-or invalid addresses share one bucket. A denied address reaches no key
-admission or allocation.
+control and cleanup. IPv6 addresses in a `/48` share a window;
+missing or invalid addresses share one bucket. IPv4 remains keyed by address.
+A denied address reaches no key admission or allocation.
 
 Each admission object permits 120 control calls per verified key in 60
 seconds. Cleanup gets a
 separate 120-call window. Each purpose holds at most 4,096 live identity
-counters and one shared overflow counter. Expiry reclaims these counters;
+counters and one shared overflow counter. With 120 fresh keys per address,
+at least 34 IPv4 addresses or IPv6 /48s can fill one purpose table.
+Expiry reclaims these counters;
 reconstruction preserves them. An exhausted window returns `429`. Unsafe
 or backward clocks return `503` without resetting the window. Independent
 cleanup capacity does not make cleanup or storage unlimited.

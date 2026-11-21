@@ -8,6 +8,24 @@ const actor = (n: number) => { const bytes = new Uint8Array(32); new DataView(by
 const A = "192.0.2.1", B = "192.0.2.2";
 const fixture = { creationKey: 2, creationAddress: 3, readKey: 2, readAddress: 3, windows: 8 };
 
+test("one IPv6 /48 cannot fill creation windows by rotating /64s", () => {
+  const limits = new ServingLimits();
+  let admitted = 0;
+  for (let n = 0; n < 300; n++) {
+    if (limits.account("creation", actor(n), `2001:db8:1234:${n.toString(16)}::1`, 0)) admitted++;
+  }
+  expect(admitted).toBe(30);
+  expect(limits.counts().creation).toBe(31);
+  expect(limits.account("creation", actor(1000), "2001:db8:1235::1", 0)).toBe(true);
+  expect(limits.account("creation", actor(1001), "192.0.2.1", 0)).toBe(true);
+  expect(limits.account("creation", actor(1002), "192.0.2.2", 0)).toBe(true);
+  const local = new ServingLimits({ ...fixture, creationAddress: 1 });
+  expect(local.account("creation", actor(1), "fd00:1:2:3::1", 0)).toBe(true);
+  expect(local.account("creation", actor(2), "fd00:1:2:4::1", 0)).toBe(false);
+  expect(local.account("creation", actor(3), "::ffff:192.0.2.1", 0)).toBe(true);
+  expect(local.account("creation", actor(4), "192.0.2.1", 0)).toBe(false);
+});
+
 test("serving windows count a verified key across addresses and an address across keys, independently for creation and reads", () => {
   const limits = new ServingLimits(fixture);
   expect([limits.account("creation", actor(1), A, 0), limits.account("creation", actor(1), B, 0),
