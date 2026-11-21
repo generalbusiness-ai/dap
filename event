@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b3230514f46ea97f82a023e15a7881b38d735a3b"}
+{"kind":"assert","text":"Published: origin main is d58ff62f (O2 live-target retry cutoff) after landing check b3230514. The Workers run cfcfb7c9. I deploy d58ff62f, or a later main, when the S6 gate ends (START c753284d): say so in the END act and hold the next gate start until my deploy END.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
