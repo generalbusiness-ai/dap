@@ -153,10 +153,22 @@ export class LiveTurns {
       membership: standing?.membership ?? null, grants: standing === null ? null : heldBy(standing, view, clock),
     });
 
+    const accepted = (state: MemoryState): LiveAnswer | null => {
+      if (state.accepted(intent.actor, intent.idempotencyKey) === null) return null;
+      const judged = judgeAct(state, definition, signed, { ...context(state, this.#clock(state)), prepared: [] });
+      if (judged.result === "accepted-before") return { answer: "applied", generation: this.#generation, tick: judged.seq };
+      if (judged.result === "refused") return refused(judged.reason, judged.name);
+      if (judged.result === "mismatch") return refused("bad-intent", judged.reason);
+      if (judged.result === "unavailable") return unavailable(judged.reason);
+      return null;
+    };
+
     for (let restarts = 0; ; restarts++) {
-      if (restarts > this.#bounds.turnRestarts) return unavailable("busy");
       // Before the rules: what is due runs first, and the walk that finds the rules judges nothing.
       const before = this.#section(definition, (state): LiveAnswer | { tick: number; asks: RuleInput[] } => {
+        const repeat = accepted(state);
+        if (repeat) return repeat;
+        if (restarts > this.#bounds.turnRestarts) return unavailable("busy");
         const drained = this.#drain(state, definition);
         if (drained) return drained;
         return { tick: state.scope()!.head.seq, asks: prepareRules(state, definition, { act: signed, context: { ...context(state, this.#clock(state)), prepared: [] } }) };
@@ -164,8 +176,10 @@ export class LiveTurns {
       if ("answer" in before) return before;
       const prepared = before.asks.length === 0 ? [] : await turnDeadline(() => this.#ports.rules.evaluate(before.asks), this.#bounds.preparationSeconds);
       if (generation !== this.#generation) return reset();
-      if (prepared === LATE) return unavailable("unavailable");
       const done = this.#section(definition, (state): LiveAnswer | "again" => {
+        const repeat = accepted(state);
+        if (repeat) return repeat;
+        if (prepared === LATE) return unavailable("unavailable");
         if (state.scope()!.head.seq !== before.tick) return "again";
         const clock = this.#clock(state);
         const judged = judgeAct(state, definition, signed, { ...context(state, clock), prepared });

@@ -54,7 +54,8 @@ names no fact, and a live scope sends nothing that could cite it.
 4. Unless this generation already applied the intent, the live turn reads
    the signer's standing and deployment admission as for a recorded act.
    If the generation changes during either read, the act gets `reset`.
-5. In one synchronous section: what is due drains first, and
+5. In one synchronous section, a known accepted key goes to `judgeAct`
+   before the timer drain. Otherwise, what is due drains first, and
    `prepareRules` finds the rules that the act's guards meet.
 6. The rules are evaluated within `preparationSeconds`. This is the one
    wait.
@@ -72,7 +73,7 @@ the act answers `unavailable`.
 
 ### Timed rules from memory
 
-Before each act's rules are found, `LiveTurns` applies each due timed rule
+Before a fresh act's rules are found, `LiveTurns` applies each due timed rule
 with `judgeTimed` and `applyLive`, within `timedAttemptsPerTurn`. Each
 applied rule adds one to the tick. After each change, `LiveTurns` sets the
 memory timer for the earliest deadline that the state holds. When the
@@ -83,7 +84,9 @@ is behind or the budget is spent, is retried after `drainRetrySeconds`. A
 reset drops every deadline with the state that held it.
 
 A recorded act does not drain: it answers `busy` while a transition is due,
-and the scope's alarm drains. A live act drains first and then applies.
+and the scope's alarm drains. A fresh live act drains first and then applies. An accepted repeat returns its
+original tick without draining. The judge still checks the signature, address,
+and digest, including when the key becomes known during a wait or restart.
 Both orders write the same transitions before the act.
 
 ## The kernel change that the judges need
@@ -187,6 +190,8 @@ The figures come from the code of this head.
 | A repeat of an applied intent after a reset applies again | the same test |
 | The stored rows after many live acts equal the stored rows after creation | the same test, and the timed-rule test |
 | Timed rules from memory: the timer fires at the deadline, and an act drains what is due first | `live-turn.test.ts`, "a timed rule runs from memory" |
+| A concurrent repeat keeps its tick when the first call waits for rules | `live-turn.test.ts`, "a concurrent accepted repeat keeps its tick when rule evaluation moves the turn" |
+| An accepted repeat retains its tick and leaves two due leases undrained | `live-turn.test.ts`, "an accepted repeat keeps its tick without draining due leases" |
 | The live timer arms for the last valid timestamp | `live-turn.test.ts`, "a live timer arms for the last representable deadline" |
 | Application admission can refuse a live act after rule evaluation. An accepted repeat keeps its original tick | `live-turn.test.ts`, "a live act rechecks application admission after waiting for its rules" |
 | O2: a delivery after confirmation gets `retry` and leaves the receiver's storage untouched. The sender keeps its request outstanding | `live-turn.test.ts`, "O2: an active live scope answers a delivery retry ..." |
@@ -199,15 +204,25 @@ it by hand, so no test waits on the wall clock.
 
 ## Evidence
 
-The gate tested clean head `f35d0e4fdcc026bd1b3fb68275410aaf9d22b480`,
-tree `4493d2c5e2b2b4d29abd7672975e1f0d7ffd3d0e`, against main
-`f9ff3958e079e7f36c85be1b455382794b1c87f4`. The follow-up adds
-this evidence. Source and tests match the gated tree.
+The first gate tested head `f35d0e4fdcc026bd1b3fb68275410aaf9d22b480`,
+tree `4493d2c5e2b2b4d29abd7672975e1f0d7ffd3d0e`, against origin/main
+`f9ff3958e079e7f36c85be1b455382794b1c87f4`. Its wall time was
+1,383.60 seconds. The Native stage took 911,359.29 milliseconds and
+passed the 16 cases in the moved scale selection. The first review head
+`45d962153ce49e6ceac9cbc87d2a1eb1854abfc3`, tree
+`5257d9221cf63e0371ce9b2f78178168f9b7f026`, added the evidence note.
 
-The gate took 1,383.60 seconds of wall time. The Native stage took
-911,359.29 milliseconds of wall time and included the moved selection.
-The test runner's Native records show 16 passing scale cases in nine
-owners. It recorded no lost timer crossings.
+Checker report `a5e72d5d` found that an exact repeat could answer
+`busy` and drain one due lease. The corrected turn passes the accepted
+key to the judge in its two existing synchronous sections. This lets
+the same result win if another call accepts the intent while the first
+call waits for rules. The concurrent witness holds rule evaluation
+until the second call records the original tick in memory.
+
+The first eight rows record the original source. The final native run
+and concurrent control cover the corrected source. In each control
+the selected change failed the intended assertion, and the controller
+restored the source.
 
 | Check | Command | Exit | Output | SHA-256 |
 |---|---|---:|---|---|
@@ -218,11 +233,11 @@ owners. It recorded no lost timer crossings.
 | Workspace types | `npm run typecheck --workspace @generalbusiness/dap-scope --workspace @generalbusiness/dap-platform --workspace @generalbusiness/dap-derive` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-gate/typecheck.log` | `117fbee10a748fe99a2124461209f06580977a1f540fbe6565a542fd14625a5f` |
 | Admission control | `node scripts/control.mjs packages/scope/src/live.ts 'const refusal = admissionRefusal();' 'const refusal = null;' --expect 'rechecks application admission' -- packages/scope --project scope test/live-turn.test.ts -t 'rechecks application admission'` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-gate/admission-control.log` | `a823ac921fe3d2234cb727432e40e1a371968d489ba09dcc341465a5a1f4bc1d` |
 | Timer control | `node scripts/control.mjs packages/scope/src/live.ts 'const LAST_DEADLINE = timeOf(LAST_MS);' 'const LAST_DEADLINE = "9999-12-31T23:59:59Z";' --expect 'last representable deadline' -- packages/scope --project scope test/live-turn.test.ts -t 'last representable deadline'` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-gate/deadline-control.log` | `338d4553a582a15e9bc4506c20f80c68338a3acdf512ce1c896f66596d50aaaa` |
-| Review gate | `npm run gate` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-gate/gate.txt` | `bd5c7a74a4f95ebb2ec1813772e9b706d8497fb702f07afa1b1f4f9077f3fa50` |
-
-Each control failed one assertion with the selected guard changed. The
-admission control applied an act after revocation. The timer control
-left the last valid deadline unarmed. Both control runs restored the source.
+| First review gate | `npm run gate` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-gate/gate.txt` | `bd5c7a74a4f95ebb2ec1813772e9b706d8497fb702f07afa1b1f4f9077f3fa50` |
+| Original two-lease failure | `node_modules/.bin/vitest run --project scope packages/scope/test/live-turn.test.ts -t 'accepted repeat keeps its tick without draining'` | 1 | `~/play/artroom-evidence/2026-11-21-lv2-retry-gate/before-escalated.log` | `68e75223fac266d4cfd2c5b8312d666345aab22b3d3ea067797fce1803ad995a` |
+| Early two-lease control | `node scripts/control.mjs packages/scope/src/live.ts 'if (state.accepted(intent.actor, intent.idempotencyKey) !== null) {' 'if (false) {' --expect 'accepted repeat keeps its tick without draining' -- packages/scope --project scope test/live-turn.test.ts -t 'accepted repeat keeps its tick without draining'` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-retry-gate/control.log` | `f94c34b402c3ab23ee3336276f9341350e14fb0f7467214c332c75e41f4d3eca` |
+| Native live turns, 8 tests | `node_modules/.bin/vitest run --project scope packages/scope/test/live-turn.test.ts` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-retry-gate/native-sections.log` | `3e4d23709638fd27b7f233fc7c7dd0a56a785e3a46ad460bcf36a92e76c81486` |
+| Concurrent retry control | `node scripts/control.mjs packages/scope/src/live.ts 'if (state.accepted(intent.actor, intent.idempotencyKey) === null) return null;' 'if (true) return null;' --expect 'a concurrent accepted repeat keeps its tick' -- packages/scope --project scope test/live-turn.test.ts -t 'a concurrent accepted repeat keeps its tick'` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-retry-gate/control-sections.log` | `63fdc1cc495d2801a3afbf282c19a49d7da2e93f8766d80495d1948043e9425a` |
 
 ## Open limits
 

@@ -133,6 +133,20 @@ describe("the live turn on native storage", () => {
     expect(await R.live(act, before.generation)).toEqual({ answer: "applied", generation: before.generation, tick: before.tick + 1 });
   });
 
+  test("a concurrent accepted repeat keeps its tick when rule evaluation moves the turn", async () => {
+    const R = await Room.create(true, env.SCOPES, START, liveForms.rule());
+    R.c.bounds = { ...R.c.bounds, turnRestarts: 0 };
+    await evictDurableObject(R.object);
+    const generation = (await R.state())!.generation;
+    const act = R.count(1, 1);
+    R.c.gate.hold();
+    const waiting = R.live(act, generation);
+    await R.c.gate.held();
+    expect(await R.live(act, generation)).toEqual({ answer: "applied", generation, tick: 1 });
+    R.c.gate.release();
+    expect(await waiting).toEqual({ answer: "applied", generation, tick: 1 });
+  });
+
   test("a timed rule runs from memory: its timer fires at the deadline, and an act drains what is due before it is judged", async () => {
     const R = await Room.create(true);
     const created = await R.stored();
@@ -150,6 +164,21 @@ describe("the live turn on native storage", () => {
     expect(await R.live(R.count(1, 1), generation)).toEqual({ answer: "applied", generation, tick: 5 });
     expect((await R.state())?.snapshot.items.map(({ id, state }) => [id, state])).toEqual([[0, "open"], [1, "ended"], [3, "ended"]]);
     expect(await R.stored()).toEqual(created);
+  });
+
+  test("an accepted repeat keeps its tick without draining due leases", async () => {
+    const R = await Room.create(true);
+    R.c.bounds = { ...R.c.bounds, timedAttemptsPerTurn: 1 };
+    await evictDurableObject(R.object);
+    const generation = (await R.state())!.generation;
+    const first = R.lease();
+    expect(await R.live(first, generation)).toEqual({ answer: "applied", generation, tick: 1 });
+    expect(await R.live(R.lease(), generation)).toEqual({ answer: "applied", generation, tick: 2 });
+    R.later(61);
+    expect(await R.live(first, generation)).toEqual({ answer: "applied", generation, tick: 1 });
+    expect(await R.state()).toMatchObject({ generation, tick: 2, snapshot: { items: [
+      { id: 0 }, { id: 1, state: "open" }, { id: 2, state: "open" },
+    ] } });
   });
 
   test("a live timer arms for the last representable deadline", async () => {
