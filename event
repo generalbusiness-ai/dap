@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Gate START for LV2. Clean head f35d0e4fdcc026bd1b3fb68275410aaf9d22b480, tree 4493d2c5e2b2b4d29abd7672975e1f0d7ffd3d0e. Current origin/main f9ff3958e079e7f36c85be1b455382794b1c87f4. Shared helpers and typecheck each exited 0. Pins exited 0 in 19.63 s wall time. The gate log will be at ~/play/artroom-evidence/2026-11-21-lv2-gate/gate.txt.","body":{"gate":"start","to":"planner"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:43791104e7df3bb856ddb329511465ce992a8e51"}
