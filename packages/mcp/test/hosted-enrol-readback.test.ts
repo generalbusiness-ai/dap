@@ -6,7 +6,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { expect, test } from "vitest";
 import type { ControlRequest, Input, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, readMinimumParameter, signControlWith, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, digestBytes, keyIdOfSecret, readMinimumParameter, signControl, signControlWith, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { encodeAgentKeyInvitation, httpTransport, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
 import { HostedAgent, hostedRolePort, type AgentPorts } from "../src/hosted.ts";
 import { RETIRED_STORE_STOP } from "../src/hosted-store-stop.ts";
@@ -14,6 +14,7 @@ import { enrolledKeyItem, retirementBody } from "../src/hosted-retirement.ts";
 import { identityId, type Identity } from "@generalbusiness/dap-client";
 import { sqliteStore, type Sql, type SqlValue } from "../src/sqlite-custody.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";
+import { oauthRedirectPolicy } from "../src/oauth-parameters.ts";
 
 /** The SQLite adapter used by sqlite-custody.test.ts, including PRAGMA reads
  * for HostedAgent's actual schema migration. Every instance owns its database. */
@@ -40,6 +41,35 @@ function nodeSql(): Sql & { db: DatabaseSync } {
 
 const NOW = Date.parse("2099-01-01T00:00:00Z");
 const OP = "hosted-enrol-readback";
+
+test.each(["grant", "connections", "revoke-grant", "bearer", "retire"] as const)("expired signed %s refuses before reading the Agent row", async action => {
+  const inner = nodeSql(), owner = new Uint8Array(32).fill(11), peer = new StandIn(keyIdOfSecret(owner));
+  let reads = 0;
+  const sql: Sql = { ...inner, exec: (query, ...values) => {
+    if (query.startsWith("SELECT op, seed, key, state, membership, handle, config, bearer, bearer_expires, answer FROM agent")) reads++;
+    return inner.exec(query, ...values);
+  } };
+  const id = "a".repeat(64), agent = new HostedAgent(sql, { id, now: () => NOW, random: n => new Uint8Array(n),
+    fetch: async () => { throw Error("No network"); }, observe: async () => null, roleStanding: async () => ({ status: "unavailable" }) });
+  const client = "https://claude.ai/metadata.json", redirect = "https://claude.ai/api/mcp/auth_callback", resource = "https://example.test/mcp";
+  const context = { client: { client_id: client, client_name: "TEST", redirect_uris: [redirect], token_endpoint_auth_method: "none" as const }, resources: [resource], redirects: oauthRedirectPolicy()! };
+  const grantBody = utf8(canonicalize({ client_id: client, redirect_uri: redirect, code_challenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM", resource, scope: "mcp", state_digest: textDigest("TEST state") }));
+  try {
+    {
+      const body = action === "grant" ? grantBody : utf8("{}");
+      const request: ControlRequest = { v: 1, action, service: SERVICE, membership: peer.membership, agent: id, actor: keyIdOfSecret(owner), body: digestBytes(body), op: `TEST-${action}`, notAfter: timeOf(NOW) };
+      const call = (deadline: number) => {
+        const signed = signControl({ ...request, notAfter: timeOf(deadline) }, owner);
+        return action === "grant" ? agent.grant(signed, body, context) : action === "connections" || action === "revoke-grant" ? agent.connectionControl(signed, action, body) : agent.control(signed, action, body);
+      };
+      const before = reads;
+      expect(await call(NOW)).toEqual({ status: 400, body: { error: "control", rule: "notAfter" } });
+      expect(reads).toBe(before);
+      expect((await call(NOW + 60_000)).status).toBe(404);
+      expect(reads).toBe(before + 1);
+    }
+  } finally { inner.db.close(); }
+});
 
 test.each([
   { fault: "retained-hash", status: 409 },
