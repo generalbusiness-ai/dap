@@ -53,5 +53,16 @@ the session log that `scripts/deploy-check.mjs` reads.
 ## Evidence
 
 `git grep -n 4.147.0` outside `notes/` finds only the two Jam records.
-The gate runs on the committed head; its START and END acts name
-`artroom-evidence/2026-11-18-la2-gate/`.
+
+The gate ran at head `31e61679172186416f1379d3af5e187cc4156783`,
+tree `6b4bff2e7d862ceef472810b128e37f632cf46b8`, with zero changed
+files. START `2389a9c1` and END `a52068c4` record the run. The gate
+log reports 1,929.4 seconds of wall time for the test stage.
+
+| Check | Command | Exit | Retained output | SHA-256 |
+|---|---|---:|---|---|
+| Full gate | `bash scripts/gate.sh` (`npm run gate` entry point) | 0 | `~/play/artroom-evidence/2026-11-21-la2-gate/gate.txt` | `a31c49e5dfd5311fc853530a1346271ef3362beea1ee816d745605e8cc8bb36b` |
+
+The [document-only follow-up](../../docs/evidence-filing.md#follow-up-after-a-gate)
+changes this note. Source and tests match the gated tree. The review
+request records the exact follow-up tree.
