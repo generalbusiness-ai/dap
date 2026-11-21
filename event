@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/platform/test/package-graph.test.ts","body":{"commit":"fb7b538837eb65f9549fc1bd523f9c95d30f9f1a","path":"packages/platform/test/package-graph.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:00e6c7e5e19e186c5396067a9b133b30b7082cfa","text":"Merge retired a covered predecessor; the successor is at packages/package-graph/src/model.ts."}
