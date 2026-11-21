@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6c808ad5457784927edb2c711d283b0849c9c04a","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-codec/application-view.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6d85da95f0bb55d3f21e1abc49088cae5fcb12cb","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-18-member-and-presence-ui.md."}
