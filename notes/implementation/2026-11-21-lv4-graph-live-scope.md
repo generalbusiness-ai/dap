@@ -74,14 +74,29 @@ level. Grow's baseline package is the case of a send to a recorded target
 that passes. The planner accepted this control (ruling on `d88f7bcb`,
 point 2, in request `bcde5286`).
 
-## Other findings
+## Evidence
+
+The gate tested head `5d9c7e4b222e9db61d853bc405912096ff6a5dc2`, tree
+`ea7cadf5b9debf7c37d4f0b419cfbebb4bf2b2b5`, with a clean checkout.
+The follow-up changes only this note. The source and tests are unchanged.
+
+| Check | Command | Exit | Output | SHA-256 |
+|---|---|---:|---|---|
+| Review gate | `npm run gate` | 0 | `~/play/artroom-evidence/2026-11-21-lv4g-gate/gate.txt` | `aac0f67408377ace7b1564397472003b0087b6ad847dfdef46d229c47f27c5ec` |
+| Package graph witness and recorded control, 12 tests | From `packages/platform`: `../../node_modules/.bin/vitest run --config vitest.config.ts test/package-graph.test.ts --reporter=verbose` | 0 | `~/play/artroom-evidence/2026-11-21-lv4g-gate/platform-package-graph.log` | `62baf1830432d219a351df41fa3fb1227a496aefee0d4f7180c29df23ae26e4a` |
+
+The focused run used an export of the gated tree and the matching lockfile's
+dependency view. The command took 3.08 seconds of wall time.
+
+## Open limits
 
 - `stagedFindings` refuses a sequenced definition only when `level` is
   the string `"sequenced"`. The contract writes the level as
   `{ name: "sequenced", version: 1 }`, so this check does not give a
   natively valid sequenced definition the `unsupported-form` refusal
-  that `docs/package-reference.md` describes. This head leaves that
-  check as it is.
+  that `docs/package-reference.md` describes. SQ-1 (`6f74c6ed`) owns the
+  correction.
 - `projectedUse` counts a live scope's entries as it counts a recorded
   scope's. A live scope keeps only its two creation entries, so the
-  ceiling stays an upper bound.
+  ceiling stays an upper bound. LV4 (`627719c9`) owns the client call and
+  tool once LV3 lands.
