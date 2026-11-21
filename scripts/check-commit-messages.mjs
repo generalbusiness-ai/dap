@@ -113,12 +113,28 @@ export function checkHistory(options) {
   }) };
 }
 
+/** One inherited merge has an accepted subject-length exception in range checks.
+ * The full object ID, rule, line and measured length must all match. */
+export function exceptInheritedSubject(report) {
+  const inherited = "446e2ab8d0d7ec6ab477e32b11cd925620c2ef5b";
+  const accepted = [];
+  const flagged = report.flagged.flatMap(row => {
+    const issue = row.issues[0];
+    if (row.id !== inherited || row.issues.length !== 1 || issue.line !== 1 || issue.rule !== "subject-length" || issue.length !== 185) return [row];
+    accepted.push(row.id);
+    return [];
+  });
+  return { ...report, flagged, accepted };
+}
+
 function main(args) {
   const audit = args[0] === "--subjects-since";
   if (audit ? args.length !== 3 : args.length !== 2) throw Error("Usage: check-commit-messages.mjs BASE HEAD | --subjects-since DATE HEAD");
-  const report = checkHistory(audit ? { since: args[1], head: args[2] } : { base: args[0], head: args[1] });
+  const history = checkHistory(audit ? { since: args[1], head: args[2] } : { base: args[0], head: args[1] });
+  const report = audit ? history : exceptInheritedSubject(history);
   if (audit) console.log(JSON.stringify(report, null, 2));
   else {
+    for (const id of report.accepted) console.log(`${id} line 1: accepted inherited subject-length exception (185 characters)`);
     for (const row of report.flagged) {
       for (const issue of row.issues) console.error(`${row.id} line ${issue.line}: ${issue.rule}${issue.length === undefined ? "" : ` (${issue.length} characters)`}${issue.token === undefined ? "" : `: ${issue.token}`}`);
     }

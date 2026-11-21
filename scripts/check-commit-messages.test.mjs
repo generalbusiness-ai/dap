@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { checkHistory, checkMessage } from "./check-commit-messages.mjs";
+import { checkHistory, checkMessage, exceptInheritedSubject } from "./check-commit-messages.mjs";
 
 // Invariant: the subject bound counts Unicode code points, not UTF-16 units;
 // detail belongs after an empty line rather than extending the subject.
@@ -47,6 +47,26 @@ test("terminal trailers are exempt while body lookalikes and continuation text r
   assert.equal(checkMessage("Subject\nGitseq-Approval: exactb8a4dea1").filter(issue => issue.rule === "glued-hash").length, 1);
 });
 
+// The exception changes only the ordinary range CLI report. The immutable ID
+// is a value fixture because a portable test cannot recreate a chosen Git hash.
+test("the inherited subject exception preserves every other finding", () => {
+  const id = "446e2ab8d0d7ec6ab477e32b11cd925620c2ef5b", neighbor = "546e2ab8d0d7ec6ab477e32b11cd925620c2ef5b";
+  const length = { line: 1, rule: "subject-length", length: 185 };
+  const glued = { line: 3, rule: "glued-hash", token: "exactb8a4dea1" };
+  const report = { checked: 2, subjectOnly: false, flagged: [
+    { id, subject: "inherited", issues: [length, glued] },
+    { id: neighbor, subject: "neighbor", issues: [length] },
+  ] };
+  const result = exceptInheritedSubject(report);
+  assert.deepEqual(result.accepted, []);
+  assert.deepEqual(result.flagged.map(row => row.issues), [[length, glued], [length]]);
+  const alone = exceptInheritedSubject({ ...report, flagged: [{ id, subject: "inherited", issues: [length] }] });
+  assert.deepEqual(alone.accepted, [id]);
+  assert.deepEqual(alone.flagged, []);
+  assert.deepEqual(checkMessage("x".repeat(185)), [length]);
+  assert.deepEqual(exceptInheritedSubject({ ...report, flagged: [{ id, subject: "other length", issues: [{ ...length, length: 186 }] }] }).flagged[0].issues[0].length, 186);
+});
+
 // Invariant: the real Git boundary checks every introduced commit, including
 // a bad side commit behind a clean merge, without checking or rewriting base.
 test("the command checks the whole base..head range, including side history, and fails closed on a missing base", () => {
@@ -62,21 +82,23 @@ test("the command checks the whole base..head range, including side history, and
     const side = commit("side", "New tree73587f1b");
     git("checkout", "main"); date = "2026-09-15T12:00:00Z"; commit("main", "Good subject");
     date = "2026-10-20T12:00:00Z"; git("merge", "--no-ff", "side", "-m", "Merge side");
+    const neighbor = commit("neighbor", "x".repeat(185));
     const head = git("rev-parse", "HEAD"), before = git("rev-parse", "HEAD^{tree}");
     const historical = checkHistory({ cwd, since: "1900-01-01T00:00:00Z", head });
-    assert.equal(historical.subjectOnly, true); assert.equal(historical.checked, 4);
-    assert.deepEqual(new Set(historical.flagged.map(row => row.id)), new Set([base, side]));
+    assert.equal(historical.subjectOnly, true); assert.equal(historical.checked, 5);
+    assert.deepEqual(new Set(historical.flagged.map(row => row.id)), new Set([base, side, neighbor]));
     // Both parents predate the cutoff, but their shared ancestor is newer.
     // A pruning --since walk would miss that reachable violating subject.
     const inverted = checkHistory({ cwd, since: "2026-10-01T00:00:00Z", head });
-    assert.equal(inverted.checked, 2);
-    assert.deepEqual(inverted.flagged.map(row => row.id), [base]);
+    assert.equal(inverted.checked, 3);
+    assert.deepEqual(new Set(inverted.flagged.map(row => row.id)), new Set([base, neighbor]));
     const report = checkHistory({ cwd, base, head });
-    assert.equal(report.checked, 3); assert.deepEqual(report.flagged.map(row => row.id), [side]);
+    assert.equal(report.checked, 4); assert.deepEqual(report.flagged.map(row => row.id), [side, neighbor]);
     assert.deepEqual(report.flagged[0].issues.map(issue => issue.token), ["tree73587f1b"]);
     assert.deepEqual(checkHistory({ cwd, base: head, head }), { checked: 0, subjectOnly: false, flagged: [] });
     const failed = spawnSync(process.execPath, [script, base, head], { cwd, encoding: "utf8" });
     assert.equal(failed.status, 1); assert.match(failed.stderr, /glued-hash: tree73587f1b/);
+    assert.match(failed.stderr, new RegExp(`${neighbor} line 1: subject-length \\(185 characters\\)`));
     const missing = spawnSync(process.execPath, [script, "", head], { cwd, encoding: "utf8" });
     assert.equal(missing.status, 2); assert.match(missing.stderr, /base or head is missing/);
     assert.equal(git("rev-parse", "HEAD"), head); assert.equal(git("rev-parse", "HEAD^{tree}"), before); assert.equal(git("status", "--porcelain"), "");
