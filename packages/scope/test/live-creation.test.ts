@@ -1,4 +1,4 @@
-/** LV1 cannot pin or run live before LV2's platform mode. Real runtime/SQLite; no outside service or browser runs. */
+/** LV2 admits live creation at runtime, as LV1 admitted its forms. Real runtime/SQLite; no outside service or browser runs. */
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
@@ -8,7 +8,7 @@ import { validateDefinition } from "@generalbusiness/dap-derive";
 import { liveBase } from "../../derive/test/definition-corpus/live-data.ts";
 import { rita, stubOf } from "./fixtures-native.ts";
 
-test("LV1 runtime creation refuses live with no retained writes; the recorded counterpart creates", async () => {
+test("runtime creation admits live as it admits the recorded counterpart: each writes its genesis", async () => {
   for (const live of [false, true]) {
     const declared = liveBase(live);
     expect(validateDefinition(declared, PROPOSED_BOUNDS).ok).toBe(true);
@@ -24,12 +24,7 @@ test("LV1 runtime creation refuses live with no retained writes; the recorded co
     });
     const before = await snapshot();
     const answer = await stubOf(name, env.AS_DEPLOYED).create(signed, declared);
-    if (live) {
-      expect(answer).toEqual({ answer: "refused", reason: "unsupported-definition" });
-      expect(await snapshot()).toEqual(before);
-    } else {
-      expect(answer).toMatchObject({ answer: "accepted", receipt: { fact: { seq: 0 } } });
-      expect(await snapshot()).not.toEqual(before);
-    }
+    expect(answer).toMatchObject({ answer: "accepted", receipt: { fact: { seq: 0 } } });
+    expect(await snapshot()).not.toEqual(before);
   }
 });

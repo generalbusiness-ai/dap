@@ -10,14 +10,15 @@ import { countedEntries, archivedPosition, heldPositions, judgeFloor } from "@ge
 
 import type { ActType, Answer, Beside, Bounds, ScopeBoundName, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, Effect, FactRef, Created, Grant, Head, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, SequenceRef, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalBytes, canonicalize, digestBytes, definitionDigest, intentDigest, isDigest, isEntry, isGrant, rawRetainedJSON, isPlatformDefinition, newGenesisNonce, parseStrict, sealedFactRef, platformName, retainedValueKey, scopeIdOf, textDigest, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
-import { readRetainedUses, same, actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, preparationScopeGrant, prepareRules, presentedTypes, readFields, resolvedEntryEffects, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
-import type { ClassifiedRetainedUse, RetainedResultOperand, SelectedRetainedUse, ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, OwnRetainedRow, RetainedOwn, Owners, Placed, PlatformRules, Presented, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
+import { readRetainedUses, same, actNeeds, liveActive, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, preparationScopeGrant, prepareRules, presentedTypes, readFields, resolvedEntryEffects, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
+import type { ClassifiedRetainedUse, RetainedResultOperand, SelectedRetainedUse, ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, OwnRetainedRow, RetainedOwn, Owners, Placed, PlatformRules, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ReceiverReads } from "./receiver-reads.ts";
 import { producerName } from "./receiver-facts.ts";
 import { namedBy } from "./definitions.ts";
-import type { Asked, DefinitionRead, Further, Ports, Standing } from "./ports.ts";
+import { heldBy, type Asked, type DefinitionRead, type Further, type Ports, type Standing } from "./ports.ts";
 import type { Retained, Sealed, Store } from "./store.ts";
+import { LiveTurns } from "./live.ts";
 import { LATE, ARCHIVED_FACT, SOURCE_TOO_LARGE, Turns, fetchFacts, isSigned, within, type Verdict } from "./turn.ts";
 
 export type { Created };
@@ -230,21 +231,6 @@ export const NO_GENESIS_NONCE = newGenesisNonce(new Uint8Array(16));
 const unavailable = (reason: UnavailableReason) => ({ answer: "unavailable", reason }) as const;
 const said = <A>(answer: A): Verdict<A> => ({ verdict: "answer", answer });
 
-/**
- * Phase two of the authority port, in the commit (section 5.1): what the
- * read of this input's own turn holds, at this head and this reading. Null:
- * it cannot serve this commit. A port that fails here has decided nothing,
- * so the act is not judged.
- */
-function heldBy(standing: Standing, view: StateView, clock: Reading): readonly Presented[] | null {
-  try {
-    const held = standing.held(view, clock);
-    return Array.isArray(held) ? held as readonly Presented[] : null;
-  } catch {
-    return null;
-  }
-}
-
 /** The entry that was written on what `held` answered, for a port that keeps its read. A port that fails here has changed nothing in the entry. */
 function told(standing: Standing, sealed: Sealed): void {
   try {
@@ -338,10 +324,13 @@ export class Scope {
   readonly #ports: Ports;
   readonly #bounds: Bounds;
   readonly #turns: Turns;
+  readonly #live: LiveTurns;
   readonly #pinCell: PinCell = { value: null };
 
   /** The one queue of this scope. Every writer's input waits in it: an act here, a delivery and a diagnosis from their own modules. */
   get turns(): Turns { return this.#turns; }
+  /** The live turn of an active live scope (live note, section 3.3). For a scope of another level it answers `unavailable`. */
+  get live(): LiveTurns { return this.#live; }
 
   /** One input's receiver policy and evidence budget. No derived name is
    * cached on Scope or used by the global producer Source API. */
@@ -373,6 +362,7 @@ export class Scope {
     this.#store = store;
     this.#ports = ports;
     this.#bounds = bounds;
+    this.#live = new LiveTurns(store, ports, bounds, () => this.pinned(), (asked) => this.#standing(asked));
     this.#turns = new Turns(store, ports, bounds, () => { const pinned = this.pinned(); return pinned ? pinned.definition : undefined; }, pinned => pinned ? (pinned.definition ? ownersOf(pinned.definition, pinned.platform, this.#ports.owners) : this.#ports.owners ?? undefined) : this.owners(), this.#pinCell, candidate => this.#resolvePin(candidate));
   }
 
@@ -656,6 +646,8 @@ export class Scope {
     const pinned = this.pinned();
     const scope = this.#store.scope();
     if (!pinned?.definition || !scope) return unavailable("unavailable");
+    // Live note, section 3.3: an active live scope takes acts through its live turn (`live.ts`) and records none.
+    if (liveActive(pinned.definition, scope)) return unavailable("unavailable");
     const { definition, named } = pinned;
     const platform = pinned.platform ?? undefined;
     const bounds = this.#bounds;

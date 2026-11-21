@@ -47,6 +47,8 @@ import { isEntryOf, same, timeMs, timeOf, type Item } from "@generalbusiness/dap
 
 import type { Delivered, StateView } from "@generalbusiness/dap-derive";
 import { Scope, creationKind, ownOf, type Checkpointed, type Created } from "./core.ts";
+import { liveTurnsOf, type LiveTurns } from "./live.ts";
+import type { LiveAnswer } from "@generalbusiness/dap-platform";
 import { Deliveries } from "./delivery.ts";
 import { admittedOrigin, declaredBy, observedAt, hostedRoleStandingAt, primaryCopy, routed, sentText, sourced, sourceOrigin, type SourceCopy, type Sourced } from "./namespace.ts";
 import { JoinLimits, isJoin, type LimitConfig } from "./limits.ts";
@@ -645,6 +647,16 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
 
     });
   }
+  /**
+   * One act of an active live scope (live note, sections 3.3 and 3.4), judged in memory and recorded nowhere. `generation`: the
+   * generation that the sender last read. Another generation is answered `reset` with the current one.
+   */
+  async live(signed: SignedIntent, grants: readonly Grant[], generation: unknown): Promise<LiveAnswer | RoomRetiredStop> {
+    if (this.#retired) return ROOM_RETIRED_STOP;
+    return this.#publicInvoke("acts", () => this.#scope.live.act(signed, grants, generation));
+  }
+  /** The live turn, for the live reads and the watch in this object's isolate. Null: a retired room. */
+  [liveTurnsOf](): LiveTurns | null { return this.#retired ? null : this.#scope.live; }
   /** One step of a capability, asked for with the signed intent that it prepares for (section 5.5). */
   async prepare(signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#publicInvoke("preparations", async () => this.#sent(await this.#scope.prepare(signed, grants, capability, step))); }
   settle(signed: SignedIntent): Settlement | RoomRetiredStop {

@@ -74,10 +74,35 @@ function relationOwnerKind(entry: Entry, at: ScopeRef, localKind: ScopeKind | nu
   return found;
 }
 
+/** True for a scope of the live level after its confirmation: its journal is whole, and live state changes in memory only. */
+export const liveActive = (definition: ValidDefinition, scope: Pick<NonNullable<ReturnType<StateView["scope"]>>, "status"> | null): boolean =>
+  definition.declared.level?.name === "live" && scope?.status === "active";
+
 export function applyEntry(writer: StateWriter, definition: ValidDefinition, entry: Entry, hash: Digest, options: DrawOptions = {}): void {
-  const scope = writer.scope();
   // Live note, sections 3.1 and 7: creation and confirmation are the whole retained journal.
-  if (definition.declared.level?.name === "live" && scope?.status === "active") throw new FoldError("a live scope records no entry after confirmation");
+  if (liveActive(definition, writer.scope())) throw new FoldError("a live scope records no entry after confirmation");
+  folded(writer, definition, entry, hash, options);
+}
+
+/**
+ * Live note, sections 3.3 and 3.6: the change that one applied live input
+ * makes to a live scope's state in memory. The live turn of the platform
+ * builds the input's entry with `entryOf` at the generation's tick and
+ * hashes it, and the entry is never sealed or stored. Its `seq` is the
+ * tick, and its hash takes the place of an entry hash in that state only.
+ * The fold is `applyEntry`'s, without the refusal of an entry after the
+ * confirmation. It takes an act or a timed transition of an active live
+ * scope, and nothing else.
+ */
+export function applyLive(writer: StateWriter, definition: ValidDefinition, entry: Entry, hash: Digest, options: DrawOptions = {}): void {
+  if (!liveActive(definition, writer.scope())) throw new FoldError("only an active live scope applies a live input");
+  if (entry.input.type !== "act" && entry.input.type !== "timed") throw new FoldError(`a live scope applies no ${entry.input.type} input`);
+  if (entry.sends.length > 0) throw new FoldError("a live input sends nothing");
+  folded(writer, definition, entry, hash, options);
+}
+
+function folded(writer: StateWriter, definition: ValidDefinition, entry: Entry, hash: Digest, options: DrawOptions): void {
+  const scope = writer.scope();
   const input = entry.input;
   const at: ScopeRef = input.type === "genesis" ? { scope: scopeIdOf(input.seed), genesis: hash } : scope?.at ?? (() => { throw new FoldError("a later entry has no sequence"); })();
   if (input.type !== "genesis" && (!("genesis" in entry) || entry.genesis !== at.genesis)) throw new FoldError("the entry names another sequence");

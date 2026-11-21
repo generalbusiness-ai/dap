@@ -27,7 +27,7 @@ import { countedEntries } from "@generalbusiness/dap-derive";
 import type { Bounds, Digest, Entry, FactRef, GenesisNonce, PlatformDefinition, ScopeId, Seed, UnavailableReason } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isPlatformDefinition, newGenesisNonce, isSeed, parseStrict, platformName, resolveGenesisSelf } from "@generalbusiness/dap-bytes";
 
-import { bound, clockOf, creationFields, factsNamed, isEntryOf, isFactRef, isLocalId, isObject, isScopeRef, judgeDelivery, judgeGenesis, messageFacts, messageTexts, own, prepareRules, readFields, retainedResultContext, textsNamed } from "@generalbusiness/dap-derive";
+import { bound, clockOf, creationFields, factsNamed, isEntryOf, isFactRef, isLocalId, isObject, isScopeRef, judgeDelivery, liveActive, judgeGenesis, messageFacts, messageTexts, own, prepareRules, readFields, retainedResultContext, textsNamed } from "@generalbusiness/dap-derive";
 import type { ClassifiedRetainedUse, Clock as Reading, Creation, Delivered, DeliveryContext, Fetched, RetainedResultMaterial, Judgment, PlatformRules, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import { NO_GENESIS_NONCE, Observes, Received, ownOf, retainedOperands, retainedUsesOf, snapshotsOf, used, valuesOf, type Scope } from "./core.ts";
 import { carryProducerName } from "./receiver-facts.ts";
@@ -143,6 +143,9 @@ export class Deliveries {
       && isObject(message.body) && message.body["message"] === "publish-file";
     const previous = store.decided(from.at, from.seq, delivered.n);
     const known = previous !== null;
+    // Live note, section 11, O2: an active live scope admits no delivery after its confirmation. The sender's deadline settles a
+    // request. A repeat of a recorded delivery is still answered from its entry.
+    if (!known && receiving?.definition && liveActive(receiving.definition, store.scope())) return retry("unavailable");
     const creates = message.class === "request" && message.type === "create" && !isScopeRef(delivered.to);
     if (creates && !isSeed(delivered.to)) return UNVERIFIED;
     let reader = !known && message.class !== "control" && receiving?.definition ? await this.#scope.receiverReads() : null;

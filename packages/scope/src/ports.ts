@@ -94,6 +94,29 @@ export interface Standing {
 }
 
 /**
+ * One timer in memory, for the earliest deadline of a live scope's timed
+ * rules (live note, section 3.6). `set` replaces the timer that was set
+ * before: `fire` runs once after `milliseconds`, or never for null. It
+ * writes nothing to storage and sets no alarm, so it ends with the object.
+ */
+export interface LiveTimer { set(milliseconds: number | null, fire: () => void): void }
+
+/**
+ * Phase two of the authority port, in the commit (section 5.1): what the
+ * read of this input's own turn holds, at this head and this reading. Null:
+ * it cannot serve this commit. A port that fails here has decided nothing,
+ * so the act is not judged.
+ */
+export function heldBy(standing: Standing, view: StateView, clock: Reading): readonly Presented[] | null {
+  try {
+    const held = standing.held(view, clock);
+    return Array.isArray(held) ? held as readonly Presented[] : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Held authority, in two phases (section 5.1, the rows "Held authority" and
  * "Retained judgment input"; section 16.1; authority note, section 3.3).
  *
@@ -288,6 +311,8 @@ export interface Ports {
   installations?: InstallationStateSource;
   /** Told each delivery's sealed entry, inside its transaction. A failure here aborts the delivery, and the sender keeps the task. */
   sealedDelivery?(entry: Entry): void;
+  /** The memory timer of a live scope's timed rules (`live.ts`). Absent: the runtime's `setTimeout`. */
+  liveTimer?: LiveTimer;
   clock: Clock; random: Random; authority: Authority; resolver: Resolver; rules: Rules; alarm: Alarm; definitions: Definitions; texts: SentTexts; readers: Readers;
   /** Null: this scope has no transport. Its sends stay in the outbox and nothing dispatches them. */
   transport: Transport | null;
