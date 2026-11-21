@@ -30,8 +30,7 @@ class Room {
   generation = "";
   constructor(readonly name: ScopeId, readonly c: Controls, readonly at: ScopeRef) {}
   /** `before`: what the test sets for this name before the object starts: its bounds, or its ports. */
-  static async create(before: (name: ScopeId, c: Controls) => void = () => undefined): Promise<Room> {
-    const declared: DeclaredDefinition = liveForms.timed();
+  static async create(before: (name: ScopeId, c: Controls) => void = () => undefined, declared: DeclaredDefinition = liveForms.timed()): Promise<Room> {
     const intent: Intent = { v: 1, to: null, actor: rita.key, kind: declared.genesis, on: null, expected: {}, fields: {},
       idempotencyKey: crypto.randomUUID(), notAfter: timeOf(timeMs(START)! + 60_000) };
     const seed: Seed = { v: 1, kind: "directory", definition: definitionDigest(declared), creator: null, cause: intentDigest(intent), ordinal: 0 };
@@ -159,6 +158,41 @@ describe("the live reads and the watch", () => {
   });
 
 
+});
+
+test("experimental live meter refuses a fresh act at capacity but retains retry and timer authority", async () => {
+  const declared = liveForms.timed();
+  declared.items["lease"]!.parties = {
+    source: { fixed: false, required: false, list: false, author: false },
+    author: { fixed: false, required: false, list: false, author: true },
+  };
+  declared.acts["lease"]!.effects = [...declared.acts["lease"]!.effects, { party: { slot: "source", from: { signer: true } } }];
+  declared.timed["expire"]!.effects = [{ party: { slot: "author", from: { slot: "source" } } }, { state: "ended" }];
+  const policy = { limit: Number.MAX_SAFE_INTEGER, used: 0 };
+  const R = await Room.create((_name, c) => { c.liveMeter = policy; }, declared);
+  const record = await stubOf(R.name).summary(reader);
+  const lease = R.lease();
+  expect(await R.live(lease)).toEqual({ answer: "applied", generation: R.generation, tick: 1 });
+  const watch = await R.watch();
+  expect(await watch.next()).toEqual({ generation: R.generation, tick: 1 });
+  let published = false;
+  const next = watch.next().then(line => { published = true; return line; });
+  policy.limit = policy.used;
+  const fresh = R.intent(rita, "count", { on: 0, expected: { on: 1 }, fields: { next: 1 }, notAfter: timeOf(timeMs(START)! + 120_000) });
+  expect(await R.live(fresh)).toMatchObject({ answer: "refused", reason: "scope-full", tick: 1 });
+  expect(await R.live(lease)).toEqual({ answer: "applied", generation: R.generation, tick: 1 });
+  expect(published).toBe(false);
+  expect(await R.read<LiveSummary>("/live")).toMatchObject([200, { tick: 1, value: { items: [{ values: { count: 0 } }, { type: "lease", state: "open" }] } }]);
+  R.c.clock.now = timeOf(timeMs(START)! + 60_000);
+  expect(await R.live(R.count(2, 999))).toMatchObject({ answer: "refused", reason: "revision-moved" });
+  expect(await next).toEqual({ generation: R.generation, tick: 2 });
+  const [, ended] = await R.read<Item[]>("/live-items/lease");
+  expect(ended).toMatchObject({ ok: true, tick: 2, value: [{ state: "ended", parties: { author: una.member }, attributed: [una.member] }] });
+  expect(policy.used).toBeLessThanOrEqual(policy.limit);
+  policy.limit = Number.MAX_SAFE_INTEGER;
+  expect(await R.live(fresh)).toEqual({ answer: "applied", generation: R.generation, tick: 3 });
+  expect(await stubOf(R.name).summary(reader)).toEqual(record);
+  await watch.cancel();
 });
 
 describe("the watch's line", () => {

@@ -1,3 +1,4 @@
+import { StageMap, StageSet, type StageChange } from "./live-stage.ts";
 /**
  * The state a scope's entries fold into (scope contract, sections 6.3, 6.5,
  * 4.2, 7.2 to 7.4). It is behind an interface so that the runtime can keep it
@@ -400,12 +401,12 @@ export class MemoryState implements StateWriter {
     const kept = new Set(floor.kept);
     for (const seq of this.#fixedHashes.keys()) if (seq < floor.floor && !kept.has(seq)) this.#fixedHashes.delete(seq);
   }
-  readonly #fixedRows = new Map<string, FixedRow>();
-  readonly #fixedRaw = new Map<string, string>();
-  readonly #fixedCounts = new Map<string, number>();
-  readonly #fixedDependencies = new Map<string, Set<string>>();
-  readonly #fixedRowDependencies = new Map<string, readonly string[]>();
-  readonly #fixedHashes = new Map<number, Digest>();
+  #fixedRows = new Map<string, FixedRow>();
+  #fixedRaw = new Map<string, string>();
+  #fixedCounts = new Map<string, number>();
+  #fixedDependencies = new Map<string, Set<string>>();
+  #fixedRowDependencies = new Map<string, readonly string[]>();
+  #fixedHashes = new Map<number, Digest>();
   #fixedReady: string | null = null;
   fixedReady(definition: Digest, at: ScopeRef, head: Head): boolean { return this.#fixedReady === key(definition, at.scope, at.genesis, head.seq, head.hash); }
   finishFixed(definition: Digest, at: ScopeRef, head: Head): void { this.#fixedReady = key(definition, at.scope, at.genesis, head.seq, head.hash); }
@@ -434,7 +435,9 @@ export class MemoryState implements StateWriter {
     };
     if (previous) change(previous, this.#fixedRaw.get(id)!, -1);
     for (const dependency of this.#fixedRowDependencies.get(id) ?? []) {
-      const rows = this.#fixedDependencies.get(dependency)!;
+      const held = this.#fixedDependencies.get(dependency)!;
+      const rows = this.#staging ? new Set(held) : held;
+      if (this.#staging) this.#fixedDependencies.set(dependency, rows);
       rows.delete(id);
       if (rows.size === 0) this.#fixedDependencies.delete(dependency);
     }
@@ -442,57 +445,128 @@ export class MemoryState implements StateWriter {
     const keys = [...new Set(dependencies.map(dependency => key(dependency.seq, dependency.hash)))];
     this.#fixedRowDependencies.set(id, keys);
     for (const dependency of keys) {
-      const rows = this.#fixedDependencies.get(dependency) ?? new Set<string>();
+      const held = this.#fixedDependencies.get(dependency);
+      const rows = this.#staging && held ? new Set(held) : held ?? new Set<string>();
       rows.add(id); this.#fixedDependencies.set(dependency, rows);
     }
     change(row, raw, 1);
   }
   #scope: ScopeState | null = null;
-  readonly #items = new Map<number, Item>();
+  #items = new Map<number, Item>();
   /**
    * The index of section 6.5: for each type and state, the IDs of its items
    * in ascending order. `putItem` keeps it. A new item has the highest ID,
    * so it is appended; an item that changes state is found and placed by
    * binary search.
    */
-  readonly #index = new Map<string, number[]>();
-  readonly #counts = new Map<string, readonly [string, string, number]>();
-  readonly #relations = new Map<string, Relation>();
-  readonly #accepted = new Map<string, readonly [KeyId, string, Accepted]>();
-  readonly #requests = new Map<string, OwnRequest>();
-  readonly #pendingRequests = new Set<string>();
-  readonly #decided = new Map<string, Decided>();
-  readonly #sourceOrder = new Map<string, SourceOrder>();
-  readonly #creations = new Map<Digest, HeldCreation>();
-  readonly #operations = new Map<OperationId, Operation>();
-  readonly #texts = new Map<string, readonly [number, string, readonly Digest[]]>();
-  readonly #prepared = new Map<string, PreparedStep>();
-  readonly #records = new Map<string, RecordState>();
-  readonly #observed = new Map<string, ObservedHead>();
-  readonly #holders = new Map<number, Held>();
-  readonly #itemDuties = new Map<number, readonly ItemDuty[]>();
-  readonly #settledHolders = new Set<number>();
-  readonly #accounts = new Map<string, Account>();
+  #index = new Map<string, number[]>();
+  #counts = new Map<string, readonly [string, string, number]>();
+  #relations = new Map<string, Relation>();
+  #accepted = new Map<string, readonly [KeyId, string, Accepted]>();
+  #requests = new Map<string, OwnRequest>();
+  #pendingRequests = new Set<string>();
+  #decided = new Map<string, Decided>();
+  #sourceOrder = new Map<string, SourceOrder>();
+  #creations = new Map<Digest, HeldCreation>();
+  #operations = new Map<OperationId, Operation>();
+  #texts = new Map<string, readonly [number, string, readonly Digest[]]>();
+  #prepared = new Map<string, PreparedStep>();
+  #records = new Map<string, RecordState>();
+  #observed = new Map<string, ObservedHead>();
+  #holders = new Map<number, Held>();
+  #itemDuties = new Map<number, readonly ItemDuty[]>();
+  #settledHolders = new Set<number>();
+  #accounts = new Map<string, Account>();
   /**
    * For each observed scope ID, the genesis hashes of the observed heads that are held, once each, in byte order. `putObserved`
    * keeps it, and no head is ever removed. So `geneses` reads one list, and not every head that the scope holds: a scope
    * reads it for each entry that it judges on its membership reference (I3 deltas, section 31, entry FD5).
    */
-  readonly #geneses = new Map<ScopeId, readonly Digest[]>();
+  #geneses = new Map<ScopeId, readonly Digest[]>();
 
   /**
    * For each relationship name and kind of owner, the number of keys that this scope keeps a copy for. `putRelation` keeps it,
    * and no copy is ever removed. So `copies` with no states reads one number, and not every copy that the scope holds: a scope
    * reads it at the first update for each key (I3 deltas, section 31, entry FD6).
    */
-  readonly #copies = new Map<string, number>();
+  #copies = new Map<string, number>();
   /**
    * The declared indexes (section 17.2a): for each type, slot and key, the IDs of its items in ascending order; and for each
    * type and slot, how many rows it holds. A new item has the highest ID, so its row is appended. No row is ever removed. It is
    * derived state, and `all` holds none of it.
    */
-  readonly #keyed = new Map<string, number[]>();
-  readonly #rows = new Map<string, number>();
+  #keyed = new Map<string, number[]>();
+  #rows = new Map<string, number>();
+
+  #liveStaged = false;
+  get #staging(): boolean { return this.#liveStaged && (this.#fixedHashes as StageMap<number, Digest>).staged; }
+  /** Experimental opt-in: ordinary states retain native Map and Set storage. */
+  static stagedLive(): MemoryState {
+    const state = new MemoryState();
+    state.#liveStaged = true;
+    state.#fixedRows = new StageMap();
+    state.#fixedRaw = new StageMap();
+    state.#fixedCounts = new StageMap();
+    state.#fixedDependencies = new StageMap();
+    state.#fixedRowDependencies = new StageMap();
+    state.#fixedHashes = new StageMap();
+    state.#items = new StageMap();
+    state.#index = new StageMap();
+    state.#counts = new StageMap();
+    state.#relations = new StageMap();
+    state.#accepted = new StageMap();
+    state.#requests = new StageMap();
+    state.#decided = new StageMap();
+    state.#sourceOrder = new StageMap();
+    state.#creations = new StageMap();
+    state.#operations = new StageMap();
+    state.#texts = new StageMap();
+    state.#prepared = new StageMap();
+    state.#records = new StageMap();
+    state.#observed = new StageMap();
+    state.#holders = new StageMap();
+    state.#itemDuties = new StageMap();
+    state.#accounts = new StageMap();
+    state.#geneses = new StageMap();
+    state.#copies = new StageMap();
+    state.#keyed = new StageMap();
+    state.#rows = new StageMap();
+    state.#pendingRequests = new StageSet() as unknown as Set<string>;
+    state.#settledHolders = new StageSet() as unknown as Set<number>;
+    return state;
+  }
+
+  /** Experimental synchronous preflight. A false decision leaves the base untouched. */
+  liveTransaction(work: () => void, decide: (changes: readonly StageChange[]) => boolean): boolean {
+    const collections = {
+      fixedRows: this.#fixedRows, fixedRaw: this.#fixedRaw, fixedCounts: this.#fixedCounts,
+      fixedDependencies: this.#fixedDependencies, fixedRowDependencies: this.#fixedRowDependencies, fixedHashes: this.#fixedHashes,
+      items: this.#items, index: this.#index, counts: this.#counts, relations: this.#relations, accepted: this.#accepted,
+      requests: this.#requests, pendingRequests: this.#pendingRequests, decided: this.#decided, sourceOrder: this.#sourceOrder,
+      creations: this.#creations, operations: this.#operations, texts: this.#texts, prepared: this.#prepared, records: this.#records,
+      observed: this.#observed, holders: this.#holders, itemDuties: this.#itemDuties, settledHolders: this.#settledHolders,
+      accounts: this.#accounts, geneses: this.#geneses, copies: this.#copies, keyed: this.#keyed, rows: this.#rows,
+    };
+    if (!this.#liveStaged) throw new Error("live staging is not enabled for this state");
+    const all = Object.values(collections) as unknown as { begin(): void; changes(name: string): StageChange[]; commit(): void; discard(): void }[];
+    const oldScope = this.#scope, oldReady = this.#fixedReady, oldFloor = this.#floor;
+    if ((this.#fixedHashes as StageMap<number, Digest>).staged) throw new Error("nested live transaction");
+    for (const collection of all) collection.begin();
+    try {
+      work();
+      const changes = Object.entries(collections).flatMap(([name, collection]) => (collection as unknown as { changes(name: string): StageChange[] }).changes(name));
+      changes.push({ collection: "scope", key: null, before: oldScope, after: this.#scope, hadBefore: oldScope !== null, hasAfter: this.#scope !== null });
+      changes.push({ collection: "fixedReady", key: null, before: oldReady, after: this.#fixedReady, hadBefore: oldReady !== null, hasAfter: this.#fixedReady !== null });
+      if (this.#floor !== oldFloor) throw new Error("a live transaction cannot change the floor");
+      if (!decide(changes)) { for (const collection of all) collection.discard(); this.#scope = oldScope; this.#fixedReady = oldReady; return false; }
+      for (const collection of all) collection.commit();
+      return true;
+    } catch (error) {
+      for (const collection of all) collection.discard();
+      this.#scope = oldScope; this.#fixedReady = oldReady; this.#floor = oldFloor;
+      throw error;
+    }
+  }
 
   /** `tally`, when it is given, counts what `geneses` and `copies` read, for a test of their bounds. Nothing else is counted. */
   readonly tally: { steps: number } | undefined;
@@ -587,7 +661,8 @@ export class MemoryState implements StateWriter {
     return (this.#keyed.get(key(type, slot, at)) ?? []).slice(0, limit);
   }
   putIndexed(type: string, slot: string, at: string, item: number) {
-    const ids = this.#keyed.get(key(type, slot, at)) ?? [];
+    const held = this.#keyed.get(key(type, slot, at));
+    const ids = this.#staging && held ? [...held] : held ?? [];
     this.#keyed.set(key(type, slot, at), ids);
     ids.splice(firstAbove(ids, item), 0, item);
     this.#rows.set(key(type, slot), (this.#rows.get(key(type, slot)) ?? 0) + 1);
@@ -599,11 +674,15 @@ export class MemoryState implements StateWriter {
     this.#items.set(item.id, item);
     if (was?.type === item.type && was.state === item.state) return;
     if (was) {
-      const ids = this.#index.get(key(was.type, was.state))!;
+      const bucket = key(was.type, was.state);
+      const held = this.#index.get(bucket)!;
+      const ids = this.#staging ? [...held] : held;
+      if (this.#staging) this.#index.set(bucket, ids);
       ids.splice(firstAbove(ids, item.id - 1), 1);
     }
     const at = key(item.type, item.state);
-    const ids = this.#index.get(at) ?? [];
+    const held = this.#index.get(at);
+    const ids = this.#staging && held ? [...held] : held ?? [];
     this.#index.set(at, ids);
     ids.splice(firstAbove(ids, item.id), 0, item.id);
   }

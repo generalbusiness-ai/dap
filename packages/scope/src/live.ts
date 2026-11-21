@@ -25,8 +25,8 @@
 
 import type { Bounds, Entry, Grant, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { CanonicalError, canonicalize, entryHash, isGrant, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
-import { actionOf, applyEntry, applyLive, clockOf, entryOf, judgeAct, judgeTimed, LAST_MS, liveActive, MemoryState, nextDue, own, prepareRules, timeMs, timeOf, windowOf } from "@generalbusiness/dap-derive";
-import type { Clock as Reading, Draft, JudgeContext, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
+import { actionOf, applyEntry, applyLive, clockOf, entryOf, judgeAct, judgeTimed, LAST_MS, liveActive, MemoryState, liveCreation, liveDelta, liveMeterSpec, nextDue, own, prepareRules, timeMs, timeOf, windowOf } from "@generalbusiness/dap-derive";
+import type { Clock as Reading, Draft, JudgeContext, LiveDelta, LiveMeterSpec, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import type { LiveAnswer } from "@generalbusiness/dap-platform";
 import type { FreshActAdmission, FreshActAdmissionDecision } from "./applications/act-admission.ts";
 // A cycle with core.ts: heldBy is read only when an act runs, after both modules have loaded.
@@ -72,17 +72,20 @@ export class LiveTurns {
   readonly #pinned: () => Pinned | null;
   readonly #standing: LiveStanding;
   readonly #timer: LiveTimer;
+  readonly #meterPolicy: { limit: number; used: number } | undefined;
   #generation: string;
   #state: MemoryState | null = null;
+  #meter: { spec: LiveMeterSpec; charge: LiveDelta; fixed: number; policy: { limit: number; used: number } } | null = null;
   #changed: ((generation: string, tick: number) => void) | null = null;
 
-  constructor(store: Store, ports: Pick<Ports, "clock" | "random" | "rules" | "capabilities" | "freshActAdmission" | "liveTimer">, bounds: Bounds, pinned: () => Pinned | null, standing: LiveStanding) {
+  constructor(store: Store, ports: Pick<Ports, "clock" | "random" | "rules" | "capabilities" | "freshActAdmission" | "liveTimer" | "liveMeter">, bounds: Bounds, pinned: () => Pinned | null, standing: LiveStanding) {
     this.#store = store;
     this.#ports = ports;
     this.#bounds = bounds;
     this.#pinned = pinned;
     this.#standing = standing;
     this.#timer = ports.liveTimer ?? timeoutTimer();
+    this.#meterPolicy = ports.liveMeter;
     this.#generation = this.#mint();
   }
 
@@ -189,7 +192,7 @@ export class LiveTurns {
             if (refusal) return refusal;
             const applied = this.#apply(state, definition, judged.draft, clock);
             return typeof applied === "number" ? { answer: "applied", generation: this.#generation, tick: applied }
-              : refused(applied === "size" ? "bad-field" : "unauthorized");
+              : applied === "full" ? refused("scope-full", "liveBytes") : refused(applied === "size" ? "bad-field" : "unauthorized");
           }
           case "accepted-before": return { answer: "applied", generation: this.#generation, tick: judged.seq };
           case "refused": return refused(judged.reason, judged.name);
@@ -249,7 +252,7 @@ export class LiveTurns {
   }
 
   /** The draft as the entry it would be at this tick, its hash, and the fold of it into memory. The new tick, or why it cannot be an entry. */
-  #apply(state: MemoryState, definition: ValidDefinition, draft: Draft, clock: Reading): number | "size" | "form" {
+  #apply(state: MemoryState, definition: ValidDefinition, draft: Draft, clock: Reading): number | "size" | "form" | "full" {
     const entry = entryOf(state, draft, clock);
     let bytes: string;
     try {
@@ -260,7 +263,21 @@ export class LiveTurns {
     }
     if (utf8(bytes).length > this.#bounds.entryBytes) return "size";
     try {
-      applyLive(state, definition, entry, entryHash(entry), { bounds: this.#bounds });
+      const meter = this.#meter;
+      if (!meter) applyLive(state, definition, entry, entryHash(entry), { bounds: this.#bounds });
+      else {
+        let next = meter.charge;
+        const committed = state.liveTransaction(() => applyLive(state, definition, entry, entryHash(entry), { bounds: this.#bounds }), changes => {
+          const delta = liveDelta(changes, meter.spec, state.scope()!.at);
+          next = { dynamic: meter.charge.dynamic + delta.dynamic, items: meter.charge.items + delta.items, timers: meter.charge.timers + delta.timers };
+          const total = meter.fixed + next.dynamic + next.items + next.timers;
+          if (![next.dynamic, next.items, next.timers, total].every(Number.isSafeInteger) || total < 0) throw new Error("live meter arithmetic");
+          return total <= meter.policy.limit;
+        });
+        if (!committed) { if (entry.input.type === "timed") throw new Error("live timer exceeded its reserve"); return "full"; }
+        meter.charge = next;
+        meter.policy.used = meter.fixed + next.dynamic + next.items + next.timers;
+      }
     } catch (error) {
       throw new Broken(error instanceof Error ? error.message : "the live fold failed");
     }
@@ -273,12 +290,25 @@ export class LiveTurns {
     const scope = this.#store.scope();
     if (!definition || !scope || !liveActive(definition, scope)) return null;
     if (this.#state) return { state: this.#state };
-    const state = new MemoryState();
+    let state: MemoryState;
     try {
+      const entries = [];
       for (let seq = 0; seq <= scope.head.seq; seq++) {
         const kept = this.#store.stored(seq);
         if (!kept) return null;
-        applyEntry(state, definition, parseStrict(kept.bytes) as Entry, kept.hash, { bounds: this.#bounds });
+        entries.push({ entry: parseStrict(kept.bytes) as Entry, hash: kept.hash });
+      }
+      if (this.#meterPolicy) {
+        const spec = liveMeterSpec(definition, this.#bounds);
+        const made = liveCreation(definition, entries, spec, { bounds: this.#bounds });
+        const used = made.fixed + made.charge.dynamic + made.charge.items + made.charge.timers;
+        if (!Number.isSafeInteger(used) || used > this.#meterPolicy.limit) return null;
+        this.#meterPolicy.used = used;
+        this.#meter = { spec, charge: made.charge, fixed: made.fixed, policy: this.#meterPolicy };
+        state = made.state;
+      } else {
+        state = new MemoryState();
+        for (const kept of entries) applyEntry(state, definition, kept.entry, kept.hash, { bounds: this.#bounds });
       }
     } catch {
       return null;
@@ -296,6 +326,7 @@ export class LiveTurns {
   #reset(): void {
     this.#generation = this.#mint();
     this.#state = null;
+    this.#meter = null;
     this.#timer.set(null, () => undefined);
     try { this.#changed?.(this.#generation, this.#store.scope()?.head.seq ?? 0); } catch { /* a notice was lost, and no state */ }
   }

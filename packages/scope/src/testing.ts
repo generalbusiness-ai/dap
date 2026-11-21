@@ -287,6 +287,7 @@ export interface Controls {
   rulebook: RulesScript | null;
   /** The live timer as the scope last set it, a stand-in for `setTimeout`: its delay and what it runs. Null: none is set. A test fires it. */
   liveTimer: { milliseconds: number; fire: () => void } | null;
+  liveMeter?: { limit: number; used: number };
 }
 
 const all = new Map<string, Controls>();
@@ -326,7 +327,7 @@ export function testPorts(c: Controls): Partial<Ports> {
   const authority: Authority = { read: (asked, seconds) => (c.membership ? observed : standIn).read(asked, seconds), further: (scope) => observed.further!(scope) };
   // The scripted capability owns no operation. A test that needs owners' rules supplies its own stand-in for them.
   const liveTimer = { set: (milliseconds: number | null, fire: () => void) => { c.liveTimer = milliseconds === null ? null : { milliseconds, fire }; } };
-  return { clock: c.clock, authority, readers: testReaders, resolver, rules: gated, definitions, capabilities: scriptedCapability(() => c.capability), owners: null, liveTimer };
+  return { clock: c.clock, authority, readers: testReaders, resolver, rules: gated, definitions, capabilities: scriptedCapability(() => c.capability), owners: null, liveTimer, ...(c.liveMeter ? { liveMeter: c.liveMeter } : {}) };
 }
 
 // ---------------------------------------------------------------- several scopes in one namespace

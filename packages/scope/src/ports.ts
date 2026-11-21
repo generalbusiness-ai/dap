@@ -296,6 +296,8 @@ export interface Ports {
   installations?: InstallationStateSource;
   /** Told each delivery's sealed entry, inside its transaction. A failure here aborts the delivery, and the sender keeps the task. */
   sealedDelivery?(entry: Entry): void;
+  /** Experimental test-only live logical cap; absent in production. */
+  liveMeter?: { limit: number; used: number };
   /** The memory timer of a live scope's timed rules (`live.ts`). Absent: the runtime's `setTimeout`. */
   liveTimer?: LiveTimer;
   clock: Clock; random: Random; authority: Authority; resolver: Resolver; rules: Rules; alarm: Alarm; definitions: Definitions; texts: SentTexts; readers: Readers;
