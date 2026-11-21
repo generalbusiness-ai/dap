@@ -172,6 +172,16 @@ remaining rows cover the reads and watch child.
 | Child entry-point inventory, 13 tests | `node --test scripts/security-entry-points.test.mjs` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-reads-gate/inventory.log` | `9969387fe3dd0509b4063bc23f8d464cdc7f48f432ec4b8b71288bfcde77628c` |
 | Child local idle-watch probe | `run.sh <LV3 worktree> <evidence directory> 155000` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-reads-gate/o3/lv3-o3-natural-idle.log` | `7283231cae215263f4d707f0bc6910cacaea55b6fe4b51d01fb208d51bf4543a` |
 | Child local idle-watch result | `run.sh <LV3 worktree> <evidence directory> 155000` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-reads-gate/o3/lv3-o3-natural-idle.json` | `16ecd3637a7d5a62d204f7b965a746d253a060524b63bf78cc0d2ca87c369476` |
+| Child review gate | `npm run gate` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-reads-gate/gate.txt` | `2583aecdb05de34cc60d5c72455b61a44e4e2bcf58f79eb64b1375bcba732000` |
+
+The gate ran at `47ac1b2868ae8015a56da2c768b3ae02c2538018`, tree
+`251182667368a1b6752b0661298d57757160ee96`, against `origin/main`
+`f9ff3958e079e7f36c85be1b455382794b1c87f4`. It took 1752.44 seconds and
+passed 5,045 plain and 1,226 native tests, with one plain and two native
+skips. It observed 246 Node and 58 counting cases and ran all 13 native
+scale modules. Every stage had complete terminal evidence. The native
+driver reported zero lost crossings, two stale crossings, and zero
+crossings without an owner. The evidence follow-up changes only this note.
 
 The O3 evidence directory holds `run.sh`, `natural-idle.test.ts`, and
 `vitest.o3.config.ts`. To repeat the experiment, run the retained script
