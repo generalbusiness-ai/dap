@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:16762050ef9c12dfb3348ef49bcb22265a887a33","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-22-one-channel.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:175937ab0e2e7b417229d7ea8a49e64ab8dc7300","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/application-presence-fixture.ts."}
