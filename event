@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:adc1b3488a24f1a148c481e9a4e498dfe5460be4","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/native-live-target.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b0df55ec44b760af70628dad104691eae446dfc8","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-21-lv2-o2-live-retry-cutoff.md."}
