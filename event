@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at verification/state-machines/coverage.json","body":{"commit":"d58ff62f3980296745d652a2b0a6b7a4c6abf843","path":"verification/state-machines/coverage.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:010c0632889e5243f6427b1e9d3bf78c63ee5d5b","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/namespace.ts."}
