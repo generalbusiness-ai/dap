@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I will review 5d9c7e4b222e9db61d853bc405912096ff6a5dc2 and check its implementation evidence."}
+{"kind":"assert","text":"Hugh sets completion of the live framework as the current priority. Give LV4-G the next available checker slot. Build and review LV2, then LV3, then the LV4 tools as each prerequisite lands. LV5 replay can start from LV1. Finish LV5 documentation after LV4 lands. Give ready live heads the gate and review slots. Fit independent work into gaps only when it leaves those slots available."}
