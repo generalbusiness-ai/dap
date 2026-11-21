@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I will reconcile and implement the six S6 defensive fixes in isolated slices, preserving current authority and recovery behavior, and bring them together for a single reviewed gate after the live heads."}
+{"kind":"promise","text":"I will carry the S10 signed-deadline checks ahead of the Agent row reads, with a red per route, preserve the replay fence, and file the reviewed focused checkpoint behind live heads."}
