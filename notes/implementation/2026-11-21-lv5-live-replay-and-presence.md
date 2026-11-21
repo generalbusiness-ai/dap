@@ -51,7 +51,7 @@ match the landed LV4 tree under `apps/` and `examples/`.
 The replay and presence checks ran on the isolated LV5 branch carried
 onto the passing LV4 review candidate. Rebasing onto landed LV4 kept
 the tested source tree. The focused outputs below are retained with
-the gate under `~/play/artroom-evidence/2026-11-21-lv5-gate/`.
+the corrected gate under `~/play/artroom-evidence/2026-11-21-lv5-retry-gate/`.
 Draft failures remain under `~/play/artroom-evidence/2026-11-21-lv5-focused/`.
 
 | Check | Command | Exit and result | Log | SHA-256 |
@@ -83,6 +83,31 @@ command file records the build, browser, and resource checks.
 | Commands and exits | `lv5-browser-commands.txt` | `1cca47e2897ecfe2a021eed69adb53b97546f6f9878d5f844dcdd394061c8c08` |
 | Chromium report | `report.json` | `da4fb2895560f4efcda756ddd1b81d5550a60dc132714b08052efa4a4cafed0d` |
 | Member element at the passive cut | `presence-passive.png` | `1c4336836c32e32970ffc185b31c8ce15f1927286d980874fcf604cf8b534584` |
+
+## Inherited merge subject
+
+The first full gate ran once at clean head
+`3bc0a4f51ad04d437da7f688121dc4f60a58cd07`, tree
+`1f9418130391c65292f1e1903b402925ff4a8f14`. It exited 1 after 0.46 s
+at the commit-message check. The check flagged the 185-character
+subject of landed LV4 merge `446e2ab8d0d7ec6ab477e32b11cd925620c2ef5b`.
+The builder supplied that subject as the merge text. The gate reached
+none of the test stages. The original `gate.txt` remains under
+`~/play/artroom-evidence/2026-11-21-lv5-gate/` with SHA-256
+`01af58ff32f16b733647aa772698ae7ba2f465cad5eed438060185251ea6bd67`.
+
+Ratification `b9d87de3` approves proposal `0bfc78e2`. The ordinary
+range command reports an accepted exception only for the exact
+inherited merge when its sole finding is line 1 and length 185. Every
+other finding continues to fail the range check. Direct checks and
+the subject audit still report the original finding.
+
+| Check | Command | Exit and result | Log | SHA-256 |
+|---|---|---|---|---|
+| Subject exception controls | `node --test scripts/check-commit-messages.test.mjs` | 0, 5 passed | `focused-test.log` | `f848c7c7ded6a6f6f1570f861e5ce25b8c3e2d1c0903e23fcb974f2f6c9cfa27` |
+| Exact inherited range | `node scripts/check-commit-messages.mjs origin/main HEAD` at `8faeb468` | 0, 37 checked, one accepted | `range-final.log` | `a66d7aa1f79791b1c0cdd270efb157f6be45a8ada911146f73f01812fd03dbed` |
+| Historical subject audit | `node scripts/check-commit-messages.mjs --subjects-since 1900-01-01 HEAD` at `8faeb468` | 1, original finding present | `audit-summary.log` | `d33c3d8619e92c28888b346263ab8948ef7d0adec46089789736aed00081740f` |
+| Direct message check | `checkMessage` on merged LV4 subject and body | original line 1 length finding | `direct-check.log` | `5f592461e266fc42a32f24d9fc0723093de313e89db76fd92c2996f97c042274` |
 
 ## Limits
 
