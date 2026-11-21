@@ -10,7 +10,7 @@ deployment from
   `apps/room/wrangler.self-host.jsonc`.
 - A Cloudflare login that can deploy the Worker.
 - The `DAP_HOME` directory of an admin of your rooms.
-- The pinned Wrangler, which you run as `npx -y wrangler@4.147.0`.
+- The pinned Wrangler, which you run as `npx -y wrangler@4.163.0`.
 
 The examples use `https://dap-my-room.example.workers.dev` as the Worker's
 address. Replace it with your own. Run every command on this page from
@@ -48,7 +48,7 @@ apps at `/mcp`, read [Run the hosted MCP endpoint](hosted-mcp.md).
 3. Follow the Worker's logs as requests arrive.
 
    ```sh
-   npx -y wrangler@4.147.0 tail --config apps/room/wrangler.self-host.jsonc --format pretty
+   npx -y wrangler@4.163.0 tail --config apps/room/wrangler.self-host.jsonc --format pretty
    ```
 
    Wrangler prints each request and its console lines until you stop it.
@@ -233,7 +233,7 @@ back to that release's presentation.
      --receipt-dir "$RECEIPTS"
    ```
 
-   Both commands run Wrangler 4.147.0 from an external scratch directory.
+   Both commands run Wrangler 4.163.0 from an external scratch directory.
    They install nothing in the checkout. Wrangler can still create temporary
    files under the config root's `.wrangler/tmp`. The deployment uses `--keep-vars`.
    Each completed Worker gets a receipt with its commit, configuration,
@@ -365,7 +365,7 @@ The retired-format reader is commit
 1. List the recent deployments and their versions.
 
    ```sh
-   npx -y wrangler@4.147.0 deployments list --config apps/room/wrangler.self-host.jsonc
+   npx -y wrangler@4.163.0 deployments list --config apps/room/wrangler.self-host.jsonc
    ```
 
    Wrangler lists the 10 most recent deployments with their version IDs.
@@ -373,7 +373,7 @@ The retired-format reader is commit
 2. Roll back to the version that you recorded before the deployment.
 
    ```sh
-   npx -y wrangler@4.147.0 rollback <version-id> --config apps/room/wrangler.self-host.jsonc --message "<reason>"
+   npx -y wrangler@4.163.0 rollback <version-id> --config apps/room/wrangler.self-host.jsonc --message "<reason>"
    ```
 
 3. Read `/health` again. Its `version` equals the version that you chose.
@@ -498,7 +498,7 @@ a command argument or a file in the checkout. Keep `DEPLOYMENT` set.
 1. Send a new `SESSION_SECRET`.
 
    ```sh
-   node --input-type=module -e 'import { randomBytes } from "node:crypto"; process.stdout.write(JSON.stringify({SESSION_SECRET:randomBytes(32).toString("base64url")}));' | npx -y wrangler@4.147.0 secret bulk --config apps/room/wrangler.self-host.jsonc
+   node --input-type=module -e 'import { randomBytes } from "node:crypto"; process.stdout.write(JSON.stringify({SESSION_SECRET:randomBytes(32).toString("base64url")}));' | npx -y wrangler@4.163.0 secret bulk --config apps/room/wrangler.self-host.jsonc
    ```
 
    Wrangler reports success and does not print the value.
@@ -522,7 +522,7 @@ client asks for a new session. Signed reads keep working.
 3. Send it to the Worker.
 
    ```sh
-   node -e 'process.stdout.write(JSON.stringify({GITHUB_APP_PRIVATE_KEY: require("node:fs").readFileSync(0, "utf8")}))' < /absolute/path/to/new-app-key.pkcs8.pem | npx -y wrangler@4.147.0 secret bulk --config apps/room/wrangler.self-host.jsonc
+   node -e 'process.stdout.write(JSON.stringify({GITHUB_APP_PRIVATE_KEY: require("node:fs").readFileSync(0, "utf8")}))' < /absolute/path/to/new-app-key.pkcs8.pem | npx -y wrangler@4.163.0 secret bulk --config apps/room/wrangler.self-host.jsonc
    ```
 
 4. Read `/health`. `wiring.github` is `{"state": "wired"}`. Then delete

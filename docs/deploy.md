@@ -1,7 +1,7 @@
 # Deploy the scope Worker
 
 `npm run deploy:scope` deploys the scope Worker from
-the ignored local file `apps/room/wrangler.self-host.jsonc` with Wrangler 4.147.0 and `--keep-vars`. That
+the ignored local file `apps/room/wrangler.self-host.jsonc` with Wrangler 4.163.0 and `--keep-vars`. That
 flag keeps the plain settings that the Worker already has and the file
 omits. A value in the file, or a value given with `--var`, replaces the
 stored one. The command sets no missing setting and changes no secret.
@@ -21,7 +21,7 @@ directory and give it the absolute path of the file:
 ```sh
 DAP_REPO=/absolute/path/to/the-reviewed-checkout
 cd "$(mktemp -d)"
-npx -y wrangler@4.147.0 deploy --keep-vars --config "$DAP_REPO/apps/room/wrangler.demo.jsonc"
+npx -y wrangler@4.163.0 deploy --keep-vars --config "$DAP_REPO/apps/room/wrangler.demo.jsonc"
 ```
 
 Repeat the Worker's reviewed `--var` overrides on the same command. A value

@@ -186,7 +186,7 @@ out of repository files and command arguments. Only the SQL request
 carries the token, and the health read carries no analytics credential.
 The check makes reads only.
 
-Deploy with the project's pinned Wrangler 4.147.0 and a fresh output
+Deploy with the project's pinned Wrangler 4.163.0 and a fresh output
 file. [Wrangler's structured output](https://developers.cloudflare.com/workers/wrangler/system-environment-variables/)
 is NDJSON that `WRANGLER_OUTPUT_FILE_PATH` selects. The check needs one
 version-1 `wrangler-session` for `deploy` and one successful version-1

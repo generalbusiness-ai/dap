@@ -127,7 +127,7 @@ test("the self-host template has no project resources and the retired Worker ret
   expect([retired.name, retired.main, retired.vars.SCOPE_INDEX_MODE]).toEqual(["artroom-scope", "worker.ts", "enforce"]);
   expect(retired.r2_buckets).toEqual([{ binding: "APPLICATION_CONTENT", bucket_name: "artroom-application-content" }]);
   const packageJson = JSON.parse(readFileSync(new URL("../../../package.json", import.meta.url), "utf8"));
-  expect(packageJson.scripts["deploy:scope"]).toBe("npx -y wrangler@4.147.0 deploy --keep-vars --config apps/room/wrangler.self-host.jsonc");
+  expect(packageJson.scripts["deploy:scope"]).toBe("npx -y wrangler@4.163.0 deploy --keep-vars --config apps/room/wrangler.self-host.jsonc");
 });
 
 test("dap-commons declares its exact namespace and unplanned register configuration", () => {

@@ -10,7 +10,7 @@ the room page. To run the service on one Mac, follow
 You need Git, Node 26, and a Cloudflare account that supports Workers,
 Durable Objects with SQLite storage, and Artifacts. You must be able to
 deploy Workers in that account. The commands run the pinned Wrangler
-4.147.0 through `npx`. You do not install Wrangler globally or in the
+4.163.0 through `npx`. You do not install Wrangler globally or in the
 checkout.
 
 1. Clone the source and install its locked dependencies.
@@ -30,8 +30,8 @@ checkout.
 
    ```sh
    cd apps/room
-   npx -y wrangler@4.147.0 login
-   npx -y wrangler@4.147.0 whoami
+   npx -y wrangler@4.163.0 login
+   npx -y wrangler@4.163.0 whoami
    cd ../..
    ```
 
@@ -80,7 +80,7 @@ checkout.
    ```sh
    npm run deploy:scope
    cd apps/room
-   node --input-type=module -e 'import { randomBytes } from "node:crypto"; process.stdout.write(JSON.stringify({SESSION_SECRET:randomBytes(32).toString("base64url")}));' | npx -y wrangler@4.147.0 secret bulk --config wrangler.self-host.jsonc
+   node --input-type=module -e 'import { randomBytes } from "node:crypto"; process.stdout.write(JSON.stringify({SESSION_SECRET:randomBytes(32).toString("base64url")}));' | npx -y wrangler@4.163.0 secret bulk --config wrangler.self-host.jsonc
    cd ../..
    ```
 
@@ -208,8 +208,8 @@ for a room you keep.
 
    ```sh
    cd apps/room
-   npx -y wrangler@4.147.0 artifacts repos list --namespace dap-my-room
-   npx -y wrangler@4.147.0 artifacts repos delete <repository-name> --namespace dap-my-room
+   npx -y wrangler@4.163.0 artifacts repos list --namespace dap-my-room
+   npx -y wrangler@4.163.0 artifacts repos delete <repository-name> --namespace dap-my-room
    cd ../..
    ```
 
@@ -237,7 +237,7 @@ for a room you keep.
    ```sh
    npm run deploy:scope
    cd apps/room
-   npx -y wrangler@4.147.0 delete --config wrangler.self-host.jsonc
+   npx -y wrangler@4.163.0 delete --config wrangler.self-host.jsonc
    cd ../..
    ```
 
@@ -246,7 +246,7 @@ for a room you keep.
 6. Remove the private `DAP_HOME` directory when you no longer need its
    keys or original requests.
 
-Wrangler 4.147.0 can list and get Artifacts namespaces but cannot delete
+Wrangler 4.163.0 can list and get Artifacts namespaces but cannot delete
 one. The [Artifacts REST API](https://developers.cloudflare.com/artifacts/api/rest-api/#namespaces)
 lists no namespace deletion route either. After step 1 the namespace is
 empty, and it stays in your account.

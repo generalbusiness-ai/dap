@@ -3,7 +3,7 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const checkout = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-export const WRANGLER = "4.147.0";
+export const WRANGLER = "4.163.0";
 // Each hosted name has one tracked configuration. Only the room Workers own
 // Durable Objects and therefore a migration history.
 const configs = new Map([

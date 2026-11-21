@@ -138,7 +138,7 @@ test("Judge client refuses failed, truncated or oversized observations without e
 test("Judge CLI takes the completed version from retained output and requires calibration before I/O", async () => {
   const dir = await mkdtemp(join(tmpdir(), "artroom-judge-cli-")), deployPath = join(dir, "deploy.ndjson"), calibrationPath = join(dir, "calibration.json");
   // Synthetic shape of documented Wrangler output, not an executed deployment.
-  const session = { type: "wrangler-session", version: 1, wrangler_version: "4.147.0", command_line_args: ["deploy"] };
+  const session = { type: "wrangler-session", version: 1, wrangler_version: "4.163.0", command_line_args: ["deploy"] };
   const deployed = { type: "deploy", version: 1, worker_name: "fixture", version_id: version };
   const records = JSON.stringify(session) + "\n" + JSON.stringify(deployed) + "\n";
   const calibration = { format: "dap-metric-calibration-1", deployment, version, from: new Date(now - 60_000).toISOString(), through: new Date(now).toISOString(), routeCount: 100, p95Ms: 10, boundMs: 10, recordingSha256: "a".repeat(64) };

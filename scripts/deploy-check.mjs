@@ -111,7 +111,7 @@ export function deploymentVersion(text) {
   const rows = text.split(/\r?\n/).filter(s => s.trim()).map(s => JSON.parse(s));
   if (rows.length > 128 || rows.some(row => !row || typeof row !== "object" || row.type === "command-failed")) throw new Error("deploy");
   const sessions = rows.filter(row => row.type === "wrangler-session"), deployed = rows.filter(row => row.type === "deploy");
-  if (sessions.length !== 1 || deployed.length !== 1 || sessions[0].version !== 1 || sessions[0].wrangler_version !== "4.147.0"
+  if (sessions.length !== 1 || deployed.length !== 1 || sessions[0].version !== 1 || sessions[0].wrangler_version !== "4.163.0"
       || !Array.isArray(sessions[0].command_line_args) || sessions[0].command_line_args[0] !== "deploy" || deployed[0].version !== 1
       || typeof deployed[0].worker_name !== "string" || !deployed[0].worker_name || typeof deployed[0].version_id !== "string" || !UUID.test(deployed[0].version_id)) throw new Error("deploy");
   return deployed[0].version_id;

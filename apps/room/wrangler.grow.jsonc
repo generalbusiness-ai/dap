@@ -1,6 +1,6 @@
 // Grow's scope Worker at https://dap-grow.inguz.workers.dev.
 // Deploy from a scratch directory with the pinned tool:
-// npx -y wrangler@4.147.0 deploy --keep-vars --config /absolute/path/to/artroom/apps/room/wrangler.grow.jsonc
+// npx -y wrangler@4.163.0 deploy --keep-vars --config /absolute/path/to/artroom/apps/room/wrangler.grow.jsonc
 // Set SESSION_SECRET separately from stdin.
 // Durable Objects and Register17 belong to this Worker. The artroom-demo
 // Artifacts namespace and application-content bucket are shared.

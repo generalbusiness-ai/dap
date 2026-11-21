@@ -25,7 +25,7 @@ Node.js 22.18 or later, and a GitHub account. The project tests on Node 26.
 Do not install extra tools into the checkout. `package.json` and
 `package-lock.json` change only in a commit that you send for review. To
 run a tool once, run a pinned version from a scratch directory, for example
-`npx -y wrangler@4.147.0` in a directory outside the checkout.
+`npx -y wrangler@4.163.0` in a directory outside the checkout.
 
 ## Find the code
 
