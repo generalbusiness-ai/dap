@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c77af0acb4c8321cbc8ee9df702168e49d2a3cbf","text":"Merge retired a covered predecessor; the successor is at docs/scopes.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c82061446e1ac5796f335f9523a6c95816d229c0","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-21-lv5-live-replay-and-presence.md."}
