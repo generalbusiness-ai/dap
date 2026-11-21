@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { validateDefinition } from "../src/index.ts";
 import type { StageChange } from "../src/live-stage.ts";
+import { LiveBindings } from "../src/live-binding.ts";
 import type { Type } from "../src/validate/context.ts";
 import { liveCreation, liveDelta, type LiveMeterSpec } from "../src/validate/live-meter.ts";
 import { liveBase } from "./definition-corpus/live-data.ts";
@@ -15,7 +16,7 @@ const tally: Type = { name: "tally", initial: "open", states: new Map([["open", 
 ]) };
 const definition = valid(validateDefinition(liveBase(), PROPOSED_BOUNDS));
 const fixture = new Scope(definition);
-const spec: LiveMeterSpec = { definition, types: new Map([["tally", tally]]), bounds: PROPOSED_BOUNDS, deadlines: { tally: { open: 2 } }, timed: [] };
+const spec: LiveMeterSpec = { definition, bindings: new LiveBindings(new Map([["tally", tally]])), types: new Map([["tally", tally]]), bounds: PROPOSED_BOUNDS, deadlines: { tally: { open: 2 } }, timed: [] };
 const change = (collection: string, key: unknown, before: unknown, after: unknown): StageChange =>
   ({ collection, key, before, after, hadBefore: before !== undefined, hasAfter: after !== undefined });
 
@@ -60,11 +61,47 @@ test("long admitted type names expose the actual logical baseline", async () => 
   declared.acts["found"]!.on = name; delete declared.acts["count"];
   const definition = valid(validateDefinition(declared, PROPOSED_BOUNDS)), fixture = new Scope(definition);
   const measured = liveCreation(definition, fixture.entries, liveMeterSpec(definition, PROPOSED_BOUNDS), fixture.foldOptions);
+  expect(measured.state.all()).toEqual(fixture.state.all());
+  expect(measured.state.count(name, "open")).toBe(fixture.state.count(name, "open"));
+  expect(measured.state.count("unknown", "open")).toBe(0);
   const definitionBytes = utf8(canonicalize(declared)).length;
   const genesisBytes = utf8(canonicalize(fixture.entries[0]!.entry)).length;
   const logical = measured.fixed + measured.charge.dynamic + measured.charge.items + measured.charge.timers;
   console.log("long-type-baseline", { definitionBytes, genesisBytes, logical });
   expect(definitionBytes).toBeLessThan(PROPOSED_BOUNDS.definitionBytes);
   expect(genesisBytes).toBeLessThan(PROPOSED_BOUNDS.entryBytes);
-  expect(logical).toBeGreaterThan(19_200_000);
+  expect(logical).toBeLessThan(19_200_000);
+});
+
+test("the live limit reserves four entry widths when no declared item growth is counted", async () => {
+  const { liveLimit, liveMeterSpec } = await import("../src/validate/live-meter.ts");
+  const bounds = { ...PROPOSED_BOUNDS, entryBytes: 4096, scopeItems: 0 };
+  const validSpec = liveMeterSpec(definition, bounds);
+  expect(liveLimit(1234, validSpec)).toBe(1234 + 4 * 4096);
+});
+
+test("the live limit saturates at 32 MiB without overflowing", async () => {
+  const { LIVE_LIMIT, liveLimit, liveMeterSpec } = await import("../src/validate/live-meter.ts");
+  const bounds = { ...PROPOSED_BOUNDS, scopeItems: Number.MAX_SAFE_INTEGER };
+  const validSpec = liveMeterSpec(definition, bounds);
+  const huge = { ...validSpec, definition: { ...definition, declared: { ...definition.declared,
+    items: { tally: { ...definition.declared.items["tally"]!, max: Number.MAX_SAFE_INTEGER } } } } };
+  expect(liveLimit(1000, huge)).toBe(LIVE_LIMIT);
+  expect(liveLimit(LIVE_LIMIT - 1, validSpec)).toBe(LIVE_LIMIT);
+});
+
+test("a live item named constructor in state name initializes without an inherited deadline", async () => {
+  const { liveMeterSpec, liveLimit } = await import("../src/validate/live-meter.ts");
+  const declared = liveBase(), item = declared.items["tally"]!;
+  item.states = { name: { final: false } }; item.initial = "name";
+  item.refs["local"] = { fixed: false, required: false, to: { type: "item", of: "constructor" } };
+  delete declared.items["tally"]; declared.items["constructor"] = item;
+  declared.acts["found"]!.on = "constructor"; declared.acts["count"]!.on = "constructor";
+  declared.acts["count"]!.guards = [{ state: ["name"] }];
+  const definition = valid(validateDefinition(declared, PROPOSED_BOUNDS)), fixture = new Scope(definition);
+  const spec = liveMeterSpec(definition, PROPOSED_BOUNDS);
+  const created = liveCreation(definition, fixture.entries, spec, fixture.foldOptions);
+  expect(created.state.item(0)).toMatchObject({ type: "constructor", state: "name" });
+  expect(created.charge.timers).toBe(0);
+  expect(liveLimit(created.fixed + created.charge.dynamic + created.charge.items, spec)).toBeGreaterThan(0);
 });

@@ -51,4 +51,4 @@ export { readRetainedUses, isRetainedUse, inspectClassifiedRetainedUse, type Ret
 export { retainedResultContext } from "./operand.ts";
 
 // Experimental O1 integration; no budget is enabled by this export.
-export { liveCreation, liveDelta, liveMeterSpec, type LiveDelta, type LiveMeterSpec } from "./validate/live-meter.ts";
+export { liveCreation, liveDelta, liveLimit, liveMeterSpec, type LiveDelta, type LiveMeterSpec } from "./validate/live-meter.ts";

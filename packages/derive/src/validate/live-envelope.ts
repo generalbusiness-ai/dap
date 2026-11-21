@@ -1,6 +1,7 @@
 /** Experimental logical-byte envelopes for live state. Not connected to validation or admission. */
 import type { Bounds, TimedRule } from "@generalbusiness/dap-contract";
 import type { ScopeState } from "../state.ts";
+import type { LiveBindings } from "../live-binding.ts";
 import { fixedRowsOf } from "../fixed-index.ts";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import type { Type } from "./context.ts";
@@ -25,10 +26,14 @@ const row = (name: string, key: number, value: number): number => array(stated(n
 const NUMBER = 20, DIGEST = 73, NULL = 4;
 
 /** Persistent empty state buckets and zero counts, paid once per declared state. */
-export function liveStateBuckets(type: Type): number {
+export function liveStateBuckets(type: Type, bindings: LiveBindings): number {
+  const id = bindings.type(type.name);
+  if (id === undefined) throw new Error("unknown live type");
   return add(...[...type.states.keys()].map(state => {
-    const key = stated(canonicalize([type.name, state]));
-    return add(row("index-bucket", key, 2), row("counts", key, array(stated(type.name), stated(state), NUMBER)));
+    const ordinal = bindings.state(type.name, state);
+    if (ordinal === undefined) throw new Error("unknown live state");
+    const key = stated(canonicalize([id, ordinal]));
+    return add(row("index-bucket", key, 2), row("counts", key, array(stated(id), stated(ordinal), NUMBER)));
   }));
 }
 
@@ -69,17 +74,20 @@ export function liveTimedAppend(type: Type, rules: readonly TimedRule[], bounds:
 }
 
 /** Per-item index envelope based on the fixed values actually held after opening. */
-export function liveHeldItemEnvelope(definition: import("./index.ts").ValidDefinition, type: Type, item: import("@generalbusiness/dap-contract").Item, at: import("@generalbusiness/dap-contract").ScopeRef): number {
-  const state = Math.max(...[...type.states.keys()].map(stated));
-  const indexKey = Math.max(...[...type.states.keys()].map(name => stated(canonicalize([type.name, name]))));
+export function liveHeldItemEnvelope(definition: import("./index.ts").ValidDefinition, type: Type, item: import("@generalbusiness/dap-contract").Item, at: import("@generalbusiness/dap-contract").ScopeRef, bindings: LiveBindings): number {
+  const typeId = bindings.type(type.name);
+  if (typeId === undefined) throw new Error("unknown live type");
+  const state = stated(Math.max(0, type.states.size - 1));
+  const indexKey = Math.max(...[...type.states.keys()].map(name => stated(canonicalize([typeId, bindings.state(type.name, name)]))));
   const itemId = stated(item.id);
   let total = row("index-edge", indexKey, itemId);
   for (const { row: fixedRow, dependencies } of fixedRowsOf(definition, item, at, () => null)) {
-    const rawText = canonicalize(fixedRow.raw), raw = stated(fixedRow.raw), name = fixedRow.slot;
-    const id = stated(canonicalize([type.name, name, item.id]));
-    const fixed = object([["type", stated(type.name)], ["slot", stated(name)], ["item", itemId], ["state", state], ["raw", raw], ["key", quote(raw)]]);
-    const rawCount = Math.max(...[...type.states.keys()].map(stateName => stated(canonicalize(["raw", type.name, name, rawText, stateName]))));
-    const normalizedCount = quote(array(stated("normalized"), stated(type.name), stated(name), quote(raw), state));
+    const rawText = canonicalize(fixedRow.raw), raw = stated(fixedRow.raw), slotId = bindings.slot(type.name, fixedRow.slot);
+    if (slotId === undefined) throw new Error("unknown live slot");
+    const id = stated(canonicalize([typeId, slotId, item.id]));
+    const fixed = object([["item", itemId], ["state", state], ["raw", raw], ["key", quote(raw)]]);
+    const rawCount = Math.max(...[...type.states.keys()].map(name => stated(canonicalize([0, typeId, slotId, rawText, bindings.state(type.name, name)]))));
+    const normalizedCount = quote(array(stated(1), stated(typeId), stated(slotId), quote(raw), state));
     total = add(total, row("fixedRows", id, fixed), row("fixedRaw", id, stated(rawText)),
       row("fixedCounts", rawCount, NUMBER), row("fixedCounts", normalizedCount, NUMBER), row("fixedRowDependencies", id, 2));
     for (const dependency of dependencies) {

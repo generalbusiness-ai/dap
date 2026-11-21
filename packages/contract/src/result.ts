@@ -74,6 +74,7 @@ export type CreationConflict = "genesis-conflict";
 /** The head an answer was judged at. A refusal is a statement about that head only. */
 export interface Head { seq: number; hash: Digest }
 
+/** `scope-full` names an exhausted stored whole-scope budget or a held live-generation budget. */
 export type Answer =
   | { answer: "archived"; archived: Archived; fact: FactRef }
   | { answer: "accepted"; receipt: Receipt }

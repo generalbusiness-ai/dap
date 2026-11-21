@@ -5,6 +5,7 @@
  * except where a test names the real read sessions of `sessions.ts`.
  */
 import { env } from "cloudflare:workers";
+import { runInDurableObject } from "cloudflare:test";
 import { describe, expect, test } from "vitest";
 import type { DeclaredDefinition, Grant, Intent, Item, ScopeId, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, definitionDigest, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
@@ -13,7 +14,7 @@ import { grantOf, keys, membership, type Actor, type Over } from "@generalbusine
 import { type LiveAnswer, type LiveLine, type LiveRead, type LiveSummary } from "@generalbusiness/dap-platform";
 import { liveForms } from "../../derive/test/definition-corpus/live-data.ts";
 import { LiveReads } from "../src/live-reads.ts";
-import type { LiveTurns } from "../src/live.ts";
+import { liveTurnsOf, type LiveTurns } from "../src/live.ts";
 import { Streams, mintSession, readerOf, sessionReaders, sessionsOf, type Opened } from "../src/sessions.ts";
 import { controls, testReaders, type Controls } from "../src/testing.ts";
 import { route } from "../src/worker.ts";
@@ -193,6 +194,33 @@ test("experimental live meter refuses a fresh act at capacity but retains retry 
   expect(await R.live(fresh)).toEqual({ answer: "applied", generation: R.generation, tick: 3 });
   expect(await stubOf(R.name).summary(reader)).toEqual(record);
   await watch.cancel();
+});
+
+test("a whole-scope live generation keeps genesis marker duties and drains a marked timer at capacity", async () => {
+  const declaration = liveForms.timed();
+  declaration.capacity = { name: "whole-scope", version: 1 };
+  const flag = { fixed: false, required: true, of: { type: "bool" as const }, default: false };
+  declaration.items["tally"]!.values["flag"] = flag;
+  declaration.items["lease"]!.values["flag"] = flag;
+  declaration.acts["mark-tally"] = { step: "transition", on: "tally", grant: "count", also: {}, fields: {}, guards: [],
+    settles: { of: "on", sets: "flag", in: ["open"] }, effects: [{ value: { slot: "flag", from: { const: true } } }], sends: [], attention: [] };
+  declaration.acts["mark-lease"] = { step: "transition", on: "lease", grant: "lease", also: {}, fields: {}, guards: [],
+    settles: { of: "on", sets: "flag", in: ["open"] }, effects: [{ value: { slot: "flag", from: { const: true } } }], sends: [], attention: [] };
+  const policy = { limit: Number.MAX_SAFE_INTEGER, used: 0 };
+  const R = await Room.create((_name, c) => { c.liveMeter = policy; }, declaration);
+  const duties = (item: number) => runInDurableObject(objectOf(R.name), instance => {
+    const live = (instance as unknown as { [liveTurnsOf](): LiveTurns | null })[liveTurnsOf]()?.current();
+    return live?.view.itemDuties(item) ?? null;
+  });
+  expect(await duties(0)).toContainEqual(expect.objectContaining({ kind: "mark", slot: "flag" }));
+  expect(await R.live(R.lease())).toMatchObject({ answer: "applied", tick: 1 });
+  expect(await duties(1)).toEqual(expect.arrayContaining([expect.objectContaining({ kind: "mark", slot: "flag" }), expect.objectContaining({ kind: "deadline" })]));
+  policy.limit = policy.used;
+  R.c.clock.now = timeOf(timeMs(START)! + 60_000);
+  await runInDurableObject(objectOf(R.name), () => R.c.liveTimer!.fire());
+  expect(await R.read<Item[]>("/live-items/lease")).toMatchObject([200, { tick: 2, value: [{ state: "ended" }] }]);
+  expect(await duties(1)).toContainEqual(expect.objectContaining({ kind: "mark", slot: "flag" }));
+  expect(policy.used).toBeLessThanOrEqual(policy.limit);
 });
 
 describe("the watch's line", () => {

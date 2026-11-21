@@ -36,9 +36,8 @@ export type LiveAnswer =
  * Why a live read gives no value, or why no watch opens. A read session
  * authorizes the live reads as it authorizes the reads of the record, so
  * the reasons of its check are the reasons of `ReadRefusal`. `not-found`:
- * the scope is no active live scope, or names no such item type.
- * `unavailable`: the scope holds as many streams as it may, or its
- * creation entries do not fold.
+ * no live state is available, or the definition names no such item type.
+ * `unavailable`: the scope holds as many streams as it may.
  */
 export type LiveReadRefusal = Extract<ReadRefusal, "forbidden" | "sessions-unavailable" | "clock-behind" | "not-found" | "unavailable" | "rate-limited">;
 

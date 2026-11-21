@@ -25,7 +25,7 @@
 
 import type { Bounds, Entry, Grant, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { CanonicalError, canonicalize, entryHash, isGrant, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
-import { actionOf, applyEntry, applyLive, clockOf, entryOf, judgeAct, judgeTimed, LAST_MS, liveActive, MemoryState, liveCreation, liveDelta, liveMeterSpec, nextDue, own, prepareRules, timeMs, timeOf, windowOf } from "@generalbusiness/dap-derive";
+import { actionOf, applyLive, clockOf, entryOf, judgeAct, judgeTimed, LAST_MS, liveActive, MemoryState, liveCreation, liveDelta, liveLimit, liveMeterSpec, nextDue, own, prepareRules, timeMs, timeOf, windowOf } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Draft, JudgeContext, LiveDelta, LiveMeterSpec, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import type { LiveAnswer } from "@generalbusiness/dap-platform";
 import type { FreshActAdmission, FreshActAdmissionDecision } from "./applications/act-admission.ts";
@@ -75,7 +75,7 @@ export class LiveTurns {
   readonly #meterPolicy: { limit: number; used: number } | undefined;
   #generation: string;
   #state: MemoryState | null = null;
-  #meter: { spec: LiveMeterSpec; charge: LiveDelta; fixed: number; policy: { limit: number; used: number } } | null = null;
+  #meter: { spec: LiveMeterSpec; charge: LiveDelta; fixed: number; limit: number } | null = null;
   #changed: ((generation: string, tick: number) => void) | null = null;
 
   constructor(store: Store, ports: Pick<Ports, "clock" | "random" | "rules" | "capabilities" | "freshActAdmission" | "liveTimer" | "liveMeter">, bounds: Bounds, pinned: () => Pinned | null, standing: LiveStanding) {
@@ -264,20 +264,18 @@ export class LiveTurns {
     if (utf8(bytes).length > this.#bounds.entryBytes) return "size";
     try {
       const meter = this.#meter;
-      if (!meter) applyLive(state, definition, entry, entryHash(entry), { bounds: this.#bounds });
-      else {
-        let next = meter.charge;
-        const committed = state.liveTransaction(() => applyLive(state, definition, entry, entryHash(entry), { bounds: this.#bounds }), changes => {
-          const delta = liveDelta(changes, meter.spec, state.scope()!.at);
-          next = { dynamic: meter.charge.dynamic + delta.dynamic, items: meter.charge.items + delta.items, timers: meter.charge.timers + delta.timers };
-          const total = meter.fixed + next.dynamic + next.items + next.timers;
-          if (![next.dynamic, next.items, next.timers, total].every(Number.isSafeInteger) || total < 0) throw new Error("live meter arithmetic");
-          return total <= meter.policy.limit;
-        });
-        if (!committed) { if (entry.input.type === "timed") throw new Error("live timer exceeded its reserve"); return "full"; }
-        meter.charge = next;
-        meter.policy.used = meter.fixed + next.dynamic + next.items + next.timers;
-      }
+      if (!meter) throw new Error("live generation has no meter");
+      let next = meter.charge;
+      const committed = state.liveTransaction(() => applyLive(state, definition, entry, entryHash(entry), { bounds: this.#bounds }), changes => {
+        const delta = liveDelta(changes, meter.spec, state.scope()!.at);
+        next = { dynamic: meter.charge.dynamic + delta.dynamic, items: meter.charge.items + delta.items, timers: meter.charge.timers + delta.timers };
+        const total = meter.fixed + next.dynamic + next.items + next.timers;
+        if (![next.dynamic, next.items, next.timers, total].every(Number.isSafeInteger) || total < 0) throw new Error("live meter arithmetic");
+        return total <= Math.min(meter.limit, this.#meterPolicy?.limit ?? meter.limit);
+      });
+      if (!committed) { if (entry.input.type === "timed") throw new Error("live timer exceeded its reserve"); return "full"; }
+      meter.charge = next;
+      if (this.#meterPolicy) this.#meterPolicy.used = meter.fixed + next.dynamic + next.items + next.timers;
     } catch (error) {
       throw new Broken(error instanceof Error ? error.message : "the live fold failed");
     }
@@ -298,18 +296,15 @@ export class LiveTurns {
         if (!kept) return null;
         entries.push({ entry: parseStrict(kept.bytes) as Entry, hash: kept.hash });
       }
-      if (this.#meterPolicy) {
-        const spec = liveMeterSpec(definition, this.#bounds);
-        const made = liveCreation(definition, entries, spec, { bounds: this.#bounds });
-        const used = made.fixed + made.charge.dynamic + made.charge.items + made.charge.timers;
-        if (!Number.isSafeInteger(used) || used > this.#meterPolicy.limit) return null;
-        this.#meterPolicy.used = used;
-        this.#meter = { spec, charge: made.charge, fixed: made.fixed, policy: this.#meterPolicy };
-        state = made.state;
-      } else {
-        state = new MemoryState();
-        for (const kept of entries) applyEntry(state, definition, kept.entry, kept.hash, { bounds: this.#bounds });
-      }
+      const spec = liveMeterSpec(definition, this.#bounds);
+      const made = liveCreation(definition, entries, spec, { bounds: this.#bounds });
+      const used = made.fixed + made.charge.dynamic + made.charge.items + made.charge.timers;
+      if (!Number.isSafeInteger(used) || used < 0) return null;
+      const limit = liveLimit(used, spec);
+      if (used > limit || used > (this.#meterPolicy?.limit ?? limit)) return null;
+      if (this.#meterPolicy) this.#meterPolicy.used = used;
+      this.#meter = { spec, charge: made.charge, fixed: made.fixed, limit };
+      state = made.state;
     } catch {
       return null;
     }

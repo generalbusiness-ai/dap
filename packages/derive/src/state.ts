@@ -1,3 +1,4 @@
+import { LiveBindings } from "./live-binding.ts";
 import { StageMap, StageSet, type StageChange } from "./live-stage.ts";
 /**
  * The state a scope's entries fold into (scope contract, sections 6.3, 6.5,
@@ -392,6 +393,9 @@ function firstAbove(ids: readonly number[], after: number): number {
   return low;
 }
 
+type CompactFixedRow = { item: number; state: number; raw: FixedRow["raw"]; key: string };
+type CountRow = readonly [string, string, number] | readonly [number, number, number];
+
 /** The state in memory, for a verifier and for tests. */
 export class MemoryState implements StateWriter {
   #floor: JournalFloor | null = null;
@@ -401,7 +405,7 @@ export class MemoryState implements StateWriter {
     const kept = new Set(floor.kept);
     for (const seq of this.#fixedHashes.keys()) if (seq < floor.floor && !kept.has(seq)) this.#fixedHashes.delete(seq);
   }
-  #fixedRows = new Map<string, FixedRow>();
+  #fixedRows = new Map<string, FixedRow | CompactFixedRow>();
   #fixedRaw = new Map<string, string>();
   #fixedCounts = new Map<string, number>();
   #fixedDependencies = new Map<string, Set<string>>();
@@ -419,16 +423,16 @@ export class MemoryState implements StateWriter {
     if (!floor || seq >= floor.floor || floor.kept.includes(seq)) this.#fixedHashes.set(seq, hash);
   }
   fixedCount(type: string, slot: string, value: string, states: readonly string[], mode: FixedMode): number {
-    return [...new Set(states)].reduce((n, state) => n + (this.#fixedCounts.get(key(mode, type, slot, value, state)) ?? 0), 0);
+    return [...new Set(states)].reduce((n, state) => n + (this.#fixedCounts.get(this.#fixedCountKey(mode, type, slot, value, state)) ?? 0), 0);
   }
   fixedAffected(seq: number, hash: Digest): readonly FixedRow[] {
-    return [...(this.#fixedDependencies.get(key(seq, hash)) ?? [])].map(id => this.#fixedRows.get(id)!);
+    return [...(this.#fixedDependencies.get(key(seq, hash)) ?? [])].map(id => this.#fixedRow(id)!);
   }
   putFixed(row: FixedRow, dependencies: readonly FixedDependency[]): void {
-    const id = key(row.type, row.slot, row.item), previous = this.#fixedRows.get(id), raw = canonicalize(row.raw);
+    const id = this.#fixedId(row.type, row.slot, row.item), previous = this.#fixedRow(id), raw = canonicalize(row.raw);
     const change = (held: FixedRow, rawKey: string, by: number) => {
       for (const [mode, value] of [["raw", rawKey], ["normalized", held.key]] as const) {
-        const at = key(mode, held.type, held.slot, value, held.state), n = (this.#fixedCounts.get(at) ?? 0) + by;
+        const at = this.#fixedCountKey(mode, held.type, held.slot, value, held.state), n = (this.#fixedCounts.get(at) ?? 0) + by;
         if (n < 0) throw new Error("fixed equality count became negative");
         if (n === 0) this.#fixedCounts.delete(at); else this.#fixedCounts.set(at, n);
       }
@@ -441,7 +445,7 @@ export class MemoryState implements StateWriter {
       rows.delete(id);
       if (rows.size === 0) this.#fixedDependencies.delete(dependency);
     }
-    this.#fixedRows.set(id, { ...row }); this.#fixedRaw.set(id, raw);
+    this.#fixedRows.set(id, this.#storeFixed(row)); this.#fixedRaw.set(id, raw);
     const keys = [...new Set(dependencies.map(dependency => key(dependency.seq, dependency.hash)))];
     this.#fixedRowDependencies.set(id, keys);
     for (const dependency of keys) {
@@ -460,11 +464,11 @@ export class MemoryState implements StateWriter {
    * binary search.
    */
   #index = new Map<string, number[]>();
-  #counts = new Map<string, readonly [string, string, number]>();
+  #counts = new Map<string, CountRow>();
   #relations = new Map<string, Relation>();
   #accepted = new Map<string, readonly [KeyId, string, Accepted]>();
   #requests = new Map<string, OwnRequest>();
-  #pendingRequests = new Set<string>();
+  #pendingRequests: Set<string> | StageSet<string> = new Set<string>();
   #decided = new Map<string, Decided>();
   #sourceOrder = new Map<string, SourceOrder>();
   #creations = new Map<Digest, HeldCreation>();
@@ -475,7 +479,7 @@ export class MemoryState implements StateWriter {
   #observed = new Map<string, ObservedHead>();
   #holders = new Map<number, Held>();
   #itemDuties = new Map<number, readonly ItemDuty[]>();
-  #settledHolders = new Set<number>();
+  #settledHolders: Set<number> | StageSet<number> = new Set<number>();
   #accounts = new Map<string, Account>();
   /**
    * For each observed scope ID, the genesis hashes of the observed heads that are held, once each, in byte order. `putObserved`
@@ -499,11 +503,13 @@ export class MemoryState implements StateWriter {
   #rows = new Map<string, number>();
 
   #liveStaged = false;
+  #liveBindings: LiveBindings | null = null;
   get #staging(): boolean { return this.#liveStaged && (this.#fixedHashes as StageMap<number, Digest>).staged; }
   /** Experimental opt-in: ordinary states retain native Map and Set storage. */
-  static stagedLive(): MemoryState {
+  static stagedLive(bindings?: LiveBindings): MemoryState {
     const state = new MemoryState();
     state.#liveStaged = true;
+    state.#liveBindings = bindings ?? null;
     state.#fixedRows = new StageMap();
     state.#fixedRaw = new StageMap();
     state.#fixedCounts = new StageMap();
@@ -531,9 +537,42 @@ export class MemoryState implements StateWriter {
     state.#copies = new StageMap();
     state.#keyed = new StageMap();
     state.#rows = new StageMap();
-    state.#pendingRequests = new StageSet() as unknown as Set<string>;
-    state.#settledHolders = new StageSet() as unknown as Set<number>;
+    state.#pendingRequests = new StageSet<string>();
+    state.#settledHolders = new StageSet<number>();
     return state;
+  }
+
+  #bucket(type: string, state: string): string {
+    if (!this.#liveBindings) return key(type, state);
+    const t = this.#liveBindings.type(type), s = this.#liveBindings.state(type, state);
+    return t === undefined || s === undefined ? "!missing" : key(t, s);
+  }
+  #fixedId(type: string, slot: string, item: number): string {
+    if (!this.#liveBindings) return key(type, slot, item);
+    const t = this.#liveBindings.type(type), s = this.#liveBindings.slot(type, slot);
+    if (t === undefined || s === undefined) throw new Error("unknown live fixed slot");
+    return key(t, s, item);
+  }
+  #fixedCountKey(mode: FixedMode, type: string, slot: string, value: string, state: string): string {
+    if (!this.#liveBindings) return key(mode, type, slot, value, state);
+    const t = this.#liveBindings.type(type), s = this.#liveBindings.slot(type, slot), q = this.#liveBindings.state(type, state);
+    return t === undefined || s === undefined || q === undefined ? "!missing" : key(mode === "raw" ? 0 : 1, t, s, value, q);
+  }
+  #fixedRow(id: string): FixedRow | undefined {
+    const row = this.#fixedRows.get(id);
+    if (!row) return undefined;
+    if ("type" in row) return row;
+    if (!this.#liveBindings) throw new Error("compact row without live bindings");
+    const [type, slot] = JSON.parse(id) as [number, number, number];
+    const names = this.#liveBindings.names(type, slot, row.state);
+    return { ...row, ...names };
+  }
+  #storeFixed(row: FixedRow): FixedRow | CompactFixedRow {
+    if (!this.#liveBindings) return { ...row };
+    const state = this.#liveBindings.state(row.type, row.state);
+    if (state === undefined) throw new Error("unknown live fixed state");
+    // Type and slot already occur in the compact map key; do not retain names again.
+    return { item: row.item, state, raw: row.raw, key: row.key };
   }
 
   /** Experimental synchronous preflight. A false decision leaves the base untouched. */
@@ -548,21 +587,24 @@ export class MemoryState implements StateWriter {
       accounts: this.#accounts, geneses: this.#geneses, copies: this.#copies, keyed: this.#keyed, rows: this.#rows,
     };
     if (!this.#liveStaged) throw new Error("live staging is not enabled for this state");
-    const all = Object.values(collections) as unknown as { begin(): void; changes(name: string): StageChange[]; commit(): void; discard(): void }[];
+    const all = Object.entries(collections).map(([name, collection]) => {
+      if (!(collection instanceof StageMap) && !(collection instanceof StageSet)) throw new Error("live collection is not staged");
+      return { name, collection };
+    });
     const oldScope = this.#scope, oldReady = this.#fixedReady, oldFloor = this.#floor;
     if ((this.#fixedHashes as StageMap<number, Digest>).staged) throw new Error("nested live transaction");
-    for (const collection of all) collection.begin();
+    for (const { collection } of all) collection.begin();
     try {
       work();
-      const changes = Object.entries(collections).flatMap(([name, collection]) => (collection as unknown as { changes(name: string): StageChange[] }).changes(name));
+      const changes = all.flatMap(({ name, collection }) => collection.changes(name));
       changes.push({ collection: "scope", key: null, before: oldScope, after: this.#scope, hadBefore: oldScope !== null, hasAfter: this.#scope !== null });
       changes.push({ collection: "fixedReady", key: null, before: oldReady, after: this.#fixedReady, hadBefore: oldReady !== null, hasAfter: this.#fixedReady !== null });
       if (this.#floor !== oldFloor) throw new Error("a live transaction cannot change the floor");
-      if (!decide(changes)) { for (const collection of all) collection.discard(); this.#scope = oldScope; this.#fixedReady = oldReady; return false; }
-      for (const collection of all) collection.commit();
+      if (!decide(changes)) { for (const { collection } of all) collection.discard(); this.#scope = oldScope; this.#fixedReady = oldReady; return false; }
+      for (const { collection } of all) collection.commit();
       return true;
     } catch (error) {
-      for (const collection of all) collection.discard();
+      for (const { collection } of all) collection.discard();
       this.#scope = oldScope; this.#fixedReady = oldReady; this.#floor = oldFloor;
       throw error;
     }
@@ -575,11 +617,11 @@ export class MemoryState implements StateWriter {
   scope() { return this.#scope; }
   keyCounts(): KeyCounts { return { items: this.#items.size, records: this.#relations.size + this.#records.size, requests: this.#pendingRequests.size }; }
   item(id: number) { return this.#items.get(id) ?? null; }
-  count(type: string, state: string) { return this.#counts.get(key(type, state))?.[2] ?? 0; }
+  count(type: string, state: string) { return this.#counts.get(this.#bucket(type, state))?.[2] ?? 0; }
   page(type: string, states: readonly string[], after: number | null, limit: number): Page {
     // One position in each listed state's bucket, from the cursor; then a merge by ID. No other item is read.
     const buckets = [...new Set(states)].map((state) => {
-      const ids = this.#index.get(key(type, state)) ?? [];
+      const ids = this.#index.get(this.#bucket(type, state)) ?? [];
       return { ids, at: after === null ? 0 : firstAbove(ids, after) };
     });
     const items: Item[] = [];
@@ -656,7 +698,7 @@ export class MemoryState implements StateWriter {
   accountsOf(item: number) { return [...this.#accounts.values()].filter((a) => a.item === item).sort((a, b) => keyOrder([a.seq, a.n], [b.seq, b.n])); }
   lookup(type: string, slot: string, at: string, limit: number): readonly number[] | null {
     // Complete: one row for each item of the type that the state holds, live and final.
-    const items = [...this.#counts.values()].reduce((n, [of, , count]) => (of === type ? n + count : n), 0);
+    const items = [...this.#counts.values()].reduce((n, [of, , count]) => (of === (this.#liveBindings?.type(type) ?? type) ? n + count : n), 0);
     if ((this.#rows.get(key(type, slot)) ?? 0) !== items) return null;
     return (this.#keyed.get(key(type, slot, at)) ?? []).slice(0, limit);
   }
@@ -674,19 +716,27 @@ export class MemoryState implements StateWriter {
     this.#items.set(item.id, item);
     if (was?.type === item.type && was.state === item.state) return;
     if (was) {
-      const bucket = key(was.type, was.state);
+      const bucket = this.#bucket(was.type, was.state);
       const held = this.#index.get(bucket)!;
       const ids = this.#staging ? [...held] : held;
       if (this.#staging) this.#index.set(bucket, ids);
       ids.splice(firstAbove(ids, item.id - 1), 1);
     }
-    const at = key(item.type, item.state);
+    const at = this.#bucket(item.type, item.state);
     const held = this.#index.get(at);
     const ids = this.#staging && held ? [...held] : held ?? [];
     this.#index.set(at, ids);
     ids.splice(firstAbove(ids, item.id), 0, item.id);
   }
-  addCount(type: string, state: string, by: number) { this.#counts.set(key(type, state), [type, state, this.count(type, state) + by]); }
+  addCount(type: string, state: string, by: number) {
+    const binding = this.#liveBindings, t = binding?.type(type), q = binding?.state(type, state);
+    if (binding && (t === undefined || q === undefined)) throw new Error("unknown live count");
+    const count = this.count(type, state) + by;
+    if (binding) {
+      if (t === undefined || q === undefined) throw new Error("unknown live count");
+      this.#counts.set(this.#bucket(type, state), [t, q, count]);
+    } else this.#counts.set(this.#bucket(type, state), [type, state, count]);
+  }
   putRelation(r: Relation) {
     const at = key(r.owner.scope, r.owner.genesis, r.name, r.item);
     if (!this.#relations.has(at)) this.#copies.set(key(r.name, r.ownerKind), (this.#copies.get(key(r.name, r.ownerKind)) ?? 0) + 1);
@@ -726,7 +776,11 @@ export class MemoryState implements StateWriter {
       v: 1, scope: this.#scope,
       ...(this.#floor === null ? {} : { floor: this.#floor }),
       items: sorted(this.#items.values(), (i) => [i.id]),
-      counts: sorted(this.#counts.values(), ([type, state]) => [type, state]).filter(([, , n]) => n !== 0),
+      counts: sorted([...this.#counts.values()].map((entry): readonly [string, string, number] => {
+        if (typeof entry[0] === "string" && typeof entry[1] === "string") return [entry[0], entry[1], entry[2]];
+        if (typeof entry[0] !== "number" || typeof entry[1] !== "number" || !this.#liveBindings) throw new Error("invalid compact count");
+        return [...this.#liveBindings.typeState(entry[0], entry[1]), entry[2]];
+      }), ([type, state]) => [type, state]).filter(([, , n]) => n !== 0),
       relations: sorted(this.#relations.values(), (r) => [r.owner.scope, r.owner.genesis, r.name, r.item]),
       accepted: sorted(this.#accepted.values(), ([actor, k]) => [actor, k]),
       requests: sorted(this.#requests.values(), (r) => [r.seq, r.n]),
