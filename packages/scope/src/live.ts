@@ -181,7 +181,8 @@ export class LiveTurns {
 
     for (let restarts = 0; ; restarts++) {
       // Before the rules: what is due runs first, and the walk that finds the rules judges nothing.
-      const before = this.#section(definition, (state): LiveAnswer | { tick: number; asks: RuleInput[] } => {
+      const before = this.#section(definition, (state): LiveAnswer | { tick: number; asks: RuleInput[] } | { repeat: true } => {
+        if (binding && state.accepted(intent.actor, intent.idempotencyKey) !== null) return { repeat: true };
         const repeat = binding ? null : accepted(state);
         if (repeat) return repeat;
         if (restarts > this.#bounds.turnRestarts) return unavailable("busy");
@@ -189,6 +190,15 @@ export class LiveTurns {
         if (drained) return drained;
         return { tick: state.scope()!.head.seq, asks: prepareRules(state, definition, { act: signed, context: { ...context(state, this.#clock(state)), prepared: [] } }) };
       });
+      if ("repeat" in before) {
+        // The proof is the final remote read; neither a repeat nor a key
+        // mismatch may drain the due backlog or expose a replaced binding.
+        if (!await binding!()) return unavailable("unavailable");
+        if (generation !== this.#generation) return reset();
+        const repeat = this.#section(definition, state => accepted(state));
+        if (repeat) return repeat;
+        continue;
+      }
       if ("answer" in before) {
         if (!binding || before.answer === "unavailable") return before;
         return early(() => "tick" in before && before.tick !== this.#tick() ? unavailable("unavailable") : before);

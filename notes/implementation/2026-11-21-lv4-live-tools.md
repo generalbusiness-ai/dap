@@ -38,6 +38,10 @@ and commits synchronously. A replacement visible at the final read
 refuses the action. That read gives no ordering guarantee for a remote
 replacement after it completes. See planner ruling `8163372d`.
 
+An exact bound retry checks the installation and returns its original
+tick before draining due timers. If the installation changes between
+the two proofs, the turn returns `unavailable` without a generation.
+
 ## Focused evidence
 
 The native presence witness installs two packages that pin the same child
@@ -67,3 +71,5 @@ Logs under `~/play/artroom-evidence/2026-11-21-lv4-tools-focused/`.
 | MCP types | exit 0 | `lv4-mcp-typecheck.log` | `c1e1f1c2bbd0cff21cb159852caefece8652f03525b695b9f47a14976469405b` |
 | Installed native and MCP presence witness | 1 passed | `lv4-mcp-presence-final.log` | `088ea5cce46a735981963cc0bf41965a0bc50a1ad71b45f608c5bc38905360bb` |
 | Security entry-point inventory | 13 passed | `lv4-cli-entrypoints-final.log` | `29df8e826377eca6e4b3e23d5182c712be68a92b68999c2a11bb8c2d22d6f8d2` |
+| Bound retry with a due backlog | 10 passed | `lv4-bound-repeat.log` | `8949d61232128bbeebe22b37209a457798c5e7a37b5d820a3c3ad3d7d9ee04bb` |
+| Scope types after bound retry | exit 0 | `lv4-bound-repeat-typecheck.log` | `fb2b1b20daea8ec6bdc1bf8b7eceb9b3703b9e4ffe7530b18d9218bb23d34976` |
