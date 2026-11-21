@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b96c59edaa64b516d60726b7611ad04aef776ad1","text":"Merge retired a covered predecessor; the successor is at apps/room/page/assets.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:daa7de0dd7522626c2eb8eceb00615b002ab993a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-21-lv4-graph-live-scope.md."}
