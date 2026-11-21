@@ -1,6 +1,6 @@
 import { isRoomRetiredStop, roomRetiredResponse, type RoomRetiredStop } from "./room-retired.ts";
 import { scopeWiring, scopeNamespace } from "./internal/room-hooks.ts";
-import { answersVersionQuestion } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, type LiveRead, type LiveReadRefusal, type LiveSummary } from "@generalbusiness/dap-platform";
 import { mcpRoute, type McpEnv } from "./worker-mcp.ts";
 import { readMinimumParameter } from "@generalbusiness/dap-bytes";
 import type { ReadMinimum } from "@generalbusiness/dap-contract";
@@ -213,6 +213,9 @@ interface Remote {
   applicationProjection(encoded: unknown, reader: unknown, atLeast?: ReadMinimum): Promise<NativeApplicationProjection>;
   session(asked: unknown, options?: SessionIssueOptions): Promise<SessionIssueAnswer>;
   stream(reader: unknown): Promise<Opened | StreamRefusal>;
+  watch(reader: unknown): Promise<Opened | StreamRefusal | { ok: false; reason: LiveReadRefusal }>;
+  liveSummary(reader: unknown): Promise<LiveRead<LiveSummary>>;
+  liveItems(reader: unknown, type: string, cursor?: Cursor): Promise<LiveRead<readonly Item[]>>;
   release(id: string): Promise<void>;
   incidents(reader: unknown, cursor?: Cursor): Promise<Read<readonly Incident[]>>;
   waiting(reader: unknown, list: "diagnosed" | "unanswered", cursor?: Cursor): Promise<Read<readonly OutboxItem[]>>;
@@ -236,6 +239,11 @@ export interface Api extends ScopeApi {
   stream(scope: string, reader: unknown): Promise<ReadableStream<Uint8Array> | StreamRefusal | typeof MISSING>;
   /** Internal route ownership, not a public HTTP operation. */
   streamExchange(scope: string, reader: unknown): Promise<StreamExchange | StreamRefusal | typeof MISSING>;
+  /** The watch of a live scope, on the head stream's exchange (live note, section 3.5): its lines are the generation and the tick. */
+  watchExchange(scope: string, reader: unknown): Promise<StreamExchange | StreamRefusal | { ok: false; reason: LiveReadRefusal } | typeof MISSING>;
+  /** The reads of live state (live note, section 3.5). Platform answers, outside `ScopeApi`. */
+  liveSummary(scope: string, reader: unknown): Promise<LiveRead<LiveSummary>>;
+  liveItems(scope: string, reader: unknown, type: string, cursor?: Cursor): Promise<LiveRead<readonly Item[]>>;
   incidents(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Incident[]>>;
   waiting(scope: string, reader: unknown, list: "diagnosed" | "unanswered", cursor?: Cursor): Promise<Read<readonly OutboxItem[]>>;
   /** A member's read token at a destination, once (I5). */
@@ -256,7 +264,7 @@ export interface Api extends ScopeApi {
 const RETIRED_HTTP = Symbol("retired HTTP room");
 const ROOM_RPC_METHODS = new Set([
   "reservationSnapshot", "stageSnapshot", "create", "submit", "prepare", "settle", "summary", "items", "history", "entry",
-  "outbox", "outboxItem", "log", "retained", "queryItems", "applicationProjection", "session", "stream", "release",
+  "outbox", "outboxItem", "log", "retained", "queryItems", "applicationProjection", "session", "stream", "watch", "liveSummary", "liveItems", "release",
   "incidents", "waiting", "credential", "requests", "keepOriginal", "listOriginals", "readOriginal", "endOriginal",
 ]);
 function retiredRoomAnswer(method: string): unknown {
@@ -319,11 +327,11 @@ function roomApi(binding: Binding, address: string | null, creationAdmission: Cr
       };
     } });
   };
-  const openStream = async (scope: string, reader: unknown): Promise<StreamExchange | StreamRefusal | typeof MISSING> => {
+  const openStream = async (scope: string, reader: unknown, kind: "stream" | "watch" = "stream"): Promise<StreamExchange | StreamRefusal | { ok: false; reason: LiveReadRefusal } | typeof MISSING> => {
     // Both public streaming and the private sandbox exchange retain the
     // session-only boundary before any native target lookup.
     if (presentsSignedRead(reader)) return { ok: false, reason: "forbidden" };
-    const object = at(scope), opened = await object?.stream(reader);
+    const object = at(scope), opened = await object?.[kind](reader);
     if (!object || !opened) return MISSING;
     if (!("body" in opened)) return opened;
     // The only capability is to close this exact already-authorized opening.
@@ -402,9 +410,12 @@ function roomApi(binding: Binding, address: string | null, creationAdmission: Cr
     async retained(scope: string, reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.retained(reader, kind, digest, domain)) ?? MISSING; },
     // With no option the second argument is not passed: an older object sees the call it always saw.
     async session(scope: string, asked: unknown, options?: SessionIssueOptions): Promise<SessionIssueAnswer> { return (await (options ? at(scope)?.session(asked, options) : at(scope)?.session(asked))) ?? MISSING; },
-    streamExchange: openStream,
+    streamExchange: (scope, reader) => openStream(scope, reader) as Promise<StreamExchange | StreamRefusal | typeof MISSING>,
+    watchExchange: (scope, reader) => openStream(scope, reader, "watch"),
+    async liveSummary(scope: string, reader: unknown): Promise<LiveRead<LiveSummary>> { if (presentsSignedRead(reader)) return { ok: false, reason: "forbidden" }; return (await at(scope)?.liveSummary(reader)) ?? MISSING; },
+    async liveItems(scope: string, reader: unknown, type: string, cursor?: Cursor): Promise<LiveRead<readonly Item[]>> { if (presentsSignedRead(reader)) return { ok: false, reason: "forbidden" }; return (await at(scope)?.liveItems(reader, type, cursor)) ?? MISSING; },
     async stream(scope: string, reader: unknown) {
-      const opened = await openStream(scope, reader);
+      const opened = await openStream(scope, reader) as StreamExchange | StreamRefusal | typeof MISSING;
       return "body" in opened ? opened.body : opened;
     },
     async incidents(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Incident[]>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.incidents(reader, cursor)) ?? MISSING; },
@@ -441,6 +452,7 @@ const READ_STATUS: Record<ReadRefusal, number> = {
 };
 const SESSION_STATUS: Record<SessionRefusal, number> = { "sessions-unavailable": 503, "bad-request": 400, "not-found": 404, misaddressed: 422, "clock-behind": 503, expired: 422, unauthorized: 403, replayed: 409, "rate-limited": 429 };
 const read = (result: Read<unknown>): Response => json(result.ok ? 200 : READ_STATUS[result.reason], result);
+const liveRead = (result: LiveRead<unknown>): Response => json(result.ok ? 200 : READ_STATUS[result.reason], result);
 /** The status of a refusal at the originals routes. Each answer of those routes is marked so that nothing stores it. */
 const ORIGINAL_STATUS: Record<string, number> = { ...READ_STATUS, "bad-request": 400, expired: 422, conflict: 409, full: 507, "room-full": 423 };
 const NO_STORE = { "content-type": "application/json", "cache-control": "no-store" };
@@ -540,7 +552,7 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
   if (v !== "v1" || root !== "scopes" || more.length > 0) return json(404, { error: "not-found" });
   // Only a retained input is named by two parts: its kind and its digest.
   if (what === "retained" ? which === undefined || last === undefined : last !== undefined) return json(404, { error: "not-found" });
-  if ((what === "sessions" || what === "stream" || what === "incidents" || what === "requests") && (scope === undefined || which !== undefined)) return json(404, { error: "not-found" });
+  if ((what === "sessions" || what === "stream" || what === "incidents" || what === "requests" || what === "live" || what === "live-stream") && (scope === undefined || which !== undefined)) return json(404, { error: "not-found" });
   // `?standing=1` on the sessions route asks for the signer's standing beside the session. It is a representation hint, outside the signed body.
   // Exactly one `standing` member with the value `1` asks. Any other `standing` is refused before the body is read, so no request identity is used.
   const standings = url.searchParams.getAll("standing");
@@ -646,8 +658,11 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
     const answer = await scopes.credential(scope, reader, which);
     return new Response(JSON.stringify(answer), { status: answer.ok ? 200 : READ_STATUS[answer.reason], headers: { "content-type": "application/json", "cache-control": "no-store" } });
   }
-  if (what === "stream") {
-    const opened = await scopes.streamExchange(scope, reader);
+  // The reads of live state and the watch (live note, section 3.5): beside the reads of the record, and never in one answer with them.
+  if (what === "live") return liveRead(await scopes.liveSummary(scope, reader));
+  if (what === "live-items" && which !== undefined) return liveRead(await scopes.liveItems(scope, reader, which, cursor));
+  if (what === "stream" || what === "live-stream") {
+    const opened = what === "stream" ? await scopes.streamExchange(scope, reader) : await scopes.watchExchange(scope, reader);
     if (!("body" in opened)) return read(opened);
     if (ctx) closeOnDisconnect(request.signal, opened.close, work => ctx.waitUntil(work));
     return new Response(opened.body, { status: 200, headers: { "content-type": "application/x-ndjson", "cache-control": "no-store" } });

@@ -466,7 +466,10 @@ export class SessionRequests {
  * read the summary. It sends the scope's head, as one line of JSON: once
  * when it opens, and after each commit. It sends nothing that a summary
  * read does not answer in `at`. No adopted text states what a public
- * stream sends or how it is framed (I3 deltas, entry ES7).
+ * stream sends or how it is framed (I3 deltas, entry ES7). The watch of a
+ * live scope is a stream of the same kind that sends the generation and
+ * the tick of its live state in place of the head (live note, section 3.5;
+ * `live-reads.ts`). Every rule below holds for it as written.
  *
  * - **Before every send** the session is checked again, whole, on the
  *   scope's own clock. A session that has ended, or that the scope no
@@ -501,29 +504,33 @@ export class SessionRequests {
  */
 export class Streams {
   readonly #readers: Readers;
-  readonly #head: () => Head | null;
+  readonly #head: Line;
   readonly #max: number;
   readonly #open = new Map<string, Subscription>();
   #released = 0;
 
   constructor(readers: Readers, head: () => Head | null, max: number = STREAMS) {
     this.#readers = readers;
-    this.#head = head;
+    this.#head = () => { const at = head(); return at ? { key: `${at.seq}:${at.hash}`, line: { at } } : null; };
     this.#max = max;
   }
 
   /** The streams open now, and the subscriptions released so far in this run. */
   counts(): { open: number; released: number } { return { open: this.#open.size, released: this.#released }; }
 
-  /** Open a stream for that reader, or the refusal of its session. `id` names the stream for its release, and for nothing else. */
-  open(reader: unknown): Opened | StreamRefusal {
+  /**
+   * Open a stream for that reader, or the refusal of its session. `id` names the stream for its release, and for nothing else.
+   * `line`: what the stream sends. By default the scope's head; the watch of a live scope sends its generation and tick
+   * (`live-reads.ts`). Each kind of stream counts against the one bound of the scope's streams.
+   */
+  open(reader: unknown, line: Line = this.#head): Opened | StreamRefusal {
     const allowed = this.#readers.allows(reader, "summary");
     if (allowed !== true) return { ok: false, reason: allowed === false ? "forbidden" : allowed };
     // A stream whose session this scope no longer accepts is closed now, so one that was never released does not hold a place.
     for (const held of [...this.#open.values()]) if (this.#readers.allows(held.reader, "summary") !== true) this.#close(held);
     if (this.#open.size >= this.#max) return { ok: false, reason: "unavailable" };
     const id = hex(crypto.getRandomValues(new Uint8Array(16)));
-    const subscription: Subscription = { id, reader, controller: null, released: false, last: null };
+    const subscription: Subscription = { id, reader, line, controller: null, released: false, last: null };
     const stream = new ReadableStream<Uint8Array>({
       start: (controller) => { subscription.controller = controller; },
       // The reader reads: a head that it has not been sent is sent now, after the session is checked again.
@@ -541,23 +548,22 @@ export class Streams {
     if (subscription) this.#close(subscription);
   }
 
-  /** After a commit: each open stream is sent the new head, or is closed by its session's check. */
+  /** After a commit or a change of live state: each open stream is sent what it has not been sent, or is closed by its session's check. */
   publish(): void {
     for (const subscription of [...this.#open.values()]) this.#send(subscription);
   }
 
   #send(subscription: Subscription): void {
     const { controller } = subscription;
-    const head = this.#head();
-    const now = head ? `${head.seq}:${head.hash}` : null;
+    const due = subscription.line();
     // Nothing that this reader has not been sent: nothing is due, and nothing is checked.
-    if (subscription.released || !controller || !head || now === subscription.last) return;
+    if (subscription.released || !controller || !due || due.key === subscription.last) return;
     // The whole check, on this scope's clock, before every send (section 3.9, "Whose clock").
     if (this.#readers.allows(subscription.reader, "summary") !== true) return this.#close(subscription);
-    // One line waits unread: nothing is queued behind it. The latest head is sent when the reader reads next.
+    // One line waits unread: nothing is queued behind it. The latest line is sent when the reader reads next.
     if ((controller.desiredSize ?? 0) <= 0) return;
-    subscription.last = now;
-    controller.enqueue(utf8(`${JSON.stringify({ at: head })}\n`));
+    subscription.last = due.key;
+    controller.enqueue(utf8(`${JSON.stringify(due.line)}\n`));
   }
 
   /** The service ends a stream: the reader's pending read completes, and the subscription is released. */
@@ -622,5 +628,7 @@ export function relay(opened: Opened, release: () => unknown): ReadableStream<Ui
   }, { highWaterMark: 0 });
 }
 
-/** One open stream. `last`: the head that its reader was sent last, or null. */
-interface Subscription { id: string; reader: unknown; controller: ReadableStreamDefaultController<Uint8Array> | null; released: boolean; last: string | null }
+/** What a stream sends now: the line, and a key that changes when the line does. Null: nothing to send yet. */
+export type Line = () => { key: string; line: unknown } | null;
+/** One open stream. `last`: the key of the line that its reader was sent last, or null. */
+interface Subscription { id: string; reader: unknown; line: Line; controller: ReadableStreamDefaultController<Uint8Array> | null; released: boolean; last: string | null }

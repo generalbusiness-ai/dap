@@ -11,7 +11,7 @@
  * journal's head, and each applied act or timed rule adds one.
  */
 
-import type { RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Cursor, Digest, Item, ReadRefusal, RefusalReason, ScopeRef, UnavailableReason } from "@generalbusiness/dap-contract";
 
 /**
  * The four answers to a live act.
@@ -30,3 +30,41 @@ export type LiveAnswer =
   | { answer: "refused"; reason: RefusalReason; name?: string; generation: string; tick: number }
   | { answer: "reset"; generation: string }
   | { answer: "unavailable"; reason: UnavailableReason };
+
+
+/**
+ * Why a live read gives no value, or why no watch opens. A read session
+ * authorizes the live reads as it authorizes the reads of the record, so
+ * the reasons of its check are the reasons of `ReadRefusal`. `not-found`:
+ * the scope is no active live scope, or names no such item type.
+ * `unavailable`: the scope holds as many streams as it may, or its
+ * creation entries do not fold.
+ */
+export type LiveReadRefusal = Extract<ReadRefusal, "forbidden" | "sessions-unavailable" | "clock-behind" | "not-found" | "unavailable" | "rate-limited">;
+
+/**
+ * One answer to a live read (live note, section 3.5). It names the
+ * generation and the tick of the state that it shows, and no head: a live
+ * read never answers a part of the record, and a read of the record never
+ * answers live state. `complete` and `next` page the items as a read of
+ * the record pages them.
+ */
+export type LiveRead<T> =
+  | { ok: true; generation: string; tick: number; value: T; complete: boolean; next?: Cursor }
+  | { ok: false; reason: LiveReadRefusal };
+
+/**
+ * The live summary: the items of each type that are in no final state, at
+ * most the type's `max`, by ID; and the count of every type and state of
+ * the definition, by type, then state, as the summary of the record counts
+ * them.
+ */
+export interface LiveSummary {
+  scope: ScopeRef;
+  definition: Digest;
+  items: readonly Item[];
+  counts: readonly (readonly [type: string, state: string, n: number])[];
+}
+
+/** One line of the watch: the live state changed, or a new generation started. A viewer that receives it reads again. */
+export interface LiveLine { generation: string; tick: number }
