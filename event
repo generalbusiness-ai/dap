@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cefa25e9b39a3f0a244853149d2f3707a03c9033","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-21-lv3-live-state-budget.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d31e71801303ff737a92e069f4e548cbd4fa8ae4","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/live.ts."}
