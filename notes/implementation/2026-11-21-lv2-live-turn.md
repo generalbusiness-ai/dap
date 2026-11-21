@@ -224,6 +224,13 @@ and concurrent control cover the corrected source. In each control
 the selected change failed the intended assertion, and the controller
 restored the source.
 
+The retry gate tested head `5448cf10288420605c4eef8621902a9acd681162`,
+tree `1be73cb1bef5e4980aa7b6031e6b0873e0b613f9`, with a clean checkout
+against the same origin/main. Its wall time was 1,300.28 seconds. The
+Native stage took 879,821.76 milliseconds and passed all 16 selected
+scale cases. The final follow-up adds this record. Source and tests
+match the retry gate tree.
+
 | Check | Command | Exit | Output | SHA-256 |
 |---|---|---:|---|---|
 | Native scope witnesses, 34 tests | `node_modules/.bin/vitest run --project scope packages/scope/test/live-turn.test.ts packages/scope/test/live-creation.test.ts packages/scope/test/turn.test.ts` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-gate/native.log` | `b920fe3e03fd39b643014d85d7aea4181d7ff48972a1326263182b816a6d19fb` |
@@ -238,6 +245,7 @@ restored the source.
 | Early two-lease control | `node scripts/control.mjs packages/scope/src/live.ts 'if (state.accepted(intent.actor, intent.idempotencyKey) !== null) {' 'if (false) {' --expect 'accepted repeat keeps its tick without draining' -- packages/scope --project scope test/live-turn.test.ts -t 'accepted repeat keeps its tick without draining'` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-retry-gate/control.log` | `f94c34b402c3ab23ee3336276f9341350e14fb0f7467214c332c75e41f4d3eca` |
 | Native live turns, 8 tests | `node_modules/.bin/vitest run --project scope packages/scope/test/live-turn.test.ts` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-retry-gate/native-sections.log` | `3e4d23709638fd27b7f233fc7c7dd0a56a785e3a46ad460bcf36a92e76c81486` |
 | Concurrent retry control | `node scripts/control.mjs packages/scope/src/live.ts 'if (state.accepted(intent.actor, intent.idempotencyKey) === null) return null;' 'if (true) return null;' --expect 'a concurrent accepted repeat keeps its tick' -- packages/scope --project scope test/live-turn.test.ts -t 'a concurrent accepted repeat keeps its tick'` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-retry-gate/control-sections.log` | `63fdc1cc495d2801a3afbf282c19a49d7da2e93f8766d80495d1948043e9425a` |
+| Retry review gate | `npm run gate` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-retry-gate/gate.txt` | `cc0eb911adedece0249d5fad89342aca12d17327530125be6475c6aeff2c14c8` |
 
 ## Open limits
 
