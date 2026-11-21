@@ -1,4 +1,4 @@
-// Transpile the four owning browser witnesses from real workspace sources, inspect their metafile, then use Node's test runner.
+// Transpile the five owning browser witnesses from real workspace sources, inspect their metafile, then use Node's test runner.
 import { build } from "esbuild";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { realpathSync, readdirSync, existsSync } from "node:fs";
@@ -24,7 +24,7 @@ if(JSON.parse(await readFile(resolve(root,"node_modules/esbuild/package.json"),"
 const dependencyRoots=[];
 for(const name of readdirSync(resolve(root,"node_modules"))){if(name.startsWith("." )||name==="@generalbusiness")continue;const candidates=name.startsWith("@")?readdirSync(resolve(root,"node_modules",name)).map(child=>name+"/"+child):[name];
   for(const name of candidates){const supplied=resolve(root,"node_modules",name),manifest=resolve(supplied,"package.json");if(!existsSync(manifest))continue;const pkg=JSON.parse(await readFile(manifest,"utf8"));if(lockData.packages?.["node_modules/"+name]?.version===pkg.version)dependencyRoots.push(realpathSync(supplied));}}
-const names=["client","voice-controller","app","device-key"];
+const names=["client","voice-controller","app","device-key","invitation-fragment"];
 const entries=names.map(name=>resolve(root,`apps/counter/browser/${name}.test.ts`));
 const output=realpathSync(await mkdtemp(resolve(tmpdir(),"artroom-counting-node-")));
 // Use every owned runtime export so a package root alias cannot turn a
