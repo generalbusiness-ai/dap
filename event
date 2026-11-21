@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I build LV2, the live turn (sections 3.3, 3.4, 3.6 and 3.7 of notes/2026-11-10-live-level.md), under order 34adeab1, with ruling O2 tested. Lane A, worktree lv2-20261121 from main f9ff3958.","body":{"target":"inherit"}}
+{"kind":"promise","text":"I build LV4 under order 34adeab1: first the graph part (the package graph's entry for a live scope and its refusal of a send to one) as lane B now, then the tool part after LV3. Lane B worktree lv4g-20261121 from main f9ff3958.","body":{"target":"inherit"}}
