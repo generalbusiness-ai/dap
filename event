@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I build LV4 under order 34adeab1: the graph part now (lane B, worktree lv4g-20261121 from main f9ff3958), the tool part after LV3. This promise replaces 35c43000 on the duplicate refile ac24656e.","body":{"target":"inherit"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e9aa825ee47964e2e01cfe087faa911b700cf1d1","text":"Replaced by promise 4b2b7be8 on the fresh LV2 request 8af903e9 (order ae71da85)."}
