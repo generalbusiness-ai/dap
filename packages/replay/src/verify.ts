@@ -41,7 +41,7 @@ import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/
 import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Seed, Bounds, CapabilityName, Digest, Entry, FactRef, FactUse, Grant, Head, KeyId, Observation, ObservationRequest, ObservationUse, MismatchName, PlatformData, PlatformDefinition, Report, RetainedInput, ScopeId, ScopeKind, ScopeRef, SequenceRef } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, digestBytes, isEntryOf, type CheckedSequence, rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isEntryBodyOf, isObservationUse, isPlatformDefinition, natural, parseStrict, platformName, resolveGenesisSelf, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { AmountError, RuleFault, ByteUsage, bound, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeActForReplay, judgeCheckpoint, judgeDeliveryForReplay, archivedPosition, countedEntries, heldPositions, judgeFloor, judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesisForReplay, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, preparationScopeGrant, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds } from "@generalbusiness/dap-derive";
+import { AmountError, RuleFault, ByteUsage, bound, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, liveActive, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeActForReplay, judgeCheckpoint, judgeDeliveryForReplay, archivedPosition, countedEntries, heldPositions, judgeFloor, judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesisForReplay, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, preparationScopeGrant, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds } from "@generalbusiness/dap-derive";
 import type { AnchoredJudgmentCopy, DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, SourceCopy, Observing, Owners, PlatformRules, PreparationJudgment, Own, RecordedRef, Retains, Rules, StateView, Texts, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES, evaluateRules } from "@generalbusiness/dap-derive/rule";
 import { PAGE_ENTRIES, PAGE_REPLY_BYTES, RETAINED_REPLY_BYTES, hashOfBytes, type HistorySource, type Stored } from "./source.ts";
@@ -1449,6 +1449,12 @@ class Verifier {
     if (!before && entry.clamped) throw mismatch("a genesis is not clamped");
     // A known head: the history must have that entry there (section 9.5, equivocation).
     if (!this.#room && run.id === this.#target && this.#expected?.seq === seq && this.#expected.hash !== hash) throw mismatch(`the history forks from the expected head: entry ${seq} has another hash than ${this.#expected.hash}`);
+
+    // The fold has already confirmed the live scope. A later entry is a
+    // mismatch even if its input names dependencies that cannot be read.
+    if (this.#mode === "replay" && run.definition && liveActive(run.definition, run.state.scope())) {
+      throw mismatch("a live scope records no entry after confirmation");
+    }
 
     // The actors' signatures.
     if (input.type === "act" && !verifySignedIntent(input.signed)) throw mismatch("the act's signature is not its actor's over its intent");
