@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/cli/test/demo-config.test.ts","body":{"commit":"28ce66ee0b93b57c5cff4f22c076b79107ce1e02","path":"packages/cli/test/demo-config.test.ts"}}
+{"kind":"artifact","text":"Merge published the current artifact at scripts/deploy-check.mjs","body":{"commit":"28ce66ee0b93b57c5cff4f22c076b79107ce1e02","path":"scripts/deploy-check.mjs"}}
