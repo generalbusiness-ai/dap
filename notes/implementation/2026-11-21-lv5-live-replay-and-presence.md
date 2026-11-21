@@ -109,6 +109,26 @@ the subject audit still report the original finding.
 | Historical subject audit | `node scripts/check-commit-messages.mjs --subjects-since 1900-01-01 HEAD` at `8faeb468` | 1, original finding present | `audit-summary.log` | `d33c3d8619e92c28888b346263ab8948ef7d0adec46089789736aed00081740f` |
 | Direct message check | `checkMessage` on merged LV4 subject and body | original line 1 length finding | `direct-check.log` | `5f592461e266fc42a32f24d9fc0723093de313e89db76fd92c2996f97c042274` |
 
+
+## Full gate
+
+`npm run gate` ran once at clean head
+`05bc393b160714fc0c820003f7bda6d1bd35115f`, tree
+`15b6f5027f1c9ca51ebb8f9f3315eeb55dd2a70a`. The gate selected all
+scales against fetched `origin/main` at
+`f9ff3958e079e7f36c85be1b455382794b1c87f4`. The evidence commit
+changes this note only. Source and test files match the gated head.
+
+| Check | Command | Exit and result | Log | SHA-256 |
+|---|---|---|---|---|
+| Full gate | `npm run gate` | 0, 1,916.28 s wall | `~/play/artroom-evidence/2026-11-21-lv5-retry-gate/gate.txt` | `ca9157f28a7dbc9e9884976845d50ea5ec0c05444e91412a3e6895eed7291f5c` |
+
+`/usr/bin/time -p` measured the gate's wall time. The kernel check
+passed. Node passed 246 cases and counting passed 58. The plain suite
+passed 5,074 cases and skipped one. The native suite passed 1,236
+cases and skipped two, and ran all 13 scale modules. The native run
+reported zero lost, five stale, and zero unowned timeout crossings.
+
 ## Limits
 
 B4 uses a test package. An authored package can add the opt-in binding
