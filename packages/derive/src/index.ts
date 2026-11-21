@@ -49,3 +49,6 @@ export * from "./floor.ts";
 export { readRetainedUses, isRetainedUse, inspectClassifiedRetainedUse, type RetainedUse, type SelectedRetainedUse, type ClassifiedRetainedUse, type RetainedUseRead, type RetainedUseProjection, type RetainedSelectionResult } from "./retained-use.ts";
 
 export { retainedResultContext } from "./operand.ts";
+
+// Experimental O1 integration; no budget is enabled by this export.
+export { liveCreation, liveDelta, liveLimit, liveMeterSpec, type LiveDelta, type LiveMeterSpec } from "./validate/live-meter.ts";

@@ -5,6 +5,7 @@
  * except where a test names the real read sessions of `sessions.ts`.
  */
 import { env } from "cloudflare:workers";
+import { runInDurableObject } from "cloudflare:test";
 import { describe, expect, test } from "vitest";
 import type { DeclaredDefinition, Grant, Intent, Item, ScopeId, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, definitionDigest, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
@@ -13,7 +14,7 @@ import { grantOf, keys, membership, type Actor, type Over } from "@generalbusine
 import { type LiveAnswer, type LiveLine, type LiveRead, type LiveSummary } from "@generalbusiness/dap-platform";
 import { liveForms } from "../../derive/test/definition-corpus/live-data.ts";
 import { LiveReads } from "../src/live-reads.ts";
-import type { LiveTurns } from "../src/live.ts";
+import { liveTurnsOf, type LiveTurns } from "../src/live.ts";
 import { Streams, mintSession, readerOf, sessionReaders, sessionsOf, type Opened } from "../src/sessions.ts";
 import { controls, testReaders, type Controls } from "../src/testing.ts";
 import { route } from "../src/worker.ts";
@@ -30,8 +31,7 @@ class Room {
   generation = "";
   constructor(readonly name: ScopeId, readonly c: Controls, readonly at: ScopeRef) {}
   /** `before`: what the test sets for this name before the object starts: its bounds, or its ports. */
-  static async create(before: (name: ScopeId, c: Controls) => void = () => undefined): Promise<Room> {
-    const declared: DeclaredDefinition = liveForms.timed();
+  static async create(before: (name: ScopeId, c: Controls) => void = () => undefined, declared: DeclaredDefinition = liveForms.timed()): Promise<Room> {
     const intent: Intent = { v: 1, to: null, actor: rita.key, kind: declared.genesis, on: null, expected: {}, fields: {},
       idempotencyKey: crypto.randomUUID(), notAfter: timeOf(timeMs(START)! + 60_000) };
     const seed: Seed = { v: 1, kind: "directory", definition: definitionDigest(declared), creator: null, cause: intentDigest(intent), ordinal: 0 };
@@ -159,6 +159,68 @@ describe("the live reads and the watch", () => {
   });
 
 
+});
+
+test("experimental live meter refuses a fresh act at capacity but retains retry and timer authority", async () => {
+  const declared = liveForms.timed();
+  declared.items["lease"]!.parties = {
+    source: { fixed: false, required: false, list: false, author: false },
+    author: { fixed: false, required: false, list: false, author: true },
+  };
+  declared.acts["lease"]!.effects = [...declared.acts["lease"]!.effects, { party: { slot: "source", from: { signer: true } } }];
+  declared.timed["expire"]!.effects = [{ party: { slot: "author", from: { slot: "source" } } }, { state: "ended" }];
+  const policy = { limit: Number.MAX_SAFE_INTEGER, used: 0 };
+  const R = await Room.create((_name, c) => { c.liveMeter = policy; }, declared);
+  const record = await stubOf(R.name).summary(reader);
+  const lease = R.lease();
+  expect(await R.live(lease)).toEqual({ answer: "applied", generation: R.generation, tick: 1 });
+  const watch = await R.watch();
+  expect(await watch.next()).toEqual({ generation: R.generation, tick: 1 });
+  let published = false;
+  const next = watch.next().then(line => { published = true; return line; });
+  policy.limit = policy.used;
+  const fresh = R.intent(rita, "count", { on: 0, expected: { on: 1 }, fields: { next: 1 }, notAfter: timeOf(timeMs(START)! + 120_000) });
+  expect(await R.live(fresh)).toMatchObject({ answer: "refused", reason: "scope-full", tick: 1 });
+  expect(await R.live(lease)).toEqual({ answer: "applied", generation: R.generation, tick: 1 });
+  expect(published).toBe(false);
+  expect(await R.read<LiveSummary>("/live")).toMatchObject([200, { tick: 1, value: { items: [{ values: { count: 0 } }, { type: "lease", state: "open" }] } }]);
+  R.c.clock.now = timeOf(timeMs(START)! + 60_000);
+  expect(await R.live(R.count(2, 999))).toMatchObject({ answer: "refused", reason: "revision-moved" });
+  expect(await next).toEqual({ generation: R.generation, tick: 2 });
+  const [, ended] = await R.read<Item[]>("/live-items/lease");
+  expect(ended).toMatchObject({ ok: true, tick: 2, value: [{ state: "ended", parties: { author: una.member }, attributed: [una.member] }] });
+  expect(policy.used).toBeLessThanOrEqual(policy.limit);
+  policy.limit = Number.MAX_SAFE_INTEGER;
+  expect(await R.live(fresh)).toEqual({ answer: "applied", generation: R.generation, tick: 3 });
+  expect(await stubOf(R.name).summary(reader)).toEqual(record);
+  await watch.cancel();
+});
+
+test("a whole-scope live generation keeps genesis marker duties and drains a marked timer at capacity", async () => {
+  const declaration = liveForms.timed();
+  declaration.capacity = { name: "whole-scope", version: 1 };
+  const flag = { fixed: false, required: true, of: { type: "bool" as const }, default: false };
+  declaration.items["tally"]!.values["flag"] = flag;
+  declaration.items["lease"]!.values["flag"] = flag;
+  declaration.acts["mark-tally"] = { step: "transition", on: "tally", grant: "count", also: {}, fields: {}, guards: [],
+    settles: { of: "on", sets: "flag", in: ["open"] }, effects: [{ value: { slot: "flag", from: { const: true } } }], sends: [], attention: [] };
+  declaration.acts["mark-lease"] = { step: "transition", on: "lease", grant: "lease", also: {}, fields: {}, guards: [],
+    settles: { of: "on", sets: "flag", in: ["open"] }, effects: [{ value: { slot: "flag", from: { const: true } } }], sends: [], attention: [] };
+  const policy = { limit: Number.MAX_SAFE_INTEGER, used: 0 };
+  const R = await Room.create((_name, c) => { c.liveMeter = policy; }, declaration);
+  const duties = (item: number) => runInDurableObject(objectOf(R.name), instance => {
+    const live = (instance as unknown as { [liveTurnsOf](): LiveTurns | null })[liveTurnsOf]()?.current();
+    return live?.view.itemDuties(item) ?? null;
+  });
+  expect(await duties(0)).toContainEqual(expect.objectContaining({ kind: "mark", slot: "flag" }));
+  expect(await R.live(R.lease())).toMatchObject({ answer: "applied", tick: 1 });
+  expect(await duties(1)).toEqual(expect.arrayContaining([expect.objectContaining({ kind: "mark", slot: "flag" }), expect.objectContaining({ kind: "deadline" })]));
+  policy.limit = policy.used;
+  R.c.clock.now = timeOf(timeMs(START)! + 60_000);
+  await runInDurableObject(objectOf(R.name), () => R.c.liveTimer!.fire());
+  expect(await R.read<Item[]>("/live-items/lease")).toMatchObject([200, { tick: 2, value: [{ state: "ended" }] }]);
+  expect(await duties(1)).toContainEqual(expect.objectContaining({ kind: "mark", slot: "flag" }));
+  expect(policy.used).toBeLessThanOrEqual(policy.limit);
 });
 
 describe("the watch's line", () => {

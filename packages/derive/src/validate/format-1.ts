@@ -5,6 +5,7 @@
  * this format; a stricter interpretation needs its own authorized version.
  */
 
+import { rememberLiveTypes } from "./live-meter.ts";
 import { hasAnyWorkspace, workspaceOwner } from "../capability/workspace.ts";
 import type { Bounds, DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { definitionDigest } from "@generalbusiness/dap-bytes";
@@ -203,7 +204,9 @@ export function validateFormat1(input: unknown, bounds: Bounds, profiles: Readon
   if (problems.length > 0) return { ok: false, problems };
   try {
     const keyed = [...d.types.values()].flatMap((type): [string, readonly string[]][] => (type.indexes ? [[type.name, type.indexes]] : []));
-    return { ok: true, definition: bindReads(d, { declared, digest: definitionDigest(declared), timedTypes: [...timedTypes].sort(), holdTypes: [...d.holdTypes].sort(), indexes: d.indexes, ...persistedCapacity, underived: d.underived, marks: d.marks, observing: d.observing, ...(d.ruleInputBytes > 0 ? { ruleInputBytes: d.ruleInputBytes } : {}), ...(reserved ? { reserving: reserved } : {}), ...(standing ? { standing } : {}), ...(keyed.length > 0 ? { keyed: Object.fromEntries(keyed) } : {}) }, FORMAT_1) };
+    const definition = bindReads(d, { declared, digest: definitionDigest(declared), timedTypes: [...timedTypes].sort(), holdTypes: [...d.holdTypes].sort(), indexes: d.indexes, ...persistedCapacity, underived: d.underived, marks: d.marks, observing: d.observing, ...(d.ruleInputBytes > 0 ? { ruleInputBytes: d.ruleInputBytes } : {}), ...(reserved ? { reserving: reserved } : {}), ...(standing ? { standing } : {}), ...(keyed.length > 0 ? { keyed: Object.fromEntries(keyed) } : {}) }, FORMAT_1);
+    if (live) rememberLiveTypes(definition, d.types);
+    return { ok: true, definition };
   } catch {
     return { ok: false, problems: [{ code: "shape", path: "", message: "has no canonical bytes" }] };
   }

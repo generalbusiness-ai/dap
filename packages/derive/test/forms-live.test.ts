@@ -2,7 +2,7 @@
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Entry } from "@generalbusiness/dap-contract";
 import { entryHash } from "@generalbusiness/dap-bytes";
-import { applyEntry, applyLive, checkpointOf, clockOf, derivable, entryOf, judgeGenesis, validateDefinition, type Problem } from "../src/index.ts";
+import { applyEntry, applyLive, checkpointOf, clockOf, derivable, entryOf, judgeGenesis, validateDefinition, MemoryState, type Problem } from "../src/index.ts";
 import { liveBase, liveDurableForms, liveForms, liveOutcomeSend } from "./definition-corpus/live-data.ts";
 import { contextParentData } from "./definition-corpus/general-creation-data.ts";
 import { Ledger, T0, creation, deliver, created, keys, valid } from "./fixtures-entry.ts";
@@ -100,4 +100,71 @@ test("applyLive folds a judged act into an active live scope's memory at the nex
   if (counted.result !== "write") throw new Error("count was not judged to write");
   const sealed = entryOf(recorded.state, counted.draft, clockOf(recorded.state, T0));
   expect(() => applyLive(recorded.state, recorded.definition, sealed, entryHash(sealed))).toThrow("only an active live scope applies a live input");
+});
+
+test("live staged folds leave the original state intact on refusal and fault, and commit the same result as a separate fold", () => {
+  const child = confirmed(liveBase());
+  const judged = child.judge(child.intent(keys.rita, "count", { on: 0, expected: { on: 1 }, fields: { next: 9 } }));
+  if (judged.result !== "write") throw new Error("the fixture act must write");
+  const entry = entryOf(child.state, judged.draft, clockOf(child.state, T0)), hash = entryHash(entry);
+  const staged = MemoryState.stagedLive();
+  for (const kept of child.entries) applyEntry(staged, child.definition, kept.entry, kept.hash, child.foldOptions);
+  const oracle = child.replay();
+  applyLive(oracle, child.definition, entry, hash, child.foldOptions);
+  const before = staged.snapshot();
+  let changed: readonly import("../src/live-stage.ts").StageChange[] = [];
+  const apply = () => applyLive(staged, child.definition, entry, hash, child.foldOptions);
+  expect(staged.liveTransaction(apply, (rows) => { changed = rows; return false; })).toBe(false);
+  expect(changed.map(row => row.collection)).toContain("accepted");
+  expect(changed.map(row => row.collection)).toContain("fixedHashes");
+  expect(staged.snapshot()).toBe(before);
+  expect(staged.fixedHash(entry.seq)).toBeNull();
+  expect(() => staged.liveTransaction(() => { apply(); throw new Error("after fold"); }, () => true)).toThrow("after fold");
+  expect(staged.snapshot()).toBe(before);
+  expect(staged.liveTransaction(apply, () => true)).toBe(true);
+  expect(staged.all()).toEqual(oracle.all());
+  expect(staged.fixedHash(entry.seq)).toBe(oracle.fixedHash(entry.seq));
+});
+
+test("a refused live fold does not publish a cross-item fixed-row rekey", async () => {
+  const { fixedValueOf } = await import("../src/fixed-index.ts");
+  const { canonicalize } = await import("@generalbusiness/dap-bytes");
+  const child = confirmed(liveBase());
+  const judged = child.judge(child.intent(keys.rita, "count", { on: 0, expected: { on: 1 }, fields: { next: 5 } }));
+  if (judged.result !== "write") throw new Error("the fixture act must write");
+  const entry = entryOf(child.state, judged.draft, clockOf(child.state, T0)), hash = entryHash(entry);
+  const raw = { entry: { at: child.at, seq: entry.seq, hash } };
+  const put = (state: typeof child.state) => {
+    const value = fixedValueOf(raw, child.at, seq => state.fixedHash(seq));
+    state.putFixed({ type: "other", slot: "proof", item: 999, state: "open", raw, key: value.key }, value.dependencies);
+  };
+  const staged = MemoryState.stagedLive();
+  for (const kept of child.entries) applyEntry(staged, child.definition, kept.entry, kept.hash, child.foldOptions);
+  put(staged);
+  const oracle = child.replay(); put(oracle);
+  applyLive(oracle, child.definition, entry, hash, child.foldOptions);
+  const before = canonicalize(raw), after = canonicalize({ entry: entry.seq });
+  const count = (key: string) => staged.fixedCount("other", "proof", key, ["open"], "normalized");
+  const apply = () => applyLive(staged, child.definition, entry, hash, child.foldOptions);
+  expect(count(before)).toBe(1);
+  expect(staged.liveTransaction(apply, () => false)).toBe(false);
+  expect([count(before), count(after), staged.fixedHash(entry.seq)]).toEqual([1, 0, null]);
+  expect(staged.liveTransaction(apply, () => true)).toBe(true);
+  expect([count(before), count(after)]).toEqual([0, oracle.fixedCount("other", "proof", after, ["open"], "normalized")]);
+});
+
+test("an admitted live reference keeps an unresolved future fixed dependency", () => {
+  const declaration = liveForms.timed();
+  declaration.items["lease"]!.refs["proof"] = { fixed: true, required: true, to: { type: "reference", fragment: 8 } };
+  declaration.acts["lease"]!.fields = { proof: { type: "reference", fragment: 8, required: true } };
+  declaration.acts["lease"]!.effects = [...declaration.acts["lease"]!.effects, { ref: { slot: "proof", from: { field: "proof" } } }];
+  const child = confirmed(declaration);
+  const future = { at: child.at, seq: child.head.seq + 2, hash: child.head.hash };
+  const lease = child.judge(child.intent(keys.rita, "lease", { fields: { proof: { entry: future } } }));
+  if (lease.result !== "write") throw new Error(`the reference was not admitted: ${JSON.stringify(lease)}`);
+  const entry = entryOf(child.state, lease.draft, clockOf(child.state, T0));
+  const state = MemoryState.stagedLive();
+  for (const kept of child.entries) applyEntry(state, child.definition, kept.entry, kept.hash, child.foldOptions);
+  expect(state.liveTransaction(() => applyLive(state, child.definition, entry, entryHash(entry), child.foldOptions), () => true)).toBe(true);
+  expect(state.fixedAffected(future.seq, future.hash)).toEqual([expect.objectContaining({ type: "lease", slot: "proof", item: entry.seq })]);
 });
