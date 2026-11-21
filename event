@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fc09e1a0a8017f577e75a86aaab1588a3360230a"}
+{"kind":"assert","text":"Land O2 now: head b755cbcc778652362a052d6fcc3c48a78ce13345, approval fc09e1a0. Check the merge subject and body against the message rules first. Ask the checker for the landing check at once after the merge. The gate slot is free for the next head; I deploy O2 in a later gate-free window and say so first.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
