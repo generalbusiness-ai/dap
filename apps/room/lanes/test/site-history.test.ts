@@ -1,19 +1,19 @@
 import { afterAll, expect, test, vi } from "vitest";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { otherLane } from "@generalbusiness/dap-derive/testing";
-import { Host } from "./support/host.ts";
-import { bare, cleanup, commitText, git, put, setRef } from "./support/repo.ts";
+import { Host } from "../../../../packages/git/test/support/host.ts";
+import { bare, cleanup, commitText, git, put, setRef } from "../../../../packages/git/test/support/repo.ts";
 
 // Only native publication and admission are stand-ins. The Site handler,
 // GitHub reader, upload-pack parser and local Git HTTP backend are real.
 const state = vi.hoisted(() => ({ room: null as unknown, publication: null as unknown, proof: null as unknown }));
-vi.mock("../../scope/src/site/host.ts", async importOriginal => ({
+vi.mock("../../../../packages/scope/src/site/host.ts", async importOriginal => ({
   ...await importOriginal<Record<string, unknown>>(),
   roomOf: async () => state.room,
   publicationOf: async () => state.publication,
   publishedCommitOf: async () => ({ ok: true, proof: state.proof }),
 }));
-vi.mock("../../scope/src/serving-admission.ts", async importOriginal => ({
+vi.mock("../../../../packages/scope/src/serving-admission.ts", async importOriginal => ({
   ...await importOriginal<Record<string, unknown>>(),
   admitServing: async () => "admitted",
 }));
@@ -59,7 +59,7 @@ test("anonymous Site serves a real Git revision with over 4096 history objects",
     if (request.method === "POST") posts++;
     return host.upstream(new Request(`http://127.0.0.1${path}`, { method: request.method, headers, ...(request.method === "POST" ? { body: await request.arrayBuffer() } : {}) }));
   };
-  const { site } = await vi.importActual<{ site: (request: Request, env: typeof settings, fetch: typeof send) => Promise<Response> }>("../../scope/src/site/route.ts");
+  const { site } = await vi.importActual<{ site: (request: Request, env: typeof settings, fetch: typeof send) => Promise<Response> }>("../../../../packages/scope/src/site/route.ts");
   const response = await site(new Request(`https://scopes.test/site/${otherLane.scope}/HEAD/README.md`), settings, send);
   expect([response.status, await response.clone().text()]).toEqual([200, expect.any(String)]);
   expect(await response.text()).toContain("Long history");
