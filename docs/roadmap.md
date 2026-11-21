@@ -14,7 +14,8 @@ keep stable, and lists the parts that fail its test today.
 
 | What | Where to read and check it |
 |---|---|
-| A scope keeps an ordered record, pins one definition, judges each signed act, and answers with a receipt or a refusal. | [Scopes](scopes.md), [The life of an act](manual/life-of-an-act.md) |
+| A recorded scope keeps an ordered journal, pins one definition, judges each signed act, and answers with a receipt or a refusal. | [Scopes](scopes.md), [The life of an act](manual/life-of-an-act.md) |
+| A live scope keeps its creation pair in the journal and holds subsequent state in memory. Applied live acts, successful reads, and watch lines name a generation and tick. | [Live scopes](scopes.md#live-scopes) |
 | Anyone with the record can replay it. The rehearsal of the repository story ends with fourteen scopes reported consistent. | [The record](manual/record.md), [Rehearse the demo](demo.md) |
 | Scopes compose by messages. The receiver reads the sender's entry, checks it, and judges the delivery in its own turn. Each request gets one result. | [Scopes: composition](scopes.md#composition) |
 | dap-room: membership, rules, issues, changes, reviews of an exact version, and publication to a Git host with a recorded outcome. Two changes on one base are settled by reservation and judgement. | [apps/room/docs](../apps/room/docs/first-change.md), [Rehearse the demo](demo.md) |
@@ -68,7 +69,7 @@ In order, nearest first.
 |---|---|---|
 | [The commons `note` act](../notes/2026-10-28-boundary-objects-in-use.md) | The first slice is built: `commons@1`, its `note` act and reference fields. The hosted `dap-commons` Worker is configured and holds no planned register in its source | Every case: readings, marks and agreements between parties |
 | [An application's own messages between scopes](#an-applications-own-messages-between-scopes) | A native test-host witness passes across rooms under v1 installation. V2 packages cannot yet declare an external receive port | 21, 25, 31, 32, 33, 37, 39, 40, 41, 51, and parts of 08, 18, 19, 24 |
-| [Durability levels](#durability-levels) | Recorded runs. The journal floor's first two slices and the archive binding are built. Live and the Sequenced level are designed, not built | 36, 44, and the live part of every case |
+| [Durability levels](#durability-levels) | Live and Recorded run. The journal floor's first two slices and the archive binding are built. Sequenced remains a design | 36, 44, and the live part of every case |
 | [A fork for each hold](#a-fork-for-each-hold) | Planned. A first measurement ran | 34 |
 | [Offline work and propose from a branch](#offline-work-and-propose-from-a-branch) | Proposing a branch's UTF-8 files is built. Offline work is designed, not built. A pack upload protocol is not designed | 34 |
 | [Private views in one record](#private-views-in-one-record) | Not designed in dap. Tested in the dap-spike | 42, and the club and the kanban board from the dap-spike's sweep |
@@ -140,15 +141,17 @@ room. The package design must keep that disclosure explicit.
 
 ### Durability levels
 
-**What it is.** A scope's definition declares one of three levels.
-**Live**: no record is kept, and the scope can reset. **Recorded**: the
-scope keeps its journal, as every scope does today. **Sequenced**: scopes
-that share an order use an order scope. An archive is not a durability
-level. It is a binding of the room.
+**What it is.** A scope's definition declares one of three levels. A
+**Live** scope keeps its creation pair and can reset its in-memory state.
+A **Recorded** scope keeps its journal. The **Sequenced** design gives
+scopes that share an order an order scope. A room can bind a journal
+archive independently of these levels.
 
-**Today.** Scopes run at Recorded only. A room's directory can bind a
-journal archive, and a signed package can require that binding before it
-installs. Rooms created before the binding keep their old platform
+**Today.** Scopes run at Live and Recorded. The live reader session
+authorizes summary and item reads, watches, and signed live acts. An
+installed application can use a bounded live projection in a mounted
+view. A room's directory can bind a journal archive, and a signed package
+can require that binding before it installs. Rooms created before the binding keep their old platform
 versions. A binding alone exports nothing. The archive engine runs on the
 hosted `dap-grow` Worker for the demo room. Other rooms cannot yet join
 an archive or consent to one. No command restores a room from an archive.

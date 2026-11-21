@@ -286,9 +286,24 @@ A definition without `level` uses recorded durability: the runtime
 commits its journal before it answers with a receipt. You can declare
 that requirement explicitly with `level: { name: "recorded", version: 1 }`.
 The explicit member changes the definition's bytes and digest. It does not
-change an existing scope's pin. The Live and Sequenced levels are not
-built. The validator refuses their declarations as
-`unsupported-definition`.
+change an existing scope's pin.
+
+Use `level: { name: "live", version: 1 }` for state that can disappear
+on reset. The live scope keeps its genesis and creator's confirmation.
+Use bounded items and timed rules for state such as a presence lease.
+Keep decisions that must survive a reset in a recorded scope. A live
+definition cannot use a send, a receive handler, a capability, or a
+`fact` field. The package graph refuses sends to a live scope.
+
+Read the live generation before submitting an act. To submit
+from TypeScript, use the session's `ScopeHandle.liveAct()`. The CLI's
+`dap act` selects the live interface from the pinned definition. If the
+scope answers `reset`, read the new generation and decide whether to
+submit again. An identical retry in the same generation returns the
+original applied tick. After reset, an unexpired intent can apply again.
+See [Live scopes](scopes.md#live-scopes).
+
+The runtime refuses creation at the Sequenced level.
 
 An archive is a binding of the room, not of a definition. A signed
 package can require it with `host.requires: ["archive"]`, and

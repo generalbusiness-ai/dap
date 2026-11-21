@@ -264,7 +264,7 @@ The subsections follow the order of the types in that file.
 | Member | Holds |
 |---|---|
 | `format` | `artroom-definition-1`. |
-| `level` | Optional durability level (`DurabilityLevel`): `live`, `recorded` or `sequenced`, version 1. Absent means `recorded`. The runtime supports `recorded` only. |
+| `level` | Optional durability level (`DurabilityLevel`): `live`, `recorded` or `sequenced`, version 1. Absent means `recorded`. The runtime supports `recorded` and `live`. |
 | `capacity` | Optional capacity rule (`CapacityVersion`). Absent means the scope counts entries only. `{ name: "whole-scope", version: 1 }` counts all five budgets: entries, bytes, items, records and requests. |
 | `name` | The name that a `fact` type's `under` compares with. |
 | `profile` | The rule-expression profile, by name and version. Required. |
@@ -925,6 +925,45 @@ retained inputs and one clock reading, and returns the entry that the input
 writes or the answer it gets. `applyEntry` is the only code that changes
 state. The runtime calls these functions inside the commit, and a verifier
 calls the same functions.
+
+## Live scopes
+
+A definition that pins `{ name: "live", version: 1 }` keeps its genesis
+and the creator's confirmation in the journal. Replay accepts that
+creation pair. A third entry in the live scope's journal is a mismatch.
+
+The runtime holds live state in memory. Each generation starts from the
+genesis state. An applied act or timed rule advances the generation's
+tick. An act that opens an item uses that tick as the item's ID. Item
+revisions still provide the `expected` check. A reset starts a new
+generation and discards live items, ticks, and the accepted-intent index.
+
+Live definitions have bounded items and state. The runtime refuses an
+act with `scope-full` if the act would exceed the scope's live state
+budget. The budget counts logical state bytes and has a 32 MiB ceiling.
+A live scope cannot send or receive deliveries, invoke capabilities, or
+provide facts that another record can cite.
+
+The live interface uses the scope's ordinary reference and an issued
+reader session. HTTP paths below start at `/v1/scopes/:scope`.
+
+| Operation | Result |
+|---|---|
+| `POST /live-act` | Judges a signed intent in the named generation. An applied answer carries the generation and tick. A refusal carries the reason, generation, and tick. A reset answer gives the current generation. An unavailable answer gives a reason. |
+| `GET /live` | Reads the live summary at a generation and tick. |
+| `GET /live-items/:type` | Reads one bounded page of live items of the named type at a generation and tick. |
+| `GET /live-stream` | Opens a watch with newline-delimited generation and tick pairs. A later line tells the reader to read the current state again. |
+
+The watch can skip intermediate ticks. A viewer can read the latest
+state after a notification or reconnection. A watch gives no guarantee
+that the host keeps a generation in memory.
+
+The client exposes `ScopeHandle.liveSummary()` and
+`ScopeHandle.liveAct()`. The ordinary reads and receipts describe the
+record. Applications can read a bounded live projection and invoke
+`view_live_act` from the mounted view that offered the action. That tool
+checks the current installation, view cut, and generation. See the
+[live level design](../notes/2026-11-10-live-level.md).
 
 ## Composition and delivery
 

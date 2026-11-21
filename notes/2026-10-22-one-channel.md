@@ -2,9 +2,9 @@
 
 Status: current. Draft 2, for request `1e8ef5d5`. Draft 2 answers review
 `b64354d7`: mixed reads are split, the checker's and gateway's local
-records are named, and D5, D13 and D21 are completed. Nothing here is
-built. It describes main `c40492ee`. It landed at `5cd53dcf` (approval
-`02e1ca94`).
+records are named, and D5, D13 and D21 are completed. The original audit
+describes main `c40492ee` and landed at `5cd53dcf` (approval `02e1ca94`).
+LV5 adds class E for live acts and reads.
 
 An agent in a room changes an issue's title. It signs an act, the issue's
 scope judges it, and the journal keeps it. A week later a verifier replays
@@ -20,7 +20,8 @@ limits.
 Every change is an act judged in a turn. Every read is of the record at a
 named position. Every effect on an outside system is a declared capability
 form whose outcome is its own entry. Any other surface is named in this
-audit, with its limits.
+audit, with its limits. A live read names a generation and tick. See
+[kernel promise 11](../docs/kernel.md#6-kernel-promises).
 
 The kernel boundary page (request `2ee805c5`) carries this sentence in its
 list of the kernel's promises.
@@ -32,7 +33,8 @@ list of the kernel's promises.
 | A. Act | A signed intent, judged in a turn, kept as an entry. | Replay derives it again. |
 | B. Read at a position | An answer from a scope's journal, items or summary, with the head it was read at. | The answer names `at` (`packages/contract/src/read.ts:18`), and the same read at the same head gives the same answer. An answer that also holds advisory, custody or operational fields is mixed: its recorded part is B, and the rest is D (D7). A head label alone does not make a field B. |
 | C. Capability form | An outside effect under a declared capability or operation, whose outcome is its own entry. | The attempt and its outcome are entries (`packages/scope/src/operations.ts:9-35`). |
-| D. Something else | Any surface that reads or changes state outside A, B and C. | It has a disposition in section 4. |
+| D. Something else | Any surface that reads or changes state outside A, B, C and E. | It has a disposition in section 4. |
+| E. Judged, not retained | A signed act judged in a live scope or a session read of its live state. The scope keeps the resulting state in memory for the generation. | A judgment or successful read names a generation and tick. The journal keeps only the creation pair. |
 
 A surface in class C can still trust what the outside system says. The
 scope records the answer and cannot check it
@@ -82,7 +84,8 @@ The gitseq workroom is a different system and is outside this audit.
 | Surface | Class | Evidence | Note |
 |---|---|---|---|
 | Card, carousel, record and log views | B, mixed heads | Each read point is a scope, a position and a hash (`packages/mcp/src/views/declared.ts:109`). | Related reads across scopes have no atomic snapshot (`docs/application-views.md`, lines 104 to 108). D2. |
-| View acts | A | Signed through the service (`packages/mcp/src/views/session.ts:249-275`). | — |
+| Recorded view acts | A | Signed through the service (`packages/mcp/src/views/session.ts:249-275`). | — |
+| Live view act and live projection read | E | The mounted view uses `view_live_act` for a signed act and `view_read` for a projection of a live scope. | The view binds both to its installation. A live act also names the view cut. |
 | Surface view, `window.dapSurface` | B by its API; D by placement | The API is `root`, `signal`, `onData`, `member` and `open` within the declared `opens` (`docs/application-views.md`, lines 242 to 253). | Package scripts run in the same document as the kit's tool bridge (`packages/mcp/browser/surface.ts:64-71`). Package code can then reach every listed tool. D12. |
 | Publication from a fold, `publish-file` | C | The destination opens `file-publication`; its push, mint and receipt are outcomes (`destination.ts:2592-2595`). | The scope does not check the text against the item's state ([fold publication](2026-10-13-fold-publication.md), lines 147 to 151). Any application scope of the room can write any path (same note, section 6). The path check refuses only control characters, empty segments and `.git` (`packages/bytes/src/edit-path.ts:11-15`). D13. |
 | Pages, `/site/*` | B | The head comes only from destination records (`docs/pages.md`, lines 235 to 242); files are read from Git by commit ID. | Each Artifacts read mints a short token and tries to revoke it, with no entry (`packages/scope/src/site/host.ts:195-202`). D14. |
@@ -107,7 +110,7 @@ The gitseq workroom is a different system and is outside this audit.
 | Surface | Class | Evidence | Note |
 |---|---|---|---|
 | Grow presence | A | `provision-presence`, `arrive` and `leave` are acts (`examples/grow/presence.ts:9-46`). | No heartbeat. |
-| Live presence, designed | D, not built | Volatile acts have no durability ([volatile acts](2026-10-09-shared-language-volatile-acts.md), lines 27 to 31). | D18. |
+| Live presence | E | An opted-in view reads the lease projection and uses live acts to enter, renew, and leave. | A timed rule expires a lease when the view loses its connection. D18. |
 | Retained files, designed | A for the reference; D for the upload | An entry names a file by digest ([retained files](2026-10-21-retained-files.md), lines 23 to 31). | A large upload is a request before any act (same note, lines 292 to 300), and sweeps and deletes run with no entry (lines 391 to 404). D19. |
 | Capture with a stated source, designed | A | Capture acts ([capture](2026-10-21-capture-with-source.md), lines 42 to 113). | The connector's token and reads stay outside; the content is the capturer's claim. |
 | Hosted agents, designed | A for team acts; D for model calls | Team policy, `commit`, `say` and `fail` are acts ([hosted Counter contracts](2026-10-15-hosted-counter-contracts.md), lines 130 to 158). | The model call, the spend ledger and the conversation stay private (same note, lines 224 to 227 and 525 to 541). D20. |
@@ -123,6 +126,8 @@ The gitseq workroom is a different system and is outside this audit.
 | Items, history, entries, log, retained, item queries, projections | B | Every answer names `at` (`worker.ts:318-371`). | — |
 | Summary, outbox, operation status, settle route | B and D mixed | The recorded fields name `at`. | The summary's `reservationExpiry` comes from a fresh clock at an unchanged head (`packages/scope/src/reads.ts:219-233`); the outbox carries dispatcher attempts (`reads.ts:326-342`); operation status carries driver bookkeeping (`reads.ts:345-359`). D7. |
 | `/v1/scopes/:s/stream` | B | Pushes each new head (`packages/scope/src/sessions.ts:499`). | Held in memory; a restart closes it. |
+| Live act | E | `POST /v1/scopes/:s/live-act` judges the signed intent under an issued session. | The applied answer gives a generation and tick. A live act has no recorded receipt. |
+| Live read and watch | E | `GET /v1/scopes/:s/live` and `/live-items/:type` give live state. The `/live-stream` watch gives generation and tick pairs. | Reads and watches use an issued session. A watch line prompts another read. |
 | `/v1/scopes/:s/sessions` | D: authentication | Membership answers from its head, with no entry (`sessions.ts:52-56`). | One secret covers every repository of a deployment (`sessions.ts:22-25`). The lifetime bound depends on two clocks (`sessions.ts:43-48`). D21. |
 | `/v1/scopes/:s/credential/:handle` | D | The route behind the `credential` tool (`worker.ts:375-379`). | D1. |
 | `/v1/demo/creation-offer` | B | A register projection with its head (`apps/room/demo-creation.ts:6-23`). | — |
@@ -236,8 +241,9 @@ outside, has one disposition here.
   through floor entries (F2, F3), and the write token is recorded as an
   operation of the archive binding. Until F3 is deployed, the record holds
   no archive receipt.
-- **D18. Live presence.** A new named class, "judged, not retained": a
-  volatile act is judged and then dropped. It is never evidence.
+- **D18. Live presence.** Class E covers both the live act and the live
+  read. A lease is current within one generation. The journal keeps the
+  creation pair and never cites a live lease as evidence.
 - **D19. Retained files.** The upload becomes a recorded preparation step,
   and sweeps and deletes become timed or outcome entries. This changes
   slices RF1 to RF4 before they are built.

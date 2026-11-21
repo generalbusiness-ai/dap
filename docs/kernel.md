@@ -98,7 +98,9 @@ it.
 ## 6. Kernel promises
 
 1. **The record is the interface.** Everything a person, an agent or a
-   verifier needs to know about what happened is in the record.
+   verifier needs to know about what happened is in the record. The state
+   of a live scope is the one exception. It is not in the record, and
+   nothing in the record rests on it.
 2. **Every entry form ever written stays replayable by the same derivation
    code.** Replay refuses no entry kind today: the `Verifier` class in
    `replay/src/verify.ts` handles all nine inputs. K1 is the way this
@@ -115,7 +117,9 @@ it.
    scope's present state.
 6. **A refusal carries its reason.** Every refusal names a reason code.
 7. **The sequence is the clock.** The order of a scope's entries is its
-   time. A recorded time is evidence of when, not the order.
+   time. A recorded time is evidence of when, not the order. A live scope
+   orders its inputs by tick inside one generation, and no order crosses
+   a reset.
 8. **A scope URI resolves.** Every thing with a scope is addressed by its
    scope's URI, and that URI resolves.
 9. **The runtime and the verifier call the same functions.** Both judge
@@ -131,7 +135,8 @@ it.
    record at a named position. Every effect on an outside system is a
    declared capability form whose outcome is its own entry. The
    [one-channel audit](../notes/2026-10-22-one-channel.md) names every
-   other surface, with its limits.
+   other surface, with its limits. A read of live state names a generation
+   and a tick, and it is not a read of the record.
 
 This list grows only by review. A change that removes a promise also needs
 the review in section 7.
