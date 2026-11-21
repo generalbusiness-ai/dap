@@ -3,7 +3,7 @@
 import type { ReadMinimum, ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import type { LiveApplicationProjectionRead } from "@generalbusiness/dap-platform";
 import { applicationItemSnapshot } from "@generalbusiness/dap-client";
-import { canonicalize, digestBytes, isLocalId, isMemberRef, parseStrict, unb64url, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, isLocalId, isMemberRef, isScopeRef, parseStrict, timeMs, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
 import { applicationProjectionId, applicationViewFactField, isApplicationJournalSource, readPublishedApplicationPackage2, type ApplicationView, type ApplicationViewAct, type PublishedPackedApplication2 } from "@generalbusiness/dap-platform/application-v2";
 import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule";
@@ -269,6 +269,38 @@ export class DeclaredViewSource implements ViewSource {
     if (reply.value.projection !== applicationProjectionId(projection)) throw new ViewError("unavailable", "The live projection does not match the installed declaration.");
     const rows = reply.value.sources[view.item];
     if (!rows || Object.keys(reply.value.sources).length !== 1) throw new ViewError("unavailable", "The live selection is incomplete.");
+    if (view.presence) {
+      const presence = view.presence, viewer = await this.port.viewer?.();
+      if (!viewer || !isMemberRef(viewer.member) || canonicalize(viewer.member.membership) !== canonicalize(install.membership)) throw new ViewError("unavailable", "The presence viewer is unavailable.");
+      const visible = rows.map(row => {
+        const member = row.fields[presence.member], focus = row.fields[presence.focus], expires = row.fields[presence.expires];
+        if (!isMemberRef(member) || !isScopeRef(focus) || typeof expires !== "string" || timeMs(expires) === null) throw new ViewError("unavailable", "The presence projection is malformed.");
+        return { member, focus, expires: expires as import("@generalbusiness/dap-contract").Timestamp };
+      });
+      const own = rows.filter((_row, index) => canonicalize(visible[index]!.member) === canonicalize(viewer.member) && canonicalize(visible[index]!.focus) === canonicalize(selection.scope));
+      const actions: NativeCardAction[] = [], offered: { enter?: string; renew?: string; leave?: string } = {};
+      for (const role of ["enter", "renew", "leave"] as const) {
+        if (role === "enter" ? own.length !== 0 : own.length !== 1) continue;
+        const index = view.acts.findIndex(control => control.act === presence[role]), control = view.acts[index];
+        const declaration = control && definition.acts[control.act];
+        if (!control || !declaration || !viewer.grants.includes(control.needs) || control.parameters || Object.keys(declaration.also).length) continue;
+        if (role === "enter" && (declaration.step !== "open" || control.when !== "true" || control.args && Object.keys(control.args).length)) continue;
+        const row = own[0];
+        if (role !== "enter") {
+          let allowed = false;
+          try { allowed = (await evaluate(control.when, input(row!))).value === true; } catch (error) { if (!(error instanceof RuleEvalError)) throw error; }
+          if (!allowed) continue;
+        }
+        const id = `presence-${role}`, on = role === "enter" ? null : row!.id, at = role === "enter" ? {} : { on: row!.revision };
+        actions.push({ id, label: control.label, purpose: "act", kind: control.act,
+          args: { target: selection.scope.scope, on, at, digest: projection.definition, fields: role === "enter" ? { [presence.focusField]: selection.scope } : control.args ?? {} },
+          live: { query: selection, generation: reply.generation, presence: { viewer: viewer.member, member: presence.member, focus: presence.focus } } });
+        offered[role] = id;
+      }
+      const members = await projectionMembers(projection, reply.value, this.port.members);
+      return { status: rows.length ? "ready" : "empty", position: 0, count: rows.length, scope: selection.scope, refresh: view.refresh, members,
+        fallback: "Live presence", presence: { viewer: viewer.member, rows: visible, ...offered }, presenceActions: actions };
+    }
     const ordered = view.order ? orderedViewRows(rows, view.order) : rows;
     if (!ordered.length) return { status: "empty", position: 0, count: 0, fallback: "This live view has no matching items." };
     const row = ordered[query.position];

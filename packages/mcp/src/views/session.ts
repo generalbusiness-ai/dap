@@ -139,9 +139,10 @@ function checkedLocal(action: LocalReviewAction, card: Card): void {
 
 function checked(projection: Projection, query: ViewQuery): Projection {
   if (utf8(canonicalize(projection)).length > 64 * 1024) throw new ViewError("unavailable", "The card projection exceeds its byte bound.");
+  if ((projection.presenceActions?.length ?? 0) > 3 || projection.presenceActions?.some(action => !action.live?.presence)) throw new ViewError("unavailable", "The presence actions are malformed.");
   if (!finite(projection.count) || !finite(projection.position) || (projection.count > 0 && projection.position >= projection.count)) throw new ViewError("unavailable", "The card projection has an invalid position.");
   const card = projection.card;
-  if (projection.status === "ready" && (!card || projection.count === 0)) throw new ViewError("unavailable", "The projection supplied no card for its ready result.");
+  if (projection.status === "ready" && ((!card && !projection.presence) || projection.count === 0)) throw new ViewError("unavailable", "The projection supplied no card for its ready result.");
   if (card) {
     if (card.actions.length > 2) throw new ViewError("unavailable", "A card may offer at most two acts.");
     if (new Set(card.actions.map((act) => act.id)).size !== card.actions.length) throw new ViewError("unavailable", "Card act IDs must be distinct.");
@@ -258,7 +259,7 @@ export class ViewSessions {
       entriesRead: entries, presented: entries.map((range) => ({ ...range })),
       reviewIntended: query.page === "updates" ? structuredClone(card?.reviewIntended ?? []) : [],
       unavailable: structuredClone(card?.unavailable ?? []), waitsOn: [...(card?.waitsOn ?? [])], settles: [...(card?.settles ?? [])],
-      navigation: query.page === "summary" ? [...(projection.status !== "ready" && projection.back ? ["back"] : []), ...(projection.position > 0 ? ["previous"] : []), ...(projection.position + 1 < projection.count ? ["next"] : []), ...(card && projection.status === "ready" ? ["open"] : [])] : ["back", ...(card?.diffAvailable && query.page === "item" ? ["diff"] : [])],
+      navigation: projection.presence ? [] : query.page === "summary" ? [...(projection.status !== "ready" && projection.back ? ["back"] : []), ...(projection.position > 0 ? ["previous"] : []), ...(projection.position + 1 < projection.count ? ["next"] : []), ...(card && projection.status === "ready" ? ["open"] : [])] : ["back", ...(card?.diffAvailable && query.page === "item" ? ["diff"] : [])],
       ...(query.page === "diff" && card?.shownRead ? { exact: { kind: card.shownRead.kind, commits: structuredClone(card.shownRead.commits), truncated: card.shownRead.truncated } } : {}),
       ...(card?.declared ? { note: card.declared.context } : {}),
       ...(instance.receipt ? { receipt: instance.exactReceipt?.of === instance.receipt ? instance.exactReceipt.text : instance.receipt } : {}),
@@ -270,6 +271,7 @@ export class ViewSessions {
       displayedCard.declared = declared;
     }
     return structuredClone({ view: instance.key, cut: instance.cut, active: this.#active(instance), query, status: projection.status, position: projection.position, count: projection.count,
+      ...(projection.presence ? { presence: projection.presence } : {}),
       ...(displayedCard ? { card: displayedCard } : {}), fallback: projection.fallback, context,
       ...(projection.scope ? { scope: projection.scope } : {}),
       ...(projection.back ? { back: projection.back } : {}),
@@ -320,6 +322,7 @@ export class ViewSessions {
         instance.query = { ...query, position: projection.position };
         instance.projection = projection;
         instance.cut++;
+        instance.liveDispatches.clear();
       } catch (error) {
         if (error instanceof ViewError) throw error;
         throw new ViewError("unavailable", "The card could not be refreshed. The previous card and receipt are retained.");
@@ -342,7 +345,8 @@ export class ViewSessions {
     const dispatchKey = `${cut}:${actionId}`, retained = instance.liveDispatches.get(dispatchKey);
     if (retained) return { result: await retained, display: this.#display(instance) };
     if (instance.busy) throw new ViewError("busy", "The card has an operation in progress.");
-    const action = instance.projection.card?.actions.find((candidate): candidate is NativeCardAction => !candidate.local && candidate.id === actionId && !!candidate.live);
+    const action = instance.projection.presenceActions?.find(candidate => candidate.id === actionId)
+      ?? instance.projection.card?.actions.find((candidate): candidate is NativeCardAction => !candidate.local && candidate.id === actionId && !!candidate.live);
     if (!action || !this.ports.liveAct || action.parameters) throw new ViewError("shape", "The displayed card offers no such live act.");
     if (instance.liveDispatches.size >= 32) throw new ViewError("busy", "This view retains 32 live outcomes. Open a new view.");
     instance.busy = true;
@@ -447,6 +451,7 @@ export class ViewSessions {
     instance.projection = shown;
     instance.query = query;
     instance.cut++;
+    instance.liveDispatches.clear();
     return true;
   }
   /** A complete retained answer signs nothing. A truncated answer can run again; a failure keeps the page and says why. */
@@ -548,11 +553,13 @@ export class ViewSessions {
         card.unresolvedOriginal = true;
         card.actions = [original];
         instance.cut++;
+        instance.liveDispatches.clear();
       } else if (answer.answer !== "unavailable" && action.purpose === "check-original") {
         instance.pending.delete(itemKey);
         card.unresolvedOriginal = false;
         card.actions = [];
         instance.cut++;
+        instance.liveDispatches.clear();
       }
       return { result, display: this.#display(instance) };
     } finally { instance.busy = false; }

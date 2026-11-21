@@ -3,7 +3,7 @@ import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 /** Pure presentation and mounted-view custody-boundary fixtures. The native
  * install/projection/standing ports below are explicit in-memory answers. */
 import { expect, test } from "vitest";
-import type { DeclaredDefinition, ScopeRef } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from "@generalbusiness/dap-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
 import { applicationProjectionId, applicationProjectionQueryDigest, packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
@@ -15,6 +15,35 @@ import type { CallResult } from "../src/service.ts";
 import { viewTools } from "../src/views/tools.ts";
 import { viewToolName } from "../src/views/names.ts";
 const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
+
+test("presence offers lifecycle acts only for the authenticated viewer and retains refresh on empty views", async () => {
+  const { packet } = await applicationPresencePacket("1", true);
+  const installation: ApplicationInstallation = { scope, directory: scope, membership: scope, rules: scope, destination: scope,
+    definition: packet.package.semantic.entry, ids: packet.ids, item: 7 };
+  const viewer = { membership: scope, member: "@alice" as const }, other = { membership: scope, member: "@bob" as const };
+  const projection = packet.package.semantic.projections["cards"]!, control = packet.package.presentation.views["cards"]!;
+  let rows: { id: number; type: string; state: string; revision: number; fields: { member: MemberRef; focus: ScopeRef; expires: string } }[] = [];
+  const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
+    installation: async () => installation, viewer: async () => ({ member: viewer, grants: [control.acts[0]!.needs] }), actions: async () => [],
+    projection: async () => { throw Error("No recorded projection is read."); },
+    liveProjection: async query => ({ ok: true, query: applicationProjectionQueryDigest(query)!, generation: "one", tick: 3, complete: true,
+      value: { scope: query.scope, definition: projection.definition, projection: applicationProjectionId(projection), sources: { cards: rows } } }),
+  });
+  const query = { screen: "cards", scope, page: "summary" as const, position: 0 };
+  const empty = await source.read(query);
+  expect(empty).toMatchObject({ status: "empty", scope, refresh: 2000, presence: { viewer, rows: [], enter: "presence-enter" } });
+  expect(await source.read({ screen: "cards", page: "summary", position: 0 })).toMatchObject({ scope });
+  expect(empty.presenceActions?.[0]).toMatchObject({ args: { on: null, at: {}, fields: { focus: scope } } });
+  rows = [{ id: 4, type: "card", state: "here", revision: 1, fields: { member: other, focus: scope, expires: "2026-11-21T12:00:30Z" } }];
+  const others = await source.read(query);
+  expect(others.presence).toMatchObject({ enter: "presence-enter" });
+  expect(others.presence?.renew).toBeUndefined();
+  rows.push({ id: 5, type: "card", state: "here", revision: 2, fields: { member: viewer, focus: scope, expires: "2026-11-21T12:00:30Z" } });
+  const own = await source.read(query);
+  expect(own).toMatchObject({ scope, presence: { renew: "presence-renew", leave: "presence-leave", rows: [expect.objectContaining({ focus: scope }), expect.objectContaining({ focus: scope })] } });
+  expect(own.presence?.enter).toBeUndefined();
+  expect(own.presenceActions?.map(action => action.args["on"])).toEqual([5, 5]);
+});
 
 test("a declared live view displays only its selected projected row and retains its action binding", async () => {
   const { packet } = await applicationPresencePacket();

@@ -1,0 +1,138 @@
+# LV5 live replay and presence
+
+LV5 completes the live level's replay and documents the level. An
+opted-in view can display live lease rows through the member element
+and send the lease actions offered on its current view cut.
+
+## Decisions
+
+Replay uses the existing live creation predicate. It verifies the
+genesis and creator confirmation of a created live scope. After that
+pair, a canonical third entry yields a mismatch before replay asks
+for that entry's retained inputs. The focused replay control disables
+that early rejection. The forged entry then reports incomplete because
+its foreign retained input is missing.
+
+Kernel promises 1, 7, and 11 use the sentences in section 4.3 of the
+live level note. The one-channel audit names live acts and reads as
+"judged, not retained". Section 7 review covers the replay change
+under ruling `4b5e0ec2`. LV5 uses the existing entry types, live
+predicate, package binding, and app-only tool.
+
+The declared binding uses one source of active lease rows. It names
+the member, focus, and expiry aliases and the three lifecycle acts.
+The opener supplies the mounted scope as the focus and binds the
+member to the signer. A native guard admits one active lease for the
+member and focus pair. Renewal and leave target the viewer's own
+current row. The declarations require two refresh intervals to fit
+inside the lease. The fixture declares a 30-second lease.
+
+The installed native fixture exercises MCP, scope storage, the issued
+session, and the live turn. It sees the real authenticated member in
+the display table, enters with the full focus reference, renews, and
+leaves. An injected clock and timer then drive the actual timed
+transition before any later view read. The journal still has its two
+creation entries.
+
+The production generated kit renders `here` when both scope reference
+fields match. A Chromium test uses scripted host replies to check the
+member text and app-only calls with their exact displayed cuts.
+On resource teardown, the browser can send leave while the bridge is
+available and the view is idle. The timed rule ends a lease when the
+close is lost. The planner approved the native and Chromium witness
+boundaries.
+
+The generated MCP card resources are reproduced from the updated kit.
+The signed packets, authored packages, and open release identifiers
+match the landed LV4 tree under `apps/` and `examples/`.
+
+## Focused evidence
+
+The replay and presence checks ran on the isolated LV5 branch carried
+onto the passing LV4 review candidate. Rebasing onto landed LV4 kept
+the tested source tree. The focused outputs below are retained with
+the corrected gate under `~/play/artroom-evidence/2026-11-21-lv5-retry-gate/`.
+Draft failures remain under `~/play/artroom-evidence/2026-11-21-lv5-focused/`.
+
+| Check | Command | Exit and result | Log | SHA-256 |
+|---|---|---|---|---|
+| Replay creation | `npm test --workspace @generalbusiness/dap-replay -- test/live-creation.test.ts` | 0, 1 passed | `replay-creation.log` | `bc64d61b41d6ad07c7d8e726f6c6c5937a8be9bd89317011e747df3a9fe9c62e` |
+| Replay rejection control on LV2 | `node scripts/control.mjs` with the replay predicate disabled | 0, distinguishes mismatch from incomplete | `replay-control-on-lv2.log` | `c8f7bc88236d782c69b3a8d8dceb81d7d4f791a1277d0dcb3f143f131d6f64b1` |
+| Replay types | `npm run typecheck --workspace @generalbusiness/dap-replay` | 0 | `replay-types.log` | `bfa936e6ac3350bc231de0d8a02765e43afc255bf7b9ea23aa4213cb09752357` |
+| View binding | Platform Vitest, `test/application-view.test.ts` | 0, 10 passed | `presence-binding-test.log` | `f54b0ff1d3430b095fac76955c8551607f4bcb6b5c51ea71158feda371d650ba` |
+| Platform types | `npm run typecheck --workspace @generalbusiness/dap-platform` | 0 | `presence-binding-types-pass.log` | `8e1906f22f3ac7a95ff9fe28fb85bb3e0cdc12b3ff75f3f416de9d1c010998f3` |
+| Installed scope presence | Scope Vitest, `test/application-live-presence.test.ts` | 0, 3 passed | `scope-presence-pass.log` | `37da2b34e089bcfff6b93f9970500ae89e237185126e5527b17e890f314bcd48` |
+| Scope types | `npm run typecheck --workspace @generalbusiness/dap-scope` | 0 | `scope-types-pass.log` | `fb2b1b20daea8ec6bdc1bf8b7eceb9b3703b9e4ffe7530b18d9218bb23d34976` |
+| MCP declared views and sessions | MCP Vitest, `test/declared-views.test.ts` and `test/view-sessions.test.ts` | 0, 31 passed | `mcp-views-verified.log` | `edb6ad266d7624f537c9660321e7bf9f042f4628bff680e5c18ae31e6ee9d422` |
+| MCP types | `npm run typecheck --workspace @generalbusiness/dap-mcp` | 0 | `mcp-typecheck-verified.log` | `c1e1f1c2bbd0cff21cb159852caefece8652f03525b695b9f47a14976469405b` |
+| MCP entry-point inventory | `node --test scripts/security-entry-points.test.mjs` | 0, 13 passed | `mcp-security-inventory.log` | `8d378997aeea8e5da5ab96da78663727e5cba002197d49dccbeede337f8b4fb7` |
+| Card reproduction | MCP Vitest, `test/view-resources.test.ts` | 0, 6 passed | `lv5-view-resources.log` | `a78ecbe15486cd265362a84e28cd979fcd63a592cfe85a654b135475a8e92298` |
+| Pins after the reviewed seal | `timeout 60 npm run pins` | 0, 19.70 s wall | `pins-after-inventory.log` | `8eaa7fed5fac855317c6a74bcadc630ad90a15dce4661e41b3b7fd3bbc7265a3` |
+| Browser presence | `node --import tsx packages/mcp/test/presence-browser.mjs` with the pinned browser and host | 0, 2 modes | `lv5-presence-browser.log` | `03daf64415313936d826c02cf233f043e1bc36a17d02778c479198204d88469b` |
+| Documentation links | `node scripts/check-doc-links.mjs` | 0 | `lv5-doc-links.log` | `f7e2079a2c8c6a91e1f5bc4b6044bccc8fedac02ff0387e9b75059d29b60efa0` |
+| Section citations | `node scripts/check-section-citations.mjs --report /private/tmp/artroom-lv5-section-citations.json` | 0 | `lv5-citations.log` | `36796a031e391abf6ecfbe8e99328848c6f99a6e67a8441edc5c4ef5e0382260` |
+
+The browser used Playwright 1.63.0 and Chromium revision 1243. The
+Browser plugin skill was unavailable. The report contains the two
+browser cases and their error counts. The screenshot shows two member
+rows with different genesis values for the same focus scope ID. The
+command file records the build, browser, and resource checks.
+
+| Browser evidence | File | SHA-256 |
+|---|---|---|
+| Commands and exits | `lv5-browser-commands.txt` | `1cca47e2897ecfe2a021eed69adb53b97546f6f9878d5f844dcdd394061c8c08` |
+| Chromium report | `report.json` | `da4fb2895560f4efcda756ddd1b81d5550a60dc132714b08052efa4a4cafed0d` |
+| Member element at the passive cut | `presence-passive.png` | `1c4336836c32e32970ffc185b31c8ce15f1927286d980874fcf604cf8b534584` |
+
+## Inherited merge subject
+
+The first full gate ran once at clean head
+`3bc0a4f51ad04d437da7f688121dc4f60a58cd07`, tree
+`1f9418130391c65292f1e1903b402925ff4a8f14`. It exited 1 after 0.46 s
+at the commit-message check. The check flagged the 185-character
+subject of landed LV4 merge `446e2ab8d0d7ec6ab477e32b11cd925620c2ef5b`.
+The builder supplied that subject as the merge text. The gate reached
+none of the test stages. The original `gate.txt` remains under
+`~/play/artroom-evidence/2026-11-21-lv5-gate/` with SHA-256
+`01af58ff32f16b733647aa772698ae7ba2f465cad5eed438060185251ea6bd67`.
+
+Ratification `b9d87de3` approves proposal `0bfc78e2`. The ordinary
+range command reports an accepted exception only for the exact
+inherited merge when its sole finding is line 1 and length 185. Every
+other finding continues to fail the range check. Direct checks and
+the subject audit still report the original finding.
+
+| Check | Command | Exit and result | Log | SHA-256 |
+|---|---|---|---|---|
+| Subject exception controls | `node --test scripts/check-commit-messages.test.mjs` | 0, 5 passed | `focused-test.log` | `f848c7c7ded6a6f6f1570f861e5ce25b8c3e2d1c0903e23fcb974f2f6c9cfa27` |
+| Exact inherited range | `node scripts/check-commit-messages.mjs origin/main HEAD` at `8faeb468` | 0, 37 checked, one accepted | `range-final.log` | `a66d7aa1f79791b1c0cdd270efb157f6be45a8ada911146f73f01812fd03dbed` |
+| Historical subject audit | `node scripts/check-commit-messages.mjs --subjects-since 1900-01-01 HEAD` at `8faeb468` | 1, original finding present | `audit-summary.log` | `d33c3d8619e92c28888b346263ab8948ef7d0adec46089789736aed00081740f` |
+| Direct message check | `checkMessage` on merged LV4 subject and body | original line 1 length finding | `direct-check.log` | `5f592461e266fc42a32f24d9fc0723093de313e89db76fd92c2996f97c042274` |
+
+
+## Full gate
+
+`npm run gate` ran once at clean head
+`05bc393b160714fc0c820003f7bda6d1bd35115f`, tree
+`15b6f5027f1c9ca51ebb8f9f3315eeb55dd2a70a`. The gate selected all
+scales against fetched `origin/main` at
+`f9ff3958e079e7f36c85be1b455382794b1c87f4`. The evidence commit
+changes this note only. Source and test files match the gated head.
+
+| Check | Command | Exit and result | Log | SHA-256 |
+|---|---|---|---|---|
+| Full gate | `npm run gate` | 0, 1,916.28 s wall | `~/play/artroom-evidence/2026-11-21-lv5-retry-gate/gate.txt` | `ca9157f28a7dbc9e9884976845d50ea5ec0c05444e91412a3e6895eed7291f5c` |
+
+`/usr/bin/time -p` measured the gate's wall time. The kernel check
+passed. Node passed 246 cases and counting passed 58. The plain suite
+passed 5,074 cases and skipped one. The native suite passed 1,236
+cases and skipped two, and ran all 13 scale modules. The native run
+reported zero lost, five stale, and zero unowned timeout crossings.
+
+## Limits
+
+B4 uses a test package. An authored package can add the opt-in binding
+under separate work. Grow still reports activity through its recorded
+window. The live runtime can reset a generation. The browser witness
+uses the generated kit with a scripted host, and the native witness
+supplies the installation and clock authority.

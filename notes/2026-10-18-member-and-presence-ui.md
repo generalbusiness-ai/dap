@@ -2,9 +2,9 @@
 
 Status: current. Draft 3, 19 October 2026. It is approved at `c16fe0aa`
 and landed at `9554919b`. D1 (`8aad37bb`) and B1 (`9c6d344c`) have
-landed; B2, B3 and B4 are not built. It sets a common framework for
-showing a member anywhere in a dap interface, and for showing a member's
-presence from a recorded source now and from the live surface later. It
+landed. LV5 delivers B4 for views that opt into a live presence binding.
+B2 and B3 remain separate. This note describes how the member element
+shows identity and presence from recorded or live sources. It
 fixes what the member element shows, where its data comes from, and how
 an application author gets it with little effort. The builder designs
 the element's appearance and the screens that use it, following the
@@ -43,15 +43,12 @@ membership scope and a member ID (`packages/contract/src/scope.ts:104`).
 So the data exists and the read exists. What is missing is one element
 that every surface uses, and one path that fills it.
 
-Live presence is designed and not built. The roadmap's "Durability
-levels" entry says so, and the validator refuses every level but
-recorded. Recorded presence exists in one place: the grow site's
-`arrive` and `leave` acts, which are signed comments with no effects
-(`examples/grow/site.ts:10,28`), and a projection over the last 100
-entries of the site's journal filtered to those acts
-(`examples/grow/check/dap.application.json`, projection `presence`). That
-projection is recent reported activity. It is not who is in each room
-now: a member whose last arrival is older than the window has no row.
+An opted-in view can show a live lease. Grow reports activity from its
+recorded projection over the site's
+`arrive` and `leave` acts. The projection covers the last 100 journal
+entries and filters them to those acts
+(`examples/grow/check/dap.application.json`, projection `presence`). A
+member whose last arrival precedes the window has no row.
 Decision `72c9d5e5` of 19 October commissions the complete source, a
 presence item per member on the site scope, as the second G3 head of
 plan 033. The element must therefore be built against the declaration's
@@ -190,10 +187,9 @@ and the Counter import. That consolidation is its own request.
 
 The element takes presence from one of two sources, chosen by the view.
 
-1. **The live scope**, once it exists: the `presentAt` query and the
-   actor summary of the declaration (volatile acts note, sections 2 and
-   7). Not available at this note.
-2. **The recorded presence item**, as the stand-in before the live scope:
+1. **The live scope.** An opt-in binding uses an installed live
+   projection of active lease rows. See the lifecycle below.
+2. **The recorded presence item**, designed for B3:
    one item per member on the site scope, which `arrive` opens or moves
    and `leave` closes. Decision `72c9d5e5` commissions it as the second
    G3 head of plan 033, after G3's first head lands and before G5. The
@@ -253,24 +249,23 @@ item's report fact, whose entry is 2, and not from its revision, which
 is 1. The window read holds no Rita row and shows "unknown". Neither
 shows Rita as absent, and no read scans past the window.
 
-**Renewal is B4, and nothing today provides it.** Enter, Renew and Leave
-are acts judged under the viewer's session, with the declaration's
-ownership, generation and expected checks. A read token writes nothing.
-When the live scope exists, these acts go through a new app-only tool in
-the shape of `view_read` (`packages/mcp/src/views/tools.ts:67`), never
-the model's tool surface, because a chat host may show every tool call.
-The host calls it on the kit's refresh timer
-(`packages/mcp/browser/main.ts:25-29`): the lease is 30 seconds and the
-grow views refresh every 2 seconds, so a view that is open keeps its
-lease, and closing the view leaves presence. Each call is one act; no
-lease extends without one.
+**Opt-in live presence.** A declared view can bind `presence` to its
+live projection. It names the member, focus, and expiry fields, the
+opener's focus field, and the enter, renew, and leave acts. The view
+uses the member element to show the current lease rows. The element
+shows "here" when the row's focus matches the full selected scope
+reference.
 
-**A decision for review.** Whether opening a card enters presence with
-focus on that subject, as section 12 of the volatile acts note sketches,
-or only after the viewer sets a status. The planner's recommendation:
-enter on open with focus on the subject and no status, because the
-"here" expression is the one most views need, and the viewer can still
-set busy or blocked by hand.
+The mounted view opens a lease for its authenticated viewer with focus
+on the selected scope and no status. The view uses the app-only tool
+`view_live_act` with its current cut. The runtime judges each act under
+the pinned definition and the installation's session. Renew and leave
+target the viewer's own lease and use its current revision.
+
+The view refreshes before renewal, and an applied renew act extends the
+lease. The installed fixture declares a 30-second lease. Host teardown
+can send a leave when the bridge and current cut are available. If the
+close is lost, the expiry rule ends the lease.
 
 ## 6. Use cases
 
@@ -349,9 +344,10 @@ packet comes first and is reviewed before any build.
    unavailable", never a scan. Witnesses: the grow site overview shows
    who is reported in each room through the element, and the
    late-opening client of section 5.
-5. **B4. Live presence.** The live source and renewal through the
-   app-only tool. Waits for the live scope's executor, which plan 033
-   does not commission. Not commissioned by this note.
+5. **B4. Live presence.** An opted-in view shows live lease rows on
+   the member element. An installed fixture witnesses entry, renewal,
+   leave, and timed expiry. Adding the binding to an authored package
+   is a separate change.
 
 B1 and B2 need nothing that is not on main. B3 needs the presence item
 of the second G3 head.

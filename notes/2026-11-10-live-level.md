@@ -190,10 +190,10 @@ type LiveAnswer =
   | { answer: "unavailable"; reason: UnavailableReason };
 ```
 
-`applied` carries no receipt, no hash and no `FactRef`. Its tick is the
-ID of an item that the act opened. A refusal names the generation and
-the tick that judged it, where a recorded refusal names a head. The
-reasons are the reasons of the recorded contract.
+`applied` carries no receipt, no hash and no `FactRef`.
+If the act opened an item, the tick is its ID. A refusal names the
+generation and the tick that judged it, where a recorded refusal names
+a head. The reasons are the reasons of the recorded contract.
 
 The answer `applied` is not the clause `applied` of a send's result
 (`OutboxItem.result` in `packages/contract/src/read.ts`). The creator's

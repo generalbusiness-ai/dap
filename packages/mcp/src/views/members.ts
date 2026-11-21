@@ -42,7 +42,7 @@ function displayMember(ref: MemberRef, snapshot: MembershipDisplaySnapshot | nul
   };
 }
 
-export async function projectionMembers(declaration: ApplicationReadProjection, data: ApplicationProjectionData, read?: MembershipDisplayRead): Promise<MemberTable> {
+export async function projectionMembers(declaration: ApplicationReadProjection, data: Pick<ApplicationProjectionData, "sources">, read?: MembershipDisplayRead): Promise<MemberTable> {
   const distinct = new Map<string, MemberRef>();
   const collect = (value: FieldValue | null | undefined) => {
     if (isMemberRef(value)) distinct.set(canonicalize(value), value);

@@ -607,12 +607,20 @@ export class McpService {
       if (!act || action.kind === definition.genesis) return failed({ error: "shape", sentence: "The view action is unavailable.", next: "Open the view again." });
       this.#admitTarget(snapshot, { scope, ref: summary.scope, place: "root", pinned: summary.definition, definition, membership: membership.scope }, action.kind, action.kind);
       const on = action.args["on"], at = shapeAt(action.args["at"]);
-      if (typeof on !== "number" || !Number.isSafeInteger(on) || on < 0 || !at) return failed({ error: "shape", sentence: "The view action is incomplete.", next: "Open the view again." });
+      if ((on !== null && (typeof on !== "number" || !Number.isSafeInteger(on) || on < 0)) || !at || (on === null && (!action.live.presence || act.step !== "open" || Object.keys(at).length !== 0))) return failed({ error: "shape", sentence: "The view action is incomplete.", next: "Open the view again." });
       const shaped = shapeFields(act, isRecord(action.args["fields"]) ? action.args["fields"] : {}, [], membership);
       if (shaped.texts.length) return failed({ error: "shape", sentence: "Live actions do not carry detached text.", next: "Open the view again." });
       const reader = await this.#reads.reader(membership), handle = new ScopeHandle(this.#reads.transport, scope, reader);
       const current = await handle.applicationLiveProjection(query);
-      if (!current.ok || current.generation !== generation || !Object.values(current.value.sources).some(rows => rows.some(row => row.id === on && row.revision === at["on"]))) return failed({ error: "stale", sentence: "The live view changed.", next: "Refresh the view." });
+      if (!current.ok || current.generation !== generation) return failed({ error: "stale", sentence: "The live view changed.", next: "Refresh the view." });
+      const presence = action.live.presence;
+      if (presence) {
+        const { at: membershipAt } = await this.#summary(membership.scope, membership);
+        const session = await sessionAt(this.#reads, membership, membershipAt.at);
+        if (!session || session.claims.key !== this.key || canonicalize({ membership: session.claims.membership, member: session.claims.member }) !== canonicalize(presence.viewer)) return failed({ error: "stale", sentence: "The presence viewer changed.", next: "Refresh the view." });
+        const own = Object.values(current.value.sources).flat().filter(row => canonicalize(row.fields[presence.member] ?? null) === canonicalize(presence.viewer) && canonicalize(row.fields[presence.focus] ?? null) === canonicalize(query.scope));
+        if (on === null ? own.length !== 0 : own.length !== 1 || own[0]!.id !== on || own[0]!.revision !== at["on"]) return failed({ error: "stale", sentence: "The presence view changed.", next: "Refresh the view." });
+      } else if (!Object.values(current.value.sources).some(rows => rows.some(row => row.id === on && row.revision === at["on"]))) return failed({ error: "stale", sentence: "The live view changed.", next: "Refresh the view." });
       admit();
       const signed = await signedIntent(this.#port.signer, { to: summary.scope, kind: action.kind, on, fields: shaped.fields, expected: at }, { idempotencyKey: `view-live-${crypto.randomUUID()}`, now: this.#now() });
       const finish = dispatch ? await dispatch.prepare({ service: this.#service, signer: this.#port.signer.key, membership }, this.#port.dispatchSource ?? null) : null;
