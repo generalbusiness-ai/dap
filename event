@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"cfcfb7c93b2c8b1d6ef037535d61d548ea6aac4f","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:002b10c666a95e471e66f8fc4a491835e24f9a39","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/declared-views.test.ts."}
