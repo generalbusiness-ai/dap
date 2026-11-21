@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:98f457384571d69123f194225168dc7a3d133ab4","text":"Merge retired a covered predecessor; the successor is at examples/lending/release-identifiers.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9d72fa789c9ff5ce5e5946bc70acd4001e4f304a","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/forms-live.test.ts."}
