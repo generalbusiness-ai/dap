@@ -28,6 +28,7 @@ import { bornOf, genuineRetained, ownOf, retainedUsesOf, snapshotsOf, type Birth
 import type { Ports, Resolver, SourceReadContext } from "./ports.ts";
 import type { Retained, Sealed, Store } from "./store.ts";
 import { entryCorrelation, inOperation, measured, metric, operational, type Operational } from "./operational.ts";
+import { authoredCutoff } from "./authored-cutoff.ts";
 
 /** The facts that the fold reads for one just-sealed entry. Its retained uses must read whole: a sealed entry whose own
  * retained rows do not read is not folded (the transaction rolls back). */
@@ -402,6 +403,23 @@ export class Turns {
       if (judged.result === "unavailable") return committed(judged.reason === "clock-behind" ? "clock-behind" : "unfit");
       if (judged.result === "dropped") return committed("dropped");
       const { sealed, pin, added } = this.#seal(definition, judged.draft, clock, []);                 // 6.5
+      const input = sealed.entry.input;
+      if (input.type === "timed") {
+        const origin = this.#store.stored(input.item);
+        const at = this.#store.scope()?.at;
+        if (origin && at) {
+          let entry: unknown;
+          try {
+            entry = parseStrict(origin.bytes);
+          } catch { /* Missing origin evidence leaves ordinary dispatch unchanged. */ }
+          if (isEntry(entry)) {
+            const cutoff = authoredCutoff(definition, entry, { at, seq: origin.seq, hash: origin.hash }, 0);
+            if (cutoff && cutoff.item === input.item && cutoff.rule === input.rule && cutoff.due === input.due) {
+              this.#store.putLiveCutoffReceipt(origin.seq, cutoff.n, origin.hash, cutoff.target, { timedSeq: sealed.entry.seq, timedHash: sealed.hash });
+            }
+          }
+        }
+      }
       if (definition.declared.capacity?.name === "whole-scope") {
         const bound = this.#full(definition, sealed.entry.input, true, pin, added);
         if (bound) { turn.full = bound; throw new Full(); }

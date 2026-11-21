@@ -166,7 +166,7 @@ ruling `4b5e0ec2`. A live scope writes its genesis entry and its creator's
 confirmation, and no entry after them. The kernel part is the validator's
 admission of the level and the fold's refusal of a later entry. The code
 that runs live acts is a platform service, because no recorded entry
-depends on it. The level is designed and not built. The
+depends on it. The first version of the level is built. The
 [live note](../notes/2026-11-10-live-level.md), section 4, gives the
 review and the sentences that promises 1, 7 and 11 gain.
 

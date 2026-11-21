@@ -76,10 +76,10 @@
       "AtMostOneSend": "sends <= 1",
       "MarkBeforeEffect": "sends > 0 => marked"
     },
-    "syncCommit": "6728059211cee75dc0f6fdd104ef52a44c5f7da0",
+    "syncCommit": "f4450a11b802433193be186cf525496e736113f2",
     "sha256": {
       "packages/scope/src/operations.ts": "b33908e9a65901298d6d6ca3b11c3dadb0888891591874ccd369a9011e19cf3b",
-      "packages/scope/src/sqlite.ts": "c012365221f0695050a8f891fc40f95942753ad199173c30af4e9f6da8c299b6"
+      "packages/scope/src/sqlite.ts": "a2dbe93d220862dbac271757685846da87766f661bd46bec6a3ea8b8ce25a24d"
     }
   },
   "Voice": {

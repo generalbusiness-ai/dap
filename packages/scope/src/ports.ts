@@ -9,6 +9,7 @@
  * are the platform package's, which is code of this runtime.
  */
 
+import type { LiveTargetSource } from "./native-live-target.ts";
 import type { NativeBirthSource } from "./native-birth.ts";
 import type { InstallationStateSource } from "./applications/installation-state.ts";
 import type { FreshActAdmission } from "./applications/act-admission.ts";
@@ -292,6 +293,8 @@ export interface Ports {
   proofs?: ProofSource;
   /** Bounded raw native birth metadata; no identity alias or authority. */
   births?: NativeBirthSource;
+  /** Exact active target pin, bounded and read-only. */
+  liveTarget?: LiveTargetSource;
   /** AD-1: an installation item's current state and release, read by act admission. */
   installations?: InstallationStateSource;
   /** Told each delivery's sealed entry, inside its transaction. A failure here aborts the delivery, and the sender keeps the task. */

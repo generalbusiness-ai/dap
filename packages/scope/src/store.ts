@@ -32,6 +32,9 @@ export type Retained = RetainedInput;
 /** A send the dispatcher may attempt now: the envelope's parts, and its log so far. */
 export interface Outgoing { seq: number; n: number; hash: Digest; to: ScopeRef | Seed; message: Message; attempts: readonly Dispatched[] }
 
+/** A locally recorded timed transition for one still-dispatchable request. */
+export interface LiveCutoffReceipt { readonly timedSeq: number; readonly timedHash: Digest }
+
 /**
  * One attempt of an outside operation, as the driver holds it (scope
  * contract, section 4.3; authority note, section 5.4). The row is written
@@ -115,6 +118,10 @@ export interface Store extends StateWriter {
   outgoing(now: number, limit: number): Outgoing[];
   /** When the next attempt of any outstanding send is due, in milliseconds, or null. A new send is due at its entry's time. */
   nextDispatch(): number | null;
+  /** Record the timed entry only while the exact originating request can dispatch. */
+  putLiveCutoffReceipt(seq: number, n: number, originHash: Digest, target: ScopeRef, receipt: LiveCutoffReceipt): void;
+  /** Read one receipt while its request remains dispatchable. */
+  liveCutoffReceipt(seq: number, n: number): LiveCutoffReceipt | null;
   /** The send's log, and when its next attempt is due. */
   attempted(seq: number, n: number, attempts: readonly Dispatched[], next: number): void;
   /** Transport acknowledged the send with that fact: it is done. */

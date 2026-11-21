@@ -20,7 +20,7 @@ import { DOMAINS } from "@generalbusiness/dap-contract";
 import { RETAINED_BYTE_DOMAINS, canonicalize, isDigest, isHead, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
 import { AmountError, NOTHING, naturalAmount, isObject, MemoryState, byteOrder, fixedRowsOf, heldPositions, operationId, operationStanding, pendingOf, slotOf, timeMs } from "@generalbusiness/dap-derive";
 import type { Accepted, Account, Decided, FixedDependency, FixedMode, FixedRow, HeldCreation, Holder, Item, ObservedHead, Operation, Outstanding, OwnRequest, Page, PreparedStep, RangeIndex, RecordState, RecordsWhere, Relation, ScopeState, SourceOrder, StateSnapshot, ValidDefinition } from "@generalbusiness/dap-derive";
-import type { Dispatched, OutboxItem, OperationStatus, Outgoing, Retained, Sending, Store, Stored } from "./store.ts";
+import type { Dispatched, LiveCutoffReceipt, OutboxItem, OperationStatus, Outgoing, Retained, Sending, Store, Stored } from "./store.ts";
 import { ARCHIVE_PIN_KEY, archivePinBytes } from "./archive-pin.ts";
 import { LocalSigners, SIGNER_INDEX_BOUNDS } from "./local-signers.ts";
 import type { Amount, ItemDuty } from "@generalbusiness/dap-derive";
@@ -135,6 +135,13 @@ CREATE TABLE IF NOT EXISTS item_key (type TEXT NOT NULL, slot TEXT NOT NULL, key
 
 /** A send that is still to be dispatched: not held, not acknowledged, and for a request with no result and no diagnosis. */
 const DUE = "o.held = 0 AND o.ack IS NULL AND o.result IS NULL AND o.diagnosis IS NULL";
+
+// Installed only by an eligible sender's timed-entry transaction.
+const LIVE_CUTOFF_SCHEMA = `
+CREATE TABLE IF NOT EXISTS live_cutoff_receipt (seq INTEGER NOT NULL, n INTEGER NOT NULL, timed_seq INTEGER NOT NULL, timed_hash TEXT NOT NULL, PRIMARY KEY (seq,n)) WITHOUT ROWID;
+CREATE TRIGGER IF NOT EXISTS forget_live_cutoff_receipt AFTER UPDATE OF ack, result, diagnosis, held ON outbox WHEN NEW.ack IS NOT NULL OR NEW.result IS NOT NULL OR NEW.diagnosis IS NOT NULL OR NEW.held != 0 BEGIN DELETE FROM live_cutoff_receipt WHERE seq=NEW.seq AND n=NEW.n; END;
+CREATE TRIGGER IF NOT EXISTS forget_deleted_live_cutoff_receipt AFTER DELETE ON outbox BEGIN DELETE FROM live_cutoff_receipt WHERE seq=OLD.seq AND n=OLD.n; END;
+`;
 
 /** An operation that is not settled: it still reserves room (derive's `pendingOf`). */
 const OPEN = "opened + unknown + unopened > 0";
@@ -758,6 +765,25 @@ export class SqliteStore implements Store {
       .map((row) => ({ seq: row["seq"] as number, n: row["n"] as number, hash: row["hash"] as Digest, to: rowJson(row["target"]), message: rowJson(row["message"]), attempts: rowJson(row["attempts"]) }));
   }
   nextDispatch(): number | null { return (this.#one(`SELECT MIN(o.next) AS next FROM outbox o WHERE ${DUE}`)?.["next"] as number | null | undefined) ?? null; }
+  putLiveCutoffReceipt(seq: number, n: number, originHash: Digest, target: ScopeRef, receipt: LiveCutoffReceipt): void {
+    const eligible = this.#one(`SELECT 1 AS eligible FROM outbox o JOIN entry e ON e.seq=o.seq
+      WHERE o.seq=? AND o.n=? AND e.hash=? AND o.target=? AND o.request IS NOT NULL AND ${DUE}`, seq, n, originHash, canonicalize(target));
+    if (!eligible) return;
+    if (!this.#hasLiveCutoffReceipts()) this.#run(LIVE_CUTOFF_SCHEMA);
+    this.#run(`INSERT INTO live_cutoff_receipt (seq,n,timed_seq,timed_hash)
+      SELECT o.seq,o.n,?,? FROM outbox o JOIN entry e ON e.seq=o.seq
+      WHERE o.seq=? AND o.n=? AND e.hash=? AND o.target=? AND o.request IS NOT NULL AND ${DUE}
+      ON CONFLICT (seq,n) DO NOTHING`, receipt.timedSeq, receipt.timedHash, seq, n, originHash, canonicalize(target));
+  }
+  #hasLiveCutoffReceipts(): boolean {
+    return this.#one("SELECT 1 AS present FROM sqlite_master WHERE type='table' AND name='live_cutoff_receipt'") !== null;
+  }
+  liveCutoffReceipt(seq: number, n: number): LiveCutoffReceipt | null {
+    if (!this.#hasLiveCutoffReceipts()) return null;
+    const row = this.#one(`SELECT r.timed_seq, r.timed_hash FROM live_cutoff_receipt r JOIN outbox o ON o.seq=r.seq AND o.n=r.n
+      WHERE r.seq=? AND r.n=? AND o.request IS NOT NULL AND ${DUE}`, seq, n);
+    return row ? { timedSeq: row["timed_seq"] as number, timedHash: row["timed_hash"] as Digest } : null;
+  }
   attempted(seq: number, n: number, attempts: readonly Dispatched[], next: number): void {
     this.#run("UPDATE outbox SET attempts = ?, next = ? WHERE seq = ? AND n = ?", canonicalize(attempts), next, seq, n);
   }

@@ -1,3 +1,5 @@
+import { PreparationFlights } from "./preparation-flight.ts";
+import { readNativeLiveTarget, type LiveTargetSource, type NativeLiveTarget } from "./native-live-target.ts";
 import { isRoomRetiredStop, type RoomRetiredStop } from "./room-retired.ts";
 import { archivedPosition } from "@generalbusiness/dap-derive";
 /**
@@ -54,6 +56,7 @@ export interface Peer {
   proofSource?(fact: FactRef, maxBytes: number, milliseconds?: number): Promise<ProofBody | null | RoomRetiredStop>;
   /** Raw checked birth only; never a producer-selected privileged identity. */
   nativeBirth?(at: ScopeRef, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null | RoomRetiredStop>;
+  nativeLiveTarget?(at: ScopeRef, milliseconds: number, maxBytes: number): Promise<NativeLiveTarget | null | RoomRetiredStop>;
   nativeBirthByName?(name: ScopeId, kind: ScopeKind, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null | RoomRetiredStop>;
   /** AD-1: one installation item's current state and release, only from its Rules incarnation. */
   applicationInstallationState?(rules: ScopeRef, directory: ScopeRef, item: number): Promise<unknown>;
@@ -412,9 +415,22 @@ export function admitSourced(answer: unknown, fact: FactRef, maxBytes: number): 
  * namespace binding. A call that fails is no answer: the entry cannot be
  * read now, or the attempt is unanswered.
  */
-export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proofs: ProofSource; births: NativeBirthSource; birthNames: NativeBirthNameSource; installations: InstallationStateSource; transport: Transport; definitions: Definitions; texts: SentTexts } {
+export function namespace<Id>(binding: Binding<Id>, liveFlights = new PreparationFlights()): { resolver: Resolver; proofs: ProofSource; births: NativeBirthSource; birthNames: NativeBirthNameSource; liveTarget: LiveTargetSource; installations: InstallationStateSource; transport: Transport; definitions: Definitions; texts: SentTexts } {
   const peer = (name: ScopeId): Peer => binding.get(binding.idFromName(name)) as Peer;
   return {
+    liveTarget: {
+      read(at, milliseconds) {
+        if (!isScopeRef(at) || !Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds) return Promise.resolve(null);
+        const expected = Object.freeze({ scope: at.scope, genesis: at.genesis });
+        return liveFlights.run(async run => {
+          const target = peer(expected.scope);
+          if (typeof target.nativeLiveTarget !== "function") return null;
+          const result = await target.nativeLiveTarget(expected, run.remaining(), PROOF_BYTE_BOUNDS.body);
+          if (!run.active() || isRoomRetiredStop(result)) return null;
+          return readNativeLiveTarget(result, expected, PROOF_BYTE_BOUNDS.body);
+        }, liveFlights.clock.now() + milliseconds);
+      },
+    },
     birthNames: {
       async read(name, kind, milliseconds, maxBytes = PROOF_BYTE_BOUNDS.body) {
         if (!isScopeId(name) || !["directory", "destination", "register"].includes(kind) || !Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds || !Number.isSafeInteger(maxBytes) || maxBytes <= 0 || maxBytes > PROOF_BYTE_BOUNDS.body) return null;

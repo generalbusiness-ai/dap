@@ -142,7 +142,7 @@ or caller authority.
 
 The Durable Object binding also has internal namespace methods that are not
 HTTP routes: `jobState`, `workSourceState`, `stageSnapshot`,
-`nativeBirthByName`, `archiveItem` and `applicationArchiveProofBytes`.
+`nativeBirthByName`, `nativeLiveTarget`, `archiveItem` and `applicationArchiveProofBytes`.
 [Route notes](#route-notes)
 describes them.
 
@@ -1023,6 +1023,16 @@ known scope and kind before target lookup. The receiver bounds preparation
 and bytes. The workspace service then verifies the full returned reference,
 genesis and creation lineage. It uses no legacy source fallback and grants
 no read session or repository authority that a caller selects.
+
+The internal `nativeLiveTarget` method classifies an exact active target's
+pinned declaration. The indexed namespace checks that the scope is known
+before target lookup, including in register mode. A bounded preparation
+checks the stored genesis and canonical pinned definition without starting a
+turn or recovering an alarm. The caller admits the returned genesis against
+the full scope reference before it uses the level reported by the trusted
+native namespace. A missing or invalid answer proves nothing. The sender
+holds one proof slot until the underlying call settles, including after a
+timeout.
 
 The credential route also accepts a lane whose declared definition includes
 `hold@2`, behind the same membership gate. Private custody checks the
