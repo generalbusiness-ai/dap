@@ -2,8 +2,11 @@
 
 Status: approved by Hugh on 2026-11-17 (decision `c69cb559`), with the
 recommendation of section 4 and the answers of section 5. Request
-`d7f77eeb`. U1 (`ea7faed9`) builds step 1 of section 6. Nothing else is
-built.
+`d7f77eeb`. U1 builds step 1 of section 6. U2 builds the archive proof,
+and U3 builds the CLI command and screen-host update. The implementation
+records for [U1](implementation/2026-11-17-u1-upgrade-application.md),
+[U2](implementation/2026-11-17-u2-upgrade-archive.md), and
+[U3](implementation/2026-11-18-u3-cli-upgrade.md) describe their scope.
 
 IR-1 (`f8fbe5ec`) found that each Counter upgrade opens a new installation
 item and leaves the old item active. No act retires the old item or its

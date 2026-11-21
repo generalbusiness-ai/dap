@@ -1,8 +1,10 @@
 # The local Artifacts simulator
 
-Status: findings and recommendations for request `51dd7c02`. Nothing is
-adopted. Each adoption step below is a separate request after this note
-lands.
+Status: findings and recommendations for request `51dd7c02`. LA-1 and LA-2
+landed the first two adoption steps in main `6e3f4c6c` and `28ce66ee`.
+The [LA-1 record](implementation/2026-11-18-la1-local-artifacts-remote.md)
+and [LA-2 record](implementation/2026-11-18-la2-wrangler-pin.md) describe
+their scope. The remaining adoption steps are separate requests.
 
 Cloudflare's wrangler 4.163.0 (published 2026-11-16) simulates the
 Workers `artifacts` binding locally. A repository created under `wrangler

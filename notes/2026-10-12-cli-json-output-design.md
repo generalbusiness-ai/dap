@@ -1,6 +1,6 @@
 # JSON output for the dap command line
 
-Status: draft revision 6 (builder), revising approved revision 5 (53b0335e). It authorizes no implementation until the checker approves it.
+Status: revision 6 is approved (`de6b54f1`) and landed at `facb24f9`.
 Not built: the CLI has no `--json` flag.
 
 Builder revision 6, under parent request `92d6dddb`, against Main

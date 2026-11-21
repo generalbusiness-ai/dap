@@ -6,7 +6,7 @@ R2 or R3). Design only. This file is part of the contract. As
 revision 11 had it, it is adopted with the contract, as evidence that
 the contract's forms can express the lane definitions. That adoption
 did not make it R2's definitions. What revision 12 changes in it is
-listed below, and is proposed until revision 12 is adopted.
+listed below. Revision 12 was adopted at `53f0e183`.
 
 This file writes the two lane definitions of the lane design, `issue`
 and `change`, in the contract's forms: every item type, act, receive

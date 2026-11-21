@@ -5,7 +5,8 @@ approved (`410a56a5`) and landed at `6eaae3f7`. Draft 4 adds the drain
 of a node with no live peer and the waker's delay, from the
 [SeaweedFS evaluation](implementation/2026-10-27-seaweedfs-local-bucket.md)
 of 27 October. Slice H1, the celld project in the repository, landed at
-`d6967b7f`. Slices H2 to H5 are not built. Section 12 lists what changed
+`d6967b7f`. A Mac mini host kit landed at `14ffb0f6`, and its continuity
+procedure landed at `8e9f0942`. Section 12 lists what changed
 in each draft. The
 [Git host choice note](2026-10-27-git-host-choice.md) of 27 October
 amends sections 4.2, 4.7, 9 and 10: the host is the deployer's choice,

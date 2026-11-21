@@ -1,6 +1,6 @@
 # The live level: a first version
 
-Status: current. Draft 2, for request `bf1992ae`. Nothing here is built.
+Status: current. Draft 2, for request `bf1992ae`. LV1 admission landed in `1f81ac01`. The graph part of LV4 landed in `fb7b5388`. The remaining live runtime and client work follows the heads in section 8.
 
 A scope's definition declares one durability level: live, recorded or
 sequenced. Recorded is built. The sequenced level has its design in the

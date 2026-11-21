@@ -1,6 +1,6 @@
 # Signed requests across devices
 
-Status: design for J1 ([plan 032](plans/032-2026-10-17-journey-as-acceptance-target.md), section 2b). The build lands with this note. Code citations hold at main `c1ff846e`.
+Status: design for J1 ([plan 032](plans/032-2026-10-17-journey-as-acceptance-target.md), section 2b). The build landed at `aaf37467`. Code citations hold at main `c1ff846e`.
 
 Ana comments on an issue from a laptop. The page signs the act and sends it. The reply never comes, and then the laptop's battery runs out. Ana opens the room on a phone and wants to know one thing: did the comment land?
 

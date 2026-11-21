@@ -1,8 +1,13 @@
 # Shared application language and volatile acts
 
 Status: current. The note landed at `bb395d25` (approval `6a1705a8`).
-Sections 1 to 14 and 16 are not built. Section 15 is partly built; its
-own status line says what.
+Sections 1 to 14 are not built. Section 15 is partly built. The
+[sequenced note](2026-10-18-sequenced-level-and-order-scope.md) withdraws
+its Archived level and makes the archive a room binding. The
+[live note](2026-11-10-live-level.md) governs the live level in section
+16. Live admission landed at `1f81ac01`, and its package graph support
+landed at `fb7b5388`. The remaining live runtime and client work is not
+built. The sequenced level is not built.
 
 9 October 2026. **Design and implementation plan.**
 Request `f5b286d71a3243c809d152fd7cd95e6d945e4256`, promise
@@ -1354,7 +1359,8 @@ No claim of a full source audit, current deployed support or measured speedup.
 `1838cbe6`) and by A2 (`0e63ba92`). Built: A0a (`e987350d`), A1
 (`698a3d71`), A2 and A3 for fixtures only (`0e63ba92`, `6dac9c76`), the
 archive binding (`fb390d88`) and the reader repair (`7bc1490c`). Not
-built: A0b, A4 and A5. A room cannot declare the Archived level yet. Request
+built: A0b, A4 and A5. The sequenced note later withdrew the Archived
+level in favor of an archive binding. Request
 `0d72a50b28c683046f6ea127d0ebe5b484f87822`, planner promise
 `fae322e0901ae73e961b1434c6fe55ec6d842b73`, resting on the durability
 request `578edf653772749b5fa9b47f6782f6db4d0ab720`. Read against main
@@ -1877,7 +1883,8 @@ and this section differ, that note holds. Its section 6 lists what it
 withdraws from 16.2 to 16.5: the live scope with no genesis, the
 reference "ID, generation, kind" and the locator.
 
-**Proposed design; no runtime adoption.** Same request and promise as
+**Original proposal.** The live note governs the live level, with partial
+implementation as stated above. Same request and promise as
 section 15. Hugh decided on 12 October 2026 that the region is not needed
 apart from the scope. This section amends sections 1 to 14; where it and
 they differ, this section holds. The JSON examples of section 2 are not

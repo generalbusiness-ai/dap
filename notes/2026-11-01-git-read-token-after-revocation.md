@@ -1,6 +1,6 @@
 # A Git read token after its key is revoked
 
-Status: current. It landed at `970c701c` (approval `7a2618e4`). No code is built. The planner ruled in `cccd205a`: the one-hour pin is not built before real calls 2 and 3 run, and the planner runs those calls. The planner has run real call 2, and ruled in `908b6d86` that the pin does not need real call 3. So the pin can join the next cohort, and nobody has started it. `revoke-reads` follows that change and is not built now. No notice goes to a lane. One next cohort lands at a time, so a slice that builds the token pin carries `separate-recovery` with it. The planner ruled in `9af818a5` that a final failed state for a claim joins the same cohort, and that it is the first reason to build that cohort. `separate-recovery` has no opt-in now.
+Status: current. The design landed at `970c701c` (approval `7a2618e4`). The failed-claim cohort landed at `28839920` with the one-hour read-token pin and `separate-recovery`. The planner ruled in `908b6d86` that the pin did not need real call 3. The planner ruled in `9af818a5` that final failed claims join the same cohort. `revoke-reads` remains a separate change. No notice goes to a lane.
 
 Teo keeps a member key on a laptop. Mara is an admin of the same room. The room publishes to a repository on Cloudflare Artifacts, and Rita operates the Worker.
 

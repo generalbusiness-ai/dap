@@ -1,7 +1,10 @@
 # Outside effects by a member: the publisher
 
 Status: current. Hugh ratified this note on 13 November 2026, for request
-`35cbcb29`, with the two decisions of section 11. Nothing here is built.
+`35cbcb29`, with the two decisions of section 11. P1 landed in main
+`7a6fcadf` as a separate Lending publisher example. The later steps remain
+proposals. The [P1 record](implementation/2026-11-14-p1-publisher-member.md)
+describes its scope and evidence.
 
 A scope judges signed acts and keeps one entry for each act that takes
 effect. One part of dap does more. A destination scope writes to a Git

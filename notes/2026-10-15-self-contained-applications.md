@@ -8,7 +8,10 @@ Source baseline: main `bc95110e1`, dap-spike main `9d738e2e`. This note is
 for the request that carries it. It commissions no implementation.
 Separate requests commission each milestone in section 7. M1 landed in
 three parts (`feccbbcf`, `bfa02edd`, `ad39fdf1`). M2a (`4d8c878c`) and M2b
-(`4b794cf5`) landed. The rest of M2, M3 and M4 are not built. The packages
+(`4b794cf5`) landed. The rest of M2 and M4 are not built. M3's full
+carry-forward witness remains open. The later [application upgrade
+design](2026-11-17-application-upgrade.md) and its U1, U2 and U3 records
+describe the upgrade work landed in source. The packages
 note (`165d5a86`, section 11) and the sequenced-level note (`3dad6109`,
 section 8) amend sections 4 and 7.
 

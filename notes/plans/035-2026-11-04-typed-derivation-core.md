@@ -1,6 +1,6 @@
 # Plan 035: Give Dap derivations a typed, inspectable program
 
-Status: M1–M7 have landed. M8 reconciles the complete body routes and interpretations under request `bd1a9429`, following main `01de2ca8`. The [M8 record](../implementation/2026-11-08-typed-core-m8.md) tracks that work. Parent request `e99550e9bfedcde3bed05bae1d345fcbfe5f7c9a` remains open. Hugh overrides only the deletion-size gate; the semantic contract, witness map, file boundaries and other stop criteria still apply. The [stop record](../implementation/2026-11-04-typed-core-stop.md) retains the earlier estimate as history.
+Status: M1–M8 landed. M8 landed at `0914c89e` under request `bd1a9429`. The [M8 record](../implementation/2026-11-08-typed-core-m8.md) tracks acceptance. Hugh overrode only the deletion-size gate. The [stop record](../implementation/2026-11-04-typed-core-stop.md) retains the earlier estimate as history.
 
 Planned against `7135dc3985694760ff8c80ad07f200ba8f6e767d` on 2026-11-04.
 Category: architecture and direction. Effort: large overall, split into small reviewed deliveries.

@@ -1,8 +1,9 @@
 # Boundary objects in use: what the cases pass between parties
 
 Status: current. A proposal to the planner, 28 October 2026, revised 29
-October 2026 against main `2be6ca74`. Nothing here is built, and this
-note changes no other document.
+October 2026 against main `2be6ca74`. Commons notes, reference fields,
+and local source witnesses landed at `c8c7b631`. Parent BO1 remains open
+([implementation record](implementation/2026-10-30-bo1-commons.md)).
 
 ## 1. Scene
 

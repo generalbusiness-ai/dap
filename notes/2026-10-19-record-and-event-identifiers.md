@@ -2,7 +2,8 @@
 
 Status: current. Draft 6 landed at `2fcd50ab`. The adoption premise now
 follows the retirement ruling of 9 November 2026, `c0a795e7`.
-The protocol and dap's adoption remain unbuilt.
+Generic citations and identifier vectors landed at `3de64311`. Dap's
+identifier cutover landed at `57e893c0`.
 
 Part one specifies a protocol for sequence and event identifiers. Part
 two describes how dap adopts this protocol.
@@ -774,12 +775,10 @@ After the cutover, the planner and builder recreate the Grow, Lending and
 J5 Site demo rooms in the new format. They rerun J5's acceptance scene and
 record evidence for the new room.
 
-The change is not built. Request `05d618e2` resumed on 9 November 2026 in
-`9ab66624`. The identifiers build comes first in phase 3, before C1, M1a,
-the join-parity build and the foreign-hold work. The note amendment may
-run as filler in phase 2. It goes through review before the code that
-depends on it. If a rule of this section cannot be built as written, stop
-and ask the planner before choosing another construction.
+Request `05d618e2` resumed on 9 November 2026 in `9ab66624`. The plan
+then placed the identifiers build first in phase 3, before C1, M1a, the
+join-parity build and the foreign-hold work. The identifier cutover
+landed on main at `57e893c0`.
 
 | Term here | In dap |
 |---|---|

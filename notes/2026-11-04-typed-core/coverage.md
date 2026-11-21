@@ -1,7 +1,7 @@
 # Frozen form coverage
 
 Status: complete design inventory at `7135dc3985694760ff8c80ad07f200ba8f6e767d`.
-M1–M2 implements the first slice described in the contract. M3–M7 have landed their production cutovers. M8 must finish body orchestration and the complete interpretations; the [M8 record](../implementation/2026-11-08-typed-core-m8.md) tracks reconciliation and remaining evidence.
+M1–M2 implemented the first slice described in the contract. M3–M8 landed their production cutovers. The [M8 record](../implementation/2026-11-08-typed-core-m8.md) tracks acceptance of body orchestration and interpretations.
 
 This inventory covers the admitted definition vocabulary and its rule boundaries.
 It does not claim to enumerate arbitrary JavaScript rule bodies. The existing
@@ -168,4 +168,4 @@ candidate. This extends execution coverage without extending the prototype
 explanation or dependency visitors. Their whole-body unsupported result remains
 conservative. Native interiors remain M7 work, and final orchestration remains
 M8 work. Focused owners, exact-source Page CI, and the single M6 gate pass. Independent
-review and landing remain pending.
+review and landing were pending at that checkpoint.

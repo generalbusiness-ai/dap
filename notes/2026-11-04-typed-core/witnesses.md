@@ -1,6 +1,6 @@
 # Typed core witnesses
 
-Status: acceptance map for M8 after M1–M7 landed. Planner ruling `24e2a8d` accepts the move from prototype construction to the actual admitted program. The retirement checkpoint passes its 55 focused cases and two controls through the bounded follow-up recorded in the implementation note. Maintained assets and their owning compiler contexts and case also pass. The final gate, Page workflow, review and landing remain ahead.
+Status: acceptance map for M8, which landed at `0914c89e`. Planner ruling `24e2a8d` accepts the move from prototype construction to the actual admitted program. The retirement checkpoint passes its 55 focused cases and two controls through the bounded follow-up recorded in the implementation note. Maintained assets and their owning compiler contexts and case also pass. The [M8 record](../implementation/2026-11-08-typed-core-m8.md) records the final gate and Page workflow.
 
 All paths below are relative to the repository root. Test files belong to
 `packages/derive/test/` unless another path appears. Existing tests establish

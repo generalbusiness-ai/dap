@@ -1,7 +1,8 @@
 # A brokered market as a dap application: the market room and the provider rooms
 
 Status: current. 20 October 2026, draft 2. It landed at `7a148325`
-(approval `df3b3b31`). Nothing here is built.
+(approval `df3b3b31`). The native M0 cross-room witness landed at
+`f2677f77`. The market application remains unbuilt.
 
 A person runs a small matching business: night nurses in one city,
 plumbers in another, used instruments in a third. Buyers post needs and
@@ -303,11 +304,10 @@ rooms:
   has it.
 - **A provider's acceptance** is the provider's own act from their own
   AI app. That needs the person to reach their provider room from the
-  app they are in, in one step, as themselves. That is the OAuth work on
-  the hosted endpoint, which is not built
-  ([hosted endpoint note](2026-10-13-hosted-mcp-endpoint.md), section 1;
-  request `3f598e55`). Until then a provider joins in the browser from
-  the invitation link, which exists.
+  app they are in, in one step, as themselves. The [OAuth design for the
+  hosted endpoint](2026-11-02-hosted-mcp-oauth.md) covers that connection.
+  The hosted acceptance run remains open. A provider can join in the
+  browser from the invitation link.
 - **Views.** A host with the MCP Apps capability shows the card kit's
   cards; a host without it gets the text tool surface
   ([docs/mcp.md](../docs/mcp.md), "Cards"). Whether the cloud agent
@@ -328,11 +328,11 @@ design.
 |---|---|---|
 | Items, states, acts with grants and guards, timed rules, views by grant, the per-member carousel | Landed | the grow room; plan 033 G1 to G3 |
 | A declared application with scopes of its own that send to each other: one scope creates another, and a child sends summaries to its parent | Landed | Grow's Site creates Rooms and receives each Room's summary (`examples/grow/site.ts`, `examples/grow/room.ts`; `packages/scope/test/grow-demo-tick.test.ts`) |
-| One application whose scopes are in different rooms, with different members, and that send to each other across rooms | Not built; the first slice confirms whether a declared send can address a scope of another room and how the receiver admits it | [roadmap](../docs/roadmap.md#an-applications-own-messages-between-scopes) |
+| One application whose scopes are in different rooms, with different members, and that send to each other across rooms | The M0 native witness covers a declared send and admission under the v1 installation contract. V2 composition and live-room acceptance remain open | [roadmap](../docs/roadmap.md#an-applications-own-messages-between-scopes) |
 | Exports whose retained entries are safe for the receiving room's readers | Designed here; nothing enforces it | section 5 |
 | A room created and a package installed for each enrolled provider | The pieces exist as person-run steps: room creation, package install by URI, person invitation | [docs/cli.md](../docs/cli.md) |
 | An outside party's word as a report with a source; an invited outside member who accepts from their own AI app | Designed, not built | sales note, sections 4 and 5; slice C2 |
-| A person's access from their own AI app by OAuth | Not built; requested | request `3f598e55`; [hosted endpoint note](2026-10-13-hosted-mcp-endpoint.md) |
+| A person's access from their own AI app by OAuth | OAuth source landed. Hosted Claude and ChatGPT acceptance remains open | request `3f598e55`, [OAuth design](2026-11-02-hosted-mcp-oauth.md) |
 | A hosted sourcing agent | Designed, not built; the agent runs in the operator's own cloud agent or machine until then | [hosted agent teams](2026-10-15-hosted-agent-teams-design.md) |
 | Custody for payment and vetting evidence | Not designed | [roadmap](../docs/roadmap.md#evidence-capture-and-private-custody) |
 | Private views in one record | Not needed here | section 5 |

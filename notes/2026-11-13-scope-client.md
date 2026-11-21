@@ -1,22 +1,27 @@
 # One client for a declared scope
 
-Status: current. Hugh ratified this note on 13 November 2026, for request
-`e5b86654`. The review of the checker then added the rule of 5.1 for a
-record that holds 8 envelopes. An amendment of 13 November 2026 adds
-section 5.5 for request `43de81ee`. Nothing here is built. Section 13
-lists the build steps.
+Status: current. C1 through C4 have landed on `main`. They added custody
+v2 (`918ce5d7`), the declared-scope replica (`26d1e65c`), request status
+and retries (`8e0928f3`), and slots, drafts, and one-call submit
+(`d6c863bb`). The browser authorization store followed in E4-B
+(`3e54b8ab`). Section 13 records the build order.
 
-A page shows a scope and lets a member act on it. Today the page author
-assembles that from parts: a signer, a handle, a fold, a store of sent
-requests and a rule for each answer. The dap-foldkit adapter did this in
-1,374 lines, and two reviews on 13 November 2026 reproduced eleven faults
-in it. Each fault is a decision that the author made and that the
-definition or the record already settles.
+Hugh ratified this note on 13 November 2026 for request `e5b86654`.
+Review added the rule in section 5.1 for a record that holds eight
+envelopes. An amendment the same day added section 5.5 for request
+`43de81ee`.
+
+A page shows a scope and lets a member act on it. Before the scope
+client, the page author assembled this from a signer, a handle, a fold,
+a store of sent requests, and a rule for each answer. The dap-foldkit
+adapter did this in 1,374 lines, and two reviews on 13 November 2026
+reproduced eleven faults in it. Each fault is a decision that the author
+made and that the definition or the record already settles.
 
 This note designs one client in `packages/client` that makes those
 decisions. The author passes a declared definition one time. The author
 then writes views, the words for each outcome, and one typed call for
-each control. Every fact below is read at main `57e893c0`.
+each control. The original source inventory used `main` at `57e893c0`.
 
 Hugh made two decisions on 13 November 2026 that this note takes as
 given. An edited retry goes under the same key. The replica moves into

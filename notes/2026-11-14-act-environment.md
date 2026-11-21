@@ -3,11 +3,13 @@
 Status: current. Hugh asked for this note on 14 November 2026, decided
 each item of section 17 and ratified the note on that day. It landed as
 main `270dc8c7` for request `98f450a1`. Steps E1 and R are built. E1
-landed as main `d1585bda` on 15 November 2026. The runtime and the
-replay judge through the shared body, and no production module calls
-Explore yet. R landed as main `c6711b53` on the same day, and Lending
+landed as main `d1585bda` on 15 November 2026. The runtime and replay
+judge through the shared body. R landed as main `c6711b53` on the same
+day, and Lending
 0.3.0 holds the reservation definition. E4 landed as main `91610da9`
-on 16 November 2026. No other step is built.
+on 16 November 2026. E4-B added the browser authorization store in main
+`3e54b8ab`. C4 and E4-C landed draft exploration and one-call submit
+in `d6c863bb`. Section 13 describes the broader E2, E3, E5, E6, and A work.
 Section 13 lists the build steps and their requests. Section 18 lists
 the rulings of step E1 that changed sections 3, 5 and 8. Section 19
 lists the rulings of steps E4 and C4 and of the requests EK-1, ES-1,
@@ -1283,7 +1285,7 @@ A small model also runs to a bound over every order of its steps.
 | E2 | The MCP tool `explore`, on a replica in the agent host, with the same result and context | E1, C2 |
 | E3 | Explore in the local instance, again at each view and each tick. `offers`, a `ref` with its sources, `recorded`, and one identity for a row. Step C4 builds the basis of a draft, the changed fields, the returned `now` and the new version after a return (section 6) | E1, C2, C4 |
 | E4 | Retained authorization: the record with versions, the default deadline, three of the four operations (no new envelope for the same version), the owner and the store in memory, the transaction of a submit, the predicate | C1, C3 |
-| E4-B | The browser store keeps authorizations, with the removal rule of section 7.1. It lands in the C4 head | E4 |
+| E4-B | The browser store keeps authorizations, with the removal rule of section 7.1. It landed at `3e54b8ab` | E4 |
 | E5 | Sequential dependencies: sources by key and version, the materialized act, `waits`, the returns | E4 |
 | E6 | Environment resolution through MCP `settle`, React and foldkit. `dap dev` with `log` and the head stream | E3 to E5 |
 | R | The reservation definition, with its scenario | Starts with E1 |

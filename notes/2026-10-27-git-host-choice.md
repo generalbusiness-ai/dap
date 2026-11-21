@@ -3,9 +3,11 @@
 Status: current. A design note, 27 October 2026, against main
 `bb23e50f`. It amends the
 [self-hosting note](2026-10-19-self-hosting-on-celld.md) (sections 4.2,
-4.7, 9 and 10) and the [hosts page](../docs/hosts.md). Nothing here is
-built. Hugh agreed the direction on 27 October for a local deployment
-on one machine: celld, one node, a local bucket.
+4.7, 9 and 10) and the [hosts page](../docs/hosts.md). Rooms without
+repository publication landed at `248edb41`. Binding an unpublished room
+to a GitHub repository landed at `4be4c43f`. Hugh agreed the direction
+on 27 October for a local deployment on one machine: celld, one node, a
+local bucket.
 
 ## 1. Scene
 

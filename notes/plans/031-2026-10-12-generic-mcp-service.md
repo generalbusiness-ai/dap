@@ -3,7 +3,9 @@
 Status: current. Draft 7 landed at `e179059d`. Stage 1 landed at
 `bd02ecff`, and application discovery at `8235c6b3`. The stage 2 hosted
 endpoint landed at `3bd0ef1c`. MCP Apps resources came with the card kit
-(`6e309b6b`). OAuth (request `3f598e55`) is not built.
+(`6e309b6b`). OAuth resource discovery and grant access landed in source
+with O1. The [OAuth design](../2026-11-02-hosted-mcp-oauth.md) records the
+subsequent work and its limits.
 
 2026-10-12. Draft 7, for checker review before implementation.
 Planned against main `d309b6b9baca9e6a51a1dfb2c7979145463b229c`.
