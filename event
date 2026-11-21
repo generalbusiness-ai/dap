@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Gate START for LA-2 head 31e6167917 (on main f9ff3958). Evidence: artroom-evidence/2026-11-21-la2-gate/.","body":{"gate":"start","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9ef483f7912feb965c532ccc25e63057da00b3e7","text":"Duplicate of the fresh request 8af903e9 under order ae71da85. The builder's promise rests on 8af903e9."}
