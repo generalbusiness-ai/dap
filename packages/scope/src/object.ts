@@ -1,3 +1,4 @@
+import { nativeLiveTarget } from "./native-live-target.ts";
 import { scopeWiring, scopeMetricEnvironment, scopeGenesisEligibility, scopeSessionEligibility } from "./internal/room-hooks.ts";
 import { classifyRoomFormat, writeRoomFormat2 } from "./room-format.ts";
 import { ROOM_RETIRED_STOP, isRoomRetiredStop, type RoomRetiredStop } from "./room-retired.ts";
@@ -304,7 +305,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     this.#requestIndex = new RequestIndex(this.#readSql);
     this.#reads = new Reads(store, () => this.#scope.pinned(), ports.readers, wiring.reads ?? READ_BOUNDS, record, this.#signed, () => this.#scope.owners(), { index: this.#requestIndex, now: () => Date.now() });
     this.#deliveries = new Deliveries(this.#name, this.#scope, store, ports, bounds);
-    this.#dispatcher = given.transport ? new Dispatcher(this.#scope, store, { transport: given.transport, clock: ports.clock, capabilities: ports.capabilities }, wakes, bounds) : null;
+    this.#dispatcher = given.transport ? new Dispatcher(this.#scope, store, { transport: given.transport, clock: ports.clock, capabilities: ports.capabilities, ...(ports.liveTarget ? { liveTarget: ports.liveTarget } : {}) }, wakes, bounds) : null;
     this.#operations = new Operations(this.#scope, store, ports, wakes, bounds, (operation, attempt, seq) => { record.record("outcome-conflict", [{ operation, attempt }, { entry: seq }]); });
     this.#clock = ports.clock;
     this.#outside = ports.outside;
@@ -856,6 +857,15 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       if (!active() || ++calls > EXACT_PROOF_RECEIVER_BOUNDS.sqlCalls) throw new Error("proof-unavailable");
     });
     const result = bytes.exact(fact, maxBytes);
+    return active() ? result : null;
+  }
+  /** Exact active live pin. This path does not start a turn or recover an alarm. */
+  nativeLiveTarget(at: unknown, milliseconds: number, maxBytes: number) {
+    if (this.#retired) return ROOM_RETIRED_STOP;
+    const began = this.#queryFlights.clock.now(), ends = began + milliseconds;
+    if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds || !Number.isFinite(began) || !Number.isFinite(ends)) return null;
+    const active = () => { const now = this.#queryFlights.clock.now(); return now >= began && now < ends; };
+    const result = nativeLiveTarget(this.#readPreparation, at, new PreparationBudget(undefined, active), maxBytes);
     return active() ? result : null;
   }
   /** Closed raw birth view with scheduling metadata recovery only; no native

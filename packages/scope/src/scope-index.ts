@@ -57,7 +57,7 @@ function absent(method: unknown): unknown {
   if (method === "create") return { answer: "refused", reason: "source-unverified" };
   if (method === "submit" || method === "prepare") return { answer: "unavailable", reason: "unavailable" };
   if (method === "deliver") return { answer: "routing", reason: "not-found" };
-  if (["source", "proofSource", "nativeBirth", "nativeBirthByName", "creationDeclaration", "declared", "text", "observe", "sessionReference", "siteRoom", "siteDestination", "sitePublication", "sitePublishedCommit", "applicationRoom", "applicationRoomBytes", "applicationInstallation", "applicationInstallationState", "applicationProjectionDeclarationBytes", "demoCreationOffer", "jobState", "workSourceState", "reservationSnapshot", "stageSnapshot"].includes(method as string)) return null;
+  if (["source", "proofSource", "nativeBirth", "nativeBirthByName", "nativeLiveTarget", "creationDeclaration", "declared", "text", "observe", "sessionReference", "siteRoom", "siteDestination", "sitePublication", "sitePublishedCommit", "applicationRoom", "applicationRoomBytes", "applicationInstallation", "applicationInstallationState", "applicationProjectionDeclarationBytes", "demoCreationOffer", "jobState", "workSourceState", "reservationSnapshot", "stageSnapshot"].includes(method as string)) return null;
   return { ok: false, reason: "not-found" };
 }
 
@@ -173,6 +173,11 @@ export function indexedScopes(binding: Binding, env: ScopeIndexEnvironment): Bin
           const kind = actualArgs?.[1];
           if (!["directory", "destination", "register"].includes(kind as string)) return missing();
           try { if (await cachedHas(knownScopeAnswers, index, mode, name, kind as ScopeKind) !== true) return missing(); }
+          catch { return missing(); }
+        }
+        // An exact live-pin proof must not initialize or register an unknown target.
+        if (method === "nativeLiveTarget") {
+          try { if (await cachedHas(knownScopeAnswers, index, mode, name) !== true) return missing(); }
           catch { return missing(); }
         }
         let known: boolean;

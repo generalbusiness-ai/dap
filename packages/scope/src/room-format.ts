@@ -37,6 +37,7 @@ const ROOM_TABLES = [
   "item_slot",
   "journal_kept",
   "latest_local_signer",
+  "live_cutoff_receipt",
   "local_signer_control",
   "mcp_request_clock",
   "mcp_request_window",

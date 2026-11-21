@@ -27,7 +27,11 @@ import { countedEntries } from "@generalbusiness/dap-derive";
  * commit and from the object's alarm.
  */
 
-import type { Attempt, Bounds, Timestamp } from "@generalbusiness/dap-contract";
+import type { Attempt, Bounds, Entry, Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalize, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
+import { authoredCutoff, type AuthoredCutoff } from "./authored-cutoff.ts";
+import { EXACT_PROOF_RECEIVER_BOUNDS } from "./proof-bytes.ts";
+import type { LiveTargetSource } from "./native-live-target.ts";
 import { judgeDiagnosis, timeMs, timeOf, type Capabilities } from "@generalbusiness/dap-derive";
 import { genuineRetained, ownOf, retainedUsesOf, used, type Scope } from "./core.ts";
 import type { Alarm, Clock, Transport } from "./ports.ts";
@@ -97,6 +101,7 @@ export class Dispatcher {
   readonly #store: Store;
   readonly #transport: Transport;
   readonly #clock: Clock;
+  readonly #liveTarget: LiveTargetSource | undefined;
   readonly #wakes: Wakes;
   readonly #bounds: Bounds;
   /** For the clause of a diagnosis, which may hold a capability effect (section 6.11). */
@@ -104,11 +109,12 @@ export class Dispatcher {
   #running: Promise<number> | null = null;
   #again = false;
 
-  constructor(scope: Scope, store: Store, ports: { transport: Transport; clock: Clock; capabilities?: Capabilities | null }, wakes: Wakes, bounds: Bounds) {
+  constructor(scope: Scope, store: Store, ports: { transport: Transport; clock: Clock; capabilities?: Capabilities | null; liveTarget?: LiveTargetSource }, wakes: Wakes, bounds: Bounds) {
     this.#capabilities = ports.capabilities ?? undefined;
     this.#scope = scope;
     this.#store = store;
     this.#transport = ports.transport;
+    this.#liveTarget = ports.liveTarget;
     this.#clock = ports.clock;
     this.#wakes = wakes;
     this.#bounds = bounds;
@@ -144,15 +150,80 @@ export class Dispatcher {
       const due = this.#store.outgoing(now, this.#bounds.deliveryBatch);
       if (due.length === 0) break;
       for (const send of due) {
-        // The retry policy of section 7.5: so many routing refusals, and a request is given up. The number is never the proof.
+        // The clock can move while an earlier row waits on a remote peer.
+        let now = timeMs(this.#clock.read())!;
+        const ends = performance.now() + this.#bounds.dispatchSeconds * 1000;
+        const candidate = this.#cutoff(send);
+        if (candidate && !this.#current(send)) continue;
+        let proof: boolean | null | undefined;
+        if (candidate && send.attempts.some(a => a.answer === "retry") && this.#liveTarget) {
+          const left = Math.floor(ends - performance.now());
+          proof = left > 0 ? await this.#liveTarget.read(candidate.target, Math.min(left, EXACT_PROOF_RECEIVER_BOUNDS.milliseconds)) : null;
+          if (!this.#current(send)) continue;
+          now = timeMs(this.#clock.read())!;
+          if (proof === true) {
+            let receipt = this.#store.liveCutoffReceipt(send.seq, send.n);
+            if (receipt || timeMs(candidate.due)! <= now) {
+              if (!receipt && this.#pending(candidate)) {
+                await this.#scope.alarm();
+                if (!this.#current(send)) continue;
+                now = timeMs(this.#clock.read())!;
+                receipt = this.#store.liveCutoffReceipt(send.seq, send.n);
+              }
+              if (receipt) { await this.#giveUp(send, now, counts, candidate); made++; continue; }
+              if (this.#pending(candidate)) {
+                this.#store.attempted(send.seq, send.n, send.attempts, now + this.#bounds.drainRetrySeconds * 1000);
+                made++; continue;
+              }
+            }
+          }
+        }
         const refused = send.attempts.filter((a) => ROUTING.includes(a.answer)).length;
         if (send.message.class === "request" && refused >= this.#bounds.routingRefusals) await this.#giveUp(send, now, counts);
-        else await this.#dispatch(send, now, counts);
+        else { await this.#dispatch(send, now, counts, candidate, proof === true, ends); await this.#clamp(send, now, ends, proof); }
         made++;
       }
     }
     await this.#wakes.set();
     return made;
+  }
+
+  /** Check the current durable row after every asynchronous operation. */
+  #current(send: Outgoing): boolean {
+    const row = this.#store.outboxItem(send.seq, send.n);
+    return !!row && !row.held && !row.acknowledged && !row.result && !row.diagnosis
+      && canonicalize(row.to) === canonicalize(send.to) && canonicalize(row.attempts) === canonicalize(send.attempts);
+  }
+
+  #cutoff(send: Outgoing): AuthoredCutoff | null {
+    const definition = this.#scope.pinned()?.definition, scope = this.#store.scope(), stored = this.#store.stored(send.seq);
+    if (!definition || !scope || !stored || stored.hash !== send.hash || !isScopeRef(send.to)) return null;
+    try {
+      const entry = parseStrict(stored.bytes) as Entry;
+      const result = authoredCutoff(definition, entry, { at: scope.at, seq: send.seq, hash: send.hash }, send.n);
+      return result && canonicalize(result.target) === canonicalize(send.to) && canonicalize(entry.sends.find(row => row.n === send.n)?.message) === canonicalize(send.message) ? result : null;
+    } catch { return null; }
+  }
+
+  #pending(cutoff: AuthoredCutoff): boolean {
+    const definition = this.#scope.pinned()?.definition, rule = definition?.declared.timed[cutoff.rule];
+    const item = this.#store.item(cutoff.item);
+    return !!rule && !!item && item.type === rule.on && rule.states.includes(item.state) && item.values[rule.deadline] === cutoff.due;
+  }
+
+  /** A proven live target can wake no later than the authored deadline. */
+  async #clamp(send: Outgoing, now: number, ends: number, proof?: boolean | null): Promise<void> {
+    const row = this.#store.outboxItem(send.seq, send.n);
+    if (!row || row.held || row.acknowledged || row.result || row.diagnosis || !row.attempts.length
+      || !row.attempts.some(a => a.answer === "retry")) return;
+    const current = { ...send, attempts: row.attempts }, cutoff = this.#cutoff(current);
+    if (!cutoff || !this.#liveTarget) return;
+    const left = Math.floor(ends - performance.now());
+    const known = proof === undefined ? left > 0 ? await this.#liveTarget.read(cutoff.target, Math.min(left, EXACT_PROOF_RECEIVER_BOUNDS.milliseconds)) : null : proof;
+    if (known !== true || !this.#current(current)) return;
+    now = timeMs(this.#clock.read())!;
+    if (!this.#pending(cutoff) && !this.#store.liveCutoffReceipt(send.seq, send.n)) return;
+    this.#store.attempted(send.seq, send.n, current.attempts, Math.max(now, Math.min(timeMs(cutoff.due)!, now + this.#delay(current.attempts.length))));
   }
 
   /** The delay before the attempt after the `count`th: the first delay, doubled each time, up to the longest. */
@@ -162,7 +233,8 @@ export class Dispatcher {
   }
 
   /** One dispatch of one send, with its record before and after. */
-  async #dispatch(send: Outgoing, now: number, counts: DispatchCounts): Promise<void> {
+  async #dispatch(send: Outgoing, now: number, counts: DispatchCounts, cutoff: AuthoredCutoff | null, proven: boolean, ends: number): Promise<void> {
+    const o2 = cutoff !== null;
     const { seq, n } = send;
     const store = this.#store;
     const at: Timestamp = timeOf(now);
@@ -170,15 +242,33 @@ export class Dispatcher {
     const next = now + this.#delay(send.attempts.length + 1);
     // Section 7.4: the attempt is recorded before it is sent, as unanswered. The alarm is set for its retry before the send
     // leaves, so a scope that stops here is woken and sends again.
-    store.attempted(seq, n, logged("none"), next);
-    counts.attempted++;
-    outboxCorrelation(`${seq}.${n}`);
+    if (o2 && !this.#current(send)) return;
+    if (o2 && performance.now() >= ends) {
+      store.attempted(seq, n, send.attempts, now + this.#bounds.drainRetrySeconds * 1000);
+      return;
+    }
+    // For a recognized retry, arm its wake with the existing real log.
+    // The new unanswered marker is written only when transport can start.
+    const preflight = o2 && send.attempts.some(a => a.answer === "retry");
+    store.attempted(seq, n, preflight ? send.attempts : logged("none"), next);
+    if (!preflight) { counts.attempted++; outboxCorrelation(`${seq}.${n}`); }
     await this.#wakes.set();
+    if (o2 && !this.#current(preflight ? send : { ...send, attempts: logged("none") })) return;
+    const nowAfterWake = timeMs(this.#clock.read())!;
+    if (cutoff && proven && preflight
+      && (store.liveCutoffReceipt(seq, n) || timeMs(cutoff.due)! <= nowAfterWake && this.#pending(cutoff))) {
+      store.attempted(seq, n, send.attempts, nowAfterWake);
+      return;
+    }
+    const seconds = o2 ? Math.max(0, (ends - performance.now()) / 1000) : this.#bounds.dispatchSeconds;
+    if (o2 && seconds <= 0) return;
+    if (preflight) { store.attempted(seq, n, logged("none"), next); counts.attempted++; outboxCorrelation(`${seq}.${n}`); }
     const scope = store.scope()!;
     const envelope = { to: send.to, from: { at: scope.at, seq, hash: send.hash }, n, message: send.message };
-    const answer = await within(() => this.#transport.send(envelope), this.#bounds.dispatchSeconds);
+    const answer = await within(() => this.#transport.send(envelope), seconds);
     // No answer in time, or none at all: the record stays as it was written.
     if (answer === LATE || answer === null) return;
+    if (o2 && !this.#current({ ...send, attempts: logged("none") })) return;
     if (answer.answer === "recorded") {
       store.acknowledge(seq, n, logged("acknowledged"), answer.fact);
       counts.acknowledged++;
@@ -198,7 +288,7 @@ export class Dispatcher {
    * the request leaves the outgoing sends. Not written now, as when the
    * scope is busy, it is offered again after the drain's retry delay.
    */
-  async #giveUp(send: Outgoing, now: number, counts: DispatchCounts): Promise<void> {
+  async #giveUp(send: Outgoing, now: number, counts: DispatchCounts, cutoff?: AuthoredCutoff): Promise<void> {
     const { seq, n } = send;
     const store = this.#store;
     const bounds = this.#bounds;
@@ -217,6 +307,7 @@ export class Dispatcher {
       const end = await this.#scope.turns.run<boolean>({
         asks: () => [],
         judge: (view, clock) => {
+          if (cutoff && (!this.#current(send) || !store.liveCutoffReceipt(seq, n))) return { verdict: "answer", answer: false };
           const judged = judgeDiagnosis(view, definition, { of: { seq, n }, attempts }, { clock, bounds, facts, prepared: [], origin, own: ownOf(store, sequence), capabilities: this.#capabilities, platform: this.#scope.pinned()?.platform ?? undefined });
           switch (judged.result) {
             case "write":
@@ -231,7 +322,7 @@ export class Dispatcher {
       });
       written = end.end === "answer" && end.answer;
     }
-    if (!written) store.attempted(seq, n, send.attempts, now + bounds.drainRetrySeconds * 1000);
-    else counts.diagnosed++;
+    if (written) counts.diagnosed++;
+    else if (!cutoff || this.#current(send)) store.attempted(seq, n, send.attempts, now + bounds.drainRetrySeconds * 1000);
   }
 }

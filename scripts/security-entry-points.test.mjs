@@ -11,8 +11,8 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 // its own source-ordered line. Root adopts actual parser values after review.
 const namedOwners = {
   "packages/scope/src/object.ts": {
-    "packages/scope/src/object.ts:$module": "ffdabf5a2d806fe29a0960da110aacb09a64866b9ec7e8f8f997f5350c23aba8",
-    "packages/scope/src/object.ts:ScopeObject": "ecaa5714b1a2b4707deb197128fae63731f2e53e08c7600b1e20ccfce4172c5f" // AD-1: applicationInstallationState, admission installations and clock
+    "packages/scope/src/object.ts:$module": "4c3875fc44f97cda061271b20a221fcf8fa30f52efa49ba8be172314e9a68fe3",
+    "packages/scope/src/object.ts:ScopeObject": "180c4afe879fcee1c07a1623d6b21188595b083e9244e0e501e657d34885b108" // AD-1: applicationInstallationState, admission installations and clock
   },
   "packages/scope/src/object-archive.ts": {
     "packages/scope/src/object-archive.ts:$module": "e7430b7ed51040dd00253653d928b5a829912472cff2f5139f56478c2565f3e7",
@@ -269,7 +269,7 @@ const seals = {
   "packages/scope/src/read-wait.ts": "d1f3f58f089f89164b270bac3263172c8d9bc0ece2cb3a375ca7b000b6507573", // DX-A2 reviewed minimum admission and wait owner; actual maintained AST value.
   "packages/scope/src/authority.ts": "8072e369fa879a6072fb0d546598962696d05df11f4b38fcf83469addbd0d5f9", // Token refusal: the commit of read-token asks whether a compromised notice named the key; maintained whole-AST value.
   "packages/scope/src/observation-cache.ts": "d43f96c5f634d188e1c989d39b75669c89fdf8a062ab2450b0f9b6621b227186", // Bounded reusable observation payload and FIFO owner; actual maintained parser output.
-  "packages/scope/src/turn.ts": "1b541a0be387bbce3adaa3456b62786809d2a218982dd6bb9b3f95c410bd5d36", // LV2 keeps active live scopes out of recorded sealing, timed drains, and alarm scheduling.
+  "packages/scope/src/turn.ts": "23b00de9d322cb89ff660e1e97bd7d5ef68dafe4f166176727f338790cb9f492", // The timed commit records a receipt only for the exact eligible request and authored deadline.
   "packages/platform/src/reservation-v17.ts": "ab6816b23c9e4edfd034b24d481e6a14b9baf065808b3cc26496bcd531b0cafc", // Reviewed retained-policy decoder; actual maintained parser output.
   "packages/platform/src/evidence.ts": "77da4fdc1cf2601ee64849d2051ecdba0e8391d6b93b6ce74d7e59df90033897", // Reviewed platform binding codec under ruling 1bc4f7fd; actual maintained parser output.
   "packages/git/src/checkout-snapshot.ts": "82f53717d419b70fe208801b6d0bf2fc0c947ac2beffb27b2e2d01898f48ee25", // Detached object identity and closure bounds; imports do not seal this implementation.
@@ -290,7 +290,7 @@ const seals = {
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": namedOwners["packages/scope/src/worker.ts"],
   "packages/scope/src/worker-mcp.ts": namedOwners["packages/scope/src/worker-mcp.ts"],
-  "packages/scope/src/scope-index.ts": "a81743f771c39157153dedcd2fb5a410ba4d5fa02487e45aa658ef4e01e60dbc", // AD-1: applicationInstallationState answers null for an unindexed scope. AR-10: a positive kind answer also answers has(name); AR-8 keeps positive answers per isolate (insert-only known_scope rows).
+  "packages/scope/src/scope-index.ts": "4ed8173132b79c5ff883ed5c4aa13b1c063c3ee4ed3398c5ff486603748b7b6c", // AD-1: applicationInstallationState answers null for an unindexed scope. AR-10: a positive kind answer also answers has(name); AR-8 keeps positive answers per isolate (insert-only known_scope rows).
   "packages/scope/src/host-wiring.ts": "6cbde3017c210bc1875d07c470bc588c452bc855171646ce889bf39cd9065fa5", // Installed-register authority retains exact Native birth and host binding.
   "packages/scope/src/installed-registers.ts": "39618d91dba4884b866f1823d5bc2ee89e7ca0b78b47b884387e7bfeba2dee5e", // Installed-register authority retains exact Native birth and host binding.
   "packages/scope/src/register-setting.ts": "2c9adba64fdd98bb63f93ee4375952ed0fcc465258968e00701bcc7528e02bcf", // Shared exact Register selector. S3 requires a valid GitHub root to be an installed register; actual maintained parser output.
@@ -299,7 +299,7 @@ const seals = {
   "packages/scope/src/creation-lineage.ts": "12f2ab7d81f26f0a7c9d75095928d39e450f7eeca94e51793c7b7892760d2ee9", // Reviewed whole-lineage boundary; adopted AST value.
   "packages/scope/src/creation-versions.ts": "872e383c736e3d77b3377dec67ca29855612f1bbf2e9a6754c4c58db72fce97d", // Reviewed R6 creation-policy parser; actual maintained output.
   "packages/scope/src/creation-declaration.ts": "0aca81538bf80d643ff74166d99e535b68abf3b7dca2b06b65cee543806a3fd9", // Bounded immutable native Directory custody, not authority.
-  "packages/scope/src/namespace.ts": "ad0f9dd3e83f8890552c7ba8828a8310935f34fef7456534bdea630dc89329f2", // Reviewed internal declaration RPC; adopted AST value.
+  "packages/scope/src/namespace.ts": "8364d60a9af7fbdeed776dbe7defad492265e52bd798359fbd2900f0ad8f7da4", // Reviewed internal declaration RPC; adopted AST value.
   "packages/scope/src/health.ts": "3bc54d08e569c894c3c8c905feb99d95d9d951ed83d156815f039525e8741c6f", // S3 adds policy and missing, setting names only; actual maintained parser output.
   "packages/scope/src/site/route.ts": "a0dd2fc19f24b87ff033d8ebbe89718b8a953c291fc5f2689d064ade92e40166",
   "packages/scope/src/site/host.ts": "7ba177e4cf693beaad6ecef85cc3d33455a5896cd35565f50a98e03ba848cd07", // Private Site token custody; actual maintained parser output.
@@ -334,6 +334,7 @@ const seals = {
   "packages/scope/src/read-token-quota.ts": "54020db49341f3b775c68f3b491db015d2e9f77f9ecb9d3c06f5d46e781d9065", // R13 private reservation and custody owner; actual maintained parser output.
   "packages/scope/src/workspace-host.ts": "2d2040debfd2c51cbe69bf41023b7c26068c68ee9d8b743140fc88e56c35dc7c", // Reviewed SQL custody, setup revocation and full refs for recorded branch names.
   "packages/scope/src/workspace-lineage.ts": "1813da1335de71432b6af8bf8d41f4a77478ed0fb212cdc68a863e99cc617c5f", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
+  "packages/scope/src/native-live-target.ts": "35a2285b4d2054a6e660b858891800d9c1db43b10deb753f948e91959edea781", // Exact active live pin, admitted birth and closed native reply.
   "packages/scope/src/native-birth.ts": "f8b131dd7da72f215e59aa80365706c78bee4e564a4a573a3c080c72326c5d7e", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.
   "packages/mcp/src/oauth-resource.ts": "895d3a1b241e5fe0d5228febff46fe6c921899110fef99056dd1b53199d341ae", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/oauth-access.ts": "96679465b97286aa2babe6e3b670bf51b202427300cea836e9be9da744884b78", // O1 resource discovery and grant transport boundary.
