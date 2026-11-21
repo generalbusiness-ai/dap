@@ -1,7 +1,9 @@
 import { ACT_OUTPUT, projectAnswer, type ActResult } from "./act-result.ts";
 import { answersVersionQuestion, platform } from "@generalbusiness/dap-platform";
 import { isRecord } from "@generalbusiness/dap-bytes";
-import { EXPIRY_MARGIN_MS, invitationRedemptionFields } from "@generalbusiness/dap-client";
+import { EXPIRY_MARGIN_MS, invitationRedemptionFields, declaredHandle, completeSummary } from "@generalbusiness/dap-client";
+import { scopeReplica, explore } from "@generalbusiness/dap-client/scope";
+import { exploreData, ExplorationLogBudget } from "./explore-result.ts";
 /**
  * One MCP service for every dap application (plan 031). It lists
  * generic tools, and one act tool per act declaration of
@@ -246,6 +248,8 @@ const keyArg = { type: "string", minLength: 1, maxLength: 128, description: "You
 
 export class McpService {
   #reads: Reads;
+  #exploring = false;
+  #readSessions!: ReadSessions;
   /** The scope service: the configuration's, or, for a process that has joined nothing yet, the one its first join names. */
   #service: string;
   readonly kept = new Kept();
@@ -377,7 +381,7 @@ export class McpService {
       return new McpService({ ...port, declaredViews: { bytes: packet.bytes, release: packet.ids.release, item: row.id } });
     } catch { return service; }
   }
-  #readsOf(service: string): Reads { return new Reads({ ...(this.#port.readSessions ? { sessions: this.#port.readSessions } : {}), service, ...(this.#fetch ? { fetch: this.#fetch } : {}), signer: this.#port.signer, now: this.#port.now ?? Date.now }); }
+  #readsOf(service: string): Reads { this.#readSessions = this.#port.readSessions ?? new ReadSessions(); return new Reads({ sessions: this.#readSessions, service, ...(this.#fetch ? { fetch: this.#fetch } : {}), signer: this.#port.signer, now: this.#port.now ?? Date.now }); }
   #now(): number { return (this.#port.now ?? Date.now)(); }
 
   // ---------------------------------------------------------------- the list
@@ -1066,6 +1070,9 @@ export class McpService {
     // A membership scope as #membershipRef reads it: a scope ID, or a full ScopeRef.
     const membershipArg = { anyOf: [scopeRefArg.properties.scope, scopeRefArg] };
     return Object.fromEntries([
+      tool("explore", "Explore one act against an authenticated declared scope without submitting it. The result is a prediction, not a commitment.",
+        { target: scopeRefArg.properties.scope, key: keyArg, act: { type: "object", properties: { kind: { type: "string" }, on: { type: ["integer", "null"], minimum: 0, maximum: Number.MAX_SAFE_INTEGER }, fields: { type: "object" }, expected: { type: "object", additionalProperties: { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER } } }, required: ["kind", "on", "fields"], additionalProperties: false } },
+        ["target", "key", "act"], READ, a => this.#explore(a)),
       tool("room", "Orientation. The service, your key, the scopes of the room by name, the issues and changes the directory lists, the applications its factory created (such as a Counter), the standalone scopes, your standing on each membership, the active definitions, and the act tools your role does not hold; paged by bytes, with a cursor. Start here.",
         { cursor: { type: "string" } }, [], READ, (a) => this.#room(a)),
       tool("commons", "Read one bounded page of Commons notes with their facts, authors, media and opaque about references. Text and citation previews may be shortened; use step for complete citations and text for the retained text. A reference grants no access to its target. Readability and completeness are explicit.",
@@ -1111,6 +1118,137 @@ export class McpService {
         { target: scopeArg, kind: { type: "string" }, digest: { type: "string" }, on: { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER }, at: AT_INPUT, after: AFTER_INPUT, now: NOW_INPUT, fields: { type: "object" }, texts: { type: "array", items: { type: "string" } }, presented: { type: "object" }, values: { type: "array", items: { type: "string" } }, idempotencyKey: keyArg, resubmit: { type: "boolean" } },
         ["target", "kind", "digest", "idempotencyKey"], WRITE, (a, dispatch) => (typeof a["kind"] === "string" ? this.#perform(null, a, a["kind"], undefined, undefined, undefined, dispatch) : Promise.resolve(failed({ error: "shape", field: "kind", what: "is missing", declared: "a native act kind" }))), ACT_OUTPUT, AFTER_WITH_NOW),
     ]);
+  }
+
+  async #explore(args: Args): Promise<CallResult> {
+    const unavailable = () => ok({ is: "unavailable", lacks: ["source"] }, BOUNDS.large);
+    const input = args["act"], target = args["target"], key = args["key"];
+    if (Object.keys(args).some(name => !["target", "key", "act"].includes(name)) || !isScopeId(target) || typeof key !== "string" || !validKey(key)
+      || !isRecord(input) || Object.keys(input).some(name => !["kind", "on", "fields", "expected"].includes(name))
+      || typeof input["kind"] !== "string" || !isRecord(input["fields"])
+      || !(input["on"] === null || typeof input["on"] === "number" && Number.isSafeInteger(input["on"]) && input["on"] >= 0)
+      || (input["expected"] !== undefined && (!isRecord(input["expected"]) || Object.values(input["expected"]).some(value => typeof value !== "number" || !Number.isSafeInteger(value) || value < 0))))
+      return failed({ error: "shape", field: "act", what: "is not a closed exploration input", declared: "target, key, and act with kind, on, fields, and optional expected revisions" });
+    try { if (bytesOf(input) > PROPOSED_BOUNDS.entryBytes) return unavailable(); } catch { return unavailable(); }
+    if (this.#exploring) return unavailable();
+    this.#exploring = true;
+    let active = true, done = false, settled = false, poisoned = false, pending = 0;
+    const budget = new ExplorationLogBudget();
+    let replica: ReturnType<typeof scopeReplica> | undefined;
+    const release = () => { if (done && settled && !poisoned && pending === 0) this.#exploring = false; };
+    const track = <T>(promise: Promise<T>): Promise<T> => {
+      pending++;
+      return promise.finally(() => { pending--; release(); });
+    };
+    const fetch = this.#fetch ?? (globalThis as { fetch?: Fetch }).fetch;
+    const physical: Fetch = (url, options) => {
+      if (!active || !fetch) return Promise.reject(new TransportError("exploration read unavailable"));
+      return track((async () => {
+        const response = await fetch(url, options);
+        if (!response.body) return response;
+        const source = response.body;
+        if (!active) {
+          try { await source.getReader().cancel(); } catch { poisoned = true; }
+          return { status: response.status, body: null };
+        }
+        return { status: response.status, ...(response.headers ? { headers: response.headers } : {}), body: { getReader: () => {
+          const body = source.getReader();
+          return { read: () => track(body.read()), cancel: () => track(Promise.resolve().then(() => body.cancel()).catch(error => { poisoned = true; throw error; })) };
+        } } };
+      })());
+    };
+    const service = this.#service, sessions = this.#readSessions;
+    const reads = new Reads({ sessions, service, fetch: physical,
+      signer: this.#port.signer, now: this.#port.now ?? Date.now });
+    const work = (async (): Promise<CallResult> => {
+      const config = await this.#port.config.read();
+      if (!active) return unavailable();
+      const snapshot = this.#deriveSnapshot(config, await readInventory(reads, this.kept, config));
+      if (!active) return unavailable();
+      const held = snapshot.read.inventory.scopes.find(item => item.scope === target);
+      if (!held || isPlatformDefinition(held.pinned) || !held.membership) return failed({ error: "target", what: "the target is not a listed declared scope" });
+      const binding = snapshot.bindings.find(item => item.kind === input["kind"] && item.scopes.some(scope => scope.scope === target) && item.digests.includes(held.pinned));
+      if (!binding || !selected(binding, this.#tools) || !listed(binding, snapshot.read.inventory)) return failed({ error: "shape", field: "act.kind", what: "is not an admitted act of the target", declared: "an act listed for this scope" });
+      const membership = snapshot.memberships.get(held.membership);
+      if (!membership) return unavailable();
+      const fields = Object.fromEntries(Object.entries(binding.act.fields).map(([name, field]) => [name, { ...field, required: false }]));
+      let shaped: ReturnType<typeof shapeFields>;
+      try { shaped = shapeFields({ ...binding.act, fields }, input["fields"] as Record<string, unknown>, [], membership); }
+      catch (error) { if (error instanceof Unshaped) return failed({ error: "shape", field: error.field, what: error.what, declared: error.declared }); throw error; }
+      const act = { ...input, fields: shaped.fields };
+      const memberHead = await reads.read(membership, (transport, reader) => transport.summary(membership.scope, reader));
+      if (!active || !memberHead.ok) return unavailable();
+      const session = await sessionAt(reads, membership, memberHead.at);
+      if (!active || !session?.standing || canonicalize(session.standing.head) !== canonicalize(memberHead.at)) return unavailable();
+      const requestedAt = reads.sessionRequestedAt(membership, session);
+      if (requestedAt === null) return unavailable();
+      const original = reads.transport;
+      // Logical input, not a heap measurement. Count a page before the replica can fold it.
+      const transport = { ...original,
+        summary: (...args: Parameters<typeof original.summary>) => track(original.summary(...args)),
+        log: (...args: Parameters<typeof original.log>) => track(original.log(...args).then(reply => {
+          if (!reply.ok) return reply;
+          if (!budget.accept(reply.value.entries)) throw new TransportError("exploration journal limit");
+          return reply;
+        })),
+      };
+      const handle = new ScopeHandle(transport, target, session.reader());
+      const opened = await declaredHandle(handle, held.definition as unknown as DeclaredDefinition);
+      if (!active || !opened.ok || canonicalize(opened.handle.at) !== canonicalize(held.ref)) return unavailable();
+      const first = completeSummary(await handle.summary());
+      if (!active || !first.ok || !first.complete || first.next !== undefined
+        || canonicalize(first.value.scope) !== canonicalize(held.ref) || first.value.definition !== opened.handle.digest) return unavailable();
+      const now = () => timeOf(this.#now());
+      replica = scopeReplica(opened.handle, {
+        exploration: { actor: session.claims.key, member: { membership, member: session.claims.member }, clock: now,
+          active: () => active, read: async () => reads.sessionRequestedAt(membership, session) === requestedAt
+            ? { is: "ready", session } : { is: "unavailable", lacks: ["authority-unavailable"] } },
+        observe: emit => {
+          emit({ status: "current", snapshot: first.value });
+          return { refresh: () => {}, cancel: () => {}, done: Promise.resolve() };
+        },
+      });
+      const owned = replica;
+      const ready = await new Promise<boolean>(resolve => {
+        const unsubscribe = owned.subscribe(view => {
+          if (view.state.is === "current" || view.state.is === "stopped") { unsubscribe(); resolve(view.state.is === "current"); }
+        });
+        if (owned.view.state.is === "current" || owned.view.state.is === "stopped") {
+          unsubscribe(); resolve(owned.view.state.is === "current");
+        }
+      });
+      if (!ready || !active || !await owned.read()) return unavailable();
+      const result = await explore(owned, key, act as never, { session, requestedAt }, now);
+      if (!active || owned.view.state.is !== "current" || !owned.view.head) return unavailable();
+      const finalConfig = await this.#port.config.read();
+      if (!active || configDigest(finalConfig) !== snapshot.configured) return unavailable();
+      const last = completeSummary(await handle.summary());
+      const head = result.is === "incomplete" ? owned.view.head : result.context.head;
+      if (!active || !last.ok || !last.complete || last.next !== undefined || !head
+        || canonicalize(last.value.scope) !== canonicalize(held.ref) || last.value.definition !== opened.handle.digest
+        || canonicalize(first.value.at) !== canonicalize(head) || canonicalize(last.value.at) !== canonicalize(head)
+        || canonicalize(owned.view.head) !== canonicalize(head)
+        || this.#service !== service || this.#readSessions !== sessions
+        || reads.sessionRequestedAt(membership, session) !== requestedAt) return unavailable();
+      const postRead = now(), postMs = timeMs(postRead);
+      const usedMs = result.is === "incomplete" ? timeMs(requestedAt) : timeMs(result.context.clock);
+      if (postMs === null || usedMs === null || postMs < usedMs || session.endedBy(postRead)) return unavailable();
+      const data = exploreData(result as unknown as Record<string, unknown>, BOUNDS.large - 512);
+      if (!data) return unavailable();
+      const response = ok({ ...data, descriptor: { definition: held.pinned, kind: binding.kind, declaration: binding.declaration } }, BOUNDS.large);
+      return bytesOf(response) <= BOUNDS.large ? response : unavailable();
+    })().finally(() => { settled = true; release(); });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<CallResult>(resolve => { timer = setTimeout(() => resolve(unavailable()), 10_000); });
+    try { return await Promise.race([work.catch(() => unavailable()), deadline]); }
+    finally {
+      if (timer !== undefined) clearTimeout(timer);
+      active = false;
+      replica?.close();
+      done = true;
+      release();
+    }
+
   }
 
   /**

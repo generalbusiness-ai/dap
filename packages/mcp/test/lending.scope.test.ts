@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { FactRef, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/dap-bytes";
+import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
 import { FILE_PUBLICATION_COHORT, FIRST_ACTIONS_OF } from "@generalbusiness/dap-platform";
 import { lending } from "../../../examples/lending/definition.ts";
 import { LENDING_DEFINITION } from "../../../examples/lending/pin.ts";
@@ -85,3 +85,44 @@ for (const mode of ["default", "generic"] as const) {
     } finally { room.done(); }
   }, 600_000);
 }
+
+// Invariant: MCP explores a real authenticated journal without signing or changing its head.
+test("explore predicts a lending release from the authenticated native cut", async () => {
+  const room = mcpRoom();
+  try {
+    const rita = await libraryRoom(room);
+    const applications = (await rita.ok("room"))["applications"] as { definition: string; scope: ScopeId; state: string }[];
+    const library = applications.find(value => value.definition === NAME && value.state === "created")!.scope;
+    const donation = await rita.ok(`${NAME}.donate`, { target: library, fields: { name: "Pot", description: "A pot", page: "shelf/pot.md", content: "A pot" }, idempotencyKey: "donate-setup" });
+    const thing = (donation["fact"] as FactRef).seq;
+    const reserved = await rita.ok(`${NAME}.reserve`, { target: library, fields: { tool: thing, day: "2099-01-01", until: timeOf(room.now() + 3_600_000) }, idempotencyKey: "reserve-setup" });
+    const reservation = (reserved["fact"] as FactRef).seq;
+    await room.pause([library]);
+    await room.pause([library]);
+    const before = await rita.ok("inspect", { scope: library });
+    const signed = rita.signedIntents.length, writes = rita.custodyWrites();
+    const posted = rita.requests.filter(request => request.startsWith("POST ") && request.endsWith("/acts")).length;
+    const result = await rita.ok("explore", { target: library, key: "explore-release", act: { kind: "release", on: reservation, fields: {} } });
+    expect(result["is"], JSON.stringify(result)).toBe("admitted");
+    expect(result["rows"]).toEqual(expect.arrayContaining([expect.objectContaining({ type: "reservation" })]));
+    expect(rita.signedIntents).toHaveLength(signed);
+    expect(rita.custodyWrites()).toBe(writes);
+    expect(rita.requests.filter(request => request.startsWith("POST ") && request.endsWith("/acts"))).toHaveLength(posted);
+    const after = await rita.ok("inspect", { scope: library });
+    expect(after["head"]).toEqual(before["head"]);
+    expect(after["head"]).toEqual((result["context"] as { head: unknown }).head);
+    let readLog = false, advanced = false;
+    const shadow = room.agent("fenced", { secret: rita.secret, config: rita.config, beforeFetch: async url => {
+      const path = new URL(url).pathname;
+      if (path === `/v1/scopes/${library}/log`) readLog = true;
+      else if (readLog && !advanced && path === `/v1/scopes/${library}`) {
+        advanced = true;
+        const release = await rita.ok(`${NAME}.release`, { target: library, on: reservation, fields: {}, idempotencyKey: "independent-release" });
+        expect(release["answer"]).toBe("accepted");
+      }
+    } });
+    const moved = await shadow.ok("explore", { target: library, key: "moved-release", act: { kind: "release", on: reservation, fields: {} } });
+    expect(advanced).toBe(true);
+    expect(moved["is"]).toBe("unavailable");
+  } finally { room.done(); }
+});
