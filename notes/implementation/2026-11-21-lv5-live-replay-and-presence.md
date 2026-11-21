@@ -49,9 +49,10 @@ match the landed LV4 tree under `apps/` and `examples/`.
 ## Focused evidence
 
 The replay and presence checks ran on the isolated LV5 branch carried
-onto the passing LV4 review candidate. Failed draft checks remain in the
-same evidence directory. Output retained under
-`~/play/artroom-evidence/2026-11-21-lv5-focused/`.
+onto the passing LV4 review candidate. Rebasing onto landed LV4 kept
+the tested source tree. The focused outputs below are retained with
+the gate under `~/play/artroom-evidence/2026-11-21-lv5-gate/`.
+Draft failures remain under `~/play/artroom-evidence/2026-11-21-lv5-focused/`.
 
 | Check | Command | Exit and result | Log | SHA-256 |
 |---|---|---|---|---|
@@ -68,6 +69,8 @@ same evidence directory. Output retained under
 | Card reproduction | MCP Vitest, `test/view-resources.test.ts` | 0, 6 passed | `lv5-view-resources.log` | `a78ecbe15486cd265362a84e28cd979fcd63a592cfe85a654b135475a8e92298` |
 | Pins after the reviewed seal | `timeout 60 npm run pins` | 0, 19.70 s wall | `pins-after-inventory.log` | `8eaa7fed5fac855317c6a74bcadc630ad90a15dce4661e41b3b7fd3bbc7265a3` |
 | Browser presence | `node --import tsx packages/mcp/test/presence-browser.mjs` with the pinned browser and host | 0, 2 modes | `lv5-presence-browser.log` | `03daf64415313936d826c02cf233f043e1bc36a17d02778c479198204d88469b` |
+| Documentation links | `node scripts/check-doc-links.mjs` | 0 | `lv5-doc-links.log` | `f7e2079a2c8c6a91e1f5bc4b6044bccc8fedac02ff0387e9b75059d29b60efa0` |
+| Section citations | `node scripts/check-section-citations.mjs --report /private/tmp/artroom-lv5-section-citations.json` | 0 | `lv5-citations.log` | `36796a031e391abf6ecfbe8e99328848c6f99a6e67a8441edc5c4ef5e0382260` |
 
 The browser used Playwright 1.63.0 and Chromium revision 1243. The
 Browser plugin skill was unavailable. The report contains the two
