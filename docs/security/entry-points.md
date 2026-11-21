@@ -1220,6 +1220,8 @@ workspace owners (`workspace-host.ts`, `workspace-lineage.ts` and
 `native-birth.ts`) each have an explicit owner seal. Native version pins
 and owning tests cover the imported policy rules.
 
+The MCP `explore` tool reads a declared scope with the authenticated session. It verifies the journal and the final Summary before returning a prediction. One owner bounds the logical journal input to 4 MiB and 16 pages, and keeps the physical slot until outstanding reads settle. If cancellation rejects, the slot stays closed for that service instance. The response deadline is 10 seconds. A complete result fits 64 KiB. The tool submits no act and writes no authorization. The restricted application read bridge does not expose it.
+
 The test checks structure. Its stand-ins show dispatch, not Durable Object
 behavior, authentication, storage bounds, credential custody, outbound
 ordering, or the platform asset adapter. Native and pure gate tests cover
@@ -1246,6 +1248,7 @@ Gate owners: [address.ts](../../packages/bytes/src/address.ts),
 [hosted-retirement.ts](../../packages/mcp/src/hosted-retirement.ts),
 [hosted-tools.ts](../../packages/mcp/src/hosted-tools.ts),
 [service.ts](../../packages/mcp/src/service.ts),
+[explore-result.ts](../../packages/mcp/src/explore-result.ts),
 [catalogue.ts](../../packages/mcp/src/catalogue.ts), and
 [inventory.ts](../../packages/mcp/src/inventory.ts).
 

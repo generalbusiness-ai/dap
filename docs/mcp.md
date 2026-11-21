@@ -129,11 +129,11 @@ a notification, is not run and issues no session.
 
 The list has two parts.
 
-- **The generic tools**, the same for every room: `room`, `commons`, `inspect`,
+- **The generic tools**, the same for every room: `explore`, `room`, `commons`, `inspect`,
   `create`, `join`, `install_application`, `application_installation`,
   `prepare`, `items`, `steps`, `step`, `record`, `sends`, `text`, `wait`,
   `settle`, `credential` and `diff`, and in `--generic` and `--generic=add` modes
-  `actions` and `act`. These are the twenty names of
+  `actions` and `act`. These are the twenty-one names of
   `GENERIC_TOOL_NAMES` in `packages/mcp/src/hosted-tools.ts`. The hosted
   endpoint omits `create`, `install_application`, `credential`, `diff`,
   `prepare`, `join` and `record` by default. `MCP_TOOL_ADDITIONS`
@@ -1936,6 +1936,12 @@ The acts of one scope, as act tools would describe them: each kind with its deri
   }
 }
 ```
+
+### `explore`
+
+Judges a declared act at an authenticated scope cut without submitting it. The input names `target`, `key`, and an `act` with `kind`, `on`, `fields`, and optional `expected` revisions. The result states whether the act is incomplete, refused, unavailable, or admitted. An admitted result includes every changed projected row. A result is a prediction, not a commitment.
+
+The context states the standing used for the judgment and its `authorityAge` in milliseconds at that context’s clock. The age is local elapsed time since the session request began; it does not prove that membership has stayed unchanged. A moved scope, missing input, expired session, or exceeded read or result limit yields unavailable.
 
 ### `act`
 
