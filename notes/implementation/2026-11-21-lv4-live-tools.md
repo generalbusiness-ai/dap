@@ -135,3 +135,23 @@ and this note. Corrected logs are under
 | Active-source inventory | 12 passed | `active.log` | `69495edcb580c47a015893d24aff6f8e3854fb70cba0e240b793d39e00aba2b6` |
 | Client intent and application projection | 16 passed | `client.log` | `4544efab93c437b194333aeb0e41cf68034d1c6bd5b816aefbefc8e94f0ed98b` |
 | Client types | exit 0 | `typecheck.log` | `93d077e30835a17c82425abeab78e368f3aaae2d1ee44b05b5fa8291b6391430` |
+
+## Full gate
+
+`npm run gate` ran once at clean head
+`957db0f1e35529e071477484830f7d39ff7671ee`, tree
+`d5fa74b947693ffb3b7dabf1cbae33d22f6a5066`. The gate used fetched
+`origin/main` at `f9ff3958e079e7f36c85be1b455382794b1c87f4`. It
+exited 0 in 1762.24 seconds of wall time measured by `/usr/bin/time -p`.
+The review head adds this evidence to the note. Its source and test
+trees match the gated head.
+
+| Check | Result | Log | SHA-256 |
+|---|---|---|---|
+| `npm run gate` | exit 0 | `~/play/artroom-evidence/2026-11-21-lv4-retry-gate/gate.txt` | `7dbcfb8e5f5f8f9f6fce53d0108c4f18dbbc548d4e6b1e664dd76cfa230ac4d7` |
+
+The kernel check passed. Node passed 246 cases and counting passed 58.
+The plain suite passed 5,070 cases and skipped one. The native suite
+passed 1,234 cases and skipped two, and ran all 13 scale modules. The
+native run reported zero lost, four stale, and zero unowned timeout
+crossings.
