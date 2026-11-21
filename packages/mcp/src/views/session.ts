@@ -24,6 +24,7 @@ interface Instance {
   readReceipt?: Receipt;
   busy: boolean;
   dispatches: Map<string, Promise<TypedCallResult<ViewOutcomeData>>>;
+  liveDispatches: Map<string, Promise<CallResult>>;
   pending: Map<string, Card["actions"][number]>;
   inputs: Map<string, { meaning: string; outcome: Promise<InputOpening> }>;
   /** The displayed reads, newest last, and the one its diff page shows. Only complete answers replay without another read. */
@@ -61,6 +62,7 @@ function shownOf(read: ExactRead, answer: ExactReadData): { shown: ShownRead; fi
   return { shown, files };
 }
 export interface ViewPorts {
+  liveAct?: (action: NativeCardAction, admit: () => void, dispatch?: DispatchContext) => Promise<CallResult>;
   /** Identity of the actual envelope, retained by the service, never supplied by the browser or the source card. */
   signerOf?: (result: CallResult) => ActSigner | null;
   /** Sign one read-token act and make one bounded read. `admit` runs before the signature. */
@@ -152,7 +154,9 @@ function checked(projection: Projection, query: ViewQuery): Projection {
     for (const action of card.actions) {
       if (action.local) { checkedLocal(action, card); continue; }
       const at = shapeAt(action.args["at"]);
-      if (!card.declared) {
+      if (action.live) {
+        if (!at || at["on"] !== card.identity.at["on"]) throw new ViewError("unavailable", "A live act disagrees with the displayed subject revision.");
+      } else if (!card.declared) {
         // An act signs revisions of the subjects it binds, each one a revision this card displayed.
         if (at !== undefined && Object.keys(at).some(name => !Object.hasOwn(card.identity.at, name) || at[name] !== card.identity.at[name])) throw new ViewError("unavailable", "An act disagrees with the displayed revisions.");
       } else if (at === undefined || Object.keys(card.identity.at).some(name => Object.hasOwn(at, name) && at[name] !== card.identity.at[name])) throw new ViewError("unavailable", "A declared act disagrees with the displayed subject revision.");
@@ -219,7 +223,7 @@ export class ViewSessions {
     }
     if (this.#instances.size >= MAX_INSTANCES) throw new ViewError("busy", "This connection retains its maximum of 128 views. Start a new connection.");
     const query: ViewQuery = { screen, position: 0, page: this.source.initialPage?.(screen, subject) ?? "summary", ...(subject === undefined ? {} : { subject }), ...(items === undefined ? {} : { items: structuredClone(items) }), ...(scope === undefined ? {} : { scope: structuredClone(scope) }) };
-    const instance: Instance = { key, query, cut: 0, projection: { status: "unavailable", count: 0, position: 0, fallback: "Loading the card." }, busy: true, dispatches: new Map(), pending: new Map(), inputs: new Map(), reads: [] };
+    const instance: Instance = { key, query, cut: 0, projection: { status: "unavailable", count: 0, position: 0, fallback: "Loading the card." }, busy: true, dispatches: new Map(), liveDispatches: new Map(), pending: new Map(), inputs: new Map(), reads: [] };
     this.#instances.set(key, instance);
     this.#current.set(screen, key);
     try {
@@ -328,8 +332,26 @@ export class ViewSessions {
     if (actionId === VIEW_DIFF || (isExactAction(actionId) && instance.projection.card?.diffRead)) return this.#readExact(instance, cut, actionId, dispatchContext);
     const dispatchKey = `${cut}:${actionId}`;
     const action = instance.projection.card?.actions.find((candidate) => candidate.id === actionId);
+    if (action && !action.local && action.live) throw new ViewError("shape", "This action requires the live action tool.");
     if (action?.parameters) throw new ViewError("shape", "Type the declared measurements in chat; this card cannot supply their values.");
     return this.#dispatch(instance, cut, action, dispatchKey, dispatchContext);
+  }
+  async liveAct(key: string, cut: number, actionId: string, dispatchContext?: DispatchContext): Promise<{ result: CallResult; display: Display }> {
+    const instance = this.#instance(key);
+    this.#admit(instance, cut);
+    const dispatchKey = `${cut}:${actionId}`, retained = instance.liveDispatches.get(dispatchKey);
+    if (retained) return { result: await retained, display: this.#display(instance) };
+    if (instance.busy) throw new ViewError("busy", "The card has an operation in progress.");
+    const action = instance.projection.card?.actions.find((candidate): candidate is NativeCardAction => !candidate.local && candidate.id === actionId && !!candidate.live);
+    if (!action || !this.ports.liveAct || action.parameters) throw new ViewError("shape", "The displayed card offers no such live act.");
+    if (instance.liveDispatches.size >= 32) throw new ViewError("busy", "This view retains 32 live outcomes. Open a new view.");
+    instance.busy = true;
+    try {
+      const pending = this.ports.liveAct(structuredClone(action), () => this.#admit(instance, cut), dispatchContext);
+      instance.liveDispatches.set(dispatchKey, pending);
+      const result = await pending;
+      return { result, display: this.#display(instance) };
+    } finally { instance.busy = false; }
   }
   /** Only the context line, selected identity and receipt cross back to the model. */
   #inputOpening(instance: Instance): InputOpening {

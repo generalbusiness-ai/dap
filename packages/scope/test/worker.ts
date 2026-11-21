@@ -72,6 +72,8 @@ class TestApiEntry<E extends Env = Env> extends WorkerEntrypoint<E> implements S
   retained(...args: Parameters<ScopeApi["retained"]>): ReturnType<ScopeApi["retained"]> { return api(this.scopes(), null, this.env).retained(...args); }
 }
 /** Scripted provider settings only; fixed-owner RPC, SQL and alarms are actual. */
+/** Test-only per-scope wrapper around the real declaration source. */
+export const declarationReadWrappers = new Map<string, (source: NonNullable<Wiring["applicationDeclarationSource"]>) => NonNullable<Wiring["applicationDeclarationSource"]>>();
 export const siteTokenTestSettings = new Map<string, import("../src/artifacts-wiring.ts").ArtifactsBindings>();
 /** Env-only census fixtures; authorization, exact proof RPC and SQL are production. */
 export const scopeCensusTestSettings = new Map<string, Partial<Env>>();
@@ -368,6 +370,8 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
       ...(net.sized.has(name ?? "") ? { bounds: net.sized.get(name ?? "")! } : {}),
       ...(outside ? { outside: (given: OutsideGiven) => outside(given, this.ctx.storage.sql) } : {}),
       sessions: session.sessions,
+      ...(declarationReadWrappers.has(name ?? "") && session.applicationDeclarationSource
+        ? { applicationDeclarationSource: declarationReadWrappers.get(name ?? "")!(session.applicationDeclarationSource) } : {}),
       ...(archiveHostWiring.has(name ?? "") ? { archiveHost: archiveHostWiring.get(name ?? "")! } : {}),
       ...(roomArchiveWiring.has(name ?? "") ? { archive: roomArchiveWiring.get(name ?? "")! } : {}),
       ...(fixtureArchiveWiring.has(name ?? "") ? { fixtureArchive: fixtureArchiveWiring.get(name ?? "")! } : {}),

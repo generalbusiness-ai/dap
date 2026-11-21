@@ -20,11 +20,19 @@ import type {
 } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, utf8, readMinimum, isReceipt, definitionDigest, entryHash, encodeItemQueryParameter, readItemQueryParameter, itemQueryReadFor, within, LATE, isDigest, parseStrict, textDigest, scopeIdOf } from "@generalbusiness/dap-bytes";
-import { encodeApplicationProjectionQuery, readApplicationProjectionQuery, readApplicationProjectionReplyText } from "@generalbusiness/dap-platform/application-v2";
+import { encodeApplicationProjectionQuery, readApplicationProjectionQuery, readApplicationProjectionReplyText, applicationProjectionQueryDigest } from "@generalbusiness/dap-platform/application-v2";
+import type { LiveAnswer, LiveRead, LiveSummary, LiveApplicationProjectionRead } from "@generalbusiness/dap-platform";
 import { registerScopeReader } from "./scope-reader.ts";
 
 /** How a handle reaches a scope service: the contract's `ScopeApi`. `http.ts` and `binding.ts` each make one. */
 export type Transport = ScopeApi;
+
+/** Separate live interface; recorded transports need not implement it. */
+export interface LiveTransport {
+  liveSummary(scope: ScopeId, reader: unknown): Promise<LiveRead<LiveSummary>>;
+  applicationLiveProjection(scope: ScopeId, reader: unknown, encoded: string): Promise<LiveApplicationProjectionRead>;
+  liveAct(scope: ScopeId, reader: unknown, signed: SignedIntent, grants: readonly Grant[], generation: string, binding?: string): Promise<LiveAnswer>;
+}
 
 /** No answer could be read: the request or its reply was lost, or the reply was not an answer. Nothing is known about what was recorded. */
 export class TransportError extends Error {
@@ -100,6 +108,22 @@ export class ScopeHandle {
    */
   submit(signed: SignedIntent, grants: readonly Grant[] = [], beside: Beside = {}): Promise<Answer> { return this.#transport.submit(this.scope, signed, grants, beside); }
 
+  /** Read live state under this handle's session. */
+  liveSummary(): Promise<LiveRead<LiveSummary>> {
+    const transport = this.#transport as Transport & Partial<LiveTransport>;
+    if (!transport.liveSummary) throw new TransportError("the transport does not support live reads");
+    return transport.liveSummary(this.scope, this.#reader);
+  }
+
+  /** Submit one live intent against the generation last read under this session. */
+  liveAct(signed: SignedIntent, generation: string, grants: readonly Grant[] = [], binding?: ApplicationProjectionQuery): Promise<LiveAnswer> {
+    const transport = this.#transport as Transport & Partial<LiveTransport>;
+    if (!transport.liveAct) throw new TransportError("the transport does not support live acts");
+    const encoded = binding === undefined ? undefined : encodeApplicationProjectionQuery(binding);
+    if (binding !== undefined && (!encoded || binding.scope.scope !== this.scope)) throw new TransportError("invalid bounded application projection");
+    return transport.liveAct(this.scope, this.#reader, signed, grants, generation, encoded ?? undefined);
+  }
+
   /** The receipt of an accepted act, by its exact signed intent, or `not-found` (section 4.2). It admits nothing. */
   settle(signed: SignedIntent): Promise<Settlement> { return this.#transport.settle(this.scope, signed); }
 
@@ -126,6 +150,16 @@ export class ScopeHandle {
     });
     if (result === LATE) throw new TransportError("no whole item query within 10 seconds; coverage is incomplete");
     return result;
+  }
+  /** Read a live summary bound to one installed application's query. */
+  async applicationLiveProjection(query: ApplicationProjectionQuery): Promise<LiveApplicationProjectionRead> {
+    const encoded = encodeApplicationProjectionQuery(query), checked = readApplicationProjectionQuery(encoded);
+    const transport = this.#transport as Transport & Partial<LiveTransport>;
+    if (!checked || !encoded || checked.scope.scope !== this.scope) throw new TransportError("invalid bounded application projection");
+    if (!transport.applicationLiveProjection) throw new TransportError("the transport does not support live application projections");
+    const reply = await transport.applicationLiveProjection(this.scope, this.#reader, encoded);
+    if (reply.ok && (reply.query !== applicationProjectionQueryDigest(checked) || !sameRef(reply.value.scope, checked.scope))) throw new TransportError("the reply does not match the bounded application projection");
+    return reply;
   }
   /** One complete declared projection at one journal head. Requires a read session. */
   async applicationProjection(query: ApplicationProjectionQuery, atLeast?: ReadMinimum | Receipt): Promise<ApplicationProjectionRead> {

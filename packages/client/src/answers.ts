@@ -14,10 +14,10 @@
  * and it computes the hash itself.
  */
 
-import { answersVersionQuestion } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, type LiveAnswer, type LiveRead, type LiveSummary, type LiveApplicationProjectionRead } from "@generalbusiness/dap-platform";
 import type { Answer, DeliveryRefusal, Created, CreationUnavailableReason, MismatchReason, RefusalReason, Read, Settlement, ScopeApi, UnavailableReason } from "@generalbusiness/dap-contract";
 import { isScopeBoundName } from "@generalbusiness/dap-contract";
-import { REFUSAL_REASONS, canonicalize, isItemQueryRead, among, isOutboxItem, isFactRef, isHead, isItem, isListOf, isLogPage, isRead, isReceipt, isRecord, isRetainedInput, isSealed, isSummary } from "@generalbusiness/dap-bytes";
+import { REFUSAL_REASONS, canonicalize, isItemQueryRead, among, isOutboxItem, isFactRef, isHead, isItem, isScopeRef, isDigest, isFieldValue, isListOf, isLogPage, isRead, isReceipt, isRecord, isRetainedInput, isSealed, isSummary } from "@generalbusiness/dap-bytes";
 import { isArchived } from "./journal-tail.ts";
 import { readApplicationProjectionReplyText } from "@generalbusiness/dap-platform/application-v2";
 
@@ -74,6 +74,46 @@ function isAnswer(v: unknown): v is Answer {
     case "mismatch": return only(v, "answer", "reason") && among(MISMATCH)(v["reason"]);
     default: return false;
   }
+}
+
+/** A live answer never carries a receipt or a recorded head. */
+export function isLiveAnswer(v: unknown): v is LiveAnswer {
+  if (!isRecord(v)) return false;
+  const generation = typeof v["generation"] === "string" && v["generation"].length > 0;
+  const tick = typeof v["tick"] === "number" && Number.isSafeInteger(v["tick"]) && v["tick"] >= 0;
+  switch (v["answer"]) {
+    case "applied": return only(v, "answer", "generation", "tick") && generation && tick;
+    case "reset": return only(v, "answer", "generation") && generation;
+    case "refused": return (only(v, "answer", "reason", "generation", "tick") || only(v, "answer", "reason", "name", "generation", "tick") && typeof v["name"] === "string") && among(ACT_REFUSED)(v["reason"]) && generation && tick;
+    case "unavailable": return only(v, "answer", "reason") && among(UNAVAILABLE)(v["reason"]);
+    default: return false;
+  }
+}
+
+/** Check the live summary without accepting a recorded head. */
+export function isLiveSummary(v: unknown): v is LiveRead<LiveSummary> {
+  if (!isRecord(v)) return false;
+  if (v["ok"] === false) return only(v, "ok", "reason") && ["forbidden", "sessions-unavailable", "clock-behind", "not-found", "unavailable", "rate-limited"].includes(v["reason"] as string);
+  if (v["ok"] !== true || !only(v, "ok", "generation", "tick", "value", "complete") || typeof v["generation"] !== "string" || !v["generation"] || !Number.isSafeInteger(v["tick"]) || (v["tick"] as number) < 0 || typeof v["complete"] !== "boolean" || !isRecord(v["value"])) return false;
+  const value = v["value"];
+  return only(value, "scope", "definition", "items", "counts") && isScopeRef(value["scope"]) && isDigest(value["definition"])
+    && isListOf(isItem)(value["items"]) && Array.isArray(value["counts"]) && value["counts"].every(row => Array.isArray(row) && row.length === 3 && typeof row[0] === "string" && typeof row[1] === "string" && Number.isSafeInteger(row[2]) && row[2] >= 0);
+}
+
+/** A live application reply binds its summary to one query digest. */
+export function isLiveApplicationProjection(v: unknown): v is LiveApplicationProjectionRead {
+  if (!isRecord(v)) return false;
+  if (v["ok"] === false) return isLiveSummary(v) || only(v, "ok", "reason") && v["reason"] === "incomplete";
+  if (v["ok"] !== true || !only(v, "ok", "query", "generation", "tick", "complete", "value") || !isDigest(v["query"])
+    || typeof v["generation"] !== "string" || !v["generation"] || !Number.isSafeInteger(v["tick"]) || (v["tick"] as number) < 0
+    || v["complete"] !== true || !isRecord(v["value"])) return false;
+  const value = v["value"];
+  if (!only(value, "scope", "definition", "projection", "sources") || !isScopeRef(value["scope"]) || !isDigest(value["definition"])
+    || !isDigest(value["projection"]) || !isRecord(value["sources"]) || Object.keys(value["sources"]).length !== 1) return false;
+  return Object.values(value["sources"]).every(rows => Array.isArray(rows) && rows.length <= 100 && rows.every(row =>
+    isRecord(row) && only(row, "id", "type", "state", "revision", "fields") && Number.isSafeInteger(row["id"]) && (row["id"] as number) >= 0
+    && Number.isSafeInteger(row["revision"]) && (row["revision"] as number) >= 0 && typeof row["type"] === "string" && typeof row["state"] === "string"
+    && isRecord(row["fields"]) && Object.values(row["fields"]).every(field => field === null || isFieldValue(field))));
 }
 
 /** For each operation, whether a reply is an answer of that operation. */

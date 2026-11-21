@@ -6,7 +6,7 @@ import { net } from "../../src/testing.ts";
 import type { SessionOwner } from "../session-settings.ts";
 import { Platform, quiet } from "../repository.ts";
 import { wired } from "../outside.ts";
-import { platformOutside } from "../worker.ts";
+import { declarationReadWrappers, platformOutside } from "../worker.ts";
 import { applicationTrustSettings } from "./application-trust-settings.ts";
 
 type PortFactory = NonNullable<ReturnType<typeof wired.get>>;
@@ -67,7 +67,7 @@ export function nativeFixtureLifetime(owner: SessionOwner, options: { required?:
   let hold: NonNullable<typeof net.hold> = () => false;
   const deaf: NonNullable<typeof net.deaf> = () => false;
   let released = false;
-  const ports = resources(wired), outsides = resources(platformOutside), peers = resources(net.peers), trust = resources(applicationTrustSettings);
+  const ports = resources(wired), outsides = resources(platformOutside), peers = resources(net.peers), trust = resources(applicationTrustSettings), declarations = resources(declarationReadWrappers);
   let trustSetting: (() => unknown) | null = null;
   const cleanups = new Set<() => void>();
   net.hold = hold; net.deaf = deaf;
@@ -105,7 +105,7 @@ export function nativeFixtureLifetime(owner: SessionOwner, options: { required?:
       retired.add(hold); retired.add(deaf);
       if (net.hold === hold) net.hold = previousLive(before.hold);
       if (net.deaf === deaf) net.deaf = previousLive(before.deaf);
-      ports.release(); outsides.release(); peers.release(); trust.release();
+      ports.release(); outsides.release(); peers.release(); trust.release(); declarations.release();
     }
     // Every gate and provider is released even if one cleanup failed. Do not
     // expose arbitrary cleanup errors, which may contain private fixture data.
@@ -181,6 +181,9 @@ export function nativeFixtureLifetime(owner: SessionOwner, options: { required?:
     },
     wire(name: string, factory: PortFactory): void { active(); ports.set(name, () => { active(); return factory(); }); },
     outside(name: string, factory: OutsideFactory): void { active(); outsides.set(name, (given, sql) => { active(); return factory(given, sql); }); },
+    declarationRead(name: string, wrap: NonNullable<ReturnType<typeof declarationReadWrappers.get>>): void {
+      active(); declarations.set(name, source => { active(); return wrap(source); });
+    },
     /** Scripted anchors stay available until the owning scenario has finished. */
     peer(hash: Digest, value: Parameters<typeof net.peers.set>[1]): void { active(); peers.set(hash, value); },
     now(): number { active(); return timeMs(clock.now)!; },

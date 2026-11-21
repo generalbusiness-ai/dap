@@ -3,8 +3,9 @@
 import { APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionRefusal, type ReadMinimum, type ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isRecord, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
+import type { LiveRead, LiveSummary } from "@generalbusiness/dap-platform";
 import { timeMs } from "@generalbusiness/dap-derive";
-import { applicationProjectionQueryDigest, ApplicationProjectionError, bindApplicationProjection, isApplicationJournalSource, readApplicationProjectionQuery } from "@generalbusiness/dap-platform/application-v2";
+import { applicationProjectionQueryDigest, applicationProjectionId, applicationProjectionQueries, ApplicationProjectionError, bindApplicationProjection, isApplicationJournalSource, readApplicationProjectionQuery } from "@generalbusiness/dap-platform/application-v2";
 import { ItemQueryBudget } from "../item-query-budget.ts";
 import { PreparationFlights, PREPARATION_MILLISECONDS, type PreparationRun } from "../preparation-flight.ts";
 import { preparedSessionRefusal, type QueryVisibility, type SessionPreparation } from "../session-preparation.ts";
@@ -27,6 +28,7 @@ export interface ApplicationProjectionConfig {
   flights: PreparationFlights;
   source: ApplicationDeclarationSource | null;
   births?: NativeBirthSource | null;
+  liveSummary?: (reader: unknown) => LiveRead<LiveSummary>;
   minimum?: (reader: unknown, minimum: ReadMinimum, active: () => boolean) => Promise<ReadWaitRefusal | null>;
 }
 export class ApplicationProjections {
@@ -52,7 +54,16 @@ export class ApplicationProjections {
     }
     return this.config.flights.run(run => this.#run(encoded, reader, run), ends).then(result => result ?? no("unavailable"));
   }
-  async #run(encoded: unknown, reader: unknown, run: PreparationRun): Promise<NativeApplicationProjection> {
+  /** Capture live state only inside the same authenticated ownership flight. */
+  async readLive(encoded: unknown, reader: unknown): Promise<NativeApplicationProjection> {
+    return this.config.flights.run(run => this.#run(encoded, reader, run, "live")).then(result => result ?? no("unavailable"));
+  }
+  /** Check binding without reading or advancing the live overlay. */
+  async checkLiveBinding(encoded: unknown, reader: unknown): Promise<boolean> {
+    const result = await this.config.flights.run(run => this.#run(encoded, reader, run, "proof"));
+    return result?.ok === true;
+  }
+  async #run(encoded: unknown, reader: unknown, run: PreparationRun, mode: "recorded" | "live" | "proof" = "recorded"): Promise<NativeApplicationProjection> {
     const c = this.config, query = readApplicationProjectionQuery(encoded);
     if (!query || !c.name || query.scope.scope !== c.name) return no("invalid-query");
     if (typeof reader !== "string" || reader.length > B.sessionChars || reader.startsWith("Signed ")) return no("forbidden");
@@ -96,6 +107,40 @@ export class ApplicationProjections {
       const guard = () => preparedSessionRefusal(c, frame, reader, visibility, prepared.membership, prepared.resolvedBirth, history);
       if (!frame.current() || !run.active()) return no("unavailable");
       const denied = guard(); if (denied !== null) return no(denied);
+      if (mode !== "recorded") {
+        const entries = Object.entries(projection.sources);
+        if (entries.length !== 1) return no("query-not-ready");
+        const [name, source] = entries[0]!;
+        if (isApplicationJournalSource(source) || source.states.some(state => definition.declared.items[source.item]!.states[state]!.final)
+          || Object.values(source.fields).some(field => field.from.kind === "fact-time" || field.from.kind === "fact-signer")) return no("query-not-ready");
+        // Validates every selected source and rejects unknown or missing IDs.
+        const selection = applicationProjectionQueries(projection, query.scope, query.items)[name]!;
+        if (mode === "proof") {
+          if (!run.active() || !preparation.available || !frame.current()) return no("unavailable");
+          const final = guard(); return final === null ? { ok: true, serialized: "{}" } : no(final);
+        }
+        const summary = c.liveSummary?.(reader);
+        if (!summary || !summary.ok || canonicalize(summary.value.scope) !== canonicalize(query.scope)
+          || summary.value.definition !== definition.digest) return no("query-not-ready");
+        if (!summary.complete) return no("incomplete");
+        const items = summary.value.items.filter(item => item.type === source.item && source.states.includes(item.state)
+          && (selection.ids === null || selection.ids.includes(item.id)));
+        if (items.length > source.limit || source.read !== "many" && items.length !== 1) return no("incomplete");
+        const rows = items.map(item => {
+          const fields: Record<string, unknown> = {};
+          for (const [alias, field] of Object.entries(source.fields)) {
+            const slots = field.from.kind === "party" ? item.parties : field.from.kind === "ref" ? item.refs : item.values;
+            const value = slots[field.from.name];
+            if (value === undefined || value === null && !field.nullable) throw new Error("live projection field unavailable");
+            fields[alias] = value;
+          }
+          return { id: item.id, type: item.type, state: item.state, revision: item.revision, fields };
+        });
+        const serialized = applicationJson({ ok: true, query: applicationProjectionQueryDigest(query), generation: summary.generation,
+          tick: summary.tick, complete: true, value: { scope: query.scope, definition: definition.digest, projection: applicationProjectionId(projection), sources: { [name]: rows } } }, B.resultBytes);
+        if (!run.active() || !preparation.available || !frame.current()) return no("unavailable");
+        const final = guard(); return final === null ? { ok: true, serialized } : no(final);
+      }
       const projected = applicationProjectionData(c.sql, frame, projection, query.items, run.active);
       if (!projected.ok) return no(projected.reason === "behind" ? "unavailable" : projected.reason);
       const serialized = applicationJson({ ok: true, query: applicationProjectionQueryDigest(query), value: projected.value }, B.resultBytes);

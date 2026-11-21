@@ -8,12 +8,31 @@ import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
 import { applicationProjectionId, applicationProjectionQueryDigest, packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
 import { applicationCounterPacket2, applicationCounterNavigationPacket2 } from "../../scope/test/fixtures.ts";
+import { applicationPresencePacket } from "../../scope/test/support/application-presence-fixture.ts";
 import { DeclaredViewSource } from "../src/views/declared.ts";
 import { ViewSessions } from "../src/views/session.ts";
 import type { CallResult } from "../src/service.ts";
 import { viewTools } from "../src/views/tools.ts";
 import { viewToolName } from "../src/views/names.ts";
 const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
+
+test("a declared live view displays only its selected projected row and retains its action binding", async () => {
+  const { packet } = await applicationPresencePacket();
+  const installation: ApplicationInstallation = { scope, directory: scope, membership: scope, rules: scope, destination: scope,
+    definition: packet.package.semantic.entry, ids: packet.ids, item: 7 };
+  const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
+    installation: async () => installation, actions: async () => [packet.package.presentation.views["cards"]!.acts[0]!.needs],
+    projection: async () => { throw Error("The live view must not use a recorded projection."); },
+    liveProjection: async query => ({ ok: true, query: applicationProjectionQueryDigest(query)!, generation: "generation", tick: 3, complete: true,
+      value: { scope: query.scope, definition: packet.package.semantic.projections["cards"]!.definition,
+        projection: applicationProjectionId(packet.package.semantic.projections["cards"]!),
+        sources: { cards: [{ id: 2, type: "card", state: "here", revision: 3, fields: { renewals: 1 } }] } } }),
+  });
+  const selected = await source.read({ screen: "cards", scope, page: "item", position: 0 });
+  expect(selected.card?.actions.map(action => action.id)).toEqual(["renew", "leave"]);
+  expect(selected.card?.reasons).toEqual(["renewals: 1"]);
+  expect(selected.card?.actions[0]?.live?.generation).toBe("generation");
+});
 
 async function fixture(navigation = false) {
   const packet = navigation ? await applicationCounterNavigationPacket2() : await applicationCounterPacket2();

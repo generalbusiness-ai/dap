@@ -1,6 +1,7 @@
 /** The generic host interpreter for a verified declared presentation. It
  * runs no package code. Its ports are native reads, not application adapters. */
 import type { ReadMinimum, ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import type { LiveApplicationProjectionRead } from "@generalbusiness/dap-platform";
 import { applicationItemSnapshot } from "@generalbusiness/dap-client";
 import { canonicalize, digestBytes, isLocalId, isMemberRef, parseStrict, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
@@ -28,6 +29,7 @@ export interface DeclaredViewPort {
   /** The current active native install, read under the configured membership. */
   installation(): Promise<ApplicationInstallation | null>;
   projection(query: ApplicationProjectionQuery, minimum?: ReadMinimum): Promise<ApplicationProjectionRead>;
+  liveProjection?(query: ApplicationProjectionQuery): Promise<LiveApplicationProjectionRead>;
   /** Current native role actions. Unknown standing returns no actions. */
   actions(): Promise<readonly string[]>;
   /** Authenticated bounded display reads only; never native authority. */
@@ -188,6 +190,11 @@ export class DeclaredViewSource implements ViewSource {
     return { label: series.label, scale: series.scale, unit: series.unit, window, samples, fallback };
   }
   async read(query: ViewQuery, _access?: Parameters<ViewSource["read"]>[1], minimum?: ReadMinimum): Promise<Omit<Projection, "card"> & { card?: Omit<Card, "actions"> & { actions: NativeCardAction[] } }> {
+    const declaredView = this.#view(query);
+    const declaredProjection = this.packet.package.semantic.projections[declaredView.projection]!;
+    const part = this.packet.package.semantic.definitions.find(item => item.id === declaredProjection.definition)!;
+    const native = parseStrict(part.bytes) as DefinitionLike & { level?: { name?: string } };
+    if (native.level?.name === "live") return this.#readLive(query, declaredView, native);
     const { view, root, scope, definition, reply, rows, routed, points, unknown } = await this.#read(query, minimum);
     const declaration = this.packet.package.semantic.projections[view.projection]!;
     const backScope = this.#backScope(view, scope, root), surface = this.#surface(query.screen, view, backScope);
@@ -244,6 +251,48 @@ export class DeclaredViewSource implements ViewSource {
         ...(surface ? { resource: surface.resource, opens: surface.opens, surface } : {}) },
     };
     return { status: "ready", position, count: rows.length, scope, points, refresh: view.refresh, ...navigation, card, fallback, members };
+  }
+  async #readLive(query: ViewQuery, view: ApplicationView, definition: DefinitionLike): Promise<Omit<Projection, "card"> & { card?: Omit<Card, "actions"> & { actions: NativeCardAction[] } }> {
+    const install = await this.port.installation();
+    if (!install || canonicalize(install.ids) !== canonicalize(this.packet.ids) || install.definition !== this.packet.package.semantic.entry || !this.port.liveProjection)
+      throw new ViewError("unavailable", "The installed live view is unavailable.");
+    const projection = this.packet.package.semantic.projections[view.projection]!;
+    if (view.kind === "surface" || view.kind === "log" || view.for || view.series || view.reads || view.links)
+      throw new ViewError("unavailable", "This live view needs unsupported recorded or related data.");
+    const selection: ApplicationProjectionQuery = { v: 1, scope: query.scope ?? install.scope, directory: install.directory, install: install.item, projection: view.projection, items: query.items ?? {} };
+    const reply = await this.port.liveProjection(selection);
+    if (!reply.ok || !reply.complete || canonicalize(reply.value.scope) !== canonicalize(selection.scope) || reply.value.definition !== projection.definition)
+      throw new ViewError("unavailable", "The installed live projection is unavailable.");
+    const source = projection.sources[view.item];
+    if (!source || isApplicationJournalSource(source) || Object.keys(projection.sources).length !== 1 || Object.values(source.fields).some(field => field.from.kind === "fact-time" || field.from.kind === "fact-signer"))
+      throw new ViewError("unavailable", "This live view needs unsupported projection sources.");
+    if (reply.value.projection !== applicationProjectionId(projection)) throw new ViewError("unavailable", "The live projection does not match the installed declaration.");
+    const rows = reply.value.sources[view.item];
+    if (!rows || Object.keys(reply.value.sources).length !== 1) throw new ViewError("unavailable", "The live selection is incomplete.");
+    const ordered = view.order ? orderedViewRows(rows, view.order) : rows;
+    if (!ordered.length) return { status: "empty", position: 0, count: 0, fallback: "This live view has no matching items." };
+    const row = ordered[query.position];
+    if (!row) throw new ViewError("shape", "The live view position is outside its projection.");
+    const held = await this.port.actions(), actions: NativeCardAction[] = [];
+    for (const [index, control] of view.acts.entries()) {
+      if (!held.includes(control.needs) || control.parameters) continue;
+      let allowed = false;
+      try { allowed = (await evaluate(control.when, input(row))).value === true; } catch (error) { if (!(error instanceof RuleEvalError)) throw error; }
+      if (!allowed) continue;
+      const declaration = definition.acts[control.act];
+      if (!declaration || Object.keys(declaration.also).length !== 0) continue;
+      const fields = control.args ?? {};
+      const at = { on: row.revision };
+      actions.push({ id: controlId(view, control, index), label: control.label, purpose: "act", kind: control.act,
+        args: { target: selection.scope.scope, on: row.id, at, digest: projection.definition, fields }, live: { query: selection, generation: reply.generation } });
+    }
+    const values = input(row), waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "") : "";
+    const fallback = template(view.fallback, row, waiting);
+    return { status: "ready", position: query.position, count: ordered.length, fallback, card: {
+      identity: { item: String(row.id), kind: row.type, revision: String(row.revision), subject: { scope: selection.scope.scope, item: row.id }, at: { on: row.revision } },
+      title: displayText(values[view.title]), summary: view.summary === null ? "" : displayText(values[view.summary]), reasons: view.facts.map(fact => formatFact(fact, values, this.port.now?.() ?? Date.now())),
+      projection: [], reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
+    } };
   }
   /** Called by the mounted-view host inside the custody build, immediately
    * before signing. Native expected revisions and grants still judge submit. */

@@ -7,13 +7,41 @@ import type { DispatchContext } from "../src/results.ts";
 import { cardOpens } from "../src/views/opens.ts";
 import { actSigner } from "../src/views/actor.ts";
 import { ViewSessions } from "../src/views/session.ts";
-import { viewTools } from "../src/views/tools.ts";
+import { toolsForHost, viewTools } from "../src/views/tools.ts";
 import type { Card, Display, LocalReviewCapture, Projection, ViewSource } from "../src/views/types.ts";
 import { digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { fixedSigner } from "./fixtures.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";
 
 const answer = (value: string): CallResult => ({ content: [{ type: "text", text: value }], structuredContent: { answer: value }, isError: false });
+
+test("a live action uses only the mounted card's current cut and offered action", async () => {
+  const scope = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` } as const;
+  const query = { v: 1 as const, scope, directory: scope, install: 1, projection: "board", items: {} };
+  const source: ViewSource = { initialPage: () => "item", read: async () => ({ status: "ready", position: 0, count: 1, fallback: "Board", card: {
+    identity: { kind: "board", item: "1", revision: "2", subject: { scope: scope.scope, item: 1 }, at: { on: 2 } },
+    title: "Board", summary: "", reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "Board",
+    actions: [{ id: "leave", label: "Leave", purpose: "act", kind: "leave", args: { on: 1, at: { on: 2 } }, live: { query, generation: "first" } }],
+  } }) };
+  const sent: unknown[] = [];
+  const sessions = new ViewSessions(source, () => ({ call: async () => answer("read") }), async () => answer("recorded"), async () => answer("settled"), () => null,
+    { liveAct: async (action, admit) => { admit(); sent.push(action); return answer("applied"); } });
+  const tools = viewTools(sessions);
+  await sessions.open("live", "needs-you");
+  expect(tools["view_live_act"]!.tool._meta?.["ui"]).toEqual({ visibility: ["app"] });
+  expect(toolsForHost(Object.values(tools).map(entry => entry.tool), false).some(tool => tool.name === "view_live_act")).toBe(false);
+  expect((await tools["view_live_act"]!.run({ view: "live", cut: 0, action: "other" })).isError).toBe(true);
+  expect((await tools["view_act"]!.run({ view: "live", cut: 0, action: "leave" })).isError).toBe(true);
+  await sessions.read("live", 0, { refresh: true });
+  expect((await tools["view_live_act"]!.run({ view: "live", cut: 0, action: "leave" })).isError).toBe(true);
+  expect(sent).toHaveLength(0);
+  const result = await tools["view_live_act"]!.run({ view: "live", cut: 1, action: "leave" });
+  expect(result.isError).toBe(false);
+  expect(sent).toHaveLength(1);
+  await tools["view_live_act"]!.run({ view: "live", cut: 1, action: "leave" });
+  expect(sent).toHaveLength(1);
+  expect(JSON.stringify(result)).not.toContain("first");
+});
 
 // Invariant: a full mounted-view cache refuses another write before dispatch, but can still check the original requests
 // already admitted. This is the session/cache boundary; scope answers and custody below it are explicit test doubles.

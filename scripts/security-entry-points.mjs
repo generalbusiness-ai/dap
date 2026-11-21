@@ -81,7 +81,7 @@ const gates = {
   // Census is signed only by the pinned register's standing founding-install
   // signer. It is not an ordinary member/session read; its whole owner is sealed.
   census: "self-signed",
-  summary: readGate("summary"), items: readGate("items"), history: readGate("history"), entry: readGate("entry"), outbox: readGate("outbox"), outboxItem: readGate("outbox"), log: readGate("log"), retained: readGate("retained"), queryItems: readGate("query-items"), applicationProjection: "session", stream: "session", streamExchange: "session", liveSummary: "session", liveItems: "session", watchExchange: "session", credential: "session",
+  summary: readGate("summary"), items: readGate("items"), history: readGate("history"), entry: readGate("entry"), outbox: readGate("outbox"), outboxItem: readGate("outbox"), log: readGate("log"), retained: readGate("retained"), queryItems: readGate("query-items"), applicationProjection: "session", stream: "session", streamExchange: "session", liveAct: "session", liveSummary: "session", liveItems: "session", watchExchange: "session", credential: "session",
   incidents: readGate("incidents"), requests: readGate("requests"), waiting: readGate("waiting"),
   // A session of the row's own member, checked against the object's own head on each request.
   keepOriginal: "session", listOriginals: "session", readOriginal: "session", endOriginal: "session",
@@ -185,7 +185,7 @@ export async function scopeRows(text, snapshotDispatches = []) {
       const query = path.endsWith("/query-items") ? "?q=e30" : path.endsWith("/application-projection") ? "?p=e30" : "";
       // Only this body-dispatched route needs two input classes. Other paths
       // retain their existing single matcher exercise.
-      const bodies = method === "POST" && parts?.[3] === "reservation-snapshot" ? ["{}", '{"stage":true}'] : ["{}"];
+      const bodies = method === "POST" && parts?.[3] === "reservation-snapshot" ? ["{}", '{"stage":true}'] : method === "POST" && parts?.[3] === "live-act" ? ['{"signed":{},"grants":[],"generation":"witness"}'] : ["{}"];
       for (const requestBody of bodies) {
         const request = new Request(`https://inventory.invalid${path}${query}`, { method, headers: { authorization: parts === null ? "Signed census-witness" : "Session witness", "cf-connecting-ip": "198.51.100.7" }, ...(method === "POST" ? { body: requestBody } : {}) });
         censusDispatched = false;

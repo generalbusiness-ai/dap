@@ -357,7 +357,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       sessionPreparation: this.#sessionPreparation, localSigners: store.localSigners, proofs: ports.proofs ?? null,
       sessions: this.#sessions, clock: this.#clock, window: bounds.intentLifetimeSeconds, flights: this.#queryFlights });
     this.#applicationProjections = new ApplicationProjections({ name: this.#name, sql: this.#readSql, sessions: this.#sessions,
-      clock: this.#clock, sessionPreparation: this.#sessionPreparation, flights: this.#queryFlights, minimum: (reader, minimum, active) => this.#projectionMinimum(reader, minimum, active), source: wiring.applicationDeclarationSource ?? null, births: ports.births ?? null });
+      clock: this.#clock, sessionPreparation: this.#sessionPreparation, flights: this.#queryFlights, minimum: (reader, minimum, active) => this.#projectionMinimum(reader, minimum, active), source: wiring.applicationDeclarationSource ?? null, births: ports.births ?? null, liveSummary: reader => this.#liveReads.summary(reader) });
     // The session requests that this scope has answered, each until its `notAfter`: one more table that is no part of the store.
     this.#requests = new SessionRequests({ exec: (query, ...bindings) => ctx.storage.sql.exec(query, ...bindings) });
     // The constructor owns this activation observation. Its synchronous SQL
@@ -660,6 +660,21 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     if (this.#retired) return ROOM_RETIRED_STOP;
     return this.#publicInvoke("acts", () => this.#scope.live.act(signed, grants, generation));
   }
+  /** Authorize the session and address before a live answer can disclose its generation. */
+  async liveAct(reader: unknown, signed: SignedIntent, grants: readonly Grant[], generation: unknown, binding?: unknown): Promise<LiveAnswer | RoomRetiredStop> {
+    if (this.#retired) return ROOM_RETIRED_STOP;
+    return this.#publicInvoke("acts", async () => {
+      this.#first();
+      await this.#prepared(reader, "summary");
+      if (this.#liveReads.watchable(reader) !== null) return { answer: "unavailable", reason: "unavailable" };
+      const at = this.#store.scope()?.at;
+      if (!isSignedIntentShape(signed) || !at || !isScopeRef(signed.intent.to)
+        || signed.intent.to.scope !== at.scope || signed.intent.to.genesis !== at.genesis
+        || !Array.isArray(grants) || typeof generation !== "string") return { answer: "unavailable", reason: "unavailable" };
+      const bound = binding === undefined ? undefined : async () => await this.#applicationProjections.checkLiveBinding(binding, reader);
+      return this.#scope.live.act(signed, grants, generation, bound);
+    });
+  }
   /** The live turn, for the live reads and the watch in this object's isolate. Null: a retired room. */
   [liveTurnsOf](): LiveTurns | null { return this.#retired ? null : this.#scope.live; }
   /** The live summary of an active live scope, at the generation and tick that it names (`live-reads.ts`). A read session authorizes it, as it authorizes the summary. */
@@ -819,6 +834,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   queryItems(encoded: unknown, reader: unknown) { if (this.#retired) return Promise.resolve(ROOM_RETIRED_STOP); return this.#itemQueries.read(encoded, reader); }
   /** Namespace-only host capability; intentionally absent from HTTP routing. */
   archiveItem(ask: ArchiveHostItemAsk) { if (this.#retired) return ROOM_RETIRED_STOP; return this.#archiveItem(ask); }
+  applicationLiveProjection(encoded: unknown, reader: unknown) { if (this.#retired) return Promise.resolve(ROOM_RETIRED_STOP); return this.#applicationProjections.readLive(encoded, reader); }
   applicationProjection(encoded: unknown, reader: unknown, atLeast?: ReadMinimum) { if (this.#retired) return Promise.resolve(ROOM_RETIRED_STOP); return this.#applicationProjections.read(encoded, reader, atLeast); }
   /** Admission of identifiers precedes authority and storage work. */
   async requests(reader: unknown, request?: string, trace?: string, cursor?: string) {

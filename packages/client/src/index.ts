@@ -3,7 +3,7 @@ export * from "./browser-key.ts";
 export * from "./application-package.ts";
 export * from "./application-uri.ts";
 export { ScopeHandle, TransportError, create } from "./handle.ts";
-export type { Transport, Followed, LogCoverage, LogRead } from "./handle.ts";
+export type { Transport, LiveTransport, Followed, LogCoverage, LogRead } from "./handle.ts";
 export * from "./declared.ts";
 export * from "./http.ts";
 export * from "./binding.ts";

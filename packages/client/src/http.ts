@@ -24,11 +24,13 @@ import { ITEM_QUERY_BOUNDS, ITEM_QUERY_WIRE_BOUNDS, APPLICATION_PROJECTION_WIRE_
 import type { ReadMinimum, ItemQuery, ScopeApi, ApplicationProjectionQuery } from "@generalbusiness/dap-contract";
 import { readMinimum, encodeReadMinimumParameter, LATE, takeBytes, within, readItemQueryParameter, readItemQueryReply, type ByteStream } from "@generalbusiness/dap-bytes";
 import { readApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/dap-platform/application-v2";
-import { ANSWERS } from "./answers.ts";
+import { ANSWERS, isLiveAnswer, isLiveSummary, isLiveApplicationProjection } from "./answers.ts";
+import type { LiveAnswer } from "@generalbusiness/dap-platform";
+import type { LiveTransport } from "./handle.ts";
 import { actBody } from "./originals.ts";
 import { OPERATIONAL_ANSWERS, type OperationalApi } from "./operational.ts";
-type HttpApi = ScopeApi & OperationalApi;
-const HTTP_ANSWERS = { ...ANSWERS, ...OPERATIONAL_ANSWERS };
+type HttpApi = ScopeApi & OperationalApi & LiveTransport;
+const HTTP_ANSWERS = { ...ANSWERS, ...OPERATIONAL_ANSWERS, liveAct: isLiveAnswer, liveSummary: isLiveSummary, applicationLiveProjection: isLiveApplicationProjection };
 import { TransportError, type Transport } from "./handle.ts";
 
 /** The little of `fetch` this package uses. The global `fetch` of Node, workerd and a browser satisfies it. */
@@ -48,7 +50,7 @@ export const REPLY_SECONDS = 30;
 const UNKNOWN = "The outcome of the submitted intent is unknown: it may have been recorded. The same signed intent may be sent again.";
 
 /** `service` is the service's base URL. `fetch` replaces the runtime's own. `bytes` and `seconds` replace `REPLY_BYTES` and `REPLY_SECONDS`. */
-export function httpTransport(service: string, options: { fetch?: Fetch; bytes?: number; seconds?: number } = {}): Transport & OperationalApi {
+export function httpTransport(service: string, options: { fetch?: Fetch; bytes?: number; seconds?: number } = {}): Transport & OperationalApi & LiveTransport {
   const base = `${service.replace(/\/+$/, "")}/v1/scopes`;
   const part = encodeURIComponent;
   const most = options.bytes ?? REPLY_BYTES;
@@ -59,12 +61,12 @@ export function httpTransport(service: string, options: { fetch?: Fetch; bytes?:
   /** One request of operation `op`. Its reply is returned only when it is an answer of that operation. */
   async function call<K extends keyof HttpApi>(op: K, path: string, reader: unknown, body?: unknown, query?: ItemQuery | ApplicationProjectionQuery): Promise<Answered<K>> {
     // A creation, an act and a request for a step submit an intent, and a failure leaves its outcome unknown. A read changes nothing.
-    const failed = (what: string) => new TransportError(op === "create" || op === "submit" || op === "prepare" ? `${what}. ${UNKNOWN}` : `${what}. Nothing was read; the read may be made again.`);
+    const failed = (what: string) => new TransportError(op === "liveAct" ? `${what}. The live act outcome is unknown. The same signed intent may be sent again in the same generation.` : op === "create" || op === "submit" || op === "prepare" ? `${what}. ${UNKNOWN}` : `${what}. Nothing was read; the read may be made again.`);
     const send = options.fetch ?? (globalThis as { fetch?: Fetch }).fetch;
     if (!send) throw new TransportError("this runtime has no fetch; nothing was sent");
     const headers: Record<string, string> = { ...(typeof reader === "string" ? { authorization: reader } : {}), ...(body === undefined ? {} : { "content-type": "application/json" }) };
-    const cap = query ? Math.min("projection" in query ? APPLICATION_PROJECTION_WIRE_BOUNDS.resultBytes : ITEM_QUERY_BOUNDS.payloadBytes, most) : most;
-    const deadline = query ? Math.min(10, seconds) : seconds;
+    const cap = op === "applicationLiveProjection" ? Math.min(APPLICATION_PROJECTION_WIRE_BOUNDS.resultBytes, most) : query ? Math.min("projection" in query ? APPLICATION_PROJECTION_WIRE_BOUNDS.resultBytes : ITEM_QUERY_BOUNDS.payloadBytes, most) : most;
+    const deadline = query || op === "applicationLiveProjection" ? Math.min(10, seconds) : seconds;
     if (query && (!(cap > 0) || !(deadline > 0) || !Number.isFinite(cap) || !Number.isFinite(deadline))) throw failed("invalid query transport bounds");
     let got: { status: number; bytes: Uint8Array | null | typeof LATE } | typeof LATE;
     try {
@@ -116,6 +118,13 @@ export function httpTransport(service: string, options: { fetch?: Fetch; bytes?:
   return {
     // What travels beside the intent goes in the same body: each detached text, and each presented fact by name.
     create: (creation, definition, definitions = [], beside = {}) => call("create", "", null, { creation, definition, definitions, ...beside }),
+    applicationLiveProjection: (scope, reader, encoded) => {
+      const query = readApplicationProjectionQuery(encoded);
+      if (!query || query.scope.scope !== scope) throw new TransportError("invalid bounded application projection");
+      return call("applicationLiveProjection", `/${part(scope)}/application-projection?p=${encoded}&live=1`, reader);
+    },
+    liveSummary: (scope, reader) => call("liveSummary", `/${part(scope)}/live`, reader),
+    liveAct: (scope, reader, signed, grants, generation, binding): Promise<LiveAnswer> => call("liveAct", `/${part(scope)}/live-act`, reader, { signed, grants, generation, ...(binding === undefined ? {} : { binding }) }),
     submit: (scope, signed, grants, beside = {}) => call("submit", `/${part(scope)}/acts`, null, actBody(signed, grants, beside)),
     prepare: (scope, signed, grants, capability, step) => call("prepare", `/${part(scope)}/preparations`, null, { signed, grants, capability, step }),
     settle: (scope, signed) => call("settle", `/${part(scope)}/settle`, null, { signed }),

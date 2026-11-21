@@ -44,7 +44,7 @@ import { PRESENTATION } from "./views/generated.ts";
 import { ViewSessions } from "./views/session.ts";
 import { toolsForHost, viewTools } from "./views/tools.ts";
 import { actSigner } from "./views/actor.ts";
-import type { ActSigner, ExactRead, ViewSource } from "./views/types.ts";
+import type { ActSigner, ExactRead, NativeCardAction, ViewSource } from "./views/types.ts";
 import { DeclaredViewSource } from "./views/declared.ts";
 import { readMembershipDisplay } from "./views/member-reads.ts";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
@@ -303,6 +303,10 @@ export class McpService {
       now,
       installation: () => this.#declaredInstallation(item!),
       projection: async (query, minimum) => this.#reads.projection((await this.#applicationRoom()).membership, query, minimum),
+      liveProjection: async query => {
+        const room = await this.#applicationRoom(), reader = await this.#reads.reader(room.membership);
+        return new ScopeHandle(this.#reads.transport, query.scope.scope, reader).applicationLiveProjection(query);
+      },
       members: scope => readMembershipDisplay(this.#reads, scope),
       viewer: async () => {
         const room = await this.#applicationRoom(), { at } = await this.#summary(room.membership.scope, room.membership);
@@ -321,7 +325,7 @@ export class McpService {
     const source = declared ?? port.views;
     const presentation = new ViewResources(port.presentation ?? source?.presentation ?? PRESENTATION);
     this.resources = port.packageBrief ? new PackageResources(presentation, port.packageBrief) : presentation;
-    const views = source ? new ViewSessions(source, dispatch => ({ call: (name, args) => this.call(name, args, dispatch) }), (kind, args, admit, dispatch) => this.#viewPerform(kind, args, admit, dispatch), (args, dispatch) => this.#viewSettle(args, dispatch), result => this.#readReceipts.get(result) ?? null, { signerOf: result => this.#actSigners.get(result) ?? null, readExact: (read, admit, dispatch) => this.#viewExact(read, admit, dispatch), unresolved: target => this.#viewUnresolved(target), dispatchStopped: result => this.#dispatchStops.has(result) }) : null;
+    const views = source ? new ViewSessions(source, dispatch => ({ call: (name, args) => this.call(name, args, dispatch) }), (kind, args, admit, dispatch) => this.#viewPerform(kind, args, admit, dispatch), (args, dispatch) => this.#viewSettle(args, dispatch), result => this.#readReceipts.get(result) ?? null, { signerOf: result => this.#actSigners.get(result) ?? null, readExact: (read, admit, dispatch) => this.#viewExact(read, admit, dispatch), liveAct: (action, admit, dispatch) => this.#viewLiveAct(action, admit, dispatch), unresolved: target => this.#viewUnresolved(target), dispatchStopped: result => this.#dispatchStops.has(result) }) : null;
     const cards = views ? viewTools(views, source?.screens) : {};
     this.#viewTools = new Set(Object.keys(cards));
     this.#generic = { ...this.#genericTools(), ...cards };
@@ -589,6 +593,34 @@ export class McpService {
   async #viewPerform(kind: string, args: Args, admit: () => void | Promise<void>, dispatch?: DispatchContext): Promise<CallOutcome<ActResult>> {
     try { return await this.#stoppedEarly(await this.#perform(null, args, kind, undefined, admit, undefined, dispatch), args); }
     catch (error) { return this.#stoppedEarly(await this.#failure(error, args), args); }
+  }
+
+  async #viewLiveAct(action: NativeCardAction, admit: () => void, dispatch?: DispatchContext): Promise<CallResult> {
+    try {
+      if (!action.live) return failed({ error: "shape", sentence: "The view has no live binding.", next: "Open the view again." });
+      const { query, generation } = action.live, room = await this.#applicationRoom();
+      const snapshot = await this.snapshot(), { scope, membership } = await this.#scope(snapshot, query.scope.scope);
+      if (!membership || canonicalize(membership) !== canonicalize(room.membership)) return failed({ error: "target", what: "the view membership changed" });
+      const summary = await this.#target(scope, membership);
+      if (canonicalize(summary.scope) !== canonicalize(query.scope) || summary.definition !== action.args["digest"]) return failed({ error: "target", what: "the view scope changed" });
+      const definition = await this.#definition(snapshot, summary.definition, scope, membership), act = definition.acts[action.kind];
+      if (!act || action.kind === definition.genesis) return failed({ error: "shape", sentence: "The view action is unavailable.", next: "Open the view again." });
+      this.#admitTarget(snapshot, { scope, ref: summary.scope, place: "root", pinned: summary.definition, definition, membership: membership.scope }, action.kind, action.kind);
+      const on = action.args["on"], at = shapeAt(action.args["at"]);
+      if (typeof on !== "number" || !Number.isSafeInteger(on) || on < 0 || !at) return failed({ error: "shape", sentence: "The view action is incomplete.", next: "Open the view again." });
+      const shaped = shapeFields(act, isRecord(action.args["fields"]) ? action.args["fields"] : {}, [], membership);
+      if (shaped.texts.length) return failed({ error: "shape", sentence: "Live actions do not carry detached text.", next: "Open the view again." });
+      const reader = await this.#reads.reader(membership), handle = new ScopeHandle(this.#reads.transport, scope, reader);
+      const current = await handle.applicationLiveProjection(query);
+      if (!current.ok || current.generation !== generation || !Object.values(current.value.sources).some(rows => rows.some(row => row.id === on && row.revision === at["on"]))) return failed({ error: "stale", sentence: "The live view changed.", next: "Refresh the view." });
+      admit();
+      const signed = await signedIntent(this.#port.signer, { to: summary.scope, kind: action.kind, on, fields: shaped.fields, expected: at }, { idempotencyKey: `view-live-${crypto.randomUUID()}`, now: this.#now() });
+      const finish = dispatch ? await dispatch.prepare({ service: this.#service, signer: this.#port.signer.key, membership }, this.#port.dispatchSource ?? null) : null;
+      admit();
+      this.#finishDispatch(finish);
+      const answer = await handle.liveAct(signed, generation, [], query);
+      return ok({ ...answer });
+    } catch (error) { return this.#failure(error, {}); }
   }
 
   /**

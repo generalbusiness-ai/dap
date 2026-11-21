@@ -6,7 +6,7 @@ import { answered, configOf, done, failed, handleOf, managedReadsOf, readerOf, r
 import { definitionOf, fileOf, scopeNamed, short, textOf } from "./command-targets.ts";
 import { statusReport } from "./status-report.ts";
 import { canonicalize, readItemQuery } from "@generalbusiness/dap-bytes";
-import { declaredHandle, type Session, signedIntent, type Transport } from "@generalbusiness/dap-client";
+import { declaredHandle, shapeDeclaredAct, type Session, signedIntent, type Transport } from "@generalbusiness/dap-client";
 import type { Entry, FieldValue, Item, KeyId, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { platform, type Role, ROLE_LISTS } from "@generalbusiness/dap-platform";
 
@@ -100,6 +100,32 @@ export function act(ctx: Context, kind: string, options: { on?: string; target?:
       fields[name] = valueOf(config, declaration.fields[name], pair.slice(at + 1));
     }
     const target = options.target ?? null;
+    if (declared?.level?.name === "live" && declared.level.version === 1) {
+      if (values.length > 0) return usage("Live acts do not accept --value. Nothing was signed or sent.");
+      const session = await sessionOf(ctx, config);
+      if (!session) return failed("Cannot act on a live scope without a read session. Nothing was signed or sent.");
+      const liveHandle = await handleOf(ctx, config, scope, session.reader());
+      const live = await liveHandle.liveSummary();
+      if (!live.ok) return failed(`Cannot read live state of ${scope}: ${live.reason}. Nothing was signed or sent.`);
+      if (!live.complete || canonicalize(live.value.scope) !== canonicalize(summary.scope) || live.value.definition !== summary.definition)
+        return failed(`The live state of ${scope} is incomplete or does not match its pinned scope and definition. Nothing was signed or sent.`);
+      const typed = await declaredHandle(handle, declared);
+      if (!typed.ok) return failed(`Cannot act on ${scope}: ${typed.reason}.`);
+      if (canonicalize(typed.handle.at) !== canonicalize(summary.scope)) return failed(`The scope ${scope} changed. Nothing was signed or sent.`);
+      const expected = expectedOf(declaration, live.value.items, target, fields);
+      const asked = { on: target, fields, expected } as never;
+      const { beside } = shapeDeclaredAct(declared, kind as never, asked);
+      if ((beside.texts?.length ?? 0) > 0 || Object.keys(beside.presented ?? {}).length > 0 || (beside.values?.length ?? 0) > 0)
+        return usage("Live acts do not accept detached inputs. Nothing was signed or sent.");
+      const { signed } = await typed.handle.intent(signer, kind as never, asked, signing(ctx));
+      const answer = await liveHandle.liveAct(signed, live.generation);
+      switch (answer.answer) {
+        case "applied": return done(`Took effect in live generation ${answer.generation} at tick ${answer.tick}.`);
+        case "refused": return failed(`Refused: ${answer.reason}${answer.name ? ` (${answer.name})` : ""}, judged in live generation ${answer.generation} at tick ${answer.tick}.`);
+        case "reset": return failed(`The live scope reset to generation ${answer.generation}. Read its state again before another act.`);
+        case "unavailable": return failed(`Unavailable: ${answer.reason}. The live act was not judged.`);
+      }
+    }
     const expected = expectedOf(declaration, summary.items, target, fields);
     if (declared) {
       const typed = await declaredHandle(handle, declared);

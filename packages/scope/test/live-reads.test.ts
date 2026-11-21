@@ -106,6 +106,44 @@ describe("the live reads and the watch", () => {
     expect(recorded).not.toHaveProperty("generation");
   });
 
+  test("live-act requires a session and exact target before it reports a generation", async () => {
+    // The membership and clock are stand-ins; session verification and the live turn are real.
+    const sessions = sessionsOf(b64url(crypto.getRandomValues(new Uint8Array(32))), "lv4-test")!;
+    let at: ScopeRef | null = null;
+    const R = await Room.create((name, c) => wired.set(name, () => ({
+      readers: sessionReaders({ sessions: () => sessions, clock: c.clock, membership: () => membership,
+        scope: () => at ? { at, kind: "directory", time: START } as ScopeState : null }),
+    })));
+    at = R.at;
+    const session = readerOf(mintSession(sessions, { v: 1, deployment: "lv4-test", membership, member: rita.member.member, key: rita.key,
+      reads: ["summary", "items"], ends: timeOf(timeMs(START)! + 600_000) }));
+    const signed = R.count(7, 1), grants = [grantOf(rita, R.at, ["count"])];
+    const post = async (body: unknown, token: string | null = session, scope = R.name) => {
+      const response = await route(new Request(`https://scopes.test/v1/scopes/${scope}/live-act`, { method: "POST", headers: { "content-type": "application/json", ...(token ? { authorization: token } : {}) }, body: JSON.stringify(body) }), env.SCOPES as unknown as Binding, {}, null);
+      return [response.status, await response.json()];
+    };
+    const body = { signed, grants, generation: R.generation };
+    expect(await post(body, null)).toEqual([503, { answer: "unavailable", reason: "unavailable" }]);
+    expect(await post({ ...body, generation: "old" })).toEqual([409, { answer: "reset", generation: R.generation }]);
+    expect(await post({ ...body, signed: {} })).toEqual([503, { answer: "unavailable", reason: "unavailable" }]);
+    expect(await post({ ...body, signed: { ...signed, intent: { ...signed.intent, to: { ...R.at, genesis: `sha256:${"a".repeat(64)}` } } } })).toEqual([503, { answer: "unavailable", reason: "unavailable" }]);
+    expect(await post(body)).toEqual([200, { answer: "applied", generation: R.generation, tick: 1 }]);
+    expect(await post({ ...body, extra: true })).toEqual([400, { error: "bad-request" }]);
+    const recorded = liveForms.timed(); delete recorded.level;
+    const create: Intent = { v: 1, to: null, actor: rita.key, kind: recorded.genesis, on: null, expected: {}, fields: {}, idempotencyKey: crypto.randomUUID(), notAfter: timeOf(timeMs(START)! + 60_000) };
+    const seed: Seed = { v: 1, kind: "directory", definition: definitionDigest(recorded), creator: null, cause: intentDigest(create), ordinal: 0 };
+    const name = scopeIdOf(seed), c = controls(name, START);
+    let recordedAt: ScopeRef | null = null;
+    wired.set(name, () => ({ readers: sessionReaders({ sessions: () => sessions, clock: c.clock, membership: () => membership,
+      scope: () => recordedAt ? { at: recordedAt, kind: "directory", time: START } as ScopeState : null }) }));
+    const created = await stubOf(name).create(signIntent(create, rita.secret), recorded);
+    if (created.answer !== "accepted") throw new Error("the recorded control must be created");
+    recordedAt = created.receipt.fact.at;
+    const recordedIntent = signIntent({ ...signed.intent, to: recordedAt, idempotencyKey: crypto.randomUUID() }, rita.secret);
+    expect(await post({ signed: recordedIntent, grants: [grantOf(rita, recordedAt, ["count"])], generation: R.generation }, session, name))
+      .toEqual([503, { answer: "unavailable", reason: "unavailable" }]);
+  });
+
   test("two viewers receive a line for a change", async () => {
     const R = await Room.create();
     const [first, second] = [await R.watch(), await R.watch()];
