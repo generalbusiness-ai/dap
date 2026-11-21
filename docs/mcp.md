@@ -1939,9 +1939,74 @@ The acts of one scope, as act tools would describe them: each kind with its deri
 
 ### `explore`
 
-Judges a declared act at an authenticated scope cut without submitting it. The input names `target`, `key`, and an `act` with `kind`, `on`, `fields`, and optional `expected` revisions. The result states whether the act is incomplete, refused, unavailable, or admitted. An admitted result includes every changed projected row. A result is a prediction, not a commitment.
+Explore one act against an authenticated declared scope without submitting it. The result is a prediction, not a commitment.
 
 The context states the standing used for the judgment and its `authorityAge` in milliseconds at that context’s clock. The age is local elapsed time since the session request began; it does not prove that membership has stayed unchanged. A moved scope, missing input, expired session, or exceeded read or result limit yields unavailable.
+
+```json
+{
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "string",
+        "pattern": "^sc_[a-z2-7]{51}[aq]$"
+      },
+      "key": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "description": "Your key for this one meaning, 1 to 128 bytes. Keep it."
+      },
+      "act": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "on": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "fields": {
+            "type": "object"
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "required": [
+          "kind",
+          "on",
+          "fields"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "key",
+      "act"
+    ],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  }
+}
+```
 
 ### `act`
 
