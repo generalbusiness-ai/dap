@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6d85da95f0bb55d3f21e1abc49088cae5fcb12cb","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-18-member-and-presence-ui.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:85ca9b0b2f725dfdaefe77c9c8e9c841a75f90d8","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/application-live-presence.test.ts."}
