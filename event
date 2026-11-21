@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I build SQ-1 behind the live heads: the staged-form check reads the level as derive does and refuses the contract form of a sequenced definition. Worktree sq1-20261121 from main f9ff3958.","body":{"target":"inherit"}}
+{"kind":"promise","text":"I build LV3, live reads and the watch, with O1 (a byte bound refused scope-full, stated as a change to contract) and the O3 measurement, under order ae71da85. Lane C, worktree lv3-20261121 stacked on the LV2 branch (WIP 94bb77fc); it gates after LV2 lands.","body":{"target":"inherit"}}
