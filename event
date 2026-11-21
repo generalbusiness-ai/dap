@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:69ba174e4086401194958a0bb38b306fe8b4b975"}
+{"kind":"promise","text":"After filing the shared-path report, I will carry the two OPS-2 source commits in isolation, preserve the source launcher, and verify the staged offline CLI install without publication. The full gate stays behind the live heads."}
