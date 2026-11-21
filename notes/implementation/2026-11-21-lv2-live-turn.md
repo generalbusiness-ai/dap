@@ -197,7 +197,34 @@ The figures come from the code of this head.
 The test ports' `liveTimer` is a stand-in for `setTimeout`. The tests fire
 it by hand, so no test waits on the wall clock.
 
-## Open questions
+## Evidence
+
+The gate tested clean head `f35d0e4fdcc026bd1b3fb68275410aaf9d22b480`,
+tree `4493d2c5e2b2b4d29abd7672975e1f0d7ffd3d0e`, against main
+`f9ff3958e079e7f36c85be1b455382794b1c87f4`. The follow-up adds
+this evidence. Source and tests match the gated tree.
+
+The gate took 1,383.60 seconds of wall time. The Native stage took
+911,359.29 milliseconds of wall time and included the moved selection.
+The test runner's Native records show 16 passing scale cases in nine
+owners. It recorded no lost timer crossings.
+
+| Check | Command | Exit | Output | SHA-256 |
+|---|---|---:|---|---|
+| Native scope witnesses, 34 tests | `node_modules/.bin/vitest run --project scope packages/scope/test/live-turn.test.ts packages/scope/test/live-creation.test.ts packages/scope/test/turn.test.ts` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-gate/native.log` | `b920fe3e03fd39b643014d85d7aea4181d7ff48972a1326263182b816a6d19fb` |
+| Live forms, 30 tests | `node_modules/.bin/vitest run --project derive packages/derive/test/forms-live.test.ts` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-gate/derive.log` | `967d3b8c7b8295a944ea6fff5493057efda53d337ae2cf8fac159e7e4c36a17c` |
+| Entry point inventory, 13 tests | `node --test scripts/security-entry-points.test.mjs` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-gate/entry-points.log` | `40eecbc29e2097e30c6b283810be090a4043968ea6879a3109da151188805137` |
+| Kernel boundary | `node scripts/check-kernel-boundary.mjs` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-gate/kernel-boundary.log` | `b3e3b33777d10b3be11d8a78665bf39cd5a62d4c502b27c7e5054bd8274bdb35` |
+| Workspace types | `npm run typecheck --workspace @generalbusiness/dap-scope --workspace @generalbusiness/dap-platform --workspace @generalbusiness/dap-derive` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-gate/typecheck.log` | `117fbee10a748fe99a2124461209f06580977a1f540fbe6565a542fd14625a5f` |
+| Admission control | `node scripts/control.mjs packages/scope/src/live.ts 'const refusal = admissionRefusal();' 'const refusal = null;' --expect 'rechecks application admission' -- packages/scope --project scope test/live-turn.test.ts -t 'rechecks application admission'` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-gate/admission-control.log` | `a823ac921fe3d2234cb727432e40e1a371968d489ba09dcc341465a5a1f4bc1d` |
+| Timer control | `node scripts/control.mjs packages/scope/src/live.ts 'const LAST_DEADLINE = timeOf(LAST_MS);' 'const LAST_DEADLINE = "9999-12-31T23:59:59Z";' --expect 'last representable deadline' -- packages/scope --project scope test/live-turn.test.ts -t 'last representable deadline'` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-gate/deadline-control.log` | `338d4553a582a15e9bc4506c20f80c68338a3acdf512ce1c896f66596d50aaaa` |
+| Review gate | `npm run gate` | 0 | `~/play/artroom-evidence/2026-11-21-lv2-gate/gate.txt` | `bd5c7a74a4f95ebb2ec1813772e9b706d8497fb702f07afa1b1f4f9077f3fa50` |
+
+Each control failed one assertion with the selected guard changed. The
+admission control applied an act after revocation. The timer control
+left the last valid deadline unarmed. Both control runs restored the source.
+
+## Open limits
 
 1. **A key that another intent holds.** The live answers have no
    `mismatch`. Proposed: `refused`, reason `bad-intent`, name
