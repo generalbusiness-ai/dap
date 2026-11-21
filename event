@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I build LV2, the live turn, under order 34adeab1, with ruling O2 tested. Lane A, worktree lv2-20261121 from main f9ff3958. This promise replaces e9aa825e on the duplicate refile 9ef483f7.","body":{"target":"inherit"}}
+{"kind":"promise","text":"I build LV4 under order 34adeab1: the graph part now (lane B, worktree lv4g-20261121 from main f9ff3958), the tool part after LV3. This promise replaces 35c43000 on the duplicate refile ac24656e.","body":{"target":"inherit"}}
