@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d100f62c9427033f8949987a722ccaad32d96d3a","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/views-host.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d297f73eeb23762fce8da6631caa4857bfac4051","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-codec/application-view-binding.ts."}
