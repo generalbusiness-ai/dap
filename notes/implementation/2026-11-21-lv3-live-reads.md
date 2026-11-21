@@ -5,9 +5,9 @@ on branch `builder/lv3-on-lv2-20261121`, based on the LV2 landing
 `c20e5315`.
 
 LV3 lets a viewer read the state of an active live scope and watch it
-change. The historical idle measurement records what pinned local workerd did with
-an open watch on an earlier source. The parent LV3 owns the whole-state
-bound under ruling `4266b531`.
+change. The idle measurement records what pinned local workerd did with
+an open watch. The parent LV3 owns the whole-state bound under ruling
+`4266b531`.
 
 ## What changed, and where
 
@@ -99,23 +99,23 @@ line sends nothing.
 
 ## O3: an idle live scope while a watch is open
 
-The historical experiment ran on workerd `1.20260815.1`, compatibility date
-`2026-08-15`, at head `9c243705c1c43a1a6c34f8198f22e80308f6b004`, tree
-`8397861e776e7a18f4a399c0b88fdec19f363690`. The harness opened two equal
+The child experiment ran on workerd `1.20260815.1`, compatibility date
+`2026-08-15`, at head `a73cf24b661c8622147e4f105ccba08575756740`, tree
+`2367c61315f73fc0814cec4ca0996e0a500b0898`. The harness opened two equal
 `liveForms.level` scopes with no timed rules. It advanced both to tick 1
 and opened one watch through the Worker's HTTP service binding. It left
-both scopes idle for 155,001 milliseconds before reading them again.
+both scopes idle for 155,002 milliseconds before reading them again.
 
 | Scope | Before idle | After idle |
 |---|---|---|
 | Unwatched | Tick 1 | New generation at tick 0 |
 | Watched | Tick 1, watch pending | Same generation at tick 1, watch still pending |
 
-This result applies to that source, which included a draft item bound. It does not measure this child source. The child-source measurement remains pending.
-
 The harness measured the elapsed idle interval inside the probe. The
-full command took 159.91 seconds of wall time and exited 0. This observed
-one local workerd run. A live definition makes no retention guarantee.
+full command took 159.86 seconds of wall time and exited 0. The earlier
+measurement at `9c243705c1c43a1a6c34f8198f22e80308f6b004` observed the same
+transition pattern on its draft item-bound source. Both runs describe
+pinned local workerd. The live level makes no watch retention guarantee.
 
 ## Wake floor and requests per room per hour
 
@@ -157,7 +157,7 @@ tests in `sessions.test.ts` cover the `Streams` change.
 ## Evidence
 
 The first five rows cover the historical measurement candidate. The
-remaining focused rows cover the reads and watch child.
+remaining rows cover the reads and watch child.
 
 | Check | Command | Exit | Output | SHA-256 |
 |---|---|---:|---|---|
@@ -170,6 +170,8 @@ remaining focused rows cover the reads and watch child.
 | Child platform types | `npm run typecheck --workspace @generalbusiness/dap-platform` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-reads-gate/platform.log` | `8e1906f22f3ac7a95ff9fe28fb85bb3e0cdc12b3ff75f3f416de9d1c010998f3` |
 | Child scope types | `npm run typecheck --workspace @generalbusiness/dap-scope` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-reads-gate/scope.log` | `fb2b1b20daea8ec6bdc1bf8b7eceb9b3703b9e4ffe7530b18d9218bb23d34976` |
 | Child entry-point inventory, 13 tests | `node --test scripts/security-entry-points.test.mjs` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-reads-gate/inventory.log` | `9969387fe3dd0509b4063bc23f8d464cdc7f48f432ec4b8b71288bfcde77628c` |
+| Child local idle-watch probe | `run.sh <LV3 worktree> <evidence directory> 155000` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-reads-gate/o3/lv3-o3-natural-idle.log` | `7283231cae215263f4d707f0bc6910cacaea55b6fe4b51d01fb208d51bf4543a` |
+| Child local idle-watch result | `run.sh <LV3 worktree> <evidence directory> 155000` | 0 | `~/play/artroom-evidence/2026-11-21-lv3-reads-gate/o3/lv3-o3-natural-idle.json` | `16ecd3637a7d5a62d204f7b965a746d253a060524b63bf78cc0d2ca87c369476` |
 
 The O3 evidence directory holds `run.sh`, `natural-idle.test.ts`, and
 `vitest.o3.config.ts`. To repeat the experiment, run the retained script
