@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I will build the SS1 client loader and generated equivalence witness after landed C2 26d1e65c, within packages/client. I will report any missing kernel port before changing its owner. Focused work runs in an isolated checkout; the full gate follows ready live heads."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:69ba174e4086401194958a0bb38b306fe8b4b975"}
