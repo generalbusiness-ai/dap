@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8bd29d18d0c9c1a209fc4336676458f1cd4be11b","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-14-act-environment.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9b22125a628e87089e21fc12cc484425f7b3f782","text":"Merge retired a covered predecessor; the successor is at packages/client/src/replica-explore.ts."}
