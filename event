@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-11-10-live-level.md","body":{"commit":"95ec0456526857a6e1fd598ef2ede6aea4a79259","path":"notes/2026-11-10-live-level.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:30863ffac6535619b0cf0a20bfcea56f19be7009","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-09-shared-language-volatile-acts.md."}
