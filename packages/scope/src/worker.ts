@@ -894,10 +894,12 @@ export class ApplicationScreenService<E extends Env = Env> extends WorkerEntrypo
     const response = await measuredRequest(request, this.env, async () => {
       const host = this.screenHost(screenOrigin), url = new URL(request.url), parts = url.pathname.split("/");
       if (!host || !this.#gateway(host, request)
-        || request.method !== "GET" || parts.length !== 5 || parts[1] !== "v1" || parts[2] !== "scopes" || parts[4] !== "stream") return json(404, { error: "not-found" });
+        || request.method !== "GET" || parts.length !== 5 || parts[1] !== "v1" || parts[2] !== "scopes" || !["stream", "live-stream"].includes(parts[4]!)) return json(404, { error: "not-found" });
       if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
       if (credentialInUrl(url)) return json(400, { error: "credential-in-url" });
-      const opened = await api(indexedScopes(this.env.SCOPES, this.env), address, this.env).streamExchange(parts[3]!, request.headers.get("authorization"));
+      const scopes = api(indexedScopes(this.env.SCOPES, this.env), address, this.env);
+      const opened = await (parts[4] === "stream" ? scopes.streamExchange(parts[3]!, request.headers.get("authorization"))
+        : scopes.watchExchange(parts[3]!, request.headers.get("authorization")));
       if (!("body" in opened)) return read(opened);
       close = opened.close;
       return new Response(opened.body, { status: 200, headers: { "content-type": "application/x-ndjson", "cache-control": "no-store" } });

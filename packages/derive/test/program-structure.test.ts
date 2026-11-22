@@ -1,4 +1,5 @@
 /** Static graph witnesses. Public clock callers have separate cutover obligations. */
+import assert from "node:assert/strict";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { validateDefinition, type ValidDefinition } from "../src/validate/index.ts";
@@ -12,7 +13,7 @@ import { lateDefinition } from "./definition-corpus/source-order-data.ts";
 import { definitionCorpus } from "./definition-corpus/index.ts";
 import { capabilityStagingData } from "./definition-corpus/capability-staging-data.ts";
 import { declarationOf } from "../src/program/declaration.ts";
-import { nativeBoundaryOfMark, nativeMark, nativeOutcomes } from "../src/program/native.ts";
+import { nativeBoundaryOfMark, nativeMark, nativeOutcomes, type NativeBoundary } from "../src/program/native.ts";
 import { checkedRow, namedRow, rowOf } from "../src/program/rows.ts";
 import { windowOf } from "../src/grant.ts";
 import { requirements } from "../src/program/requirements.ts";
@@ -39,28 +40,28 @@ function clockData(): DeclaredDefinition {
 
 test("the admitted corpus supplies every structural opcode and binds every root to its exact validation", async () => {
   const seen = new Set<string>();
-  const visit = (definition: ValidDefinition, body: BodyStructure, node: StructureNode) => {
+  const visit = (definition: ValidDefinition, body: BodyStructure, node: StructureNode, native: ReadonlySet<NativeBoundary>, name: string) => {
     seen.add(`${node.category}:${node.op}`);
     if (node.op === "native") {
-      expect(node.native.body).toBe(body.id);
-      expect(node.native.owner).toBe(body.row.id);
-      expect(node.native.mark).toBe(node.data);
-      expect(structureOf(definition)!.native).toContain(node.native);
+      assert.strictEqual(node.native.body, body.id, `${name}: native body`);
+      assert.strictEqual(node.native.owner, body.row.id, `${name}: native owner`);
+      assert.strictEqual(node.native.mark, node.data, `${name}: native mark`);
+      assert.ok(native.has(node.native), `${name}: native membership`);
     }
     // Every ordinary node has its actual executable plan. Opaque Native leaves
     // keep their captured boundary; this does not invoke a callback or judge.
     if (node.op !== "native") {
       if (node.category === "guard") {
-        expect(guardPlan(definition, body, node)?.code.op).toBe(node.op);
-        expect(guardPlan(definition, body, node)?.site.phase).toBe("before");
+        assert.strictEqual(guardPlan(definition, body, node)?.code.op, node.op, `${name}: guard opcode`);
+        assert.strictEqual(guardPlan(definition, body, node)?.site.phase, "before", `${name}: guard phase`);
       } else {
-        expect(() => conditionPlan(definition, body, node)).not.toThrow();
-        if (node.category === "effect") expect(effectPlan(definition, body, node)?.code.op).toBe(node.op);
-        else if (node.category === "send") expect(sendPlan(definition, body, node)?.code.op).toBe(node.op);
-        else expect(() => attentionPlan(definition, body, node)).not.toThrow();
+        assert.doesNotThrow(() => conditionPlan(definition, body, node), `${name}: condition plan`);
+        if (node.category === "effect") assert.strictEqual(effectPlan(definition, body, node)?.code.op, node.op, `${name}: effect opcode`);
+        else if (node.category === "send") assert.strictEqual(sendPlan(definition, body, node)?.code.op, node.op, `${name}: send opcode`);
+        else assert.doesNotThrow(() => attentionPlan(definition, body, node), `${name}: attention plan`);
       }
     }
-    node.children.forEach(child => visit(definition, body, child));
+    node.children.forEach(child => visit(definition, body, child, native, name));
   };
   for (const row of definitionCorpus) {
     const input = await row.declaration();
@@ -79,13 +80,14 @@ test("the admitted corpus supplies every structural opcode and binds every root 
       expect(hook.owner !== null && rowOf(checked.definition, hook.owner) !== null, row.name).toBe(true);
     }
     expect(graph!.roots.length, row.name).toBe(reads.frames.length);
+    const native = new Set(graph!.native), frames = new Set(reads.frames);
     for (const root of graph!.roots) {
       expect(() => checkedBody(checked.definition, root), row.name).not.toThrow();
-      expect(reads.frames.includes(root.frame), row.name).toBe(true);
+      expect(frames.has(root.frame), row.name).toBe(true);
       expect(root.frame.context.validation, row.name).toBe(graph!.validation);
       expect(root.frame.context.row, row.name).toBe(root.row.id);
       expect(rowOf(checked.definition, root.row.id), row.name).toBe(root.row);
-      root.nodes.forEach(node => visit(checked.definition, root, node));
+      root.nodes.forEach(node => visit(checked.definition, root, node, native, row.name));
       const required = requirements(checked.definition, root);
       expect(required.body, row.name).toBe(root);
       expect(required.reads, row.name).toContainEqual({ kind: "definition" });
