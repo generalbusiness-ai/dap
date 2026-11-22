@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/2026-11-22-bo1-w1-commons-plan.md","body":{"commit":"d82afed25df860551fbf9f82213f7c01efcdebff","path":"notes/implementation/2026-11-22-bo1-w1-commons-plan.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1f7647e5ce2401aea70cb5f013b3a0becf2a1b24","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-22-bo1-w1-commons-plan.md."}
