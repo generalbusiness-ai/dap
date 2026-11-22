@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ce9024975a39f085c9d1d74e5e1c8e331a95a883","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-13-scope-client.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dfc4e59ac237b7f90bd81936e46c439d8a435564","text":"Merge retired a covered predecessor; the successor is at packages/client/src/draft-project-types.ts."}
