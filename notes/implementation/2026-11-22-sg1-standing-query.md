@@ -60,4 +60,10 @@ At clean candidate `b08d652d71c26eee6868cd0621befcf00b65bc58`, tree `4310e56e`, 
 
 The earlier pins run stopped for deployment after its security phase passed. Its partial log has SHA-256 `1733db58a0d7eb91f72761903c1b2afaf249e6b4e82386546807d7fb463b6a79`. The first native run could not bind loopback in the sandbox; `native.log` has SHA-256 `588f1efe8948dd2c9367e971d5927d9bfc9c11ad2806e2539e04cfa9cbf11684`. The subsequent scoped loopback run passed.
 
-The candidate will replay over an unrelated ARC note before the official gate and named security review. This focused evidence does not claim a full gate.
+The full gate ran at clean commit `a4e640857564d58e4680fe26c70c923188081beb`, tree `d19fcb2164d5723d2633f3a0e1b53f1cf96cb8aa`, over published `189152da`. END `14be0ff601d2163aa0da534c2182793e2338f929` records its natural exit and wall time. Source and tests remain unchanged from the gated tree.
+
+| Check | Command | Exit | Output and SHA-256 |
+|---|---|---:|---|
+| Full gate | `npm run gate` | 0 | `~/play/artroom-evidence/2026-11-22-a4e6408-sg1-gate/gate.txt`, `a1233923805ca516b2b4e108ff7c43e5c5b5dbd3ea63eaab14d51cb5af8544ec` |
+
+The gate took 1,337.38 seconds. Its count lines record Node 246, Counting 60, Plain 5,127 passed and one skipped, and Native 1,240 passed and two skipped. Scale was omitted. The ownership accounting reports zero lost, two stale, and zero without an owner. The named security review remains pending.
