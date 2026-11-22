@@ -69,7 +69,8 @@ class OwnedPack {
   }
 }
 
-/** Serve isolated reads as one checked object; leave closure reads to the caller. */
+/** Fixture-only isolated response. The local-Git Site witness checks real shallow framing.
+ * Headerless synthetic cache controls retain the synchronous closure snapshot. */
 async function isolatedPack(request: Request, objects: ReadonlyMap<string, DecodedObject>): Promise<Response | null> {
   const body = new TextDecoder().decode(await request.clone().arrayBuffer());
   if (!body.includes("deepen 1\n")) return null;
@@ -133,8 +134,10 @@ export class OwnGit {
     const service = url.searchParams.get("service");
     if (request.method === "GET" && (service === "git-upload-pack" || service === "git-receive-pack")) return this.#advertisement(service);
     if (request.method === "POST" && url.pathname.endsWith("/git-upload-pack")) {
-      const isolated = await isolatedPack(request, this.objects);
-      if (isolated) return isolated;
+      if (request.headers.get("content-type") === "application/x-git-upload-pack-request") {
+        const isolated = await isolatedPack(request, this.objects);
+        if (isolated) return isolated;
+      }
       const pack = await this.#packed.get(this.objects);
       return new Response(join(pkt("NAK\n"), pack), { headers: { "content-type": "application/x-git-upload-pack-result" } });
     }
@@ -170,7 +173,7 @@ export class Hub {
     return { id: 71, name: this.name, owner: ACCOUNT, private: false, full_name: `${ACCOUNT.login}/${this.name}`, html_url: `https://github.com/${ACCOUNT.login}/${this.name}`, clone_url: `https://github.com/${ACCOUNT.login}/${this.name}.git` };
   }
   #advertisement(service: string): Response {
-    const capabilities = service === "git-receive-pack" ? "report-status delete-refs object-format=sha1" : "ofs-delta allow-reachable-sha1-in-want object-format=sha1";
+    const capabilities = service === "git-receive-pack" ? "report-status delete-refs object-format=sha1" : "ofs-delta shallow filter allow-reachable-sha1-in-want object-format=sha1";
     const refs = [...this.refs].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
     const lines = refs.length === 0 ? [pkt(`${ZERO_ID} capabilities^{}\0${capabilities}\n`)] : refs.map(([ref, id], n) => pkt(`${id} ${ref}${n === 0 ? `\0${capabilities}` : ""}\n`));
     return new Response(join(pkt(`# service=${service}\n`), utf8("0000"), ...lines, utf8("0000")), { headers: { "content-type": `application/x-${service}-advertisement` } });
@@ -208,6 +211,10 @@ export class Hub {
     // Reads are public: no credential is sent. A write carries an installation token that is minted and not revoked.
     if (request.method === "GET" && service === "git-upload-pack") return this.#advertisement(service);
     if (request.method === "POST" && url.pathname.endsWith("/git-upload-pack")) {
+      if (request.headers.get("content-type") === "application/x-git-upload-pack-request") {
+        const isolated = await isolatedPack(request, this.objects);
+        if (isolated) return isolated;
+      }
       const pack = await this.#packed.get(this.objects);
       return new Response(join(pkt("NAK\n"), pack), { headers: { "content-type": "application/x-git-upload-pack-result" } });
     }
