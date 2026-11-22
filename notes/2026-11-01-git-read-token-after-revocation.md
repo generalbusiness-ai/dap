@@ -1,6 +1,6 @@
 # A Git read token after its key is revoked
 
-Status: current. The design landed at `970c701c` (approval `7a2618e4`). The failed-claim cohort landed at `28839920` with the one-hour read-token pin and `separate-recovery`. The planner ruled in `908b6d86` that the pin did not need real call 3. The planner ruled in `9af818a5` that final failed claims join the same cohort. `revoke-reads` remains a separate change. No notice goes to a lane.
+Status: current. The design landed at `970c701c` (approval `7a2618e4`). The failed-claim cohort landed at `28839920` with the one-hour read-token pin and `separate-recovery`. The planner ruled in `908b6d86` that the pin did not need real call 3. The planner ruled in `9af818a5` that final failed claims join the same cohort. S6 adds local expiry for workspace token plaintext. `revoke-reads` remains a separate change. No notice goes to a lane.
 
 Teo keeps a member key on a laptop. Mara is an admin of the same room. The room publishes to a repository on Cloudflare Artifacts, and Rita operates the Worker.
 
@@ -289,7 +289,7 @@ This section traces the second credential that the same route gives out. Practic
 
 So a thief can read one fork and push to it for about 15 minutes. `stage` takes only the commit that a signed step names (`workspace-host.ts:230`, `:243`), so a push alone reaches nothing in the room. I recommend no change to the definition, because 15 minutes do not justify a notice to every lane. Mara can ask Teo to release the hold from another key, and the team then treats the fork's later commits as untrusted. The planner ruled in `cccd205a` that no notice goes to a lane.
 
-One smaller fact belongs here. `private_workspace_token` is outside the expiry queue, so an unread plaintext stays until a read or a confirmed revocation clears it (`workspace-host.ts:18-22`, `:151`, `:168`). That row can outlast its token, and the plaintext opens nothing after the expiry.
+`WorkspaceExpiry` indexes unread workspace and staging plaintext by the provider's recorded `ends` time. The object's alarm clears due plaintext in batches of at most 64; it also indexes legacy custody rows in batches of at most 64 before the backfill finishes (`workspace-expiry.ts:6-19`, `:33-64`; `object.ts:239-245`, `:1058-1061`). The token row and its ID remain available for the existing provider revocation path, which still revokes by ID (`workspace-host.ts:98-101`, `:129-156`). Local expiry clears custody; it does not itself confirm provider revocation.
 
 ## What Mara can say depends on the pin and the host
 

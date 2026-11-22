@@ -12,6 +12,8 @@ Workspace custody clears unread local plaintext at its recorded end. The alarm a
 
 Counter keeps a recognized invitation fragment during enrollment. A failed join clears only the used fragment after the attempt settles. A successful join clears it after custody is saved. The captured invitation remains available for a retry in the current page, and unknown sent requests retain their existing Check and Continue custody. The helper preserves the path, query, history state, and newer or unrelated fragments.
 
+The invitation field stays empty when Counter captures a fragment. Join and Check use the held fragment when that field is empty; typed text takes precedence. This review continuation changes only this evidence note and the governing token note. It changes no source or tests; the gated source and tree remain those named above.
+
 ## Decisions and reasons
 
 The CLI uses a private decoded-text display boundary. It escapes C0, DEL, backslash, C1, bidirectional controls, and line separators without changing stored values. JSON rendering retains its existing framing. A mismatched ordinary clone remote stops before disclosure, storage, or Git; the refusal states that the single-use credential may already have been consumed.
