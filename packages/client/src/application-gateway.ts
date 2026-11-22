@@ -56,7 +56,8 @@ export function applicationGatewayRoute(host: ApplicationScreenHost, address: st
     && parts.slice(3).every(part => /^[A-Za-z0-9][A-Za-z0-9._~-]*$/.test(part));
   if (parts[0] !== "v1" || parts[1] !== "scopes" || !isScopeId(parts[2])) return false;
   const what = parts[3], which = parts[4];
-  if (method === "POST") return parts.length === 4 && ["acts", "settle", "sessions"].includes(what ?? "") && !url.search;
+  if (method === "POST") return parts.length === 4 && ["acts", "settle", "sessions"].includes(what ?? "")
+    && (!url.search || what === "sessions" && url.search === "?standing=1");
   if (method !== "GET") return false;
   // GW-1: a read that takes a minimum (summary, history, items,
   // application-projection, entries) may also carry one atLeast: the

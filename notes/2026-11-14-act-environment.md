@@ -433,7 +433,8 @@ check before the guards, so the explorations of section 5.5 are
 
 **The session answer carries the standing.** A client that asks with
 `?standing=1` on the session request gets the signer's own standing
-in the answer. `issueSession` already reads that standing at the
+in the answer. SG-1 permits `?standing=1` on the signed session POST through
+the application gateway. `issueSession` already reads that standing at the
 membership head (`packages/scope/src/sessions.ts:389`). The signed
 body does not change. The answer gives only the signer's own
 standing, so the option needs no signature. Without the option, the
@@ -1350,8 +1351,9 @@ nothing.
 
 The stop `source` is coarse. It means that the act names a source
 whose row the replica does not hold. The draft stays, and the page
-shows the stop. The page promises no success and starts no wait. Step
-E5 owns the waits, and it can narrow the stop. The stop
+shows the stop. The page promises no success and starts no wait. E5
+shows an unsigned dependent request as `is: "authorization"` with status
+`waits` or `source`. The stop
 `versions-full` means that the key holds 64 positions, and its remedy
 is a new request key. The how-to page of step C4 gives one table:
 each stop, each reason of `full`, the remedy, and what the stop
@@ -1492,12 +1494,12 @@ The requests of the build steps: E1 `d35ebede`, E2 `a102d847`, E3
 `17e075b3`, E4 `afe0a437`, E5 `b1c6aad6`, E6 `edc09d8b`, R `5b5b6896`
 and A `04e4438e`. Request `6b6def0a` holds the review after step E3.
 
-## 19. Rulings of steps E4 and C4
+## 19. Rulings of steps E4, C4 and E5
 
-The build of step E4, the plan of step C4 and the requests EK-1,
-ES-1, DD-1 and E4-C found points that this note did not settle. The
-planner ruled on each on 15 and 16 November 2026, and the sections
-above hold the results.
+The builds of E4, C4 and E5 and the requests EK-1, ES-1, DD-1 and
+E4-C found points that this note did not settle. The planner ruled
+on E4 and C4 on 15 and 16 November 2026, and on E5 on 22 November
+2026. The sections above hold the results.
 
 | Ruling | Point | Section |
 |---|---|---|
