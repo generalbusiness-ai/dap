@@ -231,9 +231,9 @@ export class Replica<D extends DeclaredDefinition> {
 
   /** The chain is private and requires the host's exact checked authority. */
   async #exploreChain<K extends Kind<D>>(prefix: readonly ExplorePrefix<D>[], key: string, act: PartialAct<D, K>, authority?: ChainExploreAuthority): Promise<ChainExploreResult<D, K>> {
-    if (!authority || typeof authority.stillHeld !== "function") return { is: "unavailable", reason: "authority-unavailable" };
-    const held = () => { try { return authority.stillHeld() === true; } catch { return false; } };
-    if (!held()) return { is: "unavailable", reason: "authority-unavailable" };
+    if (authority && typeof authority.stillHeld !== "function") return { is: "unavailable", reason: "authority-unavailable" };
+    const held = authority ? () => { try { return authority.stillHeld() === true; } catch { return false; } } : undefined;
+    if (held && !held()) return { is: "unavailable", reason: "authority-unavailable" };
     const captured = structuredClone(prefix);
     if (!captured.length) return { is: "unavailable", reason: "source" };
     let cut: { current: () => boolean; subjects: readonly { name: string; item: ItemName }[] } | null = null;
@@ -278,15 +278,22 @@ export class Replica<D extends DeclaredDefinition> {
         && head !== null && head.seq === scope.head.seq && head.hash === scope.head.hash;
     };
     if (!current()) return unavailable(["source"]);
-    if (prefix && !chainHeld?.()) return unavailable(["authority-unavailable"]);
+    if (prefix && authority && !chainHeld?.()) return unavailable(["authority-unavailable"]);
     if (!binding.read) return unavailable(["authority-unavailable"]);
     const read = await binding.read({ actor: binding.actor, member: structuredClone(binding.member),
       scope: structuredClone(this.#handle.at), definition: this.#handle.digest, head: structuredClone(scope!.head),
       key, act: structuredClone(captured) });
     reading = authority ? authority.clock() : binding.clock();
-    if (prefix && !chainHeld?.()) return unavailable(["authority-unavailable"]);
     if (!current()) return unavailable(["source"]);
     if (read.is === "unavailable") return unavailable(read.lacks.length ? read.lacks : ["source"]);
+    if (prefix && !authority) {
+      const cut = read.standingCut;
+      if (!cut || typeof cut.stillHeld !== "function") return unavailable(["authority-unavailable"]);
+      const held = cut.stillHeld;
+      chainHeld = () => { try { return held() === true; } catch { return false; } };
+      authority = { session: read.session, requestedAt: cut.requestedAt, clock: binding.clock };
+    }
+    if (prefix && !chainHeld?.()) return unavailable(["authority-unavailable"]);
     const session = read.session, claims = session instanceof Session ? session.claims : null;
     const genesis = this.#held.at(0)?.entry.input;
     const membership = genesis?.type === "genesis" ? membershipOf(genesis, scope!.at) : null;

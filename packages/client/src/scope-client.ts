@@ -18,7 +18,7 @@ import type { AuthorizationPort, CustodyBuildFence } from "./authorization-store
 import type { ItemName, PartialAct, Source } from "./act-types.ts";
 import { actVersion } from "./act-version.ts";
 import { lowerActNames } from "./act-symbols.ts";
-import { exploreReplica, registerExplore, type DraftExploreResult, type ReadExploreInputs } from "./replica-explore.ts";
+import { exploreReplica, exploreReplicaChain, registerExplore, type DraftExploreResult, type ReadExploreInputs } from "./replica-explore.ts";
 import { openDraftCustodyCut, type DraftCustodyObservation } from "./draft-custody.ts";
 import { prepareDraftClear, prepareDraftEdit } from "./draft-edit.ts";
 import { ownDraftClearInputs, ownDraftEditInputs } from "./draft-preflight.ts";
@@ -83,6 +83,16 @@ interface Assembled<D extends DeclaredDefinition> {
 }
 /** A publication candidate ended because the client closed. It is not an error of the caller. */
 class CandidateClosed extends Error {}
+/** Private signal: only a pending via selector needs a hypothetical cut. */
+class PendingVia extends Error {
+  constructor(readonly sources: readonly Source[]) { super("pending via"); }
+}
+interface ViaPlan {
+  readonly prerequisites: readonly { readonly identity: AuthorizationIdentity; readonly source: Source; readonly row: string }[];
+  readonly subjects: RetainAuthorization["subjects"];
+  readonly prefix: readonly Source[];
+  readonly current: () => boolean;
+}
 const completed = (record: CustodyRecord): boolean => ["accepted", "archived", "settled"].includes(record.phase);
 const stopped = (error: unknown): DraftStop | null => {
   if (error instanceof ShapeError) return { stop: "shape", path: error.path, message: error.message };
@@ -830,7 +840,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
   }
 
   /** Derive reference/order data here. No public input contains an after graph or a selected subject list. */
-  async #retentionStep(input: AuthorizationInput, batch: readonly AuthorizationInput[], transaction: AuthorizationTransaction): Promise<RetainAuthorization> {
+  async #retentionStep(input: AuthorizationInput, batch: readonly AuthorizationInput[], transaction: AuthorizationTransaction, via?: ViaPlan): Promise<RetainAuthorization> {
     const act = input.act, declared = this.#handle.definition.acts[act.kind];
     if (!declared || act.kind === this.#handle.definition.genesis) throw new ShapeError("kind", "is not an ordinary act kind");
     if (!validKey(input.key)) throw new ShapeError("key", "is not a bounded request key");
@@ -897,9 +907,24 @@ export class ScopeClient<D extends DeclaredDefinition> {
         if (revision && typeof revision !== "number") await opening(source(revision.after), rule.item);
       }
     }
+    // A recorded subject can still have a pending change to a via slot.
+    // Resolve its basis only for declarations that actually contain a via.
+    const pendingBasis = new Set<string>();
+    if (Object.values(declared.also).some(value => "via" in value)) {
+      for (const [name, revision] of Object.entries(act.expected)) {
+        if (typeof revision === "number") continue;
+        if (batch.some(step => step.key === revision.after.key && actVersion(step.act) === revision.after.version)) {
+          pendingBasis.add(name); continue;
+        }
+        const inspected = await transaction.inspectSource(revision.after);
+        if (inspected.is === "unavailable") throw new AuthorizationError("source");
+        if (inspected.is === "unrecorded") pendingBasis.add(name);
+      }
+    }
     // A pending source has no recorded reference slots. Do not project a via path.
     const pendingSubject = (name: string, seen = new Set<string>()): boolean => {
       name = name.replace(/^also\./, "");
+      if (pendingBasis.has(name)) return true;
       if (name === "on") return on !== null && typeof on === "object";
       if (seen.has(name)) return false;
       seen.add(name);
@@ -911,7 +936,10 @@ export class ScopeClient<D extends DeclaredDefinition> {
     };
     for (const value of Object.values(declared.also)) {
       const rule = value as { via?: { of: string; slot: string } };
-      if (rule.via && pendingSubject(rule.via.of)) throw new AuthorizationError("source");
+      if (rule.via && pendingSubject(rule.via.of)) {
+        if (!via) throw new PendingVia([...sources.values()]);
+        return { key: input.key, act, sources: [...sources.values()], subjects: via.subjects };
+      }
     }
     const selected = expectedOf(declared, items, on, effectiveFields(declared, resolvedFields, this.#at));
     const publicName = (item: number | object): ItemName => typeof item === "number" ? item : names.get(item) ?? (() => { throw new AuthorizationError("source"); })();
@@ -920,16 +948,121 @@ export class ScopeClient<D extends DeclaredDefinition> {
     return { key: input.key, act, sources: [...sources.values()], subjects };
   }
 
+  /** Capture a bounded exact source graph under the store fence; explore it outside the fence. */
+  async #prepareVia(inputs: readonly AuthorizationInput[], index: number): Promise<ViaPlan> {
+    const captured = structuredClone(inputs), target = captured[index]!;
+    const graph = await this.#options.store.exclusive(async () => {
+      this.#state();
+      const transaction = this.#authorization(this.#options.store.authorizations);
+      const prerequisites = new Map<string, { identity: AuthorizationIdentity; source: Source; row: string }>();
+      const prefix: { source: Source; act: AuthorizedAct }[] = [];
+      const visited = new Set<string>(), active = new Set<string>();
+      const visit = async (source: Source, before: number): Promise<void> => {
+        const id = canonicalize(source);
+        if (active.has(id)) throw new AuthorizationError("source");
+        if (visited.has(id)) return;
+        if (visited.size + active.size >= 128) throw new AuthorizationError("source");
+        active.add(id);
+        const local = captured.findIndex(input => input.key === source.key && actVersion(input.act) === source.version);
+        let act: AuthorizedAct, dependencies: readonly Source[];
+        if (local >= 0) {
+          if (local >= before) throw new AuthorizationError("source");
+          const step = captured[local]!;
+          act = step.act;
+          try { dependencies = (await this.#retentionStep(step, captured.slice(0, local), transaction)).sources; }
+          catch (error) { if (!(error instanceof PendingVia)) throw error; dependencies = error.sources; }
+        } else {
+          const inspected = await transaction.inspectSource(source);
+          // A recorded symbolic predecessor needs checked alias rehydration, which this bridge does not yet provide.
+          if (inspected.is !== "unrecorded") throw new AuthorizationError("source");
+          const row = await transaction.find(inspected.identity);
+          if (!row || !await this.#pending(row)) throw new AuthorizationError("source");
+          const held = row.versions[inspected.position]!;
+          prerequisites.set(canonicalize(inspected.identity), { identity: inspected.identity, source, row: canonicalize(row) });
+          act = held.act; dependencies = held.after;
+        }
+        for (const dependency of dependencies) await visit(dependency, local >= 0 ? local : before);
+        active.delete(id); visited.add(id); prefix.push({ source, act });
+      };
+      let sources: readonly Source[];
+      try { await this.#retentionStep(target, captured.slice(0, index), transaction); throw new AuthorizationError("source"); }
+      catch (error) { if (!(error instanceof PendingVia)) throw error; sources = error.sources; }
+      for (const source of sources) await visit(source, index);
+      this.#state();
+      return { prerequisites: [...prerequisites.values()], prefix };
+    });
+    // The bridge validates these captured authored fields against this exact declaration.
+    const prefix = graph.prefix.map(item => ({ source: item.source, act: item.act as unknown as PartialAct<D, Kind<D>> }));
+    const projected = await exploreReplicaChain(this.#replica, prefix, target.key, target.act as unknown as PartialAct<D, Kind<D>>);
+    if (projected.is !== "admitted" || !projected.current()) throw new AuthorizationError("source");
+    return { prerequisites: graph.prerequisites, subjects: structuredClone(projected.subjects), prefix: graph.prefix.map(item => item.source), current: projected.current };
+  }
+
+  async #checkViaPrerequisites(transaction: AuthorizationTransaction, plan: ViaPlan): Promise<void> {
+    for (const prerequisite of plan.prerequisites) {
+      const current = await transaction.find(prerequisite.identity);
+      if (!current || canonicalize(current) !== prerequisite.row) throw new AuthorizationError("source");
+      const inspected = await transaction.inspectSource(prerequisite.source);
+      if (inspected.is !== "unrecorded" || !await this.#pending(current)) throw new AuthorizationError("source");
+    }
+    if (!plan.current()) throw new AuthorizationError("source");
+  }
+
+  /** Retention can discover a newly relevant pending subject. Its complete
+   * order must already be present in the projection before we commit. */
+  async #checkViaOrder(transaction: AuthorizationTransaction, plan: ViaPlan, target: AuthorizationPosition): Promise<void> {
+    const order = new Map(plan.prefix.map((source, index) => [canonicalize(source), index]));
+    for (const [index, source] of plan.prefix.entries()) {
+      const row = await transaction.find(this.#authorizationIdentity(source.key));
+      const version = row?.versions.at(-1);
+      if (!version || version.id !== source.version || row?.cancelledAt !== undefined) throw new AuthorizationError("source");
+      for (const dependency of version.after) {
+        const earlier = order.get(canonicalize(dependency));
+        if (earlier === undefined || earlier >= index) throw new AuthorizationError("source");
+      }
+    }
+    const row = await transaction.find(target.identity);
+    const version = row?.versions[target.position];
+    if (!version) throw new AuthorizationError("source");
+    for (const dependency of version.after) if (!order.has(canonicalize(dependency))) throw new AuthorizationError("source");
+  }
+
   /** One unsigned gesture batch; only the complete owner/scope replacement can commit. */
   async retainAuthorizations(inputs: readonly AuthorizationInput[]): Promise<readonly AuthorizationPosition[]> {
     const captured = structuredClone(inputs), gesture = this.#clock.now();
     await this.read(); this.#state();
+    try {
+      return await this.#options.store.exclusive(async () => {
+        this.#state(); const transaction = this.#authorization(this.#options.store.authorizations);
+        const steps: RetainAuthorization[] = [];
+        for (const input of captured) steps.push(await this.#retentionStep(input, captured, transaction));
+        const held = await transaction.retain(steps, gesture, this.#options.lifetimeSeconds ?? DEFAULT_LIFETIME_SECONDS, row => this.#pending(row));
+        this.#state(); await transaction.commit(); return structuredClone(held);
+      });
+    } catch (error) { if (!(error instanceof PendingVia)) throw error; }
+    const plans = new Map<number, ViaPlan>();
+    for (let index = 0; index < captured.length; index++) {
+      const pending = await this.#options.store.exclusive(async () => {
+        const transaction = this.#authorization(this.#options.store.authorizations);
+        try { await this.#retentionStep(captured[index]!, captured.slice(0, index), transaction); return false; }
+        catch (error) { if (error instanceof PendingVia) return true; throw error; }
+      });
+      if (pending) plans.set(index, await this.#prepareVia(captured, index));
+    }
+    if (plans.size === 0) throw new AuthorizationError("source");
     return this.#options.store.exclusive(async () => {
       this.#state(); const transaction = this.#authorization(this.#options.store.authorizations);
+      for (const plan of plans.values()) await this.#checkViaPrerequisites(transaction, plan);
       const steps: RetainAuthorization[] = [];
-      for (const input of captured) steps.push(await this.#retentionStep(input, captured, transaction));
+      for (let index = 0; index < captured.length; index++) {
+        try { steps.push(await this.#retentionStep(captured[index]!, captured.slice(0, index), transaction, plans.get(index))); }
+        catch (error) { if (error instanceof PendingVia) throw new AuthorizationError("source"); throw error; }
+      }
       const held = await transaction.retain(steps, gesture, this.#options.lifetimeSeconds ?? DEFAULT_LIFETIME_SECONDS, row => this.#pending(row));
-      this.#state(); await transaction.commit(); return structuredClone(held);
+      for (const [index, plan] of plans) await this.#checkViaOrder(transaction, plan, held[index]!);
+      this.#state();
+      for (const plan of plans.values()) if (!plan.current()) throw new AuthorizationError("source");
+      await transaction.commit(); return structuredClone(held);
     });
   }
 
@@ -1136,8 +1269,8 @@ export class ScopeClient<D extends DeclaredDefinition> {
       envelope: { signed, beside: materialized.beside }, authorization: permit.authorization };
   }
 
-  async #stageGesture(transaction: AuthorizationTransaction, input: AuthorizationInput, gesture: number, beside: Beside) {
-    const step = await this.#retentionStep(input, [input], transaction);
+  async #stageGesture(transaction: AuthorizationTransaction, input: AuthorizationInput, gesture: number, beside: Beside, via?: ViaPlan) {
+    const step = await this.#retentionStep(input, [input], transaction, via);
     const [reference] = await transaction.retain([step], gesture, this.#options.lifetimeSeconds ?? DEFAULT_LIFETIME_SECONDS, row => this.#pending(row));
     try {
       const materialized = await transaction.fill(reference!.identity, reference!.position, this.#handle.definition, this.#items(), beside);
@@ -1158,31 +1291,48 @@ export class ScopeClient<D extends DeclaredDefinition> {
     try {
       // Preview derives ordinary custody meaning but retains nothing when ready.
       // The real builder repeats this under admission and the signing fence.
-      const preview = await this.#options.store.exclusive(async () => {
-        this.#state(); const transaction = this.#authorization(this.#options.store.authorizations);
-        const candidate = await this.#stageGesture(transaction, { key, act: captured.act }, gesture, captured.beside);
-        if (!candidate.materialized) {
-          this.#state();
-          const row = await transaction.find(candidate.reference.identity);
+      let preview: { reference: AuthorizationPosition; materialized: MaterializedAct | null; retained: boolean };
+      try {
+        preview = await this.#options.store.exclusive(async () => {
+          this.#state(); const transaction = this.#authorization(this.#options.store.authorizations);
+          const candidate = await this.#stageGesture(transaction, { key, act: captured.act }, gesture, captured.beside);
+          if (!candidate.materialized) {
+            this.#state();
+            const row = await transaction.find(candidate.reference.identity);
+            await transaction.commit();
+            if (this.#clock.now() >= Date.parse(row!.versions[candidate.reference.position]!.deadline)) throw new AuthorizationError("source");
+          }
+          return { ...candidate, retained: !candidate.materialized };
+        });
+      } catch (error) {
+        if (!(error instanceof PendingVia)) throw error;
+        const plan = await this.#prepareVia([{ key, act: captured.act }], 0);
+        preview = await this.#options.store.exclusive(async () => {
+          this.#state(); const transaction = this.#authorization(this.#options.store.authorizations);
+          await this.#checkViaPrerequisites(transaction, plan);
+          const candidate = await this.#stageGesture(transaction, { key, act: captured.act }, gesture, captured.beside, plan);
+          await this.#checkViaOrder(transaction, plan, candidate.reference);
+          this.#state(); if (!plan.current()) throw new AuthorizationError("source");
           await transaction.commit();
-          if (this.#clock.now() >= Date.parse(row!.versions[candidate.reference.position]!.deadline)) throw new AuthorizationError("source");
-        }
-        return candidate;
-      });
+          return { ...candidate, retained: true };
+        });
+      }
       const materialized = preview.materialized ?? await this.#waitForSources(preview.reference, captured.beside);
       const meaning = intentMeaning(materialized), identity = { ...this.#who, key };
       const build = async (fence: CustodyBuildFence) => fence.authorizations(async port => {
         this.#state(); const transaction = this.#authorization(port);
-        if (!preview.materialized) {
+        if (preview.retained) {
           return this.#signRetained(transaction, preview.reference, captured.beside, materialized);
         }
-        const candidate = await this.#stageGesture(transaction, { key, act: captured.act }, gesture, captured.beside);
+        let candidate: { reference: AuthorizationPosition; materialized: MaterializedAct | null };
+        try { candidate = await this.#stageGesture(transaction, { key, act: captured.act }, gesture, captured.beside); }
+        catch (error) { if (error instanceof PendingVia) throw new AuthorizationError("source"); throw error; }
         if (!candidate.materialized || canonicalize(candidate.materialized) !== canonicalize(materialized)) throw new AuthorizationError("source");
         return this.#signRetained(transaction, candidate.reference, captured.beside);
       });
       const sent = await this.#custody.send(identity, meaning, build, (envelope, selected) => this.#deliver(envelope, selected), {
         notAfter: timeOf(this.#clock.now() + 30_000), bytes: utf8(canonicalize(materialized)).length,
-        authorization: preview.materialized ? { kind: "gesture" } : { kind: "position", reference: preview.reference },
+        authorization: preview.retained ? { kind: "position", reference: preview.reference } : { kind: "gesture" },
       });
       this.#busy.delete(key); await this.#after(sent); return sent;
     } finally { this.#busy.delete(key); await this.#sync(); }

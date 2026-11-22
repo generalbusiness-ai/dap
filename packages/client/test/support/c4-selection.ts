@@ -77,6 +77,14 @@ export const selection = {
       guards: [], effects: [{ ref: { slot: "target", from: { field: "target" } } },
         { value: { slot: "n", from: { const: 0 } } }, { value: { slot: "until", from: { field: "until" } } }], sends: [], attention: [],
     },
+    "make-and-revise-connector": {
+      step: "open", on: "connector", grant: "c4-selection.connector-open",
+      also: { target: { item: "target", by: "target" } },
+      fields: { target: { type: "item", of: "target", required: true }, until: { type: "time", required: true } },
+      guards: [], effects: [{ ref: { slot: "target", from: { field: "target" } } },
+        { value: { slot: "n", from: { const: 0 } } }, { value: { slot: "until", from: { field: "until" } } },
+        { of: "also.target", value: { slot: "n", from: { const: 3 } } }], sends: [], attention: [],
+    },
     "touch-connector": {
       step: "transition", on: "connector", grant: "c4-selection.connector-touch",
       also: { target: { item: "target", via: { of: "on", slot: "target" } } },
