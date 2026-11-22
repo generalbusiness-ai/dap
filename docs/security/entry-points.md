@@ -177,6 +177,8 @@ an hour in the overflow window until rows expire. Callers that already hold
 windows keep them. Creation groups all /64s within one /48, so they share
 its address allowance. This uses one counter per /48 and keeps the existing
 address-first order and bounded overflow without another counter table.
+Distinct /48s can still fill the table. Additional identities then share the
+bounded overflow window.
 
 Every `found` submit charges its address in the `found` table. An intent
 over 1 MiB, or one that fails the strict parse, charges the address and
