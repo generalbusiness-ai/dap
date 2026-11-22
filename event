@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:09582eefd6e37e24895e97db46ad7cc3872bc917","text":"Merge retired a covered predecessor; the successor is at packages/client/src/draft-store.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0d69c55c20f0a098f403e7402286cdea6fcedd15","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-21-s7-site-reads.md."}
