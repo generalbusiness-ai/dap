@@ -32,7 +32,7 @@ import { actExplore, actExploreDue, actExploreSubjects } from "./act-explore.ts"
 import { missingActInputs } from "./act-input.ts";
 import type { Act, ActRef, ActView, Context, Exploration, ItemName, Lack, PartialAct, UnavailableContext } from "./act-types.ts";
 import { scopeUsesSession } from "./scope-reader.ts";
-import { registerChainExplore, registerExplore, type ChainExploreResult, type ExplorePrefix, type DraftExploreResult, type DraftSelection, type ExploreAuthority, type ReplicaExploration } from "./replica-explore.ts";
+import { registerChainExplore, registerExplore, type ChainExploreResult, type ChainExploreAuthority, type ExplorePrefix, type DraftExploreResult, type DraftSelection, type ExploreAuthority, type ReplicaExploration } from "./replica-explore.ts";
 import { Session, sessionStanding } from "./session.ts";
 import { UnavailableActSource } from "./act-symbols.ts";
 import { selectDraftSubjects, type DraftSubjects } from "./draft-selection.ts";
@@ -230,20 +230,25 @@ export class Replica<D extends DeclaredDefinition> {
   close(): void { this.#stop({ by: "close" }); }
 
   /** The chain is private and requires the host's exact checked authority. */
-  async #exploreChain<K extends Kind<D>>(prefix: readonly ExplorePrefix<D>[], key: string, act: PartialAct<D, K>, authority?: ExploreAuthority): Promise<ChainExploreResult<D, K>> {
-    if (!authority) return { is: "unavailable", reason: "authority-unavailable" };
+  async #exploreChain<K extends Kind<D>>(prefix: readonly ExplorePrefix<D>[], key: string, act: PartialAct<D, K>, authority?: ChainExploreAuthority): Promise<ChainExploreResult<D, K>> {
+    if (!authority || typeof authority.stillHeld !== "function") return { is: "unavailable", reason: "authority-unavailable" };
+    const held = () => { try { return authority.stillHeld() === true; } catch { return false; } };
+    if (!held()) return { is: "unavailable", reason: "authority-unavailable" };
     const captured = structuredClone(prefix);
     if (!captured.length) return { is: "unavailable", reason: "source" };
     let cut: { current: () => boolean; subjects: readonly { name: string; item: ItemName }[] } | null = null;
-    const answer = await this.#explore(key, act, authority, captured, (current, subjects) => { cut = { current, subjects }; });
-    if (answer.exploration.is !== "admitted" || !cut) return { is: "unavailable", reason: "source" };
+    const answer = await this.#explore(key, act, authority, captured, (current, subjects) => { cut = { current, subjects }; }, held);
+    if (answer.exploration.is !== "admitted" || !cut) return { is: "unavailable",
+      reason: answer.exploration.is === "unavailable" && answer.exploration.lacks.includes("authority-unavailable")
+        ? "authority-unavailable" : "source" };
     const checked: { current: () => boolean; subjects: readonly { name: string; item: ItemName }[] } = cut;
     return { is: "admitted", exploration: answer.exploration, ...checked };
   }
 
   /** The operation stays inside this closure; no caller receives the state or Own. */
   async #explore<K extends Kind<D>>(key: string, input: PartialAct<D, K>, authority?: ExploreAuthority,
-    prefix?: readonly ExplorePrefix<D>[], capture?: (current: () => boolean, subjects: readonly { name: string; item: ItemName }[]) => void): Promise<DraftExploreResult<D, K>> {
+    prefix?: readonly ExplorePrefix<D>[], capture?: (current: () => boolean, subjects: readonly { name: string; item: ItemName }[]) => void,
+    chainHeld?: () => boolean): Promise<DraftExploreResult<D, K>> {
     const binding = this.#exploration;
     if (!binding) throw new TypeError("exploration requires its constructor identity binding");
     // Own input before the reader's first await. It receives a separate copy.
@@ -273,11 +278,13 @@ export class Replica<D extends DeclaredDefinition> {
         && head !== null && head.seq === scope.head.seq && head.hash === scope.head.hash;
     };
     if (!current()) return unavailable(["source"]);
+    if (prefix && !chainHeld?.()) return unavailable(["authority-unavailable"]);
     if (!binding.read) return unavailable(["authority-unavailable"]);
     const read = await binding.read({ actor: binding.actor, member: structuredClone(binding.member),
       scope: structuredClone(this.#handle.at), definition: this.#handle.digest, head: structuredClone(scope!.head),
       key, act: structuredClone(captured) });
     reading = authority ? authority.clock() : binding.clock();
+    if (prefix && !chainHeld?.()) return unavailable(["authority-unavailable"]);
     if (!current()) return unavailable(["source"]);
     if (read.is === "unavailable") return unavailable(read.lacks.length ? read.lacks : ["source"]);
     const session = read.session, claims = session instanceof Session ? session.claims : null;
@@ -359,7 +366,7 @@ export class Replica<D extends DeclaredDefinition> {
     if (prefix) {
       const started = authority?.requestedAt;
       const remains = () => {
-        if (!current() || !authority || authority.session !== session || authority.requestedAt !== started || !session.standing) return false;
+        if (!current() || !chainHeld?.() || !authority || authority.session !== session || authority.requestedAt !== started || !session.standing) return false;
         const now = authority.clock(), ms = timeMs(now), read = timeMs(reading), began = timeMs(started);
         if (ms === null || read === null || began === null || ms < read || ms < began || !Number.isSafeInteger(ms - began)
           || session.endedBy(now) || clockOf(state, now).behind || !scopeUsesSession(this.#handle.scope, session)
