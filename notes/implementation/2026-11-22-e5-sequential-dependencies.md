@@ -1,6 +1,7 @@
 # E5 sequential act dependencies
 
-Status: focused rehearsal based on E2 `b71362c1`. The review gate follows published E2.
+The focused rehearsal used E2 candidate `b71362c1`. E5 replayed
+the same fifteen commits on published E2 `42d35b88`.
 
 ## What changed
 

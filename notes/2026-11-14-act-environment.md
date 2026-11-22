@@ -11,8 +11,8 @@ on 16 November 2026. E4-B added the browser authorization store in main
 `3e54b8ab`. C4 and E4-C landed draft exploration and one-call submit
 in `d6c863bb`. EK-1 and ES-1 added the standing value check and
 session answer in `9d69f807`. E2 added the MCP tool `explore`, which judges
-a checked replica under the session's standing. E3,
-E5, E6 and A remain open. Section 13 lists the build steps.
+a checked replica under the session's standing. E5 added sequential
+dependencies between authorizations. E3, E6 and A remain open. Section 13 lists the build steps.
 Section 18 lists
 the rulings of step E1 that changed sections 3, 5 and 8. Section 19
 lists the rulings of steps E4 and C4 and of the requests EK-1, ES-1,
@@ -1291,7 +1291,7 @@ A small model also runs to a bound over every order of its steps.
 | E3 | Explore in the local instance, again at each view and each tick. `offers`, a `ref` with its sources, `recorded`, and one identity for a row. Step C4 builds the basis of a draft, the changed fields, the returned `now` and the new version after a return (section 6) | E1, C2, C4 |
 | E4 | Retained authorization: the record with versions, the default deadline, three of the four operations (no new envelope for the same version), the owner and the store in memory, the transaction of a submit, the predicate | C1, C3 |
 | E4-B | The browser store keeps authorizations, with the removal rule of section 7.1. It landed at `3e54b8ab` | E4 |
-| E5 | Sequential dependencies: sources by key and version, the materialized act, `waits`, the returns | E4 |
+| E5 | Built: sequential authorization dependencies by key and version, materialized acts, unsigned waits, and return for revision | E4 |
 | E6 | Environment resolution through MCP `settle`, React and foldkit. `dap dev` with `log` and the head stream | E3 to E5 |
 | R | The reservation definition, with its scenario | Starts with E1 |
 | A | Decision A: the admission of a subject, in the definition, the validator and the judge | E1 to E6, and its own design with the carrier and the kernel ruling (section 16) |
