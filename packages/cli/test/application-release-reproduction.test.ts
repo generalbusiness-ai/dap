@@ -9,6 +9,7 @@ import { DEMO_RELEASE, DEMO_PUBLISHER } from "../../../examples/grow/demo-releas
 import { prepareApplicationDirectory } from "../src/application-files.ts";
 import { prepareGrowDemo } from "../../../examples/grow/prepare-demo.ts";
 
+// Rebuilds maintained packages and compares reviewed release identifiers.
 test("Grow, Lending and Counter reproduce their reviewed definition and presentation identifiers from canonical sources", async () => {
   const repository = fileURLToPath(new URL("../../../", import.meta.url));
   const signer = secretSigner(new Uint8Array(32).fill(254));
@@ -97,4 +98,4 @@ test("Grow, Lending and Counter reproduce their reviewed definition and presenta
       }
     }
   } finally { await rm(grow, { recursive: true }); }
-});
+}, 30_000);

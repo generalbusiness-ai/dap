@@ -10,6 +10,7 @@ import { secretSigner } from "@generalbusiness/dap-client";
 import { newCommand } from "../src/application-command.ts";
 import { prepareApplicationDirectory } from "../src/application-files.ts";
 
+// Runs real CLI new and check, native scenario replay, and browser compilation.
 test("the actual new bin creates a usable local check project without opening custody", async () => {
   const root = await realpath(await mkdtemp(join(tmpdir(), "dap-new-")));
   const bin = fileURLToPath(new URL("../bin/dap.js", import.meta.url));
@@ -30,7 +31,7 @@ test("the actual new bin creates a usable local check project without opening cu
     expect(packet.package.presentation.assets.map(asset => asset.path).sort()).toEqual(["application.css", "application.js", "index.html"]);
     expect(packet.package.semantic.capabilities).toEqual([]);
   } finally { await rm(root, { recursive: true, force: true }); }
-});
+}, 30_000);
 
 test("new refuses existing directories and symlinks without changing their files", async () => {
   const root = await realpath(await mkdtemp(join(tmpdir(), "dap-new-preserve-")));
