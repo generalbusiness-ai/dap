@@ -1,1 +1,1 @@
-{"kind":"report","text":"Correction to my Security landing report ae9fa76c: the subject of 8a9f9d1e is 48 characters, not '31-line'. The subject, the check-commit-messages result and every other finding in that report stand."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ae9fa76c746bf48bd2ee099a7b3e9375622f0b67"}
