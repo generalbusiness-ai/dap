@@ -822,8 +822,10 @@ export class ScopeClient<D extends DeclaredDefinition> {
   }
   #items() { return Object.keys(this.#handle.definition.items).flatMap(type => [...this.#replica.view.rows(type)]); }
   async #pending(previous: Authorization): Promise<boolean> {
-    if (Date.parse(previous.versions.at(-1)!.deadline) <= this.#clock.now()) return false;
     const record = await this.#custody.find({ ...this.#who, key: previous.key });
+    if (record && completed(record) && this.#replica.accepted(this.#options.signer.key, previous.key)) return false;
+    if (record?.signings.some(signing => !signing.closed)) return true;
+    if (Date.parse(previous.versions.at(-1)!.deadline) <= this.#clock.now()) return false;
     return !record || unresolved(record);
   }
 
@@ -1036,20 +1038,100 @@ export class ScopeClient<D extends DeclaredDefinition> {
   #available(): boolean { return !this.#closed && !this.#stopping && this.#replica.view.state.is !== "stopped"; }
   #current(): void { if (!this.#available()) throw new Error("the scope client no longer owns this request"); }
 
-  async #signRetained(transaction: AuthorizationTransaction, reference: AuthorizationPosition, beside: Beside = {}) {
+  /** Recheck every exact dependency, including for an existing materialization. */
+  async #sourcesReady(transaction: AuthorizationTransaction, reference: AuthorizationPosition): Promise<{ ready: boolean; deadline: number; wakeAt: number; dependent: boolean }> {
+    const row = await transaction.find(reference.identity);
+    if (!row || row.versions.length - 1 !== reference.position) throw new AuthorizationError("version");
+    if (row.cancelledAt !== undefined) throw new AuthorizationError("cancelled");
+    const version = row.versions[reference.position]!;
+    const deadline = Date.parse(version.deadline);
+    if (this.#clock.now() >= deadline) throw new AuthorizationError(version.after.length ? "source" : "deadline");
+    let ready = true, wakeAt = deadline;
+    for (const source of version.after) {
+      const inspected = await transaction.inspectSource(source);
+      if (inspected.is === "unavailable") throw new AuthorizationError("source");
+      if (inspected.is === "resolved") continue;
+      const sourceRow = await transaction.find(inspected.identity);
+      const record = await this.#custody.find({ ...this.#who, key: source.key });
+      // Equal content can occur at several positions. An unclosed signing
+      // with unknown provenance can still resolve this source too.
+      const matching = record?.signings.filter(signing => signing.authorization
+        && canonicalize(signing.authorization.identity) === canonicalize(inspected.identity)
+        && sourceRow?.versions[signing.authorization.position]?.id === source.version) ?? [];
+      const possible = record?.signings.some(signing => {
+        if (signing.closed) return false;
+        const authorization = signing.authorization;
+        if (!authorization || canonicalize(authorization.identity) !== canonicalize(inspected.identity)) return true;
+        const signedVersion = sourceRow?.versions[authorization.position];
+        return !signedVersion || signedVersion.id === source.version;
+      }) ?? false;
+      // A folded or accepted record can precede the replica's checked entry.
+      if (!record || !completed(record)) {
+        const sourceDeadline = Date.parse(sourceRow!.versions[inspected.position]!.deadline);
+        const permitted = sourceRow!.permissions.some(permission => permission.position === inspected.position);
+        if (!possible) {
+          if (permitted && matching.length > 0 && matching.every(signing => signing.closed)) throw new AuthorizationError("source");
+          if (this.#clock.now() >= sourceDeadline) throw new AuthorizationError("source");
+          wakeAt = Math.min(wakeAt, sourceDeadline);
+        }
+      }
+      ready = false;
+    }
+    return { ready, deadline, wakeAt, dependent: version.after.length > 0 };
+  }
+
+  /** Subscribe before inspection so an event during the fence cannot be lost. */
+  async #waitForSources(reference: AuthorizationPosition, beside: Beside = {}) {
+    for (;;) {
+      this.#state();
+      let wake!: () => void;
+      const changed = new Promise<void>(resolve => { wake = resolve; });
+      const stopStore = this.#options.store.observe(wake);
+      const stopReplica = this.#replica.subscribe(wake);
+      let cancel!: () => void;
+      const closed = new Promise<never>((_resolve, reject) => { cancel = () => reject(new Lost()); });
+      const stopClient = this.subscribe(() => { wake(); if (!this.#available()) cancel(); });
+      const timer = {};
+      try {
+        const checked = await Promise.race([this.#options.store.exclusive(async () => {
+          this.#state();
+          const transaction = this.#authorization(this.#options.store.authorizations);
+          const row = await transaction.find(reference.identity);
+          if (!row || row.versions.length - 1 !== reference.position) throw new AuthorizationError("version");
+          if (row.cancelledAt !== undefined) throw new AuthorizationError("cancelled");
+          if (row.permissions.some(permission => permission.position === reference.position)) throw new AuthorizationError("authorization-used");
+          const status = await this.#sourcesReady(transaction, reference);
+          this.#state();
+          if (!status.ready) return { ...status, materialized: null };
+          const materialized = await transaction.fill(reference.identity, reference.position, this.#handle.definition, this.#items(), beside);
+          return { ...status, materialized };
+        }), closed]);
+        if (checked.materialized) return checked.materialized;
+        this.#schedule.at(timer, checked.wakeAt, wake);
+        if (this.#clock.now() >= checked.deadline) throw new AuthorizationError("source");
+        if (this.#clock.now() >= checked.wakeAt) wake();
+        await changed;
+      } finally { this.#schedule.cancel(timer); stopStore(); stopReplica(); stopClient(); }
+    }
+  }
+
+  async #signRetained(transaction: AuthorizationTransaction, reference: AuthorizationPosition, beside: Beside = {}, expected?: MaterializedAct) {
+    const status = await this.#sourcesReady(transaction, reference);
+    if (!status.ready) throw new AuthorizationError("source");
     const materialized = await transaction.fill(reference.identity, reference.position, this.#handle.definition, this.#items(), beside);
+    if (expected && canonicalize(materialized) !== canonicalize(expected)) throw new AuthorizationError("source");
     const permit = await transaction.permit(reference.identity, reference.position, this.#clock.now());
     this.#state();
-    if (this.#clock.now() >= Date.parse(permit.deadline)) throw new AuthorizationError("deadline");
+    if (this.#clock.now() >= Date.parse(permit.deadline)) throw new AuthorizationError(status.dependent ? "source" : "deadline");
     await transaction.commit();
     this.#state();
     const now = this.#clock.now();
-    if (now >= Date.parse(permit.deadline)) throw new AuthorizationError("deadline");
+    if (now >= Date.parse(permit.deadline)) throw new AuthorizationError(status.dependent ? "source" : "deadline");
     const signed = await signedIntent(this.#options.signer, { to: this.#at, kind: materialized.kind,
       on: materialized.on, fields: { ...materialized.fields }, expected: { ...materialized.expected } },
       { idempotencyKey: reference.identity.key, now, lifetimeSeconds: (Date.parse(permit.deadline) - now) / 1000 });
     this.#state();
-    if (this.#clock.now() >= Date.parse(permit.deadline)) throw new AuthorizationError("deadline");
+    if (this.#clock.now() >= Date.parse(permit.deadline)) throw new AuthorizationError(status.dependent ? "source" : "deadline");
     return { binding: { definition: this.#handle.definition.name, kind: materialized.kind, declaration: this.#handle.digest, pinned: this.#handle.digest },
       envelope: { signed, beside: materialized.beside }, authorization: permit.authorization };
   }
@@ -1082,25 +1164,25 @@ export class ScopeClient<D extends DeclaredDefinition> {
         if (!candidate.materialized) {
           this.#state();
           const row = await transaction.find(candidate.reference.identity);
-          if (this.#clock.now() >= Date.parse(row!.versions[candidate.reference.position]!.deadline)) throw new AuthorizationError("deadline");
           await transaction.commit();
+          if (this.#clock.now() >= Date.parse(row!.versions[candidate.reference.position]!.deadline)) throw new AuthorizationError("source");
         }
         return candidate;
       });
-      if (!preview.materialized) throw new AuthorizationError("source");
-      const meaning = intentMeaning(preview.materialized), identity = { ...this.#who, key };
+      const materialized = preview.materialized ?? await this.#waitForSources(preview.reference, captured.beside);
+      const meaning = intentMeaning(materialized), identity = { ...this.#who, key };
       const build = async (fence: CustodyBuildFence) => fence.authorizations(async port => {
         this.#state(); const transaction = this.#authorization(port);
-        const candidate = await this.#stageGesture(transaction, { key, act: captured.act }, gesture, captured.beside);
-        if (!candidate.materialized) {
-          this.#state(); await transaction.commit(); throw new AuthorizationError("source");
+        if (!preview.materialized) {
+          return this.#signRetained(transaction, preview.reference, captured.beside, materialized);
         }
-        if (canonicalize(candidate.materialized) !== canonicalize(preview.materialized)) throw new AuthorizationError("source");
+        const candidate = await this.#stageGesture(transaction, { key, act: captured.act }, gesture, captured.beside);
+        if (!candidate.materialized || canonicalize(candidate.materialized) !== canonicalize(materialized)) throw new AuthorizationError("source");
         return this.#signRetained(transaction, candidate.reference, captured.beside);
       });
       const sent = await this.#custody.send(identity, meaning, build, (envelope, selected) => this.#deliver(envelope, selected), {
-        notAfter: timeOf(this.#clock.now() + 30_000), bytes: utf8(canonicalize(preview.materialized)).length,
-        authorization: { kind: "gesture" },
+        notAfter: timeOf(this.#clock.now() + 30_000), bytes: utf8(canonicalize(materialized)).length,
+        authorization: preview.materialized ? { kind: "gesture" } : { kind: "position", reference: preview.reference },
       });
       this.#busy.delete(key); await this.#after(sent); return sent;
     } finally { this.#busy.delete(key); await this.#sync(); }
@@ -1125,19 +1207,11 @@ export class ScopeClient<D extends DeclaredDefinition> {
         }
         meaning = existing.meaning;
       } else {
-        const materialized = await this.#options.store.exclusive(async () => {
-          this.#state(); const transaction = this.#authorization(this.#options.store.authorizations);
-          const row = await transaction.find(captured.identity);
-          if (!row || row.versions.length - 1 !== captured.position) throw new AuthorizationError("version");
-          if (row.permissions.some(permission => permission.position === captured.position)) throw new AuthorizationError("authorization-used");
-          return transaction.fill(captured.identity, captured.position, this.#handle.definition, this.#items());
-        });
+        const materialized = await this.#waitForSources(captured);
         meaning = intentMeaning(materialized);
         build = fence => fence.authorizations(async port => {
           this.#state(); const transaction = this.#authorization(port);
-          const candidate = await transaction.fill(captured.identity, captured.position, this.#handle.definition, this.#items());
-          if (canonicalize(candidate) !== canonicalize(materialized)) throw new AuthorizationError("source");
-          return this.#signRetained(transaction, captured);
+          return this.#signRetained(transaction, captured, {}, materialized);
         });
       }
       const live = latest && !latest.dead && !latest.closed && this.#clock.now() < Date.parse(latest.notAfter);
