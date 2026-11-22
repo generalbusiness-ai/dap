@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6d3d326281e53a920436d31fa1a62df20a14dfd0","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-12-cli-json-output-design.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7b14e5748e9c28fa5390cb7a0bee35cdddc76cce","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/json-output.test.ts."}
