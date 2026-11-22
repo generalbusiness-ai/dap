@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6cc4d33eb8f8dcd194f0e2310e4a0e251f212860","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-21-property-based-testing.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:73159fa3685fea5e0db2a92958e76ef8195483e4","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/application-new.test.ts."}
