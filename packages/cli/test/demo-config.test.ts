@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { isDeepStrictEqual } from "node:util";
 import { expect, test } from "vitest";
 import type { PlatformDefinition } from "@generalbusiness/dap-contract";
+import { isScopeId } from "@generalbusiness/dap-bytes";
 import { BASE_COHORT, COMMONS_COHORT, UPGRADE_COHORT } from "@generalbusiness/dap-platform";
 import { permitsNewPlatformScope, readPlatformCreationPolicy } from "../../scope/src/creation-versions.ts";
 import { readInstalledRegisters } from "../../scope/src/register-setting.ts";
@@ -130,7 +131,25 @@ test("the self-host template has no project resources and the retired Worker ret
   expect(packageJson.scripts["deploy:scope"]).toBe("npx -y wrangler@4.163.0 deploy --keep-vars --config apps/room/wrangler.self-host.jsonc");
 });
 
-test("dap-commons declares its exact namespace and unplanned register configuration", () => {
+const commonsRegisterPair = (register: unknown, artifactRegister: unknown): boolean =>
+  register === artifactRegister && (register === "unplanned" || isScopeId(register));
+
+test("Commons register settings accept only the closed pair or equal scope IDs", () => {
+  const valid = read("wrangler.demo.jsonc").vars.REGISTER_SCOPE;
+  expect(isScopeId(valid)).toBe(true);
+  expect(commonsRegisterPair("unplanned", "unplanned")).toBe(true);
+  expect(commonsRegisterPair(valid, valid)).toBe(true);
+  const other = read("wrangler.grow.jsonc").vars.REGISTER_SCOPE;
+  expect(isScopeId(other)).toBe(true);
+  expect(other).not.toBe(valid);
+  expect(commonsRegisterPair(valid, other)).toBe(false);
+  expect(commonsRegisterPair("unplanned", valid)).toBe(false);
+  expect(commonsRegisterPair(valid, undefined)).toBe(false);
+  expect(commonsRegisterPair("malformed", "malformed")).toBe(false);
+  expect(commonsRegisterPair(undefined, undefined)).toBe(false);
+});
+
+test("dap-commons declares its exact namespace and register configuration", () => {
   const commons = read("wrangler.commons.jsonc"), grow = read("wrangler.grow.jsonc");
   expect([commons.name, commons.main, commons.vars.SCOPE_INDEX_MODE]).toEqual(["dap-commons", "worker.commons.ts", "enforce"]);
   expect([commons.vars.DEPLOYMENT, commons.vars.PUBLIC_ORIGIN]).toEqual(["dap-commons", "https://dap-commons.inguz.workers.dev"]);
@@ -141,12 +160,11 @@ test("dap-commons declares its exact namespace and unplanned register configurat
   expect(commons.migrations).toEqual([{ tag: "v1", new_sqlite_classes: ["DeployedScope", "ScopeIndex", "McpRegistry", "McpAgent"] }]);
   expect(commons.artifacts).toEqual([{ binding: "ARTIFACTS", namespace: "dap-commons", remote: true }]);
   expect(commons.vars.ARTIFACTS_NAMESPACE).toBe("dap-commons");
-  expect(commons.vars.REGISTER_SCOPE).toBe("unplanned");
-  expect(JSON.parse(commons.vars.ARTIFACTS_CONFIG)).toEqual({ registerScope: "unplanned", namespace: "dap-commons",
+  const artifacts = JSON.parse(commons.vars.ARTIFACTS_CONFIG);
+  expect(commonsRegisterPair(commons.vars.REGISTER_SCOPE, artifacts.registerScope)).toBe(true);
+  expect(artifacts).toEqual({ registerScope: commons.vars.REGISTER_SCOPE, namespace: "dap-commons",
     host: "6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net", maxBytes: 10485760, credentialIdentity: "adapter-attempt" });
-  // This source metadata does not enable the Demo parser for Register 23.
-  expect(JSON.parse(commons.vars.DEMO_START_CONFIG)).toEqual({ v: 3, origin: "https://dap-commons.inguz.workers.dev",
-    deployment: "dap-commons", register: "unplanned", definition: "platform:register@23" });
+  expect(commons.vars).not.toHaveProperty("DEMO_START_CONFIG");
   expect(JSON.parse(commons.vars.APPLICATION_SCREEN_HOSTS)).toEqual([]);
   expect(JSON.parse(commons.vars.APPLICATION_TRUST)).toEqual([]);
   expect(commons.analytics_engine_datasets).toEqual([{ binding: "METRICS", dataset: "artroom_metrics_v1" }]);
@@ -155,13 +173,12 @@ test("dap-commons declares its exact namespace and unplanned register configurat
   for (const field of ["SERVING_CREATION_KEY_PER_HOUR", "SERVING_CREATION_ADDRESS_PER_HOUR", "SERVING_READ_KEY_PER_MINUTE", "SERVING_READ_ADDRESS_PER_MINUTE"]) expect(commons.vars[field]).toBe(grow.vars[field]);
 });
 
-// Ruling 96676b22, point 2: the commons file stays unchanged, and its policy admits base through the defaults.
+// Ruling 96676b22, point 2: the Commons policy admits base through the defaults.
 test("the commons Worker's creation policy admits the base family and keeps every Commons answer", () => {
   const commons = read("wrangler.commons.jsonc"), policy = readPlatformCreationPolicy({ PLATFORM_CREATION_PINS: commons.vars.PLATFORM_CREATION_PINS });
   expect(JSON.parse(commons.vars.PLATFORM_CREATION_PINS)).toEqual(Object.values(COMMONS_COHORT));
   for (const pin of Object.values(BASE_COHORT)) expect(permitsNewPlatformScope(policy, pin), pin).toBe(true);
   for (const pin of Object.values(COMMONS_COHORT)) expect(permitsNewPlatformScope(policy, pin), pin).toBe(true);
-  expect(JSON.parse(commons.vars.DEMO_START_CONFIG).definition).toBe(COMMONS_COHORT.register);
   expect(permitsNewPlatformScope(policy, "platform:register@2" as PlatformDefinition)).toBe(false);
 });
 

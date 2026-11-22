@@ -1,5 +1,5 @@
 // Planner provisions this separate Worker and its Artifacts namespace.
-// Planner binds the three unplanned register fields from the retained plan.
+// Planner binds the two unplanned register fields from the retained plan.
 // Invalid register pins keep creation closed.
 // SESSION_SECRET stays in the planner-owned secret store.
 {
@@ -15,7 +15,6 @@
     "ARTIFACTS_NAMESPACE": "dap-commons",
     "REGISTER_SCOPE": "unplanned",
     "ARTIFACTS_CONFIG": "{\"registerScope\":\"unplanned\",\"namespace\":\"dap-commons\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}",
-    "DEMO_START_CONFIG": "{\"v\":3,\"origin\":\"https://dap-commons.inguz.workers.dev\",\"deployment\":\"dap-commons\",\"register\":\"unplanned\",\"definition\":\"platform:register@23\"}",
     "APPLICATION_SCREEN_HOSTS": "[]",
     "APPLICATION_TRUST": "[]",
     "SERVING_CREATION_KEY_PER_HOUR": "10",
