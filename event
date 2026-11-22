@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fd513bb8de0d19b63d2812c16b88c0787f9c98f2","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/command-membership.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:207a9fe2d29db53b8297922e6c6f5edacc95f39a","text":"Republished at 6332fa5b2bf90607e681aa5da404ddec17709646; the successor stands at notes/2026-10-09-shared-language-volatile-acts.md."}
