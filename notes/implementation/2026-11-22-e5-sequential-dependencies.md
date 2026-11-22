@@ -88,3 +88,42 @@ The files below are relative to
 | Whole generated owner before the final drain assertion | Four passed, including 32,000 steps, in 458.28 seconds. `scheduler-focused/owner-reviewed.log`, `cd72eaf3bb0ad02c258c2dc855abf67080af10f5e3e716d1366e466499abb868`. |
 | Final drain smoke | One selected case passed with four seeds in the scratch copy. `scheduler-focused/sample-final-drain.log`, `3862dadcf70928c8c9a3ea2750f8529f70219ee91eb7faab3dbe8b3eb57960e4`. |
 | Final client test compiler context | Exit 0 in 0.466 seconds. `scheduler-focused/tsc-final-drain.log`, `a0b01579e98cf2c1383d3fe0001bb34fa46bc6ac1eed585e6648f7f6556e2be2`. |
+
+## Repaired full gate
+
+The repaired gate tested clean head
+`ec98e1f6d3613e6a8267ea1acbe2af1c7e9c7d00`, tree
+`41535a1bc1a7b8a96368af68bd04e3cab3cb2469`, over published E2
+`42d35b88884cc99e9dae179495e584e4701d8a9d`. The gate wrapper measured
+1,275.10 seconds. Static checks, typecheck, definition pins, workspace
+pins, and kernel passed. Node passed 246 cases and Counting passed 60.
+Plain passed 5,107 with one skip in 496.20 seconds. Native passed 1,240
+with two skips in 585.53 seconds. The gate counted zero lost, three
+stale, and zero no-owner native timeout crossings. Scale selected omit
+because the changed paths fall outside the scale set.
+
+The generated case reported 400 seeds, 32,000 steps, 4,276 signatures,
+and 2,829 entries in 474.6 seconds. The same run passed the separate
+generated case that checks exact recorded materialization at signing.
+Gate END `97f94081` records this run. Gate END `c602377c` records the
+earlier timeout.
+
+The files below are relative to
+`~/play/artroom-evidence/2026-11-22-ec98e1f-e5-repaired-gate/`.
+
+| Check | Command | Exit | Output and SHA-256 |
+| --- | --- | --- | --- |
+| Repaired full gate | `npm run gate` | 0 | `gate.txt` · `926456ed1626be6d4f947773c3226e0e5291681b75ffaa505de96bccbd17a65a` |
+| Gate stage ledger | `npm run gate` | 0 | `stages.json` · `861fe6f5e6ddc89077155c9796f8fc9ff3e32d4e3e11e7aba14c9a8894665148` |
+| Generated client case terminal lines | `npm run gate` | 0 | `generated-terminal.log` · `6e3341fad5fb2ddb0fab5cc7d6ec2297ba159385c417586f7dfdf8ab8e0817be` |
+
+This continuation changes only this implementation note. Source and
+tests match the gated tree. The review request records both tree hashes.
+
+## Open limits
+
+The public composition surface follows the ActEnvironment ruling
+`f364097e`. E3 `17e075b3` owns item-row request references. E6
+`edc09d8b` owns environment resolution through MCP, React, and foldkit.
+The pinboard and map adoption sit outside this repository under the
+E5 request `b1c6aad6`.
