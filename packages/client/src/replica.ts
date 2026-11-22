@@ -28,11 +28,11 @@ import { meaningOf } from "./custody.ts";
 import type { Observation, ObservationState } from "./observe.ts";
 import { HeldEntries } from "./replica-own.ts";
 import { judgedOn, type Judged, type Judging } from "./replica-judged.ts";
-import { actExplore } from "./act-explore.ts";
+import { actExplore, actExploreSubjects } from "./act-explore.ts";
 import { missingActInputs } from "./act-input.ts";
-import type { Act, ActRef, Context, Exploration, Lack, PartialAct, UnavailableContext } from "./act-types.ts";
+import type { Act, ActRef, ActView, Context, Exploration, ItemName, Lack, PartialAct, UnavailableContext } from "./act-types.ts";
 import { scopeUsesSession } from "./scope-reader.ts";
-import { registerExplore, type DraftExploreResult, type DraftSelection, type ExploreAuthority, type ReplicaExploration } from "./replica-explore.ts";
+import { registerChainExplore, registerExplore, type ChainExploreResult, type ExplorePrefix, type DraftExploreResult, type DraftSelection, type ExploreAuthority, type ReplicaExploration } from "./replica-explore.ts";
 import { Session, sessionStanding } from "./session.ts";
 import { UnavailableActSource } from "./act-symbols.ts";
 import { selectDraftSubjects, type DraftSubjects } from "./draft-selection.ts";
@@ -138,7 +138,10 @@ export class Replica<D extends DeclaredDefinition> {
     this.#exploration = exploration ? { actor: exploration.actor, member: structuredClone(exploration.member),
       clock: exploration.clock.bind(exploration), ...(exploration.read ? { read: exploration.read.bind(exploration) } : {}),
       ...(exploration.active ? { active: exploration.active.bind(exploration) } : {}) } : null;
-    if (this.#exploration) registerExplore<D>(this, (key, act, authority) => this.#explore(key, act, authority));
+    if (this.#exploration) {
+      registerExplore<D>(this, (key, act, authority) => this.#explore(key, act, authority));
+      registerChainExplore<D>(this, (prefix, key, act, authority) => this.#exploreChain(prefix, key, act, authority));
+    }
     seams.set(this, { held: this.#held, state: () => this.#state });
     const checked = validateDefinition(handle.definition, PROPOSED_BOUNDS);
     this.#definition = checked.ok && checked.definition.digest === handle.digest ? checked.definition : null;
@@ -226,8 +229,21 @@ export class Replica<D extends DeclaredDefinition> {
   /** Stop the replica and cancel the observation. */
   close(): void { this.#stop({ by: "close" }); }
 
+  /** The chain is private and requires the host's exact checked authority. */
+  async #exploreChain<K extends Kind<D>>(prefix: readonly ExplorePrefix<D>[], key: string, act: PartialAct<D, K>, authority?: ExploreAuthority): Promise<ChainExploreResult<D, K>> {
+    if (!authority) return { is: "unavailable", reason: "authority-unavailable" };
+    const captured = structuredClone(prefix);
+    if (!captured.length) return { is: "unavailable", reason: "source" };
+    let cut: { current: () => boolean; subjects: readonly { name: string; item: ItemName }[] } | null = null;
+    const answer = await this.#explore(key, act, authority, captured, (current, subjects) => { cut = { current, subjects }; });
+    if (answer.exploration.is !== "admitted" || !cut) return { is: "unavailable", reason: "source" };
+    const checked: { current: () => boolean; subjects: readonly { name: string; item: ItemName }[] } = cut;
+    return { is: "admitted", exploration: answer.exploration, ...checked };
+  }
+
   /** The operation stays inside this closure; no caller receives the state or Own. */
-  async #explore<K extends Kind<D>>(key: string, input: PartialAct<D, K>, authority?: ExploreAuthority): Promise<DraftExploreResult<D, K>> {
+  async #explore<K extends Kind<D>>(key: string, input: PartialAct<D, K>, authority?: ExploreAuthority,
+    prefix?: readonly ExplorePrefix<D>[], capture?: (current: () => boolean, subjects: readonly { name: string; item: ItemName }[]) => void): Promise<DraftExploreResult<D, K>> {
     const binding = this.#exploration;
     if (!binding) throw new TypeError("exploration requires its constructor identity binding");
     // Own input before the reader's first await. It receives a separate copy.
@@ -300,12 +316,39 @@ export class Replica<D extends DeclaredDefinition> {
       own: this.#held.own, grants, membership, owners: null, evidence: [], ...(checkedAuthority ? { authority: checkedAuthority } : {}) };
     this.#held.take();
     let result: Exploration<D, K>;
-    try { result = actExplore(this.#definition!, state, { key, act: captured, context }); }
+    let chainSubjects: readonly { name: string; item: ItemName }[] | null = null;
+    try {
+      let view: typeof state | ActView<D> = state;
+      let failed = false;
+      for (const step of prefix ?? []) {
+        const declaration = step.act.kind === undefined ? undefined : Object.hasOwn(this.#definition!.declared.acts, step.act.kind)
+          ? this.#definition!.declared.acts[step.act.kind] : undefined;
+        const action = declaration ? actionOf(declaration, this.#definition!) : null;
+        if (!authority || !session.standing || action === null) { failed = true; break; }
+        const judged = judgeExploreGrant(session.standing, { scope: scope!.at, membership, key: binding.actor, action, clock: clockOf(state, reading) });
+        if (judged.result !== "current") { failed = true; break; }
+        const prior: Exploration<D, Kind<D>> = actExplore(this.#definition!, view, { key: step.source.key, act: step.act,
+          context: { ...context, grants: [{ grant: judged.grant, current: true }] } });
+        if (prior.is !== "admitted" || canonicalize(prior.source) !== canonicalize(step.source)) { failed = true; break; }
+        view = prior.after;
+      }
+      if (failed) result = unavailable(["source"]).exploration;
+      else if (prefix) {
+        const dependent = actExploreSubjects(this.#definition!, view, { key, act: captured, context });
+        result = dependent.exploration; chainSubjects = dependent.subjects;
+      } else result = actExplore(this.#definition!, state, { key, act: captured, context });
+    }
     catch (error) {
       if (this.#held.take().length > 0) return unavailable(["source"]);
       throw error;
     }
     if (this.#held.take().length > 0) return unavailable(["source"]);
+    if (prefix) {
+      const remains = () => current() && !!authority && authority.session === session && !session.endedBy(authority.clock())
+        && authority.clock() === reading;
+      if (!remains() || !chainSubjects) return unavailable(["source"]);
+      capture?.(remains, chainSubjects);
+    }
     if (result.is !== "refused" || result.reason !== "revision-moved") return { exploration: result, movement: null };
 
     // No await separates the body judgment from these recorded selections.

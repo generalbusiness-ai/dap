@@ -1,7 +1,7 @@
 /** Internal registration only. Package entries expose neither operation nor reader. */
 import type { DeclaredDefinition, Digest, Head, KeyId, MemberRef, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import type { Kind } from "./declared.ts";
-import type { ActRef, Exploration, Lack, PartialAct } from "./act-types.ts";
+import type { ActRef, Exploration, ItemName, Lack, PartialAct, Source } from "./act-types.ts";
 import type { Replica } from "./replica.ts";
 import type { Session } from "./session.ts";
 
@@ -74,4 +74,21 @@ function operation<D extends DeclaredDefinition>(owner: object): ExploreOperatio
   const registered = operations.get(owner) as ExploreOperation<D> | undefined;
   if (!registered) throw new TypeError("exploration requires its constructor identity binding");
   return registered;
+}
+
+/** Private chain: all source versions and the dependent share one cut. */
+export interface ExplorePrefix<D extends DeclaredDefinition> { readonly source: Source; readonly act: PartialAct<D, Kind<D>> }
+export type ChainExploreResult<D extends DeclaredDefinition, K extends Kind<D>> =
+  | { readonly is: "admitted"; readonly exploration: Extract<Exploration<D, K>, { is: "admitted" }>;
+      readonly subjects: readonly { readonly name: string; readonly item: ItemName }[]; readonly current: () => boolean }
+  | { readonly is: "unavailable"; readonly reason: "source" | "authority-unavailable" };
+type ChainOperation<D extends DeclaredDefinition> = <K extends Kind<D>>(prefix: readonly ExplorePrefix<D>[], key: string,
+  act: PartialAct<D, K>, authority?: ExploreAuthority) => Promise<ChainExploreResult<D, K>>;
+const chains = new WeakMap<object, unknown>();
+export function registerChainExplore<D extends DeclaredDefinition>(owner: object, operation: ChainOperation<D>): void { chains.set(owner, operation); }
+export function exploreReplicaChain<D extends DeclaredDefinition, K extends Kind<D>>(replica: Replica<D>, prefix: readonly ExplorePrefix<D>[],
+  key: string, act: PartialAct<D, K>, authority?: ExploreAuthority): Promise<ChainExploreResult<D, K>> {
+  const operation = chains.get(replica) as ChainOperation<D> | undefined;
+  if (!operation) throw new TypeError("exploration requires its constructor identity binding");
+  return operation(prefix, key, act, authority);
 }
