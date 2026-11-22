@@ -53,3 +53,38 @@ Case 5 holds the third step until the middle step records. Case 9 stops
 when a pending projection cannot supply the entry-valued slot. The
 generated invariant checks the exact source and materialized meaning at
 the dependent signer across matching and earlier-version outcomes.
+
+## Full gate and scheduler repair
+
+The full gate on `b93aa01dd7e8537b5cc9376ead777bfe85ac2a1c`, tree
+`5a886553425ef91e6b5669478890de7a84894e1e`, exited 1 in 817.44
+seconds. Static checks, typecheck, pins, kernel, Node (246 cases) and
+Counting (60 cases) passed. Plain reported 5,106 passes, one skip and
+one failure. The existing 400-seed client test reached its 600-second
+deadline. Native remained unreached. Scale selected omit.
+
+The bounded trace reaches seed 1, step 3. The request retains an
+authorization for a subject with pending work and waits for its
+source before it reaches custody. The test had armed a store-write
+fault. The fault never runs because the test awaits this request
+before it performs the next delivery or clock action.
+
+Ruling `33a3ecda` keeps the production wait and changes the generated
+scheduler. It keeps a call pending after observing the exact unsigned
+authorization, runs the scripted feed, delivery and clock changes,
+and checks the same invariants after the final drain. The existing
+request oracle still compares custody status and predictions.
+A separate oracle checks the unsigned authorization rows against
+the retained source, checked replica evidence and clock. The test
+keeps 400 seeds, 80 steps, and its 600-second deadline.
+
+The files below are relative to
+`~/play/artroom-evidence/2026-11-22-b93aa01-e5-gate/`.
+
+| Check | Result and SHA-256 |
+| --- | --- |
+| Original full gate | Exit 1 in 817.44 seconds. `gate.txt`, `53c9a9c14ab3cab1858273ab6f2955662c9f2a1fd05e846411233a59753afc84`. |
+| Bounded request trace | The last foreground marker completed the retained preview. The request never reached custody send. `diagnosis/logs/phases.log`, `751eca1133e06b727785f723b8ded9e248f359159eabd0041a3afc4d79b8d335`. |
+| Whole generated owner before the final drain assertion | Four passed, including 32,000 steps, in 458.28 seconds. `scheduler-focused/owner-reviewed.log`, `cd72eaf3bb0ad02c258c2dc855abf67080af10f5e3e716d1366e466499abb868`. |
+| Final drain smoke | One selected case passed with four seeds in the scratch copy. `scheduler-focused/sample-final-drain.log`, `3862dadcf70928c8c9a3ea2750f8529f70219ee91eb7faab3dbe8b3eb57960e4`. |
+| Final client test compiler context | Exit 0 in 0.466 seconds. `scheduler-focused/tsc-final-drain.log`, `a0b01579e98cf2c1383d3fe0001bb34fa46bc6ac1eed585e6648f7f6556e2be2`. |
