@@ -1,6 +1,6 @@
 /** Shared command outcomes and read/wait primitives. The stop has one identity. */
 import { shownText } from "./shown-text.ts";
-import type { Answer, Created, KeyId, ReadMinimum, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
+import type { Answer, Created, Head, KeyId, ReadMinimum, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, isFactRef, readMinimum, scopeIdOf, timeMs, timeOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, authorityRefusal, httpTransport, signedReads, requestSession, signerSessionRequest, type OperationalApi, type ReadSigning, type Session, type Signer, type Signing, type Transport } from "@generalbusiness/dap-client";
 import { SourceError } from "@generalbusiness/dap-replay";
@@ -8,6 +8,7 @@ import type { Context, Outcome } from "./command-context.ts";
 import type { ClaimStep, Config } from "./store.ts";
 import { storedSigner } from "./store-signer.ts";
 import { cachedReadSession, ReadSessionCacheError, type CachedReadSession } from "./read-session-cache.ts";
+import { localError, readError, readReasonError, transportError, typedStop, usageError, type RefusedRead } from "./json-output.ts";
 
 
 export const done = (...lines: string[]): Outcome => ({ code: 0, lines });
@@ -23,17 +24,30 @@ export const stopCommand = (outcome: Outcome): never => { throw new Stop(outcome
 /**
  * Runs a command, and turns a stop, a lost reply and a history that cannot be read into its outcome. A lost reply says what the
  * transport says: whether anything may have been recorded. A history that cannot be read says why: "... cannot be read: <reason>".
+ * The lines keep those words for the text renderer; the typed error carries only a closed code. `mode`: a command that only
+ * reads sends no mutation, so its lost reply is unreadable with no dispatch; any other command's may have dispatched one.
  */
-export async function run(command: () => Promise<Outcome>): Promise<Outcome> {
+export async function run(command: () => Promise<Outcome>, mode: "read" | "mutation" = "mutation"): Promise<Outcome> {
   try {
     return await command();
   } catch (error) {
     if (error instanceof Stop) return error.outcome;
-    if (error instanceof TransportError) return failed(`No answer: ${error.message}`);
-    if (error instanceof SourceError) return failed(error.message);
+    if (error instanceof TransportError) return mode === "read"
+      ? typedStop("unreadable", "read", transportError("none"), [`No answer: ${error.message}`])
+      : typedStop("unknown", "submit", transportError("possible"), [`No answer: ${error.message}`]);
+    if (error instanceof SourceError) return typedStop("unreadable", "verify", readReasonError("history-unreadable", error.reason ?? undefined), [error.message]);
     throw error;
   }
 }
+
+/** A native refused read as a stop's outcome: the text line beside the unchanged refused Read. */
+export function readRefused(read: RefusedRead, lines: string[]): Outcome {
+  const { status, error } = readError(read);
+  return typedStop(status, "read", error, lines);
+}
+const keyMissing = (config: Config): Outcome => typedStop("refused", "preflight", localError("key-missing"), [`The key ${config.key} is missing from the config directory; nothing was signed.`]);
+const cacheFailed = (error: ReadSessionCacheError): Outcome => typedStop("error", "read", localError("read-session-cache"), [error.message]);
+const noSession = (line: string): Outcome => typedStop("unreadable", "read", localError("no-session"), [line]);
 
 // ---------------------------------------------------------------- what every command reads
 
@@ -41,11 +55,11 @@ export const fresh = (bytes: number): Uint8Array => crypto.getRandomValues(new U
 
 export async function configOf(ctx: Context): Promise<Config> {
   const config = await ctx.store.config();
-  return config ?? stopCommand(usage("No room is set up here. Run: dap install <base-url>, or dap join <link>."));
+  return config ?? stopCommand(typedStop("usage", "preflight", usageError("no-room"), ["No room is set up here. Run: dap install <base-url>, or dap join <link>."]));
 }
 
 export async function signerOf(ctx: Context, config: Config): Promise<Signer> {
-  return (await storedSigner(ctx.store, config.key)) ?? stopCommand(failed(`The key ${config.key} is missing from the config directory; nothing was signed.`));
+  return (await storedSigner(ctx.store, config.key)) ?? stopCommand(keyMissing(config));
 }
 
 export const signing = (ctx: Context): Signing => (ctx.now ? { now: ctx.now() } : {});
@@ -62,11 +76,11 @@ export async function readTransportOf(ctx: Context, config: Config, reader?: str
     // Capability stores own their namespace and must never fall back to seeds.
     let custodyKey: KeyId | undefined;
     if (ctx.store.signer) {
-      const held = await ctx.store.signer(config.key) ?? stopCommand(failed(`The key ${config.key} is missing from the config directory; nothing was signed.`));
+      const held = await ctx.store.signer(config.key) ?? stopCommand(keyMissing(config));
       custodyKey = held.key;
     } else {
       const held = await ctx.store.secret(config.key);
-      if (held === null) stopCommand(failed(`The key ${config.key} is missing from the config directory; nothing was signed.`));
+      if (held === null) stopCommand(keyMissing(config));
       if (!(held instanceof Uint8Array) || held.length !== 32) throw new Error(`The key ${config.key} holds no 32-byte key.`);
     }
     const known = connections.get(ctx)?.get(connectionKey(config));
@@ -95,11 +109,11 @@ function sessionRefused(error: SessionRefused): never {
   const window = error.reason === "rate-limited" ? error.retryAfterSeconds === undefined
     ? " The service did not report its request window."
     : ` The service reports a request-window retry delay of ${error.retryAfterSeconds} seconds; this is not a retry grant.` : "";
-  return stopCommand(failed(`Read session refused: ${error.reason}.${window}`));
+  return stopCommand(typedStop("unreadable", "read", readReasonError("session-refused", error.reason, error.retryAfterSeconds), [`Read session refused: ${error.reason}.${window}`]));
 }
 
 function checkReadOwner(current?: () => boolean): void {
-  if (current?.() === false) stopCommand(failed("The read session owner ended; its result was not used."));
+  if (current?.() === false) stopCommand(typedStop("error", "read", localError("session-owner-ended"), ["The read session owner ended; its result was not used."]));
 }
 /** Issue under this invocation's signer, fetch and clock. No Config is needed. */
 async function issueReadSession(ctx: Context, service: string, membership: ScopeRef, signer: Signer, renewal: boolean, current?: () => boolean): Promise<Session> {
@@ -112,7 +126,7 @@ async function issueReadSession(ctx: Context, service: string, membership: Scope
   checkReadOwner(current);
   if (!answer.ok) throw new SessionRefused(answer.reason, answer.retryAfterSeconds, renewal);
   if (timeMs(answer.session.claims.ends)! - now() <= 30_000)
-    stopCommand(failed("The issued read session has no 30-second refresh margin on this clock. Check device/service clock alignment; server authority was not inferred."));
+    stopCommand(typedStop("unreadable", "read", localError("session-clock-margin"), ["The issued read session has no 30-second refresh margin on this clock. Check device/service clock alignment; server authority was not inferred."]));
   return answer.session;
 }
 
@@ -127,7 +141,7 @@ export async function requiredSessionOf(ctx: Context, service: string, membershi
 export function requiredReadsOf(ctx: Context, service: string, membership: ScopeRef, signer: Signer, current?: () => boolean): RequiredReads {
   const connection = makeConnection(ctx, service, membership, signer, true, current);
   return { transport: connection.transport, read: connection.read,
-    session: async () => await connection.session() ?? stopCommand(failed("No required read session was issued.")) };
+    session: async () => await connection.session() ?? stopCommand(noSession("No required read session was issued.")) };
 }
 
 /** A connection belongs to this Context's fetch/clock. Only issuance, not
@@ -183,13 +197,13 @@ function makeConnection(ctx: Context, service: string, membership: ScopeRef | un
         // A failed renewal never enters this bootstrap path.
         selected = null; return null;
       }
-      if (error instanceof ReadSessionCacheError) stopCommand(failed(error.message));
+      if (error instanceof ReadSessionCacheError) stopCommand(cacheFailed(error));
       throw error;
     }
   };
   const read = async <T extends { ok: boolean; reason?: string }>(perform: (reader: string | null) => Promise<T>): Promise<T> => {
     const held = await owned(() => load());
-    if (required && !held) stopCommand(failed("No required read session was issued."));
+    if (required && !held) stopCommand(noSession("No required read session was issued."));
     const result = await owned(() => perform(held?.session.reader() ?? null));
     if (result.ok) { if (held) used.add(held); return result; }
     if (result.reason !== "forbidden" || !held || !(held.reused || used.has(held)) || !membership) return result;
@@ -197,13 +211,13 @@ function makeConnection(ctx: Context, service: string, membership: ScopeRef | un
     // denied another target must not mint a new session for every denial.
     const probe = await owned(() => base.summary(membership.scope, held.session.reader()));
     if (probe.ok) return result;
-    if (probe.reason !== "forbidden") stopCommand(failed(`Read session check refused: ${probe.reason}.`));
+    if (probe.reason !== "forbidden") stopCommand(typedStop("unreadable", "read", readReasonError("session-check-refused", probe.reason), [`Read session check refused: ${probe.reason}.`]));
     try { await owned(() => held.discard()); } catch (error) {
-      if (error instanceof ReadSessionCacheError) stopCommand(failed(error.message));
+      if (error instanceof ReadSessionCacheError) stopCommand(cacheFailed(error));
       throw error;
     }
     if (selected === held) selected = undefined;
-    const next = await owned(() => load(true)) ?? stopCommand(failed("No renewed read session was issued."));
+    const next = await owned(() => load(true)) ?? stopCommand(noSession("No renewed read session was issued."));
     // Exactly one retry; even another forbidden result is returned as-is.
     const retried = await owned(() => perform(next.session.reader()));
     if (retried.ok) used.add(next);
@@ -225,7 +239,7 @@ function makeConnection(ctx: Context, service: string, membership: ScopeRef | un
       if (authorityRefusal(answer) && selected) {
         const ended = selected; selected = undefined;
         try { await owned(() => ended.discard()); } catch (error) {
-          if (error instanceof ReadSessionCacheError) stopCommand(failed(error.message));
+          if (error instanceof ReadSessionCacheError) stopCommand(cacheFailed(error));
           throw error;
         }
       }
@@ -282,8 +296,12 @@ export async function handleOf(ctx: Context, config: Config, scope: ScopeId, rea
 }
 
 export async function summaryOf(handle: ScopeHandle): Promise<Summary> {
+  return (await summaryReadOf(handle)).summary;
+}
+/** The summary and the head it was read at. */
+export async function summaryReadOf(handle: ScopeHandle): Promise<{ summary: Summary; at: Head }> {
   const read = await handle.summary();
-  return read.ok ? read.value : stopCommand(failed(`Cannot read ${handle.scope}: ${read.reason}.`));
+  return read.ok ? { summary: read.value, at: read.at } : stopCommand(readRefused(read, [`Cannot read ${handle.scope}: ${read.reason}.`]));
 }
 
 /** The answer to an act, in one or two lines. A refusal names its reason and, when the failed guard has one, its name. */

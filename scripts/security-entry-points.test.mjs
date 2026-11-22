@@ -71,12 +71,12 @@ const namedOwners = {
     "packages/cli/src/command-context.ts:$module": "4bb5035a42a4df7fa7f0e3773bd0b6f74c2f5551d9fad86e6b473538cde52edd"
   },
   "packages/cli/src/command-targets.ts": {
-    "packages/cli/src/command-targets.ts:$module": "336b7e259caf4957e5bc4f2079ca7dc0dfba585b981b7958c140a5991aa9c27a",
+    "packages/cli/src/command-targets.ts:$module": "9f67938b8780505ae6c138c8cf4c54224a166ece6b1f4c8c068ec4a1b5ac046c",
     "packages/cli/src/command-targets.ts:short": "62f9d565f48fc73fc6b282a941d6d37a48055c6c32f2ef88f21b22ead55f6e57",
     "packages/cli/src/command-targets.ts:directoryReader": "ebf7a12b7e199bfb0e7962191eae486cc1ca4ed04707f9dd73eacbc48b8e147c",
     "packages/cli/src/command-targets.ts:openingDirectory": "119dcc96ed0030341b0bd64460503a7b6112f31a370e59fd1f3100428f91cf58",
-    "packages/cli/src/command-targets.ts:scopeNamed": "d16130a225872b6e96da8b6375ff41dcec104f7772f1e6c527c92d03cfd382e4",
-    "packages/cli/src/command-targets.ts:definitionOf": "138ced231e1b804af138be95c50fdd958e478c196d21b11cba3a431658bedf0b",
+    "packages/cli/src/command-targets.ts:scopeNamed": "4240f908490279954fd786307755f4ae8f3fdda39bca6035dfeca0cc959f732a",
+    "packages/cli/src/command-targets.ts:definitionOf": "7d474c2aeb555f28dff9826e75cd4fdbf5ef62a3b0bb2d094e62a6e6d2cf1a1e",
     "packages/cli/src/command-targets.ts:laneActive": "8797076412cc4a14365ca99fc4faed2de3f34e7d0b7b62fc6283a446615a8aee",
     "packages/cli/src/command-targets.ts:fileOf": "f2c2de1136cfd275c0b2003f3ae5abd2ff8d7ba508351a05dc8145664dada339",
     "packages/cli/src/command-targets.ts:textOf": "1ae1ce4970caf7b99eb7370475b4506f47b23c9f8b09fd93933a664f2406747a",
@@ -114,16 +114,16 @@ const namedOwners = {
     "packages/cli/src/command-membership.ts:join": "35f5308686317ac4217ea5e34c7970e1bee01bde0c3ba98465b3d593bdca3822"
   },
   "packages/cli/src/command-scope.ts": {
-    "packages/cli/src/command-scope.ts:$module": "800e8b1d1224cdb7d4fe7b2f41b7f455ea1dce61f1e1cb85665e8fee2e95bb6f",
+    "packages/cli/src/command-scope.ts:$module": "4b8f0c30d6bc6bf291a5c4f74b7d01af093d427a16bd9bb6e15b44465054c518",
     "packages/cli/src/command-scope.ts:scopeIndexAccess": "b54a6859075907491f4c19313b149572acd5b3bd94c492d61fb342601759c299",
     "packages/cli/src/command-scope.ts:standing": "57372328838e0f9bcb936554f41738f9445ed53384112aae1cdad745a4dc1fce",
-    "packages/cli/src/command-scope.ts:acts": "d5bd45f6bf4eba6103c00ad6daa0ab3f952a7b00f2a43b7d5f8a2fc894f12d65",
+    "packages/cli/src/command-scope.ts:acts": "a8802dd6d9b071edd6751b4314c5e6b169f9686339d0a640b8f0b9270df7f165",
     "packages/cli/src/command-scope.ts:act": "df047a7b65892d6a6d92d411d560558874e377b004ea9278a033ed71cfb81296",
     "packages/cli/src/command-scope.ts:apps": "02729fd520eb4ed349fad0e776f974929a3663d442a0588e9b95ee104ed9ed8c",
     "packages/cli/src/command-scope.ts:items": "915fdfe876d3d6f19bc4bc07a54b3b58fa352f1298ad954353b92f25c6d6e3ce",
     "packages/cli/src/command-scope.ts:entryLine": "67a54c1079edc58b5e60e5f87ca6054359a1dc03bcf4454ef28adca78fdb9cd4",
     "packages/cli/src/command-scope.ts:log": "3ef9c27f7f2f22e7f2531f7e4d0cc859af988009fb92e3e79b13261a45943aeb",
-    "packages/cli/src/command-scope.ts:show": "c591983ea10dc03bf4af2717b5d088d6acf725de169cf73470dd477a7945a557",
+    "packages/cli/src/command-scope.ts:show": "b5b7a61951f404233ee38973b7a56ac29098a8bcf1f7c05d2710884eaf46adb9",
     "packages/cli/src/command-scope.ts:status": "f77f1396b4bed9f01c159ca07c991ef52da9cd9a50ea4e1aae3f5765d50504b4"
   },
   "packages/cli/src/command-verify.ts": {
@@ -139,13 +139,13 @@ const namedOwners = {
     "packages/cli/src/command-verify.ts:verifyAll": "a7b97c153eb0787f30c4e45521f16ee927a6c1859000480ce0cfa22acdac4565"
   },
   "packages/cli/src/command-repository.ts": {
-    "packages/cli/src/command-repository.ts:$module": "f976a57c62ebe7517e1b0d2b917071596cbe7844976a67900ee75964381d4673",
+    "packages/cli/src/command-repository.ts:$module": "bf4b2bf9d52c21de3232f737c9aa89ce247858bd7d5c5233946138f2f0a7bc14",
     "packages/cli/src/command-repository.ts:OWN_HOST": "d8049ba56c1494f7f9ab575b4ccdbe4ea8192229bb9d2a280bbb4528e1c5784a",
     "packages/cli/src/command-repository.ts:remoteOf": "57afba6cdd6f9169d7366eb5641f61a52a420f55ba723bff6922bfc6332496a9",
-    "packages/cli/src/command-repository.ts:remoteLine": "1eb8d789b8f70e63d8b28176c5b5f923eeae5065c26a17487274295b2803d354",
-    "packages/cli/src/command-repository.ts:destinationStateOf": "a0daccc378fcd22def9c7033c553d70f7fef2085553e4a562f0b660d39290f07",
-    "packages/cli/src/command-repository.ts:destinationOf": "12e9a159bbe98128f0e7f0bd184477a845e06ce0d1eede21b2dd9b498672da42",
-    "packages/cli/src/command-repository.ts:remote": "6d5001cf53cd0fc82d205a57533e3094cd6881f8259a66ae26b080f7401e796b",
+    "packages/cli/src/command-repository.ts:remoteLine": "6afbb788790e299b920261e90385f1454bdae738b37abd7af3683e4d409fbe36",
+    "packages/cli/src/command-repository.ts:destinationStateOf": "6032ac1fc8e3c3746da15ad113d1c5aa387d396f996e07460e022fcec1a425fb",
+    "packages/cli/src/command-repository.ts:destinationOf": "369aa33520fc70422e0a4b71cd01badb71dd1a4cf8f3de02ddbba32fe5c383e4",
+    "packages/cli/src/command-repository.ts:remote": "48b7cfc8617e41caf03fa7f745ea5488acd4eebc26d7b401611f1ce4ae6b50e8",
     "packages/cli/src/command-repository.ts:authorization": "e4e08477eb4c8766ccbb228da6d28f0b0c98a11500d80fcbe92e686eabb654ec",
     "packages/cli/src/command-repository.ts:b64": "2ccaf086d7986f6c72fc6eb746042e77b2da0a99cba0d51e10a9aa87025e0c6d",
     "packages/cli/src/command-repository.ts:headerEnv": "2b29643df8f13576381b9be7133dd6f5dc668a80d10822ac7fbc0d3bcb1ee878",
@@ -411,12 +411,12 @@ const pendingR8Seals = {
   "packages/mcp/src/description-context.ts": "ef86ba4f8fc9e67f792d10510b9e9c20132b80c3d8915774fede7de714c4be17", // Private native-to-plain catalogue binding; NF-4 moved it to the client install module.
   "packages/client/src/expected.ts": "2bfd1c5df978e5e3549e6747382fe5151cb79c5dad627300793d2ff0fd2b545c", // A1 shares expectedKeys while preserving sparse, prototype-safe subject resolution.
   "packages/cli/src/claim.ts": "fa630e221ac38d21c6dd01913e02d5b4e8add14ed23a671401e50949e68e73f8", // CR2 admits the signed original installer-founder at register28; legacy binding25 keeps host-none limits.
-  "packages/cli/src/command-support.ts": "67c89de28473d149a3571f045e4e3b4aba1cb5751a383e9912b782cdd2f4c3c2", // Moved shared read, session and signing support; ES-1 asks for standing and ends the cached session on an authority refusal.
+  "packages/cli/src/command-support.ts": "bd35ca61a99d50c007900ef2d12c72a16c022a6c641dce8b6207057f2004f149", // Moved shared read, session and signing support; ES-1 asks for standing and ends the cached session on an authority refusal.
   "packages/cli/src/read-session-cache.ts": "701cdbeb0a804490b29cccf98ee3f5d2a6dcebf5fd94b7d8d08f455a59699e93", // Reviewed CLI session or verification boundary; ES-1 keeps a checked standing as an optional fifth member.
   "packages/cli/src/verification.ts": "4875139168f453ff917ff565deefccc60b377ab529b42a236c6025bc7bf429d9", // Reviewed unique-entry ledger, source conflicts and owner retirement; actual maintained output.
   "packages/cli/src/files.ts": "94b3dc417b4ab527ae55e8f451fde5f3c2d0b46715ac1e5a62eab5d9197983b2", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/store.ts": "676d1779c00548f3e13298567c5827724cf9c0543041e4a40b94e86980d567db", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "packages/cli/src/line.ts": "70f9cc725e72c500e6873b58ed02911fde0458834dd62eafa3c8987ab5d5134d", // Reviewed CLI session or verification boundary; actual maintained parser output; dap issue wait signs no act. CF-1 changes it; U1 accepts --cohort upgrade.
+  "packages/cli/src/line.ts": "785638f43f7b5b1674cdbebdb8ddc7abb1d0997853f51cb26b778714efea5d81", // Reviewed CLI session or verification boundary; actual maintained parser output; dap issue wait signs no act. CF-1 changes it; U1 accepts --cohort upgrade.
   "packages/cli/src/invitations.ts": "caea37283b03aa7e4a7e4c44e2fb3bcd6c41d08e184e5e77cd08b1b79335f914", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-applications-command.ts": "5af0f495fb9af7ba04b64deda0019e39649c81971196c3999ab60d1d75a26571", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-manifest.ts": "4bd67e5543b060c24e235a15f03983ad590ee77fc94a8a96627e2ad1adcd0155", // Preserve trusted session refusal outcomes; actual maintained parser output.

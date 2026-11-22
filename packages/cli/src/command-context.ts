@@ -1,6 +1,7 @@
 /** Command ports and outcomes. */
 import type { ClaimSteps } from "./claim.ts";
 import type { CloneWait } from "./clone-outcome.ts";
+import type { Typed } from "./json-output.ts";
 import type { Store } from "./store.ts";
 import type { VerifyOptions } from "./verification.ts";
 import type { CreationOffer, Fetch } from "@generalbusiness/dap-client";
@@ -55,5 +56,9 @@ export interface Git {
   files?(base: string, branch: string): Promise<{ ok: true; tip: string; files: readonly { path: string; bytes: Uint8Array }[] } | { ok: false; reason: string }>;
 }
 
-/** What a command ends with: its exit code, and the lines it prints. 0: done. 1: refused, unavailable or not found. 2: not a command this can run. */
-export interface Outcome { code: 0 | 1 | 2 | 3; lines: string[]; claimState?: "failed" }
+/**
+ * What a command ends with: its exit code, and the lines it prints. 0: done. 1: refused, unavailable or not found. 2: not a
+ * command this can run. `typed`: the same execution as a typed result or error, the only input of the JSON renderer. The
+ * lines stay the text renderer's private carrier; `command` in `line.ts` returns an Outcome without `typed`.
+ */
+export interface Outcome { code: 0 | 1 | 2 | 3; lines: string[]; claimState?: "failed"; typed?: Typed }

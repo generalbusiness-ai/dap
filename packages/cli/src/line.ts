@@ -58,6 +58,62 @@ export const USAGE = [
 /** The flags that take no value. */
 const SWITCHES: ReadonlySet<string> = new Set(["again", "all", "plan", "planned", "check", "keep", "continue", "archive", "device", "replace"]);
 
+/** `dap mcp` reads its own options (`mcp.ts`): these four take the next token as their value. Its switches `--generic` and
+ * `--generic=add`, and any option it refuses, take none. */
+const MCP_VALUES: ReadonlySet<string> = new Set(["--tools", "--http", "--scope", "--membership"]);
+/** The global switch of JSON output. It takes no value. */
+export const JSON_SWITCH = "--json";
+
+/**
+ * The output mode of one command line, and the line without the JSON switch. One scan owns each token, as the command's own
+ * parser does: a value-taking option consumes its next token, even `--json`, which then stays data; an unknown option
+ * consumes what it consumes today. `--json` at an option position, before, between or after command words, selects JSON;
+ * repetition is one selection. The scan reads no file and no environment.
+ */
+export function scanJson(argv: readonly string[]): { json: boolean; argv: string[] } {
+  const kept: string[] = [];
+  let json = false, i = 0;
+  for (; argv[i] === JSON_SWITCH; i++) json = true;
+  const mcp = argv[i] === "mcp";
+  for (; i < argv.length; i++) {
+    const arg = argv[i]!;
+    if (arg === JSON_SWITCH) { json = true; continue; }
+    kept.push(arg);
+    if (!arg.startsWith("--")) continue;
+    const owns = mcp ? MCP_VALUES.has(arg) : !SWITCHES.has(arg.slice(2));
+    if (owns && i + 1 < argv.length) kept.push(argv[++i]!);
+  }
+  return { json, argv: kept };
+}
+
+/** The positional words of a command line, without the values that options consume. */
+function wordsOf(argv: readonly string[]): string[] {
+  const words: string[] = [];
+  for (let i = 0; i < argv.length; i++) {
+    if (!argv[i]!.startsWith("--")) words.push(argv[i]!);
+    else if (!SWITCHES.has(argv[i]!.slice(2))) i++;
+  }
+  return words;
+}
+
+/** The commands that `main.ts` dispatches by the first token, before or beside the command line of this module. */
+const EARLY: readonly string[] = ["dev", "check", "new", "pack", "scope-index", "mcp"];
+const ISSUE_WORDS: readonly string[] = ["open", "comment", "assign", "close", "wait"];
+
+/**
+ * The resolved command of the JSON envelope: only allowlisted command words, in the order of their dispatch. `claim` is
+ * the canonical `create`. An unknown command is the empty array; no supplied word, path or secret becomes a label.
+ */
+export function commandWords(argv: readonly string[]): string[] {
+  if (argv[0] !== undefined && EARLY.includes(argv[0])) return [argv[0]];
+  const [name, sub] = wordsOf(argv);
+  if (name === undefined || !Object.hasOwn(KNOWN, name)) return [];
+  if (name === "claim") return ["create"];
+  if (name === "issue") return sub !== undefined && ISSUE_WORDS.includes(sub) ? ["issue", sub] : ["issue"];
+  if (name === "application" && sub === "upgrade") return ["application", "upgrade"];
+  return [name];
+}
+
 /** The words of a command line: the positional ones, each `--name value`, and each switch; `--set` may be given more than once. */
 export function parse(argv: readonly string[]): { words: string[]; flags: Map<string, string[]> } | null {
   const words: string[] = [];
@@ -83,8 +139,38 @@ const KNOWN: Record<string, readonly string[]> = {
   install: ["host", "namespace", "register-policy", "plan", "planned", "cohort", "release", "request", "role", "values", "owner"], application: ["release", "request", "replace", "role", "values"], apps: ["cursor"], create: ["handle", "branch", "again"], claim: ["handle", "branch", "again"], invite: ["role", "acts", "hours", "keep", "check", "continue", "device"], join: ["check"], acts: [], act: ["on", "target", "set", "value"], log: ["limit"], items: ["query"], show: [], verify: ["all"], status: ["request"], remote: [], clone: ["hours", "archive"], edit: ["file", "title", "closes"], propose: ["title"], merge: ["closes"], issue: ["title", "body", "hours"], issues: [],
 };
 
-/** Runs one command line with the given context. */
+/** Every command of the envelope: the early commands of `main.ts` and the commands of `KNOWN`, with `claim` as `create`. */
+export const COMMANDS: readonly string[] = [...new Set([...EARLY, ...Object.keys(KNOWN)].map(word => word === "claim" ? "create" : word))];
+
+/**
+ * The commands with a JSON renderer: each builds a typed result or error on its Outcome. `execute` dispatches them through
+ * this table, after the checks that every command shares.
+ */
+export const JSON_COMMANDS: Readonly<Record<string, (ctx: Context, first: string | undefined) => Promise<Outcome> | Outcome>> = {
+  acts: (ctx, first) => acts(ctx, first),
+  show: (ctx, first) => first === undefined ? { code: 2, lines: ["show needs an entry.", USAGE] } : show(ctx, first),
+  remote: (ctx, first) => first === undefined ? remote(ctx) : { code: 2, lines: ["remote takes no argument.", USAGE] },
+};
+
+/**
+ * The commands without a JSON renderer yet. With `--json`, each ends with usage/2 `no-json-output` before it reads
+ * configuration or a file. Each later slice removes the commands it converts (CJ-2 to CJ-5). `mcp` and `dev` (`long-lived`)
+ * and `scope-index` (`operator-command`) are not in this list: they have no JSON result in version 1, and keep their own codes.
+ */
+export const NO_JSON_OUTPUT: readonly string[] = ["install", "application", "apps", "check", "new", "pack", "create", "invite", "join",
+  "act", "log", "items", "verify", "status", "clone", "edit", "propose", "merge", "issue", "issues"];
+/** The commands that run until they are stopped, and the operator command, with their own JSON usage codes. */
+export const JSON_LONG_LIVED: readonly string[] = ["mcp", "dev"];
+export const JSON_OPERATOR: readonly string[] = ["scope-index"];
+
+/** Runs one command line with the given context: the text adapter. Its Outcome has the code and lines, not the typed result. */
 export async function command(ctx: Context, argv: readonly string[]): Promise<Outcome> {
+  const { typed: _typed, ...outcome } = await execute(ctx, argv);
+  return outcome;
+}
+
+/** Runs one command line with the given context, and keeps the typed result or error of the commands that have one. */
+export async function execute(ctx: Context, argv: readonly string[]): Promise<Outcome> {
   const parsed = parse(argv);
   const [name, first, ...rest] = parsed?.words ?? [];
   if (!parsed || name === undefined || !(name in KNOWN)) return { code: 2, lines: [USAGE] };
@@ -136,15 +222,15 @@ export async function command(ctx: Context, argv: readonly string[]): Promise<Ou
       if (flag("keep") !== undefined) return first === undefined ? needs("a member's handle") : invitePerson(ctx, first, { mode: "new", ...(flag("role") ? { role: flag("role")! } : {}), ...(flag("hours") ? { hours: number("hours")! } : {}) });
       return first === undefined ? needs("a member's handle") : invite(ctx, first, { ...(flag("role") ? { role: flag("role")! } : {}), ...(flag("acts") !== undefined ? { acts: flag("acts")! } : {}), ...(flag("hours") ? { hours: number("hours")! } : {}) });
     case "join": return first === undefined ? needs("a link") : flag("check") !== undefined ? first.startsWith(AGENT_KEY_LINK) ? enrolAgentKey(ctx, first, { mode: "check" }) : first.startsWith(CHECKER_KEY_LINK) ? enrolCheckerKey(ctx, first, { mode: "check" }) : first.startsWith(DEVICE_KEY_LINK) ? enrolDeviceKey(ctx, first, { mode: "check" }) : needs("an explicitly tagged agent-key invitation for --check") : join(ctx, first);
-    case "acts": return acts(ctx, first);
+    case "acts": return JSON_COMMANDS["acts"]!(ctx, first);
     case "act":
       if (flag("target") !== undefined && (!/^(0|[1-9][0-9]*)$/.test(flag("target")!) || !Number.isSafeInteger(number("target")))) return { code: 2, lines: ["--target must be a nonnegative item number; a member handle is not accepted here. Nothing was signed or sent."] };
       return first === undefined ? needs("an act kind") : act(ctx, first, { ...(flag("on") ? { on: flag("on")! } : {}), ...(flag("target") ? { target: number("target")! } : {}), set: parsed.flags.get("set") ?? [], value: parsed.flags.get("value") ?? [] });
     case "log": return log(ctx, first, { ...(flag("limit") ? { limit: number("limit")! } : {}) });
     case "items": return first === undefined || flag("query") === undefined ? needs("a scope and --query JSON") : items(ctx, first, flag("query")!);
-    case "show": return first === undefined ? needs("an entry") : show(ctx, first);
+    case "show": return JSON_COMMANDS["show"]!(ctx, first);
     case "status": return (parsed.flags.get("request")?.length ?? 0) > 1 ? { code: 2, lines: ["status takes one --request value.", USAGE] } : status(ctx, first, flag("request"));
-    case "remote": return first === undefined ? remote(ctx) : { code: 2, lines: ["remote takes no argument.", USAGE] };
+    case "remote": return JSON_COMMANDS["remote"]!(ctx, first);
     case "clone": return clone(ctx, first, { ...(flag("hours") ? { hours: number("hours")! } : {}), ...(flag("archive") !== undefined ? { archive: true } : {}) });
     case "edit": return first === undefined ? needs("a path in the repository") : edit(ctx, first, { ...(flag("file") !== undefined ? { file: flag("file")! } : {}), ...(flag("title") !== undefined ? { title: flag("title")! } : {}), ...(flag("closes") !== undefined ? { closes: flag("closes")! } : {}) });
     case "propose": return first === undefined ? needs("a local branch") : propose(ctx, first, { ...(flag("title") !== undefined ? { title: flag("title")! } : {}) });

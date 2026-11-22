@@ -5,11 +5,12 @@ import { outcomeFetch, outcomeWaitLines, pauseOutcome, waitOutcome } from "./clo
 import { readTokenEntry, readTokenOpening, readTokenOutcome, readTokenReceipt } from "./clone-proof.ts";
 import type { Context, Outcome } from "./command-context.ts";
 import { knownPlatform } from "./command-install.ts";
-import { accepted, configOf, done, failed, handleOf, readerOf, requiredReadsOf, run, signerOf, signing, Stop, stopCommand, usage } from "./command-support.ts";
+import { accepted, configOf, done, failed, handleOf, readerOf, readRefused, requiredReadsOf, run, signerOf, signing, Stop, stopCommand, usage } from "./command-support.ts";
+import { readReasonError, type RemoteResult, typedDone, typedStop, usageError } from "./json-output.ts";
 import type { Config } from "./store.ts";
 import { canonicalize, isReceipt, isSignedIntentShape, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { type Fetch, type ReadCredential, readCredential, ScopeHandle, signedIntent } from "@generalbusiness/dap-client";
-import type { PlatformDefinition, Receipt, SignedIntent, Summary } from "@generalbusiness/dap-contract";
+import type { Head, PlatformDefinition, Receipt, SignedIntent, Summary } from "@generalbusiness/dap-contract";
 import { answersVersionQuestion, platform, READ_TOKEN_HOURS } from "@generalbusiness/dap-platform";
 
 // ---------------------------------------------------------------- the repository's remote, and a clone
@@ -32,29 +33,29 @@ function remoteOf(config: Config, repository: Recorded): string | null {
 }
 
 /** The remote URL as the person is told it: whole, or in its host's form with the part the room does not record marked. */
-const remoteLine = (config: Config, repository: Recorded): string =>
-  remoteOf(config, repository) ?? (repository.host === OWN_HOST ? `https://<service host>/git/${repository.namespace}/${repository.name}.git (the service host is the deployment's setting; dap clone prints it whole)` : `not known for the host ${repository.host}`);
+const remoteLine = (remoteUrl: string | null, repository: Pick<Recorded, "host" | "namespace" | "name">): string =>
+  remoteUrl ?? (repository.host === OWN_HOST ? `https://<service host>/git/${repository.namespace}/${repository.name}.git (the service host is the deployment's setting; dap clone prints it whole)` : `not known for the host ${repository.host}`);
 
 /**
  * The destination's summary. The caller's session is presented first; the destination accepts a session of the membership its
  * genesis names. A caller with no session, or one that is refused, reads again by a signed read of the caller's key, which the
  * destination answers where the key's claim caused it, within the intent window.
  */
-async function destinationStateOf(ctx: Context, config: Config): Promise<{ summary: Summary; reader: string | null; repository: Recorded | null }> {
-  const scope = config.repository?.destination ?? stopCommand(usage("No repository is known here. Run: dap create <name>, or dap join <link>."));
+async function destinationStateOf(ctx: Context, config: Config): Promise<{ summary: Summary; at: Head; reader: string | null; repository: Recorded | null }> {
+  const scope = config.repository?.destination ?? stopCommand(typedStop("usage", "preflight", usageError("no-repository"), ["No repository is known here. Run: dap create <name>, or dap join <link>."]));
   const reader = await readerOf(ctx, config);
   let read = await (await handleOf(ctx, config, scope, reader)).summary();
   if (!read.ok && read.reason === "forbidden" && reader !== null) read = await (await handleOf(ctx, config, scope, null)).summary();
-  if (!read.ok) return stopCommand(failed(`Cannot read ${scope}: ${read.reason}.`));
-  if (read.value.scope.scope !== scope || !knownPlatform(read.value.definition, "platform:destination")) return stopCommand(failed(`${scope} is no supported destination.`));
+  if (!read.ok) return stopCommand(readRefused(read, [`Cannot read ${scope}: ${read.reason}.`]));
+  if (read.value.scope.scope !== scope || !knownPlatform(read.value.definition, "platform:destination")) return stopCommand(typedStop("unsupported", "read", readReasonError("unsupported-destination"), [`${scope} is no supported destination.`]));
   const branch = read.value.items.find((item) => item.type === "branch");
   const repository = branch?.values["repository"] as Recorded | undefined;
-  if (read.complete && read.next === undefined && read.value.status === "active" && answersVersionQuestion(read.value.definition, "cliUnpublishedDestination") && branch?.state === "unpublished" && branch.values["repository"] == null && branch.values["head"] == null && branch.values["token"] == null) return { summary: read.value, reader, repository: null };
-  if (!branch || !repository || typeof repository.host !== "string" || typeof repository.name !== "string" || typeof repository.namespace !== "string" || typeof repository.id !== "string") return stopCommand(failed(`The destination ${scope} records no repository.`));
-  return { summary: read.value, reader, repository };
+  if (read.complete && read.next === undefined && read.value.status === "active" && answersVersionQuestion(read.value.definition, "cliUnpublishedDestination") && branch?.state === "unpublished" && branch.values["repository"] == null && branch.values["head"] == null && branch.values["token"] == null) return { summary: read.value, at: read.at, reader, repository: null };
+  if (!branch || !repository || typeof repository.host !== "string" || typeof repository.name !== "string" || typeof repository.namespace !== "string" || typeof repository.id !== "string") return stopCommand(typedStop("not-found", "read", readReasonError("no-recorded-repository"), [`The destination ${scope} records no repository.`]));
+  return { summary: read.value, at: read.at, reader, repository };
 }
 
-export async function destinationOf(ctx: Context, config: Config): Promise<{ summary: Summary; reader: string | null; repository: Recorded }> {
+export async function destinationOf(ctx: Context, config: Config): Promise<{ summary: Summary; at: Head; reader: string | null; repository: Recorded }> {
   const state = await destinationStateOf(ctx, config);
   if (state.repository === null) return stopCommand(failed("Refused: no-repository. This room is unpublished."));
   return { ...state, repository: state.repository };
@@ -64,10 +65,13 @@ export async function destinationOf(ctx: Context, config: Config): Promise<{ sum
 export function remote(ctx: Context): Promise<Outcome> {
   return run(async () => {
     const config = await configOf(ctx);
-    const { repository } = await destinationStateOf(ctx, config);
-    if (repository === null) return done("Mode: unpublished", "no-repository: this room has no publication.");
-    return done(`Host: ${shownText(repository.host)}`, `Namespace: ${shownText(repository.namespace)}`, `Name: ${shownText(repository.name)}`, `Remote URL: ${shownText(remoteLine(config, repository))}`);
-  });
+    const { summary, at, repository } = await destinationStateOf(ctx, config);
+    if (repository === null) return typedDone({ destination: summary.scope, head: at, mode: "unpublished", repository: null, remoteUrl: null } satisfies RemoteResult,
+      ["Mode: unpublished", "no-repository: this room has no publication."]);
+    const recorded = { host: repository.host, namespace: repository.namespace, name: repository.name };
+    const result: RemoteResult = { destination: summary.scope, head: at, mode: "published", repository: recorded, remoteUrl: remoteOf(config, repository) };
+    return typedDone(result, [`Host: ${shownText(recorded.host)}`, `Namespace: ${shownText(recorded.namespace)}`, `Name: ${shownText(recorded.name)}`, `Remote URL: ${shownText(remoteLine(result.remoteUrl, recorded))}`]);
+  }, "read");
 }
 
 /** The value of the `Authorization` header that git sends with a read token: a bearer token, and GitHub's documented form for an installation token. */
