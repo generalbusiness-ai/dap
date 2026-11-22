@@ -97,7 +97,7 @@ test("interrupting the wrapper also stops the detached test worker's owned liste
     const timer = setTimeout(() => reject(new Error("owned probe listener did not become ready")), 5000);
     child.stdout.on("data", chunk => {
       output += chunk;
-      const match = /GROUP_READY:(\d+):(\d+)/.exec(output);
+      const match = /GROUP_READY:(\d+):(\d+)\r?\n/.exec(output);
       if (match) { clearTimeout(timer); group = Number(match[1]); resolve({ port: Number(match[2]) }); }
     });
     child.once("error", error => { clearTimeout(timer); reject(error); });
@@ -107,11 +107,22 @@ test("interrupting the wrapper also stops the detached test worker's owned liste
   assert.equal(signal, null);
   assert.equal(code, 143);
   assert.match(output, /WRAPPER_RESULT:interrupted/);
-  const connected = await new Promise((resolve, reject) => {
-    const socket = connect({ host: "127.0.0.1", port: ready.port });
-    socket.once("connect", () => { socket.destroy(); resolve(true); });
-    socket.once("error", error => error.code === "ECONNREFUSED" ? resolve(false) : reject(error));
-    socket.setTimeout(1000, () => { socket.destroy(); reject(new Error("owned listener probe did not settle")); });
-  });
-  assert.equal(connected, false, "the interrupted test worker must release its listener");
+  const started = performance.now(), deadline = started + 1000;
+  let refused = false;
+  while (!refused && performance.now() < deadline) {
+    refused = await new Promise((resolve, reject) => {
+      const socket = connect({ host: "127.0.0.1", port: ready.port });
+      const finish = (error, value) => {
+        clearTimeout(timer); socket.destroy();
+        if (error) reject(error); else resolve(value);
+      };
+      const timer = setTimeout(() => finish(new Error("owned listener probe did not settle")), Math.max(0, deadline - performance.now()));
+      socket.once("connect", () => finish(null, false));
+      socket.once("error", error => error.code === "ECONNREFUSED" ? finish(null, true) : finish(error));
+    });
+    if (!refused && performance.now() < deadline) await new Promise(resolve => setTimeout(resolve, Math.min(10, deadline - performance.now())));
+  }
+  const observed = performance.now();
+  t.diagnostic(`owned listener refusal after ${(observed - started).toFixed(1)}ms`);
+  assert.ok(refused && observed <= deadline, "the interrupted test worker must release its listener within 1000ms");
 });
