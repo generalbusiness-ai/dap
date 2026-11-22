@@ -26,10 +26,12 @@ window from 10:05:50 through 10:20:50 UTC on 22 November 2026. The launcher
 exited 0 after 1.511 seconds.
 
 The evaluator counted 149 weighted routes and 71 turns. It observed zero
-errors and an error rate of 0. The weighted route p95 was 864 ms. The
-proposed first bound is 864 ms, observed on Grow, pending planner review.
-The evaluator measured the window without a prior bound. Sampling left
-coverage `unknown` and deployment acceptance open.
+errors and an error rate of 0. The weighted route p95 was 864 ms in this one
+15-minute Grow window. Ruling `9647a0f4a68b61b10a0466dbd9df15307236fb14`
+sets the Grow-only bound at 1,800 ms, about twice the observation. Tighten the
+bound after three more deploy windows. The evaluator measured this window
+without a prior bound. Sampling left coverage `unknown` and deployment
+acceptance open.
 
 ## Evidence
 
@@ -82,10 +84,11 @@ The notes-only selection skipped the test stages. Gate END `6f261691`
 records the result. The log at
 `~/play/artroom-evidence/2026-11-22-13adb42-ob-l-on-e5-gate/gate.txt`
 has SHA-256 `469f5edceafac4533c38d3550b6bd530b9304b73283dc65331cace948117158d`.
-This continuation edits only the implementation note. Source and tests
-match the gated tree.
+The continuation at `0e406156` added the gate evidence. The bound ruling
+updates the two notes. Source and tests match the gated tree.
 
 ## Open limits
 
 The deploy-check CLI requires an observed bound before it queries a window.
-The planner owns review of the observed Grow proposal under OB-L `b3d586a9`.
+Tightening the Grow-only bound awaits three further deploy windows under
+OB-L `b3d586a9`.
