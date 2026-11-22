@@ -453,7 +453,7 @@ test("GFM completeness fixture: constructs render through Site, relative page an
 });
 
 // Invariant: a directory answers its index page if it has one, else a listing of its entries.
-test("an index: the root answers its README, a directory its index.md, and a directory with neither a listing of its files (STAND-IN host)", async () => {
+test("Artifacts Site serves its index without shallow or filter capabilities (STAND-IN host)", async () => {
   const root = await page(await get(`/site/${D.name}/HEAD/`));
   expect(root.status).toBe(200);
   expect(root.body).toContain('<h1 id="handbook">Handbook</h1>');

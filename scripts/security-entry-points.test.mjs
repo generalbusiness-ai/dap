@@ -256,7 +256,7 @@ const seals = {
   "packages/scope/src/http-stream.ts": "ac798ac542c6295bda6495ef9c3f46f2c78511bfb89b88ee4b2d4df7711e2168", // Retain the exact existing close capability on observed HTTP disconnect.
   "packages/bytes/src/session.ts": "71a16d6d2d02b2f424e711a80ca28fe8e10204d3daacc4d0cf23f85ebe80903e", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "packages/mcp/src/oauth-parameters.ts": "b48c22470c29dfa7c11260fc874128859650791294ec93d8ae0007bdca95534c", // O3 OAuth authority, public-client policy or retained browser consent owner.
-  "packages/mcp/src/oauth-clients.ts": "6a9a783055313436b3d4746df9cbf38817dc4cb03477fab607980eb98a60f55a", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "packages/mcp/src/oauth-clients.ts": "7723b3dbc62a2167acf5cdb33ee79417461f3be84d8b656bc25adb9854517c47", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "packages/mcp/src/oauth-issuer.ts": "abfa05c1826d3d856a3e7bc2be7d265370e70171f6e7ee84cfc4dbd96379e32b", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "packages/scope/src/oauth-routes.ts": "941be3f30ad7c19c4126d5077e19a3b474e454f6c404f82f99f4b99e50392862", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "apps/room/page/oauth-route.ts": "859183c042ec2708d4d357ec49fffe0aae4fb9f4c44ea3cff734e9b2c33cbf1e", // O3 OAuth authority, public-client policy or retained browser consent owner.
@@ -276,7 +276,7 @@ const seals = {
   "packages/git/src/checkout-snapshot.ts": "82f53717d419b70fe208801b6d0bf2fc0c947ac2beffb27b2e2d01898f48ee25", // Detached object identity and closure bounds; imports do not seal this implementation.
   "packages/checkers/src/stage-origin.ts": "73ef787bb9dbbafca6c31c6f3231b8fd62ac0c5cbc955ee4acd68e45af483385", // Actual Native admission and causal proof verifier.
   "packages/scope/src/stage-snapshot.ts": "6f6538d1da1d49ab0741e3a36450d7821bee63933c3c71c582654522b80605aa", // Signed stage read and current Rules, key and work-source gates.
-  "packages/bytes/src/address.ts": "d6d2fc3f86f50318c6a88b21649daef212f40c4d46b942033d27b3853902ccd2", // Canonical local full-address and routable /64 counter keys; actual maintained output.
+  "packages/bytes/src/address.ts": "44abe8834cecf1f364ed2007ab80c3b1f472561d795dd6aa6c63cc52bf071ee5", // Canonical address keys and /48 creation/control admission keys; actual maintained output.
   "packages/bytes/src/index.ts": "7a8a620d0a932d6dfc8b5179ce6b4e4303203035e9412d6e0de407b2cf350230", // Bind the shared address-key and citation parser exports to their reviewed owner.
   "apps/room/celld/worker.ts": "d1bc465525bd0af046fa0703464f14aeaaee8286b88415dfec3b9e03869fb644", // H1 reviewed production entry or public-origin gate owner.
   "packages/scope/src/public-origin.ts": "d6e867fc859db69b6fcf2d465d387a032966331cbae04310ea4c24cda3773269", // H1 reviewed production entry or public-origin gate owner.
@@ -302,8 +302,8 @@ const seals = {
   "packages/scope/src/creation-declaration.ts": "0aca81538bf80d643ff74166d99e535b68abf3b7dca2b06b65cee543806a3fd9", // Bounded immutable native Directory custody, not authority.
   "packages/scope/src/namespace.ts": "8364d60a9af7fbdeed776dbe7defad492265e52bd798359fbd2900f0ad8f7da4", // Reviewed internal declaration RPC; adopted AST value.
   "packages/scope/src/health.ts": "3bc54d08e569c894c3c8c905feb99d95d9d951ed83d156815f039525e8741c6f", // S3 adds policy and missing, setting names only; actual maintained parser output.
-  "packages/scope/src/site/route.ts": "a0dd2fc19f24b87ff033d8ebbe89718b8a953c291fc5f2689d064ade92e40166",
-  "packages/scope/src/site/host.ts": "7ba177e4cf693beaad6ecef85cc3d33455a5896cd35565f50a98e03ba848cd07", // Private Site token custody; actual maintained parser output.
+  "packages/scope/src/site/route.ts": "40d7aa66c83b32f4216092c1de0486c8d501b4e26a10fa08dbf9c77326937c16",
+  "packages/scope/src/site/host.ts": "dc71b4dd5e5306580229da8ae383644befdc4151bacffea3af62ead9bd297281", // Private Site token custody; actual maintained parser output.
   "packages/scope/src/site/token-reuse.ts": "f13f69f6ac385f48620bc9a08eaf1b957c35de0c6cef37ca785033ee8e56bb19", // Reviewed pre-mint generation cleanup rescheduling; custody checks unchanged.
   "packages/scope/src/site/window.ts": "1b0e1d820a7840063d35d39dc74d61a2b9caa6ffb5763e82a21b6ae5524d4936", // Bounded site-read window; actual maintained parser output.
   "packages/scope/src/applications/route.ts": "1b36c95f39b85224469aa260eebae3fe44163bc3e0f81662afbfc0528c1ee953", // Actual union parser value adopted by root.
@@ -322,7 +322,7 @@ const seals = {
   "packages/scope/src/reads.ts": "a6b8327c0f9ae6f428641b00f3dfb7f1953a218644f001394cf9b0f053058393",
   "packages/scope/src/signed-reads.ts": "3beb23ca30b343a71dd87673c3e1252cf3fc15d622b92632c499cc42056d4e89", // Census wire name; its separate fixed-index predicate grants no ordinary scope read.
   "packages/scope/src/limits.ts": "dfab21444a03339291f51f500941dc1b0d23926fa01fb173e7cd7cc91983f099", // R12 verified-key join failure window.
-  "packages/scope/src/serving-limits.ts": "94f6987027c7638ebe0aad6899f1dbf352a25029aceca60c00476b600e7d410b", // New bounded memory-only counter, no live eviction.
+  "packages/scope/src/serving-limits.ts": "65820979e101b8389dfce229803ffbebe3217552e4643c924e26a91fe59da705", // New bounded memory-only counter, no live eviction.
   "packages/scope/src/serving-admission.ts": "44e8ef11b0bb97a0a2982643152d62d9ec1ab14f9af26a2a687d5a301ccf1168", // New bounded original-signature/counter ingress.
   "packages/bytes/src/records.ts": "5bfb14e93dab8d1489c29b7e3327891a18cfe3ab0fcecf6d4396451a05efefd7", // R11 named serving refusal; RC-1 adds the REFUSAL_CLASSES table; H1 refuses the six sequenced inputs and leaves the page kind out; actual maintained parser output.
   "packages/scope/src/session-preparation.ts": "49b091ff2910c0c2602fce76330e7084479a3bd4cb3bc1617005c18f2cd3fac3",
@@ -342,7 +342,7 @@ const seals = {
   "packages/mcp/src/oauth-access.ts": "96679465b97286aa2babe6e3b670bf51b202427300cea836e9be9da744884b78", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/oauth-http.ts": "6a2668b96a105b077cd07528897b0ed6f6d7aec8cec619a26a535bcb5adb6707", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/index.ts": "95ab1f1ddd97466f7de1322a5cb1fbbef4172dd4b281bc7ce9b1a58e8e5e3f36", // O1 resource discovery and grant transport boundary; NF-4 reader aliases from the client.
-  "packages/mcp/src/hosted.ts": "3b1805bd2091a83a66e2d3d0a5d90d9ceaa93469ca805f88530613014e26e179",
+  "packages/mcp/src/hosted.ts": "0750d381f492593a1e90825403188ffe9b99766fb31d684787569b7d14ce9144",
   "packages/mcp/src/hosted-retirement.ts": "ca631baf28f180b8d64e988ab7c5e5583ce0c96e0b374be1acee7c8723ef2a8d", // R15 caller-envelope and verified enrollment target owner.
   "packages/mcp/src/views/remote-origins.ts": "81c7e7a044690df7c00a30691ddc5e0da11531fabad2a9143d2d389ff8c0a1b1", // Exact remote presentation URL policy; no authority selection.
   "packages/mcp/src/hosted-tools.ts": "bea3d3cea128bd76102e36d0876992c1b77a5bf2263f376082c1f329d2035a60", // Reviewed R5 admission owner; actual maintained parser output.

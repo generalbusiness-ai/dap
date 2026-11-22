@@ -19,7 +19,7 @@ import { hostRegisterScopes } from "../installed-registers.ts";
 import { isRoomRetiredStop, type RoomRetiredStop } from "../room-retired.ts";
 import { isRecord } from "@generalbusiness/dap-bytes";
 import type { Entry, ScopeId } from "@generalbusiness/dap-contract";
-import { admitSequenceGenesis, canonicalize, isScopeId, isScopeRef, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize, digestBytes, isScopeId, isScopeRef, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 
 /** siteRoom answers only a genesis within this bound. */
 const SITE_ROOM_BYTES = 1024 * 1024;
@@ -37,6 +37,24 @@ import type { Binding, Sourced } from "../namespace.ts";
 import type { Publication, PublishedCommitSelection, SitePublicationPeer } from "./publication.ts";
 
 export const GITHUB_HOST = "github.com";
+/** Successful identity observations live for at most 30 seconds, with 128 entries per isolate. */
+export const SITE_GITHUB_IDENTITY_TTL_MS = 30_000;
+export const SITE_GITHUB_IDENTITY_KEYS = 128;
+const identityCache = new Map<string, { at: number; transport: (request: Request) => Promise<Response> }>();
+const defaultSend = (request: Request): Promise<Response> => globalThis.fetch(request);
+
+async function siteGitHubIdentity(send: (request: Request) => Promise<Response>, config: unknown, repository: DestinationRepository, token: string | undefined): Promise<void> {
+  // Digest includes credentials without retaining them in a diagnostic key.
+  const key = digestBytes(utf8(canonicalize({ config, repository, token: token ?? null })));
+  const now = Date.now(), cached = identityCache.get(key);
+  if (cached && cached.transport === send && now >= cached.at && now - cached.at < SITE_GITHUB_IDENTITY_TTL_MS) return;
+  await requireGitHubRepositoryIdentity((name, plaintext) => githubRepository({ account: (config as { account: GitHubAccount }).account, fetch: send }, name, plaintext), repository, token);
+  const observed = Date.now();
+  if (!Number.isSafeInteger(observed) || observed < now) return;
+  identityCache.delete(key);
+  while (identityCache.size >= SITE_GITHUB_IDENTITY_KEYS) identityCache.delete(identityCache.keys().next().value!);
+  identityCache.set(key, { at: observed, transport: send });
+}
 
 /** A reached retired room is neither a missing room nor an absent publication. */
 export class SiteRoomRetired extends Error { constructor() { super("Room retired"); this.name = "SiteRoomRetired"; } }
@@ -173,9 +191,9 @@ export async function roomOf(scopes: Binding, directory: string): Promise<Room |
 export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) => Promise<Response>, publishedRef = `refs/heads/${room.branch}`): (() => Promise<Opened>) | null {
   const { repository } = room;
   const bound = (current: ScopeId) => hostRegisterScopes(current, env)?.includes(room.register) === true;
-  const send = fetch ?? ((request: Request) => globalThis.fetch(request));
+  const send = fetch ?? defaultSend;
   // Each source records its last request and answer, for the log line of a failed read. No header and no query is kept.
-  const transport = (remote: string, maxBytes: number, authorization?: string) => {
+  const transport = (remote: string, maxBytes: number, authorization: string | undefined, isolated: boolean) => {
     let last = "";
     const traced = async (request: Request): Promise<Response> => {
       const url = new URL(request.url);
@@ -189,7 +207,8 @@ export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) =>
         throw e;
       }
     };
-    return { source: new SmartHttpSource({ remote, maxBytes: Math.min(maxBytes, 16 * 1024 * 1024), bounds: { ...READ_BOUNDS, commitBytes: 1024 * 1024, treeBytes: 8 * 1024 * 1024, blobBytes: 1024 * 1024 + 1, closureObjects: 4096, refs: 4096 }, ...(authorization === undefined ? {} : { authorization }), fetch: traced }), last: () => last };
+    const wire = Math.min(maxBytes, 16 * 1024 * 1024);
+    return { source: new SmartHttpSource({ remote, maxBytes: wire, ...(isolated ? { isolateObjects: { ownedBytes: wire * 18 } } : {}), bounds: { ...READ_BOUNDS, commitBytes: 1024 * 1024, treeBytes: 8 * 1024 * 1024, blobBytes: 1024 * 1024 + 1, closureObjects: 4096, refs: 4096 }, ...(authorization === undefined ? {} : { authorization }), fetch: traced }), last: () => last };
   };
   if (repository.host === ARTIFACTS_HOST) {
     const ready = artifactsReadiness(env);
@@ -214,7 +233,7 @@ export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) =>
         throw new SiteTokenUnavailable();
       }
       if (!bound(config.registerScope)) throw new SiteTokenUnavailable();
-      let local: ReturnType<typeof transport> | null = transport(remote, config.maxBytes, `Bearer ${answer.plaintext}`);
+      let local: ReturnType<typeof transport> | null = transport(remote, config.maxBytes, `Bearer ${answer.plaintext}`, false);
       const secrets = [answer.plaintext];
       const active = () => { if (!local) throw new Error("Site reader closed"); if (!bound(config.registerScope)) throw new SiteTokenUnavailable(); return local; };
       return {
@@ -236,9 +255,9 @@ export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) =>
     const authorization = publicReads ? undefined : `Basic ${btoa(`x-access-token:${token!}`)}`;
     return async () => {
       if (!bound(config.registerScope)) throw new SiteTokenUnavailable();
-      await step("info", () => requireGitHubRepositoryIdentity((name, plaintext) => githubRepository({ account: config["account"] as unknown as GitHubAccount, fetch: send }, name, plaintext), repository, publicReads ? undefined : token!));
+      await step("info", () => siteGitHubIdentity(send, config, repository, publicReads ? undefined : token!));
       if (!bound(config.registerScope)) throw new SiteTokenUnavailable();
-      const local = transport(remote, config.maxBytes, authorization);
+      const local = transport(remote, config.maxBytes, authorization, true);
       const active = () => { if (!bound(config.registerScope)) throw new SiteTokenUnavailable(); return local; };
       return { source: { ref: name => active().source.ref(name), refs: (prefix, limit) => active().source.refs(prefix, limit), object: (id, limit) => active().source.object(id, limit) },
         last: local.last, secrets: publicReads ? [] : [token!], close: async () => {} };

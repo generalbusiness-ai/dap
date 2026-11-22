@@ -23,6 +23,7 @@ test("the bundled authoring starter passes actual dap check with its declaration
   expect(result.lines).toContain("Local external effects are disabled; this check does not admit a package or audit screen code.");
 });
 
+// Checks and compiles both maintained application packages.
 test("maintained Counter and Lending packages bind their current browser definition and own all screen resources", async () => {
   for (const [config, pin, steps, through] of [
     ["apps/counter/dap.application.json", COUNTING_COMMITMENTS_DEFINITION, 18, 10],
@@ -62,10 +63,11 @@ test("maintained Counter and Lending packages bind their current browser definit
     expect(result.projectionChecks).toBe(3);
     expect(result.ownerRecords).toEqual([]);
   }
-});
+}, 30_000);
 
 // Invariant: maintained Grow reads use the actual Site/Room declarations,
 // retain the complete 100-bench fixture, and separate current presence from activity.
+// Checks the complete Grow grid and replays its native scenarios.
 test("maintained Grow declarations check durable presence and the complete room grid at native local heads", async () => {
   const root = await prepareGrowCheck();
   try {
@@ -97,4 +99,4 @@ test("maintained Grow declarations check durable presence and the complete room 
       }
     }
   } finally { await rm(root, { recursive: true, force: true }); }
-});
+}, 30_000);

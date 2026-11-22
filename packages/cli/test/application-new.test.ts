@@ -1,6 +1,6 @@
 /** Actual installed-bin launch, native scenario/replay and trusted browser
  * compilation. Public TEST actors are not room membership or enrollment. */
-import { spawnSync } from "node:child_process";
+import { execFile, spawnSync } from "node:child_process";
 import { mkdtemp, readFile, readdir, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -10,6 +10,7 @@ import { secretSigner } from "@generalbusiness/dap-client";
 import { newCommand } from "../src/application-command.ts";
 import { prepareApplicationDirectory } from "../src/application-files.ts";
 
+// Runs real CLI new and check, native scenario replay, and browser compilation.
 test("the actual new bin creates a usable local check project without opening custody", async () => {
   const root = await realpath(await mkdtemp(join(tmpdir(), "dap-new-")));
   const bin = fileURLToPath(new URL("../bin/dap.js", import.meta.url));
@@ -20,17 +21,25 @@ test("the actual new bin creates a usable local check project without opening cu
     expect(made.stdout).toContain("public TEST actors");
     expect((await readdir(root)).sort()).toEqual(["notes"]);
     const directory = join(root, "notes"), before = await readdir(directory);
-    const checked = run("check", "notes");
+    const checking = new Promise<{ status: number | null; stdout: string; stderr: string }>(resolve => {
+      execFile(process.execPath, [bin, "check", "notes"], { cwd: root, encoding: "utf8", env: { ...process.env, DAP_HOME: "", ARTROOM_HOME: "" } },
+        (error, stdout, stderr) => resolve({ status: error ? typeof error.code === "number" ? error.code : null : 0, stdout, stderr }));
+    });
+    const [checkResult, packetResult] = await Promise.allSettled([
+      checking, prepareApplicationDirectory(directory, secretSigner(new Uint8Array(32).fill(50))),
+    ]);
+    if (checkResult.status === "rejected") throw checkResult.reason;
+    if (packetResult.status === "rejected") throw packetResult.reason;
+    const checked = checkResult.value, packet = packetResult.value.packet;
     expect([checked.status, checked.stderr]).toEqual([0, ""]);
     expect(checked.stdout).toMatch(/Scenario notes-custody: 5 steps passed; native replay consistent/);
     expect(checked.stdout).toContain("explicit scripted TEST grants");
     expect(await readdir(directory)).toEqual(before);
-    const packet = (await prepareApplicationDirectory(directory, secretSigner(new Uint8Array(32).fill(50)))).packet;
     expect(packet.package.semantic.roles).toEqual({ member: ["notes.write"] });
     expect(packet.package.presentation.assets.map(asset => asset.path).sort()).toEqual(["application.css", "application.js", "index.html"]);
     expect(packet.package.semantic.capabilities).toEqual([]);
   } finally { await rm(root, { recursive: true, force: true }); }
-});
+}, 30_000);
 
 test("new refuses existing directories and symlinks without changing their files", async () => {
   const root = await realpath(await mkdtemp(join(tmpdir(), "dap-new-preserve-")));

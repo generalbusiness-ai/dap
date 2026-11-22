@@ -376,8 +376,15 @@ export async function site(request: Request, env: SiteEnv, fetch?: (request: Req
     const href = (parts: readonly string[], dir: boolean) => prefix + parts.map(segment).join("/") + (dir && parts.length > 0 ? "/" : "");
     const crumbs = [`<a href="${escapeHtml(prefix)}">${escapeHtml(ref)}</a>`, ...path.map((part, i) => `<a href="${escapeHtml(href(path.slice(0, i + 1), i < path.length - 1 || entry === null || entry.kind === "tree"))}">${escapeHtml(part)}</a>`)].join(" / ");
     const frame: Frame = { room: room.repository.name, root: prefix, version: versionOf(ref, named.name), versions: `${base}versions/`, crumbs, commit };
+    const page = async (id: ObjectId) => {
+      try { return await reader.blob(id, "page"); }
+      catch (error) {
+        if (error instanceof GitRefusal && error.reason === "too-large" && error.what === "isolated object allowance") throw new GitRefusal("too-large", "page");
+        throw error;
+      }
+    };
     const rendered = async (file: TreeEntry, where: string[]) => {
-      const source = siteTextDecoder.decode(await reader.blob(file.id, "page"));
+      const source = siteTextDecoder.decode(await page(file.id));
       at("render");
       const { html: body, title } = renderMarkdown(source, { resolve: (destination) => resolveAddress(prefix, where.join("/"), destination) });
       return await eligible(html(title ?? where.join("/"), frame, body, cached));
@@ -397,7 +404,7 @@ export async function site(request: Request, env: SiteEnv, fetch?: (request: Req
     // A file.
     const name = path[path.length - 1]!;
     if (isMarkdown(name)) return await rendered(entry, path);
-    const bytes = await reader.blob(entry.id, "page");
+    const bytes = await page(entry.id);
     const type = IMAGES[extension(name)];
     return await eligible(notModified(cached) ?? new Response(bytes, {
       status: 200,

@@ -351,6 +351,12 @@ export function bound(signed: SignedControl, service: string, action: ControlAct
   return null;
 }
 
+/** A verified expired request cannot select an Agent row. Other requests keep their ordinary route checks. */
+function expiredBeforeAgent(signed: SignedControl, now: number): ControlAnswer | null {
+  const until = timeMs(signed.request.notAfter);
+  return until !== null && until <= now && verifyControl(signed) ? answer(400, { error: "control", rule: "notAfter" }) : null;
+}
+
 /** The control table and budget of one object: reservations keyed by `op`, answers, tombstones. */
 class ControlPlane {
   constructor(private readonly sql: Sql, private readonly budget: number = CONTROL_BUDGET, private readonly retireReserve: number = RETIRE_RESERVE) {
@@ -1104,6 +1110,7 @@ export class HostedAgent {
     return this.#controls.run(() => this.#grant(signed, body, context));
   }
   async #grant(signed: SignedControl, body: Uint8Array, context: OAuthGrantContext): Promise<ControlAnswer> {
+    const expired = expiredBeforeAgent(signed, this.ports.now()); if (expired) return expired;
     const first = signed.request.agent === null;
     let given: ReturnType<typeof oauthGrant>, link: AgentKeyInvitation | null = null;
     try {
@@ -1133,8 +1140,8 @@ export class HostedAgent {
     const authority = await this.#grantAuthority(request, row);
     if (!authority.ok) return authority.result;
     const controller = authority.controller;
-    const expired = bound(signed, service, "grant", first ? null : this.ports.id, body, this.ports.now());
-    if (expired) return expired;
+    const expiredAfterAuthority = bound(signed, service, "grant", first ? null : this.ports.id, body, this.ports.now());
+    if (expiredAfterAuthority) return expiredAfterAuthority;
     const prior = this.#control.row(request.op), reservationAt = this.#issuerClock();
     if (!this.#sameIssuerAgent(row)) return this.#row()?.state === "retired" ? answer(409, { error: "retired" }) : answer(409, { error: "op", rule: "stale" });
     if (reservationAt === null || reservationAt < authority.at || reservationAt >= authority.until) return answer(503, { error: "temporarily_unavailable" });
@@ -1197,7 +1204,9 @@ export class HostedAgent {
 
   connectionControl(signed: SignedControl, action: "connections" | "revoke-grant", body: Uint8Array): Promise<ControlAnswer> {
     return this.#controls.run(async () => {
-      const started = this.#issuerClock(), row = this.#row(), request = signed.request;
+      const started = this.#issuerClock();
+      if (started !== null) { const expired = expiredBeforeAgent(signed, started); if (expired) return expired; }
+      const row = this.#row(), request = signed.request;
       if (!row) return answer(404, { error: "agent" });
       if (started === null) return answer(503, { error: "temporarily_unavailable" });
       const refused = bound(signed, row.config.service, action, this.ports.id, body, started); if (refused) return refused;
@@ -1210,7 +1219,7 @@ export class HostedAgent {
       if (action === "connections" ? !closed(given, []) : !closed(given, ["grant"]) || typeof given["grant"] !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(given["grant"])) return answer(400, { error: "invalid_request" });
       const at = this.#issuerClock();
       if (at === null || at < authority.at || at >= authority.until || this.#managementOwner(request.op) !== before) return answer(503, { error: "temporarily_unavailable" });
-      const expired = bound(signed, row.config.service, action, this.ports.id, body, at); if (expired) return expired;
+      const expiredAfterAuthority = bound(signed, row.config.service, action, this.ports.id, body, at); if (expiredAfterAuthority) return expiredAfterAuthority;
       if (action === "connections") {
         try { return answer(200, { agent: this.ports.id, handle: row.handle, state: row.state, connections: this.#issuer.list(at) }); }
         catch { return answer(503, { error: "temporarily_unavailable" }); }
@@ -1624,6 +1633,7 @@ export class HostedAgent {
   async #control_(signed: SignedControl, action: "bearer" | "retire", body: Uint8Array): Promise<ControlAnswer> {
     const now = this.#issuerClock();
     if (now === null) return answer(503, { error: "temporarily_unavailable" });
+    const earlyExpiry = expiredBeforeAgent(signed, now); if (earlyExpiry) return earlyExpiry;
     const row = this.#row();
     if (!row) return answer(404, { error: "agent" });
     // An enrolment still unfinished can be retired by its authority; it cannot be re-issued a bearer, having none.

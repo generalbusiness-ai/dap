@@ -2,7 +2,7 @@
  * object owns one instance. Restart or actual object eviction loses it.
  * No active window is removed to admit a new identity. */
 import type { KeyId } from "@generalbusiness/dap-contract";
-import { isKeyId } from "@generalbusiness/dap-bytes";
+import { admissionAddressKey, isKeyId } from "@generalbusiness/dap-bytes";
 import { addressKey } from "./limits.ts";
 
 export const SERVING_WINDOW_CAPACITY = 8192;
@@ -90,7 +90,7 @@ export class ServingLimits {
 
   creationAddress(address: string, now: number): { admitted: boolean; overflow: ServingOverflowReservation | null } {
     const admitted = this.account("creation", null, address, now);
-    const key = addressKey(address);
+    const key = admissionAddressKey(address);
     const window = this.#overflow.get("creation");
     return { admitted, overflow: admitted && key !== null && !this.#creation.has(`address:${key}`) && window?.incarnation
       ? { owner: this.#ownerIncarnation, window: window.incarnation } : null };
@@ -104,7 +104,7 @@ export class ServingLimits {
   account(operation: ServingOperation, verifiedActor: KeyId | null, trustedAddress: string | null, now: number, reservation: ServingOverflowReservation | null = null): boolean {
     if (!["creation", "signed-read", "found"].includes(operation) || !Number.isFinite(now) || now < 0
       || (verifiedActor !== null && !isKeyId(verifiedActor))) return false;
-    const address = addressKey(trustedAddress);
+    const address = operation === "creation" ? admissionAddressKey(trustedAddress) : addressKey(trustedAddress);
     if (verifiedActor === null && address === null) return false;
     this.#now = Math.max(this.#now, now);
     this.#expire(this.#creation, 60 * 60 * 1000, this.#now);
