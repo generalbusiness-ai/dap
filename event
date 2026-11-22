@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:56300442f0b77d8d19c9a28f4767eb111246710e","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-12-cli-json-output-design.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:65843e8fe70bdeb986da54d0a4f7d10213e33ba5","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/config-dir.ts."}
