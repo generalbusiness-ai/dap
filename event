@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c862a0749f4f37b7361a9c5ac58b7a27df15fe8c"}
+{"kind":"assert","text":"Published: origin main is 95ec0456 (NS-1, dated design note status) after landing check c862a074. Notes only; no deployment."}
