@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at apps/counter/release-identifiers.json","body":{"commit":"de2197040519ea895a292a44804b2c636b24f3b1","path":"apps/counter/release-identifiers.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at apps/counter/scripts/test-browser.mjs","body":{"commit":"de2197040519ea895a292a44804b2c636b24f3b1","path":"apps/counter/scripts/test-browser.mjs"}}
