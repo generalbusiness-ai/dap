@@ -1,7 +1,8 @@
 # BO1-W1: plan for dap-commons
 
-Draft for planner review under request `30bc6c91` and promise `5087f259`.
-The planner must approve the plan before provisioning or the hosted witness.
+Plan under request `30bc6c91` and promise `5087f259`. Planner ruling
+`9b0585ca` approves the separate Worker and the witness, subject to the
+ordering decision below.
 
 ## Register and founding
 
@@ -21,16 +22,40 @@ DAP_HOME="$DAP_W1_HOME" dap install --plan https://dap-commons.inguz.workers.dev
 ```
 
 The plan signs the install intent, determines a new public register scope ID,
-and retains the intent and key. Its deadline is 14 minutes. After approval,
-create or verify the Artifacts namespace, then set both
-`REGISTER_SCOPE` and `ARTIFACTS_CONFIG.registerScope` to that same
-`<planned-register-scope>` and deploy the reviewed pair before submitting
-`DAP_HOME="$DAP_W1_HOME" dap install --planned --cohort commons`.
-Record the receipt and full register reference including its genesis hash.
-Verify Register 23 and the founding signer from that reference before a
-founder creates one room. A plan that expires before any attempt needs a new
-private home and a fresh review of both bindings. Reconcile an attempted plan
-from its original home. Never infer non-creation from expiry.
+and retains the intent and key. Its deadline is 14 minutes. The deadline is
+part of the intent digest used to derive the register ID. Refreshing the plan
+changes that ID even when the same private key signs it. The retained plan
+cannot refresh its deadline while keeping its register ID.
+
+Prepare the deployment in two steps:
+
+1. Review a structural change that removes `DEMO_START_CONFIG` and updates
+   `demo-config.test.ts` to accept either the closed `unplanned` pair or two
+   valid, exactly equal register pins. Run the usual full gate and review
+   before creating a plan. Retain the existing closed pair until the plan.
+2. After that review, make one plan in the dedicated private home. Check its
+   full retained ID and deadline. Change only `REGISTER_SCOPE` and
+   `ARTIFACTS_CONFIG.registerScope` to that exact ID. Verify equality and
+   confirm that the timed config commit changes only those values. Run
+   `packages/cli/test/demo-config.test.ts`,
+   `scripts/security-entry-points.test.mjs`, and
+   `scripts/security-settings.test.mjs`. The route inventory also runs in
+   `npm run pins`. The ordinary config gate adds static checks, types,
+   definition pins and the full test stages. The planner must authorize the
+   focused path before it substitutes for that gate. Start the timed sequence
+   only after the planner can schedule review, deployment and submission
+   before the printed deadline.
+
+After the required review and deployment, submit
+`DAP_HOME="$DAP_W1_HOME" dap install --planned --cohort commons` before the
+printed deadline. Record the receipt and full register reference, including
+its genesis hash. Verify Register 23 and the founding signer before a founder
+creates one room. If an unattempted plan expires, keep its original home and
+make any new plan in a separate empty home. If `ARTROOM_HOME` is set, unset it
+or set it to the same new directory as `DAP_HOME`. Review both new bindings.
+If any send was attempted, stop and reconcile the exact retained plan. Do not
+replace it or infer non-creation from expiry. Exact attempted replay can recover
+a previously accepted genesis, but cannot create a never-accepted expired one.
 
 The config retains `SCOPE_INDEX_MODE=enforce`. The index adapter classifies
 `create` as creation and does not require a pre-existing index row. The
@@ -41,7 +66,9 @@ creation and registration must still succeed and be verified after deploy.
 
 ## Configuration
 
-The proposal changes three keys in `apps/room/wrangler.commons.jsonc`.
+The two-step proposal changes three keys in `apps/room/wrangler.commons.jsonc`.
+The first step removes the Start setting. The timed step changes only the two
+register values.
 
 - `vars.REGISTER_SCOPE`: `unplanned` to `<planned-register-scope>`.
 - `vars.ARTIFACTS_CONFIG.registerScope`: `unplanned` to the identical scope.
@@ -105,22 +132,21 @@ scenario gives at most six passes in its first hour and one per later hour,
 about 42 and 7 DO requests respectively. The evidence needed for an aggregate
 estimate is the actual per-turn source, provider and alarm work on this Worker.
 
+The planner reads five-minute Durable Object windows during W1 with
+`scripts/do-rate.mjs --worker dap-commons`. A window above 500 requests
+stops W1 traffic for reconciliation. After W1, the planner reads one idle
+hour. The expected idle rate is near zero. More than 100 requests in that
+hour blocks further use.
+
 ## Witness and person steps
 
-After the planner approves and performs provisioning, Hugh uses the planned
-founder key to create one room and verifies the full references and pinned
-cohort. Allow approximately 5–10 minutes for the person to review the room,
-receipt, and cohort. These are planning estimates, not measurements.
-
-Hugh authorizes one controlled agent under the room's real Membership 9,
-keeps each actor's key and invitation in its approved private custody, and
-confirms the agent's member and controller. Allow 5–10 minutes. The fixed
-W1 sequence has 23 notes. The agent signs 19: three carriers, 14 rows, the
-list, and the question-links note. Hugh signs the four person marks, one at
-a time from his private custody. Allow 2–5 minutes for each mark, or 8–20
-minutes total for those four decisions. The initial room and agent checks
-add the separate 10–20 minutes estimated above. These are planning estimates,
-not measured times.
+Before provisioning, the planner schedules one 40–60 minute block with
+Hugh. Hugh uses the founder key to create the room and verify the receipt,
+full scope references and cohort. He authorizes one controlled agent under
+Membership 9, verifies its member and controller, signs his four marks one
+at a time, and confirms the final readback. Hugh holds the founder key and
+his own marks. The agent signs 19 notes: three carriers, 14 rows, the list,
+and the question-links note. The block is a planning estimate.
 
 Each invocation submits at most its named note. The agent reads under its own
 session, and each later step verifies the accepted earlier receipts and exact
@@ -156,9 +182,9 @@ section and changes no source or tests.
 
 ## Decisions and missing evidence
 
-The planner must approve the exact identity pair and operator custody, the
-proposed DEMO_START_CONFIG removal, the actual deployed configuration, and the
-W1 content and agent workflow. Confirm the current Wrangler pin and deployment
+The planner must rule on any focused exception to the exact-head full gate
+before that exception runs. Confirm the exact identity pair, private operator
+custody, deployed configuration, W1 content, and agent workflow. Confirm the current Wrangler pin and deployment
 procedure from the reviewed head. Estimate actual DO requests using the
 observed number of scope alarms and turns. Any request to archive Commons
 itself would need an explicit policy for that native definition. The existing
