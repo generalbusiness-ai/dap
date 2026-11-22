@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/2026-11-21-s6-boundaries-and-custody.md","body":{"commit":"02d93554957be876a33297cfd0d9cd693046dea2","path":"notes/implementation/2026-11-21-s6-boundaries-and-custody.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:20a9a59858873df112d2ca0dd210e596ddb34fd7","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-21-s6-boundaries-and-custody.md."}
