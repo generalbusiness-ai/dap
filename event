@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Published: main c9038871 (SG-1 standing session query) after clean landing check fd057e50. Deploy of grow, lending, demo and the sandbox follows. No gate may start until the deploy END act.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"kind":"assert","text":"DEPLOY START: main c9038871 (SG-1) to grow, lending, demo and the sandbox. The sandbox bundle changes from 969a9791 to 1105a351. Do not start a gate until the END act.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
