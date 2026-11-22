@@ -824,6 +824,66 @@ test("a symbolic dependent waits for its exact source while an independent obser
   } finally { sourceSend.release(); second.close(); client.close(); }
 });
 
+test("a dependent waits when an earlier same-content signing can still record", async () => {
+  const s = requestScene(), store = memoryStore(), drafts = memoryDrafts();
+  let now = s.now();
+  s.clock.now = () => now;
+  const { client, who } = clientAt(s, store, drafts, 300), secondFeed = new Feed();
+  const second = scopeClient(s.handle, { signer: s.signer,
+    member: { service: "https://requests.test", membership: s.actor.member.membership,
+      member: s.actor.member.member, principal: s.actor.principal },
+    store, drafts, observe: secondFeed.observe, clock: s.clock, lifetimeSeconds: 60 });
+  const identity = (key: string) => ({ key, owner: s.signer.key, scope: s.handle.at });
+  try {
+    s.feed.current(s.scope); secondFeed.current(s.scope); await client.read(); await second.read();
+    s.mode("unavailable");
+    const act = { kind: "offer", on: null, fields: { intent: 0 }, expected: { intent: s.scope.item(0).revision } } as const;
+    await client.submitBoundAct(identity("same-source"), act);
+    const earlier = s.copies[0]!;
+    await second.submitBoundAct(identity("same-source"), act);
+    const later = s.copies.at(-1)!;
+    const row = await second.authorization(identity("same-source"));
+    if (!row) return expect.fail("the source authorizations must be retained");
+    expect(row.versions).toHaveLength(2);
+    expect(row.versions[0]!.id).toBe(row.versions[1]!.id);
+    expect(row.materializations.map(item => item.position)).toEqual([0, 1]);
+    now = sendableAt(later.intent.notAfter);
+    expect(now).toBeLessThan(sendableAt(earlier.intent.notAfter));
+    secondFeed.current(s.scope); await second.read(); await clientIdle(second);
+    const custody = new Custody(store, () => timeOf(now));
+    const record = await custody.find({ ...who, key: "same-source" });
+    expect(record?.signings).toHaveLength(2);
+    expect(record?.signings[0]?.closed).not.toBe(true);
+    expect(record?.signings[1]?.closed).toBe(true);
+    const source = { key: row.key, version: row.versions[1]!.id };
+    const dependentAct = { kind: "assign", on: { output: source }, fields: { performer: s.actor.member },
+      expected: { on: { after: source } } } as const;
+    let retained!: () => void;
+    const retainedDependent = new Promise<void>(resolve => { retained = resolve; });
+    const write = store.authorizations.write.bind(store.authorizations);
+    store.authorizations.write = async (owner, scope, rows) => {
+      await write(owner, scope, rows);
+      if (rows.some(item => item.key === "same-dependent")) retained();
+    };
+    const signs = s.signs(), posts = s.copies.length;
+    const dependent = second.submitBoundAct(identity("same-dependent"), dependentAct)
+      .then(value => ({ value }), error => ({ error }));
+    await Promise.race([retainedDependent, dependent.then(result => { throw new Error(`dependent ended before retention: ${JSON.stringify(result)}`); })]);
+    const waiting = await second.authorization(identity("same-dependent"));
+    expect(waiting?.permissions).toEqual([]);
+    expect(waiting?.materializations).toEqual([]);
+    expect([s.signs(), s.copies.length]).toEqual([signs, posts]);
+    expect(s.scope.submit(earlier).result).toBe("write");
+    s.mode("answer");
+    secondFeed.current(s.scope); await second.read();
+    expect(await dependent).toHaveProperty("value");
+    const resolved = await second.authorization(identity("same-dependent"));
+    const proof = resolved?.materializations[0]?.sources.find(item => item.source.key === source.key);
+    expect(proof?.position).toBe(0);
+    expect(resolved?.materializations[0]?.act.on).toBe(proof?.entry.opened);
+  } finally { second.close(); client.close(); }
+});
+
 // Section 12 case 3: an earlier recorded meaning cannot resolve a newer version.
 test("a dependent returns its retained input when the source key records an earlier version", async () => {
   // The additional field changes the authored meaning without changing offer's effects.
