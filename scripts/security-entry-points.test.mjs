@@ -423,7 +423,7 @@ const pendingR8Seals = {
   "packages/cli/src/status-report.ts": "cb598058ab244a80cc2d6e741f8be46468eefd005b87d516e60cf6c79e663d7e", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/client/src/session.ts": "6e4a3c47ba2a2fc26e2df8a15cdb1e2f64a4dc9e1cb271ec6ea118752338ecfd", // Reviewed CLI session or verification boundary; ES-1 asks for standing on request and keeps it only after sessionStanding checks form and agreement.
   "apps/sandbox/worker.ts": "758b28ea299eddad07022a913d4b94d632814aa51f2868810300a582ee833f51", // Inject the reply window; retain the existing Native lifetime close on an observed HTTP disconnect.
-  "packages/client/src/application-gateway.ts": "fbd240398b141bd081fa8f03725a0255a07cf0666964d23c7a31e49292744e72", // PT-1: application-projection takes p before atLeast. GW-1: the five reads that take a minimum allow one canonical atLeast of the path's scope.
+  "packages/client/src/application-gateway.ts": "fe6ef69c042161faaf3bf90a8507163f99d0b398c559cdbf6fb5219c7782cbcc", // E3 permits the exact standing query only on session POST; PT-1 and GW-1 retain their read bounds.
   "packages/client/src/application-route.ts": "62660d1d37d6d75f350d338a3efbb69c37ebcf8fd9d6dd2a27e21472e2d9c23b",
   "packages/scope/src/applications/bindings.ts": "b89e8155ad5479d5b4f9175b2e941ef80b54c75dc9af4a993401c544e150cd78",
 };

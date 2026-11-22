@@ -59,6 +59,20 @@ test("gateway allows only fixed native methods, canonical queries and the instal
     [`${host.roomOrigin}/site/${scope.scope}/HEAD/item.md`, "GET"]]) expect(applicationGatewayRoute(host, url!, method!), url).toBe(false);
 });
 
+test("gateway allows only the exact standing query on session POST", () => {
+  const at = `${host.roomOrigin}/v1/scopes/${scope.scope}`;
+  expect(applicationGatewayRoute(host, at + "/sessions", "POST")).toBe(true);
+  expect(applicationGatewayRoute(host, at + "/sessions?standing=1", "POST")).toBe(true);
+  for (const query of ["?standing=1&standing=1", "?standing=1&stand%69ng=1", "?standing=1&other=1",
+    "?other=1", "?standing=", "?standing=0", "?standing=%31", "?stand%69ng=1", "?standing=1&",
+    "?Standing=1", "?STANDING=1"])
+    expect(applicationGatewayRoute(host, at + "/sessions" + query, "POST"), query).toBe(false);
+  for (const method of ["GET", "HEAD", "PUT", "DELETE"])
+    expect(applicationGatewayRoute(host, at + "/sessions?standing=1", method), method).toBe(false);
+  for (const route of ["acts", "settle"])
+    expect(applicationGatewayRoute(host, at + `/${route}?standing=1`, "POST"), route).toBe(false);
+});
+
 // GW-1 (request 54e31a40): each read that takes a minimum allows one canonical atLeast of its own scope, beside its own parameters.
 test("gateway allows one canonical read minimum of the same scope on every read that takes one", () => {
   const at = `${host.roomOrigin}/v1/scopes/${scope.scope}`;

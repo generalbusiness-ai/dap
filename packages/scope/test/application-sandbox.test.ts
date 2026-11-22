@@ -169,6 +169,11 @@ test("named sandbox RPC binds its configured public origin over internal HTTP, c
       const issued = await requestSession(host.roomOrigin, M.name, signed, { fetch: native });
       expect(issued.ok).toBe(true);
       if (!issued.ok) throw Error(`No native session: ${issued.reason}`);
+      const signedStanding = sessionRequest(membership, una.secret, soon(60), "sandbox-rpc-standing-session");
+      const withStanding = await requestSession(host.roomOrigin, M.name, signedStanding, { fetch: native, standing: true });
+      expect(withStanding.ok).toBe(true);
+      if (!withStanding.ok) throw Error(`No native standing session: ${withStanding.reason}`);
+      expect(withStanding.session.standing).toMatchObject({ of: membership, keyState: "active" });
       const headers = { authorization: issued.session.reader() };
       const summary = await send(`/v1/scopes/${M.name}`, { headers });
       expect(summary.status).toBe(200); expect(await summary.json()).toMatchObject({ ok: true, value: { scope: membership } });
