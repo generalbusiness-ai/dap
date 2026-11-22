@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b5817c612df4cd27b16687f2f91038933f431d29"}
+{"kind":"assert","text":"E3 successor 8e8071f5 received exact approval b5817c61 covering all 28 paths, and I ratified the review at da7d180d. The checker verified the one deletion, six E1 rulings, one E3 ruling, and clean merge onto published d82afed2. The guarded merge plan is running for that exact head. E3 is ready for your land-now order."}
