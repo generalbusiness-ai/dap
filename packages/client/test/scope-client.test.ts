@@ -671,7 +671,7 @@ test("a second remark waits behind the pending first remark without signing", as
 
 // The first unsigned source expires before the later dependent's own deadline.
 test("an unsigned source deadline wakes its retained dependent before the dependent deadline", async () => {
-  const s = requestScene(), { client, store, who } = clientAt(s);
+  const s = requestScene(), { client, store, who, drafts } = clientAt(s);
   const identity = (key: string) => ({ key, owner: s.signer.key, scope: s.handle.at });
   try {
     s.feed.current(s.scope); await client.read();
@@ -717,6 +717,11 @@ test("an unsigned source deadline wakes its retained dependent before the depend
     const custody = new Custody(store, () => timeOf(s.now()));
     expect(await custody.find({ ...who, key: "expiry-dependent" })).toBeNull();
     expect([s.signs(), s.copies.length, settled]).toEqual([signs, posts, false]);
+    await clientIdle(client);
+    expect(client.view.requests.find(row => row.key === "expiry-dependent")).toEqual({
+      is: "authorization", key: "expiry-dependent", reference: { identity: identity("expiry-dependent"), position: 0 },
+      act: dependentAct, status: "waits",
+    });
     s.advance(sourceDeadline - s.now());
     expect(s.now()).toBe(sourceDeadline);
     expect(await result).toMatchObject({ error: { name: "AuthorizationError", reason: "source" } });
@@ -726,6 +731,17 @@ test("an unsigned source deadline wakes its retained dependent before the depend
     expect(returned?.materializations).toEqual([]);
     expect(await custody.find({ ...who, key: "expiry-dependent" })).toBeNull();
     expect([s.signs(), s.copies.length]).toEqual([signs, posts]);
+    await clientIdle(client);
+    const terminal = { is: "authorization", key: "expiry-dependent",
+      reference: { identity: identity("expiry-dependent"), position: 0 }, act: dependentAct, status: "source" };
+    expect(client.view.requests.find(row => row.key === "expiry-dependent")).toEqual(terminal);
+    client.close();
+    const reopened = clientAt(s, store, drafts).client;
+    try {
+      s.feed.current(s.scope); await reopened.read(); await clientIdle(reopened);
+      expect(reopened.view.requests.find(row => row.key === "expiry-dependent")).toEqual(terminal);
+      expect([s.signs(), s.copies.length]).toEqual([signs, posts]);
+    } finally { reopened.close(); }
   } finally { client.close(); }
 });
 
@@ -927,12 +943,22 @@ test("a dependent returns its retained input when the source key records an earl
     expect(waiting?.permissions).toEqual([]);
     expect(waiting?.materializations).toEqual([]);
     expect([s.signs(), s.copies.length]).toEqual([signs, posts]);
+    await clientIdle(client);
+    expect(client.view.requests.find(row => row.key === "different-version-dependent")).toEqual({
+      is: "authorization", key: "different-version-dependent",
+      reference: { identity: identity("different-version-dependent"), position: 0 }, act, status: "waits",
+    });
     earlierSend.release();
     const accepted = await earlier;
     expect("answer" in accepted && accepted.answer.answer).toBe("accepted");
     s.feed.current(s.scope); await client.read();
     expect(clientReplica(client).accepted(s.signer.key, "versioned-source")).not.toBeNull();
     expect(await result).toMatchObject({ error: { name: "AuthorizationError", reason: "source" } });
+    await clientIdle(client);
+    expect(client.view.requests.find(row => row.key === "different-version-dependent")).toEqual({
+      is: "authorization", key: "different-version-dependent",
+      reference: { identity: identity("different-version-dependent"), position: 0 }, act, status: "source",
+    });
     const returned = await client.authorization(identity("different-version-dependent"));
     expect(returned?.versions[0]?.act).toEqual(act);
     expect(returned?.permissions).toEqual([]);

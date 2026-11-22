@@ -53,11 +53,12 @@ export type RequestView<D extends DeclaredDefinition> = RequestStatus & {
   values: AskedOf<D, Kind<D>>;
   predicted: Judged | null;
 };
+export type AuthorizationRequestView = { readonly is: "authorization"; readonly key: string; readonly reference: AuthorizationPosition; readonly act: AuthorizedAct; readonly status: "waits" | "source" };
 export type ClientRow<D extends DeclaredDefinition, T extends TypeOf<D> = TypeOf<D>> = Row<D, T> & { pending?: { key: string } };
 export interface ClientView<D extends DeclaredDefinition> extends Omit<ReplicaView<D>, "row" | "rows"> {
   rows<T extends TypeOf<D>>(type: T): readonly ClientRow<D, T>[];
   /** Custody requests, partial draft entries in the list, and held stored intentions. Recorded requests leave this list. */
-  requests: readonly DraftRequestListEntry<D>[];
+  requests: readonly (DraftRequestListEntry<D> | AuthorizationRequestView)[];
   /** Editing and submitting drafts by slot address. Waiting drafts appear in `requests`. */
   drafts: DraftIndex<D, DraftViewKinds<D>>;
   row(ref: { item: number } | { key: string }): ClientRow<D> | null;
@@ -72,7 +73,7 @@ export type DraftStop = { readonly stop: "shape"; readonly path: string; readonl
 export type DraftCall<T> = { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly stop: DraftStop; readonly committed?: string };
 /** The raw batch and finite custody observations one candidate decides from. */
-interface Cut { entries: readonly StoredDraftEntry[]; seen: ReadonlyMap<string, DraftCustodyObservation> }
+interface Cut { entries: readonly StoredDraftEntry[]; seen: ReadonlyMap<string, DraftCustodyObservation>; authorizations: readonly AuthorizationRequestView[]; wakeAt: number | null }
 interface Classified { status: RequestStatus; predicted: Judged }
 /** One member call's reads. `key` is the editing key, or the one allocated key of a new intention. */
 interface Context { entries: readonly StoredDraftEntry[]; rows: readonly StoredDraft[]; seen: ReadonlyMap<string, DraftCustodyObservation>; key: string }
@@ -80,6 +81,8 @@ interface Assembled<D extends DeclaredDefinition> {
   held: Map<string, Held>;
   classes: Map<string, Classified>;
   projection: DraftProjection<D>;
+  authorizations: readonly AuthorizationRequestView[];
+  wakeAt: number | null;
 }
 /** A publication candidate ended because the client closed. It is not an error of the caller. */
 class CandidateClosed extends Error {}
@@ -132,6 +135,8 @@ export class ScopeClient<D extends DeclaredDefinition> {
   readonly #retry = new Set<string>();
   readonly #retryAt = new Map<string, number>();
   readonly #retryTokens = new Map<string, object>();
+  readonly #authorizationWake = {};
+  #authorizationWakeAt: number | null = null;
   readonly #deathTokens = new Map<string, object>();
   readonly #binding: DraftBinding;
   /** The occurrence that `submit` owns between its adoption write and the end of step 7. Another member call on that key stops `taken`. */
@@ -186,7 +191,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
     }) });
     replicas.set(this, this.#replica);
     registerExplore<D>(this, (key, act) => exploreReplica(this.#replica, key, act));
-    this.#view = this.#compute(this.#assemble({ entries: [], seen: new Map() }));
+    this.#view = this.#compute(this.#assemble({ entries: [], seen: new Map(), authorizations: [], wakeAt: null }));
     this.#stopStore = options.store.observe(() => { this.#background(() => this.#sync()); });
     this.#stopDrafts = options.drafts.observe(() => { this.#background(() => this.#sync()); });
     this.#stopReplica = this.#replica.subscribe(() => { this.#background(() => this.#sync()); });
@@ -568,6 +573,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
           // Everything from here is synchronous: one projection from one cut, then one publication.
           const assembled = this.#assemble(cut), view = this.#compute(assembled);
           this.#held = assembled.held;
+          this.#authorizationWakeAt = assembled.wakeAt;
           this.#arm();
           this.#publish(view);
           this.#scheduleFold();
@@ -586,12 +592,36 @@ export class ScopeClient<D extends DeclaredDefinition> {
   async #publicationCut(): Promise<Cut> {
     const entries = readStoredDrafts(await this.#options.drafts.read(this.#binding.owner, this.#at), this.#binding);
     const discovered = await this.#options.store.byTarget(this.#who);
-    // Stored keys cover archived records that discovery omits; a discovery miss never proves absence.
-    const keys = [...new Set([...entries.map(entry => entry.key), ...discovered.map(row => row.key)])];
+    const transaction = this.#authorization(this.#options.store.authorizations);
+    const rows = await transaction.records();
+    // Include exact source keys in the same finite custody observation.
+    const keys = [...new Set([...entries.map(entry => entry.key), ...discovered.map(row => row.key),
+      ...rows.flatMap(row => [row.key, ...row.versions.at(-1)!.after.map(source => source.key)])])];
     const cut = openDraftCustodyCut(this.#custody, this.#who, keys, () => { if (this.#closed) throw new CandidateClosed(); });
     const seen = new Map<string, DraftCustodyObservation>();
     for (const key of cut.keys) seen.set(key, await cut.acquire(key));
-    return { entries, seen };
+    const authorizations: AuthorizationRequestView[] = [];
+    let wakeAt: number | null = null;
+    const now = this.#clock.now();
+    for (const row of rows) {
+      const position = row.versions.length - 1, version = row.versions[position]!;
+      if (row.definition !== this.#binding.definition || row.descriptor !== this.#binding.descriptors[version.act.kind]
+        || row.cancelledAt !== undefined || row.permissions.some(permission => permission.position === position)
+        || version.after.length === 0 || this.#replica.accepted(this.#options.signer.key, row.key)) continue;
+      const reference = { identity: this.#authorizationIdentity(row.key), position };
+      let status: "waits" | "source";
+      try {
+        const checked = await this.#sourcesReady(transaction, reference, seen, now);
+        if (checked.ready) continue;
+        status = "waits";
+        wakeAt = wakeAt === null ? checked.wakeAt : Math.min(wakeAt, checked.wakeAt);
+      } catch (error) {
+        if (!(error instanceof AuthorizationError) || error.reason !== "source") throw error;
+        status = "source";
+      }
+      authorizations.push({ is: "authorization", key: row.key, reference, act: structuredClone(version.act), status });
+    }
+    return { entries, seen, authorizations, wakeAt };
   }
 
   /** Custody folding is its own reconciliation. It reads and writes custody only, and its failure changes no publication. */
@@ -705,7 +735,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
     for (const [key, { record }] of held) if (!byKey.has(key)) custodyOnly.push(this.#requestView(key, record, classes.get(key)!));
     const projection = projectDrafts<D>({ definition: this.#handle.definition, binding: this.#binding, identity: this.#who,
       state: this.#replica.view.state, cut: this.#viewCut(), stored, custodyOnly });
-    return { held, classes, projection };
+    return { held, classes, projection, authorizations: cut.authorizations, wakeAt: cut.wakeAt };
   }
 
   #compute(assembled: Assembled<D>): ClientView<D> {
@@ -742,7 +772,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
       }
     }
     const { drafts, requests } = assembled.projection;
-    return { ...replica, requests, drafts,
+    return { ...replica, requests: [...requests, ...assembled.authorizations], drafts,
       rows: <T extends TypeOf<D>>(type: T) => (byType.get(type) ?? []) as unknown as readonly ClientRow<D, T>[],
       row: ref => "item" in ref ? byItem.get(ref.item) ?? null : byKey.get(ref.key) ?? null };
   }
@@ -754,6 +784,8 @@ export class ScopeClient<D extends DeclaredDefinition> {
   #token(map: Map<string, object>, key: string): object { let token = map.get(key); if (!token) { token = {}; map.set(key, token); } return token; }
   #arm(): void {
     if (this.#closed || this.#replica.view.state.is === "stopped") { this.#schedule.close(); return; }
+    if (this.#authorizationWakeAt !== null) this.#schedule.at(this.#authorizationWake, this.#authorizationWakeAt, () => { this.#background(() => this.#sync()); });
+    else this.#schedule.cancel(this.#authorizationWake);
     for (const map of [this.#deathTokens, this.#retryTokens]) for (const [key, token] of map) if (!this.#held.has(key)) { this.#schedule.cancel(token); map.delete(key); this.#retry.delete(key); this.#retryAt.delete(key); }
     for (const [key, held] of this.#held) {
       const { record, outcomes } = held;
@@ -1185,20 +1217,21 @@ export class ScopeClient<D extends DeclaredDefinition> {
   #current(): void { if (!this.#available()) throw new Error("the scope client no longer owns this request"); }
 
   /** Recheck every exact dependency, including for an existing materialization. */
-  async #sourcesReady(transaction: AuthorizationTransaction, reference: AuthorizationPosition): Promise<{ ready: boolean; deadline: number; wakeAt: number; dependent: boolean }> {
+  async #sourcesReady(transaction: AuthorizationTransaction, reference: AuthorizationPosition, seen?: ReadonlyMap<string, DraftCustodyObservation>, now = this.#clock.now()): Promise<{ ready: boolean; deadline: number; wakeAt: number; dependent: boolean }> {
     const row = await transaction.find(reference.identity);
     if (!row || row.versions.length - 1 !== reference.position) throw new AuthorizationError("version");
     if (row.cancelledAt !== undefined) throw new AuthorizationError("cancelled");
     const version = row.versions[reference.position]!;
     const deadline = Date.parse(version.deadline);
-    if (this.#clock.now() >= deadline) throw new AuthorizationError(version.after.length ? "source" : "deadline");
+    if (!seen && now >= deadline) throw new AuthorizationError(version.after.length ? "source" : "deadline");
     let ready = true, wakeAt = deadline;
     for (const source of version.after) {
       const inspected = await transaction.inspectSource(source);
       if (inspected.is === "unavailable") throw new AuthorizationError("source");
       if (inspected.is === "resolved") continue;
       const sourceRow = await transaction.find(inspected.identity);
-      const record = await this.#custody.find({ ...this.#who, key: source.key });
+      const observation = seen?.get(source.key);
+      const record = seen ? observation && observation.is !== "absent" ? observation.record : null : await this.#custody.find({ ...this.#who, key: source.key });
       // Equal content can occur at several positions. An unclosed signing
       // with unknown provenance can still resolve this source too.
       const matching = record?.signings.filter(signing => signing.authorization
@@ -1217,12 +1250,13 @@ export class ScopeClient<D extends DeclaredDefinition> {
         const permitted = sourceRow!.permissions.some(permission => permission.position === inspected.position);
         if (!possible) {
           if (permitted && matching.length > 0 && matching.every(signing => signing.closed)) throw new AuthorizationError("source");
-          if (this.#clock.now() >= sourceDeadline) throw new AuthorizationError("source");
+          if (now >= sourceDeadline) throw new AuthorizationError("source");
           wakeAt = Math.min(wakeAt, sourceDeadline);
         }
       }
       ready = false;
     }
+    if (seen && !ready && now >= deadline) throw new AuthorizationError(version.after.length ? "source" : "deadline");
     return { ready, deadline, wakeAt, dependent: version.after.length > 0 };
   }
 
