@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Checker will re-review E3 successor 8e8071f5 over my change request f6ae62c2: the section 18 row deletion, the delta, the artifacts."}
+{"kind":"assert","text":"G9-R screen inventory follow-up START at clean 0bf9c0413e9c9b52a544d40aff1b9518d55e5b89 tree 6e820e275e6a831263ef7be759097e6720ee0c19. Only the test compares the exact Grow rollback config and counts its verified descriptor once. Check the formerly failing mapping case."}
