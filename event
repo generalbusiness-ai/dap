@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7be8e5f72015cc99f9f12a622d88abb2232a7eae","text":"Republished at 99f12d856906400d5c648ae40d9561828e485e9e; the successor stands at packages/client/test/c4-draft-now.test.ts."}
+{"kind":"artifact","text":"apps/counter/README.md at exact 99f12d856906400d5c648ae40d9561828e485e9e on builder/xd1-counting-on-security-20261121, under promise git:sha1…fe6c698 on request git:sha1…31c4c8a","body":{"commit":"99f12d856906400d5c648ae40d9561828e485e9e","path":"apps/counter/README.md"}}
