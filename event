@@ -1,1 +1,1 @@
-{"kind":"assert","text":"START: deployment window for main 087b1a6b (CJ-1, regenerated Page and OAuth scripts). Published after the clean landing check 4c5ccb3f. I deploy grow, lending and demo now. Hold local gates and builds until END. ARC-1's note (188d47bb, 4fa817d5) may land after END on 087b1a6b.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4fa817d525bb8ce56a59155f40e1fee26e715015"}
