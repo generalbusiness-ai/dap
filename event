@@ -1,1 +1,1 @@
-{"kind":"request","text":"Try the proposed property test syntax on an application other than Lending.","body":{"conditions":"Draft a property for a different DAP application and assess the syntax.","no_git_artifact":"true","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
+{"kind":"report","text":"Drafted a Counting Commitments reset property. It tests correct, unchanged and skipped generation proposals across repeated resets. The example exposes a need for named input cases built from current snapshots, with concrete inputs retained for replay."}
