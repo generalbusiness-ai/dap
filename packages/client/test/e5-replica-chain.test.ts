@@ -289,6 +289,23 @@ test("a recorded predecessor supplies a symbolic target to a pending via chain",
     expect([runtime.counts.actSignatures, runtime.counts.submissions]).toEqual([before.signs + 2, before.posts + 2]);
     expect((await client.authorization(held[0]!.identity))?.versions[0]?.id).toBe(source.version);
     expect(clientReplica(client).authorizationSource(runtime.signer.key, firstSource.key)?.entry.fact).toEqual(firstProof.entry.fact);
+
+    // B changed the target after A. A new B2 cannot use A's historical revision.
+    await clientIdle(client);
+    const oldProof = clientReplica(client).authorizationSource(runtime.signer.key, firstSource.key);
+    expect(oldProof?.entry.fact).toEqual(firstProof.entry.fact);
+    expect(oldProof?.revisions[target.id]).toBe(target.revision);
+    expect(runtime.store.item(target.id)!.revision).toBeGreaterThan(oldProof!.revisions[target.id]!);
+    const secondSource = { key: "stale-via-source", version: actVersion(sourceAct) };
+    const staleDependent = { kind: "touch-connector", on: { output: secondSource }, fields: { n: 4 },
+      expected: { on: { after: secondSource }, target: { after: secondSource } } } as const;
+    const beforeStale = canonicalize(await store.authorizations.read(runtime.signer.key, runtime.at));
+    const staleSigns = runtime.counts.actSignatures, stalePosts = runtime.counts.submissions;
+    await expect(client.retainAuthorizations([{ key: secondSource.key, act: sourceAct },
+      { key: "stale-via-dependent", act: staleDependent }])).rejects.toMatchObject({ name: "AuthorizationError", reason: "source" });
+    expect(canonicalize(await store.authorizations.read(runtime.signer.key, runtime.at))).toBe(beforeStale);
+    expect([runtime.counts.actSignatures, runtime.counts.submissions]).toEqual([staleSigns, stalePosts]);
+    expect(clientReplica(client).authorizationSource(runtime.signer.key, firstSource.key)).toEqual(oldProof);
   } finally {
     release(); handle.scope.submit = submit; store.read = read; client.close();
     try { await clientIdle(client); } finally { runtime.close(); }
