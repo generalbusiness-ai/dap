@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d06a65ff829408f78245f38d529d49ff8c39269f","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/workspace-host.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d29ce6474e62baf30c83d185e5ebad8f1bda41ae","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-21-s6-boundaries-and-custody.md."}
