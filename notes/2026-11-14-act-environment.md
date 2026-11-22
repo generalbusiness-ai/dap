@@ -10,8 +10,8 @@ day, and Lending
 on 16 November 2026. E4-B added the browser authorization store in main
 `3e54b8ab`. C4 and E4-C landed draft exploration and one-call submit
 in `d6c863bb`. EK-1 and ES-1 added the standing value check and
-session answer in `9d69f807`. This head builds E2: the MCP tool
-`explore` judges a checked replica under the session's standing. E3,
+session answer in `9d69f807`. E2 added the MCP tool `explore`, which judges
+a checked replica under the session's standing. E3,
 E5, E6 and A remain open. Section 13 lists the build steps.
 Section 18 lists
 the rulings of step E1 that changed sections 3, 5 and 8. Section 19
