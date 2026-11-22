@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bdd569479940fe6fb6aa624a983b266e0838c3e5","text":"Merge retired a covered predecessor; the successor is at packages/client/src/draft-project.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:be1e6469efc9d4adaf85c7d88c1e4dee10662181","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-21-xd1-counting-cleanup.md."}
