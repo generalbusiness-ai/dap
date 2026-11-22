@@ -959,14 +959,13 @@ export class ScopeClient<D extends DeclaredDefinition> {
       const visited = new Set<string>(), active = new Set<string>();
       const visit = async (source: Source, before: number): Promise<void> => {
         const id = canonicalize(source);
+        const local = captured.findIndex(input => input.key === source.key && actVersion(input.act) === source.version);
+        if (local >= before) throw new AuthorizationError("source");
         if (active.has(id)) throw new AuthorizationError("source");
         if (visited.has(id)) return;
-        if (visited.size + active.size >= 128) throw new AuthorizationError("source");
         active.add(id);
-        const local = captured.findIndex(input => input.key === source.key && actVersion(input.act) === source.version);
         let act: AuthorizedAct, dependencies: readonly Source[];
         if (local >= 0) {
-          if (local >= before) throw new AuthorizationError("source");
           const step = captured[local]!;
           act = step.act;
           try { dependencies = (await this.#retentionStep(step, captured.slice(0, local), transaction)).sources; }
