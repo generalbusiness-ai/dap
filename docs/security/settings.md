@@ -44,10 +44,9 @@ celld project has its own Worker name and entry file, and its two-export
 shim imports the production room Worker. The checker follows each Worker's
 complete runtime imports and refuses two entries with one Worker name.
 Commons has its own entry file too. Its configuration holds `unplanned` in
-all three register positions, so creation and the register health probe stay
+both register fields, so creation and the register health probe stay
 unavailable until the operator binds the exact planned register. The file
-adds no open-creation exception. Its Start configuration is retained metadata,
-and the retired demo-offer route provisions no register.
+adds no open-creation exception and has no Commons Start setting.
 
 The O4 configuration deploys `dap-connect` with hosted MCP closed. Its sole
 register placeholder needs an own-agent install plan. Its four Durable
@@ -173,7 +172,10 @@ an undocumented configuration binding fails the check.
 
 The lookup is generated from the rows below. **Main reader** is the first
 reader in the row, not its only reader. The full row holds the parser, the
-failure behavior, health visibility and the other readers.
+failure behavior, health visibility and the other readers. The Workers column
+includes every deployment whose code can read a setting, even when its config
+omits that setting. Commons omits `DEMO_START_CONFIG`, so its shared reader
+sees the setting as absent.
 
 <!-- dap-settings-lookup:start -->
 | Name | Kind | Workers | Main reader |

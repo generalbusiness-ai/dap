@@ -40,10 +40,12 @@ Prepare the deployment in two steps:
    confirm that the timed config commit changes only those values. Run
    `packages/cli/test/demo-config.test.ts`,
    `scripts/security-entry-points.test.mjs`,
-   `scripts/security-settings.test.mjs`, and `npm run pins`. The checker stays
-   available for the timed review. Start only when review, deployment, and
-   submission can proceed. If approval has not arrived eight minutes after
-   the plan, stop. If deployment has not completed ten minutes after the plan,
+   `scripts/security-settings.test.mjs`, and `npm run pins`. The checker
+   offers best-effort availability. Before signing, the planner asks the
+   checker in the workroom and by message, then waits for a reply. Start
+   only when review, deployment, and submission can proceed. If approval
+   has not arrived eight minutes after the plan, stop. If deployment has
+   not completed ten minutes after the plan,
    stop. Keep the exact plan for reconciliation. These limits do not guarantee
    completion before the printed deadline.
 
@@ -68,17 +70,17 @@ creation and registration must still succeed and be verified after deploy.
 ## Configuration
 
 The two-step proposal changes three keys in `apps/room/wrangler.commons.jsonc`.
-The first step removes the Start setting. The timed step changes only the two
+The first step removed the Start setting. The timed step changes only the two
 register values.
 
 - `vars.REGISTER_SCOPE`: `unplanned` to `<planned-register-scope>`.
 - `vars.ARTIFACTS_CONFIG.registerScope`: `unplanned` to the identical scope.
-- `vars.DEMO_START_CONFIG`: currently contains `register: "unplanned"`.
-  Remove the key for this keys-only CLI-founded plan. The current value has
-  a string `register: "unplanned"`, while `demoCreationConfig` requires a
-  full `{scope, genesis}` reference. Its presence also enables the Page
-  Start link, so leaving it advertises an unusable offer. A later Start setup
-  needs its own reviewed full reference and open-policy decision.
+- `vars.DEMO_START_CONFIG`: Step 1 removed this setting, which held
+  `register: "unplanned"`. Its value used a string register, while
+  `demoCreationConfig` requires a full `{scope, genesis}` reference. The
+  setting also enabled the Page Start link, so it advertised an unusable
+  offer. A later Start setup needs its own reviewed full reference and
+  open-policy decision.
 
 All other checked-in keys remain as written, subject to the planner's review:
 `name`, `main`, compatibility date and flags, `PLATFORM_CREATION_PINS`,
