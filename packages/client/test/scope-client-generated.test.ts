@@ -1,6 +1,6 @@
 /** C3's generated request steps, without C4 draft/slot operations: the judge and fold are real; network and clocks are ports. */
 import { expect, test } from "vitest";
-import type { SignedIntent } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Intent, type SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
 import { Custody, envelopeOf, memoryStore } from "../src/custody.ts";
 import { memoryDrafts } from "../src/draft-store.ts";
@@ -9,6 +9,10 @@ import { composeDraftCandidate } from "../src/draft-submit.ts";
 import { requestStatus } from "../src/request-status.ts";
 import { scopeClient, request, clientReplica, clientIdle, type ScopeClient } from "../src/scope-client.ts";
 import { bump, definition as nowDefinition, draftAt, judge, repoint, scope as nowScope, truth, world, type ModelKind } from "./support/c4-now-model.ts";
+import { intentMeaning } from "../src/replica.ts";
+import { changedDraft, valid } from "@generalbusiness/dap-derive/testing";
+import { validateDefinition } from "@generalbusiness/dap-derive";
+import { citing } from "./replica-support.ts";
 import { checkSigningAuthorizations, requestScene } from "./request-support.ts";
 
 const SEEDS = 400, STEPS = 80;
@@ -217,4 +221,102 @@ test(`general now through the real ScopeClient.submit over ${REAL_SEEDS} seeds: 
   }
   expect(races).toBeGreaterThan(0);
   console.log(`C4 general now, real submit: ${REAL_SEEDS} seeds, ${submits} submits, ${races} races`);
+});
+
+// Invariant 11: generated source/version schedules check the actual signer boundary.
+test("generated dependent signings require the exact recorded materialized source", async () => {
+  const declaration = changedDraft(citing, d => {
+    d.acts.offer.fields.label = { type: "text", max: 40, required: false };
+  });
+  const definition = valid(validateDefinition(declaration, PROPOSED_BOUNDS));
+  let matched = 0, mismatched = 0, dependentSigns = 0;
+  // The unrelated pending request appears before, between, or after the two source versions.
+  for (const otherAt of [0, 1, 2] as const) for (const recorded of ["earlier", "latest"] as const) {
+    const s = requestScene(definition), store = memoryStore(), drafts = memoryDrafts();
+    const suffix = `${otherAt}-${recorded}`, sourceKey = `generated-source-${suffix}`;
+    const dependentKey = `generated-dependent-${suffix}`, otherKey = `generated-other-${suffix}`;
+    const member = { service: "https://generated-dependencies.test", membership: s.actor.member.membership,
+      member: s.actor.member.member, principal: s.actor.principal };
+    const who = { service: member.service, membership: member.membership, signer: s.signer.key, target: s.handle.at };
+    let client!: ReturnType<typeof scopeClient<typeof s.handle.definition>>;
+    let latestId: string | null = null, boundaryCalls = 0;
+    const signer = { key: s.signer.key, sign: async (bytes: Uint8Array) => {
+      const text = new TextDecoder().decode(bytes), newline = text.indexOf("\n");
+      const intent = JSON.parse(text.slice(newline + 1)) as Intent;
+      if (intent.idempotencyKey === dependentKey) {
+        boundaryCalls++; dependentSigns++;
+        const rows = await store.authorizations.read(s.signer.key, s.handle.at);
+        const source = rows.find(row => row.key === sourceKey), dependent = rows.find(row => row.key === dependentKey);
+        if (!source || !dependent || !latestId) return expect.fail("signer boundary requires retained exact source and dependent");
+        const version = source.versions.at(-1)!;
+        expect(version.id).toBe(latestId);
+        expect(dependent.versions[0]!.after).toContainEqual({ key: sourceKey, version: latestId });
+        const proof = clientReplica(client).authorizationSource(s.signer.key, sourceKey);
+        if (!proof) return expect.fail("dependent signing requires a checked source entry");
+        expect(proof.entry.actor).toBe(s.signer.key);
+        expect(proof.entry.key).toBe(sourceKey);
+        const materialized = source.materializations.find(item => source.versions[item.position]?.id === latestId
+          && intentMeaning(item.act) === proof.entry.meaning);
+        expect(materialized).toBeDefined();
+        expect(dependent.permissions).toHaveLength(1);
+      }
+      return s.signer.sign(bytes);
+    } };
+    client = scopeClient(s.handle, { signer, member, store, drafts, observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+    try {
+      s.feed.current(s.scope); await client.read(); s.mode("refused");
+      const identity = (key: string) => ({ key, owner: signer.key, scope: s.handle.at });
+      const other = () => client.submitBoundAct(identity(otherKey), { kind: "link", on: null,
+        fields: { target: s.handle.at, about: 0 }, expected: {} });
+      const offer = (label: string) => ({ kind: "offer", on: null, fields: { intent: 0, label },
+        expected: { intent: s.scope.item(0).revision } } as const);
+      if (otherAt === 0) await other();
+      await client.submitBoundAct(identity(sourceKey), offer("earlier"));
+      const earlier = s.copies.find(copy => copy.intent.idempotencyKey === sourceKey)!;
+      if (otherAt === 1) await other();
+      await client.submitBoundAct(identity(sourceKey), offer("latest"));
+      const latest = s.copies.filter(copy => copy.intent.idempotencyKey === sourceKey).at(-1)!;
+      if (otherAt === 2) await other();
+      const row = await client.authorization(identity(sourceKey));
+      if (!row) return expect.fail("both source versions must remain retained");
+      expect(row.versions).toHaveLength(2);
+      expect(row.versions[0]!.id).not.toBe(row.versions[1]!.id);
+      latestId = row.versions[1]!.id;
+      const source = { key: sourceKey, version: row.versions[1]!.id };
+      const act = { kind: "assign", on: { output: source }, fields: { performer: s.actor.member },
+        expected: { on: { after: source } } } as const;
+      let retained!: () => void;
+      const written = new Promise<void>(resolve => { retained = resolve; });
+      const write = store.authorizations.write.bind(store.authorizations);
+      store.authorizations.write = async (owner, scope, rows) => {
+        await write(owner, scope, rows);
+        if (rows.some(value => value.key === dependentKey)) retained();
+      };
+      const signs = s.signs(), posts = s.copies.length;
+      const pending = client.submitBoundAct(identity(dependentKey), act).then(value => ({ value }), error => ({ error }));
+      await Promise.race([written, pending.then(result => { throw new Error(`dependent ended before retention: ${JSON.stringify(result)}`); })]);
+      const waiting = await client.authorization(identity(dependentKey));
+      expect(waiting?.versions[0]?.act).toEqual(act);
+      expect(waiting?.permissions).toEqual([]); expect(waiting?.materializations).toEqual([]);
+      expect(await new Custody(store, () => timeOf(s.now())).find({ ...who, key: dependentKey })).toBeNull();
+      expect([s.signs(), s.copies.length, boundaryCalls]).toEqual([signs, posts, 0]);
+      expect(s.scope.submit(recorded === "earlier" ? earlier : latest).result).toBe("write");
+      s.mode("answer"); s.feed.current(s.scope); await client.read();
+      const result = await pending;
+      if (recorded === "earlier") {
+        mismatched++;
+        expect(result).toMatchObject({ error: { name: "AuthorizationError", reason: "source" } });
+        expect((await client.authorization(identity(dependentKey)))?.versions[0]?.act).toEqual(act);
+        expect((await client.authorization(identity(dependentKey)))?.permissions).toEqual([]);
+        expect([s.signs(), s.copies.length, boundaryCalls]).toEqual([signs, posts, 0]);
+      } else {
+        matched++;
+        if (!("value" in result)) return expect.fail(`matched source did not send: ${String(result.error)}`);
+        expect("answer" in result.value && result.value.answer.answer).toBe("accepted");
+        expect([s.signs(), s.copies.length, boundaryCalls]).toEqual([signs + 1, posts + 1, 1]);
+      }
+      await checkSigningAuthorizations(s, store);
+    } finally { client.close(); }
+  }
+  expect({ matched, mismatched, dependentSigns }).toEqual({ matched: 3, mismatched: 3, dependentSigns: 3 });
 });
