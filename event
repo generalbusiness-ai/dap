@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:85b080bf14c5a6b1d7b97120edb74a149dfa453b","text":"Merge retired a covered predecessor; the successor is at packages/client/src/application-gateway.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:89ba61269fa6e09de86727eda7a3d462fcaa0849","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-22-pb2-live-screen-gateway.md."}
