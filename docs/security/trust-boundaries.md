@@ -283,9 +283,8 @@ pins keep new creation closed. `ALLOW_OPEN_CREATION` is absent.
 variables are absent from the checked-in file. Retained operator settings
 and actual hosted routes still require their own evidence.
 
-The checked-in `DEMO_START_CONFIG` is not a Commons provisioning interface.
-The maintained Demo parser recognizes Registers 17 and 26, not this
-Register 23 cohort. Follow [the order](../deploy.md#the-order) with
+The configuration has no `DEMO_START_CONFIG`, so the Page offers no Start
+link. Follow [the order](../deploy.md#the-order) with
 `--cohort commons` and bind only the two operational register fields.
 This source describes no deployment, activation, namespace creation, or
 hosted W1 result.

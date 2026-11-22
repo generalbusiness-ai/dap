@@ -18,7 +18,8 @@ The gate ran on `8a9bcfc674605a3f8ccf002ba87501f3c7331e80`, tree
 `b03f0993960f4ca4df0ef7da497ba298bee85a2c`, with published base
 `c02f76a0fd02c14f7a7e256009acbd681b6285cf`. Workroom acts `835db5a8`
 and `c6acb343` record the start and finish. The review head adds this note
-to the gated source.
+and updates the security documentation to describe the closed configuration.
+The gated configuration and test match the review head byte-for-byte.
 
 Outputs are under `~/play/artroom-evidence/2026-11-22-8a9bcfc-bo1-structure/`.
 

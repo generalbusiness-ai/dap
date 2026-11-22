@@ -450,7 +450,7 @@ Configuration: [apps/room/wrangler.commons.jsonc](../../apps/room/wrangler.commo
 Entry: `apps/room/worker.commons.ts` → `apps/room/worker.ts` →
 `apps/room/fetch.ts`. This separate physical entry shares the room handler and
 its authority gates. The configuration pins the Commons cohort and the
-`dap-commons` Artifacts namespace. Its three register fields hold `unplanned`,
+`dap-commons` Artifacts namespace. Both register fields hold `unplanned`,
 so source reachability does not establish a usable register or deployment.
 The operator provisions the namespace, secrets and register after landing.
 Hosted MCP still requires its existing opt-in. The retired demo-offer route
