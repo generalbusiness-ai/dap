@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:63ef4ea5888db7d75ac4477a2417a9038be6f8fa","text":"Merge retired a covered predecessor; the successor is at packages/client/src/application-gateway.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d4ecbb86d9b93d85507ea1b7b6384461023732f","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-14-act-environment.md."}
