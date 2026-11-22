@@ -44,6 +44,20 @@ For bytes, use the validated maximum canonical UTF-8 encoding, including JSON qu
 
 A progress unit is acceptable only if a separate proof establishes its finite shape and that the driver can finish and confirm it within one original pass. This note does not change the driver, authorize partial publication, or assume such a unit exists. Existing entries that already exceed a future envelope remain unchanged and may still block the confirmed frontier. Their recovery needs a separate decision.
 
+## Evidence
+
+The notes-only gate ran on clean `65788d98de793bd81aa98fa449596819f9ddd479`, tree `3c02473b8a29d2c134a15c34297cfff5705e33a8`. The follow-up adds this section and changes no source or tests. All files below are in `~/play/artroom-evidence/2026-11-22-65788d9-arc1-envelope-gate/`. Pass times come from the original archive ledgers. Gate wall time comes from `/usr/bin/time -p`.
+
+| Check | Command or workroom record | Exit and observation | Output and SHA-256 |
+|---|---|---|---|
+| Notes-only gate | `npm run gate`, END `20298ce0` | 0, 34.05 s. Notes had zero warnings. The gate skipped tests for the notes-only diff. | `gate.txt`, `fdc5abadc52d53cda253b14c98278bd434d00ab2498343d7c9d12c2b1783b301` |
+| Lending 0.6.0 | Native Lending measurement `b2c942e7` | 0, one case passed | `lending-summary.txt`, `1b9eb6abe0fff7632a402895eb87c4dd82e6068323acca9dfa4c4cae6dbfdee5` |
+| Rules 12 | Native Rules measurement `2106ca59` | 0, one case passed | `rules-summary.txt`, `0fc8bf5a78aed78ec09757e152c1f5524244678e46d849e7cfa6420f4be3801e` |
+| Directory | Native shared Base producer and follower `fa2d5d8e` | 0, two cases passed | `directory-summary.txt`, `5c36188c7d78781d6ba812c5058508dff1bb83b2c583f2a5de512ec79a2b335c` |
+| Destination 15 | Native certificate and outcome `68fc6d37` | 0, one case passed | `destination15-summary.txt`, `f59bea23170d55033e8bc9e959f016e8176f5c35afa3cdc53e2c0c47494ca28c` |
+| Destination 21 | Native maximum founder handle `428c649d` | 0, one case passed | `destination21-founder-summary.txt`, `063836281cf13b665ef057f7874b0d2e081fe983809001ae91438200c19db391` |
+| Destination 21 certificate | Native v11 certificate attempt `9c8e9afe` | 1, guard refusal before candidate admission | `destination21-v11-summary.txt`, `713bd34081d1e514b7f95f08cc641fef7b51578f32bec9761cb372d2c42e73f9` |
+
 ## Proof required before implementation
 
 The implementation proposal must establish the unit's boundaries and the complete cost formulas for each supported native and installed policy. It must cover the actual source and creator graph, independently varying authority and checker references, maximum accepted canonical bytes, immutable parents, privacy classifications, and pending or changed policy. It must prove that every mandatory final step fits alongside the unit rather than using a fresh uncharged budget. It must also state which provider responses or failures can prevent completion and how a monotonic deadline is enforced. Availability, successful provider response, and wall-clock completion are not guaranteed by counter headroom.
