@@ -4,7 +4,8 @@ Status: current. C1 through C4 have landed on `main`. They added custody
 v2 (`918ce5d7`), the declared-scope replica (`26d1e65c`), request status
 and retries (`8e0928f3`), and slots, drafts, and one-call submit
 (`d6c863bb`). The browser authorization store followed in E4-B
-(`3e54b8ab`). This head adds XD-1’s exact draft revision check.
+(`3e54b8ab`). XD-1 added the exact draft revision check with `revision`
+and `draft-changed`.
 Section 13 records the build order.
 
 Hugh ratified this note on 13 November 2026 for request `e5b86654`.
