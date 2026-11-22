@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fd10536b162b51985403cc644203647b0271a25e"}
+{"kind":"assert","text":"E3 follow-up source check. The two legacy lookup helpers in scope-client.ts preserve the refusal preceding the authority fallback. Removing them would change the existing e3-pending.test.ts no-authority legacy case from legacy-custody to authority-unavailable. I will keep that behavior. The separate replica.ts comment can describe its production checked-cut readers without changing code."}
