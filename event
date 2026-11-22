@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3cb4cef5af1721582dca7ee3f803822ee631d99d","text":"Merge retired a covered predecessor; the successor is at packages/client/test/support/c4-runtime.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:43b4b6d8cad3b3fceb983f2fd0e8f4ea58eca6ca","text":"Merge retired a covered predecessor; the successor is at packages/client/test/support/c4-bootstrap.ts."}
