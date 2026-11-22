@@ -30,6 +30,7 @@ test("application list, calls and both subscription paths avoid inventory", asyn
   for (const name of names) expect((await service.call(name, {})).structuredContent).toEqual({ name });
   expect((await service.call("view_needs_you", { view: "fixture" })).isError).toBe(false);
   expect((await service.call("room", {})).structuredContent["error"]).toBe("unknown-tool");
+  expect((await service.call("explore", {})).structuredContent["error"]).toBe("unknown-tool");
   expect((await service.call("not-listed", {})).structuredContent["error"]).toBe("unknown-tool");
   expect(called).toEqual(names);
   const wire = new Wire(service), session = newSession(null);

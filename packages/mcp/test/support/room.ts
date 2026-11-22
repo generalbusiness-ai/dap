@@ -30,7 +30,7 @@ import type { McpMetricOptions } from "../../src/metrics.ts";
 
 export const SERVICE = "https://scopes.test";
 /** The generic tools in --generic=add mode, in the order the list sends them. */
-export const GENERIC = ["room", "commons", "inspect", "create", "join", "install_application", "application_installation", "prepare", "items", "steps", "step", "record", "sends", "text", "wait", "settle", "credential", "diff", "actions", "act"];
+export const GENERIC = ["explore", "room", "commons", "inspect", "create", "join", "install_application", "application_installation", "prepare", "items", "steps", "step", "record", "sends", "text", "wait", "settle", "credential", "diff", "actions", "act"];
 
 /** What a story calls a person: their key, their configuration, and their MCP service. */
 export interface Agent {
@@ -55,6 +55,7 @@ export interface Agent {
   calls: string[];
   /** Intent-domain signing calls only, apart from the credentials signed for reads. */
   signedIntents: Intent[];
+  custodyWrites(): number;
 }
 
 export interface Room {
@@ -150,6 +151,9 @@ export function mcpRoom(external?: { finish: "external"; capture: (life: ReturnT
       const requests: string[] = [];
       const signedIntents: Intent[] = [];
       const signer = secretSigner(key);
+      const custody = memoryStore();
+      let writes = 0;
+      const countedCustody = { ...custody, write: (...args: Parameters<typeof custody.write>) => { writes++; return custody.write(...args); } };
       const counted: Fetch = async (url, init) => { requests.push(`${init?.method ?? "GET"} ${new URL(url).pathname}`); await options.beforeFetch?.(url); return fetch(url, init); };
       const service = new McpService({
         service: config.service, fetch: counted, signer: { key: signer.key, sign: (bytes) => {
@@ -157,7 +161,7 @@ export function mcpRoom(external?: { finish: "external"; capture: (life: ReturnT
           const prefix = `${DOMAINS.intent}\n`;
           if (text.startsWith(prefix)) signedIntents.push(JSON.parse(text.slice(prefix.length)) as Intent);
           return signer.sign(bytes);
-        } }, custody: memoryStore(), mode: options.mode ?? "default", ...(options.tools ? { tools: options.tools } : {}),
+        } }, custody: countedCustody, mode: options.mode ?? "default", ...(options.tools ? { tools: options.tools } : {}),
         ...(options.listPageBytes ? { listPageBytes: options.listPageBytes } : {}),
         ...(options.metrics ? { metrics: options.metrics } : {}),
         ...(options.views ? { views: options.views } : {}),
@@ -172,7 +176,7 @@ export function mcpRoom(external?: { finish: "external"; capture: (life: ReturnT
         },
       });
       const agent: Agent = {
-        name, key: keyIdOfSecret(key), secret: key, config, service, told: 0, requests, calls: [], signedIntents,
+        name, key: keyIdOfSecret(key), secret: key, config, service, told: 0, requests, calls: [], signedIntents, custodyWrites: () => writes,
         call: (tool, args = {}) => { agent.calls.push(tool); return wait(() => service.call(tool, args)); },
         ok: async (tool, args = {}) => {
           agent.calls.push(tool);

@@ -9,8 +9,11 @@ day, and Lending
 0.3.0 holds the reservation definition. E4 landed as main `91610da9`
 on 16 November 2026. E4-B added the browser authorization store in main
 `3e54b8ab`. C4 and E4-C landed draft exploration and one-call submit
-in `d6c863bb`. Section 13 describes the broader E2, E3, E5, E6, and A work.
-Section 13 lists the build steps and their requests. Section 18 lists
+in `d6c863bb`. EK-1 and ES-1 added the standing value check and
+session answer in `9d69f807`. E2 added the MCP tool `explore`, which judges
+a checked replica under the session's standing. E3,
+E5, E6 and A remain open. Section 13 lists the build steps.
+Section 18 lists
 the rulings of step E1 that changed sections 3, 5 and 8. Section 19
 lists the rulings of steps E4 and C4 and of the requests EK-1, ES-1,
 DD-1 and E4-C, of 15 and 16 November 2026, that changed sections 5,
@@ -88,14 +91,14 @@ An agent gives the same act to the tool `explore`, and gets the same
 result under the same context. A page can show an act that an agent
 constructed, and a member can authorize it there.
 
-## 2. dap has four of the six services
+## 2. The six services
 
 | Service | In dap today | Missing |
 |---|---|---|
 | Describe | `describe.ts` renders each act, field and guard. `forms.ts` gives `formFor`, `slotsFor` and `actsOn`. MCP has the tool `actions` | The names that the guards of one act declare, as a type |
-| Observe | `observeScope`, `ScopeHandle.log`, the summary and `items`. MCP has `inspect`, `items`, `steps` and `wait`. D12 step C2 built the replica and its typed rows in the client (`scopeReplica`, main `26d1e65c`) | A replica in the agent host, which step E2 adds |
-| Explore | Nothing for a caller. `judgeAct` takes a signed intent and checks its signature first (`judge.ts:184`, `:219`) | The whole service |
-| Compose | Nothing. The ID of an opened item is the sequence number of its entry (`effects.ts:330`), so no caller can name the item before the entry | The whole service |
+| Observe | `observeScope`, `ScopeHandle.log`, the summary and `items`. C2 built the replica and typed rows. E2 gives the agent host a checked replica | Further evidence and resolution for pending steps |
+| Explore | E1 shares the body judge. C4 uses a private replica exploration, and E2 exposes one checked exploration to MCP | Local view exploration at each view and tick, in E3 |
+| Compose | E1 gives hypothetical outputs symbolic names | Sequential dependencies and their resolution, in E5 |
 | Submit | `declaredHandle.submit`, `Custody`, the MCP act tools. D12 steps C3 and C4 | Work that an authority gave and that no one can sign yet |
 | Resolve | `settle`, `sends`, `wait`. D12's five statuses | The status of retained work, from one owner |
 
@@ -411,7 +414,7 @@ scope, or a change of authority.
 | Placement | Judges on | Use |
 |---|---|---|
 | A local instance | Its replica and the owner's pending steps | Each frame of a drag, each key stroke, with no network |
-| The agent host | Its own replica of the scope | The MCP tool `explore` |
+| The agent host | Its own checked replica of the scope | The MCP tool `explore`, built in E2 |
 | The scope | Its own state at its head, with the standing that it reads for the caller | Held (section 16). A method `explore` on `ScopeApi`, with the route `POST /v1/scopes/<scope>/explore`. A read, with no entry |
 
 Each placement states its context. A placement that lacks an input
@@ -445,10 +448,13 @@ type of the value today, `ObservationAnswer`. The largest reply is
 5,976 bytes of the cap of 16,384.
 
 - The context names its standing: the observation, the membership
-  head at which the service read it, and the session that gave it.
-- The value is small and up to 600 seconds old. No journal checks
-  it. The scope judges each submit with its own read, so an old value
-  costs a refused submit and never a wrong record.
+  head at which the service read it, and the non-secret claims of
+  the session that gave it. E2 reports `authorityAge` in milliseconds
+  at the context clock, from the local start of that session request.
+- The session ends at most 600 seconds after the issuing clock reads.
+  Local `authorityAge` bounds elapsed time since the request began; it
+  does not measure clock skew or prove that membership stayed unchanged.
+  The scope judges each submit with its own read.
 - A session with no standing gives none, and the exploration is
   `unavailable`. A row of `observes` stays `unavailable`. The value
   is no proof of freshness and no grant for the runtime.
@@ -483,9 +489,8 @@ never `granted`. With any row of `observes`, the function answers
 `authority-unavailable`. The bytes of a recorded grant do not change.
 Section 16 lists the export.
 
-Request ES-1 builds the session answer, and request EK-1 builds the
-export. Neither is built. Step E2 needs both, and step E3 needs C4
-too.
+ES-1 built the session answer, and EK-1 built the export, in
+`9d69f807`. E2 uses both. E3 also needs C4, which is built.
 
 An instance never presents a guessed grant. The stand-in
 `predictionGrant` of step C2 stays in the prediction of the member's
@@ -1104,7 +1109,7 @@ is published.
 | Part | Is |
 |---|---|
 | The local instance | D12's `scopeClient`, in `@generalbusiness/dap-client/scope`. It gains Explore, the draft rules, authorizations and dependencies |
-| The agent host | The MCP server. It holds a key and custody today. It gains a replica, the tool `explore`, and the resolution of the steps that it retained |
+| The agent host | The MCP server holds a key and custody. E2 adds a checked replica and the tool `explore`. Resolution of retained steps remains for E6 |
 | The scope | Gains nothing in the first version. The method `explore` is held (section 16) |
 | `dap dev` | Gains `log` and the head stream, so that a local instance runs against it. It serves neither today |
 
@@ -1282,7 +1287,7 @@ A small model also runs to a bound over every order of its steps.
 | Step | Work | Needs |
 |---|---|---|
 | E1 | Explore for complete acts: the split of `actJudged`, the context, the result, the hypothetical view and the three symbolic names | The planner's ruling for the export, from Hugh's decision (section 16) |
-| E2 | The MCP tool `explore`, on a replica in the agent host, with the same result and context | E1, C2 |
+| E2 | Built: the MCP tool `explore` judges a checked replica under the host session and clock | E1, C2, EK-1, ES-1 |
 | E3 | Explore in the local instance, again at each view and each tick. `offers`, a `ref` with its sources, `recorded`, and one identity for a row. Step C4 builds the basis of a draft, the changed fields, the returned `now` and the new version after a return (section 6) | E1, C2, C4 |
 | E4 | Retained authorization: the record with versions, the default deadline, three of the four operations (no new envelope for the same version), the owner and the store in memory, the transaction of a submit, the predicate | C1, C3 |
 | E4-B | The browser store keeps authorizations, with the removal rule of section 7.1. It landed at `3e54b8ab` | E4 |
@@ -1393,9 +1398,10 @@ first version has no method and no route. The agent host explores on a
 replica of its own, as a local instance does. A review after step E3
 takes the method up again.
 
-This note did not check how the MCP server reads the state of a scope
-inside the runtime, which imports it (`packages/scope/src/worker.ts`).
-If the server reads that state directly, step E2 does not need C2.
+E2 reads the authenticated journal through C2 in the agent host. It
+checks the scope reference, definition and judgment head against a
+final Summary. A moved or unavailable source gives no judgment. The
+host does not read the scope's in-process state or add a ScopeApi route.
 
 **Decision A enters with its own design.** That design is
 [the subject admission note](2026-11-14-subject-admission.md). Hugh

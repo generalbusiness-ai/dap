@@ -1,6 +1,59 @@
 {
   "tools": [
     {
+      "name": "explore",
+      "description": "Explore one act against an authenticated declared scope without submitting it. The result is a prediction, not a commitment.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^sc_[a-z2-7]{51}[aq]$"
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "Your key for this one meaning, 1 to 128 bytes. Keep it."
+          },
+          "act": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "on": {
+                "type": ["integer", "null"],
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "fields": {
+                "type": "object"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            },
+            "required": ["kind", "on", "fields"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["target", "key", "act"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
       "name": "room",
       "description": "Orientation. The service, your key, the scopes of the room by name, the issues and changes the directory lists, the applications its factory created (such as a Counter), the standalone scopes, your standing on each membership, the active definitions, and the act tools your role does not hold; paged by bytes, with a cursor. Start here.",
       "inputSchema": {

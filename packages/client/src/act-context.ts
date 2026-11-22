@@ -6,7 +6,9 @@ import type { Context, Source, UnavailableContext } from "./act-types.ts";
 
 /** The caller inventories its evidence beside the actual checked payloads
  * and stable ports. Shaping adds any detached texts to that inventory. */
-export interface ExplorationContext extends JudgeContext {
+export interface ExplorationContext extends Omit<JudgeContext, "grants"> {
+  readonly grants: Parameters<typeof import("@generalbusiness/dap-derive").judgeActBody>[3]["grants"];
+  readonly authority?: Context["authority"];
   readonly actor: KeyId;
   readonly scope: ScopeRef;
   readonly evidence: readonly Digest[];
@@ -23,6 +25,7 @@ export function actContext(definition: ValidDefinition, view: StateView | null, 
     actor: context.actor,
     standing: context.grants === null ? null : context.grants.filter(grant => grant.current).map(grant => grant.grant.issued),
     clock: context.clock.reading,
+    ...(context.authority ? { authority: context.authority } : {}),
     evidence: [...new Set([...context.evidence, ...shapedTexts.map(textDigest)])].sort(),
   };
   const scope = view?.scope() ?? null;

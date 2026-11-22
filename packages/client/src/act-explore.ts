@@ -105,7 +105,7 @@ export function actExplore<D extends DeclaredDefinition, K extends Kind<D>>(defi
     const result = projection.project<D>(source, body, context.owners);
     frames.set(result.after, { projection: result.projection, actor: context.actor });
     return { is: "admitted", source, act: bound.act, context: stated, bound: bound.bound, effects: result.effects,
-      sends: body.draft.sends.length, opens: result.opens, judgesTime: body.draft.judgesTime, after: result.after };
+      sends: body.draft.sends.length, ...(context.authority ? { changed: result.changed } : {}), opens: result.opens, judgesTime: body.draft.judgesTime, after: result.after };
   } catch (error) {
     if (error instanceof UnavailableActSource) return { is: "unavailable", act, context: stated, lacks: ["source"] };
     if (error instanceof UnavailableEntryValue) return { is: "unavailable", act, context: stated, lacks: ["entry"] };

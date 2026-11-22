@@ -71,8 +71,8 @@ function activeWithin(milliseconds: number): (() => boolean) | null {
 }
 
 /** Preserve the concrete Lending handle and existing caller shape. */
-export async function c4Runtime() {
-  const { scopeHandle, ...runtime } = await restore("lending");
+export async function c4Runtime(standing = false) {
+  const { scopeHandle, ...runtime } = await restore("lending", standing);
   try {
     const handle = await declaredHandle(scopeHandle, lending);
     if (!handle.ok) throw new Error(`C4 production declared read refused: ${handle.reason}`);
@@ -89,7 +89,7 @@ export async function c4SelectionRuntime() {
   } catch (error) { runtime.close(); throw error; }
 }
 
-async function restore(preset: "lending" | "selection") {
+async function restore(preset: "lending" | "selection", standing = false) {
   const bootstrap = preset === "lending" ? await c4Bootstrap() : await c4SelectionBootstrap();
   const application = "lending" in bootstrap ? bootstrap.lending : bootstrap.application;
   const now = timeMs(bootstrap.captured[0]!.ledger.now)!;
@@ -180,7 +180,7 @@ async function restore(preset: "lending" | "selection") {
       if (method === "POST" && path === `/v1/scopes/${bootstrap.membership.scope}/sessions`) {
         counts.sessionRequests++;
         const asked: unknown = JSON.parse(init?.body ?? "null");
-        return Response.json(issueSession({ sessions, clock: M.ports.clock, requests }, M.store, M.core.pinned(), asked));
+        return Response.json(issueSession({ sessions, clock: M.ports.clock, requests }, M.store, M.core.pinned(), asked, address.searchParams.get("standing") === "1" ? { standing: true } : undefined));
       }
       const prefix = `/v1/scopes/${application.scope}`;
       const reader = init?.headers?.["authorization"] ?? null;
@@ -209,13 +209,13 @@ async function restore(preset: "lending" | "selection") {
       return actualSigner.sign(bytes);
     } };
     const asked = await signerSessionRequest(bootstrap.membership, signer, timeOf(now + 60_000), "c4-real-read-session");
-    const issued = await requestSession(C4_SERVICE, bootstrap.membership.scope, asked, { fetch });
+    const issued = await requestSession(C4_SERVICE, bootstrap.membership.scope, asked, { fetch, ...(standing ? { standing: true as const } : {}) });
     if (!issued.ok) throw new Error(`C4 production session refused: ${issued.reason}`);
     requireSame(issued.session.claims.key, signer.key, "issued session key");
     requireSame(issued.session.claims.membership, bootstrap.membership, "issued session membership");
     requireSame(issued.session.claims.member, bootstrap.member.member, "issued session member");
     const scopeHandle = new ScopeHandle(httpTransport(C4_SERVICE, { fetch }), application.scope, issued.session.reader());
-    return { scopeHandle, session: issued.session, signer, member: bootstrap.member,
+    return { scopeHandle, fetch, session: issued.session, signer, member: bootstrap.member,
       service: C4_SERVICE, at: application, membership: bootstrap.membership, destination: bootstrap.destination,
       counts, routes, now: () => now, clock: { now: () => now, set: wallClock.set, clear: wallClock.clear },
       readInputs: async () => ({ is: "ready" as const, session: issued.session }),

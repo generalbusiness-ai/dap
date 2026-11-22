@@ -180,7 +180,7 @@ const namedOwners = {
     "packages/cli/src/command-issues.ts:linking": "e425a12db2c6e4da95f28b73f366215f4347592d6b868d3fd943fab497766280"
   },
   "packages/mcp/src/service.ts": {
-    "packages/mcp/src/service.ts:$module": "6645f739bedb8e071e32c52d0860deb022ffdeac9ac38ba77d4e4e2cb84af90e", // C4 adds after, now and #nowFor; EK-1 reads standing from the held session at the membership head and ends it on an authority refusal.
+    "packages/mcp/src/service.ts:$module": "26e494dd7aff9e511ce30c21e2ab8e671ccfbd92739202d51f1550647e1fde8d", // C4 adds after, now and #nowFor; EK-1 reads standing from the held session at the membership head and ends it on an authority refusal.
     "packages/mcp/src/service.ts:ListRestart": "83803f5cf365099c3ed7ad6d12153b68e7616977007feffed4ca4b01bd4ca95d",
     "packages/mcp/src/service.ts:SERVER_NAME": "1a22dd379fec10cbed8b5938dfd522ce9e8cffe176de5f4554e3cad8668764e2",
     "packages/mcp/src/service.ts:SERVER_VERSION": "93926c4b4205a41211c5dfd2e083d8a5d4eed978060ba4d0781fb54d9d3eb366",
@@ -214,7 +214,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:scopeRefArg": "54eb8fcb90bd3e5dbacec1eb71f853e5a3b578aae10d11a24d3c0ee0d69a88b3",
     "packages/mcp/src/service.ts:memberRefArg": "80b4a7634bee92e5b6d8b03dea6102cbf701fcab94198e54de219783961ee281",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "d074b4ca45666739ea2378799553c26def5a05c8f09e60396d37d378f7b8a5c2", // LV5 checks the retained presence viewer and selected row before a bound live action.
+    "packages/mcp/src/service.ts:McpService": "b388ed3ae6575315c3b1a9867b35911756643f417f4a0f71d1093c6a97d31cd9", // LV5 checks the retained presence viewer and selected row before a bound live action.
     "packages/mcp/src/service.ts:commitIdFault": "36b75703f0eb36b5abca60906629f23df18a233d26c395f0b61c792eddabe405",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
@@ -345,7 +345,8 @@ const seals = {
   "packages/mcp/src/hosted.ts": "0750d381f492593a1e90825403188ffe9b99766fb31d684787569b7d14ce9144",
   "packages/mcp/src/hosted-retirement.ts": "ca631baf28f180b8d64e988ab7c5e5583ce0c96e0b374be1acee7c8723ef2a8d", // R15 caller-envelope and verified enrollment target owner.
   "packages/mcp/src/views/remote-origins.ts": "81c7e7a044690df7c00a30691ddc5e0da11531fabad2a9143d2d389ff8c0a1b1", // Exact remote presentation URL policy; no authority selection.
-  "packages/mcp/src/hosted-tools.ts": "bea3d3cea128bd76102e36d0876992c1b77a5bf2263f376082c1f329d2035a60", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/hosted-tools.ts": "a9580d9855fc01c45e723a5b1047e1dc393099ae6b739956eb952403c3b3cbfc", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/explore-result.ts": "f6109d31edce6b73b44cfaba37f37ffc6de2a23ef24bf3838a0a24f0f1500426", // E2 bounds journal input and requires a complete projected delta.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
   "packages/mcp/src/catalogue.ts": "0ee898b27949f5450f991f70e0fe1fc9f0820e6fb45aa97afe1a04a593a98d24", // Reviewed R5 admission owner; NF-4 imports declarationDigest from the client install module.
   "packages/mcp/src/input-schema.ts": "6d6e4d779fbbcc39d3eaf899d487e9ca9008aff0f0f2bb26490a6ceebbfe979e", // Moved MCP schema derivation; actual maintained parser output.

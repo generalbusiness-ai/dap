@@ -10,6 +10,11 @@ export type { Observe, ReplicaOptions, ReplicaState, ReplicaView, Row, SignedEnt
 export type { Judged, Judging } from "./replica-judged.ts";
 export { UnheldEntry } from "./replica-own.ts";
 
+import type { Timestamp } from "@generalbusiness/dap-contract";
+import type { Kind } from "./declared.ts";
+import type { PartialAct, Exploration } from "./act-types.ts";
+import type { Session } from "./session.ts";
+import { exploreReplica } from "./replica-explore.ts";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
 import type { Replica } from "./replica.ts";
@@ -36,3 +41,10 @@ export type { AuthorizationPort } from "./authorization-store.ts";
 
 export { actVersion } from "./act-version.ts";
 export type { Source, ItemName, Revision } from "./act-types.ts";
+
+/** Explore against the replica's checked cut and the host's checked session. */
+export async function explore<D extends DeclaredDefinition, K extends Kind<D>>(replica: Replica<D>, key: string,
+  act: PartialAct<D, K>, authority: { readonly session: Session; readonly requestedAt: Timestamp },
+  clock: () => Timestamp): Promise<Exploration<D, K>> {
+  return (await exploreReplica(replica, key, act, { ...authority, clock })).exploration;
+}

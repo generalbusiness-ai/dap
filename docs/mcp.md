@@ -129,11 +129,11 @@ a notification, is not run and issues no session.
 
 The list has two parts.
 
-- **The generic tools**, the same for every room: `room`, `commons`, `inspect`,
+- **The generic tools**, the same for every room: `explore`, `room`, `commons`, `inspect`,
   `create`, `join`, `install_application`, `application_installation`,
   `prepare`, `items`, `steps`, `step`, `record`, `sends`, `text`, `wait`,
   `settle`, `credential` and `diff`, and in `--generic` and `--generic=add` modes
-  `actions` and `act`. These are the twenty names of
+  `actions` and `act`. These are the twenty-one names of
   `GENERIC_TOOL_NAMES` in `packages/mcp/src/hosted-tools.ts`. The hosted
   endpoint omits `create`, `install_application`, `credential`, `diff`,
   `prepare`, `join` and `record` by default. `MCP_TOOL_ADDITIONS`
@@ -1925,6 +1925,77 @@ The acts of one scope, as act tools would describe them: each kind with its deri
     },
     "required": [
       "scope"
+    ],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  }
+}
+```
+
+### `explore`
+
+Explore one act against an authenticated declared scope without submitting it. The result is a prediction, not a commitment.
+
+The context states the standing used for the judgment and its `authorityAge` in milliseconds at that context’s clock. The age is local elapsed time since the session request began; it does not prove that membership has stayed unchanged. A moved scope, missing input, expired session, or exceeded read or result limit yields unavailable.
+
+```json
+{
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "string",
+        "pattern": "^sc_[a-z2-7]{51}[aq]$"
+      },
+      "key": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "description": "Your key for this one meaning, 1 to 128 bytes. Keep it."
+      },
+      "act": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "on": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "fields": {
+            "type": "object"
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "required": [
+          "kind",
+          "on",
+          "fields"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "key",
+      "act"
     ],
     "additionalProperties": false
   },

@@ -21,7 +21,7 @@
 import type { DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Head, Intent, Item, KeyId, RefusalReason, SignedIntent } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { REFUSAL_CLASSES, canonicalize, intentDigest, timeMs } from "@generalbusiness/dap-bytes";
-import { MemoryState, applyEntry, clockOf, membershipOf, validateDefinition, type ValidDefinition } from "@generalbusiness/dap-derive";
+import { MemoryState, actionOf, applyEntry, clockOf, judgeExploreGrant, membershipOf, validateDefinition, type ValidDefinition } from "@generalbusiness/dap-derive";
 import type { DeclaredHandle, Kind, ValueOf } from "./declared.ts";
 import { LogProtocolError } from "./handle.ts";
 import { meaningOf } from "./custody.ts";
@@ -32,8 +32,8 @@ import { actExplore } from "./act-explore.ts";
 import { missingActInputs } from "./act-input.ts";
 import type { Act, ActRef, Context, Exploration, Lack, PartialAct, UnavailableContext } from "./act-types.ts";
 import { scopeUsesSession } from "./scope-reader.ts";
-import { registerExplore, type DraftExploreResult, type DraftSelection, type ReplicaExploration } from "./replica-explore.ts";
-import { Session } from "./session.ts";
+import { registerExplore, type DraftExploreResult, type DraftSelection, type ExploreAuthority, type ReplicaExploration } from "./replica-explore.ts";
+import { Session, sessionStanding } from "./session.ts";
 import { UnavailableActSource } from "./act-symbols.ts";
 import { selectDraftSubjects, type DraftSubjects } from "./draft-selection.ts";
 
@@ -138,7 +138,7 @@ export class Replica<D extends DeclaredDefinition> {
     this.#exploration = exploration ? { actor: exploration.actor, member: structuredClone(exploration.member),
       clock: exploration.clock.bind(exploration), ...(exploration.read ? { read: exploration.read.bind(exploration) } : {}),
       ...(exploration.active ? { active: exploration.active.bind(exploration) } : {}) } : null;
-    if (this.#exploration) registerExplore<D>(this, (key, act) => this.#explore(key, act));
+    if (this.#exploration) registerExplore<D>(this, (key, act, authority) => this.#explore(key, act, authority));
     seams.set(this, { held: this.#held, state: () => this.#state });
     const checked = validateDefinition(handle.definition, PROPOSED_BOUNDS);
     this.#definition = checked.ok && checked.definition.digest === handle.digest ? checked.definition : null;
@@ -227,7 +227,7 @@ export class Replica<D extends DeclaredDefinition> {
   close(): void { this.#stop({ by: "close" }); }
 
   /** The operation stays inside this closure; no caller receives the state or Own. */
-  async #explore<K extends Kind<D>>(key: string, input: PartialAct<D, K>): Promise<DraftExploreResult<D, K>> {
+  async #explore<K extends Kind<D>>(key: string, input: PartialAct<D, K>, authority?: ExploreAuthority): Promise<DraftExploreResult<D, K>> {
     const binding = this.#exploration;
     if (!binding) throw new TypeError("exploration requires its constructor identity binding");
     // Own input before the reader's first await. It receives a separate copy.
@@ -237,7 +237,7 @@ export class Replica<D extends DeclaredDefinition> {
     const act = { kind: captured.kind, on: captured.on ?? null, fields: captured.fields ?? {},
       ...(captured.expected === undefined ? {} : { expected: captured.expected }) } as Act<D, K>;
     const state = this.#state, scope = state.scope(), generation = this.#explorationGeneration;
-    let reading = binding.clock();
+    let reading = authority ? authority.clock() : binding.clock();
     const unavailable = (lacks: readonly Lack[]): DraftExploreResult<D, K> => {
       const context: Context | UnavailableContext = {
         scope: structuredClone(this.#handle.at), definition: this.#handle.digest,
@@ -261,7 +261,7 @@ export class Replica<D extends DeclaredDefinition> {
     const read = await binding.read({ actor: binding.actor, member: structuredClone(binding.member),
       scope: structuredClone(this.#handle.at), definition: this.#handle.digest, head: structuredClone(scope!.head),
       key, act: structuredClone(captured) });
-    reading = binding.clock();
+    reading = authority ? authority.clock() : binding.clock();
     if (!current()) return unavailable(["source"]);
     if (read.is === "unavailable") return unavailable(read.lacks.length ? read.lacks : ["source"]);
     const session = read.session, claims = session instanceof Session ? session.claims : null;
@@ -272,6 +272,23 @@ export class Replica<D extends DeclaredDefinition> {
       || canonicalize(membership) !== canonicalize(binding.member.membership)
       || !scopeUsesSession(this.#handle.scope, session) || session.endedBy(reading)
       || timeMs(reading) === null) return unavailable(["authority-unavailable"]);
+    let checkedAuthority: Context["authority"];
+    let grants: Parameters<typeof import("@generalbusiness/dap-derive").judgeActBody>[3]["grants"] = null;
+    if (authority) {
+      const began = timeMs(authority.requestedAt), now = timeMs(reading);
+      if (session !== authority.session || !session.standing || !sessionStanding(session.standing, { membership, key: binding.actor }, claims) || began === null || now === null || now < began
+        || !Number.isSafeInteger(now - began)) return unavailable(["authority-unavailable"]);
+      const declaration = Object.hasOwn(this.#definition!.declared.acts, act.kind) ? this.#definition!.declared.acts[act.kind] : undefined;
+      if (!declaration) return unavailable(["authority-unavailable"]);
+      const action = actionOf(declaration, this.#definition!);
+      if (action === null) return unavailable(["authority-unavailable"]);
+      const judged = judgeExploreGrant(session.standing, { scope: scope!.at, membership, key: binding.actor,
+        action, clock: clockOf(state, reading) });
+      if (judged.result === "authority-unavailable") return unavailable(["authority-unavailable"]);
+      grants = judged.result === "current" ? [{ grant: judged.grant, current: true }] : [];
+      checkedAuthority = { standing: structuredClone(session.standing), claims: structuredClone(claims),
+        requestedAt: authority.requestedAt, authorityAge: now - began };
+    }
 
     // A remote request is not a local outside operation. Inspect actual local
     // operation/record inventory as well as the pinned capability declarations.
@@ -280,7 +297,7 @@ export class Replica<D extends DeclaredDefinition> {
       || (snapshot.records?.length ?? 0) > 0) return unavailable(["source"]);
     const context = { actor: binding.actor, scope: structuredClone(this.#handle.at),
       clock: clockOf(state, reading), bounds: PROPOSED_BOUNDS, facts: [], prepared: [],
-      own: this.#held.own, grants: null, membership, owners: null, evidence: [] };
+      own: this.#held.own, grants, membership, owners: null, evidence: [], ...(checkedAuthority ? { authority: checkedAuthority } : {}) };
     this.#held.take();
     let result: Exploration<D, K>;
     try { result = actExplore(this.#definition!, state, { key, act: captured, context }); }

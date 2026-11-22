@@ -45,6 +45,8 @@ export interface Context {
   readonly standing: readonly FactRef[] | null;
   readonly clock: Timestamp;
   readonly evidence: readonly Digest[];
+  /** E2 only: checked session standing and the conservative local age in milliseconds. */
+  readonly authority?: { readonly standing: import("./session.ts").SessionStanding; readonly claims: import("@generalbusiness/dap-contract").SessionClaims; readonly requestedAt: Timestamp; readonly authorityAge: number };
 }
 
 /** An unavailable exploration can lack a recorded scope altogether. */
@@ -123,7 +125,7 @@ export type Lack = UnavailableReason | "intent" | "entry" | "source" | "due";
 export type Exploration<D extends DeclaredDefinition, K extends Kind<D>> =
   | IncompleteExploration<D, K>
   | { readonly is: "admitted"; readonly source: Source; readonly act: BoundAct<D, K>; readonly context: Context;
-      readonly bound: readonly string[]; readonly effects: readonly ActEffect[]; readonly sends: number;
+      readonly bound: readonly string[]; readonly effects: readonly ActEffect[]; readonly sends: number; readonly changed?: readonly ItemName[];
       readonly opens: ItemName | null; readonly judgesTime: boolean; readonly after: ActView<D> }
   | { readonly is: "refused"; readonly act: BoundAct<D, K>; readonly context: Context; readonly bound: readonly string[];
       readonly reason: RefusalReason; readonly class: RefusalClass;

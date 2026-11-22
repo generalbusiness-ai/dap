@@ -11,7 +11,7 @@ test("hosted tool settings default closed, admit only known additions, and prese
   expect(hostedMcpTools({ MCP_ENABLED: "true", MCP_CARD_ORIGINS: '[{"host":"claude","url":"https://example.com/mcp","domain":"wrong.example"}]' })).toBeNull();
   const omitted = ["create", "install_application", "credential", "diff", "prepare", "join", "record"];
   // `step` and `text` give the agent loop a full fact and complete bounded text.
-  expect(policy).toEqual(["room", "commons", "inspect", "application_installation", "items", "steps", "step", "sends", "text", "wait", "settle", "actions", "act"]);
+  expect(policy).toEqual(["explore", "room", "commons", "inspect", "application_installation", "items", "steps", "step", "sends", "text", "wait", "settle", "actions", "act"]);
   for (const name of omitted) expect(policy).not.toContain(name);
   const additions = hostedMcpTools({ MCP_ENABLED: "true", MCP_TOOL_ADDITIONS: '["create","record"]' })!;
   expect(additions).toContain("create");

@@ -3,7 +3,7 @@ import { remoteCardOrigins } from "./views/remote-origins.ts";
 import { configuredMcpResources, type ResourceSettings } from "./oauth-resource.ts";
 import type { OAuthSettings } from "./oauth-clients.ts";
 export interface HostedMcpSettings extends ResourceSettings, OAuthSettings { MCP_ENABLED?: string; MCP_TOOL_ADDITIONS?: string }
-export const GENERIC_TOOL_NAMES = ["room", "commons", "inspect", "create", "join", "install_application", "application_installation", "prepare", "items", "steps", "step", "record", "sends", "text", "wait", "settle", "credential", "diff", "actions", "act"] as const;
+export const GENERIC_TOOL_NAMES = ["explore", "room", "commons", "inspect", "create", "join", "install_application", "application_installation", "prepare", "items", "steps", "step", "record", "sends", "text", "wait", "settle", "credential", "diff", "actions", "act"] as const;
 export const HOSTED_TOOL_OMISSIONS: readonly string[] = ["create", "install_application", "credential", "diff", "prepare", "join", "record"];
 
 /** Malformed settings close the endpoint; there is no runtime fallback. */
