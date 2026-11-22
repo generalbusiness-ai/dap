@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:efd7714a26db1f28b24d443e4c634325a0c3962a","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/workspace-host.ts."}
+{"kind":"artifact","text":"notes/2026-10-09-shared-language-volatile-acts.md at exact 6332fa5b2bf90607e681aa5da404ddec17709646 on ns1-sequenced-correction-20261121, under promise git:sha1…86b3b6b on request git:sha1…7cf5141","body":{"commit":"6332fa5b2bf90607e681aa5da404ddec17709646","path":"notes/2026-10-09-shared-language-volatile-acts.md"}}
