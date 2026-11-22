@@ -51,12 +51,13 @@ with no pledge/link, increments generation and clears serial/count/last speaker/
 fulfillment/deadline/link while preserving participants, activity and history.
 It cannot settle or discard private unknown requests.
 
-The [four coherent witnesses](commitments.test.ts) are authored against the
+The [five tests](commitments.test.ts) are authored against the
 real validator, restricted evaluator, judges, sealing and fold with in-memory
 Ledger state and scripted current grants. They cover canonical identity and
 closure; contention/activity/fairness/completion; failure/cancel/paired expiry/
-wrong-next/reset/late reports; and max16/ownership/removal/re-entry. They have
-**not been run**. Memory refolding is not native persistence, native authority,
+wrong-next/reset/late reports; max16/ownership/removal/re-entry; and the
+fulfilled count across all 16 pairs of pledge resolutions. Memory refolding
+is not native persistence, native authority,
 Worker restart, durable custody, audible completion or V1 delivery evidence.
 
 [commitments.json](commitments.json) contains readable source JSON. [commitments-pin.ts](commitments-pin.ts) currently names:

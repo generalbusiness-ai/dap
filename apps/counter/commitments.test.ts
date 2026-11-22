@@ -166,3 +166,26 @@ test("live participant cap and exact ownership survive removal, re-entry and non
   expect(s.state.count("promise", "pledged")).toBe(0);
   await wrote(act(s, keys.rita, "pause")); refold(s);
 });
+
+test("lastNumber counts fulfilled pledges across every pair of resolutions", async () => {
+  const resolutions = ["fulfill", "fail", "cancel", "expire"] as const;
+  for (const first of resolutions) for (const second of resolutions) {
+    const s = make(3), participant = await activate(s, keys.una);
+    let fulfilled = 0;
+    for (const step of [first, second]) {
+      if (board(s).state === "paused") await wrote(act(s, keys.rita, "start"));
+      await wrote(act(s, keys.una, "commit", claimFields(s, participant)));
+      const held = promise(s);
+      if (step === "expire") {
+        s.now = held.values["until"] as typeof s.now;
+        expect(s.drain().map(j => j.result)).toEqual(["write", "write"]);
+      } else {
+        const fields = resolution(s, held.id);
+        await wrote(act(s, step === "cancel" ? keys.rita : keys.una, step,
+          step === "fail" ? { ...fields, reason: "process-error" } : fields, held.id));
+      }
+      if (step === "fulfill") fulfilled++;
+      expect(board(s).values["lastNumber"], [first, second].join(" → ")).toBe(fulfilled);
+    }
+  }
+});
