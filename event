@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f7a48cf8bda5a0eaed6a05f72f2b974a1aea59d4","text":"Merge retired a covered predecessor; the successor is at packages/client/test/c4-draft-now.test.ts."}
+{"kind":"promise","text":"Checker will verify local E3 merge c02f76a0 on published d82afed2: parents, tree, trailers, receipt 596d740e, 28 paths, commitment, left-live, working tree."}
