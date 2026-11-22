@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:95c8d71840fa690fb86358e6f9795471786509ed","text":"Use the planner’s PB-3 request for the client. Carry session refresh, watch closure and unknown answers into that work."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e89187b25baf08eaf8efab7f2f0533764d0da1ad","text":"Use the planner’s PB-2 request for the gateway. Carry the wrong-origin control and real gateway witness into that work."}
