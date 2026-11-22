@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"packages/cli/src/line.ts at exact 414ab7f71122ebd694f8e719bbdce8c322da6fd0 on builder/cj1-on-ob-l-20261122, under CJ-1 promise 380ed640. Refiled against the live test evidence and restatement 9d066930.","body":{"commit":"414ab7f71122ebd694f8e719bbdce8c322da6fd0","path":"packages/cli/src/line.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:edc866f0020b67ccd5b7469579c3e5115b1639ee","text":"The same exact CJ-1 apps/room/page/assets.ts artifact now rests on live gate provenance."}
