@@ -982,57 +982,65 @@ export class ScopeClient<D extends DeclaredDefinition> {
     return { key: input.key, act, sources: [...sources.values()], subjects };
   }
 
+  async #captureViaGraph(transaction: AuthorizationTransaction, captured: readonly AuthorizationInput[], index: number,
+    sources: readonly Source[], ordered: boolean) {
+    const prerequisites = new Map<string, { identity: AuthorizationIdentity; source: Source; row: string; proof: AuthorizationSource | null }>();
+    const aliases: AuthorizationSource[] = [];
+    const prefix: { source: Source; act: AuthorizedAct }[] = [];
+    const visited = new Set<string>(), active = new Set<string>();
+    const orderedKeys = ordered ? new Map(captured.map((input, index) => [input.key, { index, version: actVersion(input.act) }])) : null;
+    const visit = async (source: Source, before: number): Promise<void> => {
+      const id = canonicalize(source), named = orderedKeys?.get(source.key);
+      if (named && (named.index >= before || named.version !== source.version)) throw new AuthorizationError("source");
+      const local = orderedKeys ? named?.index ?? -1 : captured.findIndex(input => input.key === source.key && actVersion(input.act) === source.version);
+      if (local >= before) throw new AuthorizationError("source");
+      if (active.has(id)) throw new AuthorizationError("source");
+      if (visited.has(id)) return;
+      active.add(id);
+      let act: AuthorizedAct, dependencies: readonly Source[];
+      if (local >= 0) {
+        const step = captured[local]!;
+        act = step.act;
+        try { dependencies = (await this.#retentionStep(step, captured.slice(0, local), transaction)).sources; }
+        catch (error) { if (!(error instanceof PendingVia)) throw error; dependencies = error.sources; }
+      } else {
+        const inspected = await transaction.inspectSource(source);
+        if (inspected.is === "unavailable") throw new AuthorizationError("source");
+        const identity = this.#authorizationIdentity(source.key);
+        const row = await transaction.find(identity);
+        if (!row) throw new AuthorizationError("source");
+        if (inspected.is === "resolved") {
+          const proof = structuredClone(inspected.value);
+          prerequisites.set(id, { identity, source, row: canonicalize(row), proof });
+          aliases.push(proof);
+          active.delete(id); visited.add(id);
+          return;
+        }
+        if (!await this.#pending(row)) throw new AuthorizationError("source");
+        const held = row.versions[inspected.position]!;
+        prerequisites.set(id, { identity, source, row: canonicalize(row), proof: null });
+        act = held.act; dependencies = held.after;
+      }
+      for (const dependency of dependencies) await visit(dependency, local >= 0 ? local : before);
+      active.delete(id); visited.add(id); prefix.push({ source, act });
+    };
+    if (ordered) for (const step of captured.slice(0, index)) await visit({ key: step.key, version: actVersion(step.act) }, index);
+    for (const source of sources) await visit(source, index);
+    return { prerequisites: [...prerequisites.values()], prefix, aliases };
+  }
+
   /** Capture a bounded exact source graph under the store fence; explore it outside the fence. */
   async #prepareVia(inputs: readonly AuthorizationInput[], index: number, ordered = false): Promise<ViaPlan> {
     const captured = structuredClone(inputs), target = captured[index]!;
     const graph = await this.#options.store.exclusive(async () => {
       this.#state();
       const transaction = this.#authorization(this.#options.store.authorizations);
-      const prerequisites = new Map<string, { identity: AuthorizationIdentity; source: Source; row: string; proof: AuthorizationSource | null }>();
-      const aliases: AuthorizationSource[] = [];
-      const prefix: { source: Source; act: AuthorizedAct }[] = [];
-      const visited = new Set<string>(), active = new Set<string>();
-      const visit = async (source: Source, before: number): Promise<void> => {
-        const id = canonicalize(source);
-        const local = captured.findIndex(input => input.key === source.key && actVersion(input.act) === source.version);
-        if (local >= before) throw new AuthorizationError("source");
-        if (active.has(id)) throw new AuthorizationError("source");
-        if (visited.has(id)) return;
-        active.add(id);
-        let act: AuthorizedAct, dependencies: readonly Source[];
-        if (local >= 0) {
-          const step = captured[local]!;
-          act = step.act;
-          try { dependencies = (await this.#retentionStep(step, captured.slice(0, local), transaction)).sources; }
-          catch (error) { if (!(error instanceof PendingVia)) throw error; dependencies = error.sources; }
-        } else {
-          const inspected = await transaction.inspectSource(source);
-          if (inspected.is === "unavailable") throw new AuthorizationError("source");
-          const identity = this.#authorizationIdentity(source.key);
-          const row = await transaction.find(identity);
-          if (!row) throw new AuthorizationError("source");
-          if (inspected.is === "resolved") {
-            const proof = structuredClone(inspected.value);
-            prerequisites.set(id, { identity, source, row: canonicalize(row), proof });
-            aliases.push(proof);
-            active.delete(id); visited.add(id);
-            return;
-          }
-          if (!await this.#pending(row)) throw new AuthorizationError("source");
-          const held = row.versions[inspected.position]!;
-          prerequisites.set(id, { identity, source, row: canonicalize(row), proof: null });
-          act = held.act; dependencies = held.after;
-        }
-        for (const dependency of dependencies) await visit(dependency, local >= 0 ? local : before);
-        active.delete(id); visited.add(id); prefix.push({ source, act });
-      };
       let sources: readonly Source[];
       try { await this.#retentionStep(target, captured.slice(0, index), transaction); throw new AuthorizationError("source"); }
       catch (error) { if (!(error instanceof PendingVia)) throw error; sources = error.sources; }
-      if (ordered) for (const step of captured.slice(0, index)) await visit({ key: step.key, version: actVersion(step.act) }, index);
-      for (const source of sources) await visit(source, index);
+      const graph = await this.#captureViaGraph(transaction, captured, index, sources, ordered);
       this.#state();
-      return { prerequisites: [...prerequisites.values()], prefix, aliases };
+      return graph;
     });
     // The bridge validates these captured authored fields against this exact declaration.
     const prefix = graph.prefix.map(item => ({ source: item.source, act: item.act as unknown as PartialAct<D, Kind<D>> }));
@@ -1083,43 +1091,29 @@ export class ScopeClient<D extends DeclaredDefinition> {
   async #retainComposition(steps: readonly CompositionStep[]): Promise<readonly AuthorizationPosition[]> {
     const captured = structuredClone(steps);
     if (!captured.length) throw new AuthorizationError("source");
-    const byKey = new Map<string, { index: number; source: Source }>();
-    for (const [index, step] of captured.entries()) {
-      if (!validKey(step.source.key) || byKey.has(step.source.key) || actVersion(step.act) !== step.source.version) throw new AuthorizationError("source");
-      byKey.set(step.source.key, { index, source: step.source });
+    const keys = new Set<string>();
+    for (const step of captured) {
+      if (!validKey(step.source.key) || keys.has(step.source.key) || actVersion(step.act) !== step.source.version) throw new AuthorizationError("source");
+      keys.add(step.source.key);
     }
     await this.read(); this.#state();
     const inputs = captured.map(step => ({ key: step.source.key, act: step.act }));
-    const prerequisites = await this.#options.store.exclusive(async () => {
+    const graph = await this.#options.store.exclusive(async () => {
       this.#state();
       const transaction = this.#authorization(this.#options.store.authorizations);
-      const found = new Map<string, ViaPlan["prerequisites"][number] & { proof: AuthorizationSource }>();
-      for (const [index, input] of inputs.entries()) {
-        let sources: readonly Source[];
-        try { sources = (await this.#retentionStep(input, inputs.slice(0, index), transaction)).sources; }
-        catch (error) { if (!(error instanceof PendingVia)) throw error; sources = error.sources; }
-        for (const source of sources) {
-          const prior = byKey.get(source.key);
-          if (prior) {
-            if (prior.index >= index || prior.source.version !== source.version) throw new AuthorizationError("source");
-            continue;
-          }
-          const inspected = await transaction.inspectSource(source);
-          if (inspected.is !== "resolved") throw new AuthorizationError("source");
-          const identity = this.#authorizationIdentity(source.key), row = await transaction.find(identity);
-          if (!row) throw new AuthorizationError("source");
-          found.set(canonicalize(source), { identity, source, row: canonicalize(row), proof: structuredClone(inspected.value) });
-        }
-      }
+      const index = inputs.length - 1, target = inputs[index]!;
+      let sources: readonly Source[];
+      try { sources = (await this.#retentionStep(target, inputs.slice(0, index), transaction)).sources; }
+      catch (error) { if (!(error instanceof PendingVia)) throw error; sources = error.sources; }
+      const found = await this.#captureViaGraph(transaction, inputs, index, sources, true);
       this.#state();
-      return [...found.values()];
+      return found;
     });
     const last = captured.at(-1)!;
-    const prefix = captured.slice(0, -1).map(step => ({ source: step.source, act: step.act as unknown as PartialAct<D, Kind<D>> }));
-    const aliases = prerequisites.map(item => item.proof);
-    const checked = await exploreReplicaChain(this.#replica, prefix, last.source.key, last.act as unknown as PartialAct<D, Kind<D>>, undefined, aliases);
+    const prefix = graph.prefix.map(step => ({ source: step.source, act: step.act as unknown as PartialAct<D, Kind<D>> }));
+    const checked = await exploreReplicaChain(this.#replica, prefix, last.source.key, last.act as unknown as PartialAct<D, Kind<D>>, undefined, graph.aliases);
     if (checked.is !== "admitted" || canonicalize(checked.exploration.source) !== canonicalize(last.source) || !checked.current()) throw new AuthorizationError("source");
-    return this.#retainAuthorizations(inputs, checked.current, true, prerequisites);
+    return this.#retainAuthorizations(inputs, checked.current, true, graph.prerequisites);
   }
 
   async #retainAuthorizations(inputs: readonly AuthorizationInput[], current?: () => boolean, ordered = false,
