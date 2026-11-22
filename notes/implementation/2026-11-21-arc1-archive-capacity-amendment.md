@@ -1,0 +1,49 @@
+# ARC-1 archive remedies
+
+Status: Native sealed a local J4 `change/propose-manifest` entry with 98
+distinct facts across 33 source scopes. The unchanged archive driver
+disabled the prefix because the native registry has no J4 root policy.
+The privacy preflight separately refused its stored `hold@2` preparation.
+The filtered Native log is
+`~/play/artroom-evidence/2026-11-22-arc1-shipped-manifest-focused/archive-native-summary.txt`,
+SHA-256 `4a8a01ad829808cca76bb4a7d971674975f7a14efd82405cc2843bc705248b61`.
+The original Native log's SHA-256 is
+`3d6f9703c516a1110c87f88578d7de9f51be3cfc9b0e571c40d5df3a9d986631`.
+The filtered log omits the fixture receipt.
+
+Under ruling `bd91ac8ac7028635a1af0809fee591133dc50d32`, step 1 of
+`a02976090677aab379c9d1d12624074f36fbac04` now measures the widest legal
+entry for each platform or Lending family covered by a shipped archive
+policy. Use the existing driver and pass budget. Any later request adding
+J4 archiving must archive and measure the 98-fact manifest as an
+acceptance condition. Finding `86fcedeb5888e042ab7f6261b44a43ec82d612fb`
+records the separate narrow foreign-hold refusal.
+
+Amendment for ruling `47849971d432410e395909b9d7216ead5934ced8`. Both options retain the existing archive pass ceilings. Neither establishes an eventual-export guarantee for every admitted entry.
+
+| Question | A: staged private copying | B: prospective admission envelope |
+|---|---|---|
+| Rows and bytes | One proposed stage has at most 193 rows: one header, 64 source rows, and 128 ordered use receipts. Under the draft's explicit 256 KiB birth and declaration limits, 1 KiB source frame and receipt limits, and 8 KiB header, the logical bound is 33,759,232 bytes. SQLite overhead, buffers, and any retained fact bodies are additional and need bounds. | Adds no archive staging rows. Admission must price the whole single-entry pass across entries, attempts, graph nodes, calls, metadata, input work, time, parent and finish work under the unchanged limits. An individual use count does not prove those costs fit. |
+| Wake floor and due wakes | Existing retry delay has a 60-second floor and 3,600-second cap. With uninterrupted no-progress retries, the derived steady interval rates are 60, 30, 15, 7.5, 3.75, 1.875, then 1 scheduled due wake per room-hour. A proposed progress stage at the 60-second floor can schedule at most 60 stage passes per room-hour. | Uses the existing retry schedule. A supported new admission would avoid an entry exceeding a proven envelope on its own; it does not remove other retry causes or change the wake floor. |
+| External requests | One due wake is an owning-scope alarm, not one request per use. Actual cross-object requests and provider calls depend on the reached phase and fan-out. Multiply measured calls per pass by the applicable due rate; do not treat SQL ledger calls or uses as external requests. | The same accounting applies. Admission pricing must include source births, declarations, policy and support graph work, and finish costs. It does not itself measure provider or cross-object calls. |
+| Restart, move, partial work, cleanup | Resume bounded staged rows after restart. Fence them by room incarnation, head, candidate, target and policy. A move or changed binding invalidates stale staging. Keep incomplete work unpublished; the archive owner cleans staged rows in bounded batches after publication, invalidation, stop or retirement without deleting pending publication custody. | Adds no cleanup owner and stores no new archive receipt. Restart recomputes and pays again. A move gives no transferred admission credit. A partial pass retains only a confirmed prefix; it cannot skip the obstructing entry or infer provider completion. Existing retention and privacy rules govern cleanup. |
+| Already stuck entries | May help only if the existing candidate fits its source cap and the final complete revalidation/export fits the unchanged budget. The draft does not yet prove either final-budget condition or progress. | Prospective only. An older accepted entry can remain a first-entry obstacle; grandfathering, migration or an operational repair needs a separate decision. |
+| Shipped act compatibility | The same legacy entry and its actual source cardinality matter; staging cannot assume one distinct source per use. | `change/propose-manifest` has a **static shape upper bound of 99 distinct foreign facts**: 32 decisions, up to 64 selected-record facts, two optional facts and a presented pin. That is not an observed 99-use accepted entry. The pinned T3 native manifest matched 7 sealed lane uses across 3 full source references. That case measures admission and its sealed use count. It did not measure archiving the 99-fact shape. A cap below 99 could exclude shape-valid inputs; the first actually affected legal act remains to be witnessed. |
+
+## Measurement and unresolved bounds
+
+The scalar witness used 128 uses and 64 distinct source sequences in one candidate. Its first pass retried on the input-work limit at `scout-next`: 132,860,477 input-work units of the 134,217,728-unit allowance were charged before a further 5,085,568-unit debit, a 3,728,317-unit shortfall. The second observed pass also retried on a limit. Neither pass created a pending mark or advanced the confirmed boundary. Floor policy was disabled, so the witness observed no floor behavior. It used stand-ins for grants, source preparation, policy, host and clock; it did not measure a provider or production resolver. The scalar emission is `~/play/artroom-evidence/2026-11-21-arc1-focused/arc1-focused-20261121-emission-summary.log`, SHA-256 `5c784db2283eca4194a3de88e244e5dd14766a83d518f9f84b296f64ac1b3d88`. The emission deliberately exited 1 after the separate passing witness.
+
+The capacity deferral scheduled the first retry 120 seconds later. The fixed fallback then scheduled a 60-second retry. The capacity deferral persists its own counter and drops the original consecutive-retry count. The fixed fallback retains the capacity counter while the pre-Mark retry counter advances. If the same fixed failure continues, the next waits are derived as 120, 240, 480, 960, 1,920 and then 3,600 seconds. At the cap the stuck room schedules one archive-due alarm per hour. The fixture observed two retries. It did not measure a full hour or hosted billing. Other alarm owners can wake the room sooner, and an archive pass can return before it is due.
+
+The current archive caps distinct full source references at 64 before the per-source birth loop. The admitted limit of 128 uses does not mean 128 distinct sources. A candidate with 128 distinct sources fails that cap even with staged copying. For 128 uses over at most 64 sources, the final revalidation and publication still need a complete proof against the existing shared pass budget. Staged receipts must not become independent authority or substitute for current policy and exact fact checks.
+
+A five-producer round-robin fixture used genuine Native authority with scripted host and prebuilt source pins. Every exact width from 128 through 11 was admitted and then failed a limit; width 10 confirmed sequence 1. Width 10 charged 233 attempts and 52,396,743 input-work units, plus separately charged setup of 3,849,600 units. Its scripted host recorded one mint, send and revoke. Width 128 stopped at the limit with 426 attempts and 132,619,055 input-work units. These measurements describe that test profile and parent, not a general admission threshold or production source-preparation cost. The `~/play/artroom-evidence/2026-11-21-arc1-b-focused/arc1-b-native-threshold-20261121-summary.log` has SHA-256 `6737821b789c1dc6034c8c953d3f3658743deda95247a56887aed6a5c5a0c9e0`; its command record explains the deliberate nonzero emission.
+
+A distinct used-source-only test profile made 64 sources available and admitted all 119 tested widths from 128 through 10. None confirmed. Width 10 stopped as unavailable without a recorded capacity shortfall, so this run established no maximum. The retained summary is `~/play/artroom-evidence/2026-11-21-arc1-b-focused/arc1-b-used-sources-20261121-summary.log`, SHA-256 `90ba17b9700c2b6b2d352db160c276466c449656d900076f00bc1dc3a09ad8ba`.
+
+The earlier 64-source profile stopped at width 75 with an inconclusive limit; it is a separate result in the `~/play/artroom-evidence/2026-11-21-arc1-b-focused/arc1-b-focused-20261121-summary.log`, SHA-256 `15e99b02f8418dcc70b8c027958a0df51db30e4d0459d3d6dae7757397781b4d`. The `~/play/artroom-evidence/2026-11-21-arc1-b-focused/arc1-b-control-20261121-summary.log`, SHA-256 `ee2d1eff31000501144a3250edce7b9f6832e8fb479e08bd5674931a5737c25b`, also confirms sequence 1 in its fixture. The `~/play/artroom-evidence/2026-11-21-arc1-t3-focused/verbose-sanitized.log`, SHA-256 `882d9b0f1ddd104034a8854d91f6ed5c95c8407e9922da84ee97370f45139b64`, records seven lane uses and three sources. No measured shipped act was shown to be refused by a proposed bound.
+
+B must establish a conservative whole-pass envelope under the unchanged limits, including parent, policy and finishing costs. A width of 10 is not a safe use-count promise: another supported shape, source graph, retained body, parent or policy can cost more. If no useful all-axis envelope fits, B needs a narrower compatibility boundary or another design. Provider success, policy availability and eventual export remain outside that conditional cost guarantee.
+
+The current archive wake design and durable backoff are recorded in [archive wake rate](2026-11-16-ar1-archive-wake-rate.md). The retained floor design is [retained journal floor](../2026-10-20-retained-journal-floor.md). The [source cap](../../packages/scope/src/archive-source-pins.ts) and [pass budget](../../packages/scope/src/archive-budget.ts) remain unchanged. This amendment records focused evidence and makes no full-gate claim.
