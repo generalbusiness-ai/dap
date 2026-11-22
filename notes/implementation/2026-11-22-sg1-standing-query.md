@@ -48,4 +48,16 @@ checks the Grow source and published packet, Lending and Counter sources,
 their tracked signed packets, and deployed trust rows. Its `run-2.log` has
 SHA-256 `a0c7bcb23bdf7dcb3df77558c44163e39357626d25a0cb0c7a6aed5a9abfea0c`.
 
-The official gate and named security review follow CJ-1.
+At clean candidate `b08d652d71c26eee6868cd0621befcf00b65bc58`, tree `4310e56e`, on published CJ-1 `087b1a6`, `npm run pins` passed in 21.592 seconds. It checked generated Page and OAuth equality and release reproduction. The signed release packets remain unchanged. The gateway owner passed 5 tests, the native sandbox owner passed 10 tests, and the client and scope test TypeScript contexts passed. Their commands and raw results are in `~/play/artroom-evidence/2026-11-22-b08d652-sg1-published-cj-focused/`:
+
+| Log | SHA-256 |
+|---|---|
+| `pins.log` | `b645d9e00fa45fe32ecfd81ef69c854b4b329ddd515195020eb4c5b5fcf8f693` |
+| `gateway.log` | `c23c8f50d86b50a2882382064476079f2189316de5f885f0fe0e5242d8577685` |
+| `native-loopback.log` | `c6a7ada259a39f9fba45fd6c87da00859a0ce01404615e2c3c3d9f79718d7328` |
+| `client-tsc.log` | `5aafbced0054965646b93f63d6ee8b7e08b1d31550ecb9e305778050bfda640f` |
+| `scope-tsc.log` | `d02da1a5d6f3351b7e0ddfa680fc8f74ae061d860da56489c6c6caca99e64690` |
+
+The earlier pins run stopped for deployment after its security phase passed. Its partial log has SHA-256 `1733db58a0d7eb91f72761903c1b2afaf249e6b4e82386546807d7fb463b6a79`. The first native run could not bind loopback in the sandbox; `native.log` has SHA-256 `588f1efe8948dd2c9367e971d5927d9bfc9c11ad2806e2539e04cfa9cbf11684`. The subsequent scoped loopback run passed.
+
+The candidate will replay over an unrelated ARC note before the official gate and named security review. This focused evidence does not claim a full gate.
