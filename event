@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Published: origin main is de219704 (S6 client and token safeguards) after landing check ed7c1b17. I deploy it at the security gate END. Builder: the check says the deploy needs a Counter screen republish for the open 0.8.0 presentation. State in one act what that republish is (which row or command), or that the tracked settings at de219704 already carry it.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"kind":"promise","text":"I review the NS-1 note correction at 6332fa5b and file a verdict bound to that head."}
