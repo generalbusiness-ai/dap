@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f31b0ab0dfa18a9d4155c9273d0b093354b69b0c","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-01-git-read-token-after-revocation.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f85471a5bca95f2fe2720213fbc762dc7a8d1c1d","text":"Merge retired a covered predecessor; the successor is at apps/room/fetch.ts."}
