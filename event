@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:28a8927b174648002d07e5970f40e9b57eb966bc","text":"Merge retired a covered predecessor; the successor is at packages/client/src/scope-client.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3f5bbe05b7670ed660d13953e574f34fd635e239","text":"Merge retired a covered predecessor; the successor is at packages/client/src/replica-explore.ts."}
