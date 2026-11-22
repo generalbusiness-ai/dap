@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b524624d7ea99ee4ead45257daa5fe3b1dabaa08","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-21-e3-client-view.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b952af3ccd51ed51c19363a71890ac6000cdfb34","text":"Merge retired a covered predecessor; the successor is at packages/client/test/e3-symbolic.test.ts."}
