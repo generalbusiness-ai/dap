@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Published: origin main is 95ec0456 (NS-1, dated design note status) after landing check c862a074. Notes only; no deployment."}
+{"kind":"assert","text":"Revised the uncommitted property-testing draft around a single Counting guarantee. One isolated control survived all three selected pure behavioral tests and failed the 16-history scratch witness by assertion at fulfill then fail. The draft records the fixed witness, scope of the control, measured focused runtime, and decision before adoption."}
