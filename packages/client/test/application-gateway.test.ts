@@ -73,6 +73,19 @@ test("gateway allows only the exact standing query on session POST", () => {
     expect(applicationGatewayRoute(host, at + `/${route}?standing=1`, "POST"), route).toBe(false);
 });
 
+test("gateway admits only the three exact live routes", () => {
+  const at = `${host.roomOrigin}/v1/scopes/${scope.scope}`;
+  for (const [path, method] of [["live", "GET"], ["live-act", "POST"], ["live-stream", "GET"]] as const) {
+    expect(applicationGatewayRoute(host, `${at}/${path}`, method), path).toBe(true);
+    expect(applicationGatewayRoute(host, `${at}/${path}?extra=1`, method), path).toBe(false);
+    expect(applicationGatewayRoute(host, `${at}/${path}?`, method), path).toBe(false);
+    expect(applicationGatewayRoute(host, `${at}/${path}/extra`, method), path).toBe(false);
+    expect(applicationGatewayRoute(host, `${at}/${path}`, method === "GET" ? "POST" : "GET"), path).toBe(false);
+    expect(applicationGatewayRoute(host, `${at.replace(host.roomOrigin, "https://other.test")}/${path}`, method), path).toBe(false);
+  }
+  expect(applicationGatewayRoute(host, `${at}/live-items/lease`, "GET")).toBe(false);
+});
+
 // GW-1 (request 54e31a40): each read that takes a minimum allows one canonical atLeast of its own scope, beside its own parameters.
 test("gateway allows one canonical read minimum of the same scope on every read that takes one", () => {
   const at = `${host.roomOrigin}/v1/scopes/${scope.scope}`;

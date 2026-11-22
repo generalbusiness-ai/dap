@@ -43,7 +43,7 @@ export default {
     const { host } = mapping, service = env[mapping.service];
     if (!service) return refused(503);
     const metadata = url.pathname === APPLICATION_SCREEN_HOST_PATH;
-    const logical = host.roomOrigin + url.pathname + url.search;
+    const logical = host.roomOrigin + url.pathname + (url.search || (url.href.includes("?") ? "?" : ""));
     const screen = applicationScreenHostMatches(host, url.pathname);
     if (metadata ? request.method !== "GET" || !!url.search : screen ? !["GET", "HEAD"].includes(request.method) || !!url.search : !applicationGatewayRoute(host, logical, request.method)) return refused(404);
     // Both ends pin the same descriptor. A misbound service refuses before
@@ -71,7 +71,7 @@ export default {
     // Bound waiting for response headers by the maintained transport window.
     // Once headers arrive, do not put a deadline on the native head stream;
     // its existing consumer bounds and body cancellation still own it.
-    const stream = !screen && request.method === "GET" && /^\/v1\/scopes\/[^/]+\/stream$/.test(url.pathname);
+    const stream = !screen && request.method === "GET" && /^\/v1\/scopes\/[^/]+\/(?:stream|live-stream)$/.test(url.pathname);
     let exchange: NativeStreamExchange | undefined, closing: Promise<void> | undefined;
     const close = (): Promise<void> => closing ??= (async () => {
       const owned = exchange;

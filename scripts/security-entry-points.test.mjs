@@ -51,7 +51,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:snapshotReaderOf": "24485585bf55db1edb79dbde6d2617c6606541a245dd24a778b8e269d6b19669",
     "packages/scope/src/worker.ts:DeployedScope": "f1b5027752d8eeaba3d3ef14ba0534df71af9b87f3bb640023025e34a5219d2e",
     "packages/scope/src/worker.ts:ApplicationStreamLifetime": "4c82d6b5ea8ae68089f2f80321e3361b6176c9725d0b46481b6f32b6d2093ba3",
-    "packages/scope/src/worker.ts:ApplicationScreenService": "c21c6c69f6b8f28aa64abfd9ca8e11a94a104f560d6430018f8ff9a68d52e5b8"
+    "packages/scope/src/worker.ts:ApplicationScreenService": "be3e1171e821579a62b94983d77ea44f426c7f9e4cd32b936b1a2721c24b28ee"
   },
   "packages/scope/src/worker-mcp.ts": {
     "packages/scope/src/worker-mcp.ts:$module": "e0e50567d6e936b2129d0aa4b2796b158f06f78da4afc9eb8cee7699838ba860",
@@ -423,8 +423,8 @@ const pendingR8Seals = {
   "packages/cli/src/status-report.ts": "cb598058ab244a80cc2d6e741f8be46468eefd005b87d516e60cf6c79e663d7e", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/client/src/session.ts": "4f11f9aa151a85fcf2382d4da12a82349b33e3b07352cb315d46c68612a383c1", // E3 records provenance only for requested standing that passes sessionStanding.
   "packages/client/src/checked-view-session.ts": "6610b9b64767a8ad096576091dceb95d133963988e402686e134482d1153d9cb", // E3 checks issuance provenance and the exact token, claims and standing before trusting a session for a held cut.
-  "apps/sandbox/worker.ts": "758b28ea299eddad07022a913d4b94d632814aa51f2868810300a582ee833f51", // Inject the reply window; retain the existing Native lifetime close on an observed HTTP disconnect.
-  "packages/client/src/application-gateway.ts": "fe6ef69c042161faaf3bf90a8507163f99d0b398c559cdbf6fb5219c7782cbcc", // SG-1 permits the exact standing query only on session POST; PT-1 and GW-1 retain their read bounds.
+  "apps/sandbox/worker.ts": "5d854cd80a32b22e00ba1daeabceaba812ff076ef81c63a5a75890ed7300d2c1", // PB-2 preserves empty query delimiters and the Native stream lifetime.
+  "packages/client/src/application-gateway.ts": "d814abc9bd2f448ddf491425b8cbae69af5e396df5b64f0d005686417bcee797", // PB-2 admits three query-free live routes; SG-1 retains the exact session standing query.
   "packages/client/src/application-route.ts": "62660d1d37d6d75f350d338a3efbb69c37ebcf8fd9d6dd2a27e21472e2d9c23b",
   "packages/scope/src/applications/bindings.ts": "b89e8155ad5479d5b4f9175b2e941ef80b54c75dc9af4a993401c544e150cd78",
 };

@@ -5,15 +5,18 @@ import { expect, test } from "vitest";
 import { canonicalize, isSeed, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { declaredHandle, httpTransport, memoryStore, requestSession, ScopeHandle, secretSigner, sessionRequest } from "@generalbusiness/dap-client";
+import { encodeApplicationProjectionQuery } from "@generalbusiness/dap-platform/application-v2";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { McpService, type ServerPort } from "@generalbusiness/dap-mcp";
 import nativeWorker from "../../../apps/room/worker.ts";
+import sandbox, { type SandboxEnv } from "../../../apps/sandbox/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { liveTurnsOf, type LiveTurns } from "../src/live.ts";
 import { applicationWorkerBindings, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture } from "./fixtures-native.ts";
 import { applicationPresencePacket } from "./support/application-presence-fixture.ts";
 import { rita, routed } from "./repository.ts";
 import { soon } from "./net.ts";
+import { SCREEN_TEST_HOST } from "./worker.ts";
 
 // One installed live child changes only its memory, and rejects a stale generation after eviction.
 test("an installed live presence card enters, renews and leaves without writing storage", async () => {
@@ -142,6 +145,58 @@ test("an installed live presence card enters, renews and leaves without writing 
     expect(reset.generation).not.toBe(generation);
     expect(await life.wait(storage)).toEqual(before);
     expect(await life.wait(() => child.entries())).toEqual(entries);
+
+    // The installed child and issued session cross both real gateway checks.
+    const host = SCREEN_TEST_HOST, original = env.SCREEN_API as unknown as NonNullable<SandboxEnv["ROOM"]>;
+    const internal = (request: Request) => {
+      const url = new URL(request.url);
+      return new Request("http://127.0.0.1:9876" + url.pathname + url.search,
+        { method: request.method, headers: request.headers, body: request.body, redirect: "manual" });
+    };
+    const service: NonNullable<SandboxEnv["ROOM"]> = {
+      screenHost: (...args) => Reflect.apply(original.screenHost, original, args),
+      screen: (...args) => Reflect.apply(original.screen, original, args),
+      native: (origin, request, address) => original.native(origin, internal(request), address),
+      nativeStream: (origin, request, address) => original.nativeStream(origin, internal(request), address),
+    };
+    const gateway: SandboxEnv = { SCREEN_HOSTS: JSON.stringify([{ host, service: "ROOM" }]), ROOM: service };
+    const pending: Promise<unknown>[] = [], execution = { waitUntil: (work: Promise<unknown>) => { pending.push(work); } };
+    const path = `/v1/scopes/${child.name}`;
+    const sendGateway = (suffix: string, init?: RequestInit) => sandbox.fetch(new Request(host.screenOrigin + path + suffix, init), gateway, execution);
+    const auth = { authorization: issued.session.reader() };
+    await life.owner.required(async () => {
+      try {
+        for (const [suffix, method] of [["/live?", "GET"], ["/live-act?", "POST"], ["/live-stream?", "GET"]] as const) {
+          expect((await life.wait(() => sendGateway(suffix, { method, headers: auth }))).status, suffix).toBe(404);
+        }
+        expect((await life.wait(() => sendGateway("/live"))).status).toBe(403);
+        expect((await life.wait(() => sendGateway("/live-stream"))).status).toBe(403);
+        const summary = await life.wait(() => sendGateway("/live", { headers: auth }));
+        expect(summary.status).toBe(200);
+        expect(await summary.json()).toMatchObject({ ok: true, generation: reset.generation });
+        const nonLive = await life.wait(() => sandbox.fetch(new Request(`${host.screenOrigin}/v1/scopes/${M.name}/live`, { headers: auth }), gateway, execution));
+        expect(nonLive.status).not.toBe(200);
+        const counts = () => (child.object as unknown as { serving(): Promise<{ streams: { open: number; released: number } }> }).serving();
+        const beforeWatch = (await life.wait(counts)).streams;
+        const stream = await life.wait(() => sendGateway("/live-stream", { headers: auth }));
+        expect(stream.status).toBe(200);
+        const watch = stream.body!.getReader();
+        try {
+          expect((await life.wait(() => watch.read())).done).toBe(false);
+          const enteredAgain = await typed.handle.intent(signer, "enter", { on: null, fields: {}, expected: {} } as never, { now: life.now() });
+          const body = JSON.stringify({ signed: enteredAgain.signed, grants: [], generation: reset.generation, binding: encodeApplicationProjectionQuery(query) });
+          const denied = await life.wait(() => sendGateway("/live-act", { method: "POST", headers: { "content-type": "application/json" }, body }));
+          expect(denied.status).not.toBe(200);
+          const stale = await life.wait(() => sendGateway("/live-act", { method: "POST", headers: { ...auth, "content-type": "application/json" },
+            body: JSON.stringify({ signed: enteredAgain.signed, grants: [], generation: "old", binding: encodeApplicationProjectionQuery(query) }) }));
+          expect(stale.status).toBe(409);
+          const applied = await life.wait(() => sendGateway("/live-act", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body }));
+          expect([applied.status, await applied.json()]).toMatchObject([200, { answer: "applied", generation: reset.generation }]);
+          expect((await life.wait(() => watch.read())).done).toBe(false);
+        } finally { await watch.cancel(); }
+        expect((await life.wait(counts)).streams).toEqual({ open: beforeWatch.open, released: beforeWatch.released + 1 });
+      } finally { await Promise.all(pending); }
+    });
   } finally { life.release(); }
 });
 

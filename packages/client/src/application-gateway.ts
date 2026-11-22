@@ -56,8 +56,9 @@ export function applicationGatewayRoute(host: ApplicationScreenHost, address: st
     && parts.slice(3).every(part => /^[A-Za-z0-9][A-Za-z0-9._~-]*$/.test(part));
   if (parts[0] !== "v1" || parts[1] !== "scopes" || !isScopeId(parts[2])) return false;
   const what = parts[3], which = parts[4];
-  if (method === "POST") return parts.length === 4 && ["acts", "settle", "sessions"].includes(what ?? "")
-    && (!url.search || what === "sessions" && url.search === "?standing=1");
+  if (method === "POST") return parts.length === 4 && (["acts", "settle", "sessions"].includes(what ?? "")
+    && (!url.search || what === "sessions" && url.search === "?standing=1")
+    || what === "live-act" && !address.includes("?"));
   if (method !== "GET") return false;
   // GW-1: a read that takes a minimum (summary, history, items,
   // application-projection, entries) may also carry one atLeast: the
@@ -73,6 +74,7 @@ export function applicationGatewayRoute(host: ApplicationScreenHost, address: st
     if (what === "history") return minimum("cursor");
     if (["outbox", "log"].includes(what ?? "")) return query("cursor");
     if (what === "stream") return !url.search;
+    if (what === "live" || what === "live-stream") return !address.includes("?");
     if (what === "query-items") return keys.length === 1 && query("q");
     // PT-1: p comes first, the one order that the room's parser reads.
     if (what === "application-projection") return others === 1 && keys[0] === "p" && minimum("p");
