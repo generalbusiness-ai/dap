@@ -2,6 +2,7 @@
 import { expect, test } from "vitest";
 import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
 import { actVersion } from "../src/act-version.ts";
+import { retainComposition } from "../src/scope-composition.ts";
 import { Reads } from "../src/reads.ts";
 import { ScopeHandle } from "../src/handle.ts";
 import { DeclaredHandle } from "../src/declared.ts";
@@ -308,6 +309,105 @@ test("a recorded predecessor supplies a symbolic target to a pending via chain",
     expect(clientReplica(client).authorizationSource(runtime.signer.key, firstSource.key)).toEqual(oldProof);
   } finally {
     release(); handle.scope.submit = submit; store.read = read; client.close();
+    try { await clientIdle(client); } finally { runtime.close(); }
+  }
+});
+
+// The private ordered sequence adds immediate dependencies even for independent acts.
+test("a checked composition orders independent acts before any later signing", async () => {
+  const runtime = await c4SelectionRuntime(), feed = new Feed(), store = memoryStore();
+  const reads = new Reads({ service: runtime.service, fetch: runtime.fetch, signer: runtime.signer, now: runtime.now });
+  const session = await reads.session(runtime.membership);
+  if (!session) { runtime.close(); return expect.fail("Reads must issue a session"); }
+  const requestedAt = reads.sessionRequestedAt(runtime.membership, session);
+  if (!requestedAt) { runtime.close(); return expect.fail("Reads must retain its request start"); }
+  const standingCut = { requestedAt, stillHeld: () => reads.sessionRequestedAt(runtime.membership, session) === requestedAt };
+  const handle = new DeclaredHandle(new ScopeHandle(reads.transport, runtime.at.scope, session.reader()),
+    runtime.at, runtime.handle.definition, runtime.handle.digest);
+  const client = scopeClient(handle, { signer: runtime.signer,
+    member: { service: runtime.service, ...runtime.member, principal: null }, store,
+    drafts: { read: async () => [], write: async () => {}, observe: () => () => {} },
+    observe: feed.observe, clock: runtime.clock, lifetimeSeconds: 60,
+    exploration: async () => ({ is: "ready", session, standingCut }),
+  });
+  let entered!: () => void, release!: () => void, secondEntered!: () => void, secondRelease!: () => void, firstRead!: () => void, secondRead!: () => void;
+  const dispatchStarted = new Promise<void>(resolve => { entered = resolve; });
+  const dispatchAllowed = new Promise<void>(resolve => { release = resolve; });
+  const secondStarted = new Promise<void>(resolve => { secondEntered = resolve; });
+  const secondAllowed = new Promise<void>(resolve => { secondRelease = resolve; });
+  const sawFirst = new Promise<void>(resolve => { firstRead = resolve; });
+  const sawSecond = new Promise<void>(resolve => { secondRead = resolve; });
+  const submit = handle.scope.submit.bind(handle.scope), read = store.read.bind(store);
+  let observing = false;
+  try {
+    feed.emit({ status: "streaming" }); await client.read(); await clientIdle(client);
+    const anchor = client.view.rows("anchor")[0];
+    if (!anchor) return expect.fail("the checked Replica must hold the anchor");
+    const acts = [
+      { kind: "make-target", on: null, fields: { n: 1 }, expected: {} },
+      { kind: "make-target", on: null, fields: { n: 2 }, expected: {} },
+      { kind: "rename-anchor", on: anchor.id, fields: { label: "composed" }, expected: { on: anchor.revision } },
+    ] as const;
+    const sources = acts.map((act, index) => ({ key: `composition-${index}`, version: actVersion(act) }));
+    const initial = { signs: runtime.counts.actSignatures, posts: runtime.counts.submissions };
+    const badSources = sources.map((source, index) => index === 1 ? { ...source, version: actVersion(acts[0]) } : source);
+    const beforeBad = canonicalize(await store.authorizations.read(runtime.signer.key, runtime.at));
+    await expect(retainComposition(client, acts.map((act, index) => ({ source: badSources[index]!, act }))))
+      .rejects.toMatchObject({ reason: "source" });
+    expect(canonicalize(await store.authorizations.read(runtime.signer.key, runtime.at))).toBe(beforeBad);
+    expect([runtime.counts.actSignatures, runtime.counts.submissions, store.records.size]).toEqual([initial.signs, initial.posts, 0]);
+    const held = await retainComposition(client, acts.map((act, index) => ({ source: sources[index]!, act })));
+    expect(held).toHaveLength(3);
+    const rows = await store.authorizations.read(runtime.signer.key, runtime.at);
+    expect(rows.find(row => row.key === sources[1]!.key)?.versions[0]?.after).toContainEqual(sources[0]);
+    expect(rows.find(row => row.key === sources[2]!.key)?.versions[0]?.after).toContainEqual(sources[1]);
+    expect(rows.every(row => row.permissions.length === 0 && row.materializations.length === 0)).toBe(true);
+    expect([runtime.counts.actSignatures, runtime.counts.submissions, store.records.size]).toEqual([initial.signs, initial.posts, 0]);
+    handle.scope.submit = async (signed, grants, beside) => {
+      if (signed.intent.idempotencyKey === sources[0]!.key) { entered(); await dispatchAllowed; }
+      if (signed.intent.idempotencyKey === sources[1]!.key) { secondEntered(); await secondAllowed; }
+      return submit(signed, grants, beside);
+    };
+    const custodyId = (key: string) => identityId({ service: runtime.service, membership: runtime.member.membership,
+      signer: runtime.signer.key, target: runtime.at, key });
+    store.read = async id => {
+      const value = await read(id);
+      if (observing && id === custodyId(sources[0]!.key)) firstRead();
+      if (observing && id === custodyId(sources[1]!.key)) secondRead();
+      return value;
+    };
+    const first = client.sendAuthorization(held[0]!);
+    await Promise.race([dispatchStarted, first.then(() => { throw new Error("first ended before dispatch barrier"); }, error => { throw error; })]);
+    observing = true;
+    const second = client.sendAuthorization(held[1]!).then(value => ({ value }), error => ({ error }));
+    const third = client.sendAuthorization(held[2]!).then(value => ({ value }), error => ({ error }));
+    await Promise.race([Promise.all([sawFirst, sawSecond]), second.then(result => { throw new Error(`second ended while waiting: ${JSON.stringify(result)}`); }),
+      third.then(result => { throw new Error(`third ended while waiting: ${JSON.stringify(result)}`); })]);
+    expect([runtime.counts.actSignatures, runtime.counts.submissions]).toEqual([initial.signs + 1, initial.posts]);
+    expect((await client.authorization(held[1]!.identity))?.permissions).toEqual([]);
+    expect((await client.authorization(held[2]!.identity))?.permissions).toEqual([]);
+    release();
+    const firstAnswer = await first;
+    expect("answer" in firstAnswer && firstAnswer.answer.answer).toBe("accepted");
+    await client.read();
+    await Promise.race([secondStarted, second.then(result => { throw new Error(`second ended before dispatch barrier: ${JSON.stringify(result)}`); })]);
+    expect([runtime.counts.actSignatures, runtime.counts.submissions]).toEqual([initial.signs + 2, initial.posts + 1]);
+    expect((await client.authorization(held[2]!.identity))?.permissions).toEqual([]);
+    secondRelease();
+    const secondAnswer = await second;
+    if (!("value" in secondAnswer)) return expect.fail(`second failed: ${String(secondAnswer.error)}`);
+    expect("answer" in secondAnswer.value && secondAnswer.value.answer.answer).toBe("accepted");
+    await client.read();
+    const thirdAnswer = await third;
+    if (!("value" in thirdAnswer)) return expect.fail(`third failed: ${String(thirdAnswer.error)}`);
+    expect("answer" in thirdAnswer.value && thirdAnswer.value.answer.answer).toBe("accepted");
+    const entries = sources.map(source => clientReplica(client).accepted(runtime.signer.key, source.key));
+    expect(entries.every(entry => entry !== null)).toBe(true);
+    expect(entries[0]!.fact.seq).toBeLessThan(entries[1]!.fact.seq);
+    expect(entries[1]!.fact.seq).toBeLessThan(entries[2]!.fact.seq);
+    expect([runtime.counts.actSignatures, runtime.counts.submissions]).toEqual([initial.signs + 3, initial.posts + 3]);
+  } finally {
+    release(); secondRelease(); handle.scope.submit = submit; store.read = read; client.close();
     try { await clientIdle(client); } finally { runtime.close(); }
   }
 });

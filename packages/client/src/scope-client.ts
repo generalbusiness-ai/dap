@@ -17,6 +17,7 @@ import { AuthorizationError, AuthorizationTransaction, type Authorization, type 
 import type { AuthorizationPort, CustodyBuildFence } from "./authorization-store.ts";
 import type { ItemName, PartialAct, Source } from "./act-types.ts";
 import { actVersion } from "./act-version.ts";
+import { registerComposition, type CompositionStep } from "./scope-composition.ts";
 import { lowerActNames } from "./act-symbols.ts";
 import { exploreReplica, exploreReplicaChain, registerExplore, type DraftExploreResult, type ReadExploreInputs } from "./replica-explore.ts";
 import { openDraftCustodyCut, type DraftCustodyObservation } from "./draft-custody.ts";
@@ -191,6 +192,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
     }) });
     replicas.set(this, this.#replica);
     registerExplore<D>(this, (key, act) => exploreReplica(this.#replica, key, act));
+    registerComposition(this, steps => this.#retainComposition(steps));
     this.#view = this.#compute(this.#assemble({ entries: [], seen: new Map(), authorizations: [], wakeAt: null }));
     this.#stopStore = options.store.observe(() => { this.#background(() => this.#sync()); });
     this.#stopDrafts = options.drafts.observe(() => { this.#background(() => this.#sync()); });
@@ -981,7 +983,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
   }
 
   /** Capture a bounded exact source graph under the store fence; explore it outside the fence. */
-  async #prepareVia(inputs: readonly AuthorizationInput[], index: number): Promise<ViaPlan> {
+  async #prepareVia(inputs: readonly AuthorizationInput[], index: number, ordered = false): Promise<ViaPlan> {
     const captured = structuredClone(inputs), target = captured[index]!;
     const graph = await this.#options.store.exclusive(async () => {
       this.#state();
@@ -1027,6 +1029,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
       let sources: readonly Source[];
       try { await this.#retentionStep(target, captured.slice(0, index), transaction); throw new AuthorizationError("source"); }
       catch (error) { if (!(error instanceof PendingVia)) throw error; sources = error.sources; }
+      if (ordered) for (const step of captured.slice(0, index)) await visit({ key: step.key, version: actVersion(step.act) }, index);
       for (const source of sources) await visit(source, index);
       this.#state();
       return { prerequisites: [...prerequisites.values()], prefix, aliases };
@@ -1074,15 +1077,40 @@ export class ScopeClient<D extends DeclaredDefinition> {
 
   /** One unsigned gesture batch; only the complete owner/scope replacement can commit. */
   async retainAuthorizations(inputs: readonly AuthorizationInput[]): Promise<readonly AuthorizationPosition[]> {
-    const captured = structuredClone(inputs), gesture = this.#clock.now();
+    return this.#retainAuthorizations(inputs);
+  }
+
+  async #retainComposition(steps: readonly CompositionStep[]): Promise<readonly AuthorizationPosition[]> {
+    const captured = structuredClone(steps);
+    if (!captured.length) throw new AuthorizationError("source");
+    const keys = new Set<string>();
+    for (const step of captured) {
+      if (!validKey(step.source.key) || keys.has(step.source.key) || actVersion(step.act) !== step.source.version) throw new AuthorizationError("source");
+      keys.add(step.source.key);
+    }
     await this.read(); this.#state();
+    const last = captured.at(-1)!;
+    const prefix = captured.slice(0, -1).map(step => ({ source: step.source, act: step.act as unknown as PartialAct<D, Kind<D>> }));
+    const checked = await exploreReplicaChain(this.#replica, prefix, last.source.key, last.act as unknown as PartialAct<D, Kind<D>>);
+    if (checked.is !== "admitted" || canonicalize(checked.exploration.source) !== canonicalize(last.source) || !checked.current()) throw new AuthorizationError("source");
+    return this.#retainAuthorizations(captured.map(step => ({ key: step.source.key, act: step.act })), checked.current, true);
+  }
+
+  async #retainAuthorizations(inputs: readonly AuthorizationInput[], current?: () => boolean, ordered = false): Promise<readonly AuthorizationPosition[]> {
+    const captured = structuredClone(inputs), gesture = this.#clock.now();
+    if (!current) await this.read();
+    this.#state();
     try {
       return await this.#options.store.exclusive(async () => {
         this.#state(); const transaction = this.#authorization(this.#options.store.authorizations);
         const steps: RetainAuthorization[] = [];
-        for (const input of captured) steps.push(await this.#retentionStep(input, captured, transaction));
+        for (const [index, input] of captured.entries()) {
+          const step = await this.#retentionStep(input, captured, transaction);
+          steps.push(this.#orderedStep(step, captured, index, ordered));
+        }
         const held = await transaction.retain(steps, gesture, this.#options.lifetimeSeconds ?? DEFAULT_LIFETIME_SECONDS, row => this.#pending(row));
-        this.#state(); await transaction.commit(); return structuredClone(held);
+        this.#state(); if (current && !current()) throw new AuthorizationError("source");
+        await transaction.commit(); return structuredClone(held);
       });
     } catch (error) { if (!(error instanceof PendingVia)) throw error; }
     const plans = new Map<number, ViaPlan>();
@@ -1092,7 +1120,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
         try { await this.#retentionStep(captured[index]!, captured.slice(0, index), transaction); return false; }
         catch (error) { if (error instanceof PendingVia) return true; throw error; }
       });
-      if (pending) plans.set(index, await this.#prepareVia(captured, index));
+      if (pending) plans.set(index, await this.#prepareVia(captured, index, ordered));
     }
     if (plans.size === 0) throw new AuthorizationError("source");
     return this.#options.store.exclusive(async () => {
@@ -1100,15 +1128,28 @@ export class ScopeClient<D extends DeclaredDefinition> {
       for (const plan of plans.values()) await this.#checkViaPrerequisites(transaction, plan);
       const steps: RetainAuthorization[] = [];
       for (let index = 0; index < captured.length; index++) {
-        try { steps.push(await this.#retentionStep(captured[index]!, captured.slice(0, index), transaction, plans.get(index))); }
+        try { steps.push(this.#orderedStep(await this.#retentionStep(captured[index]!, captured.slice(0, index), transaction, plans.get(index)), captured, index, ordered)); }
         catch (error) { if (error instanceof PendingVia) throw new AuthorizationError("source"); throw error; }
       }
       const held = await transaction.retain(steps, gesture, this.#options.lifetimeSeconds ?? DEFAULT_LIFETIME_SECONDS, row => this.#pending(row));
       for (const [index, plan] of plans) await this.#checkViaOrder(transaction, plan, held[index]!);
       this.#state();
       for (const plan of plans.values()) if (!plan.current()) throw new AuthorizationError("source");
+      if (current && !current()) throw new AuthorizationError("source");
       await transaction.commit(); return structuredClone(held);
     });
+  }
+
+  #orderedStep(step: RetainAuthorization, batch: readonly AuthorizationInput[], index: number, ordered: boolean): RetainAuthorization {
+    if (!ordered) return step;
+    for (const source of step.sources) {
+      const position = batch.findIndex(item => item.key === source.key);
+      if (position >= 0 && (position >= index || actVersion(batch[position]!.act) !== source.version)) throw new AuthorizationError("source");
+    }
+    if (index === 0) return step;
+    const previous = batch[index - 1]!;
+    const source = { key: previous.key, version: actVersion(previous.act) };
+    return { ...step, sources: [...new Map([...step.sources, source].map(value => [canonicalize(value), value])).values()] };
   }
 
   /** Fill once using only this instance's checked source entries and post-entry revisions. */
