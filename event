@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:77573dadeaa94a8813560c4023a64ca4c322dfcf","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/command-issues.ts."}
+{"kind":"promise","text":"I check the S6 landing at local main de219704."}
