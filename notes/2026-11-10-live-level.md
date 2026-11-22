@@ -1,6 +1,10 @@
 # The live level: a first version
 
-Status: current. Draft 2, for request `bf1992ae`. LV1 admission landed in `1f81ac01`. The graph part of LV4 landed in `fb7b5388`. The remaining live runtime and client work follows the heads in section 8.
+Status: current. Draft 2, for request `bf1992ae`. LV1 landed at
+`1f81ac01`, the LV4 graph at `fb7b5388`, LV2 at `c20e5315`, LV3 reads
+and watch at `af2f675f`, the LV3 retained budget at `dbc4aecd`, LV4 tools
+at `446e2ab8`, LV5 at `cfcfb7c9`, and the O2 retry cutoff at `d58ff62f`.
+Section 11 records the resolved and remaining points.
 
 A scope's definition declares one durability level: live, recorded or
 sequenced. Recorded is built. The sequenced level has its design in the
@@ -403,32 +407,32 @@ definition.
 
 ## 8. Heads
 
-Each is one head with one gate. They follow identifiers head (c+d),
-because a live act is addressed to a `SequenceRef`. The level needs no
-creation family of its own. A room that installs ordinary packages can
-install one with a live scope.
+These heads followed identifiers head (c+d), because a live act is
+addressed to a `SequenceRef`. The level needs no creation family of its
+own. A room that installs ordinary packages can install one with a live
+scope. Each row names the landed main commit.
 
 | Head | Owns | Needs | Witness |
 |---|---|---|---|
-| LV1, validator and fold | `live` version 1 in `validateFormat1`, with the refusals of 3.2. The fold's refusal of an entry after a live scope's confirmation. Until LV2 supplies the platform's live mode, `derivable` stays false for live and runtime creation answers `unsupported-definition` without writing (ruling `a1fe9aaf`) | Identifiers head (c+d) | A definition-corpus row for each admitted form, and a refusal pair for each refused form. The corpus row that refuses `live` today becomes an admission. A journal with a third entry does not fold |
-| LV2, the live turn | The object's live mode, chosen by the pinned level. The generation. The turn of 3.3 over memory, with the judges of `derive`. Timed rules from memory. The answers. Any change that a judge needs to run with no sealed entry | LV1 | One definition and one sequence of acts: the live run and the recorded run reach the same items and states. On native storage: an applied act, a refused stale `expected`, and an act that names an old generation after an eviction, answered `reset`. A repeat of an applied intent after a reset applies again. The stored rows after many live acts equal the stored rows after creation |
-| LV3, reads and the watch | The live reads and the watch of 3.5. The bounds of the live state (O1) | LV2 | Two viewers receive a line for a change. A slow viewer reads the latest state. A read names the generation and the tick. A viewer with no session is refused |
-| LV4, package and tools | The package graph's entry for a live scope, and its refusal of a send to one. The app-only MCP tool, the client call and `dap act` | LV1 for the graph. LV3 for the tool | A package with one live scope installs, and a presence card enters, renews and leaves. A package that sends to its live scope is refused |
-| LV5, replay and documents | Replay of the two creation entries. Promises 1, 7 and 11 of the kernel page (4.3). The one-channel audit. `docs/scopes.md`, `docs/write-an-application.md`, the roadmap, and B4 of the members and presence note | LV1 for replay. LV4 for the documents | The replay test that refuses `live` today passes for a live scope's two entries. A forged third entry is a `mismatch` |
+| LV1, validator and fold (`1f81ac01`) | `live` version 1 in `validateFormat1`, with the refusals of 3.2. The fold's refusal of an entry after a live scope's confirmation. LV2 supplies the platform live mode | Identifiers head (c+d) | A definition-corpus row for each admitted form, and a refusal pair for each refused form. Live admission replaces the prior refusal. A journal with a third entry does not fold |
+| LV2, the live turn (`c20e5315`) | The object's live mode, chosen by the pinned level. The generation. The turn of 3.3 over memory, with the judges of `derive`. Timed rules from memory. The answers. Any change that a judge needs to run with no sealed entry | LV1 | One definition and one sequence of acts: the live run and the recorded run reach the same items and states. On native storage: an applied act, a refused stale `expected`, and an act that names an old generation after an eviction, answered `reset`. A repeat of an applied intent after a reset applies again. The stored rows after many live acts equal the stored rows after creation |
+| LV3, reads and the watch (`af2f675f`); retained budget (`dbc4aecd`) | The live reads and the watch of 3.5. The bounds of the live state (O1) | LV2 | Two viewers receive a line for a change. A slow viewer reads the latest state. A read names the generation and the tick. A viewer with no session is refused |
+| LV4, graph (`fb7b5388`); tools (`446e2ab8`) | The package graph's entry for a live scope, and its refusal of a send to one. The app-only MCP tool, the client call and `dap act` | LV1 for the graph. LV3 for the tool | A package with one live scope installs, and a presence card enters, renews and leaves. A package that sends to its live scope is refused |
+| LV5, replay and documents (`cfcfb7c9`) | Replay of the two creation entries. Promises 1, 7 and 11 of the kernel page (4.3). The one-channel audit. `docs/scopes.md`, `docs/write-an-application.md`, the roadmap, and B4 of the members and presence note | LV1 for replay. LV4 for the documents | Replay accepts a live scope's two entries. A forged third entry is a `mismatch` |
 
-LV2 and the graph part of LV4 can run as parallel lanes after LV1.
+O2 added the live-target retry cutoff at `d58ff62f` (section 11).
 
 ## 9. Changes to existing documents
 
 | Document | Change | When |
 |---|---|---|
-| `docs/kernel.md`, sections 7 and 7.1 | Ruling `4b5e0ec2` | This head |
-| Volatile acts note, section 16 | A pointer to this note at its head. 16.1 reads "Live, Recorded or Sequenced" | This head |
-| Sequenced note, sections 2 and 3 | A live scope keeps no entry after its creation. The row for Live in section 2 cites this note. The row for Live in section 3 says what survives and what a fact may cite | This head |
-| `docs/kernel.md`, section 6 | Promises 1, 7 and 11 gain the sentences of 4.3 | LV5 |
-| One-channel audit | The class "judged, not retained" for a live act and a live read | LV5 |
-| `docs/scopes.md`, `docs/write-an-application.md`, `docs/roadmap.md` | The level as built | LV5 |
-| Members and presence note, B4 | Live presence on the member element, on the first version | LV5 |
+| `docs/kernel.md`, sections 7 and 7.1 | Ruling `4b5e0ec2` | Landed in `9f3338ff` |
+| Volatile acts note, section 16 | A pointer to this note at its head. 16.1 reads "Live, Recorded or Sequenced" | Landed in `9f3338ff` |
+| Sequenced note, sections 2 and 3 | A live scope keeps no entry after its creation. The row for Live in section 2 cites this note. The row for Live in section 3 says what survives and what a fact may cite | Landed in `9f3338ff` |
+| `docs/kernel.md`, section 6 | Promises 1, 7 and 11 gain the sentences of 4.3 | Landed in `cfcfb7c9` |
+| One-channel audit | The class "judged, not retained" for a live act and a live read | Landed in `cfcfb7c9` |
+| `docs/scopes.md`, `docs/write-an-application.md`, `docs/roadmap.md` | The level as built | Landed in `cfcfb7c9` |
+| Members and presence note, B4 | Live presence on the member element, on the first version | Landed in `cfcfb7c9` |
 
 ## 10. Decisions
 
@@ -454,10 +458,10 @@ LV2 and the graph part of LV4 can run as parallel lanes after LV1.
 
 ## 11. Open points
 
-| Point | Question | Proposed |
+| Point | Question | Status |
 |---|---|---|
-| O1 | The bound on a live scope's state in memory | LV3 proposes a byte bound from the definition's item limits. An act that would pass it is refused `scope-full`. The comment on `Answer` in `packages/contract/src/result.ts` gives that reason to the exhausted budget of the whole scope. For a live scope the budget counts state in memory, so the meaning widens from stored state to held state. LV3 changes the comment and says so as a change to `contract` |
-| O2 | What a live scope answers to a delivery that arrives after its confirmation | `unavailable`. The package check stops the sender before that. LV2 confirms that the sender's own deadline settles its request |
-| O3 | Whether an idle live scope should stay in memory while a watch is open | LV3 measures what the host does. The level promises nothing either way |
-| O4 | The name `live` already means "not final" for items and holds in source | Keep the level's name, which the definition type already has. Documents say "the live level" and "live state", never "a live item" for an open one |
-| O5 | The pass over sessions, leases and messaging that L5 owes | Before any head that adds a form of section 7 that waits |
+| O1 | The bound on a live scope's state in memory | Resolved by ruling `815a46ee` and LV3 retained budget `dbc4aecd`. The logical ceiling is 32 MiB, or the initial charge plus the permitted growth when smaller. The accounting measures encoded records, not host heap. An act over the bound is refused `scope-full` |
+| O2 | What a live scope answers to a delivery that arrives after its confirmation | Ruling `876695ba` and `d58ff62f` put a retry cutoff in the platform dispatcher for a proven live target and a supported authored deadline. An authentic late result remains eligible; an unproven target or unsupported form keeps its ordinary retry schedule |
+| O3 | Whether an idle live scope should stay in memory while a watch is open | LV3 measured local workerd at `a73cf24b`: after 155,002 ms the watched scope kept its generation and tick, while the unwatched scope restarted. This is an observation, not a retention guarantee. See [the LV3 record](implementation/2026-11-21-lv3-live-reads.md#o3-an-idle-live-scope-while-a-watch-is-open) |
+| O4 | The name `live` already means "not final" for items and holds in source | Resolved by the naming practice: use "the live level" and "live state" for this level, and an open item for the other meaning |
+| O5 | The pass over sessions, leases and messaging that L5 owes | Open. Complete the pass before adding a form of section 7 that waits |
