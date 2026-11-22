@@ -1,9 +1,9 @@
 # JSON output for the dap command line
 
 Status: revision 6 is approved (`de6b54f1`) and landed at `facb24f9`.
-CJ-1 is implemented in the current candidate: `--json` covers `remote`,
-`show` and `acts`, with the envelope and early refusals. CJ-2 through
-CJ-5 remain queued. The candidate has not yet passed its full gate.
+CJ-1 adds the JSON envelope to `remote`, `show` and `acts` and refuses
+incompatible commands early in JSON mode. Section 10 lists the later
+slices.
 
 Builder revision 6, under parent request `92d6dddb`, against Main
 `9255e1f8`. Revision 5 is request `f319c428`, approval `53b0335e`, merged
