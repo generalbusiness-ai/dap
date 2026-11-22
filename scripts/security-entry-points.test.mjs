@@ -421,7 +421,8 @@ const pendingR8Seals = {
   "packages/cli/src/scope-index-applications-command.ts": "5af0f495fb9af7ba04b64deda0019e39649c81971196c3999ab60d1d75a26571", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-manifest.ts": "4bd67e5543b060c24e235a15f03983ad590ee77fc94a8a96627e2ad1adcd0155", // Preserve trusted session refusal outcomes; actual maintained parser output.
   "packages/cli/src/status-report.ts": "cb598058ab244a80cc2d6e741f8be46468eefd005b87d516e60cf6c79e663d7e", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "packages/client/src/session.ts": "6e4a3c47ba2a2fc26e2df8a15cdb1e2f64a4dc9e1cb271ec6ea118752338ecfd", // Reviewed CLI session or verification boundary; ES-1 asks for standing on request and keeps it only after sessionStanding checks form and agreement.
+  "packages/client/src/session.ts": "4f11f9aa151a85fcf2382d4da12a82349b33e3b07352cb315d46c68612a383c1", // E3 records provenance only for requested standing that passes sessionStanding.
+  "packages/client/src/checked-view-session.ts": "6610b9b64767a8ad096576091dceb95d133963988e402686e134482d1153d9cb", // E3 checks issuance provenance and the exact token, claims and standing before trusting a session for a held cut.
   "apps/sandbox/worker.ts": "758b28ea299eddad07022a913d4b94d632814aa51f2868810300a582ee833f51", // Inject the reply window; retain the existing Native lifetime close on an observed HTTP disconnect.
   "packages/client/src/application-gateway.ts": "fe6ef69c042161faaf3bf90a8507163f99d0b398c559cdbf6fb5219c7782cbcc", // SG-1 permits the exact standing query only on session POST; PT-1 and GW-1 retain their read bounds.
   "packages/client/src/application-route.ts": "62660d1d37d6d75f350d338a3efbb69c37ebcf8fd9d6dd2a27e21472e2d9c23b",

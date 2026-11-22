@@ -19,7 +19,7 @@ export interface ExploreReadRequest<D extends DeclaredDefinition, K extends Kind
 
 /** Read authentication only. Neither arm supplies authority or an evaluator. */
 export type ExploreRead =
-  | { readonly is: "ready"; readonly session: Session; readonly standingCut?: { readonly requestedAt: Timestamp; readonly stillHeld: () => boolean } }
+  | { readonly is: "ready"; readonly session: Session; readonly requestedAt?: Timestamp; readonly standingCut?: { readonly requestedAt: Timestamp; readonly stillHeld: () => boolean } }
   | { readonly is: "unavailable"; readonly lacks: readonly Lack[] };
 export interface ReadExploreInputs<D extends DeclaredDefinition> {
   <K extends Kind<D>>(request: ExploreReadRequest<D, K>): Promise<ExploreRead>;

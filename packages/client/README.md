@@ -113,6 +113,20 @@ Show the updated draft to the member for a new review before submitting
 again. The two-argument form remains available when the caller does not
 require that exact draft.
 
+## Inspecting a client view
+
+`ClientView.projectedRow` and `projectedRows` present checked projected
+items. A proven pending opening uses its symbolic source in `ref` and in
+item-valued slots; `recorded` holds the recorded row or `null`. A pending
+row without a proven source has `unavailable: "source"` and no `ref`.
+A legacy custody row has `unavailable: "legacy-custody"`, `ref: null`,
+and `recorded: null`.
+
+`ClientView.explore` and `offers` use the view's immutable checked cut,
+authority, and clock. They make no read or signing call. A host can
+supply `viewAuthority` and optional `ticks` to publish new cuts. The
+existing `row` and `rows` methods continue to supply numeric C4 rows.
+
 ## What a transport returns
 
 A reply from a service is untrusted. A transport returns it only when it is

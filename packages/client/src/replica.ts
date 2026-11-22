@@ -102,7 +102,7 @@ export function intentMeaning(intent: Pick<Intent, "kind" | "on" | "fields">): D
 type Listener<D extends DeclaredDefinition> = (view: ReplicaView<D>) => void;
 
 /** TEST SEAM: the entry store and the state of a replica. `scope.ts` does not export it (ruling 7c8774a2, f). */
-export interface Seam { held: HeldEntries; state(): MemoryState }
+export interface Seam { held: HeldEntries; state(): MemoryState; generation(): number; reading(): boolean }
 const seams = new WeakMap<object, Seam>();
 export const seamOf = (replica: Replica<DeclaredDefinition>): Seam => seams.get(replica)!;
 
@@ -143,7 +143,7 @@ export class Replica<D extends DeclaredDefinition> {
       registerExplore<D>(this, (key, act, authority) => this.#explore(key, act, authority));
       registerChainExplore<D>(this, (prefix, key, act, authority, aliases) => this.#exploreChain(prefix, key, act, authority, aliases));
     }
-    seams.set(this, { held: this.#held, state: () => this.#state });
+    seams.set(this, { held: this.#held, state: () => this.#state, generation: () => this.#explorationGeneration, reading: () => this.#reading !== null });
     const checked = validateDefinition(handle.definition, PROPOSED_BOUNDS);
     this.#definition = checked.ok && checked.definition.digest === handle.digest ? checked.definition : null;
     this.#view = this.#compute({ is: "starting" }, null);

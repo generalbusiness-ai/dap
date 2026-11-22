@@ -74,17 +74,26 @@ export async function c4Bootstrap() {
   const { application, ...captured } = await bootstrap("lending");
   return { ...captured, lending: application };
 }
+/** A fixed native fixture with an opened item's self-reference. */
+export const symbolicSelection = { ...selection, name: "test.c4-symbolic-selection",
+  items: { ...selection.items, connector: { ...selection.items.connector,
+    refs: { ...selection.items.connector.refs, self: { fixed: false, required: false, to: { type: "item", of: "connector" } } } } },
+  acts: { ...selection.acts, "make-self": { ...selection.acts["make-connector"],
+    effects: [...selection.acts["make-connector"].effects, { ref: { slot: "self", from: "self" } }] } },
+} as const;
+export async function c4SymbolicBootstrap() { return bootstrap("symbolic"); }
+
 /** Fixed small declaration only; callers cannot supply an application. */
 export async function c4SelectionBootstrap() { return bootstrap("selection"); }
 
-async function bootstrap(preset: "lending" | "selection") {
+async function bootstrap(preset: "lending" | "selection" | "symbolic") {
   // Explicit supported host. installGraph's historical default is git.example.
   // Its host outcome is a labelled fixture, never a fabricated Native Answer.
   const graph = installGraph(BASE_COHORT, undefined, "github.com");
   const { R, D, M, A, G, send } = graph;
   const native = [R, D, M, A, G];
   const materials = new Map<Ledger, RetainedInput[]>();
-  const application = preset === "lending" ? lending : selection;
+  const application = preset === "lending" ? lending : preset === "symbolic" ? symbolicSelection : selection;
   const roles = preset === "lending" ? lendingRoles.roles : selectionMetadata.roles;
   const declaration = canonicalize(application), id = definitionDigest(application);
   const texts = new Map<string, string>([[textDigest(declaration), declaration]]);
@@ -193,7 +202,7 @@ async function bootstrap(preset: "lending" | "selection") {
 }
 
 /** Only these two module-owned TEST presets can enter the native journey. */
-async function packetFor(preset: "lending" | "selection", id: Digest, declaration: string) {
+async function packetFor(preset: "lending" | "selection" | "symbolic", id: Digest, declaration: string) {
   if (preset === "lending") {
     // Same authored definition, host, roles and application capability metadata.
     // Only the TEST presentation is small; no browser build or public packet is exported.

@@ -632,6 +632,43 @@ async function gatedLending() {
     close: () => { client.close(); runtime.close(); } };
 }
 
+// Invariant 7: each new legal edit returns the stale draft before any signature.
+test("two legal remote edits produce two returns before one signing", async () => {
+  const g = await gatedLending();
+  try {
+    const slot = g.slots[0]!, key = g.keys[0]!;
+    const tool = slot.on!.name;
+    if (typeof tool !== "number") return expect.fail("the tool is recorded");
+    const did = async (kind: "borrow" | "return", id: string) => {
+      const packet = await g.runtime.handle.intent(g.runtime.signer, kind, { on: tool,
+        expected: { on: g.runtime.store.item(tool)!.revision, library: g.runtime.store.item(0)!.revision }, fields: { content: id } },
+        { now: g.runtime.now(), idempotencyKey: id, lifetimeSeconds: 60 });
+      const answer = await g.runtime.handle.submit(packet.signed, [], packet.beside);
+      expect(answer.answer).toBe("accepted");
+    };
+    await did("borrow", "remote-borrow");
+    await g.client.read(); await clientIdle(g.client);
+    const signed = g.runtime.counts.actSignatures;
+    expect(await g.client.submit(slot)).toEqual({ ok: false, stop: { stop: "state" }, committed: key });
+    await clientIdle(g.client);
+    const first = returnedOf(g.client, slot);
+    if (first?.by !== "exploration" || first.now.is !== "now") return expect.fail("first return shows now");
+    await did("return", "remote-return");
+    await g.client.read(); await clientIdle(g.client);
+    const afterRemote = g.runtime.counts.actSignatures;
+    expect(afterRemote).toBe(signed + 1);
+    expect(await g.client.submit(slot, first.now.now)).toEqual({ ok: false, stop: { stop: "state" }, committed: key });
+    await clientIdle(g.client);
+    expect(g.runtime.counts.actSignatures).toBe(afterRemote);
+    const second = returnedOf(g.client, slot);
+    if (second?.by !== "exploration" || second.now.is !== "now") return expect.fail("second return shows now");
+    expect(second.now.now.primary?.seen).toBe(g.runtime.store.item(tool)!.revision);
+    expect(g.client.view.drafts.get(slot)).toMatchObject({ values: { content: "borrow 0" } });
+    expect(await g.client.submit(slot, second.now.now)).toEqual({ ok: true, value: key });
+    expect(g.runtime.counts.actSignatures).toBe(afterRemote + 1);
+  } finally { g.close(); }
+});
+
 test("a submit waits for its exploration outside the fence: edit, discard and a submit of another slot complete", async () => {
   const g = await gatedLending();
   try {
