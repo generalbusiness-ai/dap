@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:88895b3fa618ae7b241d60702a9a5895c61f2c52","text":"Merge retired a covered predecessor; the successor is at apps/room/fetch.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8899e6ac8c6d3262cf63cb9a03599b31381879f4","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/command-membership.ts."}
