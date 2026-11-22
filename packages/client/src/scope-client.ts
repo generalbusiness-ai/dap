@@ -1041,7 +1041,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
     return { prerequisites: graph.prerequisites, subjects: structuredClone(projected.subjects), prefix: graph.prefix.map(item => item.source), current: projected.current };
   }
 
-  async #checkViaPrerequisites(transaction: AuthorizationTransaction, plan: ViaPlan): Promise<void> {
+  async #checkViaPrerequisites(transaction: AuthorizationTransaction, plan: Pick<ViaPlan, "prerequisites" | "current">): Promise<void> {
     for (const prerequisite of plan.prerequisites) {
       const current = await transaction.find(prerequisite.identity);
       if (!current || canonicalize(current) !== prerequisite.row) throw new AuthorizationError("source");
@@ -1083,26 +1083,54 @@ export class ScopeClient<D extends DeclaredDefinition> {
   async #retainComposition(steps: readonly CompositionStep[]): Promise<readonly AuthorizationPosition[]> {
     const captured = structuredClone(steps);
     if (!captured.length) throw new AuthorizationError("source");
-    const keys = new Set<string>();
-    for (const step of captured) {
-      if (!validKey(step.source.key) || keys.has(step.source.key) || actVersion(step.act) !== step.source.version) throw new AuthorizationError("source");
-      keys.add(step.source.key);
+    const byKey = new Map<string, { index: number; source: Source }>();
+    for (const [index, step] of captured.entries()) {
+      if (!validKey(step.source.key) || byKey.has(step.source.key) || actVersion(step.act) !== step.source.version) throw new AuthorizationError("source");
+      byKey.set(step.source.key, { index, source: step.source });
     }
     await this.read(); this.#state();
+    const inputs = captured.map(step => ({ key: step.source.key, act: step.act }));
+    const prerequisites = await this.#options.store.exclusive(async () => {
+      this.#state();
+      const transaction = this.#authorization(this.#options.store.authorizations);
+      const found = new Map<string, ViaPlan["prerequisites"][number] & { proof: AuthorizationSource }>();
+      for (const [index, input] of inputs.entries()) {
+        let sources: readonly Source[];
+        try { sources = (await this.#retentionStep(input, inputs.slice(0, index), transaction)).sources; }
+        catch (error) { if (!(error instanceof PendingVia)) throw error; sources = error.sources; }
+        for (const source of sources) {
+          const prior = byKey.get(source.key);
+          if (prior) {
+            if (prior.index >= index || prior.source.version !== source.version) throw new AuthorizationError("source");
+            continue;
+          }
+          const inspected = await transaction.inspectSource(source);
+          if (inspected.is !== "resolved") throw new AuthorizationError("source");
+          const identity = this.#authorizationIdentity(source.key), row = await transaction.find(identity);
+          if (!row) throw new AuthorizationError("source");
+          found.set(canonicalize(source), { identity, source, row: canonicalize(row), proof: structuredClone(inspected.value) });
+        }
+      }
+      this.#state();
+      return [...found.values()];
+    });
     const last = captured.at(-1)!;
     const prefix = captured.slice(0, -1).map(step => ({ source: step.source, act: step.act as unknown as PartialAct<D, Kind<D>> }));
-    const checked = await exploreReplicaChain(this.#replica, prefix, last.source.key, last.act as unknown as PartialAct<D, Kind<D>>);
+    const aliases = prerequisites.map(item => item.proof);
+    const checked = await exploreReplicaChain(this.#replica, prefix, last.source.key, last.act as unknown as PartialAct<D, Kind<D>>, undefined, aliases);
     if (checked.is !== "admitted" || canonicalize(checked.exploration.source) !== canonicalize(last.source) || !checked.current()) throw new AuthorizationError("source");
-    return this.#retainAuthorizations(captured.map(step => ({ key: step.source.key, act: step.act })), checked.current, true);
+    return this.#retainAuthorizations(inputs, checked.current, true, prerequisites);
   }
 
-  async #retainAuthorizations(inputs: readonly AuthorizationInput[], current?: () => boolean, ordered = false): Promise<readonly AuthorizationPosition[]> {
+  async #retainAuthorizations(inputs: readonly AuthorizationInput[], current?: () => boolean, ordered = false,
+    prerequisites: ViaPlan["prerequisites"] = []): Promise<readonly AuthorizationPosition[]> {
     const captured = structuredClone(inputs), gesture = this.#clock.now();
     if (!current) await this.read();
     this.#state();
     try {
       return await this.#options.store.exclusive(async () => {
         this.#state(); const transaction = this.#authorization(this.#options.store.authorizations);
+        if (current) await this.#checkViaPrerequisites(transaction, { prerequisites, current });
         const steps: RetainAuthorization[] = [];
         for (const [index, input] of captured.entries()) {
           const step = await this.#retentionStep(input, captured, transaction);
@@ -1125,6 +1153,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
     if (plans.size === 0) throw new AuthorizationError("source");
     return this.#options.store.exclusive(async () => {
       this.#state(); const transaction = this.#authorization(this.#options.store.authorizations);
+      if (current) await this.#checkViaPrerequisites(transaction, { prerequisites, current });
       for (const plan of plans.values()) await this.#checkViaPrerequisites(transaction, plan);
       const steps: RetainAuthorization[] = [];
       for (let index = 0; index < captured.length; index++) {

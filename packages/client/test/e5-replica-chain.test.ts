@@ -238,10 +238,12 @@ test("a recorded predecessor supplies a symbolic target to a pending via chain",
     const dependentAct = { kind: "touch-connector", on: { output: source }, fields: { n: 4 },
       expected: { on: { after: source }, target: { after: source } } } as const;
     const before = { signs: runtime.counts.actSignatures, posts: runtime.counts.submissions };
-    const held = await client.retainAuthorizations([{ key: source.key, act: sourceAct }, { key: "client-via-dependent", act: dependentAct }]);
+    const dependentSource = { key: "client-via-dependent", version: actVersion(dependentAct) };
+    const held = await retainComposition(client, [{ source, act: sourceAct }, { source: dependentSource, act: dependentAct }]);
     const waiting = await client.authorization(held[1]!.identity);
     const sourceRow = await client.authorization(held[0]!.identity);
     expect(sourceRow?.versions[0]?.id).toBe(source.version);
+    expect(sourceRow?.versions[0]?.after).toContainEqual(firstSource);
     expect(sourceRow?.versions[0]?.act).toEqual(sourceAct);
     expect(actVersion(sourceRow!.versions[0]!.act)).toBe(source.version);
     expect(waiting?.versions[0]?.after).toContainEqual(source);
@@ -302,8 +304,9 @@ test("a recorded predecessor supplies a symbolic target to a pending via chain",
       expected: { on: { after: secondSource }, target: { after: secondSource } } } as const;
     const beforeStale = canonicalize(await store.authorizations.read(runtime.signer.key, runtime.at));
     const staleSigns = runtime.counts.actSignatures, stalePosts = runtime.counts.submissions;
-    await expect(client.retainAuthorizations([{ key: secondSource.key, act: sourceAct },
-      { key: "stale-via-dependent", act: staleDependent }])).rejects.toMatchObject({ name: "AuthorizationError", reason: "source" });
+    const staleDependentSource = { key: "stale-via-dependent", version: actVersion(staleDependent) };
+    await expect(retainComposition(client, [{ source: secondSource, act: sourceAct },
+      { source: staleDependentSource, act: staleDependent }])).rejects.toMatchObject({ name: "AuthorizationError", reason: "source" });
     expect(canonicalize(await store.authorizations.read(runtime.signer.key, runtime.at))).toBe(beforeStale);
     expect([runtime.counts.actSignatures, runtime.counts.submissions]).toEqual([staleSigns, stalePosts]);
     expect(clientReplica(client).authorizationSource(runtime.signer.key, firstSource.key)).toEqual(oldProof);
