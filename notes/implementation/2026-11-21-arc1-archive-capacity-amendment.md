@@ -1,11 +1,23 @@
 # ARC-1 archive remedies
 
-Status: Under rulings `a02976090677aab379c9d1d12624074f36fbac04` and
-`2b5f626d0fb779a6e612b48457f529feea926dde`, step 1 measures the archive
-pass for the widest shipped `change/propose-manifest` entry that Native
-seals. The matched local-hold control sealed 98 distinct facts across 33
-source scopes. Archive it within the existing pass budget before choosing
-a remedy. Test the narrow foreign-hold refusal separately.
+Status: Native sealed a local J4 `change/propose-manifest` entry with 98
+distinct facts across 33 source scopes. The unchanged archive driver
+disabled the prefix because the native registry has no J4 root policy.
+The privacy preflight separately refused its stored `hold@2` preparation.
+The filtered Native log is
+`~/play/artroom-evidence/2026-11-22-arc1-shipped-manifest-focused/archive-native-summary.txt`,
+SHA-256 `4a8a01ad829808cca76bb4a7d971674975f7a14efd82405cc2843bc705248b61`.
+The original Native log's SHA-256 is
+`3d6f9703c516a1110c87f88578d7de9f51be3cfc9b0e571c40d5df3a9d986631`.
+The filtered log omits the fixture receipt.
+
+Under ruling `bd91ac8ac7028635a1af0809fee591133dc50d32`, step 1 of
+`a02976090677aab379c9d1d12624074f36fbac04` now measures the widest legal
+entry for each platform or Lending family covered by a shipped archive
+policy. Use the existing driver and pass budget. Any later request adding
+J4 archiving must archive and measure the 98-fact manifest as an
+acceptance condition. Finding `86fcedeb5888e042ab7f6261b44a43ec82d612fb`
+records the separate narrow foreign-hold refusal.
 
 Amendment for ruling `47849971d432410e395909b9d7216ead5934ced8`. Both options retain the existing archive pass ceilings. Neither establishes an eventual-export guarantee for every admitted entry.
 
