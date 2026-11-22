@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d4c301028565be19cdeaa7c9ce89badcc823c3dd","text":"Merge retired a covered predecessor; the successor is at packages/client/src/replica-explore.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dc7942e1214d0a95d67a0be0cde1d05b9e292574","text":"Merge retired a covered predecessor; the successor is at apps/counter/scripts/node-witness.test.mjs."}
