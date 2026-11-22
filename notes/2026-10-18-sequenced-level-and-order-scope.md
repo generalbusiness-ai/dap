@@ -91,9 +91,10 @@ export interface DurabilityLevel {
 
 S2 gave the type this form when it withdrew `archived`. An absent
 `level` means recorded (`DeclaredDefinition.level`). The validator
-admits recorded and live version 1 (`validateFormat1` in
-`packages/derive/src/validate/format-1.ts`). It still refuses sequenced
-version 1 until the heads of section 9 land that level.
+admits recorded, live and sequenced version 1 (`validateFormat1` in
+`packages/derive/src/validate/format-1.ts`). H1 added sequenced admission
+in `f4378c9a`, landed in `1f81ac01`. Sequenced remains non-derivable:
+the runtime cannot pin or execute it until the heads of section 9 land.
 
 | Level | What survives | Whose order | Read as of a position | Cited as a fact |
 |---|---|---|---|---|
