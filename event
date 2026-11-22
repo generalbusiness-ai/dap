@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:05a85d82b84820aa2e53e4303d8fbca87a6ee830","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/workspace-expiry.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0644bdb19d7ee2b5d08fab30ad78692ee6570b55","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/issue-wait.ts."}
