@@ -1,0 +1,155 @@
+# BO1-W1: plan for dap-commons
+
+Draft for planner review under request `30bc6c91` and promise `5087f259`.
+The planner must approve the plan before provisioning or the hosted witness.
+
+## Register and founding
+
+Use the separate `dap-commons` Worker at
+`https://dap-commons.inguz.workers.dev`. Leave dap-demo and its register,
+rooms, J4, and S1 untouched. The checked-in cohort is Register 23,
+Directory 22, Membership 9, Rules 14, Destination 16, Inbox 1, and Commons 1.
+Use an owner-only, fresh CLI home and `--cohort commons`. The default cohort
+is different.
+
+The `--plan` path signs and saves locally, so it can run before the Worker
+exists. The operator sets `DAP_W1_HOME` to the absolute path of the private
+CLI home and makes the retained plan.
+
+```sh
+DAP_HOME="$DAP_W1_HOME" dap install --plan https://dap-commons.inguz.workers.dev --cohort commons --host artifacts --namespace dap-commons --register-policy keys
+```
+
+The plan signs the install intent, determines a new public register scope ID,
+and retains the intent and key. Its deadline is 14 minutes. After approval,
+create or verify the Artifacts namespace, then set both
+`REGISTER_SCOPE` and `ARTIFACTS_CONFIG.registerScope` to that same
+`<planned-register-scope>` and deploy the reviewed pair before submitting
+`DAP_HOME="$DAP_W1_HOME" dap install --planned --cohort commons`.
+Record the receipt and full register reference including its genesis hash.
+Verify Register 23 and the founding signer from that reference before a
+founder creates one room. A plan that expires before any attempt needs a new
+private home and a fresh review of both bindings. Reconcile an attempted plan
+from its original home. Never infer non-creation from expiry.
+
+The config retains `SCOPE_INDEX_MODE=enforce`. The index adapter classifies
+`create` as creation and does not require a pre-existing index row. The
+checked-in creation policy includes Register 23. This supports bootstrap
+without register mode or open creation, provided the deployed index binding,
+the exact creation pin and the planned register settings match. The native
+creation and registration must still succeed and be verified after deploy.
+
+## Configuration
+
+The proposal changes three keys in `apps/room/wrangler.commons.jsonc`.
+
+- `vars.REGISTER_SCOPE`: `unplanned` to `<planned-register-scope>`.
+- `vars.ARTIFACTS_CONFIG.registerScope`: `unplanned` to the identical scope.
+- `vars.DEMO_START_CONFIG`: currently contains `register: "unplanned"`.
+  Remove the key for this keys-only CLI-founded plan. The current value has
+  a string `register: "unplanned"`, while `demoCreationConfig` requires a
+  full `{scope, genesis}` reference. Its presence also enables the Page
+  Start link, so leaving it advertises an unusable offer. A later Start setup
+  needs its own reviewed full reference and open-policy decision.
+
+All other checked-in keys remain as written, subject to the planner's review:
+`name`, `main`, compatibility date and flags, `PLATFORM_CREATION_PINS`,
+`SCOPE_INDEX_MODE`, `ARTIFACTS_NAMESPACE`, `APPLICATION_SCREEN_HOSTS`,
+`APPLICATION_TRUST`, the four `SERVING_*` limits, `DEPLOYMENT`,
+`PUBLIC_ORIGIN`, observability settings, and the v1 migration. Bindings are
+`SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, `AGENTS`, `ARTIFACTS`, `METRICS`,
+and `VERSION_METADATA`. The hostname is the Worker URL above. The planner
+sets `SESSION_SECRET` in the private secret store. Do not put secret values,
+private CLI homes, tokens, or signed bodies in this note. Review the deployed
+binding and secret inventory by key before applying it. No new screen trust,
+GitHub key, or open-creation setting is assumed.
+
+## Request budget
+
+An idle, confirmed scope with no other alarm or ingress has no periodic
+archive wake after its wake clears. That is a code-based floor of zero
+archive alarm requests per hour, not a measured total Worker rate. Other
+alarms can run a full archive pass even after confirmation. If there are M
+such alarms per hour, the existing AR-1 analysis allows up to about 6M
+Directory calls, in addition to those alarms. M is not measured for this
+Worker.
+
+For one happy-path room, plan one preflight, 23 ordered note invocations,
+and one final verification within one hour. Each invocation has a
+128-request cap and a 120-second deadline, so 25 × 128 gives at most 3,200
+same-origin witness HTTP requests in that hour. This is not a DO bound.
+
+A baseline with one membership session request per actor per invocation is:
+
+| Work | Scoped requests | Health requests |
+|---|---:|---:|
+| 25 preflights: six summaries, six genesis entries, two Commons summaries, and two Membership sessions each | 400 | 25 |
+| Receipt and text pairs: 253 prior-note checks, 23 immediate checks, and 23 final checks | 598 | 0 |
+| One act per note | 23 | 0 |
+| Final Commons view: one summary, one or two history pages, and 23 text reads | 25–26 | 0 |
+| Total | 1,046–1,047 | 25 |
+
+The 253 prior checks are `0 + 1 + ... + 22`. Each pair assumes the normal
+successful receipt entry read and one text read. A refusal may make
+`followReceipt` read again. The final page count assumes the 23-note history
+fits in one or two pages. MCP preparation, fallback, retries, hosted browser
+reads, setup, provider calls, and internal Worker-to-DO fanout are excluded.
+These are scoped ingress counts, not measured DO requests. Health may itself
+probe readiness. The actual fanout and elapsed time are not established.
+
+The 23 successful notes create 23 new Commons entries. The current native
+archive allowlist in `packages/git/src/archive-policy.ts` does not include
+Commons 1, so the estimate assigns no Commons export pass to those entries.
+For each other archive-bound scope whose archive cannot start, the AR-1
+scenario gives at most six passes in its first hour and one per later hour,
+about 42 and 7 DO requests respectively. The evidence needed for an aggregate
+estimate is the actual per-turn source, provider and alarm work on this Worker.
+
+## Witness and person steps
+
+After the planner approves and performs provisioning, Hugh uses the planned
+founder key to create one room and verifies the full references and pinned
+cohort. Allow approximately 5–10 minutes for the person to review the room,
+receipt, and cohort. These are planning estimates, not measurements.
+
+Hugh authorizes one controlled agent under the room's real Membership 9,
+keeps each actor's key and invitation in its approved private custody, and
+confirms the agent's member and controller. Allow 5–10 minutes. The fixed
+W1 sequence has 23 notes. The agent signs 19: three carriers, 14 rows, the
+list, and the question-links note. Hugh signs the four person marks, one at
+a time from his private custody. Allow 2–5 minutes for each mark, or 8–20
+minutes total for those four decisions. The initial room and agent checks
+add the separate 10–20 minutes estimated above. These are planning estimates,
+not measured times.
+
+Each invocation submits at most its named note. The agent reads under its own
+session, and each later step verifies the accepted earlier receipts and exact
+retained text. After the final note, verify all 23 notes, authors, signers,
+and citation references as described in `examples/commons-bill/README.md`.
+A reference grants no authority to read its target. A check sends nothing.
+A timeout or unknown outcome requires reconciliation of the original request,
+not a replacement signature. Confirm the exact W1 content, agent role,
+access path, and operator who runs it before starting.
+
+## Rollback and teardown
+
+Stop W1 traffic and disable or revoke the controlled agent through the
+recorded membership procedure. Preserve the original request and any unknown
+outcome until reconciled. The planner owns all deployment actions. If the
+new Worker fails, return its route/configuration to the previously reviewed
+closed state and keep its register identity and private custody available for
+inspection. Do not point it at dap-demo or change another Worker's register.
+A committed note and register are durable facts, so a rollback cannot undo
+them. Namespace deletion, Worker removal, retained archive handling and
+credential teardown require a separate planner decision after evidence is
+secured. No automatic destructive cleanup is proposed.
+
+## Decisions and missing evidence
+
+The planner must approve the exact identity pair and operator custody, the
+proposed DEMO_START_CONFIG removal, the actual deployed configuration, and the
+W1 content and agent workflow. Confirm the current Wrangler pin and deployment
+procedure from the reviewed head. Estimate actual DO requests using the
+observed number of scope alarms and turns. Any request to archive Commons
+itself would need an explicit policy for that native definition. The existing
+local BO1 witness establishes the local sequence. W1 measures the hosted path.
