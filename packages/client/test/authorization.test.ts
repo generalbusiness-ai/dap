@@ -7,7 +7,7 @@ import { describe, expect, test } from "vitest";
 import type { Digest } from "@generalbusiness/dap-contract";
 import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
 import { AuthorizationTransaction, type RetainAuthorization } from "../src/authorization.ts";
-import { Custody, memoryStore, type ClientCustodyStore } from "../src/custody.ts";
+import { Custody, identityId, memoryStore, type ClientCustodyStore } from "../src/custody.ts";
 import type { AuthorizationPort } from "../src/authorization-store.ts";
 import { memoryDrafts } from "../src/draft-store.ts";
 import { scopeClient, request, clientReplica } from "../src/scope-client.ts";
@@ -191,6 +191,71 @@ describe.each(stores)("$name", ({ open }) => {
       expect([s.signs(), s.copies.length]).toEqual(count); expect(s.scope.head).toEqual(head);
       await checkSigningAuthorizations(s, audit(opened));
     } finally { client.close(); }
+  });
+
+  test("three retained steps wait for their exact preceding signed records", async () => {
+    const s = requestScene(), opened = open(), { store } = opened;
+    const client = scopeClient(s.handle, { signer: s.signer,
+      member: { service: "https://sequence.test", membership: s.actor.member.membership,
+        member: s.actor.member.member, principal: s.actor.principal },
+      store, drafts: memoryDrafts(), observe: s.feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+    const gate = () => {
+      let entered!: () => void, release!: () => void;
+      return { entered: new Promise<void>(resolve => { entered = resolve; }), hit: () => entered(),
+        allowed: new Promise<void>(resolve => { release = resolve; }), release: () => release() };
+    };
+    const offerGate = gate(), assignGate = gate(), offerRead = gate(), assignRead = gate();
+    const originalRead = store.read.bind(store);
+    let watch = false;
+    store.read = async id => {
+      const value = await originalRead(id);
+      if (watch && id === identityId({ service: "https://sequence.test", membership: s.actor.member.membership,
+        signer: s.signer.key, target: s.handle.at, key: "chain-offer" })) offerRead.hit();
+      if (watch && id === identityId({ service: "https://sequence.test", membership: s.actor.member.membership,
+        signer: s.signer.key, target: s.handle.at, key: "chain-assign" })) assignRead.hit();
+      return value;
+    };
+    s.inspectCopies(async signed => {
+      const key = signed.intent.idempotencyKey;
+      if (key === "chain-offer") { offerGate.hit(); await offerGate.allowed; }
+      if (key === "chain-assign") { assignGate.hit(); await assignGate.allowed; }
+    });
+    try {
+      s.feed.current(s.scope); await client.read();
+      const offer = { kind: "offer", on: null, fields: { intent: 0 }, expected: { intent: s.scope.item(0).revision } };
+      const offerSource = { key: "chain-offer", version: actVersion(offer) }, output = { output: offerSource };
+      const assign = { kind: "assign", on: output, fields: { performer: s.actor.member }, expected: { on: { after: offerSource } } };
+      const assignSource = { key: "chain-assign", version: actVersion(assign) };
+      const report = { kind: "report", on: null, fields: { commitment: output }, expected: { commitment: { after: assignSource } } };
+      const held = await client.retainAuthorizations([{ key: offerSource.key, act: offer }, { key: assignSource.key, act: assign }, { key: "chain-report", act: report }]);
+      const before = s.signs(), first = client.sendAuthorization(held[0]!);
+      await offerGate.entered;
+      watch = true;
+      const middle = client.sendAuthorization(held[1]!), last = client.sendAuthorization(held[2]!);
+      await Promise.all([offerRead.entered, assignRead.entered]);
+      expect(s.signs()).toBe(before + 1);
+      // A real unrelated entry advances the head, so the predicted opening ID moves.
+      const intervening = s.scope.did(s.actor, "link", { fields: { target: s.handle.at, about: 0 } });
+      offerGate.release();
+      const firstResult = await first;
+      expect("answer" in firstResult && firstResult.answer.answer).toBe("accepted");
+      await assignGate.entered;
+      expect(s.signs()).toBe(before + 2);
+      const source = clientReplica(client).accepted(s.signer.key, offerSource.key);
+      if (!source || source.opened === null) return expect.fail("offer must be checked");
+      expect(source.opened).toBe(intervening.seq + 1);
+      assignGate.release();
+      const assigned = await middle, reported = await last;
+      expect("answer" in assigned && assigned.answer.answer).toBe("accepted");
+      expect("answer" in reported && reported.answer.answer).toBe("accepted");
+      const entries = s.copies.filter(copy => copy.intent.idempotencyKey.startsWith("chain-"));
+      expect(entries.map(copy => copy.intent.kind)).toEqual(["offer", "assign", "report"]);
+      expect(entries[1]!.intent.on).toBe(source.opened);
+      expect(entries[2]!.intent.fields["commitment"]).toBe(source.opened);
+      const assignFact = clientReplica(client).authorizationSource(s.signer.key, assignSource.key);
+      expect(entries[2]!.intent.expected["commitment"]).toBe(assignFact?.revisions[source.opened]);
+      await checkSigningAuthorizations(s, audit(opened));
+    } finally { offerGate.release(); assignGate.release(); client.close(); }
   });
 
   test("a pending via selector stops before either store changes, while its recorded subject uses the ordinary path", async () => {

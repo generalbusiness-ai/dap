@@ -80,8 +80,8 @@ export async function c4Runtime(standing = false) {
   } catch (error) { runtime.close(); throw error; }
 }
 /** Fixed selection declaration; no caller chooses a definition or scope. */
-export async function c4SelectionRuntime() {
-  const { scopeHandle, ...runtime } = await restore("selection");
+export async function c4SelectionRuntime(standing = false) {
+  const { scopeHandle, ...runtime } = await restore("selection", standing);
   try {
     const handle = await declaredHandle(scopeHandle, selection);
     if (!handle.ok) throw new Error(`C4 production selection declared read refused: ${handle.reason}`);

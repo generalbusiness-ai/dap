@@ -78,6 +78,13 @@ export interface AuthorizationSource {
     readonly fact: { readonly at: ScopeRef; readonly seq: number; readonly hash: Digest }; readonly opened: number | null };
   readonly revisions: Readonly<Record<number, number>>;
 }
+/** Internal classification. The scope owner decides whether an unrecorded
+ * occurrence still has a live custody record or has ended. */
+export type SourceInspection =
+  | { readonly is: "resolved"; readonly value: AuthorizationSource }
+  | { readonly is: "unrecorded"; readonly identity: AuthorizationIdentity; readonly position: number }
+  | { readonly is: "unavailable" };
+
 /** Positive evidence only; the instance supplies its checked replica, never an adapter's proof object. */
 export interface AuthorizationEvidence {
   authorizationSource(owner: KeyId, key: string): { entry: AuthorizationSource["entry"]; revisions: Readonly<Record<number, number>> } | null;
@@ -197,18 +204,29 @@ export class AuthorizationTransaction {
     await this.#replace({ ...row, cancelledAt: timeOf(at), cancelledAfterPermissions: row.permissions.length });
   }
 
-  /** Resolve a positive source from the actual replica and matching retained content. */
-  async source(source: Source): Promise<AuthorizationSource> {
+  /** Classify the exact current content without deciding custody liveness. */
+  async inspectSource(source: Source): Promise<SourceInspection> {
     const captured = structuredClone(source);
     const identity = { key: captured.key, owner: this.namespace.owner, scope: this.namespace.scope };
-    const row = await this.find(identity), checked = this.evidence?.authorizationSource(identity.owner, identity.key);
-    if (!row || row.cancelledAt !== undefined || row.versions.at(-1)?.id !== captured.version || !checked
-      || checked.entry.actor !== row.owner || checked.entry.key !== row.key || !sameScope(checked.entry.fact.at, row.scope)) return stop("source");
-    // A Source names content. Equal-content gesture occurrences can both explain the same first sealed bytes.
+    const row = await this.find(identity);
+    if (!row || row.cancelledAt !== undefined || row.versions.at(-1)?.id !== captured.version)
+      return { is: "unavailable" };
+    const checked = this.evidence?.authorizationSource(identity.owner, identity.key);
+    if (!checked) return { is: "unrecorded", identity: structuredClone(identity), position: row.versions.length - 1 };
+    if (checked.entry.actor !== row.owner || checked.entry.key !== row.key || !sameScope(checked.entry.fact.at, row.scope))
+      return { is: "unavailable" };
+    // Equal-content occurrences may both explain the first sealed bytes.
+    // Inspect every materialization of this exact version, not just the last.
     const materialized = row.materializations.find(held => row.versions[held.position]?.id === captured.version
       && checked.entry.meaning === meaning(held.act));
-    if (!materialized) return stop("source");
-    return structuredClone({ source: captured, position: materialized.position, entry: checked.entry, revisions: checked.revisions });
+    if (!materialized) return { is: "unavailable" };
+    return { is: "resolved", value: structuredClone({ source: captured, position: materialized.position, entry: checked.entry, revisions: checked.revisions }) };
+  }
+
+  /** Resolve a positive source from the actual replica and matching retained content. */
+  async source(source: Source): Promise<AuthorizationSource> {
+    const inspected = await this.inspectSource(source);
+    return inspected.is === "resolved" ? inspected.value : stop("source");
   }
 
   async item(name: ItemName): Promise<ItemName> {

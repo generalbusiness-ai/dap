@@ -23,6 +23,12 @@ export const selection = {
       parties: {}, refs: {},
       values: { n: { fixed: false, required: true, of: { type: "int", min: 0, max: 9 } } },
     },
+    connector: {
+      many: true, max: 2, initial: "open", states: { open: { final: false }, expired: { final: true } },
+      parties: {}, refs: { target: { fixed: true, required: true, to: { type: "item", of: "target" } } },
+      values: { n: { fixed: false, required: true, of: { type: "int", min: 0, max: 9 } },
+        until: { fixed: true, required: true, of: { type: "time" } } },
+    },
     note: {
       many: true, max: 2, initial: "open", states: { open: { final: false } },
       parties: {}, refs: {},
@@ -64,6 +70,27 @@ export const selection = {
       fields: { label: { type: "text", max: 16, required: true } },
       guards: [], effects: [{ value: { slot: "label", from: { field: "label" } } }], sends: [], attention: [],
     },
+    "make-connector": {
+      step: "open", on: "connector", grant: "c4-selection.connector-open",
+      also: { target: { item: "target", by: "target" } },
+      fields: { target: { type: "item", of: "target", required: true }, until: { type: "time", required: true } },
+      guards: [], effects: [{ ref: { slot: "target", from: { field: "target" } } },
+        { value: { slot: "n", from: { const: 0 } } }, { value: { slot: "until", from: { field: "until" } } }], sends: [], attention: [],
+    },
+    "make-and-revise-connector": {
+      step: "open", on: "connector", grant: "c4-selection.connector-open",
+      also: { target: { item: "target", by: "target" } },
+      fields: { target: { type: "item", of: "target", required: true }, until: { type: "time", required: true } },
+      guards: [], effects: [{ ref: { slot: "target", from: { field: "target" } } },
+        { value: { slot: "n", from: { const: 0 } } }, { value: { slot: "until", from: { field: "until" } } },
+        { of: "also.target", value: { slot: "n", from: { const: 3 } } }], sends: [], attention: [],
+    },
+    "touch-connector": {
+      step: "transition", on: "connector", grant: "c4-selection.connector-touch",
+      also: { target: { item: "target", via: { of: "on", slot: "target" } } },
+      fields: { n: { type: "int", min: 0, max: 9, required: true } },
+      guards: [], effects: [{ value: { slot: "n", from: { field: "n" } } }], sends: [], attention: [],
+    },
     "make-note": {
       step: "open", on: "note", grant: "c4-selection.member",
       also: { anchor: { item: "anchor", one: true }, target: { item: "target", via: { of: "also.anchor", slot: "target" } } },
@@ -71,13 +98,14 @@ export const selection = {
       guards: [], effects: [{ value: { slot: "label", from: { field: "label" } } }], sends: [], attention: [],
     },
   },
-  receives: {}, timed: {}, rules: {},
+  receives: {}, timed: { "connector-expire": { on: "connector", states: ["open"], deadline: "until",
+    effects: [{ state: "expired" }], attention: [] } }, rules: {},
 } as const satisfies DeclaredDefinition;
 
 /** Only these fixed TEST packet fields enter the selection preset. */
 export const selectionMetadata = {
   name: "ai.generalbusiness.c4-selection", version: "0.1.0",
   host: { execution: "recorded-do", profiles: ["restricted@1"] },
-  roles: { admin: ["c4-selection.establish", "c4-selection.member"] },
+  roles: { admin: ["c4-selection.establish", "c4-selection.member", "c4-selection.connector-open", "c4-selection.connector-touch"] },
   capabilities: [],
 } as const;

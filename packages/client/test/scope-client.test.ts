@@ -1,16 +1,17 @@
 /** The in-memory judge/fold is real; the transport, observation and client clock are deterministic stand-ins. */
 import { afterEach, expect, test } from "vitest";
-import type { Digest } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Digest } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { Custody, identityId, memoryStore } from "../src/custody.ts";
 import { secretSigner, signedIntent } from "../src/intent.ts";
-import { keys } from "@generalbusiness/dap-derive/testing";
+import { changedDraft, keys, valid } from "@generalbusiness/dap-derive/testing";
+import { validateDefinition } from "@generalbusiness/dap-derive";
 import { sendableAt } from "../src/originals.ts";
 import { intentMeaning, seamOf } from "../src/replica.ts";
 import { DeclaredHandle, shapeDeclaredAct } from "../src/declared.ts";
 import { ScopeHandle } from "../src/handle.ts";
 import { bindingTransport, type ServiceBinding } from "../src/binding.ts";
-import { Feed, SESSION } from "./replica-support.ts";
+import { citing, Feed, SESSION } from "./replica-support.ts";
 import { scopeClient, request, clientReplica, clientIdle, clientDelivery } from "../src/scope-client.ts";
 import { requestDescriptors, checkSigningAuthorizations, requestScene } from "./request-support.ts";
 import { memoryDrafts, refineDraft, type DraftPort, type StoredDraft } from "../src/draft-store.ts";
@@ -634,20 +635,114 @@ test("a second remark waits behind the pending first remark without signing", as
     s.mode("unavailable");
     await request(client, "first-remark", "remark", { on: 0, fields: { text: "first" } });
     const signs = s.signs(), posts = s.copies.length;
-    const result = await request(second, "second-remark", "remark", { on: 0, fields: { text: "second" } }).catch((error: unknown) => error);
-    expect(s.signs()).toBe(signs);
-    expect(s.copies.length).toBe(posts);
-    expect(result).toMatchObject({ reason: "source" });
+    let retained!: () => void;
+    const retainedSecond = new Promise<void>(resolve => { retained = resolve; });
+    const write = store.authorizations.write.bind(store.authorizations);
+    store.authorizations.write = async (owner, scope, rows) => {
+      await write(owner, scope, rows);
+      if (rows.some(row => row.key === "second-remark")) retained();
+    };
+    let settled = false;
+    const result = request(second, "second-remark", "remark", { on: 0, fields: { text: "second" } })
+      .then(value => { settled = true; return { value }; }, error => { settled = true; return { error }; });
+    await retainedSecond;
     const rows = await store.authorizations.read(s.signer.key, s.handle.at);
     const first = rows.find(row => row.key === "first-remark")!, waiting = rows.find(row => row.key === "second-remark")!;
     expect(waiting.versions[0]!.after).toEqual([{ key: first.key, version: first.versions[0]!.id }]);
+    expect(waiting.versions[0]!.act).toMatchObject({ kind: "remark", on: 0, fields: { text: "second" } });
     expect(waiting.permissions).toEqual([]);
     expect(waiting.materializations).toEqual([]);
     const custody = new Custody(store, () => timeOf(s.now()));
     const identity = { service: "https://requests.test", membership: s.actor.member.membership,
       signer: s.signer.key, target: s.handle.at, key: "second-remark" };
     expect(await custody.find(identity)).toBeNull();
+    expect([s.signs(), s.copies.length, settled]).toEqual([signs, posts, false]);
+    // A cancelled exact source is terminal even if its already signed bytes can still arrive.
+    await client.cancelAuthorization({ key: first.key, owner: s.signer.key, scope: s.handle.at });
+    expect(await result).toMatchObject({ error: { name: "AuthorizationError", reason: "source" } });
+    const returned = (await store.authorizations.read(s.signer.key, s.handle.at)).find(row => row.key === "second-remark");
+    expect(returned?.versions[0]?.act).toEqual(waiting.versions[0]!.act);
+    expect(returned?.permissions).toEqual([]);
+    expect(returned?.materializations).toEqual([]);
+    expect(await custody.find(identity)).toBeNull();
+    expect([s.signs(), s.copies.length]).toEqual([signs, posts]);
   } finally { second.close(); client.close(); }
+});
+
+// The first unsigned source expires before the later dependent's own deadline.
+test("an unsigned source deadline wakes its retained dependent before the dependent deadline", async () => {
+  const s = requestScene(), { client, store, who, drafts } = clientAt(s);
+  const identity = (key: string) => ({ key, owner: s.signer.key, scope: s.handle.at });
+  try {
+    s.feed.current(s.scope); await client.read();
+    const sourceAct = { kind: "remark", on: 0, fields: { text: "unsigned source" }, expected: {} } as const;
+    await client.retainAuthorizations([{ key: "unsigned-expiry-source", act: sourceAct }]);
+    const first = await client.authorization(identity("unsigned-expiry-source"));
+    if (!first) expect.fail("source authorization must be retained");
+    const source = { key: first.key, version: first.versions[0]!.id };
+    const sourceDeadline = Date.parse(first.versions[0]!.deadline);
+    expect(sourceDeadline - s.now()).toBe(60_000);
+    expect(first.permissions).toEqual([]);
+    expect(first.materializations).toEqual([]);
+    s.advance(10_000);
+    let retained!: () => void, timerSet!: () => void;
+    const retainedDependent = new Promise<void>(resolve => { retained = resolve; });
+    const sourceTimer = new Promise<void>(resolve => { timerSet = resolve; });
+    const write = store.authorizations.write.bind(store.authorizations);
+    store.authorizations.write = async (owner, scope, rows) => {
+      await write(owner, scope, rows);
+      if (rows.some(row => row.key === "expiry-dependent")) retained();
+    };
+    const set = s.clock.set.bind(s.clock);
+    s.clock.set = (run, delay) => {
+      const timer = set(run, delay);
+      if (s.now() + delay === sourceDeadline) timerSet();
+      return timer;
+    };
+    const dependentAct = { kind: "remark", on: 0, fields: { text: "retained dependent" }, expected: {} } as const;
+    const signs = s.signs(), posts = s.copies.length;
+    let settled = false;
+    const result = client.submitBoundAct(identity("expiry-dependent"), dependentAct)
+      .then(value => { settled = true; return { value }; }, error => { settled = true; return { error }; });
+    const early = result.then(outcome => { throw new Error(`dependent ended before wait barrier: ${JSON.stringify(outcome)}`); });
+    await Promise.race([retainedDependent, early]);
+    await Promise.race([sourceTimer, early]);
+    const waiting = await client.authorization(identity("expiry-dependent"));
+    if (!waiting) expect.fail("dependent authorization must be retained");
+    expect(waiting.versions[0]!.after).toContainEqual(source);
+    expect(waiting.versions[0]!.act).toEqual(dependentAct);
+    expect(Date.parse(waiting.versions[0]!.deadline) - sourceDeadline).toBe(10_000);
+    expect(waiting.permissions).toEqual([]);
+    expect(waiting.materializations).toEqual([]);
+    const custody = new Custody(store, () => timeOf(s.now()));
+    expect(await custody.find({ ...who, key: "expiry-dependent" })).toBeNull();
+    expect([s.signs(), s.copies.length, settled]).toEqual([signs, posts, false]);
+    await clientIdle(client);
+    expect(client.view.requests.find(row => row.key === "expiry-dependent")).toEqual({
+      is: "authorization", key: "expiry-dependent", reference: { identity: identity("expiry-dependent"), position: 0 },
+      act: dependentAct, status: "waits",
+    });
+    s.advance(sourceDeadline - s.now());
+    expect(s.now()).toBe(sourceDeadline);
+    expect(await result).toMatchObject({ error: { name: "AuthorizationError", reason: "source" } });
+    const returned = await client.authorization(identity("expiry-dependent"));
+    expect(returned?.versions[0]?.act).toEqual(dependentAct);
+    expect(returned?.permissions).toEqual([]);
+    expect(returned?.materializations).toEqual([]);
+    expect(await custody.find({ ...who, key: "expiry-dependent" })).toBeNull();
+    expect([s.signs(), s.copies.length]).toEqual([signs, posts]);
+    await clientIdle(client);
+    const terminal = { is: "authorization", key: "expiry-dependent",
+      reference: { identity: identity("expiry-dependent"), position: 0 }, act: dependentAct, status: "source" };
+    expect(client.view.requests.find(row => row.key === "expiry-dependent")).toEqual(terminal);
+    client.close();
+    const reopened = clientAt(s, store, drafts).client;
+    try {
+      s.feed.current(s.scope); await reopened.read(); await clientIdle(reopened);
+      expect(reopened.view.requests.find(row => row.key === "expiry-dependent")).toEqual(terminal);
+      expect([s.signs(), s.copies.length]).toEqual([signs, posts]);
+    } finally { reopened.close(); }
+  } finally { client.close(); }
 });
 
 test("two captured observed submits from stale views stop busy without a partial second authorization", async () => {
@@ -671,6 +766,206 @@ test("two captured observed submits from stale views stop busy without a partial
     expect(s.copies.length).toBe(posts);
     expect(await store.authorizations.read(s.signer.key, s.handle.at)).toEqual(before);
   } finally { second.close(); client.close(); }
+});
+
+// Invariant 11: the exact retained source must resolve before its dependent can sign.
+test("a symbolic dependent waits for its exact source while an independent observed subject stays busy", async () => {
+  const s = requestScene(), { client, store, who, drafts } = clientAt(s), sourceSend = gate();
+  const secondFeed = new Feed();
+  const second = scopeClient(s.handle, { signer: s.signer,
+    member: { service: "https://requests.test", membership: s.actor.member.membership,
+      member: s.actor.member.member, principal: s.actor.principal },
+    store, drafts, observe: secondFeed.observe, clock: s.clock, lifetimeSeconds: 60 });
+  const identity = (key: string) => ({ key, owner: s.signer.key, scope: s.handle.at });
+  try {
+    s.feed.current(s.scope); secondFeed.current(s.scope); await client.read(); await second.read();
+    const other = s.scope.did(s.actor, "offer", { fields: { intent: 0 }, expected: { intent: s.scope.item(0).revision } }).seq;
+    s.feed.current(s.scope); secondFeed.current(s.scope); await client.read(); await second.read();
+    const observed = { kind: "assign", on: other, fields: { performer: s.actor.member },
+      expected: { on: s.scope.item(other).revision } } as const;
+    s.mode("unavailable");
+    await client.submitBoundAct(identity("observed-first"), observed);
+    s.mode("answer");
+    s.inspectCopies(async signed => {
+      if (signed.intent.idempotencyKey === "opening-source") await sourceSend.wait();
+    });
+    const opening = client.submitBoundAct(identity("opening-source"),
+      { kind: "offer", on: null, fields: { intent: 0 }, expected: { intent: s.scope.item(0).revision } });
+    await Promise.race([sourceSend.started, opening.then(() => { throw new Error("source finished before dispatch barrier"); }, error => { throw error; })]);
+    const sourceRow = await client.authorization(identity("opening-source"));
+    if (!sourceRow) expect.fail("the source must be retained before dispatch");
+    const source = { key: sourceRow.key, version: sourceRow.versions[0]!.id };
+    let retained!: () => void;
+    const dependentRetained = new Promise<void>(resolve => { retained = resolve; });
+    const write = store.authorizations.write.bind(store.authorizations);
+    store.authorizations.write = async (owner, scope, rows) => {
+      await write(owner, scope, rows);
+      if (rows.some(row => row.key === "dependent")) retained();
+    };
+    const dependentAct = { kind: "assign", on: { output: source },
+      fields: { performer: s.actor.member }, expected: { on: { after: source } } } as const;
+    const signs = s.signs(), posts = s.copies.length;
+    const dependent = second.submitBoundAct(identity("dependent"), dependentAct);
+    // Attach the rejection handler before observing the retained-row barrier.
+    let settled = false;
+    const dependentResult = dependent.then(value => { settled = true; return { value }; }, error => { settled = true; return { error }; });
+    await Promise.race([dependentRetained, dependentResult.then(result => { throw new Error(`dependent ended before retention: ${JSON.stringify(result)}`); })]);
+    const waiting = await second.authorization(identity("dependent"));
+    expect(waiting?.versions[0]?.after).toContainEqual(source);
+    expect(waiting?.versions[0]?.act).toEqual(dependentAct);
+    expect(waiting?.permissions).toEqual([]);
+    expect(waiting?.materializations).toEqual([]);
+    expect(await new Custody(store, () => timeOf(s.now())).find({ ...who, key: "dependent" })).toBeNull();
+    expect([s.signs(), s.copies.length]).toEqual([signs, posts]);
+    const beforeBusy = await store.authorizations.read(s.signer.key, s.handle.at);
+    const busy = await second.submitBoundAct(identity("observed-stale"), observed).catch((error: unknown) => error);
+    expect(busy).toMatchObject({ reason: "busy" });
+    expect(await store.authorizations.read(s.signer.key, s.handle.at)).toEqual(beforeBusy);
+    expect([s.signs(), s.copies.length]).toEqual([signs, posts]);
+    expect(settled).toBe(false);
+
+    // An actual entry shifts the source's opening position before the source records.
+    s.scope.did(s.actor, "remark", { on: 0, fields: { text: "intervening entry" } });
+    sourceSend.release(); await opening;
+    s.feed.current(s.scope); secondFeed.current(s.scope); await second.read();
+    const outcome = await dependentResult;
+    expect(outcome).toHaveProperty("value");
+    const row = await second.authorization(identity("dependent"));
+    const proof = row?.materializations[0]?.sources.find(item => item.source.key === source.key);
+    expect(proof?.entry.opened).not.toBeNull();
+    expect(row?.materializations[0]?.act.on).toBe(proof?.entry.opened);
+    if (proof?.entry.opened === null || proof?.entry.opened === undefined) expect.fail("source must open an item");
+    expect(row?.materializations[0]?.act.expected["on"]).toBe(proof.revisions[proof.entry.opened]);
+    expect(s.scope.item(proof.entry.opened).state).toBe("accepted");
+  } finally { sourceSend.release(); second.close(); client.close(); }
+});
+
+test("a dependent waits when an earlier same-content signing can still record", async () => {
+  const s = requestScene(), store = memoryStore(), drafts = memoryDrafts();
+  let now = s.now();
+  s.clock.now = () => now;
+  const { client, who } = clientAt(s, store, drafts, 300), secondFeed = new Feed();
+  const second = scopeClient(s.handle, { signer: s.signer,
+    member: { service: "https://requests.test", membership: s.actor.member.membership,
+      member: s.actor.member.member, principal: s.actor.principal },
+    store, drafts, observe: secondFeed.observe, clock: s.clock, lifetimeSeconds: 60 });
+  const identity = (key: string) => ({ key, owner: s.signer.key, scope: s.handle.at });
+  try {
+    s.feed.current(s.scope); secondFeed.current(s.scope); await client.read(); await second.read();
+    s.mode("unavailable");
+    const act = { kind: "offer", on: null, fields: { intent: 0 }, expected: { intent: s.scope.item(0).revision } } as const;
+    await client.submitBoundAct(identity("same-source"), act);
+    const earlier = s.copies[0]!;
+    await second.submitBoundAct(identity("same-source"), act);
+    const later = s.copies.at(-1)!;
+    const row = await second.authorization(identity("same-source"));
+    if (!row) return expect.fail("the source authorizations must be retained");
+    expect(row.versions).toHaveLength(2);
+    expect(row.versions[0]!.id).toBe(row.versions[1]!.id);
+    expect(row.materializations.map(item => item.position)).toEqual([0, 1]);
+    now = sendableAt(later.intent.notAfter);
+    expect(now).toBeLessThan(sendableAt(earlier.intent.notAfter));
+    secondFeed.current(s.scope); await second.read(); await clientIdle(second);
+    const custody = new Custody(store, () => timeOf(now));
+    const record = await custody.find({ ...who, key: "same-source" });
+    expect(record?.signings).toHaveLength(2);
+    expect(record?.signings[0]?.closed).not.toBe(true);
+    expect(record?.signings[1]?.closed).toBe(true);
+    const source = { key: row.key, version: row.versions[1]!.id };
+    const dependentAct = { kind: "assign", on: { output: source }, fields: { performer: s.actor.member },
+      expected: { on: { after: source } } } as const;
+    let retained!: () => void;
+    const retainedDependent = new Promise<void>(resolve => { retained = resolve; });
+    const write = store.authorizations.write.bind(store.authorizations);
+    store.authorizations.write = async (owner, scope, rows) => {
+      await write(owner, scope, rows);
+      if (rows.some(item => item.key === "same-dependent")) retained();
+    };
+    const signs = s.signs(), posts = s.copies.length;
+    const dependent = second.submitBoundAct(identity("same-dependent"), dependentAct)
+      .then(value => ({ value }), error => ({ error }));
+    await Promise.race([retainedDependent, dependent.then(result => { throw new Error(`dependent ended before retention: ${JSON.stringify(result)}`); })]);
+    const waiting = await second.authorization(identity("same-dependent"));
+    expect(waiting?.permissions).toEqual([]);
+    expect(waiting?.materializations).toEqual([]);
+    expect([s.signs(), s.copies.length]).toEqual([signs, posts]);
+    expect(s.scope.submit(earlier).result).toBe("write");
+    s.mode("answer");
+    secondFeed.current(s.scope); await second.read();
+    expect(await dependent).toHaveProperty("value");
+    const resolved = await second.authorization(identity("same-dependent"));
+    const proof = resolved?.materializations[0]?.sources.find(item => item.source.key === source.key);
+    expect(proof?.position).toBe(0);
+    expect(resolved?.materializations[0]?.act.on).toBe(proof?.entry.opened);
+  } finally { second.close(); client.close(); }
+});
+
+// Section 12 case 3: an earlier recorded meaning cannot resolve a newer version.
+test("a dependent returns its retained input when the source key records an earlier version", async () => {
+  // The additional field changes the authored meaning without changing offer's effects.
+  const declared = changedDraft(citing, d => {
+    d.acts.offer.fields.label = { type: "text", max: 40, required: false };
+  });
+  const s = requestScene(valid(validateDefinition(declared, PROPOSED_BOUNDS)));
+  const { client, store, who } = clientAt(s), earlierSend = gate();
+  const identity = (key: string) => ({ key, owner: s.signer.key, scope: s.handle.at });
+  try {
+    s.feed.current(s.scope); await client.read();
+    s.inspectCopies(async signed => {
+      if (signed.intent.idempotencyKey === "versioned-source") await earlierSend.wait();
+    });
+    const earlier = client.submitBoundAct(identity("versioned-source"),
+      { kind: "offer", on: null, fields: { intent: 0, label: "earlier" }, expected: { intent: s.scope.item(0).revision } });
+    await Promise.race([earlierSend.started, earlier.then(() => { throw new Error("earlier source finished before dispatch barrier"); }, error => { throw error; })]);
+    const latestAct = { kind: "offer", on: null, fields: { intent: 0, label: "latest" }, expected: { intent: s.scope.item(0).revision } } as const;
+    await client.retainAuthorizations([{ key: "versioned-source", act: latestAct }]);
+    const versions = await client.authorization(identity("versioned-source"));
+    if (!versions) expect.fail("both source versions must be retained");
+    expect(versions.versions).toHaveLength(2);
+    expect(versions.versions[0]!.id).not.toBe(versions.versions[1]!.id);
+    const source = { key: versions.key, version: versions.versions[1]!.id };
+    const act = { kind: "assign", on: { output: source }, fields: { performer: s.actor.member },
+      expected: { on: { after: source } } } as const;
+    let retained!: () => void;
+    const retainedDependent = new Promise<void>(resolve => { retained = resolve; });
+    const write = store.authorizations.write.bind(store.authorizations);
+    store.authorizations.write = async (owner, scope, rows) => {
+      await write(owner, scope, rows);
+      if (rows.some(row => row.key === "different-version-dependent")) retained();
+    };
+    const signs = s.signs(), posts = s.copies.length;
+    const result = client.submitBoundAct(identity("different-version-dependent"), act)
+      .then(value => ({ value }), error => ({ error }));
+    await Promise.race([retainedDependent, result.then(outcome => { throw new Error(`dependent ended before retention: ${JSON.stringify(outcome)}`); })]);
+    const waiting = await client.authorization(identity("different-version-dependent"));
+    expect(waiting?.versions[0]?.act).toEqual(act);
+    expect(waiting?.versions[0]?.after).toContainEqual(source);
+    expect(waiting?.permissions).toEqual([]);
+    expect(waiting?.materializations).toEqual([]);
+    expect([s.signs(), s.copies.length]).toEqual([signs, posts]);
+    await clientIdle(client);
+    expect(client.view.requests.find(row => row.key === "different-version-dependent")).toEqual({
+      is: "authorization", key: "different-version-dependent",
+      reference: { identity: identity("different-version-dependent"), position: 0 }, act, status: "waits",
+    });
+    earlierSend.release();
+    const accepted = await earlier;
+    expect("answer" in accepted && accepted.answer.answer).toBe("accepted");
+    s.feed.current(s.scope); await client.read();
+    expect(clientReplica(client).accepted(s.signer.key, "versioned-source")).not.toBeNull();
+    expect(await result).toMatchObject({ error: { name: "AuthorizationError", reason: "source" } });
+    await clientIdle(client);
+    expect(client.view.requests.find(row => row.key === "different-version-dependent")).toEqual({
+      is: "authorization", key: "different-version-dependent",
+      reference: { identity: identity("different-version-dependent"), position: 0 }, act, status: "source",
+    });
+    const returned = await client.authorization(identity("different-version-dependent"));
+    expect(returned?.versions[0]?.act).toEqual(act);
+    expect(returned?.permissions).toEqual([]);
+    expect(returned?.materializations).toEqual([]);
+    expect(await new Custody(store, () => timeOf(s.now())).find({ ...who, key: "different-version-dependent" })).toBeNull();
+    expect([s.signs(), s.copies.length]).toEqual([signs, posts]);
+  } finally { earlierSend.release(); client.close(); }
 });
 
 // A public gesture owns its input before the first store read can suspend it.

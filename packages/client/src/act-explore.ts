@@ -1,25 +1,35 @@
 /** Judge one act body under the caller's checked inputs. This authorizes no send. */
 import type { DeclaredDefinition, KeyId } from "@generalbusiness/dap-contract";
 import { canonicalize, REFUSAL_CLASSES, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { judgeActBody, type StateView, type Texts, type ValidDefinition } from "@generalbusiness/dap-derive";
+import { judgeActBody, LAST_MS, nextDue, timeOf, type StateView, type Texts, type ValidDefinition } from "@generalbusiness/dap-derive";
 import type { Kind } from "./declared.ts";
 import { ShapeError, shapeFieldsOf } from "./declared.ts";
-import type { Act, ActView, Exploration, PartialAct, Source } from "./act-types.ts";
+import type { Act, ActView, Exploration, ItemName, PartialAct, Source } from "./act-types.ts";
 import { actContext, type ExplorationContext } from "./act-context.ts";
 import { bindActBasis } from "./act-basis.ts";
 import { missingActInputs } from "./act-input.ts";
-import { ActProjection, UnavailableEntryValue } from "./act-projection.ts";
+import { ActProjection, UnavailableEntryValue, type RecordedActAlias } from "./act-projection.ts";
 import { copyActState } from "./act-state.ts";
 import { lowerActBasis, lowerActNames, UnavailableActSource } from "./act-symbols.ts";
 import { actVersion } from "./act-version.ts";
+import { effectiveFields, expectedOf } from "./expected.ts";
 
 interface Frame { readonly projection: ActProjection; readonly actor: KeyId }
 const frames = new WeakMap<object, Frame>();
+
+/** The earliest timer in one captured pre-step view. `nextDue` requires an
+ * as-of instant; LAST_MS is derive's maximum representable timestamp. */
+export function actExploreDue<D extends DeclaredDefinition>(definition: ValidDefinition, view: StateView | ActView<D>) {
+  const reader = "all" in view ? view : frames.get(view)?.projection.reader();
+  if (!reader) throw new TypeError("a hypothetical view has no owned projection");
+  return nextDue(reader, definition, timeOf(LAST_MS));
+}
 
 export interface ExploreInput<D extends DeclaredDefinition, K extends Kind<D>> {
   readonly key: string;
   readonly act: PartialAct<D, K>;
   readonly context: ExplorationContext;
+  readonly recordedAliases?: readonly RecordedActAlias[];
 }
 
 /** Added text bytes supplement the port. Other digests retain its readings;
@@ -36,6 +46,22 @@ function withTexts(context: ExplorationContext, values: readonly string[]): Expl
  * is copied at this cut, so a later real submit cannot move that cut. */
 export function actExplore<D extends DeclaredDefinition, K extends Kind<D>>(definition: ValidDefinition,
   view: StateView | ActView<D>, input: ExploreInput<D, K>): Exploration<D, K> {
+  return explore(definition, view, input);
+}
+
+/** Internal selection sidecar, computed only for an admitted body. */
+export function actExploreSubjects<D extends DeclaredDefinition, K extends Kind<D>>(definition: ValidDefinition,
+  view: StateView | ActView<D>, input: ExploreInput<D, K>): {
+    readonly exploration: Exploration<D, K>; readonly subjects: readonly { readonly name: string; readonly item: ItemName }[] | null;
+  } {
+  let subjects: readonly { readonly name: string; readonly item: ItemName }[] | null = null;
+  const exploration = explore(definition, view, input, selected => { subjects = selected; });
+  return { exploration, subjects };
+}
+
+function explore<D extends DeclaredDefinition, K extends Kind<D>>(definition: ValidDefinition,
+  view: StateView | ActView<D>, input: ExploreInput<D, K>,
+  selected?: (subjects: readonly { readonly name: string; readonly item: ItemName }[]) => void): Exploration<D, K> {
   const { context } = input;
   if (context.owners === undefined) throw new TypeError("owners must be supplied explicitly; use null for checked absence");
   // The checked-context adapter associates D with this actual compiled
@@ -62,7 +88,12 @@ export function actExplore<D extends DeclaredDefinition, K extends Kind<D>>(defi
       is: "unavailable", act, context: actContext(definition, view, context, [], []), lacks: ["source"],
     };
     const snapshot = copyActState(view, definition);
-    projection = new ActProjection(definition, snapshot.view);
+    try {
+      projection = new ActProjection(definition, snapshot.view).withRecordedAliases(input.recordedAliases ?? []);
+    } catch (error) {
+      if (error instanceof UnavailableActSource) return { is: "unavailable", act, context: actContext(definition, snapshot.view, context, [], []), lacks: ["source"] };
+      throw error;
+    }
   } else return { is: "unavailable", act, context: actContext(definition, null, context, [], []), lacks: ["source"] };
 
   const reader = projection.reader(), scope = reader.scope();
@@ -76,8 +107,7 @@ export function actExplore<D extends DeclaredDefinition, K extends Kind<D>>(defi
     // private numeric aliases and never enter the public Act or its digest.
     const capture = lowerActNames(act, declared.fields, { item: name => {
       if (typeof name === "number") return name;
-      projection.references.output(name.output);
-      return projection.references.token(name.output);
+      return projection.references.captureOutput(name.output);
     } }, (source, path) => { if (path !== "on") fieldSources.set(canonicalize(path), source); });
     const subjects = projection.references.captureSubjects(projection.raw.all().items);
     const capturedFields = projection.references.captureFields(capture.fields, fieldSources);
@@ -103,6 +133,23 @@ export function actExplore<D extends DeclaredDefinition, K extends Kind<D>>(defi
     if (body.result === "unavailable") return { is: "unavailable", act: bound.act, context: stated,
       lacks: "lacks" in body ? body.lacks : [body.reason] };
     const result = projection.project<D>(source, body, context.owners);
+    if (selected) {
+      const originals = projection.raw.all().items;
+      const identities = subjects.map((item, index) => ({ id: item.id, name: projection.references.row(originals[index]!).name }));
+      const resolved = expectedOf(declared, subjects.map(item => ({ ...item, revision: item.id })), capture.on,
+        effectiveFields(declared, capturedFields, scope.at));
+      const entries = Object.entries(resolved).map(([name, id]) => {
+        const row = identities.find(candidate => candidate.id === id);
+        if (!row) throw new TypeError("a selected subject has no row provenance");
+        return { name, item: structuredClone(row.name) };
+      });
+      if (capture.on !== null && !entries.some(entry => entry.name === "on")) {
+        const row = identities.find(candidate => candidate.id === capture.on);
+        if (!row) throw new TypeError("the primary subject has no row provenance");
+        entries.unshift({ name: "on", item: structuredClone(row.name) });
+      }
+      selected(entries);
+    }
     frames.set(result.after, { projection: result.projection, actor: context.actor });
     return { is: "admitted", source, act: bound.act, context: stated, bound: bound.bound, effects: result.effects,
       sends: body.draft.sends.length, ...(context.authority ? { changed: result.changed } : {}), opens: result.opens, judgesTime: body.draft.judgesTime, after: result.after };
