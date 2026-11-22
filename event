@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8447befd2969205ec68c13abb09cef02cd3c1a44"}
+{"kind":"promise","text":"I will apply the supplied exact-revision draft patch as given, update the developer guide and keep the existing race regression. I will verify client types and the owning test, then bring one exact gate and checker review after Security."}
