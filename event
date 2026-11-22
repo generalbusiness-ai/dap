@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:168ddd77db98a8066de35640a68ebb364fae7969","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/command-support.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2ccfaa91ce7f50999278174c54f0fc8f327269ed","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-21-cj1-on-s6.md."}
