@@ -1287,7 +1287,7 @@ A small model also runs to a bound over every order of its steps.
 | Step | Work | Needs |
 |---|---|---|
 | E1 | Explore for complete acts: the split of `actJudged`, the context, the result, the hypothetical view and the three symbolic names | The planner's ruling for the export, from Hugh's decision (section 16) |
-| E2 | Built in this head: the MCP tool `explore` judges a checked replica under the host session and clock | E1, C2, EK-1, ES-1 |
+| E2 | Built: the MCP tool `explore` judges a checked replica under the host session and clock | E1, C2, EK-1, ES-1 |
 | E3 | Explore in the local instance, again at each view and each tick. `offers`, a `ref` with its sources, `recorded`, and one identity for a row. Step C4 builds the basis of a draft, the changed fields, the returned `now` and the new version after a return (section 6) | E1, C2, C4 |
 | E4 | Retained authorization: the record with versions, the default deadline, three of the four operations (no new envelope for the same version), the owner and the store in memory, the transaction of a submit, the predicate | C1, C3 |
 | E4-B | The browser store keeps authorizations, with the removal rule of section 7.1. It landed at `3e54b8ab` | E4 |
