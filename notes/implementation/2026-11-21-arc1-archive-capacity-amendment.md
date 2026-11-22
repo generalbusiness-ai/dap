@@ -1,9 +1,11 @@
 # ARC-1 archive remedies
 
-Status: Ruling `a02976090677aab379c9d1d12624074f36fbac04` sets step 1.
-Measure the archive pass for one shipped `change/propose-manifest` entry
-that Native accepts with 99 distinct foreign facts, using the existing
-pass budget, before choosing a remedy.
+Status: Under rulings `a02976090677aab379c9d1d12624074f36fbac04` and
+`2b5f626d0fb779a6e612b48457f529feea926dde`, step 1 measures the archive
+pass for the widest shipped `change/propose-manifest` entry that Native
+seals. The matched local-hold control sealed 98 distinct facts across 33
+source scopes. Archive it within the existing pass budget before choosing
+a remedy. Test the narrow foreign-hold refusal separately.
 
 Amendment for ruling `47849971d432410e395909b9d7216ead5934ced8`. Both options retain the existing archive pass ceilings. Neither establishes an eventual-export guarantee for every admitted entry.
 
