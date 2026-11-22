@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:980c979285029d92c3e4efe09e5fd77858513a09","text":"Merge retired a covered predecessor; the successor is at apps/counter/commitments-README.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a0633b79ddcc7065530b0d8b5b03aa5883056651","text":"Merge retired a covered predecessor; the successor is at apps/counter/commitments.test.ts."}
