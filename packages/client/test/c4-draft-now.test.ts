@@ -394,6 +394,34 @@ test("taken outranks the now check", async () => {
   } finally { release(); store.exclusive = exclusive; await stale?.catch(() => null); first.client.close(); second.close(); }
 });
 
+test("an exact submit stops before signing when another client edits the same key", async () => {
+  const feed = new Feed(), first = realOwner(), { s, store, drafts } = first;
+  const second = scopeClient(s.handle, { signer: s.signer,
+    member: { service: first.who.service, membership: first.who.membership, member: s.actor.member.member, principal: s.actor.principal },
+    store, drafts, observe: feed.observe, clock: s.clock, lifetimeSeconds: 60 });
+  try {
+    s.feed.current(s.scope); feed.current(s.scope); await first.client.read(); await second.read();
+    const on = { name: 0, seen: s.scope.item(0).revision, assumes: [] };
+    const slot = first.client.slot("remark", { on });
+    const made = await first.client.edit(slot, { text: "approved by the first tab" });
+    if (!made.ok) return expect.fail("the first tab creates the draft");
+    await clientIdle(first.client);
+    const revision = first.client.view.drafts.get(slot)!.revision;
+    await clientIdle(second);
+    const changed = await second.edit(second.slot("remark", { on }), { text: "edited by the second tab" });
+    expect(changed).toEqual(made);
+    const signs = s.signs(), copies = s.copies.length;
+    expect(await first.client.submit(slot, undefined, revision)).toEqual({ ok: false, stop: { stop: "draft-changed" } });
+    expect([s.signs(), s.copies.length]).toEqual([signs, copies]);
+
+    await clientIdle(first.client);
+    const latest = first.client.view.drafts.get(slot)!.revision;
+    expect(latest).not.toBe(revision);
+    expect(await first.client.submit(slot, undefined, latest)).toEqual(made);
+    expect(s.signs()).toBe(signs + 1);
+  } finally { first.client.close(); second.close(); }
+});
+
 // A returned draft whose view lacks its primary row stops with `state`: no `now` can be shown, so none can be passed.
 test("a view without now stops with state", async () => {
   const { s, store, drafts, client } = realOwner();

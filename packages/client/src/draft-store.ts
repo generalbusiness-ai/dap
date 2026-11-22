@@ -1,6 +1,6 @@
 /** Internal draft batches. Structure is not authority, freshness, or a complete act. */
 import type { DeclaredDefinition, Digest, KeyId, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, isDigest, isKeyId, isLocalId, isRecord, isScopeRef, parseStrict, same, wellFormed } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, isDigest, isKeyId, isLocalId, isRecord, isScopeRef, parseStrict, same, textDigest, wellFormed } from "@generalbusiness/dap-bytes";
 import { expectedKeys } from "@generalbusiness/dap-derive";
 import type { ActRef, ItemName, Revision, Source } from "./act-types.ts";
 import { AuthorizationError } from "./authorization.ts";
@@ -42,6 +42,8 @@ export interface StoredDraft extends DraftCommon {
   readonly placement: "slot" | "waiting";
   readonly after?: string; readonly returned?: StoredDraftReturn;
 }
+export const draftRevision = (draft: StoredDraft): Digest => textDigest(canonicalize(draft));
+
 export interface DraftDismissal extends DraftCommon { readonly is: "dismissed" }
 export type StoredDraftEntry = StoredDraft | DraftDismissal;
 /** The caller owns custody's existing exclusive fence. Raw operations acquire no lock. */
