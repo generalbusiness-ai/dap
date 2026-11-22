@@ -2,8 +2,12 @@
 
 Status: current. Draft 6 is approved (`4db1d74b`) and landed at
 `db95fb9a`, amended at `da96238e`. Head 1 landed at `e444edf8`, head 2
-at `aeebc18c`, and head 3 at `02a91803`. Head 3's live calibration and
-full acceptance are not done.
+at `aeebc18c`, and head 3 at `02a91803`. The OB-L Demo observation found no
+events in its selected window. A Grow window observed a route p95 of 864 ms,
+which is proposed as a bound pending planner review. The deploy-check CLI
+requires an observed bound before it can query its first calibration window.
+Full acceptance remains open. The [OB-L result](implementation/2026-11-22-ob-l-demo-observation.md)
+records both observations and their limits.
 
 2026-10-12. Draft 6. Hugh's direction, 2026-10-12 17:36
 Eastern: draft a dated design in `notes/`, send it to the checker, and tell
