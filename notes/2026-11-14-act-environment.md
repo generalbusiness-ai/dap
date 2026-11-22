@@ -11,10 +11,12 @@ store in main `3e54b8ab`. C4 and E4-C landed draft exploration and
 one-call submit in `d6c863bb`. EK-1 and ES-1 added the standing value
 check and session answer in `9d69f807`. E2 added the MCP tool `explore`,
 which judges a checked replica under the session's standing. E5 added
-sequential dependencies between authorizations. E3, E6 and A remain
-open. Section 13 lists the build steps. Section 18 lists the E1 rulings
-that changed sections 3, 5 and 8. Section 19 lists later rulings,
-including E5. Section 5.7 gives the source of an instance's standing.
+sequential dependencies between authorizations. E3 added checked
+projected rows and local `explore` and `offers` on the held view cut.
+E6 and A remain open. Section 13 lists the build steps. Section 18 lists
+the E1 rulings that changed sections 3, 5 and 8. Section 19 lists
+later rulings, including E5. Section 5.7 gives the source of an
+instance's standing.
 
 A dap application has more than one interface. A member acts through a
 page, an agent acts through MCP tools, and an operator acts through the
