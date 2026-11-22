@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:98534f98b915873811806aa323112618c78aaf4e","text":"Merge retired a covered predecessor; the successor is at packages/client/src/act-types.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:af74dd87556b19ed9a0460be24b8896c6b33dec6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-21-e2-replica-explore.md."}
