@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b626ce2c48440cf28b0011cc4010ba4d030bbb3c","text":"Merge retired a covered predecessor; the successor is at packages/client/test/application-gateway.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c98603c02c68b81bcd8a1a340e000a5ff3cf78bc","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-22-sg1-standing-query.md."}
