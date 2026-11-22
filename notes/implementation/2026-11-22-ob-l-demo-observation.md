@@ -75,6 +75,16 @@ has SHA-256 `14de247b01c4609a626a3e78295fde1aac9d347897177b2b19ecd227f6f25b9c`.
 That gate covered the earlier Demo-only source. This notes-only head carries
 both observations over published E5 `b77be3f9`.
 
+The notes-only `npm run gate` on published E5 passed at
+`13adb42e995a769f15a11b33710f0c1c16081f70`, tree
+`f788cbb32c9871760c31accb430dfcf6c76872c9`. It exited 0 in 31.51 seconds.
+The notes-only selection skipped the test stages. Gate END `6f261691`
+records the result. The log at
+`~/play/artroom-evidence/2026-11-22-13adb42-ob-l-on-e5-gate/gate.txt`
+has SHA-256 `469f5edceafac4533c38d3550b6bd530b9304b73283dc65331cace948117158d`.
+This continuation edits only the implementation note. Source and tests
+match the gated tree.
+
 ## Open limits
 
 The deploy-check CLI requires an observed bound before it queries a window.
