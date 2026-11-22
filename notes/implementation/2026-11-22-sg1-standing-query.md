@@ -66,4 +66,4 @@ The full gate ran at clean commit `a4e640857564d58e4680fe26c70c923188081beb`, tr
 |---|---|---:|---|
 | Full gate | `npm run gate` | 0 | `~/play/artroom-evidence/2026-11-22-a4e6408-sg1-gate/gate.txt`, `a1233923805ca516b2b4e108ff7c43e5c5b5dbd3ea63eaab14d51cb5af8544ec` |
 
-The gate took 1,337.38 seconds. Its count lines record Node 246, Counting 60, Plain 5,127 passed and one skipped, and Native 1,240 passed and two skipped. Scale was omitted. The ownership accounting reports zero lost, two stale, and zero without an owner. The named security review remains pending.
+The gate took 1,337.38 seconds. Its count lines record Node 246, Counting 60, Plain 5,127 passed and one skipped, and Native 1,240 passed and two skipped. Scale was omitted. The ownership accounting reports zero lost, two stale, and zero without an owner. Checker `3f9b83a7` approved the named security review.
