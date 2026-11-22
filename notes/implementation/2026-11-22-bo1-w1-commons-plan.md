@@ -144,6 +144,16 @@ them. Namespace deletion, Worker removal, retained archive handling and
 credential teardown require a separate planner decision after evidence is
 secured. No automatic destructive cleanup is proposed.
 
+## Evidence
+
+The gate ran on clean `da69aa9f021c5932a1eee41f85fedd8790e46279`, tree
+`2f9fec1f5c83d0ab2ef325865873d1436650b881`. This follow-up adds the evidence
+section and changes no source or tests.
+
+| Check | Command | Exit and wall time | Output and SHA-256 |
+| --- | --- | --- | --- |
+| Notes-only gate | `/usr/bin/time -p npm run gate` | 0, 35.92 s. Static checks, types and definition pins passed. The gate skipped tests for the notes-only diff. | `~/play/artroom-evidence/2026-11-22-da69aa9-bo1-w1-plan-gate/gate.txt`, `c8cd67eeff5da8b75c82076b1248c79b9cc00ddd487833d752f4050fe1df7ce7` |
+
 ## Decisions and missing evidence
 
 The planner must approve the exact identity pair and operator custody, the
