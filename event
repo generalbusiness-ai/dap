@@ -1,1 +1,1 @@
-{"kind":"request","text":"Continue drafting property test expressions for other DAP apps.","body":{"conditions":"Draft concrete property expressions for additional DAP apps and identify the syntax each needs.","no_git_artifact":"true","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
+{"kind":"artifact","text":"Merge published the current artifact at apps/room/fetch.ts","body":{"commit":"de2197040519ea895a292a44804b2c636b24f3b1","path":"apps/room/fetch.ts"}}
