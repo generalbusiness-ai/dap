@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:561c38536e73ae31f6e18e121e57cf149083a108","text":"The same exact CJ-1 packages/cli/test/support/read-commands.ts artifact now rests on live gate provenance."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9d43dd6e85837a32454ea00e149a8bbf9f8f4ee8","text":"The same exact CJ-1 scripts/security-entry-points.test.mjs artifact now rests on live gate provenance."}
