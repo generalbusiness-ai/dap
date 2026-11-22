@@ -1493,7 +1493,6 @@ hold the results.
 
 | Ruling | Point | Section |
 |---|---|---|
-| `e7a865da` | E3 publishes checked projected rows and judges on the held view cut. The numeric C4 surface remains | 6, 13 |
 | `fa103f71` | The caller gives the key, Explore computes the version, and the result states its source | 3, 5.3, 8.1 |
 | `ef1fc932` | A judgment that reads the signed intent is `unavailable`. The export is `judgeActBody` | 5.4 |
 | `04218678` | A command record of `device-command` takes the name `{ entry }` | 5.4 |
