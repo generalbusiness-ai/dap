@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f19e314bb4bd004fed2e5b326e174648dacfcd92","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-10-live-level.md."}
+{"kind":"promise","text":"I will correct the count unit in the one S6 note, preserve its tested evidence, and request independent notes-only review.","body":{"target":"inherit"}}
