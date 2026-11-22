@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/client/test/support/c4-selection.ts","body":{"commit":"b77be3f95b91714ed8dab8c5056dd033f08fe8ab","path":"packages/client/test/support/c4-selection.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:04a3c345d434112ac432e560f121f60cc1fdfa8e","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-14-act-environment.md."}
