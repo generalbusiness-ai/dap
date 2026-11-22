@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bc042bab97c62fde85425f48babbcd70c7b36b41","text":"Merge retired a covered predecessor; the successor is at scripts/fixtures/room-format-table-history.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c9dcbe945a28fb714ea2138c571ceba275a9e86c","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/main.ts."}
