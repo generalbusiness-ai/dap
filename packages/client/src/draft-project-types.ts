@@ -21,6 +21,8 @@ export type DraftReturnView =
   | ({ readonly by: "request" } & Extract<RequestStatus, { why: Why }> & { readonly now: DraftNowView });
 export interface DraftContent<D extends DeclaredDefinition, K extends Kind<D>> {
   readonly key: string;
+  /** Identifies the exact stored draft behind this view. Pass it to submit to require that revision. */
+  readonly revision: Digest;
   readonly kind: K;
   readonly slot: Slot<D, K>;
   readonly values: Readonly<EditableValues<D, K>>;

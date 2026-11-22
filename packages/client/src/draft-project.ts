@@ -4,7 +4,7 @@ import { same } from "@generalbusiness/dap-bytes";
 import type { Kind } from "./declared.ts";
 import { draftNowOf, nowMovement } from "./draft-now.ts";
 import { draftIndex, slotFor, type EditableValues, type SlotInput } from "./draft-slot.ts";
-import { descriptorFor, type StoredDraft } from "./draft-store.ts";
+import { descriptorFor, draftRevision, type StoredDraft } from "./draft-store.ts";
 import type { SignedEntry } from "./replica.ts";
 import { requestEntryDecision } from "./request-entry-decision.ts";
 import type { AnyDraftContent, AnyDraftView, DraftKeyEvidence, DraftKeyRoute, DraftPresentation, DraftProjection,
@@ -63,7 +63,7 @@ function content<D extends DeclaredDefinition>(definition: D, stored: StoredDraf
   });
   // Present values already passed store refinement. Only their per-kind generic correlation needs this assertion.
   const values = Object.fromEntries(fields) as EditableValues<D, Kind<D>>;
-  return { key: stored.key, kind, slot, values, ...(stored.after === undefined ? {} : { after: { key: stored.after } }) } as AnyDraftContent<D>;
+  return { key: stored.key, revision: draftRevision(stored), kind, slot, values, ...(stored.after === undefined ? {} : { after: { key: stored.after } }) } as AnyDraftContent<D>;
 }
 /** One stored shape, two causes. Both arms recompute `now` here from the kept draft and the cut's rows. Nothing is written. */
 function returned<D extends DeclaredDefinition>(input: DraftProjectInput<D>, stored: StoredDraft, evidence: DraftKeyEvidence): DraftReturnView | undefined {

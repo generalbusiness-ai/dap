@@ -29,7 +29,7 @@ import type { DraftKeyEvidence, DraftProjection, DraftRequestListEntry, DraftReq
   LocalDraftActivity, ProjectStoredKey } from "./draft-project-types.ts";
 import type { DraftSelectionRow } from "./draft-selection.ts";
 import { ownDraftSlot, slotAddress, slotFor, type ClearField, type DraftIndex, type EditPatch, type Slot, type SlotInput } from "./draft-slot.ts";
-import { descriptorFor, readStoredDrafts, refineDraft, type DraftBinding, type DraftDismissal, type DraftPort, type DraftSlot, type StoredDraft, type StoredDraftEntry } from "./draft-store.ts";
+import { descriptorFor, draftRevision, readStoredDrafts, refineDraft, type DraftBinding, type DraftDismissal, type DraftPort, type DraftSlot, type StoredDraft, type StoredDraftEntry } from "./draft-store.ts";
 
 /** Seat holds no principal and uses an origin; this port states the four facts C3 needs, each once (ruling e868dd08). */
 export interface ScopeMember { service: string; membership: ScopeRef; member: MemberId; principal: MemberRef | null }
@@ -68,7 +68,7 @@ interface Held { record: CustodyRecord; outcomes: Outcome[] }
  * A submit that an exploration returns (`revision-moved`) stops with `state` and `committed: key`; the view then shows the
  * return and its `now`. A submit that stops after its adoption write names the key too. */
 export type DraftStop = { readonly stop: "shape"; readonly path: string; readonly message: string }
-  | { readonly stop: "state" | "taken" | "descriptor-mismatch" | "definition-mismatch" };
+  | { readonly stop: "state" | "taken" | "draft-changed" | "descriptor-mismatch" | "definition-mismatch" };
 export type DraftCall<T> = { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly stop: DraftStop; readonly committed?: string };
 /** The raw batch and finite custody observations one candidate decides from. */
@@ -288,10 +288,14 @@ export class ScopeClient<D extends DeclaredDefinition> {
   dismiss(key: string): Promise<DraftCall<void>> { return this.#dispose(key, "dismiss"); }
 
   /** The one submit of a draft. Steps 1 to 7 are the check order of `general-now-call-shape-20261116/PROPOSAL.md` section (b).
-   * `now` is the value that the returned draft showed. An editing draft takes none. There is no hidden retry: a scope
+   * `now` is the value that the returned draft showed. An editing draft takes none. Pass the view’s `revision` to stop
+   * before signing if the stored draft changed. There is no hidden retry: a scope
    * refusal after step 5 leaves the draft returned (form 2) with a new `now` in the view, and the member submits again. */
-  async submit<K extends Kind<D>>(slot: Slot<D, K>, now?: DraftNow | null): Promise<DraftCall<string>> {
+  async submit<K extends Kind<D>>(slot: Slot<D, K>, now?: DraftNow | null, expectedRevision?: Digest): Promise<DraftCall<string>> {
     const definition = this.#handle.definition;
+    if (expectedRevision !== undefined && !isDigest(expectedRevision)) {
+      return { ok: false, stop: { stop: "shape", path: "expectedRevision", message: "Expected a draft revision from the view." } };
+    }
     // Step 1: copy and validate `slot` and `now` before any `await`. An ill-shaped value stops with `shape`.
     let owned: Slot<D, K>, passed: DraftNow | null | undefined;
     try {
@@ -311,6 +315,7 @@ export class ScopeClient<D extends DeclaredDefinition> {
       if ("stop" in decided) return { ok: false, stop: decided.stop };
       const stored = decided.current;
       if (!stored) return { ok: false, stop: { stop: "taken" } };
+      if (expectedRevision !== undefined && draftRevision(stored) !== expectedRevision) return { ok: false, stop: { stop: "draft-changed" } };
       if (!this.#acceptable()) return { ok: false, stop: { stop: "state" } };
       // Step 3: decide whether the draft is returned from this call's own rows, then compare `now` with that fact.
       // A returned draft whose view lacks a subject stops with `state` before any `now` comparison.

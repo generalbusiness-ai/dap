@@ -104,6 +104,15 @@ capability versions, so a scope may be created under a definition that
 uses a capability record, as both lane definitions do. No grant is read
 in production yet, so each act of such a scope is refused `unauthorized`.
 
+## Reviewing a draft before submit
+
+When a member reviews a `ScopeClient` draft, keep the view's `revision`
+and pass it as the third argument to `submit(slot, now, revision)`. If
+the stored draft changes before signing, submit stops with `draft-changed`.
+Show the updated draft to the member for a new review before submitting
+again. The two-argument form remains available when the caller does not
+require that exact draft.
+
 ## What a transport returns
 
 A reply from a service is untrusted. A transport returns it only when it is

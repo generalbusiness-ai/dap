@@ -120,7 +120,8 @@ results. The review considers the follow-up alongside each failed gate.
 
 The production Plain stage ran on the previous candidate `94518da2` and
 published main `95ec0456`, in that order, with the same Node version,
-Vitest executable, dependency lock and 5,000 ms CLI deadline. The builder ran no concurrent tests or builds. Both used incoming power and were charging.
+Vitest executable, dependency lock and 5,000 ms CLI deadline. The builder ran
+no concurrent tests or builds.
 The battery started at 5 percent for the candidate and 11 percent for main.
 
 The candidate exited 1 in 305.20 seconds with 5,083 passing cases, four
