@@ -5,9 +5,9 @@ Sections 1 to 14 are not built. Section 15 is partly built. The
 [sequenced note](2026-10-18-sequenced-level-and-order-scope.md) withdraws
 its Archived level and makes the archive a room binding. The
 [live note](2026-11-10-live-level.md) governs the live level in section
-16. Live admission landed at `1f81ac01`, and its package graph support
-landed at `fb7b5388`. The remaining live runtime and client work is not
-built. The sequenced level is not built.
+16. Live admission landed at `1f81ac01`, its package graph at `fb7b5388`,
+and the live runtime and client work through LV5 at `cfcfb7c9`. O2's
+retry cutoff landed at `d58ff62f`. The sequenced level is not built.
 
 9 October 2026. **Design and implementation plan.**
 Request `f5b286d71a3243c809d152fd7cd95e6d945e4256`, promise
@@ -1433,8 +1433,8 @@ transport or deployment setting selects it.
 
 | Level | Declared as | What survives | Confirmation | Support |
 |---|---|---|---|---|
-| Live | `level: { name: "live", version: 1 }` | Nothing | Applied | Designed in sections 2 to 14 and 16; not built |
-| Recorded | No `level` member, or `level: { name: "recorded", version: 1 }` | The journal in the Durable Object | Recorded, with a receipt | Built; every definition today |
+| Live | `level: { name: "live", version: 1 }` | The genesis and creator confirmation | Applied | Built through LV5; the live note governs section 16 |
+| Recorded | No `level` member, or `level: { name: "recorded", version: 1 }` | The journal in the Durable Object | Recorded, with a receipt | Built |
 | Archived | `level: { name: "archived", version: 1 }` | The journal, and a copy in the room's repository that a clone can verify | Recorded, with a receipt; then Archived through N | Designed in this section; not built |
 
 **Where it is written.** `DeclaredDefinition` gains one optional member:
