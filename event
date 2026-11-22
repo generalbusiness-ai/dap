@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4e27e4c468566fba5c88d718ee28aa8b25040026","text":"Republished at 99f12d856906400d5c648ae40d9561828e485e9e; the successor stands at apps/counter/commitments.test.ts."}
+{"kind":"artifact","text":"docs/security/entry-points.md at exact 99f12d856906400d5c648ae40d9561828e485e9e on builder/xd1-counting-on-security-20261121, under promise git:sha1…8181841 on request git:sha1…19176f4","body":{"commit":"99f12d856906400d5c648ae40d9561828e485e9e","path":"docs/security/entry-points.md"}}
