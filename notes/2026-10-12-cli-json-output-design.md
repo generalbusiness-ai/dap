@@ -1,7 +1,9 @@
 # JSON output for the dap command line
 
 Status: revision 6 is approved (`de6b54f1`) and landed at `facb24f9`.
-Not built: the CLI has no `--json` flag.
+CJ-1 is implemented in the current candidate: `--json` covers `remote`,
+`show` and `acts`, with the envelope and early refusals. CJ-2 through
+CJ-5 remain queued. The candidate has not yet passed its full gate.
 
 Builder revision 6, under parent request `92d6dddb`, against Main
 `9255e1f8`. Revision 5 is request `f319c428`, approval `53b0335e`, merged
@@ -549,8 +551,9 @@ commands live in the files below.
 | Native answers and reads | `packages/contract/src/result.ts`: Answer, ReadRefusal; `transport.ts`: Created; `read.ts`: Read; `floor.ts`: Archived; `entry.ts`: Input |
 | Cursor binding | `packages/bytes/src/item-query.ts`; `packages/client/src/item-query.ts`; `packages/scope/src/reads.ts`: history |
 
-This comparison covers those named boundaries, not every branch. It makes no
-claim that a renderer or schema has run.
+This comparison records the design review at revision 6. It covers those
+named boundaries, not every branch. It made no claim that a renderer or
+schema had run at that time.
 
 After checker approval, the planner files five implementation requests,
 CJ-1 to CJ-5. Each is its own gated head. Each keeps text bytes and exits
@@ -560,7 +563,7 @@ run in parallel lanes after it. CJ-4 follows CJ-3, and CJ-5 is last.
 
 | Slice | Content | Files | Focused tests |
 | --- | --- | --- | --- |
-| CJ-1 envelope | Option-position `--json` scan; mode before `configDir()` and the early `dev`/`check`/`new` dispatch; typed result and error on `Outcome`; JSON renderer; closed error factories and the private carrier; closed codes for the `command-support.ts` and `main.ts` raw-message sites; `mcp`, `dev` and `scope-index` refusal; commands `remote`, `show`, `acts`. | `line.ts`, `main.ts`, `command-context.ts`, `command-support.ts`, a new renderer module, `command-scope.ts`, `command-repository.ts` | parser ownership table; process-boundary document and exit; private-path sentinels; MCP and dev no-effect; three command fixtures |
+| CJ-1 envelope (implemented in candidate) | Option-position `--json` scan; mode before `configDir()` and the early `dev`/`check`/`new` dispatch; typed result and error on `Outcome`; JSON renderer; closed error factories and the private carrier; closed codes for the `command-support.ts` and `main.ts` raw-message sites; `mcp`, `dev` and `scope-index` refusal; commands `remote`, `show`, `acts`. | `line.ts`, `main.ts`, `command-context.ts`, `command-support.ts`, a new renderer module, `command-scope.ts`, `command-repository.ts` | parser ownership table; process-boundary document and exit; private-path sentinels; MCP and dev no-effect; three command fixtures |
 | CJ-2 bounded reads | `log` (`--cursor`, incomplete/1 at the bound), `items`, `apps`, `issues` (`--after`, lane bound, kept rows on a refused lane), `verify`, `verify --all`, `status`, in both renderers; read refusals `archived` and `too-large`. | `command-scope.ts`, `application-list.ts`, `command-issues.ts`, `command-verify.ts`, `verification.ts`, `status-report.ts`, `line.ts` | log variants, bound and resume; forged, stale and below-floor cursors; outdated index and lane bound; verify budget stop |
 | CJ-3 single acts | `act`; `issue open`, `comment`, `assign`, `close`; `issue wait` with `waiting`/3; base-URL `install`, `--plan`, `--planned` and `--register-policy`; native `Answer`, `Created` and `archived`; single-lane `issueNamed`. | `command-scope.ts`, `command-issues.ts`, `issue-wait.ts`, `command-install.ts` | exact native equality; acceptance kept after a later failure; archived answer; wait bound exit 3 |
 | CJ-4 workflows | `create`/`claim`, `invite` (all modes, including `--device`), `join` (person, agent, checker, device), `clone` (with `--archive`), `edit`, `propose`, `merge`; `recorded`, `custody`, `waited`; closed codes for the `invitations.ts` and `command-verify.ts` raw-message sites. | `claim.ts`, `command-membership.ts`, `invitations.ts`, `command-repository.ts`, `clone-outcome.ts`, `command-change.ts` | evidence-survives-failure rows; confidential link once; child-stream separation; archive journal fetch failure |

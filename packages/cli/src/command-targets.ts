@@ -1,7 +1,8 @@
 /** Shared command targets and local inputs. */
 import type { DefinitionShape } from "./browser-helpers.ts";
 import type { Context } from "./command-context.ts";
-import { failed, handleOf, readTransportOf, stopCommand, summaryOf, usage } from "./command-support.ts";
+import { failed, handleOf, readRefused, readTransportOf, stopCommand, summaryOf, usage } from "./command-support.ts";
+import { typedStop, usageError } from "./json-output.ts";
 import type { Config } from "./store.ts";
 import { canonicalize, definitionDigest, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { activeDirectory, declaredHandle, ScopeHandle } from "@generalbusiness/dap-client";
@@ -41,7 +42,7 @@ export function scopeNamed(config: Config, named: string | undefined): ScopeId {
   };
   const name = named ?? "directory";
   if (/^sc_[a-z2-7]+$/.test(name)) return name as ScopeId;
-  return names[name] ?? stopCommand(usage(`No scope named ${name} is known here. Name one of: ${Object.keys(names).filter((n) => names[n]).join(", ") || "none yet"}; or give a scope ID.`));
+  return names[name] ?? stopCommand(typedStop("usage", "parse", usageError("unknown-scope"), [`No scope named ${name} is known here. Name one of: ${Object.keys(names).filter((n) => names[n]).join(", ") || "none yet"}; or give a scope ID.`]));
 }
 
 /** The definition a scope pins: a platform one from the platform package, a declared one as the scope retains it. */
@@ -50,7 +51,7 @@ export async function definitionOf(handle: ScopeHandle, summary: Summary): Promi
   const supplied = platform(named);
   if (supplied) return { shape: supplied.data as unknown as DefinitionShape, declared: null, named };
   const read = await handle.definition();
-  if (!read.ok) return stopCommand(failed(`Cannot read the definition of ${handle.scope}: ${read.reason}.`));
+  if (!read.ok) return stopCommand(readRefused(read, [`Cannot read the definition of ${handle.scope}: ${read.reason}.`]));
   return { shape: read.value as unknown as DefinitionShape, declared: read.value, named };
 }
 

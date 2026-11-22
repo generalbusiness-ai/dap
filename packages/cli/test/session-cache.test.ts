@@ -264,7 +264,8 @@ test("an ended temporary read owner discards late session issuance before cache 
   const outcome = run(async () => { await flow.transport.summary(TARGET.scope, undefined); return { code: 0, lines: [] }; });
   await queued;
   current = false; release();
-  expect(await outcome).toEqual({ code: 1, lines: ["The read session owner ended; its result was not used."] });
+  expect(await outcome).toEqual({ code: 1, lines: ["The read session owner ended; its result was not used."],
+    typed: { phase: "read", status: "error", error: { kind: "local", code: "session-owner-ended", message: "The read session owner ended; its result was not used." } } });
   expect([f.state.issued, f.state.reads, f.state.probes]).toEqual([1, 0, 0]);
   expect(await f.store.sessionCache!.read()).toBeNull();
   await expect(flow.session()).rejects.toBeInstanceOf(Stop);

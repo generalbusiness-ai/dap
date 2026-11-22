@@ -3,7 +3,8 @@ import { shownJson, shownText } from "./shown-text.ts";
 import { applicationList } from "./application-list.ts";
 import { describe, expectedOf, heldActs, type Standing, valueOf } from "./browser-helpers.ts";
 import type { Context, Outcome } from "./command-context.ts";
-import { answered, configOf, done, failed, handleOf, managedReadsOf, readerOf, readTransportOf, REGISTER_FULL, run, sessionOf, signerOf, signing, Stop, stopCommand, summaryOf, usage } from "./command-support.ts";
+import { answered, configOf, done, failed, handleOf, managedReadsOf, readerOf, readRefused, readTransportOf, REGISTER_FULL, run, sessionOf, signerOf, signing, Stop, stopCommand, summaryOf, summaryReadOf, usage } from "./command-support.ts";
+import { actFormOf, type ActsResult, type ShowResult, typedDone, typedStop, usageError } from "./json-output.ts";
 import { definitionOf, fileOf, scopeNamed, short, textOf } from "./command-targets.ts";
 import { statusReport } from "./status-report.ts";
 import { canonicalize, readItemQuery } from "@generalbusiness/dap-bytes";
@@ -62,14 +63,21 @@ export function acts(ctx: Context, named?: string): Promise<Outcome> {
     const scope = scopeNamed(config, named);
     const reader = await readerOf(ctx, config);
     const handle = await handleOf(ctx, config, scope, reader);
-    const { shape, named: definition } = await definitionOf(handle, await summaryOf(handle));
+    const read = await summaryReadOf(handle);
+    const { shape, named: definition } = await definitionOf(handle, read.summary);
     const key = (await signerOf(ctx, config)).key;
-    const held = config.repository ? standing((await summaryOf(await handleOf(ctx, config, config.repository.membership.scope, reader))).items, key) : null;
+    const membership = config.repository ? await summaryReadOf(await handleOf(ctx, config, config.repository.membership.scope, reader)) : null;
+    const held = membership ? standing(membership.summary.items, key) : null;
     const { acts: listed, hidden } = heldActs(shape, held);
+    const result: ActsResult = { scope: read.summary.scope, head: read.at, definition,
+      caller: { key, standing: held ? { handle: held.handle, role: held.role } : null },
+      membership: membership ? { scope: membership.summary.scope, head: membership.at } : null,
+      acts: Object.fromEntries(listed.map(([kind, act]) => [kind, actFormOf(act)])), hidden };
+    // The text keeps its compact declaration lines, which the client words from the whole native act.
     const shown = listed.map(([kind, act]) => `  ${shownText(describe(kind, act))}`);
-    const who = held ? `${held.handle} (${held.role})` : `key ${key}, which is no active member's`;
-    return done(`Acts on ${scope} (${shownText(definition)}) for ${shownText(who)}:`, ...shown, ...(hidden > 0 ? [`Not shown: ${hidden} that need an action your role does not hold.`] : []));
-  });
+    const who = result.caller.standing ? `${result.caller.standing.handle} (${result.caller.standing.role})` : `key ${result.caller.key}, which is no active member's`;
+    return typedDone(result, [`Acts on ${scope} (${shownText(result.definition)}) for ${shownText(who)}:`, ...shown, ...(result.hidden > 0 ? [`Not shown: ${result.hidden} that need an action your role does not hold.`] : [])]);
+  }, "read");
 }
 
 /**
@@ -197,16 +205,18 @@ export function log(ctx: Context, named: string | undefined, options: { limit?: 
 export function show(ctx: Context, named: string): Promise<Outcome> {
   return run(async () => {
     const config = await configOf(ctx);
-    const match = /^(.+):(\d+)$/.exec(named) ?? stopCommand(usage("Name an entry as <scope>:<seq>, as log prints it."));
+    const match = /^(.+):(\d+)$/.exec(named) ?? stopCommand(typedStop("usage", "parse", usageError("entry-name"), ["Name an entry as <scope>:<seq>, as log prints it."]));
     const scope = scopeNamed(config, match[1]);
     const handle = await handleOf(ctx, config, scope);
     const read = await handle.entry(Number(match[2]));
-    if (!read.ok) return failed(`Cannot read entry ${named}: ${read.reason}.`);
+    if (!read.ok) return readRefused(read, [`Cannot read entry ${named}: ${read.reason}.`]);
     const { entry, hash } = read.value;
-    const input = entry.input;
-    const detail = input.type === "act" ? `Fields: ${shownJson(JSON.stringify(input.signed.intent.fields))}. Grants recorded: ${input.authority.length}.` : `Effects: ${shownJson(JSON.stringify(entry.effects))}.`;
-    return done(`${entryLine(scope, entry)}; hash ${hash}.`, detail);
-  });
+    // A genesis entry's own hash is its scope's sealed genesis; every later entry names it.
+    const result: ShowResult = { scope: { scope, genesis: "genesis" in entry ? entry.genesis : hash }, seq: entry.seq, hash, head: read.at, entry };
+    const input = result.entry.input;
+    const detail = input.type === "act" ? `Fields: ${shownJson(JSON.stringify(input.signed.intent.fields))}. Grants recorded: ${input.authority.length}.` : `Effects: ${shownJson(JSON.stringify(result.entry.effects))}.`;
+    return typedDone(result, [`${entryLine(result.scope.scope, result.entry)}; hash ${result.hash}.`, detail]);
+  }, "read");
 }
 
 /** Current operational observations through the caller's session. */
