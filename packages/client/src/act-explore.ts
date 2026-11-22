@@ -1,7 +1,7 @@
 /** Judge one act body under the caller's checked inputs. This authorizes no send. */
 import type { DeclaredDefinition, KeyId } from "@generalbusiness/dap-contract";
 import { canonicalize, REFUSAL_CLASSES, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { judgeActBody, type StateView, type Texts, type ValidDefinition } from "@generalbusiness/dap-derive";
+import { judgeActBody, LAST_MS, nextDue, timeOf, type StateView, type Texts, type ValidDefinition } from "@generalbusiness/dap-derive";
 import type { Kind } from "./declared.ts";
 import { ShapeError, shapeFieldsOf } from "./declared.ts";
 import type { Act, ActView, Exploration, ItemName, PartialAct, Source } from "./act-types.ts";
@@ -16,6 +16,14 @@ import { effectiveFields, expectedOf } from "./expected.ts";
 
 interface Frame { readonly projection: ActProjection; readonly actor: KeyId }
 const frames = new WeakMap<object, Frame>();
+
+/** The earliest timer in one captured pre-step view. `nextDue` requires an
+ * as-of instant; LAST_MS is derive's maximum representable timestamp. */
+export function actExploreDue<D extends DeclaredDefinition>(definition: ValidDefinition, view: StateView | ActView<D>) {
+  const reader = "all" in view ? view : frames.get(view)?.projection.reader();
+  if (!reader) throw new TypeError("a hypothetical view has no owned projection");
+  return nextDue(reader, definition, timeOf(LAST_MS));
+}
 
 export interface ExploreInput<D extends DeclaredDefinition, K extends Kind<D>> {
   readonly key: string;

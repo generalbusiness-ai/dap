@@ -27,17 +27,30 @@ test("a checked source chain selects a pending connector's recorded target", asy
     await replica.read();
     const target = replica.view.rows("target").find(item => item.id === opened.item);
     if (!target) return expect.fail("the checked replica must hold the actual target");
-    const sourceAct = { kind: "make-connector", on: null, fields: { target: target.id },
+    const dueAt = runtime.now() + 10_000;
+    const sourceAct = { kind: "make-connector", on: null, fields: { target: target.id, until: timeOf(dueAt) },
       expected: { target: target.revision } } as const;
     const source = { key: "chain-connector", version: actVersion(sourceAct) };
     const dependent = { kind: "touch-connector", on: { output: source }, fields: { n: 4 },
       expected: { on: { after: source }, target: target.revision } } as const;
-    const authority = { session: runtime.session, requestedAt: timeOf(runtime.now()), clock: () => timeOf(runtime.now()) };
+    let clock = runtime.now();
+    const authority = { session: runtime.session, requestedAt: timeOf(clock), clock: () => timeOf(clock) };
     const before = { state: canonicalize(runtime.store.all()), counts: { ...runtime.counts } };
     const result = await exploreReplicaChain<typeof selection, "touch-connector">(replica,
       [{ source, act: sourceAct }], "chain-touch", dependent, authority);
     if (result.is !== "admitted") return expect.fail(`checked chain unavailable: ${result.reason}`);
     expect(result.current()).toBe(true);
+    expect(result.exploration.judgesTime).toBe(false);
+    expect(runtime.store.all().items.some(item => item.type === "connector")).toBe(false);
+    clock += 1;
+    expect(result.current()).toBe(true);
+    clock = dueAt - 1;
+    expect(result.current()).toBe(true);
+    clock = dueAt;
+    expect(result.current()).toBe(false);
+    clock = runtime.now() - 1;
+    expect(result.current()).toBe(false);
+    clock = runtime.now();
     expect(result.subjects).toContainEqual({ name: "on", item: { output: source } });
     expect(result.subjects).toContainEqual({ name: "target", item: target.id });
     expect(result.exploration.act).toEqual(dependent);
@@ -51,5 +64,16 @@ test("a checked source chain selects a pending connector's recorded target", asy
     expect(canonicalize(runtime.store.all())).toBe(before.state);
     expect(runtime.counts.actSignatures).toBe(before.counts.actSignatures);
     expect(runtime.counts.submissions).toBe(before.counts.submissions);
+    clock = Date.parse(runtime.session.claims.ends);
+    expect(result.current()).toBe(false);
+    clock = runtime.now();
+    const anchor = replica.view.rows("anchor")[0];
+    if (!anchor) return expect.fail("the checked replica must hold the recorded anchor");
+    const later = await runtime.handle.intent(runtime.signer, "rename-anchor", {
+      on: anchor.id, fields: { label: "new head" }, expected: { on: anchor.revision },
+    }, { now: runtime.now(), idempotencyKey: "chain-change-head", lifetimeSeconds: 60 });
+    expect((await runtime.handle.submit(later.signed, [], later.beside)).answer).toBe("accepted");
+    await replica.read();
+    expect(result.current()).toBe(false);
   } finally { replica.close(); runtime.close(); }
 });

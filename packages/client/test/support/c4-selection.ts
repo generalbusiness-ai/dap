@@ -24,9 +24,10 @@ export const selection = {
       values: { n: { fixed: false, required: true, of: { type: "int", min: 0, max: 9 } } },
     },
     connector: {
-      many: true, max: 2, initial: "open", states: { open: { final: false } },
+      many: true, max: 2, initial: "open", states: { open: { final: false }, expired: { final: true } },
       parties: {}, refs: { target: { fixed: true, required: true, to: { type: "item", of: "target" } } },
-      values: { n: { fixed: false, required: true, of: { type: "int", min: 0, max: 9 } } },
+      values: { n: { fixed: false, required: true, of: { type: "int", min: 0, max: 9 } },
+        until: { fixed: true, required: true, of: { type: "time" } } },
     },
     note: {
       many: true, max: 2, initial: "open", states: { open: { final: false } },
@@ -72,9 +73,9 @@ export const selection = {
     "make-connector": {
       step: "open", on: "connector", grant: "c4-selection.connector-open",
       also: { target: { item: "target", by: "target" } },
-      fields: { target: { type: "item", of: "target", required: true } },
+      fields: { target: { type: "item", of: "target", required: true }, until: { type: "time", required: true } },
       guards: [], effects: [{ ref: { slot: "target", from: { field: "target" } } },
-        { value: { slot: "n", from: { const: 0 } } }], sends: [], attention: [],
+        { value: { slot: "n", from: { const: 0 } } }, { value: { slot: "until", from: { field: "until" } } }], sends: [], attention: [],
     },
     "touch-connector": {
       step: "transition", on: "connector", grant: "c4-selection.connector-touch",
@@ -89,7 +90,8 @@ export const selection = {
       guards: [], effects: [{ value: { slot: "label", from: { field: "label" } } }], sends: [], attention: [],
     },
   },
-  receives: {}, timed: {}, rules: {},
+  receives: {}, timed: { "connector-expire": { on: "connector", states: ["open"], deadline: "until",
+    effects: [{ state: "expired" }], attention: [] } }, rules: {},
 } as const satisfies DeclaredDefinition;
 
 /** Only these fixed TEST packet fields enter the selection preset. */

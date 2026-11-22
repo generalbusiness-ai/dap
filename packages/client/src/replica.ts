@@ -28,7 +28,7 @@ import { meaningOf } from "./custody.ts";
 import type { Observation, ObservationState } from "./observe.ts";
 import { HeldEntries } from "./replica-own.ts";
 import { judgedOn, type Judged, type Judging } from "./replica-judged.ts";
-import { actExplore, actExploreSubjects } from "./act-explore.ts";
+import { actExplore, actExploreDue, actExploreSubjects } from "./act-explore.ts";
 import { missingActInputs } from "./act-input.ts";
 import type { Act, ActRef, ActView, Context, Exploration, ItemName, Lack, PartialAct, UnavailableContext } from "./act-types.ts";
 import { scopeUsesSession } from "./scope-reader.ts";
@@ -317,10 +317,20 @@ export class Replica<D extends DeclaredDefinition> {
     this.#held.take();
     let result: Exploration<D, K>;
     let chainSubjects: readonly { name: string; item: ItemName }[] | null = null;
+    let earliestDue: number | null = null, judgesTime = false;
+    const noteDue = (view: typeof state | ActView<D>): void => {
+      const due = actExploreDue(this.#definition!, view);
+      if (due) {
+        const ms = timeMs(due.due);
+        if (ms === null) throw new TypeError("the projected timer has no valid deadline");
+        earliestDue = earliestDue === null ? ms : Math.min(earliestDue, ms);
+      }
+    };
     try {
       let view: typeof state | ActView<D> = state;
       let failed = false;
       for (const step of prefix ?? []) {
+        noteDue(view);
         const declaration = step.act.kind === undefined ? undefined : Object.hasOwn(this.#definition!.declared.acts, step.act.kind)
           ? this.#definition!.declared.acts[step.act.kind] : undefined;
         const action = declaration ? actionOf(declaration, this.#definition!) : null;
@@ -330,12 +340,15 @@ export class Replica<D extends DeclaredDefinition> {
         const prior: Exploration<D, Kind<D>> = actExplore(this.#definition!, view, { key: step.source.key, act: step.act,
           context: { ...context, grants: [{ grant: judged.grant, current: true }] } });
         if (prior.is !== "admitted" || canonicalize(prior.source) !== canonicalize(step.source)) { failed = true; break; }
+        judgesTime ||= prior.judgesTime;
         view = prior.after;
       }
       if (failed) result = unavailable(["source"]).exploration;
       else if (prefix) {
+        noteDue(view);
         const dependent = actExploreSubjects(this.#definition!, view, { key, act: captured, context });
         result = dependent.exploration; chainSubjects = dependent.subjects;
+        if (result.is === "admitted") judgesTime ||= result.judgesTime;
       } else result = actExplore(this.#definition!, state, { key, act: captured, context });
     }
     catch (error) {
@@ -344,8 +357,16 @@ export class Replica<D extends DeclaredDefinition> {
     }
     if (this.#held.take().length > 0) return unavailable(["source"]);
     if (prefix) {
-      const remains = () => current() && !!authority && authority.session === session && !session.endedBy(authority.clock())
-        && authority.clock() === reading;
+      const started = authority?.requestedAt;
+      const remains = () => {
+        if (!current() || !authority || authority.session !== session || authority.requestedAt !== started || !session.standing) return false;
+        const now = authority.clock(), ms = timeMs(now), read = timeMs(reading), began = timeMs(started);
+        if (ms === null || read === null || began === null || ms < read || ms < began || !Number.isSafeInteger(ms - began)
+          || session.endedBy(now) || clockOf(state, now).behind || !scopeUsesSession(this.#handle.scope, session)
+          || !sessionStanding(session.standing, { membership, key: binding.actor }, claims)) return false;
+        if (judgesTime && ms !== read) return false;
+        return earliestDue === null || ms < earliestDue;
+      };
       if (!remains() || !chainSubjects) return unavailable(["source"]);
       capture?.(remains, chainSubjects);
     }
