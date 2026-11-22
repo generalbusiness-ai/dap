@@ -1,5 +1,10 @@
 # ARC-1 archive remedies
 
+Status: Ruling `a02976090677aab379c9d1d12624074f36fbac04` sets step 1.
+Measure the archive pass for one shipped `change/propose-manifest` entry
+that Native accepts with 99 distinct foreign facts, using the existing
+pass budget, before choosing a remedy.
+
 Amendment for ruling `47849971d432410e395909b9d7216ead5934ced8`. Both options retain the existing archive pass ceilings. Neither establishes an eventual-export guarantee for every admitted entry.
 
 | Question | A: staged private copying | B: prospective admission envelope |
