@@ -2,8 +2,10 @@
 
 *Enumerate small, closed sets of histories.*
 
-Status: design decision under request `d9477b7f`, 2026-11-21. Full
-`npm run gate` pending before review.
+Status: design decision under request `d9477b7f`, 2026-11-21.
+`npm run gate` passed on `a779ade8` (gate END `a7e42f58`).
+The checker is reviewing that exact head under `b4ce2c41`.
+Landing is pending.
 
 **Guarantee.** Within one Counting Commitments generation, the board's
 `lastNumber` equals the number of pledges the scope has fulfilled.
