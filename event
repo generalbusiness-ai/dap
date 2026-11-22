@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/2026-11-22-arc1-prospective-envelope.md","body":{"commit":"880729728d2d5c50b7e742a81df1b7a58198cc8f","path":"notes/implementation/2026-11-22-arc1-prospective-envelope.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f91aa05c56c047ad4f73378bf412e2ee68ee5bbf","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-22-arc1-prospective-envelope.md."}
