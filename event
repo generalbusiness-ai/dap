@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:71395cb72de1fcc5d78b7fd65958d040215d7114","text":"Merge retired a covered predecessor; the successor is at packages/client/test/support/c4-selection.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9ac96a7170fe9dbac8bf18aabba5b1d3952ccbbf","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-14-act-environment.md."}
