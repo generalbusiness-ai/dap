@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0d7631f17dcf191bfd0367c7a638eb4ce5b37099","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/invitation-fragment.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0eec747d880fb77d56258cc03871d9675a6f4b84","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/command-scope.ts."}
