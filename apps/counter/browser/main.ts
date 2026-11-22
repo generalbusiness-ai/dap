@@ -8,6 +8,7 @@ import { browserLock, counterCustody, dropRetiredSlots, privateDeviceStore, priv
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { applicationScreenTransport, loadApplicationScreenContext } from "@generalbusiness/dap-client";
 import { counterEnrollment } from "./installed.ts";
+import { attemptInvitation, clearInvitationFragment, invitationFragment } from "./invitation-fragment.ts";
 import { atStep, unconfirmedWords } from "./enrollment-step.ts";
 import type { TrustedActFetch } from "./client.ts";
 async function main() {
@@ -67,11 +68,15 @@ async function importFile(legacy=false){
 dialog.querySelector<HTMLButtonElement>("[data-import]")!.onclick=()=>bundle.click();
 bundle.onchange=()=>{void importFile();};dialog.querySelector<HTMLButtonElement>("[data-legacy]")!.onclick=()=>{void importFile(true);};
 if (enrollment) {
+  let capturedInvitation = invitationFragment(location);
   const enroll = async (mode: "join" | "check" | "continue") => {
     if (busy) return;
     const at = ++active; busy = true; renderPicker(); message.textContent = "Checking native membership…";
+    const typed = dialog.querySelector<HTMLTextAreaElement>("[data-invitation]")!.value;
+    const invitation = typed || capturedInvitation || "";
     try {
-      const result = await enrollment(() => at === active).perform(mode, dialog.querySelector<HTMLTextAreaElement>("[data-invitation]")!.value);
+      const perform = () => enrollment(() => at === active).perform(mode, invitation);
+      const result = await (mode === "join" ? attemptInvitation(location, history, invitation, perform) : perform());
       if (at !== active) return;
       if (result.device) {
         const device = result.device, held = await atStep("custody save", () => custody.load(() => at === active));
@@ -80,16 +85,16 @@ if (enrollment) {
         if (at !== active) return;
         custodyEpoch = held.epoch; devices = [result.device]; selectedKey = result.device.binding.publicKey;
         dialog.querySelector<HTMLTextAreaElement>("[data-invitation]")!.value = "";
-        if (location.hash) history.replaceState(null, "", location.pathname);
+        clearInvitationFragment(location, history, invitation);
+        capturedInvitation = null;
       }
       message.textContent = result.reason;
-    } catch (error) { if (at === active) message.textContent = unconfirmedWords(error); }
+    } catch (error) { if (mode === "join") clearInvitationFragment(location, history, invitation); if (at === active) message.textContent = unconfirmedWords(error); }
     finally { busy = false; renderPicker(); }
   };
   dialog.querySelector<HTMLButtonElement>("[data-enroll]")!.onclick = () => { void enroll("join"); };
   dialog.querySelector<HTMLButtonElement>("[data-enroll-check]")!.onclick = () => { void enroll("check"); };
   dialog.querySelector<HTMLButtonElement>("[data-enroll-continue]")!.onclick = () => { void enroll("continue"); };
-  if (location.hash.startsWith("#artroom-invite:")) dialog.querySelector<HTMLTextAreaElement>("[data-invitation]")!.value = location.hash.slice(1);
 }
 form.addEventListener("submit",event=>{event.preventDefault();void(async()=>{
  if(busy)return;const device=currentDevice(),voiceId=voice.value;if(!device||!speech.voices().some(v=>v.id===voiceId)){message.textContent="refused because an identity and an available English (US) voice are required";return;}

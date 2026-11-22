@@ -1,8 +1,9 @@
 /** Membership invitations and retained enrollment custody. */
+import { shownText } from "./shown-text.ts";
 import { type DefinitionShape, expectedOf, type Link, LINK, linkOf } from "./browser-helpers.ts";
 import type { Context, Outcome } from "./command-context.ts";
 import { standing } from "./command-scope.ts";
-import { accepted, active, configOf, done, failed, fresh, handleOf, run, signerOf, signing, stopCommand, summaryOf, transportOf, usage, validStep, waitFor } from "./command-support.ts";
+import { accepted, active, answered, configOf, done, failed, fresh, handleOf, run, signerOf, signing, stopCommand, summaryOf, transportOf, usage, validStep, waitFor } from "./command-support.ts";
 import { definitionOf } from "./command-targets.ts";
 import { enrolAgentKey, enrolCheckerKey, enrolDeviceKey } from "./invitations.ts";
 import { newStoredSigner } from "./store-signer.ts";
@@ -42,8 +43,8 @@ export function invite(ctx: Context, member: string, options: { role?: string; a
     const { inbox: _inbox, ...shared } = repository;
     const link: Link = { v: 1, service: config.service, repository: shared, invitation, secret, handle: member, definition: summary.definition };
     return done(
-      `Invited ${member} as ${options.role}: invitation ${repository.membership.scope}:${invitation}, until ${fields.inviteEnds}.`,
-      `Link for ${member} only (it holds the invitation's secret): ${LINK}${b64url(utf8(JSON.stringify(link)))}`,
+      `Invited ${shownText(member)} as ${options.role}: invitation ${repository.membership.scope}:${invitation}, until ${fields.inviteEnds}.`,
+      `Link for ${shownText(member)} only (it holds the invitation's secret): ${LINK}${b64url(utf8(JSON.stringify(link)))}`,
     );
   });
 }
@@ -60,9 +61,9 @@ export function inviteDevice(ctx: Context, member: string, options: { hours?: nu
     const M = await handleOf(ctx, config, repository.membership.scope);
     const before = await summaryOf(M);
     const held = standing(before.items, signer.key);
-    if (held && !held.actions.includes("membership.invite")) return failed(`Your role ${held.role} does not hold membership.invite, so nothing was signed. Ask an admin of this room to run: dap invite ${member} --device.`);
+    if (held && !held.actions.includes("membership.invite")) return failed(`Your role ${held.role} does not hold membership.invite, so nothing was signed. Ask an admin of this room to run: dap invite ${shownText(member)} --device.`);
     const row = before.items.find((item) => item.type === "member" && item.state === "active" && item.values["handle"] === member);
-    if (!row) return failed(`${member} is no active member of this room. Nothing was signed.`);
+    if (!row) return failed(`${shownText(member)} is no active member of this room. Nothing was signed.`);
     const { inbox: _inbox, ...shared } = repository;
     const secret = b64url(fresh(32));
     const link = (invitation: DeviceKeyInvitation["invitation"], expected: DeviceKeyInvitation["expected"]): DeviceKeyInvitation => ({ v: 1, kind: "device-key", service: new URL(config.service).origin, repository: shared, definition: before.definition, handle: member, invitation, secret, expected });
@@ -77,8 +78,8 @@ export function inviteDevice(ctx: Context, member: string, options: { hours?: nu
     const roster = after.items.find((item) => item.type === "roster" && item.state === "open"), current = after.items.find((item) => item.type === "member" && item.id === row.id);
     if (!roster || !current) return failed(`The invitation ${M.scope}:${invitation.seq} took effect, and the roster could not be read after it. Make another device link.`);
     return done(
-      `Invited a new device of ${member}: invitation ${M.scope}:${invitation.seq}, until ${fields.inviteEnds}.`,
-      `Link for a new device of ${member} only (it holds the invitation's secret): ${encodeDeviceKeyInvitation(link(invitation, { on: roster.revision, member: current.revision }))}`,
+      `Invited a new device of ${shownText(member)}: invitation ${M.scope}:${invitation.seq}, until ${fields.inviteEnds}.`,
+      `Link for a new device of ${shownText(member)} only (it holds the invitation's secret): ${encodeDeviceKeyInvitation(link(invitation, { on: roster.revision, member: current.revision }))}`,
     );
   });
 }
@@ -95,12 +96,25 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
     if (before?.join?.kind === "enrol") return failed("An original agent enrollment is retained; a person invitation cannot replace it.");
     if (before?.join?.kind === "checker-enrol") return failed("An original checker enrollment is retained; a person invitation cannot replace it.");
     if (before?.join?.kind === "device-enrol") return failed("An original device enrollment is retained; a person invitation cannot replace it.");
+    if (before?.join?.complete) {
+      if (before.join.link !== textDigest(canonicalize(link)) || before.service !== link.service || !before.repository?.inbox || !before.handle || !before.join.accepted)
+        return failed("The completed join cleanup does not match this invitation. Nothing was replaced.");
+      if (!ctx.store.discardPrivate) return failed("The completed join's private request still needs cleanup.");
+      await ctx.store.discardPrivate(before.join.request);
+      const { join: _completed, ...joined } = before;
+      await ctx.store.save(joined);
+      return done(`Joined as ${before.handle}.`, `Your inbox: ${before.repository.inbox}.`);
+    }
     if (before?.repository) return usage(`This config directory has a repository already: directory ${before.repository.directory.scope}.`);
     if (before && !before.join) return usage("This config directory is set up already; use another config directory to join.");
     const linkDigest = textDigest(canonicalize(link));
     let pending: PendingJoin | undefined = before?.join;
     const shared = pending && (({ inbox: _inbox, ...repository }) => repository)(pending.repository);
     if (pending && (pending.link !== linkDigest || before!.service !== link.service || canonicalize(shared) !== canonicalize(link.repository) || pending.handle !== link.handle)) return failed(`The invitation link does not match the pending join. ${joinSent(pending)} Retry the original invitation link.`);
+    if (pending?.refused) {
+      if (ctx.store.discardPrivate) await ctx.store.discardPrivate(pending.request);
+      return answered(link.repository.membership.scope, pending.refused, "Joined");
+    }
     const base: Config = before ? { v: 2, service: before.service, key: before.key } : { v: 2, service: link.service, key: "device" };
     const signer = pending ? await signerOf(ctx, base) : await newStoredSigner(ctx.store, base.key);
     let signed: SignedIntent;
@@ -140,7 +154,14 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
       if (settled.value.intent !== digest || canonicalize(settled.value.fact) !== canonicalize(pending!.accepted)) return failed(`The saved accepted fact does not match this exact join. ${joinSent(pending!)}`);
       fact = pending!.accepted;
     } else {
-      const receipt = accepted(await M.submit(signed), M.scope, "Joined").receipt;
+      const answer = await M.submit(signed);
+      if (answer.answer === "refused" && answer.reason === "guard-failed"
+        && (answer.name === "invitation-used" || answer.name === "invitation-expired")) {
+        await keep({ ...pending!, refused: answer });
+        if (ctx.store.discardPrivate) await ctx.store.discardPrivate(pending!.request);
+        return answered(M.scope, answer, "Joined");
+      }
+      const receipt = accepted(answer, M.scope, "Joined").receipt;
       if (!isFactRef(receipt.fact) || canonicalize(receipt.fact.at) !== canonicalize(at) || receipt.intent !== digest) throw new TransportError("The accepted reply does not match this exact join; its saved request remains pending.");
       fact = receipt.fact;
       await keep({ ...pending!, accepted: fact });
@@ -157,7 +178,12 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
     await keep({ ...pending!, repository: { ...link.repository, inbox } });
     const I = await handleOf(ctx, config, inbox, null);
     await waitFor(ctx, () => [M.scope, inbox], () => active(I), "your inbox", "retry the original dap join invitation link to continue this enrollment.");
-    await ctx.store.save({ ...config, repository: { ...link.repository, inbox }, handle: link.handle });
-    return done(`Joined as ${link.handle} on key ${signer.key}.`, `Your inbox: ${inbox}.`);
+    const complete = { ...config, repository: { ...link.repository, inbox }, handle: link.handle };
+    if (ctx.store.discardPrivate) {
+      await ctx.store.save({ ...complete, join: { ...pending!, complete: true } });
+      await ctx.store.discardPrivate(pending!.request);
+    }
+    await ctx.store.save(complete);
+    return done(`Joined as ${shownText(link.handle)} on key ${signer.key}.`, `Your inbox: ${inbox}.`);
   });
 }

@@ -89,6 +89,7 @@
     "packages/scope/src/room-format.ts",
     "packages/scope/src/sessions.ts",
     "packages/scope/src/sqlite.ts",
+    "packages/scope/src/workspace-expiry.ts",
     "packages/scope/src/workspace-host.ts"
   ],
   "independentObjects": {

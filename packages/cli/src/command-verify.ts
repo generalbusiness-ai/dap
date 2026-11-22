@@ -1,5 +1,6 @@
 /** Standalone and room replay verification. */
 import type { Context, Outcome } from "./command-context.ts";
+import { shownJson, shownText } from "./shown-text.ts";
 import { configOf, done, failed, handleOf, managedReadsOf, readSigning, run, signerOf, stopCommand, summaryOf, usage } from "./command-support.ts";
 import { scopeNamed } from "./command-targets.ts";
 import type { Config } from "./store.ts";
@@ -159,12 +160,12 @@ async function roomScopes(ctx: Context, config: Config, budget: Verification): P
 /** Disclose the shared proof once, including the actual root of each prefix. */
 function sharedProofLines(proof: FinishedRoom): string[] {
   const lines = [...proof.otherRooms && !proof.dependencies.missing.length ? [otherRoomsLine(proof.anchors.length)] : [], `Shared room proof: ${proof.roots.length} roots; ${proof.dependencies.verified} verified dependencies; ${proof.dependencies.anchored} anchored dependencies; ${proof.dependencies.missing.length} missing dependencies.`];
-  for (const row of proof.coverage) lines.push(`Shared coverage: ${row.scope.scope}, genesis ${row.scope.genesis}${row.kind ? `, kind ${row.kind}` : ""}, entries ${row.from} to ${row.through}; proving root ${row.root}.`);
+  for (const row of proof.coverage) lines.push(`Shared coverage: ${row.scope.scope}, genesis ${row.scope.genesis}${row.kind ? `, kind ${shownText(row.kind)}` : ""}, entries ${row.from} to ${row.through}; proving root ${row.root}.`);
   for (const row of proof.texts) lines.push(`Shared checked text: ${row.digest}; source ${row.source.scope}, genesis ${row.source.genesis}; proving root ${row.root}; consumers ${row.consumers.join(", ") || "none"}.`);
   for (const trust of proof.trusts) lines.push(`Shared trust: ${trust}.`);
   for (const fact of proof.anchors) lines.push(`Shared anchor: ${canonicalize(fact)}.`);
   for (const fact of proof.dependencies.missing) lines.push(`Shared missing dependency: ${canonicalize(fact)}.`);
-  for (const row of proof.redacted) lines.push(`Shared redacted text: tombstone ${canonicalize(row.tombstone)}, item ${row.item}, slot ${JSON.stringify(row.slot)}.`);
+  for (const row of proof.redacted) lines.push(`Shared redacted text: tombstone ${canonicalize(row.tombstone)}, item ${row.item}, slot ${shownJson(JSON.stringify(row.slot))}.`);
   for (const row of proof.omittedTexts ?? []) lines.push(`Shared omitted text: ${row.digest}, ${row.bytes} bytes, first use ${canonicalize(row.first)}.`);
   for (const row of proof.incompleteBytes ?? []) lines.push(`Shared incomplete byte checks: ${canonicalize(row.scope)}, entries ${row.from} to ${row.through}: ${row.reason}.`);
   return lines;
@@ -209,7 +210,7 @@ function verifyAll(ctx: Context): Promise<Outcome> {
         const notProven = sessionDeniedDependency(report, report.missing, results, denied);
         lines.push(`${kind} ${scope}, entry ${report.target.seq}: ${notProven?.line ?? report.result}.`);
         if (notProven) lines.push(`Proof dependency: Register creation result ${notProven.at.at.scope}:${notProven.at.seq}.`);
-        if (report.result !== "consistent") first ??= notProven ? `First finding: ${kind} ${scope}: ${notProven.line}.` : `First finding: ${kind} ${scope} is ${report.result}${why ? `: ${why}` : ""}.`;
+        if (report.result !== "consistent") first ??= notProven ? `First finding: ${kind} ${scope}: ${notProven.line}.` : `First finding: ${kind} ${scope} is ${report.result}${why ? `: ${shownText(why)}` : ""}.`;
         if (kind === "destination" && report.result === "consistent") {
           try {
             budget.at("cleanup", scope); budget.progress();
@@ -219,7 +220,7 @@ function verifyAll(ctx: Context): Promise<Outcome> {
             first ??= cleanup.finding;
           } catch (error) {
             if (!(error instanceof SourceError) && !(error instanceof TransportError)) throw error;
-            const finding = `Cleanup status not read: destination ${scope}: ${error.message}.`;
+            const finding = `Cleanup status not read: destination ${scope}: ${shownText(error.message)}.`;
             lines.push(finding); first ??= finding;
           }
         } else if (kind === "destination") {

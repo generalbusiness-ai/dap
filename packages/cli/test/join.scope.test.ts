@@ -148,6 +148,7 @@ test.each(["platform:membership@2", "platform:membership@6", "platform:membershi
     expect(finished.code, finished.lines.join("\n")).toBe(0);
     expect(sent).toHaveLength(beforeSettlement); // settlement is read-only, even past the saved deadline.
     expect([await store.secret("device"), (await store.config())!.join, (await store.config())!.repository!.inbox]).toEqual([key, undefined, accepted.join!.repository.inbox]);
+    expect(await store.private(pending.request)).toBeNull();
     expect(initialAnswers).toEqual([["accepted", null, null]]);
     expect(await joins()).toHaveLength(1);
     if (definition !== "platform:membership@2") {

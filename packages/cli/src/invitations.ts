@@ -1,3 +1,4 @@
+import { shownText } from "./shown-text.ts";
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/dap-client";
 import { cliInvitationDirectoriesForMembership, answersVersionQuestion, isHandle, platform } from "@generalbusiness/dap-platform";
 /** Retained invitation creation and explicitly tagged agent, checker and device enrollment.
@@ -341,7 +342,7 @@ async function issueRetainedInvitation(ctx: Context, input: IssuedInput, options
         row.member = await prepare(openingKind(row.input), memberFields(row.input)); await persist();
       }
       const result = await advance(row.member);
-      if (result !== "verified") return status(result, result === "refused" ? `Native refusal: ${row.member.refused!.reason}${row.member.refused!.name ? " (" + row.member.refused!.name + ")" : ""}. The original ${row.input.kind === "checker-key" ? "checker" : "agent"} opening is retained.` : `The original ${row.input.kind === "checker-key" ? "checker" : "agent"} opening is retained.`);
+      if (result !== "verified") return status(result, result === "refused" ? `Native refusal: ${row.member.refused!.reason}${row.member.refused!.name ? " (" + shownText(row.member.refused!.name) + ")" : ""}. The original ${row.input.kind === "checker-key" ? "checker" : "agent"} opening is retained.` : `The original ${row.input.kind === "checker-key" ? "checker" : "agent"} opening is retained.`);
     }
     if (!row.invitation) {
       if (options.mode === "check") return status("prepared", "Continue explicitly to prepare the original invitation.");
@@ -349,7 +350,7 @@ async function issueRetainedInvitation(ctx: Context, input: IssuedInput, options
       row.invitation = await prepare(invitationKind(row.input), fields); await persist();
     }
     const result = await advance(row.invitation);
-    if (result !== "verified") return status(result, result === "refused" ? `Native refusal: ${row.invitation.refused!.reason}${row.invitation.refused!.name ? " (" + row.invitation.refused!.name + ")" : ""}. The original invitation is retained.` : "The original invitation is retained.");
+    if (result !== "verified") return status(result, result === "refused" ? `Native refusal: ${row.invitation.refused!.reason}${row.invitation.refused!.name ? " (" + shownText(row.invitation.refused!.name) + ")" : ""}. The original invitation is retained.` : "The original invitation is retained.");
     const receipt = row.invitation.receipt!, s = await wait(options, async () => summary(await membershipHandle(), row.repository.membership, pin));
     const invited = s.items.find(i => i.id === receipt.fact.seq && i.type === (row.input.kind === "person" ? "member" : "key"));
     if (!invited || invited.state !== "invited" || Object.entries(invitationIssueFields(pin, row.secret)).some(([name, value]) => invited.values[name] !== value) || invited.values["inviteEnds"] !== row.ends) return status("unknown", "The current native invitation could not be verified.");
@@ -538,7 +539,7 @@ async function enrolKey(ctx: Context, text: string, options: { mode?: "continue"
         config = { ...enrolled, repository: bound, handle: link.handle };
         await save(config);
         if (!sameOptional(await ctx.store.config(), config)) return bad();
-        return { code: 0, lines: [`Joined as ${link.handle} on key ${keyIdOfSecret(key)}, a new device key of this member.`, `Your inbox: ${bound.inbox}.`] };
+        return { code: 0, lines: [`Joined as ${shownText(link.handle)} on key ${keyIdOfSecret(key)}, a new device key of this member.`, `Your inbox: ${bound.inbox}.`] };
       }
       const memberEntry = await followFact(M, link.member);
       const invitationEntry = await followFact(M, link.invitation);
@@ -564,7 +565,7 @@ async function enrolKey(ctx: Context, text: string, options: { mode?: "continue"
       config = { ...config!, repository: { ...observed, inbox: inbox.scope }, handle: link.handle };
       await save(config);
       if (!sameOptional(await ctx.store.config(), config)) return bad();
-      return { code: 0, lines: [checker ? `Enrolled independent checker ${link.handle}. Native checker bindings verified.` : `Enrolled independent agent ${link.handle}. Native agent and controller bindings verified.`] };
+      return { code: 0, lines: [checker ? `Enrolled independent checker ${shownText(link.handle)}. Native checker bindings verified.` : `Enrolled independent agent ${shownText(link.handle)}. Native agent and controller bindings verified.`] };
     } finally { key.fill(0); }
   } catch (error) { return error instanceof Stop ? error.outcome : bad(); }
 }
@@ -601,9 +602,9 @@ export async function invitePerson(ctx: Context, member: string | undefined, opt
       const { invitationIssue: _finished, ...released } = (await ctx.store.config())!;
       await ctx.store.save(released);
     }
-    if (result.state === "verified") return say(0, `Invited ${result.handle}: the invitation is recorded and verified.`, `Link for ${result.handle} only (it holds the invitation's secret): ${result.link}`);
-    if (result.state === "refused") return say(1, `The invitation of ${result.handle} was refused. ${result.reason ?? ""}`.trim());
-    return say(1, `The invitation of ${result.handle} is ${result.state}. ${result.state === "unknown" ? "The act may still take effect. " : ""}${result.reason ?? ""} Run dap invite --check, or dap invite --continue to resume the exact original.`.replace(/\s+/g, " ").trim());
+    if (result.state === "verified") return say(0, `Invited ${shownText(result.handle)}: the invitation is recorded and verified.`, `Link for ${shownText(result.handle)} only (it holds the invitation's secret): ${result.link}`);
+    if (result.state === "refused") return say(1, `The invitation of ${shownText(result.handle)} was refused. ${shownText(result.reason ?? "")}`.trim());
+    return say(1, `The invitation of ${shownText(result.handle)} is ${result.state}. ${result.state === "unknown" ? "The act may still take effect. " : ""}${shownText(result.reason ?? "")} Run dap invite --check, or dap invite --continue to resume the exact original.`.replace(/\s+/g, " ").trim());
   };
   try {
     const config = await ctx.store.config();
@@ -616,7 +617,7 @@ export async function invitePerson(ctx: Context, member: string | undefined, opt
       if (!retained) return say(2, "No invitation is retained here.");
       return await finish(await issueInvitation(ctx, retained.input, { privateRequests: retained.names, mode: options.mode, operation: retained.operation }));
     }
-    if (retained) return say(1, `An invitation of ${retained.input.handle} is retained. Run dap invite --check, or dap invite --continue. Nothing new was signed.`);
+    if (retained) return say(1, `An invitation of ${shownText(retained.input.handle)} is retained. Run dap invite --check, or dap invite --continue. Nothing new was signed.`);
     if (!member) return say(2, "Name a member's handle.");
     const input: InvitationIssueInput = { kind: "person", handle: member, hours: options.hours ?? 24, ...(options.role ? { role: options.role as "member" } : {}) };
     if (!isInvitationIssueInput(input)) return say(2, "Name a handle and a role with --role: one of member, maintainer, admin.");

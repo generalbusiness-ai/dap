@@ -1,4 +1,5 @@
 /** Scope inspection and direct signed commands. */
+import { shownJson, shownText } from "./shown-text.ts";
 import { applicationList } from "./application-list.ts";
 import { describe, expectedOf, heldActs, type Standing, valueOf } from "./browser-helpers.ts";
 import type { Context, Outcome } from "./command-context.ts";
@@ -65,9 +66,9 @@ export function acts(ctx: Context, named?: string): Promise<Outcome> {
     const key = (await signerOf(ctx, config)).key;
     const held = config.repository ? standing((await summaryOf(await handleOf(ctx, config, config.repository.membership.scope, reader))).items, key) : null;
     const { acts: listed, hidden } = heldActs(shape, held);
-    const shown = listed.map(([kind, act]) => `  ${describe(kind, act)}`);
+    const shown = listed.map(([kind, act]) => `  ${shownText(describe(kind, act))}`);
     const who = held ? `${held.handle} (${held.role})` : `key ${key}, which is no active member's`;
-    return done(`Acts on ${scope} (${definition}) for ${who}:`, ...shown, ...(hidden > 0 ? [`Not shown: ${hidden} that need an action your role does not hold.`] : []));
+    return done(`Acts on ${scope} (${shownText(definition)}) for ${shownText(who)}:`, ...shown, ...(hidden > 0 ? [`Not shown: ${hidden} that need an action your role does not hold.`] : []));
   });
 }
 
@@ -91,7 +92,7 @@ export function act(ctx: Context, kind: string, options: { on?: string; target?:
     const summary = await summaryOf(handle);
     const { shape, declared } = await definitionOf(handle, summary);
     const declaration = shape.acts[kind];
-    if (!declaration || kind === shape.genesis) return usage(`${kind} is not an act of ${shape.name}. Run: dap acts ${options.on ?? ""}`.trim());
+    if (!declaration || kind === shape.genesis) return usage(`${shownText(kind)} is not an act of ${shownText(shape.name)}. Run: dap acts ${shownText(options.on ?? "")}`.trim());
     const fields: Record<string, FieldValue> = {};
     for (const pair of options.set ?? []) {
       const at = pair.indexOf("=");
@@ -121,7 +122,7 @@ export function act(ctx: Context, kind: string, options: { on?: string; target?:
       const answer = await liveHandle.liveAct(signed, live.generation);
       switch (answer.answer) {
         case "applied": return done(`Took effect in live generation ${answer.generation} at tick ${answer.tick}.`);
-        case "refused": return failed(`Refused: ${answer.reason}${answer.name ? ` (${answer.name})` : ""}, judged in live generation ${answer.generation} at tick ${answer.tick}.`);
+        case "refused": return failed(`Refused: ${answer.reason}${answer.name ? ` (${shownText(answer.name)})` : ""}, judged in live generation ${answer.generation} at tick ${answer.tick}.`);
         case "reset": return failed(`The live scope reset to generation ${answer.generation}. Read its state again before another act.`);
         case "unavailable": return failed(`Unavailable: ${answer.reason}. The live act was not judged.`);
       }
@@ -159,15 +160,15 @@ export function items(ctx: Context, named: string, raw: string): Promise<Outcome
     const page = await handle.queryItems(query);
     if (!page.ok) return failed(`Item query refused: ${page.reason}. Coverage is incomplete.`);
     return done(`Items of ${scope} at ${page.at.seq} (${page.at.hash}); selected suffix ${page.complete ? "complete" : "incomplete"}.`,
-      ...page.value.items.map(item => canonicalize(item)), ...(page.next === undefined ? [] : [`Next cursor: ${page.next}`]));
+      ...page.value.items.map(item => shownJson(canonicalize(item))), ...(page.next === undefined ? [] : [`Next cursor: ${page.next}`]));
   });
 }
 
 /** One entry in one line: where, when, what and by which key. */
 function entryLine(scope: ScopeId, entry: Entry): string {
   const input = entry.input;
-  const what = input.type === "act" ? `act ${input.signed.intent.kind} by ${short(input.signed.intent.actor)}`
-    : input.type === "genesis" ? `genesis ${input.kind}`
+  const what = input.type === "act" ? `act ${shownText(input.signed.intent.kind)} by ${short(input.signed.intent.actor)}`
+    : input.type === "genesis" ? `genesis ${shownText(input.kind)}`
     : input.type === "delivery" ? `delivery ${"type" in input.message ? input.message.type : input.message.class} from ${input.sourceKind}:${input.from.seq}`
     : input.type;
   return `${scope}:${entry.seq}  ${entry.time}  ${what}; ${entry.effects.length} effects, ${entry.sends.length} sends`;
@@ -203,7 +204,7 @@ export function show(ctx: Context, named: string): Promise<Outcome> {
     if (!read.ok) return failed(`Cannot read entry ${named}: ${read.reason}.`);
     const { entry, hash } = read.value;
     const input = entry.input;
-    const detail = input.type === "act" ? `Fields: ${JSON.stringify(input.signed.intent.fields)}. Grants recorded: ${input.authority.length}.` : `Effects: ${JSON.stringify(entry.effects)}.`;
+    const detail = input.type === "act" ? `Fields: ${shownJson(JSON.stringify(input.signed.intent.fields))}. Grants recorded: ${input.authority.length}.` : `Effects: ${shownJson(JSON.stringify(entry.effects))}.`;
     return done(`${entryLine(scope, entry)}; hash ${hash}.`, detail);
   });
 }

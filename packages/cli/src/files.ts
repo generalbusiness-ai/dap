@@ -122,6 +122,9 @@ export function fileStore(dir: string): Store {
       if (bytes === null) throw new Error(`${path} holds no private bytes`);
       return bytes;
     },
+    discardPrivate: async name => {
+      try { unlinkSync(privatePath(name)); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+    },
     keepPrivate: async (name, bytes) => write(privatePath(name), `${b64url(bytes)}\n`, true),
     config: async () => {
       const path = join(dir, "config.json");

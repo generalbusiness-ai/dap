@@ -502,3 +502,27 @@ test("no deployed wiring passes the local option", () => {
   expect(archiveSource).toContain("new ArtifactsProvider(");
   expect(workerSource).toContain("new SiteTokenReuse(");
 });
+
+
+test("member read mint refuses another repository remote before minting", async () => {
+  const s = service();
+  s.script.remote = () => "https://other.invalid/git/artroom-demo/repo-1.git";
+  await expect(provider(s).mintRead(repository, { handle: "read:fixture", seconds: 60 })).rejects.toThrow();
+  expect(s.calls).toEqual(["get repo-1", "info repo-1"]);
+});
+
+test.each([undefined, "write"] as const)("member read mint refuses scope %s", async scope => {
+  const s = service();
+  s.script.token = () => ({ plaintext: "fixture", ...(scope === undefined ? {} : { scope }), expiresAt: "2026-10-07T13:15:00.000Z" });
+  await expect(provider(s).mintRead(repository, { handle: "read:fixture", seconds: 60 })).rejects.toThrow();
+  expect(s.calls).toEqual(["get repo-1", "info repo-1", "createToken repo-1 read 60"]);
+});
+
+test.each([false, true])("member read mint accepts the exact %s-local remote and read scope", async local => {
+  const s = service(), request = { handle: "read:fixture", seconds: 60 };
+  if (local) s.script.remote = name => `http://127.0.0.1:8787/git/${NAMESPACE}/${name}.git`;
+  const p = local ? new ArtifactsProvider({ binding: s.ns, host: "artifacts", namespace: NAMESPACE, service: SERVICE,
+    localOrigin: "http://127.0.0.1:8787", maxBytes: 1024, credentialHandle: async () => "unused" }) : provider(s);
+  expect(await p.mintRead(repository, request)).toEqual({ id: request.handle, ends: "2026-10-07T13:15:00Z", plaintext: "read-plaintext-1" });
+  expect(s.calls).toEqual(["get repo-1", "info repo-1", "createToken repo-1 read 60"]);
+});

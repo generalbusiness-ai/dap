@@ -3,6 +3,7 @@
  * The stream is the feed: a line says only that the head moved. The summary read under the same session decides. No model runs meanwhile.
  * It signs no act. A session request is the only signature, and each start reads the record first, so a wake missed while this was down is found at once.
  */
+import { shownText } from "./shown-text.ts";
 import type { Item, Read, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { isMemberRef } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, completeSummary, httpTransport, observeScope, openHttpHeadStream, type CompleteSnapshot, type HeadStreamFetch, type ObservationState } from "@generalbusiness/dap-client";
@@ -27,7 +28,7 @@ export function questionWoke({ ask, items }: Question, id: number, lane: string)
   const changes = items.find(item => item.type === "approval" && item.state === "submitted" && item.values["verdict"] === "request-changes" && local(item.refs["ask"]) === id && local(item.refs["bodyAt"]) === local(ask.refs["bodyAt"]));
   if (!changes) return null;
   const by = changes.parties["approver"];
-  return `${isMemberRef(by) ? by.member : "A member"} requested changes on question ${id}. Read the record, revise the question and ask again: ${show(changes.id)}`;
+  return `${isMemberRef(by) ? shownText(by.member) : "A member"} requested changes on question ${id}. Read the record, revise the question and ask again: ${show(changes.id)}`;
 }
 
 export function issueWait(ctx: Context, named: string, askWord: string, options: { hours?: number; bound?: Promise<void> } = {}): Promise<Outcome> {

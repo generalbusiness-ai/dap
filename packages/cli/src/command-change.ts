@@ -1,4 +1,5 @@
 /** File proposals and required-check publication. */
+import { shownText } from "./shown-text.ts";
 import { type ActShape, expectedOf } from "./browser-helpers.ts";
 import type { Context, Outcome } from "./command-context.ts";
 import { type Issue, issueNamed, linking } from "./command-issues.ts";
@@ -147,7 +148,7 @@ export function edit(ctx: Context, path: string, options: { file?: string; title
     const proposed = await C.intent(signer, "propose-file" as never, { on: null, fields: file, expected: expectedOf(change.declared.acts["propose-file"] as unknown as ActShape, (await summaryOf(L)).items, null, file) } as never, signing(ctx));
     const version = (await C.submit(proposed.signed, [], proposed.beside));
     if (version.answer !== "accepted") return answered(lane, version, "Proposed");
-    const lines = [`Proposed ${path} (${bytes.length} bytes) as change ${lane}, version ${version.receipt.fact.seq}.`];
+    const lines = [`Proposed ${shownText(path)} (${bytes.length} bytes) as change ${lane}, version ${version.receipt.fact.seq}.`];
     if (closes !== null) {
       const linked = await run(async () => {
         try { return await linking(ctx, config, lane, reader, change.declared, closes); }
@@ -242,15 +243,15 @@ async function proposingFiles(ctx: Context, config: Config, base: string, files:
     await waitFor(ctx, () => [lane, repository.rules], async () => (await summaryOf(L)).items.some((item) => item.type === "rules" && typeof item.values["revision"] === "number") ? true : null, `the rules of ${lane}`);
     const sources: { path: string; entry: FactRef; digest: Digest }[] = [];
     for (const file of contents) {
-      currentRequest = null; phase = `preparing source ${file.path}`;
+      currentRequest = null; phase = `preparing source ${shownText(file.path)}`;
       const fields = { base, path: file.path, digest: digestBytes(file.bytes), size: file.bytes.length, content: file.content };
       const made = await C.intent(signer, "propose-file" as never, { on: null, fields, expected: expectedOf(change.declared.acts["propose-file"] as unknown as ActShape, (await summaryOf(L)).items, null, fields) } as never, signing(ctx));
-      currentRequest = { kind: "propose-file", digest: intentDigest(made.signed.intent), status: "outcome unknown" }; phase = `submitting source ${file.path}`;
+      currentRequest = { kind: "propose-file", digest: intentDigest(made.signed.intent), status: "outcome unknown" }; phase = `submitting source ${shownText(file.path)}`;
       const answer = await C.submit(made.signed, [], made.beside);
       if (answer.answer === "refused" || answer.answer === "mismatch") currentRequest.status = answer.answer;
       if (answer.answer !== "accepted") return partial(answered(lane, answer, "Proposed"));
       sources.push({ path: file.path, entry: answer.receipt.fact, digest: fields.digest });
-      known.push({ label: `Source ${file.path}`, fact: answer.receipt.fact }); currentRequest = null;
+      known.push({ label: `Source ${shownText(file.path)}`, fact: answer.receipt.fact }); currentRequest = null;
     }
     phase = "preparing the manifest";
     const manifest = { base, files: sources };
@@ -260,7 +261,7 @@ async function proposingFiles(ctx: Context, config: Config, base: string, files:
     if (answer.answer === "refused" || answer.answer === "mismatch") currentRequest.status = answer.answer;
     if (answer.answer !== "accepted") return partial(answered(lane, answer, "Proposed"));
     known.push({ label: "Manifest", fact: answer.receipt.fact }); currentRequest = null;
-    const proposal = options.edit ? `Proposed ${files[0]!.path} (${files[0]!.bytes.length} bytes) as change ${lane}, version ${answer.receipt.fact.seq}.` : `Proposed ${files.length} files as change ${lane}, version ${answer.receipt.fact.seq}.`;
+    const proposal = options.edit ? `Proposed ${shownText(files[0]!.path)} (${files[0]!.bytes.length} bytes) as change ${lane}, version ${answer.receipt.fact.seq}.` : `Proposed ${files.length} files as change ${lane}, version ${answer.receipt.fact.seq}.`;
     const lines = [proposal];
     if (options.closes) {
       const linked = await run(async () => {
@@ -299,7 +300,7 @@ export function merge(ctx: Context, named: string, options: { closes?: string } 
     const reader = await readerOf(ctx, config);
     const read = await (await handleOf(ctx, config, lane, reader)).definition();
     if (!read.ok) return failed(`Cannot read the definition of ${lane}: ${read.reason}.`);
-    if (read.value.name !== "change") return usage(`${lane} is no change: its definition is ${read.value.name}.`);
+    if (read.value.name !== "change") return usage(`${lane} is no change: its definition is ${shownText(read.value.name)}.`);
     if (options.closes === undefined) return merging(ctx, config, lane, reader, read.value);
     const linked = await linking(ctx, config, lane, reader, read.value, await issueNamed(ctx, config, reader, options.closes));
     if (linked.code !== 0) return linked;
@@ -373,7 +374,7 @@ async function merging(ctx: Context, config: Config, lane: ScopeId, reader: stri
   if (ended.state === "committed") {
     return done(`Reserved: merge ${lane}:${seq}, tree ${ended.reservationTree}. Required checks must pass before publication.`);
   }
-  if (ended.state !== "published") return failed(`Not published: the merge ${lane}:${seq} is ${ended.state}${typeof reason === "string" ? `, ${reason}` : ""}. The change ${lane} stays open at version ${version.id}. ${again}`);
+  if (ended.state !== "published") return failed(`Not published: the merge ${lane}:${seq} is ${ended.state}${typeof reason === "string" ? `, ${shownText(reason)}` : ""}. The change ${lane} stays open at version ${version.id}. ${again}`);
   const commit = valueOf_(ended.effects, seq, "commit");
   const path = version.values["path"];
   return done(

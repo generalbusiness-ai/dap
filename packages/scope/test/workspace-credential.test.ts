@@ -4,6 +4,7 @@ import { admitSequenceGenesis, canonicalize, digestBytes, entryHash, factRefOf, 
 import { MemoryState, type Item, type RecordState } from "@generalbusiness/dap-derive";
 import { grantOf, keys, variant } from "@generalbusiness/dap-derive/testing";
 import { WorkspaceHost } from "../src/workspace-host.ts";
+import { WorkspaceExpiry } from "../src/workspace-expiry.ts";
 import { ArtifactsProvider } from "../src/artifacts-host.ts";
 import type { OutsideGiven } from "../src/given.ts";
 import type { NativeBirth } from "../src/native-birth.ts";
@@ -199,4 +200,48 @@ test("workspace mint caps workspace at 900 seconds, internal reads and staging a
       expect(custody(native.storage.sql, f)[0]?.["plaintext"], "expiry refusal does not claim provider revocation or erase custody").toBe("STAND-IN-private-bearer");
     }
   });
+});
+
+
+test("unread workspace plaintext expires across restart without claiming revocation", async () => {
+  const storage = await create();
+  await storage.inside(async native => {
+    const f = fixture(); held(f);
+    // A row from before the expiry queue existed, with a provider-reported end.
+    native.storage.sql.exec(`CREATE TABLE private_workspace_token (scope TEXT NOT NULL, token INTEGER NOT NULL, id TEXT NOT NULL, ends TEXT NOT NULL, repository TEXT NOT NULL, plaintext TEXT, actor TEXT NOT NULL, mint TEXT NOT NULL, PRIMARY KEY(scope,token), UNIQUE(scope,id)) WITHOUT ROWID`);
+    native.storage.sql.exec("INSERT INTO private_workspace_token VALUES (?,?,?,?,?,?,?,?)", canonicalize(f.lane), 8, "older-provider-id", at(900), "{}", "older-private-bearer", keys.una.key, "9:0");
+    const { host, restart } = adapter(f, native.storage.sql), reply = await mint(f, host);
+    const expiry = new WorkspaceExpiry(native.storage.sql);
+    expect(expiry.wake(f.now)).toBe(START);
+    expiry.expire(START);
+    expect(expiry.wake(f.now)).toBe(reply.ends);
+    expiry.expire(timeOf(timeMs(reply.ends)! - 1));
+    expect(custody(native.storage.sql, f)[0]?.["plaintext"]).toBe("STAND-IN-private-bearer");
+    const resumed = new WorkspaceExpiry(native.storage.sql);
+    expect(resumed.wake(f.now)).toBe(reply.ends);
+    resumed.expire(reply.ends);
+    const row = custody(native.storage.sql, f)[0]!;
+    expect(row).toMatchObject({ id: reply.token, ends: reply.ends, plaintext: null, mint: "10:0" });
+    expect(native.storage.sql.exec("SELECT id,plaintext FROM private_workspace_token WHERE scope=? AND token=8", canonicalize(f.lane)).toArray()).toEqual([{ id: "older-provider-id", plaintext: null }]);
+    expect(f.state.record("hold@2", "token", [TOKEN])?.state).toBe("live");
+    expect(resumed.wake(f.now)).toBeNull();
+    expect(restart().credential(reply.token, keys.una.key)).toBeNull();
+    resumed.expire(reply.ends);
+    expect(custody(native.storage.sql, f)[0]).toEqual(row);
+  });
+
+  // An old object's activation must schedule and run the real ScopeObject alarm.
+  // The row is a storage fixture; it makes no provider or mint-judgment claim.
+  const scope = await create();
+  const head = await scope.head();
+  await scope.inside(state => {
+    state.storage.sql.exec(`CREATE TABLE private_workspace_token (scope TEXT NOT NULL, token INTEGER NOT NULL, id TEXT NOT NULL, ends TEXT NOT NULL, repository TEXT NOT NULL, plaintext TEXT, actor TEXT NOT NULL, mint TEXT NOT NULL, PRIMARY KEY(scope,token), UNIQUE(scope,id)) WITHOUT ROWID`);
+    state.storage.sql.exec("INSERT INTO private_workspace_token VALUES (?,?,?,?,?,?,?,?)", canonicalize(scope.at), 1, "old-id", START, "{}", "old-plaintext", keys.una.key, "1:0");
+  });
+  await scope.restart();
+  await scope.head();
+  expect(await scope.alarmAt()).not.toBeNull();
+  expect(await scope.alarm()).toBe(true);
+  expect(await scope.inside(state => state.storage.sql.exec("SELECT id,plaintext FROM private_workspace_token WHERE token=1").toArray())).toEqual([{ id: "old-id", plaintext: null }]);
+  expect(await scope.head()).toEqual(head);
 });

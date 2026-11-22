@@ -1,4 +1,5 @@
 /** Issue workflows and closure links. */
+import { shownText } from "./shown-text.ts";
 import { answersVersionQuestion } from "@generalbusiness/dap-platform";
 import { type ActShape, expectedOf } from "./browser-helpers.ts";
 import type { Context, Outcome } from "./command-context.ts";
@@ -72,7 +73,7 @@ function issueAct(ctx: Context, named: string, choose: (issue: Issue, handle: st
     const read = await L.definition();
     if (!read.ok) return failed(`Cannot read the definition of ${issue.lane}: ${read.reason}.`);
     const { kind, on, fields } = choose(issue, config.handle, repository.membership);
-    const declaration = read.value.acts[kind] ?? stopCommand(failed(`The issue ${issue.lane} is under ${read.value.name}, which has no act ${kind}.`));
+    const declaration = read.value.acts[kind] ?? stopCommand(failed(`The issue ${issue.lane} is under ${shownText(read.value.name)}, which has no act ${shownText(kind)}.`));
     const items = (await summaryOf(L)).items;
     const I = await laneOf(ctx, config, issue.lane, reader, read.value);
     const signer = await signerOf(ctx, config);
@@ -105,7 +106,7 @@ export function issueOpen(ctx: Context, options: { title?: string; body?: string
     const L = await handleOf(ctx, config, lane, reader);
     const created = await waitFor(ctx, () => [D.scope, lane], () => laneActive(L, `${D.scope}:${opened}`), `the issue ${lane}`);
     const number = created.items.find((item) => item.type === "intent")?.values["number"];
-    return done(`Opened issue #${String(number)}: ${options.title}. Its lane is ${lane}.`);
+    return done(`Opened issue #${String(number)}: ${shownText(options.title)}. Its lane is ${lane}.`);
   });
 }
 
@@ -134,7 +135,7 @@ export function issues(ctx: Context): Promise<Outcome> {
     if (!config.repository) return usage("No repository is known here. Run: dap create <name>, or dap join <link>.");
     const all = await issuesOf(ctx, config, await readerOf(ctx, config));
     if (all.length === 0) return done("No issues.");
-    const lines = all.map((issue) => `#${issue.number ?? "?"}  ${issue.state}${issue.reason ? ` (${issue.reason})` : ""}  ${issue.title}${issue.assignees.length > 0 ? `; assigned to ${issue.assignees.join(", ")}` : ""}; lane ${issue.lane}`);
+    const lines = all.map((issue) => `#${issue.number ?? "?"}  ${shownText(issue.state)}${issue.reason ? ` (${shownText(issue.reason)})` : ""}  ${shownText(issue.title)}${issue.assignees.length > 0 ? `; assigned to ${issue.assignees.map(shownText).join(", ")}` : ""}; lane ${issue.lane}`);
     return done(...lines, `${all.length} issues, ${all.filter((issue) => issue.state === "open").length} open.`);
   });
 }
