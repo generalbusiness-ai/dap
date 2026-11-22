@@ -1,8 +1,9 @@
 # BO1-W1: plan for dap-commons
 
 Plan under request `30bc6c91` and promise `5087f259`. Planner ruling
-`9b0585ca` approves the separate Worker and the witness, subject to the
-ordering decision below.
+`9b0585ca` decides the separate Worker, cohort, matching register pair,
+private custody, Start removal, and non-destructive rollback. Ruling
+`e53e0500` authorizes the timed checks below.
 
 ## Register and founding
 
@@ -38,13 +39,13 @@ Prepare the deployment in two steps:
    `ARTIFACTS_CONFIG.registerScope` to that exact ID. Verify equality and
    confirm that the timed config commit changes only those values. Run
    `packages/cli/test/demo-config.test.ts`,
-   `scripts/security-entry-points.test.mjs`, and
-   `scripts/security-settings.test.mjs`. The route inventory also runs in
-   `npm run pins`. The ordinary config gate adds static checks, types,
-   definition pins and the full test stages. The planner must authorize the
-   focused path before it substitutes for that gate. Start the timed sequence
-   only after the planner can schedule review, deployment and submission
-   before the printed deadline.
+   `scripts/security-entry-points.test.mjs`,
+   `scripts/security-settings.test.mjs`, and `npm run pins`. The checker stays
+   available for the timed review. Start only when review, deployment, and
+   submission can proceed. If approval has not arrived eight minutes after
+   the plan, stop. If deployment has not completed ten minutes after the plan,
+   stop. Keep the exact plan for reconciliation. These limits do not guarantee
+   completion before the printed deadline.
 
 After the required review and deployment, submit
 `DAP_HOME="$DAP_W1_HOME" dap install --planned --cohort commons` before the
@@ -127,10 +128,18 @@ probe readiness. The actual fanout and elapsed time are not established.
 The 23 successful notes create 23 new Commons entries. The current native
 archive allowlist in `packages/git/src/archive-policy.ts` does not include
 Commons 1, so the estimate assigns no Commons export pass to those entries.
+None of the seven pinned cohort definitions appears in the current
+`ARCHIVE_NATIVE_DATA` eligible set. The archive estimate is an upper bound.
 For each other archive-bound scope whose archive cannot start, the AR-1
 scenario gives at most six passes in its first hour and one per later hour,
 about 42 and 7 DO requests respectively. The evidence needed for an aggregate
 estimate is the actual per-turn source, provider and alarm work on this Worker.
+
+After register founding and before Hugh begins, the planner reads a baseline
+with `scripts/do-rate.mjs --worker dap-commons`. Prefer one complete 15-minute
+window at no more than 25 requests. That window corresponds exactly to 100
+requests per hour and falls within the approved 10–15 minute interval. If the
+baseline exceeds the limit, stop before Hugh begins.
 
 The planner reads five-minute Durable Object windows during W1 with
 `scripts/do-rate.mjs --worker dap-commons`. A window above 500 requests
@@ -182,10 +191,10 @@ section and changes no source or tests.
 
 ## Decisions and missing evidence
 
-The planner must rule on any focused exception to the exact-head full gate
-before that exception runs. Confirm the exact identity pair, private operator
-custody, deployed configuration, W1 content, and agent workflow. Confirm the current Wrangler pin and deployment
-procedure from the reviewed head. Estimate actual DO requests using the
-observed number of scope alarms and turns. Any request to archive Commons
-itself would need an explicit policy for that native definition. The existing
-local BO1 witness establishes the local sequence. W1 measures the hosted path.
+The Worker, cohort, exact matching register pair, custody, Start removal, and
+rollback are decided by `9b0585ca`. The timed checks and stops are authorized
+by `e53e0500`. The exact W1 content, agent role and access, and operator for
+each invocation remain open. Confirm the Wrangler pin at deployment and
+measure the Durable Object rate. Any request to archive Commons itself needs
+an explicit policy for that native definition. The existing local BO1 witness
+establishes the local sequence. W1 measures the hosted path.
