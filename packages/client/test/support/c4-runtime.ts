@@ -23,7 +23,7 @@ import { originalRequest } from "../../src/originals.ts";
 import { requestSession, signerSessionRequest } from "../../src/session.ts";
 import { secretSigner } from "../../src/intent.ts";
 import { wallClock } from "../../src/request-schedule.ts";
-import { c4Bootstrap, c4SelectionBootstrap, type CapturedNode } from "./c4-bootstrap.ts";
+import { c4Bootstrap, c4SelectionBootstrap, c4SymbolicBootstrap, symbolicSelection, type CapturedNode } from "./c4-bootstrap.ts";
 import { lending } from "../../../../examples/lending/definition.ts";
 import { selection } from "./c4-selection.ts";
 
@@ -89,8 +89,18 @@ export async function c4SelectionRuntime(standing = false) {
   } catch (error) { runtime.close(); throw error; }
 }
 
-async function restore(preset: "lending" | "selection", standing = false) {
-  const bootstrap = preset === "lending" ? await c4Bootstrap() : await c4SelectionBootstrap();
+/** Fixed symbolic declaration; the issued session and genesis belong to this scope. */
+export async function c4SymbolicRuntime(standing = false) {
+  const { scopeHandle, ...runtime } = await restore("symbolic", standing);
+  try {
+    const handle = await declaredHandle(scopeHandle, symbolicSelection);
+    if (!handle.ok) throw new Error(`C4 symbolic declared read refused: ${handle.reason}`);
+    return { ...runtime, handle: handle.handle };
+  } catch (error) { runtime.close(); throw error; }
+}
+
+async function restore(preset: "lending" | "selection" | "symbolic", standing = false) {
+  const bootstrap = preset === "lending" ? await c4Bootstrap() : preset === "symbolic" ? await c4SymbolicBootstrap() : await c4SelectionBootstrap();
   const application = "lending" in bootstrap ? bootstrap.lending : bootstrap.application;
   const now = timeMs(bootstrap.captured[0]!.ledger.now)!;
   const sqls: (Sql & { close(): void })[] = [];

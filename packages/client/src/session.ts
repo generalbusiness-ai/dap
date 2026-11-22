@@ -38,6 +38,7 @@
 import { SESSION_DOMAINS } from "@generalbusiness/dap-contract";
 import { answersVersionQuestion, platform } from "@generalbusiness/dap-platform";
 import type { Signer } from "./intent.ts";
+import { recordViewSession } from "./checked-view-session.ts";
 import type { KeyId, ObservationAnswer, ScopeId, ScopeRef, SessionAnswer, SessionClaims, SessionRefusal, SessionRequest, SignedSessionRequest, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalBytes, parseStrictBytes, taggedBytes, LATE, isHead, isKeyId, isMemberId, isScopeRef, keyIdOfSecret, same, signSessionRequest, takeBytes, timeMs, within } from "@generalbusiness/dap-bytes";
 import { TransportError } from "./handle.ts";
@@ -182,5 +183,7 @@ export async function requestSession(service: string, membership: ScopeId, signe
   // The standing is kept only when it was asked for and passes every check. An answer without it, or with one that fails, is a session with no standing.
   const standing = options.standing === true && Object.hasOwn(answer, "standing")
     ? sessionStanding((answer as { standing?: unknown }).standing, { membership: signed.request.to, key: signed.request.actor }, answer.session) : null;
-  return { ok: true, session: new Session(answer.token, answer.session, standing) };
+  const session = new Session(answer.token, answer.session, standing);
+  if (standing) recordViewSession(session, standing);
+  return { ok: true, session };
 }

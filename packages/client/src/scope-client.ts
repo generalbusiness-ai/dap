@@ -1,21 +1,29 @@
 /** Requests over a declared replica: custody owns bytes, the replica owns facts, and one schedule owns time. */
-import type { Answer, Beside, DeclaredDefinition, Digest, FieldValue, Head, MemberId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Answer, Beside, DeclaredDefinition, Digest, FieldValue, Head, KeyId, MemberId, MemberRef, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { REFUSAL_CLASSES, actDescriptorDigest, canonicalize, intentDigest, isDigest, isLocalId, isRecord, same, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { changeItem, isItemEffect, newItem, validateDefinition, type PredictionActor, type ValidDefinition } from "@generalbusiness/dap-derive";
+import { REFUSAL_CLASSES, actDescriptorDigest, canonicalize, intentDigest, isDigest, isLocalId, isRecord, same, textDigest, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { changeItem, isItemEffect, newItem, validateDefinition, type PredictionActor, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { Custody, CustodyError, Lost, envelopeOf, meaningOf, validKey, type BindingRecord, type ClientCustodyStore, type CustodyRecord, type DeliveryOccurrence, type Envelope, type Identity, type Outcome, type Sent } from "./custody.ts";
 import { ShapeError, shapeDeclaredAct, shapeFieldsOf, type AskedOf, type DeclaredHandle, type Kind, type ShapeFieldType } from "./declared.ts";
 import { shapeDeclaredValues } from "./declared-shape.ts";
 import { effectiveFields, expectedOf } from "./expected.ts";
 import { DEFAULT_LIFETIME_SECONDS, newIdempotencyKey, signedIntent, type Signer } from "./intent.ts";
 import { sendableAt } from "./originals.ts";
-import { scopeReplica, intentMeaning, type Replica, type ReplicaOptions, type ReplicaView, type Row, type SignedEntry, type TypeOf } from "./replica.ts";
+import { scopeReplica, intentMeaning, seamOf, type Replica, type ReplicaOptions, type ReplicaView, type Row, type SignedEntry, type TypeOf } from "./replica.ts";
 import type { Judged } from "./replica-judged.ts";
 import { requestStatus, signingDead, type RequestStatus } from "./request-status.ts";
 import { RequestSchedule, wallClock, type ClientClock } from "./request-schedule.ts";
-import { AuthorizationError, AuthorizationTransaction, type Authorization, type AuthorizationIdentity, type AuthorizationInput, type AuthorizationPosition, type AuthorizationSource, type AuthorizedAct, type MaterializedAct, type RetainAuthorization, type SigningAuthorization } from "./authorization.ts";
+import { AuthorizationError, AuthorizationTransaction, signingPermitted, type Authorization, type AuthorizationIdentity, type AuthorizationInput, type AuthorizationPosition, type AuthorizationSource, type AuthorizedAct, type MaterializedAct, type RetainAuthorization, type SigningAuthorization } from "./authorization.ts";
 import type { AuthorizationPort, CustodyBuildFence } from "./authorization-store.ts";
-import type { ItemName, PartialAct, Source } from "./act-types.ts";
+import type { Act, ActRef, ActRow, ActView, Exploration, ItemName, PartialAct, RecordedActRow, Source } from "./act-types.ts";
+import type { ActOffer } from "./act-offers.ts";
+import { actTemplate, missingActInputs } from "./act-input.ts";
+import { actsOn } from "./forms.ts";
+import { descriptionsOf } from "./describe.ts";
+import { viewCut } from "./view-cut.ts";
+import { viewJudge } from "./view-judge.ts";
+import { presentActRows } from "./act-rows.ts";
+import type { RecordedActAlias } from "./act-projection.ts";
 import { actVersion } from "./act-version.ts";
 import { registerComposition, type CompositionStep } from "./scope-composition.ts";
 import { lowerActNames } from "./act-symbols.ts";
@@ -35,9 +43,16 @@ import { descriptorFor, draftRevision, readStoredDrafts, refineDraft, type Draft
 /** Seat holds no principal and uses an origin; this port states the four facts C3 needs, each once (ruling e868dd08). */
 export interface ScopeMember { service: string; membership: ScopeRef; member: MemberId; principal: MemberRef | null }
 export interface PresentRequest<D extends DeclaredDefinition> { kind: Kind<D>; values: AskedOf<D, Kind<D>> }
+export interface ViewAuthority {
+  read(cut: { readonly actor: KeyId; readonly member: MemberRef; readonly scope: ScopeRef; readonly definition: Digest; readonly head: Head }): Promise<import("./replica-explore.ts").ExploreRead>;
+  current(session: import("./session.ts").Session, requestedAt: Timestamp): boolean;
+  observe(changed: () => void): () => void;
+}
 export interface ClientOptions<D extends DeclaredDefinition> extends Omit<ReplicaOptions<D>, "exploration"> {
   /** Read authentication for the one Replica-owned partial exploration context. */
   exploration?: ReadExploreInputs<D>;
+  viewAuthority?: ViewAuthority;
+  ticks?: (notify: () => void) => () => void;
   signer: Signer;
   member: ScopeMember;
   store: ClientCustodyStore & { authorizations: AuthorizationPort };
@@ -56,6 +71,10 @@ export type RequestView<D extends DeclaredDefinition> = RequestStatus & {
 };
 export type AuthorizationRequestView = { readonly is: "authorization"; readonly key: string; readonly reference: AuthorizationPosition; readonly act: AuthorizedAct; readonly status: "waits" | "source" };
 export type ClientRow<D extends DeclaredDefinition, T extends TypeOf<D> = TypeOf<D>> = Row<D, T> & { pending?: { key: string } };
+export type ProjectedRow<D extends DeclaredDefinition, T extends TypeOf<D> = TypeOf<D>> =
+  | (ActRow<D, T> & { readonly pending?: { readonly key: string }; readonly unavailable?: never })
+  | { readonly type: T; readonly pending: { readonly key: string }; readonly recorded: RecordedActRow<D, T> | null; readonly unavailable: "source"; readonly ref?: never }
+  | { readonly type: T; readonly pending: { readonly key: string }; readonly ref: null; readonly recorded: null; readonly unavailable: "legacy-custody" };
 export interface ClientView<D extends DeclaredDefinition> extends Omit<ReplicaView<D>, "row" | "rows"> {
   rows<T extends TypeOf<D>>(type: T): readonly ClientRow<D, T>[];
   /** Custody requests, partial draft entries in the list, and held stored intentions. Recorded requests leave this list. */
@@ -63,6 +82,10 @@ export interface ClientView<D extends DeclaredDefinition> extends Omit<ReplicaVi
   /** Editing and submitting drafts by slot address. Waiting drafts appear in `requests`. */
   drafts: DraftIndex<D, DraftViewKinds<D>>;
   row(ref: { item: number } | { key: string }): ClientRow<D> | null;
+  projectedRows<T extends TypeOf<D>>(type: T): readonly ProjectedRow<D, T>[];
+  projectedRow(ref: { item: number } | { key: string }): ProjectedRow<D> | null;
+  explore<K extends Kind<D>>(key: string, act: PartialAct<D, K>): Exploration<D, K>;
+  offers(ref: ActRef, keyFor: (kind: Kind<D>) => string): readonly ActOffer<D, Kind<D>>[];
 }
 interface ReadProof { began: number; head: Head }
 interface Held { record: CustodyRecord; outcomes: Outcome[] }
@@ -78,6 +101,7 @@ interface Cut { entries: readonly StoredDraftEntry[]; seen: ReadonlyMap<string, 
 interface Classified { status: RequestStatus; predicted: Judged }
 /** One member call's reads. `key` is the editing key, or the one allocated key of a new intention. */
 interface Context { entries: readonly StoredDraftEntry[]; rows: readonly StoredDraft[]; seen: ReadonlyMap<string, DraftCustodyObservation>; key: string }
+interface ViewSources { readonly pending: ReadonlyMap<string, { readonly source: Source; readonly act: AuthorizedAct }>; readonly recorded: readonly RecordedActAlias[]; readonly legacy: ReadonlySet<string> }
 interface Assembled<D extends DeclaredDefinition> {
   held: Map<string, Held>;
   classes: Map<string, Classified>;
@@ -157,6 +181,10 @@ export class ScopeClient<D extends DeclaredDefinition> {
   #stopStore: () => void;
   #stopDrafts: () => void;
   #stopReplica: () => void;
+  #stopTicks: () => void;
+  #stopAuthority: () => void;
+  #lastViewClock: number | null = null;
+  readonly #viewWake = {};
 
   constructor(handle: DeclaredHandle<D>, options: ClientOptions<D>) {
     // First, before any storage, schedule, Replica or observation: the Replica constructor already starts a read.
@@ -197,6 +225,8 @@ export class ScopeClient<D extends DeclaredDefinition> {
     this.#stopStore = options.store.observe(() => { this.#background(() => this.#sync()); });
     this.#stopDrafts = options.drafts.observe(() => { this.#background(() => this.#sync()); });
     this.#stopReplica = this.#replica.subscribe(() => { this.#background(() => this.#sync()); });
+    this.#stopAuthority = options.viewAuthority?.observe(() => { if (!this.#closed) { this.#again = true; this.#background(() => this.#sync()); } }) ?? (() => {});
+    this.#stopTicks = options.ticks?.(() => { if (!this.#closed) { this.#again = true; this.#background(() => this.#sync()); } }) ?? (() => {});
     flushers.set(this, () => this.#idle());
     const call: RequestCall<D> = (key, kind, values) => this.#request(key, kind, values);
     requests.set(this, call);
@@ -225,10 +255,10 @@ export class ScopeClient<D extends DeclaredDefinition> {
     if (this.#closed) return;
     this.#closed = true;
     this.#schedule.close();
-    this.#stopStore(); this.#stopDrafts(); this.#stopReplica();
+    this.#stopAuthority(); this.#stopTicks(); this.#stopStore(); this.#stopDrafts(); this.#stopReplica();
     this.#replica.close();
     // Close cannot publish a replica head whose custody reconciliation is still awaiting a store or draft.
-    this.#view = { ...this.#view, state: this.#replica.view.state };
+    this.#view = this.#stoppedView();
     for (const listener of [...this.#listeners]) listener(this.#view);
   }
 
@@ -567,16 +597,43 @@ export class ScopeClient<D extends DeclaredDefinition> {
       try {
         do {
           this.#again = false;
-          const replica = this.#replica.view;
-          const cut = await this.#publicationCut();
+          const replica = this.#replica.view, seam = seamOf(this.#replica as unknown as Replica<DeclaredDefinition>);
+          if (this.#options.viewAuthority && seam.reading()) {
+            await this.#replica.read();
+            if (this.#closed) return;
+            this.#again = true; continue;
+          }
+          const generation = seam.generation(), cut = await this.#publicationCut();
           if (this.#closed) return;
-          // A store, draft or replica change during an await invalidates this whole candidate view.
-          if (this.#again || this.#replica.view !== replica) { this.#again = true; continue; }
-          // Everything from here is synchronous: one projection from one cut, then one publication.
-          const assembled = this.#assemble(cut), view = this.#compute(assembled);
+          const legacy = new Set<string>();
+          for (const [key, seen] of cut.seen) if (seen.is === "ordinary" && !seen.record.signings.at(-1)?.authorization) legacy.add(key);
+          let sources: ViewSources = { pending: new Map(), recorded: [], legacy };
+          if (this.#options.viewAuthority) {
+            try { sources = await this.#viewSources(cut); } catch { /* Unproved sources have no reference. */ }
+          }
+          const authority = this.#options.viewAuthority;
+          let observed: import("./replica-explore.ts").ExploreRead | null = null;
+          if (authority && replica.state.is === "current" && replica.head) {
+            try { observed = await authority.read({ actor: this.#options.signer.key, member: structuredClone(this.#actor.member),
+              scope: structuredClone(this.#at), definition: this.#handle.digest, head: structuredClone(replica.head) }); } catch { /* unavailable */ }
+          }
+          if (this.#closed) return;
+          if (observed?.is === "ready") {
+            try { if (observed.requestedAt === undefined || !authority!.current(observed.session, observed.requestedAt)) observed = null; } catch { observed = null; }
+          }
+          if (this.#again || this.#replica.view !== replica || seam.generation() !== generation) { this.#again = true; continue; }
+          const assembled = this.#assemble(cut), ms = authority ? this.#clock.now() : null;
+          let reading: Timestamp | null = null;
+          try { if (ms !== null && Number.isSafeInteger(ms) && (this.#lastViewClock === null || ms >= this.#lastViewClock)) reading = timeOf(ms); } catch { /* invalid clock */ }
+          if (reading !== null) this.#lastViewClock = ms;
+          const captured = authority && observed?.is === "ready" && reading && this.#definition ? viewCut(this.#replica, this.#definition) : null;
+          const checked = captured && reading && this.#definition ? viewJudge(this.#handle, this.#definition, captured,
+            this.#options.signer.key, this.#actor.member, reading, observed, sources.recorded) : null;
+          const view = this.#compute(assembled, sources, captured, checked, reading);
           this.#held = assembled.held;
           this.#authorizationWakeAt = assembled.wakeAt;
           this.#arm();
+          if (authority) this.#armView(captured, checked?.authority ?? null, reading);
           this.#publish(view);
           this.#scheduleFold();
         } while (this.#again && !this.#closed);
@@ -624,6 +681,35 @@ export class ScopeClient<D extends DeclaredDefinition> {
       authorizations.push({ is: "authorization", key: row.key, reference, act: structuredClone(version.act), status });
     }
     return { entries, seen, authorizations, wakeAt };
+  }
+
+  /** Resolve only source identities established by the retained signing and checked journal. */
+  async #viewSources(cut: Cut): Promise<ViewSources> {
+    const transaction = this.#authorization(this.#options.store.authorizations), rows = await transaction.records();
+    const pending = new Map<string, { source: Source; act: AuthorizedAct }>(), recorded: RecordedActAlias[] = [], legacy = new Set<string>();
+    for (const [key, seen] of cut.seen) {
+      if (seen.is !== "ordinary") continue;
+      const row = rows.find(value => value.key === key), signing = seen.record.signings.at(-1), reference = signing?.authorization;
+      if (!reference) { legacy.add(key); continue; }
+      if (!row || row.definition !== this.#handle.digest || signing.intent !== intentDigest(seen.record.envelope.signed.intent)
+        || !signingPermitted(row, reference, seen.record.envelope.signed)) continue;
+      const version = row.versions[reference.position];
+      if (!version || row.versions.at(-1)?.id !== version.id || this.#binding.descriptors[version.act.kind] !== row.descriptor) continue;
+      const source = { key, version: version.id };
+      pending.set(key, { source, act: structuredClone(version.act) });
+    }
+    // An authorization can outlive its custody row. Its checked entry and
+    // retained materialization still establish the exact recorded source.
+    for (const row of rows) {
+      const version = row.versions.at(-1);
+      if (!version || row.definition !== this.#handle.digest || this.#binding.descriptors[version.act.kind] !== row.descriptor) continue;
+      const source = { key: row.key, version: version.id };
+      try {
+        const proof = await transaction.source(source);
+        recorded.push({ source, opened: proof.entry.opened, revisions: proof.revisions });
+      } catch (error) { if (!(error instanceof AuthorizationError && error.reason === "source")) throw error; }
+    }
+    return { pending, recorded, legacy };
   }
 
   /** Custody folding is its own reconciliation. It reads and writes custody only, and its failure changes no publication. */
@@ -740,7 +826,9 @@ export class ScopeClient<D extends DeclaredDefinition> {
     return { held, classes, projection, authorizations: cut.authorizations, wakeAt: cut.wakeAt };
   }
 
-  #compute(assembled: Assembled<D>): ClientView<D> {
+  #compute(assembled: Assembled<D>, sources: ViewSources = { pending: new Map(), recorded: [], legacy: new Set() },
+    captured: ReturnType<typeof viewCut<D>> = null, checked: ReturnType<typeof viewJudge<D>> | null = null,
+    reading: Timestamp | null = null): ClientView<D> {
     const replica = this.#replica.view, byKey = new Map<string, ClientRow<D>>();
     const byType = new Map<string, ClientRow<D>[]>(), byItem = new Map<number, ClientRow<D>>();
     for (const type of Object.keys(this.#handle.definition.items)) {
@@ -774,12 +862,130 @@ export class ScopeClient<D extends DeclaredDefinition> {
       }
     }
     const { drafts, requests } = assembled.projection;
-    return { ...replica, requests: [...requests, ...assembled.authorizations], drafts,
+    const projection = this.#projected(assembled, sources, captured, checked, reading, byKey);
+    return { ...replica, requests: [...requests, ...assembled.authorizations], drafts, ...projection,
       rows: <T extends TypeOf<D>>(type: T) => (byType.get(type) ?? []) as unknown as readonly ClientRow<D, T>[],
       row: ref => "item" in ref ? byItem.get(ref.item) ?? null : byKey.get(ref.key) ?? null };
   }
+  #projected(assembled: Assembled<D>, sources: ViewSources, captured: ReturnType<typeof viewCut<D>>,
+    checked: ReturnType<typeof viewJudge<D>> | null, reading: Timestamp | null, numeric: Map<string, ClientRow<D>>) {
+    const recorded = captured ? captured.state.all().items : Object.keys(this.#handle.definition.items).flatMap(type => [...this.#replica.view.rows(type)]);
+    const initial = presentActRows(this.#handle.definition, recorded,
+      item => ({ name: item.id, seen: item.revision, assumes: [] }), item => item, () => null);
+    const byItem = new Map<number, ProjectedRow<D>>(), byKey = new Map<string, ProjectedRow<D>>();
+    for (const item of recorded) { const row = initial.row(item.id); if (row) byItem.set(item.id, row); }
+    // Unsigned E5 waits have no checked signing to project. Keep their request
+    // arm intact and do not judge against a cut that omits their effects.
+    const unsigned = assembled.authorizations.length > 0;
+    let projected: StateView | ActView<D> | null = captured?.state ?? null, failed = unsigned, hasPending = unsigned;
+    for (const [key, held] of assembled.held) {
+      const { status, predicted } = assembled.classes.get(key)!, entry = this.#replica.accepted(this.#options.signer.key, key);
+      const target = entry?.opened ?? held.record.envelope.signed.intent.on;
+      if (entry && target !== null) { const row = byItem.get(target); if (row) byKey.set(key, row); continue; }
+      if (status.status !== "pending") continue;
+      hasPending = true;
+      const opened = predicted.is === "write" ? predicted.effects.find(effect => effect.effect === "open") : undefined;
+      const current = numeric.get(key), source = sources.pending.get(key);
+      let row: ProjectedRow<D> | null = null;
+      if (projected && checked && source && !failed) {
+        const result: Exploration<D, Kind<D>> = checked.judge(key, source.act as unknown as PartialAct<D, Kind<D>>, projected);
+        if (result.is === "admitted" && same(result.source, source.source)) {
+          projected = result.after;
+          const name = opened ? result.opens : target;
+          const found = name === null ? null : result.after.row(name);
+          if (found) row = { ...found, pending: { key } };
+        }
+      }
+      if (!row) {
+        failed = true;
+        const declaration = this.#handle.definition.acts[held.record.envelope.signed.intent.kind];
+        const type = current?.type ?? (declaration?.step === "open" ? declaration.on : undefined);
+        if (type) {
+          const original = opened || !current ? null : this.#replica.view.row({ item: current.id });
+          row = sources.legacy.has(key)
+            ? { type, pending: { key }, ref: null, recorded: null, unavailable: "legacy-custody" } as ProjectedRow<D>
+            : { type, pending: { key }, recorded: original as RecordedActRow<D> | null, unavailable: "source" } as ProjectedRow<D>;
+        }
+      }
+      if (row) { byKey.set(key, row); if (!opened && target !== null) byItem.set(target, row); }
+    }
+    const fallback = <K extends Kind<D>>(input: PartialAct<D, K>, reason: "source" | "authority-unavailable" | "legacy-custody"): Exploration<D, K> => {
+      const copied = structuredClone(input), missing = missingActInputs(this.#handle.definition, copied);
+      if (missing.length || copied.kind === undefined) return { is: "incomplete", act: copied, missing };
+      const act = { kind: copied.kind, on: copied.on ?? null, fields: copied.fields ?? {}, ...(copied.expected === undefined ? {} : { expected: copied.expected }) } as Act<D, K>;
+      return { is: "unavailable", act, context: { scope: structuredClone(this.#at), definition: this.#handle.digest, head: null,
+        assumes: [], actor: this.#options.signer.key, standing: null, clock: reading, evidence: [] }, lacks: [reason] };
+    };
+    const legacyIds = new Set([...numeric.entries()].filter(([key, row]) => sources.legacy.has(key) && row.pending && !this.#replica.view.row({ item: row.id })).map(([, row]) => row.id));
+    const legacyValue = (rule: unknown, value: unknown): boolean => {
+      if (!isRecord(rule)) return false;
+      if (rule["type"] === "item") return typeof value === "number" && legacyIds.has(value);
+      if (rule["type"] === "list" && Array.isArray(value)) return value.some(entry => legacyValue(rule["of"], entry));
+      if (rule["type"] === "record" && isRecord(rule["of"]) && isRecord(value))
+        return Object.entries(value).some(([name, entry]) => legacyValue((rule["of"] as Record<string, unknown>)[name], entry));
+      return false;
+    };
+    const explore = <K extends Kind<D>>(key: string, act: PartialAct<D, K>): Exploration<D, K> => {
+      const declaration = act.kind ? this.#handle.definition.acts[act.kind] : undefined;
+      if (typeof act.on === "number" && legacyIds.has(act.on) || declaration && act.fields
+        && Object.entries(act.fields).some(([name, value]) => legacyValue(declaration.fields[name], value))) return fallback(act, "legacy-custody");
+      if (!checked || !projected) return fallback(act, "authority-unavailable");
+      if (failed) return fallback(act, [...byKey.values()].some(row => row.unavailable === "legacy-custody") ? "legacy-custody" : "source");
+      return checked.judge(key, act, projected);
+    };
+    const aliases = new Map(sources.recorded.filter(source => source.opened !== null).map(source => [canonicalize({ output: source.source }), source.opened!]));
+    const offers = (ref: ActRef, keyFor: (kind: Kind<D>) => string): readonly ActOffer<D, Kind<D>>[] => {
+      if (hasPending && failed) return [];
+      const name = typeof ref.name === "number" ? ref.name : aliases.get(canonicalize(ref.name));
+      const row = projected && !("all" in projected) ? projected.row(name ?? ref.name) : name === undefined ? null : byItem.get(name);
+      if (!row || "unavailable" in row && row.unavailable) return [];
+      return actsOn(this.#handle.definition, row.type, row.state).map(kind => {
+        const template = actTemplate(this.#handle.definition, kind, ref.name, { describe: descriptionsOf({}),
+          setting: { pinned: this.#handle.digest }, who: checked?.who(kind) ?? { standing: "unknown" } });
+        const withBasis = { ...template, act: { ...template.act, expected: { on: ref.seen } } };
+        return missingActInputs(this.#handle.definition, withBasis.act).length ? { template: withBasis }
+          : { template: withBasis, exploration: explore(keyFor(kind), withBasis.act) };
+      });
+    };
+    return { explore, offers, projectedRow: (ref: { item: number } | { key: string }) => "item" in ref ? byItem.get(ref.item) ?? null : byKey.get(ref.key) ?? null,
+      projectedRows: <T extends TypeOf<D>>(type: T) => {
+        const rows = [...byItem.values(), ...[...byKey.values()].filter(row => row.pending && ![...byItem.values()].includes(row))];
+        return rows.filter((row): row is ProjectedRow<D, T> => row.type === type);
+      } };
+  }
+  #armView(cut: ReturnType<typeof viewCut<D>>, authority: ReturnType<typeof viewJudge<D>>["authority"], reading: Timestamp | null): void {
+    this.#schedule.cancel(this.#viewWake);
+    if (!cut || !reading || !this.#definition) return;
+    const now = timeMs(reading);
+    if (now === null) return;
+    const boundaries: number[] = [];
+    if (authority) { const ends = timeMs(authority.claims.ends); if (ends !== null && ends > now) boundaries.push(ends); }
+    for (const rule of Object.values(this.#definition.declared.timed)) for (const item of cut.state.all().items) {
+      if (item.type !== rule.on || !rule.states.includes(item.state)) continue;
+      const due = timeMs(item.values[rule.deadline]);
+      if (due !== null && due > now) boundaries.push(due);
+    }
+    if (boundaries.length) this.#schedule.at(this.#viewWake, Math.min(...boundaries), () => {
+      if (!this.#closed) { this.#again = true; this.#background(() => this.#sync()); }
+    });
+  }
+  #stoppedView(): ClientView<D> {
+    const previous = this.#view;
+    const unavailable = <K extends Kind<D>>(act: PartialAct<D, K>): Exploration<D, K> => {
+      const copied = structuredClone(act), missing = missingActInputs(this.#handle.definition, copied);
+      if (missing.length || copied.kind === undefined) return { is: "incomplete", act: copied, missing };
+      const complete = { kind: copied.kind, on: copied.on ?? null, fields: copied.fields ?? {},
+        ...(copied.expected === undefined ? {} : { expected: copied.expected }) } as Act<D, K>;
+      return { is: "unavailable", act: complete, context: { scope: structuredClone(this.#at), definition: this.#handle.digest,
+        head: null, assumes: [], actor: this.#options.signer.key, standing: null, clock: null, evidence: [] }, lacks: ["source"] };
+    };
+    return { ...previous, state: this.#replica.view.state,
+      explore: (_key, act) => unavailable(act),
+      offers: (ref, keyFor) => previous.offers(ref, keyFor).map(offer => offer.exploration
+        ? { template: offer.template, exploration: unavailable(offer.template.act) } : offer) };
+  }
   #publish(next?: ClientView<D>): void {
-    this.#view = this.#halted ? { ...this.#view, state: this.#replica.view.state } : next ?? this.#view;
+    this.#view = this.#halted ? this.#stoppedView() : next ?? this.#view;
     for (const listener of [...this.#listeners]) listener(this.#view);
   }
 

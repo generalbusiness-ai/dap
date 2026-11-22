@@ -461,9 +461,8 @@ type of the value today, `ObservationAnswer`. The largest reply is
 - A reader checks the value fields and the native pin. It checks
   that the key, the member, the membership and its incarnation equal
   those of the request and of the claims.
-- The caller opts in. The MCP server and the command line do. The
-  application gateway refuses a query on a POST to `sessions` until
-  step E3 opens it for a screen page.
+- The caller opts in. The MCP server and the command line do. SG-1 lets
+  screen clients send the exact signed session POST with `?standing=1`.
 - The MCP inventory asks the shared value check for each action, and
   it keeps no role table. It reads the member `kind` from the member
   item of the membership summary. `kind` decides no action. If the
@@ -673,17 +672,26 @@ replica keeps its checked state private, so the replica owns one
 internal operation that explores an act. The operation uses the real
 authority, owners and evidence, and it answers `unavailable` when it
 holds none. No raw state leaves the replica, and no second evaluator
-exists. Step E3 calls the same operation at each view and each tick.
+exists. E3 publishes a checked `ActRow` through `projectedRow` and
+`projectedRows`. A pending row without a checked source reports `source`.
+A legacy custody row reports `legacy-custody`. The numeric C4 `row` and
+`rows` methods stay available.
+
+Each E3 publication captures one checked replica cut, session standing
+and clock. `explore` and `offers` use that held cut without a read or a
+signature. A valid signed session supplies standing. Missing, expired or
+wrong-session evidence makes a complete exploration `unavailable`. The
+client publishes a new cut on a view change or tick.
 
 A context reader gives the operation its inputs. The reader is a port
 at the constructor of the client and of the replica. It receives the
 actor, the scope, the definition, the head and the act, and it
-returns checked inputs or the lacks of section 5.4. The first adapter
-is the replica alone: the member's session, the checked replica and
-the pinned declaration. Its `standing` is null (section 5.7), and it
-holds no foreign fact and no observation.
+returns checked inputs or the lacks of section 5.4. The first C4 adapter
+was the replica alone: the member's session, the checked replica and
+the pinned declaration. Its `standing` was null (section 5.7), and it
+held no foreign fact and no observation.
 
-Rule 3 holds with that adapter. The judge compares the expected basis
+Rule 3 held with that first adapter. The judge compares the expected basis
 before it checks the grant (`packages/derive/src/judge.ts`, the
 `revision-moved` refusal and the grant check after it). A stale draft
 gets the determinate answer that its basis moved, and it returns
@@ -1284,7 +1292,7 @@ A small model also runs to a bound over every order of its steps.
 |---|---|---|
 | E1 | Explore for complete acts: the split of `actJudged`, the context, the result, the hypothetical view and the three symbolic names | The planner's ruling for the export, from Hugh's decision (section 16) |
 | E2 | Built: the MCP tool `explore` judges a checked replica under the host session and clock | E1, C2, EK-1, ES-1 |
-| E3 | Explore in the local instance, again at each view and each tick. `offers`, a `ref` with its sources, `recorded`, and one identity for a row. Step C4 builds the basis of a draft, the changed fields, the returned `now` and the new version after a return (section 6) | E1, C2, C4 |
+| E3 | Built: checked projected rows and local `explore` and `offers` at each published view and tick. Numeric C4 rows remain available (section 6) | E1, C2, C4 |
 | E4 | Retained authorization: the record with versions, the default deadline, three of the four operations (no new envelope for the same version), the owner and the store in memory, the transaction of a submit, the predicate | C1, C3 |
 | E4-B | The browser store keeps authorizations, with the removal rule of section 7.1. It landed at `3e54b8ab` | E4 |
 | E5 | Built: sequential authorization dependencies by key and version, materialized acts, unsigned waits, and return for revision | E4 |
@@ -1483,6 +1491,7 @@ hold the results.
 
 | Ruling | Point | Section |
 |---|---|---|
+| `e7a865da` | E3 publishes checked projected rows and judges on the held view cut. The numeric C4 surface remains | 6, 13 |
 | `fa103f71` | The caller gives the key, Explore computes the version, and the result states its source | 3, 5.3, 8.1 |
 | `ef1fc932` | A judgment that reads the signed intent is `unavailable`. The export is `judgeActBody` | 5.4 |
 | `04218678` | A command record of `device-command` takes the name `{ entry }` | 5.4 |
@@ -1494,15 +1503,16 @@ The requests of the build steps: E1 `d35ebede`, E2 `a102d847`, E3
 `17e075b3`, E4 `afe0a437`, E5 `b1c6aad6`, E6 `edc09d8b`, R `5b5b6896`
 and A `04e4438e`. Request `6b6def0a` holds the review after step E3.
 
-## 19. Rulings of steps E4, C4 and E5
+## 19. Rulings of steps E3, E4, C4 and E5
 
-The builds of E4, C4 and E5 and the requests EK-1, ES-1, DD-1 and
+The builds of E3, E4, C4 and E5 and the requests EK-1, ES-1, DD-1 and
 E4-C found points that this note did not settle. The planner ruled
-on E4 and C4 on 15 and 16 November 2026, and on E5 on 22 November
-2026. The sections above hold the results.
+on E4 and C4 on 15 and 16 November 2026, and on E3 and E5 on
+22 November 2026. The sections above hold the results.
 
 | Ruling | Point | Section |
 |---|---|---|
+| `e7a865da` | E3 publishes checked projected rows and judges on the held view cut. The numeric C4 surface remains | 6, 13 |
 | `34791662` | A position names a gesture. The descriptor digest is a required option. A signing with no reference is `legacy`. The authorization write comes first | 7.1 |
 | `f494b29d` | One position permits one call of the signer, and a failed signing keeps its mark | 7.1, 15 |
 | `686dc913` | The instance has one ordering policy | 7.4 |

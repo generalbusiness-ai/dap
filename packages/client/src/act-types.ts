@@ -50,7 +50,7 @@ export interface Context {
 }
 
 /** An unavailable exploration can lack a recorded scope altogether. */
-export type UnavailableContext = Omit<Context, "head"> & { readonly head: null };
+export type UnavailableContext = Omit<Context, "head" | "clock"> & { readonly head: null; readonly clock: Timestamp | null };
 
 type ReasonOf<G> = "reason" extends keyof G ? Extract<G["reason"], string> : never;
 type GuardNames<G> = G extends readonly (infer E)[] ? GuardNames<E>
@@ -120,7 +120,7 @@ type LocalEffect<E> = E extends { effect: "relation" } ? E
   : E extends { item: number } ? Omit<E, "item"> & { readonly item: ItemName }
   : E;
 export type ActEffect = LocalEffect<Effect>;
-export type Lack = UnavailableReason | "intent" | "entry" | "source" | "due";
+export type Lack = UnavailableReason | "intent" | "entry" | "source" | "due" | "legacy-custody";
 
 export type Exploration<D extends DeclaredDefinition, K extends Kind<D>> =
   | IncompleteExploration<D, K>
