@@ -13,7 +13,7 @@ import { scopeReplica, intentMeaning, type Replica, type ReplicaOptions, type Re
 import type { Judged } from "./replica-judged.ts";
 import { requestStatus, signingDead, type RequestStatus } from "./request-status.ts";
 import { RequestSchedule, wallClock, type ClientClock } from "./request-schedule.ts";
-import { AuthorizationError, AuthorizationTransaction, type Authorization, type AuthorizationIdentity, type AuthorizationInput, type AuthorizationPosition, type AuthorizedAct, type MaterializedAct, type RetainAuthorization, type SigningAuthorization } from "./authorization.ts";
+import { AuthorizationError, AuthorizationTransaction, type Authorization, type AuthorizationIdentity, type AuthorizationInput, type AuthorizationPosition, type AuthorizationSource, type AuthorizedAct, type MaterializedAct, type RetainAuthorization, type SigningAuthorization } from "./authorization.ts";
 import type { AuthorizationPort, CustodyBuildFence } from "./authorization-store.ts";
 import type { ItemName, PartialAct, Source } from "./act-types.ts";
 import { actVersion } from "./act-version.ts";
@@ -88,7 +88,7 @@ class PendingVia extends Error {
   constructor(readonly sources: readonly Source[]) { super("pending via"); }
 }
 interface ViaPlan {
-  readonly prerequisites: readonly { readonly identity: AuthorizationIdentity; readonly source: Source; readonly row: string }[];
+  readonly prerequisites: readonly { readonly identity: AuthorizationIdentity; readonly source: Source; readonly row: string; readonly proof: AuthorizationSource | null }[];
   readonly subjects: RetainAuthorization["subjects"];
   readonly prefix: readonly Source[];
   readonly current: () => boolean;
@@ -954,7 +954,8 @@ export class ScopeClient<D extends DeclaredDefinition> {
     const graph = await this.#options.store.exclusive(async () => {
       this.#state();
       const transaction = this.#authorization(this.#options.store.authorizations);
-      const prerequisites = new Map<string, { identity: AuthorizationIdentity; source: Source; row: string }>();
+      const prerequisites = new Map<string, { identity: AuthorizationIdentity; source: Source; row: string; proof: AuthorizationSource | null }>();
+      const aliases: AuthorizationSource[] = [];
       const prefix: { source: Source; act: AuthorizedAct }[] = [];
       const visited = new Set<string>(), active = new Set<string>();
       const visit = async (source: Source, before: number): Promise<void> => {
@@ -972,12 +973,20 @@ export class ScopeClient<D extends DeclaredDefinition> {
           catch (error) { if (!(error instanceof PendingVia)) throw error; dependencies = error.sources; }
         } else {
           const inspected = await transaction.inspectSource(source);
-          // A recorded symbolic predecessor needs checked alias rehydration, which this bridge does not yet provide.
-          if (inspected.is !== "unrecorded") throw new AuthorizationError("source");
-          const row = await transaction.find(inspected.identity);
-          if (!row || !await this.#pending(row)) throw new AuthorizationError("source");
+          if (inspected.is === "unavailable") throw new AuthorizationError("source");
+          const identity = this.#authorizationIdentity(source.key);
+          const row = await transaction.find(identity);
+          if (!row) throw new AuthorizationError("source");
+          if (inspected.is === "resolved") {
+            const proof = structuredClone(inspected.value);
+            prerequisites.set(id, { identity, source, row: canonicalize(row), proof });
+            aliases.push(proof);
+            active.delete(id); visited.add(id);
+            return;
+          }
+          if (!await this.#pending(row)) throw new AuthorizationError("source");
           const held = row.versions[inspected.position]!;
-          prerequisites.set(canonicalize(inspected.identity), { identity: inspected.identity, source, row: canonicalize(row) });
+          prerequisites.set(id, { identity, source, row: canonicalize(row), proof: null });
           act = held.act; dependencies = held.after;
         }
         for (const dependency of dependencies) await visit(dependency, local >= 0 ? local : before);
@@ -988,11 +997,11 @@ export class ScopeClient<D extends DeclaredDefinition> {
       catch (error) { if (!(error instanceof PendingVia)) throw error; sources = error.sources; }
       for (const source of sources) await visit(source, index);
       this.#state();
-      return { prerequisites: [...prerequisites.values()], prefix };
+      return { prerequisites: [...prerequisites.values()], prefix, aliases };
     });
     // The bridge validates these captured authored fields against this exact declaration.
     const prefix = graph.prefix.map(item => ({ source: item.source, act: item.act as unknown as PartialAct<D, Kind<D>> }));
-    const projected = await exploreReplicaChain(this.#replica, prefix, target.key, target.act as unknown as PartialAct<D, Kind<D>>);
+    const projected = await exploreReplicaChain(this.#replica, prefix, target.key, target.act as unknown as PartialAct<D, Kind<D>>, undefined, graph.aliases);
     if (projected.is !== "admitted" || !projected.current()) throw new AuthorizationError("source");
     return { prerequisites: graph.prerequisites, subjects: structuredClone(projected.subjects), prefix: graph.prefix.map(item => item.source), current: projected.current };
   }
@@ -1002,7 +1011,11 @@ export class ScopeClient<D extends DeclaredDefinition> {
       const current = await transaction.find(prerequisite.identity);
       if (!current || canonicalize(current) !== prerequisite.row) throw new AuthorizationError("source");
       const inspected = await transaction.inspectSource(prerequisite.source);
-      if (inspected.is !== "unrecorded" || !await this.#pending(current)) throw new AuthorizationError("source");
+      if (prerequisite.proof === null) {
+        if (inspected.is !== "unrecorded" || !await this.#pending(current)) throw new AuthorizationError("source");
+      } else if (inspected.is !== "resolved" || canonicalize(inspected.value) !== canonicalize(prerequisite.proof)) {
+        throw new AuthorizationError("source");
+      }
     }
     if (!plan.current()) throw new AuthorizationError("source");
   }
@@ -1011,19 +1024,20 @@ export class ScopeClient<D extends DeclaredDefinition> {
    * order must already be present in the projection before we commit. */
   async #checkViaOrder(transaction: AuthorizationTransaction, plan: ViaPlan, target: AuthorizationPosition): Promise<void> {
     const order = new Map(plan.prefix.map((source, index) => [canonicalize(source), index]));
+    const aliases = new Set(plan.prerequisites.filter(item => item.proof !== null).map(item => canonicalize(item.source)));
     for (const [index, source] of plan.prefix.entries()) {
       const row = await transaction.find(this.#authorizationIdentity(source.key));
       const version = row?.versions.at(-1);
       if (!version || version.id !== source.version || row?.cancelledAt !== undefined) throw new AuthorizationError("source");
       for (const dependency of version.after) {
         const earlier = order.get(canonicalize(dependency));
-        if (earlier === undefined || earlier >= index) throw new AuthorizationError("source");
+        if (!aliases.has(canonicalize(dependency)) && (earlier === undefined || earlier >= index)) throw new AuthorizationError("source");
       }
     }
     const row = await transaction.find(target.identity);
     const version = row?.versions[target.position];
     if (!version) throw new AuthorizationError("source");
-    for (const dependency of version.after) if (!order.has(canonicalize(dependency))) throw new AuthorizationError("source");
+    for (const dependency of version.after) if (!aliases.has(canonicalize(dependency)) && !order.has(canonicalize(dependency))) throw new AuthorizationError("source");
   }
 
   /** One unsigned gesture batch; only the complete owner/scope replacement can commit. */

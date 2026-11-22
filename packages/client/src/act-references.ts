@@ -30,6 +30,8 @@ export class ActReferences {
   readonly #rows = new Map<Item, RowIdentity>();
   readonly #subjects = new Map<number, object>();
   readonly #outputs = new Map<object, Item>();
+  readonly #recordedOutputs = new Map<object, number>();
+  readonly #recordedSources = new Set<object>();
   readonly #recorded: ReadonlySet<number>;
   readonly view: StateView;
 
@@ -42,6 +44,8 @@ export class ActReferences {
       for (const [key, value] of prior.#rows) this.#rows.set(key, value);
       for (const [key, value] of prior.#subjects) this.#subjects.set(key, value);
       for (const [key, value] of prior.#outputs) this.#outputs.set(key, value);
+      for (const [key, value] of prior.#recordedOutputs) this.#recordedOutputs.set(key, value);
+      for (const token of prior.#recordedSources) this.#recordedSources.add(token);
     } else for (const item of recorded) this.register(item, item.id, item.revision, []);
   }
 
@@ -66,9 +70,25 @@ export class ActReferences {
   }
 
   output(source: Source): Item {
-    const item = this.#outputs.get(this.token(source));
+    const token = this.token(source);
+    const id = this.#recordedOutputs.get(token);
+    const item = id === undefined ? this.#outputs.get(token) : this.view.item(id);
     if (!item) throw new UnavailableActSource(source);
     return item;
+  }
+
+  /** Bind only an output established by the checked recorded entry. */
+  recordedSource(source: Source): void { this.#recordedSources.add(this.token(source)); }
+
+  recordedOutput(source: Source, id: number): void {
+    if (!this.#recorded.has(id) || !this.view.item(id)) throw new UnavailableActSource(source);
+    this.#recordedOutputs.set(this.token(source), id);
+  }
+
+  captureOutput(source: Source): number | Token {
+    this.output(source);
+    const token = this.token(source);
+    return this.#recordedOutputs.get(token) ?? token;
   }
 
   /** The projector supplies row and leaf identities from actual emitted effects. */
@@ -110,7 +130,7 @@ export class ActReferences {
 
   #capture(value: unknown, sources: ReadonlyMap<string, Source>, path: Path): FieldValue {
     const source = sources.get(canonicalize(path));
-    if (source) return this.token(source);
+    if (source) return this.captureOutput(source);
     if (Array.isArray(value)) return value.map((member, index) => this.#capture(member, sources, [...path, index]));
     if (isRecord(value)) return Object.fromEntries(Object.entries(value).map(([name, member]) => {
       return [name, this.#capture(member, sources, [...path, name])];
@@ -142,7 +162,9 @@ export class ActReferences {
     const current = this.token(input.source);
     const pending = (source: Source): ReferenceData => {
       const item = this.output(source);
-      return { is: "pending", token: this.token(source), item, alias: item.id };
+      const id = this.#recordedOutputs.get(this.token(source));
+      return id === undefined ? { is: "pending", token: this.token(source), item, alias: item.id }
+        : { is: "recorded", id, item };
     };
     const numeric = (value: unknown): ReferenceData => {
       if (typeof value !== "number") return null;
@@ -184,8 +206,12 @@ export class ActReferences {
         const row = this.#rows.get(origin.subject);
         if (!row) throw new TypeError("a basis read has no subject provenance");
         const expected = Object.hasOwn(input.expected, origin.name) ? input.expected[origin.name] : undefined;
-        return typeof expected === "number" ? { is: "recorded-revision", value: expected, subject: row.subject }
-          : expected ? { is: "after", token: this.token(expected.after), subject: row.subject } : null;
+        if (typeof expected === "number") return { is: "recorded-revision", value: expected, subject: row.subject };
+        if (!expected) return null;
+        const recorded = this.#recordedSources.has(this.token(expected.after));
+        if (recorded && typeof value !== "number") throw new UnavailableActSource(expected.after);
+        return recorded ? { is: "recorded-revision", value: value as number, subject: row.subject }
+          : { is: "after", token: this.token(expected.after), subject: row.subject };
       }
       if (origin.at === "item" || origin.at === "revision" || origin.at === "opened") return identity(origin);
       return use === "subject" || type?.type === "item" ? numeric(value) : null;

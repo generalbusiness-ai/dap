@@ -8,7 +8,7 @@ import type { Act, ActView, Exploration, ItemName, PartialAct, Source } from "./
 import { actContext, type ExplorationContext } from "./act-context.ts";
 import { bindActBasis } from "./act-basis.ts";
 import { missingActInputs } from "./act-input.ts";
-import { ActProjection, UnavailableEntryValue } from "./act-projection.ts";
+import { ActProjection, UnavailableEntryValue, type RecordedActAlias } from "./act-projection.ts";
 import { copyActState } from "./act-state.ts";
 import { lowerActBasis, lowerActNames, UnavailableActSource } from "./act-symbols.ts";
 import { actVersion } from "./act-version.ts";
@@ -29,6 +29,7 @@ export interface ExploreInput<D extends DeclaredDefinition, K extends Kind<D>> {
   readonly key: string;
   readonly act: PartialAct<D, K>;
   readonly context: ExplorationContext;
+  readonly recordedAliases?: readonly RecordedActAlias[];
 }
 
 /** Added text bytes supplement the port. Other digests retain its readings;
@@ -87,7 +88,12 @@ function explore<D extends DeclaredDefinition, K extends Kind<D>>(definition: Va
       is: "unavailable", act, context: actContext(definition, view, context, [], []), lacks: ["source"],
     };
     const snapshot = copyActState(view, definition);
-    projection = new ActProjection(definition, snapshot.view);
+    try {
+      projection = new ActProjection(definition, snapshot.view).withRecordedAliases(input.recordedAliases ?? []);
+    } catch (error) {
+      if (error instanceof UnavailableActSource) return { is: "unavailable", act, context: actContext(definition, snapshot.view, context, [], []), lacks: ["source"] };
+      throw error;
+    }
   } else return { is: "unavailable", act, context: actContext(definition, null, context, [], []), lacks: ["source"] };
 
   const reader = projection.reader(), scope = reader.scope();
@@ -101,8 +107,7 @@ function explore<D extends DeclaredDefinition, K extends Kind<D>>(definition: Va
     // private numeric aliases and never enter the public Act or its digest.
     const capture = lowerActNames(act, declared.fields, { item: name => {
       if (typeof name === "number") return name;
-      projection.references.output(name.output);
-      return projection.references.token(name.output);
+      return projection.references.captureOutput(name.output);
     } }, (source, path) => { if (path !== "on") fieldSources.set(canonicalize(path), source); });
     const subjects = projection.references.captureSubjects(projection.raw.all().items);
     const capturedFields = projection.references.captureFields(capture.fields, fieldSources);

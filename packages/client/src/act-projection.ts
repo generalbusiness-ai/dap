@@ -17,6 +17,12 @@ type CaptureName = number | object;
 type History = ReadonlyMap<string, ReadonlyMap<CaptureName, number>>;
 const sourceKey = (source: Source): string => canonicalize([source.key, source.version]);
 
+export interface RecordedActAlias {
+  readonly source: Source;
+  readonly opened: number | null;
+  readonly revisions: Readonly<Record<number, number>>;
+}
+
 export class UnavailableEntryValue extends Error {
   override readonly name = "UnavailableEntryValue";
   readonly source: Source;
@@ -50,6 +56,20 @@ export class ActProjection {
     this.assumes = assumes;
     this.#records = records;
     this.references = references;
+  }
+
+  /** Install checked recorded evidence at the root, without adding assumptions. */
+  withRecordedAliases(aliases: readonly RecordedActAlias[]): ActProjection {
+    const references = this.references.fork(this.raw);
+    const history = new Map(this.history);
+    for (const alias of aliases) {
+      references.recordedSource(alias.source);
+      if (alias.opened !== null) references.recordedOutput(alias.source, alias.opened);
+      const revisions = new Map<CaptureName, number>();
+      for (const [id, revision] of Object.entries(alias.revisions)) revisions.set(Number(id), revision);
+      history.set(sourceKey(alias.source), revisions);
+    }
+    return new ActProjection(this.definition, this.recorded, this.raw, this.#records, references, history, this.assumes);
   }
 
   symbols(): ActSymbols {

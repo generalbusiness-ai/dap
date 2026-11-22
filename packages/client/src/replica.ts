@@ -22,6 +22,7 @@ import type { DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Head, Inte
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { REFUSAL_CLASSES, canonicalize, intentDigest, timeMs } from "@generalbusiness/dap-bytes";
 import { MemoryState, actionOf, applyEntry, clockOf, judgeExploreGrant, membershipOf, validateDefinition, type ValidDefinition } from "@generalbusiness/dap-derive";
+import type { AuthorizationSource } from "./authorization.ts";
 import type { DeclaredHandle, Kind, ValueOf } from "./declared.ts";
 import { LogProtocolError } from "./handle.ts";
 import { meaningOf } from "./custody.ts";
@@ -140,7 +141,7 @@ export class Replica<D extends DeclaredDefinition> {
       ...(exploration.active ? { active: exploration.active.bind(exploration) } : {}) } : null;
     if (this.#exploration) {
       registerExplore<D>(this, (key, act, authority) => this.#explore(key, act, authority));
-      registerChainExplore<D>(this, (prefix, key, act, authority) => this.#exploreChain(prefix, key, act, authority));
+      registerChainExplore<D>(this, (prefix, key, act, authority, aliases) => this.#exploreChain(prefix, key, act, authority, aliases));
     }
     seams.set(this, { held: this.#held, state: () => this.#state });
     const checked = validateDefinition(handle.definition, PROPOSED_BOUNDS);
@@ -230,14 +231,15 @@ export class Replica<D extends DeclaredDefinition> {
   close(): void { this.#stop({ by: "close" }); }
 
   /** The chain is private and requires the host's exact checked authority. */
-  async #exploreChain<K extends Kind<D>>(prefix: readonly ExplorePrefix<D>[], key: string, act: PartialAct<D, K>, authority?: ChainExploreAuthority): Promise<ChainExploreResult<D, K>> {
+  async #exploreChain<K extends Kind<D>>(prefix: readonly ExplorePrefix<D>[], key: string, act: PartialAct<D, K>, authority?: ChainExploreAuthority, aliases?: readonly AuthorizationSource[]): Promise<ChainExploreResult<D, K>> {
     if (authority && typeof authority.stillHeld !== "function") return { is: "unavailable", reason: "authority-unavailable" };
     const held = authority ? () => { try { return authority.stillHeld() === true; } catch { return false; } } : undefined;
     if (held && !held()) return { is: "unavailable", reason: "authority-unavailable" };
     const captured = structuredClone(prefix);
-    if (!captured.length) return { is: "unavailable", reason: "source" };
+    const capturedAliases = structuredClone(aliases ?? []);
+    if (!captured.length && !capturedAliases.length) return { is: "unavailable", reason: "source" };
     let cut: { current: () => boolean; subjects: readonly { name: string; item: ItemName }[] } | null = null;
-    const answer = await this.#explore(key, act, authority, captured, (current, subjects) => { cut = { current, subjects }; }, held);
+    const answer = await this.#explore(key, act, authority, captured, (current, subjects) => { cut = { current, subjects }; }, held, capturedAliases);
     if (answer.exploration.is !== "admitted" || !cut) return { is: "unavailable",
       reason: answer.exploration.is === "unavailable" && answer.exploration.lacks.includes("authority-unavailable")
         ? "authority-unavailable" : "source" };
@@ -248,7 +250,7 @@ export class Replica<D extends DeclaredDefinition> {
   /** The operation stays inside this closure; no caller receives the state or Own. */
   async #explore<K extends Kind<D>>(key: string, input: PartialAct<D, K>, authority?: ExploreAuthority,
     prefix?: readonly ExplorePrefix<D>[], capture?: (current: () => boolean, subjects: readonly { name: string; item: ItemName }[]) => void,
-    chainHeld?: () => boolean): Promise<DraftExploreResult<D, K>> {
+    chainHeld?: () => boolean, aliases?: readonly AuthorizationSource[]): Promise<DraftExploreResult<D, K>> {
     const binding = this.#exploration;
     if (!binding) throw new TypeError("exploration requires its constructor identity binding");
     // Own input before the reader's first await. It receives a separate copy.
@@ -328,6 +330,18 @@ export class Replica<D extends DeclaredDefinition> {
     const context = { actor: binding.actor, scope: structuredClone(this.#handle.at),
       clock: clockOf(state, reading), bounds: PROPOSED_BOUNDS, facts: [], prepared: [],
       own: this.#held.own, grants, membership, owners: null, evidence: [], ...(checkedAuthority ? { authority: checkedAuthority } : {}) };
+    const recordedAliases = [];
+    for (const proof of aliases ?? []) {
+      if (proof.entry.actor !== binding.actor || proof.entry.key !== proof.source.key
+        || canonicalize(proof.entry.fact.at) !== canonicalize(scope!.at)) return unavailable(["source"]);
+      const checked = this.authorizationSource(binding.actor, proof.source.key);
+      if (!checked || canonicalize({ actor: checked.entry.actor, key: checked.entry.key, meaning: checked.entry.meaning,
+        fact: checked.entry.fact, opened: checked.entry.opened }) !== canonicalize({ actor: proof.entry.actor,
+        key: proof.entry.key, meaning: proof.entry.meaning, fact: proof.entry.fact, opened: proof.entry.opened })
+        || canonicalize(checked.revisions) !== canonicalize(proof.revisions)) return unavailable(["source"]);
+      recordedAliases.push({ source: proof.source, opened: checked.entry.opened, revisions: checked.revisions });
+    }
+    if (!current()) return unavailable(["source"]);
     this.#held.take();
     let result: Exploration<D, K>;
     let chainSubjects: readonly { name: string; item: ItemName }[] | null = null;
@@ -343,6 +357,7 @@ export class Replica<D extends DeclaredDefinition> {
     try {
       let view: typeof state | ActView<D> = state;
       let failed = false;
+      let initial = true;
       for (const step of prefix ?? []) {
         noteDue(view);
         const declaration = step.act.kind === undefined ? undefined : Object.hasOwn(this.#definition!.declared.acts, step.act.kind)
@@ -352,7 +367,8 @@ export class Replica<D extends DeclaredDefinition> {
         const judged = judgeExploreGrant(session.standing, { scope: scope!.at, membership, key: binding.actor, action, clock: clockOf(state, reading) });
         if (judged.result !== "current") { failed = true; break; }
         const prior: Exploration<D, Kind<D>> = actExplore(this.#definition!, view, { key: step.source.key, act: step.act,
-          context: { ...context, grants: [{ grant: judged.grant, current: true }] } });
+          context: { ...context, grants: [{ grant: judged.grant, current: true }] }, ...(initial && recordedAliases.length ? { recordedAliases } : {}) });
+        initial = false;
         if (prior.is !== "admitted" || canonicalize(prior.source) !== canonicalize(step.source)) { failed = true; break; }
         judgesTime ||= prior.judgesTime;
         view = prior.after;
@@ -360,7 +376,7 @@ export class Replica<D extends DeclaredDefinition> {
       if (failed) result = unavailable(["source"]).exploration;
       else if (prefix) {
         noteDue(view);
-        const dependent = actExploreSubjects(this.#definition!, view, { key, act: captured, context });
+        const dependent = actExploreSubjects(this.#definition!, view, { key, act: captured, context, ...(initial && recordedAliases.length ? { recordedAliases } : {}) });
         result = dependent.exploration; chainSubjects = dependent.subjects;
         if (result.is === "admitted") judgesTime ||= result.judgesTime;
       } else result = actExplore(this.#definition!, state, { key, act: captured, context });
