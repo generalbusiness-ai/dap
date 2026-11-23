@@ -1,8 +1,10 @@
 # dap-family: family history on dap
 
-Status: draft 1, for request `d7bdfa89`, 2026-11-23. A proposal for
+Status: draft 2, for request `d7bdfa89`, 2026-11-23. A proposal for
 Hugh's ruling. Nothing here is built, and the note asks dap for no
 change. Section 13 lists what the application needs that dap lacks.
+Draft 2 answers the checker's verdict `7e5a904e`. Section 16 lists
+the changes.
 
 A family keeps its history together. Members record their relatives,
 the events of each life, the places where those events happened and the
@@ -29,7 +31,9 @@ How each fact here was established:
   `definition/map.ts`, the exports of `app/mapView.ts` and
   `app/locationSearch.ts`.
 - **Not verified**: no definition in sections 6 and 7 has been through
-  `validateDefinition`. The scale figures of section 12 are estimates.
+  `validateDefinition`. Each guard marked *unverified* has not been
+  checked against the guard and rule forms of `definition.ts`. The
+  scale figures of section 12 are estimates.
 
 The first draft and its UI sketches are in `~/play/dap-family`
 (`DESIGN.md` and `sketches/index.html`).
@@ -58,8 +62,8 @@ The first draft and its UI sketches are in `~/play/dap-family`
 | Anonymous viewer | Read public records: the dead, as their stewards publish them. Living people show as "Private" |
 | Link viewer | Read what a circle's view link covers, until it ends or is revoked |
 | Member | Read the circle's records. Add people, events, sources and comments |
-| Subject | A member who claimed a record as themself. Decides what it says and who sees it. Confirms or declines the relationships others assert to them |
-| Steward | Looks after a record: settles disputes, chooses preferred facts, retracts errors. A subject is always a steward |
+| Subject | A member who claimed a record as themself. Decides what it says and who sees it. Answers the links that others assert to them |
+| Steward | Looks after a record: settles disputes, chooses preferred facts, retracts errors, offers the record to its person. A subject is always a steward |
 | Circle admin | Invites, removes, changes roles, moderates |
 | Agent | Proposes sources, matches and transcriptions. Confirms no claim and chooses no preferred fact |
 
@@ -83,12 +87,13 @@ circle's living records.
    unbounded list of descendants.
 5. **Assertions, not overwrites.** When two sources disagree, both
    assertions stay with their citations, and a steward marks one as
-   preferred.
+   preferred. A correction is a retraction and a new assertion.
 6. **The living control their own record.** A living person's details
    are private by default. A claim makes the person the record's
    subject.
-7. **Erasable where it must be.** Details that identify a living person
-   are detached, so a `redact` effect can remove them (section 8.4).
+7. **Erasable where it must be.** The free text of every person is
+   detached, so a `redact` effect can remove it. Section 8.4 states
+   what stays in the journal.
 8. **Reads at scale come from projections.** The browser folds a
    replica only of the records it edits.
 9. **Definitions change slowly.** A scope pins its definition for life,
@@ -105,7 +110,7 @@ circle's living records.
 | Identity | Is | Lives in |
 |---|---|---|
 | Key | A device key that signs acts | A browser or the command line. An account has several |
-| Account | A participant with a handle | A circle's membership today. An account scope later (G1) |
+| Account | A participant with a handle. Its member ID is the handle, such as `@ruth` | A circle's membership today. An account scope later (G1) |
 | Person record | A human being, alive or dead | A person scope |
 
 An account is not a person record. Most records have no account: the
@@ -115,68 +120,80 @@ agent, a researcher, a member who has not found themself yet. A
 
 ### 3.2 A claim
 
-A claim is an item in a person scope with the states `offered`,
-`pending`, `confirmed`, `declined`, `withdrawn`, `released` and
-`lapsed`.
+A claim is an item in a person scope. Its `claimant` party slot holds
+one member. Its states:
 
-- `claim-self` opens a `pending` claim. A guard refuses it while
-  another claim is `confirmed`, and on a record marked deceased.
-- `confirm-claim` is signed by a steward, or by the confirmed subject of
-  a parent, child, sibling or partner record. The second case reads the
-  relationship copies of section 5.3.
+| State | Means | Reached by |
+|---|---|---|
+| `offered` | A steward offers the record to one member | `offer-claim` |
+| `pending` | A member says the record is them, and waits | `claim-self` |
+| `confirmed` | The member is the record's subject | `accept-offer` from `offered`; `confirm-claim` from `pending` |
+| `closed` (final) | Ended, with a reason: declined, withdrawn, lapsed or released | `close-claim`, or the timed rule at `offerEnds` |
+
+- A guard refuses `offer-claim` and `claim-self` while another claim is
+  `offered`, `pending` or `confirmed`, and on a record whose `living`
+  value is `deceased`.
+- `accept-offer` has one guard on its signer: `signer: ["claimant"]`.
+  Only the member that the steward named can accept, whatever else that
+  member's keys can read.
+- `confirm-claim` is signed by a steward. Confirmation by a relative's
+  subject is later work (G12).
 - On confirmation the claimant becomes the **subject** and a
   **steward**, and the record's visibility becomes `private` unless the
   subject chooses otherwise.
 - A living child's record names a guardian as steward. A child's claim
   after the age that the circle's policy sets ends the guardian's
   stewardship unless the child keeps it.
-- `release-claim` ends the subject's control. The member stays a
-  steward until they remove themself.
+- `close-claim` with reason `released` ends the subject's control. The
+  member stays a steward until they remove themself.
 
 ### 3.3 Invitations
 
-Each invitation is a membership invitation (`invite-member` in
-`platform:membership`: a secret's hash, an end time, a role) and a
-circle item that says what the invitation is for.
+Every invitation starts as a membership invitation: `invite-member` in
+`platform:membership`, with a handle, a role, a secret's hash and an end
+time. The invitee joins with the secret, as dap-room's invitation link
+does. The circle keeps an `invitation` item for its own list, with an
+optional hint and, for a bound invitation, the person it names.
 
 **Unbound.** "Join the Callan family circle."
 
-1. The inviter signs `invite` on the circle, with an optional note and
-   an optional **hint**: a person in the circle and a relation, such as
-   "great-grandson of Peg Callan". The hint binds nothing.
-2. The invitee opens the link. The page makes a device key and joins
-   the membership, as dap-room's invitation link does.
+1. The inviter signs `invite-member` on the membership and `invite` on
+   the circle, with an optional note and an optional **hint**: a person
+   in the circle and a relation, such as "great-grandson of Peg
+   Callan". The hint binds nothing.
+2. The invitee opens the link. The page makes a device key and joins.
 3. **Find yourself.** The page searches the circle with the invitee's
    name and the hint. Picking a record signs `claim-self`, which waits
-   for a confirmation.
+   for a steward.
 4. **Add yourself.** With no match, the page signs `add-person` on the
-   circle: living, private, with the invitee as subject and only
-   steward.
-5. **Connect.** The page turns the hint into parentage assertions. An
-   assertion that names a claimed living person shows on that person's
-   record only after they confirm it.
+   circle, which creates a living, private record with the invitee as
+   subject and only steward. The page then adds the invitee's names to
+   that record (section 8.4 says why the names do not travel in the
+   create message).
+5. **Connect.** The page turns the hint into parentage assertions in
+   the invitee's own record.
 
 **Bound.** "Ruth, we have a record for you. Is this you?"
 
-1. A steward of an unclaimed record P, living or of unknown status,
-   signs `invite-bound` on the circle with P. The circle sends
-   `tell offer-claim` to P with the invitation's hash and end time. P
-   opens a claim in state `offered`. A guard refuses the offer while P
-   has a confirmed claim or another open offer.
-2. The invitee joins the membership with a new key and sees P as it
-   stands.
-3. **That's me.** The page signs `redeem-claim` on P with the
-   invitation's secret. P checks the secret against the hash, as `join`
-   does in membership, and the claim becomes `confirmed` in one act.
-   The steward vouched when they invited.
-4. **Review.** The page walks the subject through each recorded fact:
-   keep, correct, hide or remove. It then asks who may see the record.
-5. **Not me.** The invitee declines. P records the declined offer, the
-   inviter receives a notice, and the invitee stays a member with no
-   claim.
+1. A steward of an unclaimed record P signs `invite-member` on the
+   membership with the handle `@ruth`, and `offer-claim` on P with the
+   member `@ruth` and an end time `offerEnds`. P's guard checks that the
+   signer is a steward. P opens a claim in state `offered` with `@ruth`
+   in `claimant`.
+2. Ruth opens the link, joins the membership with a new key, and sees P
+   as it stands.
+3. **That's me.** The page signs `accept-offer` on P with Ruth's key.
+   The signer guard holds, and the claim becomes `confirmed` in one
+   act. No secret reaches P, so a member who reads the membership's
+   journal and sees the secret of `join` gains nothing: P accepts only
+   `@ruth`.
+4. **Review.** The page walks Ruth through each recorded fact: keep,
+   retract and add again, or hide. It then asks who may see the record.
+5. **Not me.** Ruth signs `close-claim` with reason `declined`. The
+   steward receives a notice, and Ruth stays a member with no claim.
 
-A timed rule on P lapses the offer at the invitation's end. The inviter
-can revoke it earlier.
+A timed rule on P closes an `offered` claim at `offerEnds` with reason
+`lapsed`. The steward can close it earlier.
 
 ### 3.4 Viewers with no account
 
@@ -217,9 +234,11 @@ age if the source gives one. A description. Its citations. A state:
 french-republican, islamic, other), `qualifier` (exact, about,
 estimated, calculated, before, after, between, from-to), `y`, `m`, `d`,
 `y2`, `m2`, `d2`, `dual` (the second year of 1712/13), `text` (as
-written) and `sort` (days since 1 January 1 CE, proleptic Gregorian). A
-rule expression checks that `sort` agrees with the other members, so no
-client files 1712 under 1812.
+written) and `sort` (days since 1 January 1 CE, proleptic Gregorian).
+The client computes `sort`. The index computes it again and marks a
+record whose `sort` disagrees. A rule that checks `sort` in the scope
+needs calendar arithmetic in the profile's rule language, which is
+*unverified*.
 
 **Couple.** Two persons, a kind, a state (current, ended, unknown), its
 events and citations. A person with several partners has several
@@ -251,51 +270,65 @@ outside the journal (G6).
 
 ### 5.1 The definitions
 
-| Definition | One for each | Owns | Size over a life |
-|---|---|---|---|
-| `family-person` | Person | Names, sex, status, events, parentages to its parents, citations, references, media, notes, claims, stewards, visibility, merge status | 20 to 500 entries |
-| `family-couple` | Couple | Partners, kind, events, citations | 5 to 50 |
-| `family-place` | Place | Names, point, area, jurisdictions, references, comments | 5 to 100 |
-| `family-source` | Source | Description, repository, references, media, page transcriptions | 5 to 50 |
-| `family-circle` | Circle | Policy, the IDs of its people, invitations, view links, tasks, discussions | Grows. A busy circle starts a new discussion scope before 100 000 entries |
-| `platform:membership` | Circle | Members, keys, roles, invitations | As in dap-room |
-| `family-merge` | Merge proposal | The two records, field choices, approvals, outcome | 5 to 30 |
-| live presence | Circle | Each member's viewport and selection | Nothing kept |
+| Definition | One for each | Owns | Size over a life | From stage |
+|---|---|---|---|---|
+| `family-person` | Person | Names, sex, status, events, parentages to its parents, citations, references, media, notes, claims, link answers, stewards, visibility, merge status | 20 to 500 entries | F0 |
+| `family-couple` | Couple | Partners, kind, events, citations | 5 to 50 | F0 |
+| `family-circle` | Circle | Policy, the IDs of its people, invitations, view links, tasks, discussions | Grows. A busy circle starts a new discussion scope before 100 000 entries | F0 |
+| `platform:membership` | Circle | Members, keys, roles, invitations | As in dap-room | F1 |
+| `family-place` | Place | Names, point, area, jurisdictions, references, comments | 5 to 100 | F3 |
+| `family-source` | Source | Description, repository, references, media, page transcriptions | 5 to 50 | F3 |
+| `family-merge` | Merge proposal | The two records, field choices, approvals, progress | 5 to 30 | F6 |
+| live presence | Circle | Each member's viewport and selection | Nothing kept | F7 |
 
 ### 5.2 Messages between them
 
 ```
 family-circle --create--> family-person, family-couple
-family-circle --tell offer-claim--> family-person
 family-person (child) --relate parent-of--> family-person (parent)
 family-person (child) --relate child-in--> family-couple
 family-couple --relate partner-in--> family-person (each partner)
-family-merge --tell merge-into--> family-person (duplicate)
-family-person (duplicate) --relate redirect--> its neighbours
 family-person --index--> family-circle
 events and citations name places and sources by ID; no message
 ```
 
 - A parentage is an item in the child's scope, which relates
-  `parent-of` to the parent and `child-in` to the couple if named. The
-  parent's `relate` handler declares `copies` (proposed: 512). A
-  person with more children is read from the index.
+  `parent-of` to the parent and `child-in` to the couple if named.
+- The parent's `parent-of` handler declares `copies: 512`. The copies
+  count against `scopeRecords` (200 000) when the scope opts in. A
+  513th child's relate is refused `type-full`, and the parent keeps no
+  copy. The child's send has a `refused` clause that sets the
+  parentage's `copied` value to false. The parentage stands in the
+  child's record and in the index, and the tree reads that child from
+  the index.
 - A couple is its own scope and relates `partner-in` to each partner.
-- The circle holds the IDs of its people, not their records.
+- The circle holds the IDs of its people, not their records. The
+  `create` message carries the creator, the subject and the stewards,
+  and no name or date.
 
-### 5.3 What the copies are for
+### 5.3 What the copies give a person scope
 
-The copies that `relate` leaves in a person scope give it three facts
-with no read of another scope:
+[Relationship updates](../docs/scopes.md#composition-and-delivery): the receiver
+keeps a copy of the owner's item state and the update's detail, keyed
+by owner, item and name. A person scope therefore holds a copy for each
+of its children's parentages that name it (`parent-of`) and for each
+of its couples (`partner-in`). It holds no copy about its own parents:
+its parentages are its own items.
 
-- Who may confirm a claim on this record: the confirmed subjects of its
-  parents, children and partners.
-- What a living subject must confirm. A link asserted by someone else
-  arrives as a copy in state `proposed`. The subject's `confirm-link`
-  or `decline-link` acts on it. The asserting record keeps its
-  assertion either way, and the projections show the link only once it
-  is confirmed or the subject is not a claimed living person.
-- Whom to tell: a `notify` to the stewards of the related record.
+The copies give the person scope two things:
+
+- **A notice.** Each handler carries attention to the record's
+  stewards: "Alex recorded Daniel as a parent", "Daniel and Sofia are
+  recorded as a couple".
+- **The material for an answer.** A copy's state is the owner's state,
+  and the receiver cannot change it. When a claimed living subject
+  disagrees, or agrees, they sign `answer-link`, which opens a local
+  `link-answer` item: the owner scope, the item, the relationship name,
+  and `confirmed` or `declined`. Nothing checks that the copy exists,
+  because `also` selects local items only. Projections join an answer
+  to its copy and ignore an answer with no copy. A projection shows a
+  link to a claimed living person only when that person's answer is
+  `confirmed`.
 
 ## 6. Definitions
 
@@ -307,40 +340,46 @@ elements in a list.
 
 ### 6.1 `family-person@1`
 
+A detached slot is detached for every person, living or dead, because
+detachment is a property of the field type. Detached here: the name
+parts, `gender`, `placeText`, `description`, note text, transcripts,
+captions and dispute reasons.
+
 | Item | Many | States | Parties | Refs | Values |
 |---|---|---|---|---|---|
-| `person` (genesis) | no | `open`, `merged` (final) | `subject`, `stewards` (list, 16), `creator` | `mergedInto` (scope) | `living`, `sex`, `gender` (detached), `visibility`, `prefName`, `prefBirth`, `prefDeath` |
+| `person` (genesis) | no | `open`, `merged` (final) | `subject`, `stewards` (list, 16), `creator` | `circle`, `mergedInto` (scopes) | `living`, `sex`, `gender`, `visibility`, `prefName`, `prefBirth`, `prefDeath` |
 | `name` | 64 | `asserted`, `disputed`, `retracted` | `author` | | `type`, `given`, `surname`, `prefix`, `suffix`, `asWritten`, `lang`, `citations` |
-| `event` | 512 | as `name` | `author` | `place` (scope) | `kind`, `date` (record), `placeText`, `lat`, `lng`, `age`, `description` (detached), `citations` |
-| `parentage` | 16 | as `name` | `author` | `parent`, `couple` (scopes) | `kind`, `citations` |
-| `citation` | 1024 | `cited`, `retracted` | `author` | `source` (scope) | `locator`, `url`, `accessed`, `transcript` (detached), `quality` (record) |
+| `event` | 512 | as `name` | `author` | `place` (scope) | `kind`, `date` (record), `placeText`, `lat`, `lng`, `age`, `description`, `citations` |
+| `parentage` | 16 | as `name` | `author` | `parent`, `couple` (scopes) | `kind`, `copied`, `citations` |
+| `citation` | 1024 | `cited`, `retracted` | `author` | `source` (scope) | `locator`, `url`, `accessed`, `transcript`, `quality` (record) |
 | `extref` | 128 | `listed`, `removed` | `author` | | `system`, `id`, `url` |
-| `media` | 256 | `listed`, `removed` | `author` | | `digest`, `kind`, `caption` (detached), `date`, `place` |
-| `note` | 256 | `posted`, `deleted` | `author` | | `text` (detached), `on` (item) |
-| `claim` | 64 | section 3.2 | `claimant`, `decidedBy` | `circle` (scope) | `inviteHash`, `inviteEnds`, `evidence` (detached) |
-| `dispute` | 512 | `open`, `resolved` | `author`, `resolver` | | `on` (item), `reason` (detached), `outcome` |
-
-For a living person, the names, free text and transcriptions are
-detached (section 8.4).
+| `media` | 256 | `listed`, `removed` | `author` | | `digest`, `kind`, `caption`, `date`, `place` |
+| `note` | 256 | `posted`, `deleted` | `author` | | `text`, `on` (item) |
+| `claim` | 64 | section 3.2 | `claimant`, `decidedBy` | | `offerEnds`, `reason` |
+| `link-answer` | 512 | `confirmed`, `declined` | `subject` | `owner` (scope) | `item`, `relation` |
+| `dispute` | 512 | `open`, `resolved` | `author`, `resolver` | | `on` (item), `reason`, `outcome` |
 
 | Acts | Who | Guards |
 |---|---|---|
 | `open-person` (genesis, by `create` from a circle) | the circle | Creator, subject and stewards from the message |
-| `add-name`, `add-event`, `add-parentage`, `cite`, `add-extref`, `add-media` | a steward; any contributor when the record is deceased and public | |
-| `edit-*`, `retract-*` | the author or a steward | State is `asserted`. A retraction keeps the item |
+| `add-name`, `add-event`, `add-parentage`, `cite`, `add-extref`, `add-media` | a steward; any contributor when `living` is `deceased` and `visibility` is `public` | For a record whose `living` is not `deceased`: no `lat`, `lng` or `place`, and a date of a year only (a rule, *unverified*) |
+| `retract` | the author or a steward | State is `asserted`. The item stays |
 | `dispute`, `resolve` | any member who reads it; a steward resolves | The item is `asserted` |
 | `prefer` | a steward | The item exists and is not retracted |
-| `set-living`, `set-visibility` | a steward; only the subject when there is one | `public` refused for a living or presumed living record unless the subject signs |
+| `set-living`, `set-visibility` | a steward; only the subject when there is one | `public` is refused unless `living` is `deceased` |
 | `add-steward`, `remove-steward` | a steward | The subject cannot be removed |
-| `claim-self`, `confirm-claim`, `redeem-claim`, `decline-claim`, `withdraw-claim`, `release-claim` | section 3.2 | `redeem-claim`: state `offered`, the secret hashes to `inviteHash`, before `inviteEnds` |
-| `confirm-link`, `decline-link` | the subject | The copy is `proposed` |
+| `offer-claim`, `claim-self`, `accept-offer`, `confirm-claim`, `close-claim` | section 3.2 | Section 3.2 |
+| `answer-link` | the subject | None on the copy (section 5.3) |
 | `note`, `delete-note`, `moderate-note` | as in `shared-map` | |
-| `redact` | the subject; a steward of a living record | Drops the bytes |
+| `redact` | the subject; a steward of a living record | Drops the bytes of one detached slot |
+| `mark-merged` | a steward | Sets `mergedInto`. State becomes `merged` |
 
-Handlers: `offer-claim` (tell, from a circle), `merge-into` and
-`unmerge` (tell, from a merge), and the relations `parent-of`,
-`partner-in`, `member-of` and `redirect`. Timed: an offered claim lapses
-at `inviteEnds`.
+Handlers: `parent-of` and `partner-in` (relate, with attention to the
+stewards). Timed: an `offered` claim closes at `offerEnds`.
+
+`set-visibility` reads `living` only. "Presumed living" (section 8.1)
+depends on dates estimated from relatives, which the scope does not
+hold. The publisher and the index apply that rule.
 
 ### 6.2 `family-couple@1`
 
@@ -348,7 +387,7 @@ One genesis item `couple`: `partners` (two scopes), `kind`, `state`, and
 the `event`, `citation`, `note` and `dispute` items of a person. The
 genesis relates `partner-in` to each partner. When a partner is a
 claimed living person, projections wait for that person's
-`confirm-link`. The couple scope does not wait.
+`answer-link`. The couple scope does not wait.
 
 ### 6.3 `family-circle@1`
 
@@ -356,16 +395,17 @@ claimed living person, projections wait for that person's
 |---|---|
 | `circle` (genesis) | Title, home person, policy: who adds people, the default visibility, the guardianship age, the presumed-living horizon |
 | `person-ref` (50 000) | One for each person scope the circle works on |
-| `invitation` | `unbound` or `bound` (names a person scope). `issued`, `redeemed`, `declined`, `revoked`, `lapsed` |
+| `invitation` | The invitee's handle, an optional hint (detached), and for a bound invitation the person scope. `issued`, `redeemed`, `revoked`, `lapsed` |
 | `view-link` | Coverage, whether it includes living people, end. `active`, `revoked`, `lapsed` |
 | `task` | A research task, with an assignee and the records it is about |
 | `thread`, `post` | Discussions |
 
 Acts: `add-person` and `add-couple` send `create`. `include` adds an
-existing person scope. `invite-bound` also sends `tell offer-claim`.
-Others: `invite`, `revoke-invitation`, `make-view-link`,
-`revoke-view-link`, and the task and discussion acts. Membership roles:
-`viewer`, `contributor`, `steward`, `admin`, `agent`.
+existing person scope. Others: `invite`, `revoke-invitation`,
+`make-view-link`, `revoke-view-link`, and the task and discussion acts.
+The circle's `invitation` item is a list for people to read. The person
+scope alone decides a claim. Membership roles: `viewer`, `contributor`,
+`steward`, `admin`, `agent`.
 
 ### 6.4 `family-place@1` and `family-source@1`
 
@@ -380,16 +420,27 @@ pick GeoNames 2961423 at the same moment then name the same scope,
 because a scope's ID is the digest of its seed
 ([Identity and genesis](../docs/scopes.md#identity-and-genesis)).
 
-### 6.5 `family-merge@1`
+### 6.5 `family-merge@1` (F6)
 
 One item `merge`: `survivor` and `duplicate` (person scopes), field
 choices, an approval from a steward of each, and a state: `proposed`,
-`approved`, `executing`, `done`, `failed`, `undone`. On approval it
-sends `tell merge-into` to the duplicate. The duplicate copies its
-assertions to the survivor by its own sends, becomes `merged`, and
-relates `redirect` to its neighbours, which point their copies at the
-survivor. Result clauses record each answer. An undo is a second merge
-scope that runs the inverse. The duplicate keeps its whole record.
+`approved`, `done`, `abandoned`.
+
+A merge moves up to 512 events and 1 024 citations. One handler sends
+at most 8 messages, a fan-out covers 32 items, and an entry sends at
+most 104. So the merge sends nothing in bulk. The client of a steward
+carries it out as ordinary acts under one custody, each act naming the
+merge in a field:
+
+1. On the survivor: `add-*` and `cite` for each chosen assertion.
+2. On each child of the duplicate: `retract` of the parentage that
+   names the duplicate, and `add-parentage` to the survivor. A child
+   with a claimed subject answers for itself.
+3. On the duplicate: `mark-merged`.
+4. On the merge: `done`.
+
+An undo is a second merge in the other direction. The duplicate keeps
+its whole record, so an undo loses nothing.
 
 ## 7. Two flows
 
@@ -398,11 +449,12 @@ scope that runs the inverse. The duplicate keeps its whole record.
 1. On Patrick's page the member selects **Add father**. With no record
    for him, the page signs `add-person` on the circle, which sends
    `create`. The new box shows at once, marked as not confirmed, as
-   dap-foldkit marks a new place.
+   dap-foldkit marks a new place. The page then adds his names to the
+   new record.
 2. The page signs `add-parentage` on Patrick's scope.
-3. Patrick's scope relates `parent-of` to the father. Each receiver
-   judges the copy in its own turn.
-4. The index takes both entries, and the tree around Patrick shows the
+3. Patrick's scope relates `parent-of` to the father. The father's
+   scope keeps a copy and tells its stewards.
+4. The index takes the entries, and the tree around Patrick shows the
    father.
 
 If step 2 fails, the father remains a person with no relatives, and the
@@ -421,9 +473,11 @@ alternative, and a later reader sees the argument and who settled it.
 
 ### 8.1 Living
 
-A record is **presumed living** unless it is marked deceased or its
-latest dated event, or its birth estimated from relatives, is 110 or
-more years ago. A circle's policy can lower the horizon to 100.
+A record is **presumed living** unless its `living` value is
+`deceased` or its latest dated event, or its birth estimated from
+relatives, is 110 or more years ago. A circle's policy can lower the
+horizon to 100. The index and the publisher apply this rule. The scope
+reads `living` only (section 6.1).
 
 ### 8.2 Classes
 
@@ -435,8 +489,7 @@ more years ago. A circle's policy can lower the horizon to 100.
 
 A fact can also be **restricted** (cause of death, adoption, a criminal
 record) to stewards only. dap has no private views inside one record,
-so a restricted fact is a detached value that the scope serves only to
-stewards (G2).
+so a restricted fact needs readers narrower than the scope's (G2).
 
 ### 8.3 Where the rule holds
 
@@ -444,18 +497,28 @@ stewards (G2).
 |---|---|
 | Member | The scope's read authorization (G2) |
 | Index | Each row carries the visibility class and the circles. The index answers a reader only with what that reader may read. A private record shows to others as an opaque ID |
-| Public projection | The publisher selects public records. It never publishes a living or presumed living person unless the subject signed `public` |
+| Public projection | The publisher selects public records, and never publishes a record it presumes living |
 | Agent | The rules of a member with the agent role |
 
 ### 8.4 Erasure
 
-The journal is permanent and replayed. Details that identify a living
-person are therefore detached: the journal carries a digest, the scope
-holds the bytes, and a `redact` effect drops them. dap redacts a
-detached text today. A living person's dates are integers in an event's
-`date` record, so they need a detached value of another type, and the
-event's `sort` is kept to the year (G10). After a redaction every
-projection rebuilds from the redacted record.
+The journal is permanent and replayed. dap redacts a detached text,
+and detachment is fixed in the definition for every record. A
+redaction removes the bytes of the detached slots of section 6.1. These
+values stay in the journals after every redaction:
+
+| Value | Where | Kept small by |
+|---|---|---|
+| Event kind, the `date` record, `lat`, `lng`, the `place` reference | P's journal | The rule of section 6.1: while `living` is not `deceased`, an event carries a year and no place. The exact date and place go in the detached `description` |
+| Sex, living status, visibility, party slots | P's journal | Nothing. They are the record's structure |
+| The `create` message | The circle's journal and its outbound message | It carries the creator, the subject and the stewards. No name or date |
+| A relate's detail | The receiver's copy | The detail carries the kind and no name or date |
+| A hint on an invitation | The circle | Detached, and redactable in the circle |
+
+A year of birth and the shape of a family remain after erasure. Full
+erasure of a value that is not text needs detached values of other
+types (G10). When `living` becomes `deceased`, stewards add exact
+events, which the rule then allows.
 
 ## 9. Reading at scale
 
@@ -503,15 +566,16 @@ New layers:
 - **Life path**: one person's events in order, joined by a line.
 - **Lineage**: ancestors' birthplaces coloured by generation, with an
   arc from each parent's birthplace to the child's.
-- **Family in year Y**: each living person in the neighbourhood at
-  their latest known residence before Y.
+- **Family in year Y**: each person in the neighbourhood who was alive
+  in year Y, at their latest known residence before Y.
 - **Density**: events by kind, clustered.
 - **Context**, outside the record: the borders of a year from a
   historical boundaries dataset, and events from Wikidata.
 
 A time slider runs from the earliest to the latest year in view. It
 animates **Family in year Y** across generations and filters every
-other layer to a window, by each event's `sort`.
+other layer to a window, by each event's `sort`. Living people's events
+carry no place, so they do not appear on the map.
 
 ## 11. The client
 
@@ -535,7 +599,7 @@ only).
 | Bytes in a person scope | 50 to 500 kB | 10⁹ scopes come to 50 to 500 TB of journals |
 | Scopes for each person | about 1.5 | A person and half a couple |
 | Fold of a person in the browser | a few ms | dap-foldkit measured about 55 ms for each 1 000 entries |
-| Busiest place, source, ancestor | 10⁶ events, 10⁸ citations, 10⁹ descendants | None receives a message for each; copies are kept for children only |
+| Busiest place, source, ancestor | 10⁶ events, 10⁸ citations, 10⁹ descendants | None receives a message for each mention. A person keeps copies from its children and its couples only, at most 512 from children |
 | Index | The dominant cost | One shard read for each generation of a neighbourhood |
 
 ## 13. What dap provides, and what this needs
@@ -543,28 +607,29 @@ only).
 | | Need | dap at `b0a6439a` | Candidate request |
 |---|---|---|---|
 | G1 | One account across circles; a person scope that accepts signers from several memberships | `MemberRef` names its membership, so a party slot can hold members of several circles. A read session and grants come from one room's membership. A personal account across records is not designed | An account scope, or a rule for a signer whose grant comes from another membership |
-| G2 | Readers from a scope's own state; restricted values for stewards | A read session covers the scopes of one repository. A signed read covers a key's own entries and their causes. Private views in one record are not designed | Readers declared from party slots and relationship copies |
+| G2 | Readers from a scope's own state; restricted facts for stewards | A read session covers the scopes of one repository. A signed read covers a key's own entries and their causes. Private views in one record are not designed | Readers declared from party slots |
 | G3 | Public pages at very large scale; view-link capabilities | Site serves a room's published Git pages anonymously. Publication from a fold runs for Git | An object-store target; a read capability for a view link |
 | G4 | Application scope kinds | `ScopeKind` is a fixed list of ten, and a `scope` field names one kind | An application kind, or a stated choice among `task`, `lane`, `commons` and `order` |
-| G5 | Application scopes that create and relate to each other | A native test-host witness passes across rooms under v1 installation. V2 packages cannot yet declare an external receive port | The receive port for v2 packages. A check of 512 copies against `scopeRecords` |
+| G5 | Application scopes that create and relate to each other | A native test-host witness passes across rooms under v1 installation. V2 packages cannot yet declare an external receive port | The receive port for v2 packages |
 | G6 | Media | Files and capture with a stated source are designed, not built | The file store, with detached-text custody |
 | G7 | One feed of many scopes into an index | An `index` row goes to the scope's directory | A projection feed for 10⁹ scopes |
-| G8 | Import of a GEDCOM file of 10 000 people | An entry sends at most 104 messages, and a fan-out covers 32 items | A batch path, or many signed acts under one custody |
+| G8 | Import of a GEDCOM file of 10 000 people, and a merge of 1 500 assertions | An entry sends at most 104 messages, and a fan-out covers 32 items | Many signed acts under one client custody, measured; or a batch path |
 | G9 | Presence | Live and Recorded run | None. Presence uses the live level as dap-foldkit does |
-| G10 | Erasure of values that are not text | `redact` names a detached text slot | Detached values of other types |
+| G10 | Erasure of values that are not text | Detachment is an option of a `text` field only | Detached values of other types |
 | G11 | Definitions that last decades | Succession to a new scope is designed, not built | Succession; until then a small person definition |
+| G12 | A claim confirmed by a relative's subject | A person scope holds no fact about its parents' subjects (section 5.3). A guard reads local items, and `also` selects local items only | A guard on a fact of another scope at an exact position, or a vouch message whose sender the handler can check against a local reference |
 
 ## 14. Order of work
 
 | Stage | Content | Needs |
 |---|---|---|
-| F0 | `family-person`, `family-couple` and `family-circle` pass `validateDefinition`. In-memory tests of a parentage relate and a bound claim across two scopes | None |
+| F0 | `family-person`, `family-couple` and `family-circle` pass `validateDefinition`. In-memory tests: a parentage relate with a refused 513th copy, an offered claim that only its claimant can accept, and the living-event rule | None |
 | F1 | One circle in one room. Person and couple scopes are children of the circle and read through the room's session. Tree, Person and Map. Both kinds of invitation. Every member reads every record | G4, G5 |
 | F2 | The index for one circle, name search, neighbourhood reads, GEDCOM import and export | G7, G8 at small scale |
 | F3 | Shared source and place scopes. Lineage and year layers, the time slider | |
 | F4 | The public projection, anonymous viewers, view links | G3 |
 | F5 | A person scope that two circles include. Accounts across circles. Living privacy by class | G1, G2, G10 |
-| F6 | Merges, duplicate hints, moderation of the public graph | |
+| F6 | Merges, duplicate hints, moderation of the public graph, confirmation by relatives | G8, G12 |
 | F7 | Presence while researching together. Agents as research assistants | |
 
 F1 is a family tree for one family. F5 is the first step past it, and
@@ -589,3 +654,16 @@ the step that needs dap to change.
    their own areas.
 7. **Names across scripts.** One phonetic key across Cyrillic, Greek,
    Hebrew, Arabic and Chinese names.
+
+## 16. Changes in draft 2
+
+| Finding of `7e5a904e` | Change |
+|---|---|
+| B1, B2 | A steward signs `offer-claim` on the person with the invited member's handle. `accept-offer` guards `signer: ["claimant"]`. No secret reaches the person scope, and no hash check is needed (3.2, 3.3, 6.1) |
+| B3 | Section 5.3 states what a copy holds. Confirmation by a relative moves to F6 as G12. A subject answers a link with a local `link-answer` item |
+| B4 | Section 6.1 names the detached slots for every person. Section 8.4 lists what stays in the journals, with the rule that keeps a living person's events to a year and no place |
+| M1 | The merge runs as ordinary acts under one client custody (6.5), with G8 |
+| M2 | A refused 513th copy sets `copied` to false on the child's parentage (5.2) |
+| M3 | `set-visibility` reads `living` only. The publisher and the index apply "presumed living" and recompute `sort` (4, 6.1, 8.1) |
+| M4 | Section 12 names the copies a person keeps. `member-of` and `unmerge` are gone. `sort` follows the date as written |
+| Simplification | `edit-*` became `retract` and add. Claim states went from seven to four. `family-merge` moved to F6, and `family-place` and `family-source` to F3 |
