@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I write the dap-family design note on 23 November, with every dap fact read at main b0a6439a, and request the checker's review at its exact head. Hugh then rules on its open questions, and I file a request for each dap gap that he accepts."}
+{"kind":"artifact","text":"notes/2026-11-23-dap-family.md at exact 8d865eb5d9c3a6aef2f5418d802cf195182b0916 on planner/dap-family-note-20261123, under promise aa85bdaf on request d7bdfa89","body":{"commit":"8d865eb5d9c3a6aef2f5418d802cf195182b0916","path":"notes/2026-11-23-dap-family.md"}}
