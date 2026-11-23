@@ -339,6 +339,42 @@ and recorded `MemoryState` keep their existing full retention unchanged.
      presence client (PB-3) checks the fresh snapshot after an unknown
      answer and treats an absent own row (and a `no-item` refusal on a
      `leave` retry) as left rather than as a guard failure.
+   - **Late retry of an `open` act after eviction.** If a member enters
+     (`open`, key `k1`), later leaves, and eviction removes both the item
+     and its retry records, a delayed retry of `k1` arriving before
+     `k1.notAfter` is no longer in `accepted` and is judged fresh. An
+     active-row uniqueness guard (`none` in state `here`) refuses `k1`
+     only if the member has already opened another active row; if the
+     member is absent, the guard passes and `k1` opens a ghost presence
+     row. The O2 retry cutoff (`d58ff62f`) applies to inter-scope
+     deliveries, not client-submitted live acts; for client acts,
+     `intent.notAfter` bounds admission, and once opened no bound shorter
+     than one lease applies. The ghost row remains until the scope's
+     timed expiry rule runs at the lease deadline (or until a later leave
+     or generation reset). Ruling `592a7ea8` accepts this cost of one
+     stale row for at most one lease.
+   - **Existing live definitions and clients reading final counts or
+     final items.** None of the current live definitions or clients reads
+     final counts or `GET /v1/scopes/:scope/live-items/:type`:
+     - The map application (`dap-foldkit/app/room-presence.ts`) calls
+       only `liveSummary()` and filters open `position` items in state
+       `here`.
+     - Pinboard (`dap-ui-sdk/PLAN-presence.md`) uses `watchLive` and
+       `openPresence` over open `viewport` rows and never reads final
+       counts or `live-items`.
+     - The shipped examples (`examples/grow`, `examples/lending`,
+       `examples/commons-bill`, `examples/repo-in-ai`) and apps
+       (`apps/counter`, `apps/room`, `apps/views`, `apps/sandbox`)
+       declare no live definitions (`examples/grow/presence.ts` is
+       recorded).
+     - `@generalbusiness/dap-client` (`ScopeHandle`, `watchLive`),
+       `packages/cli` (`dap act`), and the MCP B4 projection
+       (`packages/scope/src/applications/projection.ts`,
+       `packages/mcp/browser/main.ts`) read only open items from
+       `liveSummary()`. Only `packages/scope/test/live-reads.test.ts`
+       currently exercises `GET /live-items/:type`, and the LL-1 source
+       head updates that test to witness the empty complete page after
+       eviction.
 4. **No detached-text history growth.** `applyLive` skips appending
    superseded digests to `texts` (`putTexts`), because a live scope has
    no journal to redact. Distinct acting keys in `accepted` and
