@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-11-23-dap-family.md","body":{"commit":"4322cb368cb6e68ea3b809960818bc3fe22f77e8","path":"notes/2026-11-23-dap-family.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:96f9171cd01bfb0976285d1ef13661a81960f58b","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-23-dap-family.md."}
