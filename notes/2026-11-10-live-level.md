@@ -1,10 +1,11 @@
 # The live level: a first version
 
-Status: current. Draft 2, for request `bf1992ae`. LV1 landed at
-`1f81ac01`, the LV4 graph at `fb7b5388`, LV2 at `c20e5315`, LV3 reads
-and watch at `af2f675f`, the LV3 retained budget at `dbc4aecd`, LV4 tools
-at `446e2ab8`, LV5 at `cfcfb7c9`, and the O2 retry cutoff at `d58ff62f`.
-Section 11 records the resolved and remaining points.
+Status: current. Draft 2, for request `bf1992ae`, amended for LL-1 by
+ruling `8568a680`. LV1 landed at `1f81ac01`, the LV4 graph at `fb7b5388`,
+LV2 at `c20e5315`, LV3 reads and watch at `af2f675f`, the LV3 retained
+budget at `dbc4aecd`, LV4 tools at `446e2ab8`, LV5 at `cfcfb7c9`, and the
+O2 retry cutoff at `d58ff62f`. The LL-1 source head follows this note
+amendment. Section 11 records the resolved and remaining points.
 
 A scope's definition declares one durability level: live, recorded or
 sequenced. Recorded is built. The sequenced level has its design in the
@@ -174,11 +175,12 @@ repeat from one generation to the next. A reference to a live item names
 the generation. Each item keeps its own revision, which an act's
 `expected` names, as in a recorded scope.
 
-**A repeat.** The index of accepted intents is in memory. A repeat of an
-applied intent in the same generation is answered `applied` with the
-same tick. After a reset, a repeat inside the intent's lifetime can
-apply again. An application that cannot accept that uses a recorded
-scope.
+**A repeat.** The index of accepted intents is in memory and retains one
+latest record for each pair of actor key and target item (section 3.9). A
+repeat of that latest applied intent in the same generation answers
+`applied` with the same tick and adds no bytes. After a reset, a repeat
+inside the intent's lifetime can apply again. An application that cannot
+accept that uses a recorded scope.
 
 A refused act changes nothing, as in a recorded scope.
 
@@ -263,6 +265,100 @@ nothing else, and an application that needs more records the value.
 - **To keep a live value, a person or an agent signs a recorded act that
   carries it.** That act is new, and it is judged in its own scope like
   any other. Nothing moves from live state to a record by itself.
+
+### 3.9 Retained state of a live generation (LL-1)
+
+Measurement (`3a870393`, `df7515e2`) showed that each live act on an open
+item previously added 356 to 360 logical bytes: 265 to 267 bytes for a
+new `accepted` row and 91 to 93 bytes for a new `fixedHashes` row. At 50
+present members renewing every 15 seconds, a generation filled its 32 MiB
+logical ceiling in under five hours. Ruling `8568a680` adopts a general
+retention rule for live generations so retained state is a function of
+current open items and distinct acting keys rather than elapsed ticks.
+The definition grammar, `packages/contract`, and the validator do not
+change, and there is no declared renewal form.
+
+The rule has four parts, all confined to live state (`applyLive`,
+live-staged `MemoryState`, and the live meter). Recorded `applyEntry`
+and recorded `MemoryState` keep their existing full retention unchanged.
+
+1. **One retry record for each `(actor, target item)` pair.** Live-staged
+   `MemoryState` (`packages/derive/src/state.ts`) keys its `accepted`
+   index by `(actor, item)` where `actor` is the signing `KeyId` and
+   `item` is the act's target item ID. An act that opens an item keys its
+   record by `(actor, opened item ID)`. When the same actor applies a
+   later act to the same item, the new record atomically replaces the
+   earlier record for that `(actor, item)` pair, so repeated renewals or
+   updates add zero steady-state bytes (aside from decimal digit
+   boundaries of `tick` and `revision`). One actor acting on two distinct
+   items keeps an independent retry record for each item.
+   - An exact retry of the latest applied act on `(actor, item)` in the
+     same generation answers `applied` with the original tick and changes
+     neither state nor meter.
+   - A different intent with the same `idempotencyKey` as that latest
+     record answers `refused` with reason `bad-intent` and name
+     `idempotency-mismatch`.
+   - A repeat of a superseded act is no longer in `accepted` and is
+     judged fresh against current live state: an update with a stale
+     `expected` revision answers `revision-moved`, and a guarded open
+     answers its guard refusal.
+2. **No post-creation fixed hashes.** After confirmation (`seq > 1`),
+   `applyLive` (`packages/derive/src/fold.ts`) records no `fixedHashes`
+   row and runs no `rekeyFixed` pass, and `liveTimedAppend`
+   (`packages/derive/src/validate/live-envelope.ts`) removes its
+   per-step `fixedHashes` reserve term. Live definitions already forbid
+   every `fact` field and operand (`validate/fields.ts`) and `presents`
+   (`validate/handlers.ts`), `LiveTurns.act` supplies no `own` reader,
+   and live scopes seal no entry after `seq 1`. Before changing the fold,
+   the LL-1 source head adds a witness test that fails if any live path
+   seals or reads a fixed hash after `seq 1`, and shows it red against a
+   deliberate seal first.
+3. **Final-item eviction.** When a live act or live timed rule moves an
+   item to a final state (`states[state].final === true`), `applyLive`
+   evicts that item from live-staged `MemoryState` together with its
+   state bucket entry, its count increment, its fixed-slot equality index
+   rows (`fixedRows`, `fixedRaw`, `fixedCounts`, `fixedRowDependencies`,
+   `fixedDependencies`), its `liveHeldItemEnvelope` and `timers` meter
+   charges, and every `(actor, item)` retry record targeting that item.
+   Without eviction, member churn of 50 members leaving and re-entering
+   once per hour retained 4,263 bytes per final card and filled 32 MiB in
+   about 150 hours.
+   - **Live summary read (`LiveReads.summary`).** `items` contains open
+     items as before. `counts` reports `0` for each final state because
+     evicted items are not held in memory.
+   - **Live final-items read (`LiveReads.items`).** Returns an empty
+     complete page (`items: []`, `complete: true`) for any declared item
+     type.
+   - **Act naming an evicted item.** Because both the item and its
+     `(actor, item)` retry records are evicted, `judgeAct` finds neither
+     an accepted record nor a live item and answers `refused` with reason
+     `no-item` (for `on`, `also`, or an `item` field).
+   - **Retry of the leave act that ended the item.** If a `leave` act
+     applied and evicted the item, and its HTTP reply was lost, retrying
+     that `leave` intent receives `refused` with reason `no-item`. A
+     presence client (PB-3) checks the fresh snapshot after an unknown
+     answer and treats an absent own row (and a `no-item` refusal on a
+     `leave` retry) as left rather than as a guard failure.
+4. **No detached-text history growth.** `applyLive` skips appending
+   superseded digests to `texts` (`putTexts`), because a live scope has
+   no journal to redact. Distinct acting keys in `accepted` and
+   `observed` stay bounded by `packages/scope/src/authority.ts` at 4,096
+   admitted keys per run.
+
+**Client rule.** A live client keeps at most one unanswered act in flight
+for each `(actor, item)` pair. It retries one signed key until answered
+and sends an `expected` revision on each transition and renewal.
+
+**Kernel scope and acceptance.** The LL-1 source head touches only
+`packages/derive/src/state.ts`, `packages/derive/src/fold.ts`,
+`packages/derive/src/validate/live-envelope.ts`, and
+`packages/derive/src/validate/live-meter.ts` (plus tests), with no
+change to `packages/contract`, the validator, recorded `applyEntry`, or
+alarm scheduling (zero alarms added). The checker reviews it under
+`docs/kernel.md` section 7. At 50 members and a 15-second renewal
+interval, retained logical bytes after 1,000 renewals equal those after
+10 renewals, and a churn run of leave and re-enter returns to the same
+byte total.
 
 ## 4. The kernel review
 
@@ -420,7 +516,11 @@ scope. Each row names the landed main commit.
 | LV4, graph (`fb7b5388`); tools (`446e2ab8`) | The package graph's entry for a live scope, and its refusal of a send to one. The app-only MCP tool, the client call and `dap act` | LV1 for the graph. LV3 for the tool | A package with one live scope installs, and a presence card enters, renews and leaves. A package that sends to its live scope is refused |
 | LV5, replay and documents (`cfcfb7c9`) | Replay of the two creation entries. Promises 1, 7 and 11 of the kernel page (4.3). The one-channel audit. `docs/scopes.md`, `docs/write-an-application.md`, the roadmap, and B4 of the members and presence note | LV1 for replay. LV4 for the documents | Replay accepts a live scope's two entries. A forged third entry is a `mismatch` |
 
-O2 added the live-target retry cutoff at `d58ff62f` (section 11).
+O2 added the live-target retry cutoff at `d58ff62f` (section 11). LL-1
+(ruling `8568a680`, section 3.9) adds constant retained-state bounds for
+long-running live generations in two heads: this notes-only amendment
+first, then the source head in `packages/derive` with a full gate and
+kernel review.
 
 ## 9. Changes to existing documents
 
@@ -455,12 +555,16 @@ O2 added the live-target retry cutoff at `d58ff62f` (section 11).
    `contract`. Planner.
 10. Section 16's locator, its reference shape and its establishment by
     the directory are withdrawn. Planner.
+11. Live generations bound retained state by current open items and
+    distinct acting keys, with `(actor, target item)` retry records, no
+    post-creation fixed hashes, final-item eviction, and no detached-text
+    history growth (section 3.9). Planner, ruling `8568a680`.
 
 ## 11. Open points
 
 | Point | Question | Status |
 |---|---|---|
-| O1 | The bound on a live scope's state in memory | Resolved by ruling `815a46ee` and LV3 retained budget `dbc4aecd`. The logical ceiling is 32 MiB, or the initial charge plus the permitted growth when smaller. The accounting measures encoded records, not host heap. An act over the bound is refused `scope-full` |
+| O1 | The bound on a live scope's state in memory | Resolved by ruling `815a46ee`, LV3 retained budget `dbc4aecd`, and LL-1 ruling `8568a680` (section 3.9). The logical ceiling is 32 MiB, or the initial charge plus the permitted growth when smaller. The accounting measures encoded records, not host heap. An act over the bound is refused `scope-full`. LL-1 keeps retained bytes constant across renewals, updates, and final-item churn |
 | O2 | What a live scope answers to a delivery that arrives after its confirmation | Ruling `876695ba` and `d58ff62f` put a retry cutoff in the platform dispatcher for a proven live target and a supported authored deadline. An authentic late result remains eligible; an unproven target or unsupported form keeps its ordinary retry schedule |
 | O3 | Whether an idle live scope should stay in memory while a watch is open | LV3 measured local workerd at `a73cf24b`: after 155,002 ms the watched scope kept its generation and tick, while the unwatched scope restarted. This is an observation, not a retention guarantee. See [the LV3 record](implementation/2026-11-21-lv3-live-reads.md#o3-an-idle-live-scope-while-a-watch-is-open) |
 | O4 | The name `live` already means "not final" for items and holds in source | Resolved by the naming practice: use "the live level" and "live state" for this level, and an open item for the other meaning |
