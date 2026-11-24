@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-11-23-properties-in-the-package.md","body":{"commit":"334991816ec6281354375d54cab783b9d801ea81","path":"notes/2026-11-23-properties-in-the-package.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:117050c4b7fba10aeacb6275717ad851173cb716","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-23-authority-table.md."}
