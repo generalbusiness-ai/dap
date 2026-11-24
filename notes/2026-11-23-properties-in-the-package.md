@@ -1,8 +1,9 @@
 # Carry a definition's properties in its signed package
 
-Status: draft 2 for review, 23 November 2026, under request `8b418656`.
-Hugh read draft 1 and said "ok by my review". Draft 2 answers the
-checker's verdict `332c7cb6`. Nothing is built.
+Status: current. Hugh asked for this note on 23 November 2026, read
+draft 1 and said "ok by my review". The checker approved draft 2 in
+review `9f6bdb85`. The note landed as main `f3f0fa9a` for request
+`8b418656`. Nothing is built, and the decisions of section 9 are open.
 
 A room installs an application as a signed package. The deployment's
 `APPLICATION_TRUST` setting lists the release and its publisher. A reader
@@ -101,6 +102,12 @@ part, at the fixed path `dap.properties.json`.
 Each property names its definition by digest. Packing writes the digest
 from the path in the source file, as it does for `connections` today
 ([package reference](../docs/package-reference.md)).
+
+**The file is public.** A screen host serves the assets of a release,
+and it forwards no authorization with an asset request
+([deployment trust boundaries](../docs/security/trust-boundaries.md)).
+So each person who can load the screen can read `dap.properties.json`.
+A property is a public claim, and the file must hold no secret.
 
 The codec does not read the file's form. `dap check` and `dap pack`
 read it. A reader treats a file that it cannot read as a package that
