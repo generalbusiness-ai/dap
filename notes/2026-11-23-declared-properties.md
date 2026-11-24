@@ -1,7 +1,8 @@
 # State a guarantee beside the definition
 
-Status: draft for Hugh's review, 23 November 2026, under request
-`8b418656`. Nothing is built.
+Status: draft 2 for review, 23 November 2026, under request `8b418656`.
+Hugh read draft 1 and said "ok by my review". Draft 2 answers the
+checker's verdict `332c7cb6`. Nothing is built.
 
 A dap definition states what each act needs and what each act changes.
 It does not state what the author expects to stay true. That expectation
@@ -73,7 +74,7 @@ that is `available`, `lent` or `gone`, and a `reservation` that is `held`,
 `lapsed` or `released`. Its author expects three facts.
 
 1. A lent thing has a borrower.
-2. A thing on the shelf, or gone, has no borrower.
+2. An available thing has no borrower.
 3. Two held reservations never have the same tool and the same day.
 
 No act states any of them. Each follows from several acts together:
@@ -86,8 +87,8 @@ export const lendingProperties = properties(lending, {
 	"lent-has-borrower": always(thing, ({ on }) => [
 		when(on.set("borrower"), { if: [on.in("lent")] }),
 	]),
-	"shelf-has-no-borrower": always(thing, ({ on }) => [
-		when(on.unset("borrower"), { if: [on.in("available", "gone")] }),
+	"available-has-no-borrower": always(thing, ({ on }) => [
+		when(on.unset("borrower"), { if: [on.in("available")] }),
 	]),
 	"one-hold-per-tool-day": always(reservation, ({ on }) => [
 		when(count(range(reservation, ["held"], { where: held => [
@@ -106,7 +107,8 @@ no second language. A state property is data. It can travel in a package
 ([properties in the package](2026-11-23-properties-in-the-package.md)).
 
 A state property cannot use a guard that reads the signer, a field or a
-clock. A state has none of them.
+clock. A state has none of them. In the first version a state property
+covers items in live states only. Section 4 gives the reason.
 
 **A history property is a function of the journal and the view.** The
 Counting guarantee compares a slot with a count of entries, and no guard
@@ -143,9 +145,32 @@ No scope pins the copy, and its digest appears nowhere. So the guard
 validator and the guard evaluator of the kernel read the property, and
 the design adds no second evaluator.
 
-The build confirms this route first. If the route needs a new export
-from `packages/derive`, the step stops for the review of
+**The route covers live states only.** The judge refuses a `transition`
+on an item in a final state with `final`, before it reads a guard
+(`packages/derive/src/judge.ts:416`). A `comment` can act on a final
+item, but the validator gives a comment no guards
+(`packages/derive/src/validate/handlers.ts:263`). So the added act gets
+no guard answer for a `gone` thing.
+
+The first version accepts that limit. A state property is evaluated on
+each item in a live state, and `always` refuses a property that names a
+final state. An author states a guarantee about a final state as a
+history property: "the entry that moves a thing to `gone` leaves it
+with no borrower". That property is code, and it does not travel in a
+package.
+
+A state property for a final state needs the kernel to evaluate a guard
+list outside an act. That is a new export from `packages/derive`, with
+the review of
 [kernel section 7](../docs/kernel.md#7-rule-for-adding-to-the-kernel).
+This note does not ask for it.
+
+**The copy must pass the validator.** The search gives the copy to
+`validateDefinition`, because the judge takes a `ValidDefinition`. The
+copy holds one added act at a time. A definition that already has 64
+acts cannot take the added act, and a property cannot have more than 24
+guards (`PROPOSED_BOUNDS`). The search reports either case as a property
+that it cannot evaluate, and never as a pass.
 
 ## 5. What a failure prints
 
@@ -170,6 +195,12 @@ and Counting Commitments, with the history property of section 3.
 ## 6. What a pass does not claim
 
 - A history longer than the model's length, or a larger cast.
+- The strongest claim that the definition supports. Property 3 holds in
+  the model. The first guard of `reserve` refuses a second hold of a
+  tool and a day in every history. A statement that reads the form, as
+  [the authority table](2026-11-23-authority-table.md) does, covers
+  every history. Where the form gives the fact, the author states it in
+  that form.
 - A room whose membership gives roles other actions than the package's
   `roles`. [The authority table](2026-11-23-authority-table.md) covers
   that change.
@@ -180,9 +211,10 @@ and Counting Commitments, with the history property of section 3.
 
 1. The measurement of the history search note.
 2. State properties: the `properties` and `always` helpers in
-   `packages/define`, and the judgment of section 4. Witness: Lending's
-   three properties pass, and a planted act that moves a thing to `lent`
-   with no borrower fails `lent-has-borrower` with its history.
+   `packages/define`, and the judgment of section 4. Witnesses: Lending's
+   three properties pass. A planted act that moves a thing to `lent`
+   with no borrower fails `lent-has-borrower` with its history. `always`
+   refuses a property that names `gone`.
 3. History properties: the Counting guarantee as a function, with the
    control of the 21 November note.
 4. `dap check` runs the properties of a package that states a model.
@@ -191,5 +223,6 @@ and Counting Commitments, with the history property of section 3.
 
 1. Whether a shared search passes the bar of ruling `d6aa9122`, or the
    21 November form stays the only form.
-2. Whether a state property uses guard forms only, as section 3 says.
+2. Whether a state property uses guard forms only, as section 3 says,
+   and covers live states only, as section 4 says.
 3. Whether the 16-pair test goes when the search finds its control fault.

@@ -1,7 +1,8 @@
 # List who can write each state, and compare two lists
 
-Status: draft for Hugh's review, 23 November 2026, under request
-`8b418656`. Nothing is built.
+Status: draft 2 for review, 23 November 2026, under request `8b418656`.
+Hugh read draft 1 and said "ok by my review". Draft 2 answers the
+checker's verdict `332c7cb6`. Nothing is built.
 
 A dap definition answers "who can do this act" one act at a time. The act
 names an action in `grant`. A role holds actions. A guard can require the
@@ -15,10 +16,10 @@ this item in this state?" Today the reader finds every act that writes
 the state and joins the answers by hand. A change of one act, or of one
 role's actions, can open a state to a new role, and no report shows it.
 
-**Guarantee.** For each item state and each slot of a definition, the
-table names every act, handler and timed rule that can write it. Each row
-gives the action that the signer must hold and the party slots that the
-signer must be in.
+**Guarantee.** For each item state, each slot and each send of a
+definition, the table names every act, handler and timed rule that can
+write or send it. Each row gives the action that the signer must hold and
+each guard that reads the signer.
 
 The table is a reading of the declaration. It runs no judge and needs no
 model, so it covers every history of the definition and not a bounded
@@ -36,10 +37,31 @@ The [lending definition](../examples/lending/definition.ts) and its
 | `thing` | `available` to `lent` | `borrow` | `lending.member` | anyone |
 | `thing` | `lent` to `available` | `return` | `lending.member` | anyone |
 | `thing` | `available` or `lent` to `gone` | `cancel` | `lending.staff` | anyone |
-| `reservation` | opened as `held` | `reserve` | `lending.member` | anyone |
+| `reservation` | opened as `held` | `reserve` | `lending.member` | anyone who has at most one held reservation (`count`) |
 | `reservation` | `held` to `released` | `release` | `lending.member` | in `holder` |
 | `reservation` | `held` to `released` | `release-by-staff` | `lending.staff` | anyone |
 | `reservation` | `held` to `lapsed` | timed rule `lapse` | none | no signer |
+
+The opening act writes each fixed slot one time. Two slots change
+later.
+
+| Item | Slot | Change | Written by | Action | Signer must be |
+|---|---|---|---|---|---|
+| `thing` | `borrower` | set to the signer | `borrow` | `lending.member` | anyone |
+| `thing` | `borrower` | cleared | `return` | `lending.member` | anyone |
+| `thing` | `borrower` | cleared | `cancel` | `lending.staff` | anyone |
+| `thing` | `reason` | set from a field | `cancel` | `lending.staff` | anyone |
+
+Each send is `publish-file` to the library's destination. The signer
+supplies the text in the field `content`.
+
+| Sent by | Action | Path | Guard on the item |
+|---|---|---|---|
+| `donate` | `lending.member` | The field `page`, under the rule `shelf-page` and unused by any thing | none: the act opens the thing |
+| `borrow` | `lending.member` | The thing's `page` | `available` |
+| `return` | `lending.member` | The thing's `page` | `lent` |
+| `cancel` | `lending.staff` | The thing's `page` | `available` or `lent` |
+| `publish` | `lending.member` | The `page` of a thing that the signer names | none |
 
 | Role | Actions |
 |---|---|
@@ -56,6 +78,10 @@ Two rows differ. `release` requires the signer to be the `holder`.
 member borrowed. A library can intend that. The table shows the row, and
 the author decides.
 
+The send table shows a second fact. Five acts write a shelf page, and in
+each one the signer supplies the text. So a member who can borrow a
+thing can also write its page.
+
 ## 2. Each column comes from one declared form
 
 | Column | Form |
@@ -63,7 +89,8 @@ the author decides.
 | Item and change | The act's `step`, its item type, its `state` guards and its state effect. |
 | Written by | The act, the handler in `receives`, or the rule in `timed`. |
 | Action | The act's `grant`. |
-| Signer must be | The act's `signer` and `notIn` guards. |
+| Signer must be | The act's `signer` and `notIn` guards. Each other guard that reads the signer prints in the row by its form, as the `count` guard of `reserve` does. |
+| Send | The act's `sends`: the message, the target slot and each field's source. |
 | Role | The package's `roles`. |
 
 A slot write gives a row of the same shape, with the slot in place of the
@@ -104,6 +131,20 @@ author names that rule in it.
 
 These statements are data, and they can travel in a package
 ([properties in the package](2026-11-23-properties-in-the-package.md)).
+
+**A statement that reads the form is stronger than a property in a
+model.** The lending definition allows one held reservation for a tool
+and a day. The [declared property](2026-11-23-declared-properties.md)
+`one-hold-per-tool-day` shows that fact in a model. The form shows it
+for every history, by four facts:
+
+- `reserve` is the only act that opens a held reservation.
+- Its first guard refuses an equal tool and day.
+- Both slots are fixed.
+- No act returns a reservation to `held`.
+
+A later version can add a `unique` statement that reads those four
+facts. The first version has `only`.
 
 ## 4. A comparison is a diff of two tables
 
@@ -155,8 +196,8 @@ file and no export enters `packages/contract`, `packages/derive` or
 ## 7. Steps
 
 1. The table for one definition, as a generated file with a pins check.
-   Witness: the Lending table of section 1 matches a hand-checked copy,
-   and a planted `signer` guard on `return` changes one line.
+   Witness: the three Lending tables of section 1 match a hand-checked
+   copy, and a planted `signer` guard on `return` changes one line.
 2. `only` statements in `dap check`. Witness: a planted `cancel` with
    `lending.member` fails by name.
 3. One reading for the table and the MCP inventory.

@@ -1,7 +1,8 @@
 # Carry a definition's properties in its signed package
 
-Status: draft for Hugh's review, 23 November 2026, under request
-`8b418656`. Nothing is built.
+Status: draft 2 for review, 23 November 2026, under request `8b418656`.
+Hugh read draft 1 and said "ok by my review". Draft 2 answers the
+checker's verdict `332c7cb6`. Nothing is built.
 
 A room installs an application as a signed package. The deployment's
 `APPLICATION_TRUST` setting lists the release and its publisher. A reader
@@ -43,14 +44,15 @@ agent to reserve a drill.
    lent-has-borrower        holds in the model: 3 actors, length 6
    one-hold-per-tool-day    holds in the model: 3 actors, length 6
    only lending.staff moves a thing to gone      holds for every history
-   acts.publish has no guard                     answered: "Any member can republish a shelf page."
+   acts.publish has no guard                     publisher's answer: "Any member can write a shelf page's text."
    ```
 
 3. **The member's agent reads the same lines before its first act.** It
-   learns that only staff can remove the drill, and that another member
-   cannot take its held day. It also learns that any member can
-   republish the drill's page. It can evaluate the properties again from
-   the package bytes.
+   learns that only staff can remove the drill, in every history. It
+   learns that no second member took a held day in the model. It reads
+   the publisher's answer that any member can write the drill's page.
+   It can evaluate the first three lines again from the package bytes.
+   It cannot evaluate the answer.
 
 The admin, the member and the agent read one list, and each can derive
 it. None of them reads nine acts.
@@ -77,28 +79,37 @@ Two parts do not travel.
 An application with a model that does not travel keeps its properties in
 its tests. Its package states the `only` statements and the answers.
 
-## 3. The properties sit beside the views
+## 3. The properties travel as one asset
 
 A version 2 package has a name, a version, a `semantic` part and a
-`presentation` part. `dap check` prints one digest for each part.
+`presentation` part. `dap check` prints one digest for each part. The
+release manifest holds both digests, and the publisher signs the
+manifest.
 
-The properties belong in the `presentation` part.
+The properties are one file among the assets of the `presentation`
+part, at the fixed path `dap.properties.json`.
 
 - The `semantic` part says what scopes do. A property changes nothing
   that a scope does, so a changed property must not change the semantic
   digest.
 - The `presentation` part already binds reader-facing data to the
-  semantic digest. A property is reader-facing data about the same
-  definitions.
-- The publisher's signature covers both parts.
+  semantic digest, and its digest covers each asset's bytes.
+- An asset needs no change to the codec. The codec accepts a list of
+  assets, each with a path, a media type and bytes within the asset
+  bounds (`application-package-validation.ts:129`).
 
-Each property names its definition by path in the source file. Packing
-resolves the path to the definition's digest, as it does for
-`connections` today ([package reference](../docs/package-reference.md)).
+Each property names its definition by digest. Packing writes the digest
+from the path in the source file, as it does for `connections` today
+([package reference](../docs/package-reference.md)).
 
-The build reads the package codec first
-(`packages/platform/src/application-codec/`). If version 2 refuses an
-unknown member, the properties need a package version 3.
+The codec does not read the file's form. `dap check` and `dap pack`
+read it. A reader treats a file that it cannot read as a package that
+states no property.
+
+A typed member of the `presentation` part is the other route. The
+version 2 codec refuses an unknown member: it reads the part with a
+closed list of names (`application-package-v2.ts:80`). So a typed member
+needs a new version of the part. Section 7 gives the cost of that route.
 
 ## 4. Five times of use
 
@@ -126,8 +137,15 @@ is new work in the same command.
 ## 5. A reader treats the publisher's text as data
 
 A property's name and an `intended` sentence are text that the publisher
-wrote. An agent reads them as data and never as an instruction. The
-codec gives each name and each sentence a byte bound.
+wrote. An agent reads them as data and never as an instruction. `dap
+pack` gives each name and each sentence a byte bound, and a reader
+applies the same bound.
+
+**No check compares an `intended` sentence with the forms.** A reader can
+derive a property and an `only` statement. A reader cannot derive an
+answer. A publisher can write an answer that misstates an act, by error
+or by intent. So each report prints an answer as the publisher's word,
+beside the finding that it answers, and never as a result.
 
 ## 6. What a stated property does not give
 
@@ -147,10 +165,29 @@ codec gives each name and each sentence a byte bound.
 
 ## 7. Kernel placement
 
-The package codec is in `packages/platform`. No file and no export enters
-`packages/contract`, `packages/derive` or `packages/bytes`. The work adds
-no scope kind, platform name, capability, command group or entry kind.
-The MCP inventory gains one list in an answer that it gives today.
+No file and no export enters `packages/contract`, `packages/derive` or
+`packages/bytes`. The work adds no scope kind, platform name, capability,
+command group or entry kind. The MCP inventory gains one list in an
+answer that it gives today.
+
+The package codec is in `packages/platform`. That package fails the
+kernel test today, because replay needs its code to derive platform
+scopes ([K1](../docs/kernel.md#k1)). So a change to what platform code
+accepts at installation is a K1 change, and it needs the review of
+[kernel section 7](../docs/kernel.md#7-rule-for-adding-to-the-kernel).
+
+The asset route makes no such change, by two facts read at main
+`12cb8fa7`.
+
+- The install rule reads the `semantic` value and the `release` value by
+  digest (`packages/platform/src/application-install-v2.ts:29`). It does
+  not read the `presentation` part.
+- An asset is a form that the version 2 codec accepts today.
+
+The first build step confirms both facts. It also confirms that no
+platform rule that replay needs reads an asset's bytes. If one does, or
+if the properties become a typed member, the work stops for the section
+7 review.
 
 ## 8. Steps
 
@@ -159,15 +196,17 @@ that defines the claim.
 
 1. The properties file of Lending in its source package, and `dap pack`
    evaluates it. Witness: a planted failing property stops the pack.
-2. The `presentation` member, with its bounds. Witness: a release signed
-   with properties verifies, and one changed property byte fails the
-   signature.
+2. The asset `dap.properties.json`, with its bounds. The step first
+   confirms the two facts of section 7. Witness: a release signed with
+   properties verifies, and one changed property byte fails the
+   presentation digest.
 3. The check of a signed release.
 4. The property list in the MCP inventory.
 
 ## 9. What Hugh decides
 
-1. Whether the properties sit in the `presentation` part.
+1. Whether the properties travel as an asset, as section 3 says, or as a
+   typed member in a new version of the `presentation` part.
 2. Whether `dap pack` refuses a release with a failed property.
 3. Whether a model with a function choice stays out of every package, as
    section 2 says.

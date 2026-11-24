@@ -1,7 +1,8 @@
 # Report a guard that refuses nothing
 
-Status: draft for Hugh's review, 23 November 2026, under request
-`8b418656`. Nothing is built.
+Status: draft 2 for review, 23 November 2026, under request `8b418656`.
+Hugh read draft 1 and said "ok by my review". Draft 2 answers the
+checker's verdict `332c7cb6`. Nothing is built.
 
 A dap author writes guards to state who can do what, and when. The
 validator accepts a guard that is well formed. It does not ask whether
@@ -56,10 +57,19 @@ lending  acts.publish  no-guard  warning
 The author decides whether the definition intends that. This note does
 not decide it.
 
+The finding does not list every act that writes a shelf page. `borrow`,
+`return` and `cancel` each send a `content` field that the signer
+supplies, and each has a guard. The
+[authority table](2026-11-23-authority-table.md) lists every act that
+sends to the page.
+
 ## 2. Mechanism one runs when the author checks or packs
 
-- **`compile`** in `packages/define` returns the findings beside the
-  per-act `refusals` that it returns today.
+- **`compile`** in `packages/define` returns `findings` today
+  (`packages/define/src/index.ts:641`). The list has one rule, about the
+  names that a rule expression reads, and `compile` stops on each finding
+  of that rule. The five rules extend the same list. A `Finding` gains a
+  severity, and `compile` does not stop on a warning.
 - **`dap check`** and **`dap pack`** print each finding as a row with the
   definition, the row, the check, the severity, the reason and the
   message. [Package reference](../docs/package-reference.md) describes
@@ -80,12 +90,15 @@ judge its definition's intent.
 the properties file beside the definition, under the path of the row:
 
 ```ts
-intended: { "acts.publish": "Any member can republish a shelf page. The page text comes from the page." }
+intended: { "acts.publish": "Any member can write a shelf page's text. borrow, return and cancel also write it." }
 ```
 
 The report then prints the row as answered, with the sentence. Without
 this answer, the same warning prints on every run and the author stops
 reading the report.
+
+No check compares the sentence with the declared forms. The sentence is
+the author's word, and the report marks it as such.
 
 ## 3. Mechanism two counts the deciding guard
 

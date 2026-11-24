@@ -1,7 +1,8 @@
 # Enumerate a definition's histories with the judges that the scope runs
 
-Status: draft for Hugh's review, 23 November 2026, under request
-`8b418656`. Nothing is built.
+Status: draft 2 for review, 23 November 2026, under request `8b418656`.
+Hugh read draft 1 and said "ok by my review". Draft 2 answers the
+checker's verdict `332c7cb6`. Nothing is built.
 
 A scope judges each signed act against its pinned definition. It keeps
 one entry for each act that takes effect. The judges and the fold are
@@ -117,9 +118,12 @@ entry numbers. That work waits for the numbers.
 
 No file and no export enters `packages/contract`, `packages/derive` or
 `packages/bytes`. The search uses the exports that `story.ts` imports
-today, and `judgeActBody`. Ruling `12dff549` permitted that export for
-"the runtime, replay and exploration". The module sits beside `story.ts`
-in `packages/define`. It adds no CLI command and no MCP tool.
+today, and `judgeActBody`.
+[Kernel section 7](../docs/kernel.md#7-rule-for-adding-to-the-kernel)
+records that export under ruling `12dff549`. It says that promise 9
+requires one body of code "for the runtime, replay and exploration".
+The module sits beside `story.ts` in `packages/define`. It adds no CLI
+command and no MCP tool.
 
 ## 6. Steps
 
