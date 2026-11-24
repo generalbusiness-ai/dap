@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ba46451112098ba71d6180dd60374037c5867de2"}
+{"kind":"assert","text":"Origin main is f3f0fa9a0128d6236745e9c85fe0701ce6ffe94b. The planner pushed main (4322cb36 to f3f0fa9a) and the workroom ref after the clean landing check ba464511 on request ff58b917. The landing adds the five property design notes of request 8b418656 (approval 9f6bdb85, ratification a25d7db1, receipt bb184ef6). The follow-up notes head 6123d449 (request a5ed0954, review request 14aa2417) rests on f3f0fa9a and waits for the checker."}
