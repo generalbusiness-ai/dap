@@ -1,8 +1,9 @@
 # List who can write each state, and compare two lists
 
-Status: draft 2 for review, 23 November 2026, under request `8b418656`.
-Hugh read draft 1 and said "ok by my review". Draft 2 answers the
-checker's verdict `332c7cb6`. Nothing is built.
+Status: current. Hugh asked for this note on 23 November 2026, read
+draft 1 and said "ok by my review". The checker approved draft 2 in
+review `9f6bdb85`. The note landed as main `f3f0fa9a` for request
+`8b418656`. Nothing is built, and the decisions of section 8 are open.
 
 A dap definition answers "who can do this act" one act at a time. The act
 names an action in `grant`. A role holds actions. A guard can require the
@@ -37,7 +38,7 @@ The [lending definition](../examples/lending/definition.ts) and its
 | `thing` | `available` to `lent` | `borrow` | `lending.member` | anyone |
 | `thing` | `lent` to `available` | `return` | `lending.member` | anyone |
 | `thing` | `available` or `lent` to `gone` | `cancel` | `lending.staff` | anyone |
-| `reservation` | opened as `held` | `reserve` | `lending.member` | anyone who has at most one held reservation (`count`) |
+| `reservation` | opened as `held` | `reserve` | `lending.member` | anyone who has at most one other held reservation (`count`) |
 | `reservation` | `held` to `released` | `release` | `lending.member` | in `holder` |
 | `reservation` | `held` to `released` | `release-by-staff` | `lending.staff` | anyone |
 | `reservation` | `held` to `lapsed` | timed rule `lapse` | none | no signer |

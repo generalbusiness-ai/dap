@@ -1,8 +1,9 @@
 # Enumerate a definition's histories with the judges that the scope runs
 
-Status: draft 2 for review, 23 November 2026, under request `8b418656`.
-Hugh read draft 1 and said "ok by my review". Draft 2 answers the
-checker's verdict `332c7cb6`. Nothing is built.
+Status: current. Hugh asked for this note on 23 November 2026, read
+draft 1 and said "ok by my review". The checker approved draft 2 in
+review `9f6bdb85`. The note landed as main `f3f0fa9a` for request
+`8b418656`. Nothing is built, and the decisions of section 7 are open.
 
 A scope judges each signed act against its pinned definition. It keeps
 one entry for each act that takes effect. The judges and the fold are

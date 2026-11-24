@@ -1,8 +1,9 @@
 # State a guarantee beside the definition
 
-Status: draft 2 for review, 23 November 2026, under request `8b418656`.
-Hugh read draft 1 and said "ok by my review". Draft 2 answers the
-checker's verdict `332c7cb6`. Nothing is built.
+Status: current. Hugh asked for this note on 23 November 2026, read
+draft 1 and said "ok by my review". The checker approved draft 2 in
+review `9f6bdb85`. The note landed as main `f3f0fa9a` for request
+`8b418656`. Nothing is built, and the decisions of section 8 are open.
 
 A dap definition states what each act needs and what each act changes.
 It does not state what the author expects to stay true. That expectation

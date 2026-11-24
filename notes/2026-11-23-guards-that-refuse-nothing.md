@@ -1,8 +1,9 @@
 # Report a guard that refuses nothing
 
-Status: draft 2 for review, 23 November 2026, under request `8b418656`.
-Hugh read draft 1 and said "ok by my review". Draft 2 answers the
-checker's verdict `332c7cb6`. Nothing is built.
+Status: current. Hugh asked for this note on 23 November 2026, read
+draft 1 and said "ok by my review". The checker approved draft 2 in
+review `9f6bdb85`. The note landed as main `f3f0fa9a` for request
+`8b418656`. Nothing is built, and the decisions of section 7 are open.
 
 A dap author writes guards to state who can do what, and when. The
 validator accepts a guard that is well formed. It does not ask whether
